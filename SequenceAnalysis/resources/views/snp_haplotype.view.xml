@@ -1,0 +1,8 @@
+<view xmlns="http://labkey.org/data/xml/view" title="View Linkage" frame="none">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis"/>
+        <dependency path="SequenceAnalysis/panel/snp_viewer.css"/>
+        <dependency path="SequenceAnalysis/panel/snp_haplotype.js"/>
+    </dependencies>
+</view>

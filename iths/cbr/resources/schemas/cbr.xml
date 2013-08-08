@@ -1,0 +1,291 @@
+<ns:tables xmlns:ns="http://labkey.org/data/xml">
+  <ns:table tableName="schedule" tableDbType="TABLE">
+    <ns:columns>
+      <ns:column columnName="scheduleid"/>
+      <ns:column columnName="participantid">
+		<ns:fk>
+		       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+		       <ns:fkTable>participant</ns:fkTable>
+		        <ns:fkColumnName>participantid</ns:fkColumnName>
+		</ns:fk>
+	  </ns:column>
+      <ns:column columnName="provider"/>
+      <ns:column columnName="schedDate">
+        <ns:columnTitle>Date Scheduled</ns:columnTitle>
+      </ns:column>
+      <ns:column columnName="patType"/>
+      <ns:column columnName="facility"/>
+      <ns:column columnName="location"/>
+      <ns:column columnName="amalgaDataSource"/>
+      <ns:column columnName="amalgaId"/>
+      <ns:column columnName="maruNew"/>
+      <ns:column columnName="maruActive"/>
+      <ns:column columnName="container"/>
+      <ns:column columnName="entityid"/>
+      <ns:column columnName="createdby"/>
+      <ns:column columnName="created"/>
+      <ns:column columnName="modifiedby"/>
+      <ns:column columnName="modified"/>
+    </ns:columns>
+  </ns:table>
+  <ns:table tableName="consent" tableDbType="TABLE">
+    <ns:columns>
+      <ns:column columnName="consentId"/>
+      <ns:column columnName="eligId">
+	   	<ns:fk>
+		       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+		       <ns:fkTable>eligibility</ns:fkTable>
+		        <ns:fkColumnName>eligId</ns:fkColumnName>
+		</ns:fk>
+	  </ns:column>
+      <ns:column columnName="consentformid">
+		<ns:fk>
+		       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+		       <ns:fkTable>consentForm</ns:fkTable>
+		        <ns:fkColumnName>consentFormId</ns:fkColumnName>
+		</ns:fk>
+	  </ns:column>
+      <ns:column columnName="ccUser"/>
+      <ns:column columnName="ccReviewDate"/>
+      <ns:column columnName="ccIsPatElig"/>
+      <ns:column columnName="ccDidPatConsent"/>
+      <ns:column columnName="ccPatConsentDate"/>
+      <ns:column columnName="ccPatDeclineReason"/>
+      <ns:column columnName="ccComments"/>
+      <ns:column columnName="ccCommentsHx"/>
+      <ns:column columnName="container"/>
+      <ns:column columnName="entityid"/>
+      <ns:column columnName="createdby"/>
+      <ns:column columnName="created"/>
+      <ns:column columnName="modifiedby"/>
+      <ns:column columnName="modified"/>
+    </ns:columns>
+  </ns:table>
+  <ns:table tableName="scheduleNotes" tableDbType="TABLE">
+    <ns:columns>
+      <ns:column columnName="scheduleNoteId"/>
+      <ns:column columnName="scheduleId">
+		<ns:fk>
+		       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+		       <ns:fkTable>schedule</ns:fkTable>
+		        <ns:fkColumnName>scheduleid</ns:fkColumnName>
+		</ns:fk>
+      </ns:column>
+      <ns:column columnName="amalgaDataSource"/>
+      <ns:column columnName="field"/>
+      <ns:column columnName="value"/>
+      <ns:column columnName="container"/>
+      <ns:column columnName="entityid"/>
+      <ns:column columnName="createdby"/>
+      <ns:column columnName="created"/>
+      <ns:column columnName="modifiedby"/>
+      <ns:column columnName="modified"/>
+    </ns:columns>
+  </ns:table>
+  <ns:table tableName="termFound" tableDbType="TABLE">
+    <ns:columns>
+      <ns:column columnName="termFoundId"/>
+      <ns:column columnName="termId">
+			<ns:fk>
+			       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+			       <ns:fkTable>term</ns:fkTable>
+			        <ns:fkColumnName>termId</ns:fkColumnName>
+			</ns:fk>
+	  </ns:column>
+      <ns:column columnName="scheduleNoteId">
+		<ns:fk>
+		       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+		       <ns:fkTable>scheduleNotes</ns:fkTable>
+		       <ns:fkColumnName>scheduleNoteid</ns:fkColumnName>
+		</ns:fk>
+	  </ns:column>
+      <ns:column columnName="termValue"/>
+      <ns:column columnName="termStrength"/>
+      <ns:column columnName="createdby"/>
+      <ns:column columnName="created"/>
+      <ns:column columnName="modifiedby"/>
+      <ns:column columnName="modified"/>
+    </ns:columns>
+  </ns:table>
+  <ns:table tableName="term" tableDbType="TABLE">
+    <ns:columns>
+      <ns:column columnName="termId"/>
+      <ns:column columnName="studyId">
+		<ns:fk>
+		       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+		       <ns:fkTable>study</ns:fkTable>
+		        <ns:fkColumnName>studyId</ns:fkColumnName>
+		</ns:fk>
+	  </ns:column>
+      <ns:column columnName="source"/>
+      <ns:column columnName="field"/>
+      <ns:column columnName="term"/>
+      <ns:column columnName="termStrength"/>
+      <ns:column columnName="createdby"/>
+      <ns:column columnName="created"/>
+      <ns:column columnName="modifiedby"/>
+      <ns:column columnName="modified"/>
+    </ns:columns>
+  </ns:table>
+  <ns:table tableName="repository" tableDbType="TABLE">
+    <ns:columns>
+      <ns:column columnName="repoId"/>
+      <ns:column columnName="repoName"/>
+      <ns:column columnName="repoPi"/>
+      <ns:column columnName="labManager"/>
+      <ns:column columnName="repoManager"/>
+      <ns:column columnName="institution"/>
+      <ns:column columnName="container"/>
+      <ns:column columnName="entityid"/>
+      <ns:column columnName="createdby"/>
+      <ns:column columnName="created"/>
+      <ns:column columnName="modifiedby"/>
+      <ns:column columnName="modified"/>
+    </ns:columns>
+  </ns:table>
+  <ns:table tableName="repoCriteria" tableDbType="TABLE">
+    <ns:columns>
+      <ns:column columnName="repoCriteriaId"/>
+      <ns:column columnName="repoId">
+		<ns:fk>
+		       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+		       <ns:fkTable>repository</ns:fkTable>
+		        <ns:fkColumnName>repoId</ns:fkColumnName>
+		</ns:fk>
+	  </ns:column>
+      <ns:column columnName="amalgaDataSource"/>
+      <ns:column columnName="field"/>
+      <ns:column columnName="operator"/>
+      <ns:column columnName="value"/>
+      <ns:column columnName="effectiveFromDtTm"/>
+      <ns:column columnName="effectiveToDtTm"/>
+      <ns:column columnName="createdBy"/>
+      <ns:column columnName="created"/>
+      <ns:column columnName="modifiedBy"/>
+      <ns:column columnName="modified"/>
+    </ns:columns>
+  </ns:table>
+  <ns:table tableName="studyCriteria" tableDbType="TABLE">
+    <ns:columns>
+      <ns:column columnName="studyCriteriaId"/>
+      <ns:column columnName="studyId">
+		<ns:fk>
+		       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+		       <ns:fkTable>study</ns:fkTable>
+		        <ns:fkColumnName>studyId</ns:fkColumnName>
+		</ns:fk>
+	  </ns:column>
+      <ns:column columnName="dataSource"/>
+      <ns:column columnName="field"/>
+      <ns:column columnName="operator"/>
+      <ns:column columnName="value"/>
+      <ns:column columnName="effectiveFromDtTm"/>
+      <ns:column columnName="effectiveToDtTm"/>
+      <ns:column columnName="createdBy"/>
+      <ns:column columnName="created"/>
+      <ns:column columnName="modifiedBy"/>
+      <ns:column columnName="modified"/>
+    </ns:columns>
+  </ns:table>
+  <ns:table tableName="consentForm" tableDbType="TABLE">
+    <ns:columns>
+      <ns:column columnName="consentFormId"/>
+      <ns:column columnName="studyId">
+		<ns:fk>
+		       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+		       <ns:fkTable>study</ns:fkTable>
+		        <ns:fkColumnName>studyId</ns:fkColumnName>
+		</ns:fk>
+	  </ns:column>
+      <ns:column columnName="formName"/>
+      <ns:column columnName="active"/>
+      <ns:column columnName="container"/>
+      <ns:column columnName="entityid"/>
+      <ns:column columnName="createdby"/>
+      <ns:column columnName="created"/>
+      <ns:column columnName="modifiedby"/>
+      <ns:column columnName="modified"/>
+    </ns:columns>
+  </ns:table>
+  <ns:table tableName="participant" tableDbType="TABLE">
+    <ns:columns>
+      <ns:column columnName="participantid"/>
+      <ns:column columnName="amalgaID"/>
+      <ns:column columnName="mrn"/>
+      <ns:column columnName="firstName"/>
+      <ns:column columnName="lastName"/>
+      <ns:column columnName="gender"/>
+      <ns:column columnName="dob"/>
+      <ns:column columnName="language"/>
+      <ns:column columnName="approachableForConsent"/>
+      <ns:column columnName="patNotes"/>
+      <ns:column columnName="isIneligible"/>
+      <ns:column columnName="container"/>
+      <ns:column columnName="entityid"/>
+      <ns:column columnName="createdby"/>
+      <ns:column columnName="created"/>
+      <ns:column columnName="modifiedby"/>
+      <ns:column columnName="modified"/>
+    </ns:columns>
+  </ns:table>
+  <ns:table tableName="eligibility" tableDbType="TABLE">
+    <ns:columns>
+      <ns:column columnName="eligId"/>
+      <ns:column columnName="studyId">
+		<ns:fk>
+		       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+		       <ns:fkTable>study</ns:fkTable>
+		        <ns:fkColumnName>studyId</ns:fkColumnName>
+		</ns:fk>
+	  </ns:column>
+      <ns:column columnName="scheduleId">
+		<ns:fk>
+		       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+		       <ns:fkTable>schedule</ns:fkTable>
+		        <ns:fkColumnName>scheduleid</ns:fkColumnName>
+		</ns:fk>
+	  </ns:column>
+      <ns:column columnName="maruNew"/>
+      <ns:column columnName="maruActive"/>
+      <ns:column columnName="rcUser"/>
+      <ns:column columnName="rcReviewDate"/>
+      <ns:column columnName="rcIsPatElig">
+        <ns:columnTitle>Is Eligible?</ns:columnTitle>
+      </ns:column>
+      <ns:column columnName="rcComments"/>
+      <ns:column columnName="container"/>
+      <ns:column columnName="entityId"/>
+      <ns:column columnName="createdBy"/>
+      <ns:column columnName="created"/>
+      <ns:column columnName="modifiedBy"/>
+      <ns:column columnName="modified"/>
+    </ns:columns>
+  </ns:table>
+  <ns:table tableName="study" tableDbType="TABLE">
+    <ns:columns>
+      <ns:column columnName="studyId"/>
+      <ns:column columnName="cbrStudyId"/>
+      <ns:column columnName="repository">
+		<ns:fk>
+		       <ns:fkDbSchema>cbr</ns:fkDbSchema>
+		       <ns:fkTable>repository</ns:fkTable>
+		        <ns:fkColumnName>repoId</ns:fkColumnName>
+		</ns:fk>
+	  </ns:column>
+      <ns:column columnName="studyTitle"/>
+      <ns:column columnName="studyPi"/>
+      <ns:column columnName="pickupDeliveryContact"/>
+      <ns:column columnName="pickupAfter5"/>
+      <ns:column columnName="holdSampleOvernight"/>
+      <ns:column columnName="collectionStart"/>
+      <ns:column columnName="collectionEnd"/>
+      <ns:column columnName="consentForm"/>
+      <ns:column columnName="container"/>
+      <ns:column columnName="entityid"/>
+      <ns:column columnName="createdby"/>
+      <ns:column columnName="created"/>
+      <ns:column columnName="modifiedby"/>
+      <ns:column columnName="modified"/>
+    </ns:columns>
+  </ns:table>
+</ns:tables>

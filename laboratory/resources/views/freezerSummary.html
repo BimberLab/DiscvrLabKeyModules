@@ -1,0 +1,24 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    var webpart = <%=webpartContext%>;
+    Ext4.get(webpart.wrapperDivId).update(
+        '<div style="padding-bottom: 20px;" id="' + webpart.wrapperDivId + '_freezers"></div>' +
+        '<div style="padding-bottom: 20px;" id="' + webpart.wrapperDivId + '_byType"></div>' +
+        '<div style="padding-bottom: 20px;" id="' + webpart.wrapperDivId + '_bySubjectAndType"></div>'
+    );
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'Spaces Available Per Freezer',
+        schemaName: 'laboratory',
+        queryName: 'freezer_space_summary'
+    }).render(webpart.wrapperDivId + '_freezers');
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'Sample Summary By Type',
+        schemaName: 'laboratory',
+        queryName: 'samples_by_type'
+    }).render(webpart.wrapperDivId + '_byType');
+});
+
+</script>

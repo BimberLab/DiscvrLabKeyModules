@@ -1,0 +1,14 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="96well_plate" tableDbType="TABLE">
+                <tableTitle>96 Well Plate Layout</tableTitle>
+                <columns>
+                    <column columnName="well">
+                        <isKeyField>true</isKeyField>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

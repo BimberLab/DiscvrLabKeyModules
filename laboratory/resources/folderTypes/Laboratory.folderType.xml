@@ -1,0 +1,124 @@
+<ft:folderType xmlns:ft="http://labkey.org/data/xml/folderType">
+    <ft:name>Laboratory Folder</ft:name>
+    <ft:description>The default folder layout for basic lab management</ft:description>
+    <ft:folderTabs>
+        <ft:folderTab>
+            <ft:name>overview</ft:name>
+            <ft:caption>Overview</ft:caption>
+            <ft:selectors>
+            </ft:selectors>
+            <ft:requiredWebParts>
+            </ft:requiredWebParts>
+            <ft:preferredWebParts>
+                <ft:webPart>
+                    <ft:name>Laboratory Home</ft:name>
+                    <ft:location>body</ft:location>
+                </ft:webPart>
+                <ft:webPart>
+                    <ft:name>Lab Tools</ft:name>
+                    <ft:location>right</ft:location>
+                </ft:webPart>
+            </ft:preferredWebParts>
+        </ft:folderTab>
+        <ft:folderTab>
+            <ft:name>workbooks</ft:name>
+            <ft:caption>Workbooks</ft:caption>
+            <ft:selectors>
+                <ft:selector>
+                    <ft:view>importData</ft:view>
+                </ft:selector>
+            </ft:selectors>
+            <ft:requiredWebParts>
+            </ft:requiredWebParts>
+            <ft:preferredWebParts>
+                <ft:webPart>
+                    <ft:name>Lab Workbooks</ft:name>
+                    <ft:location>body</ft:location>
+                </ft:webPart>
+                <ft:webPart>
+                    <ft:name>Lab Tools</ft:name>
+                    <ft:location>right</ft:location>
+                </ft:webPart>
+            </ft:preferredWebParts>
+        </ft:folderTab>
+        <ft:folderTab>
+            <ft:name>reports</ft:name>
+            <ft:caption>Reports</ft:caption>
+            <ft:selectors>
+                <ft:selector>
+                    <ft:controller>assay</ft:controller>
+                </ft:selector>
+                <ft:selector>
+                    <ft:view>executeQuery</ft:view>
+                </ft:selector>
+                <ft:selector>
+                    <ft:view>dataBrowser</ft:view>
+                </ft:selector>
+                <ft:selector>
+                    <ft:controller>reports</ft:controller>
+                </ft:selector>
+            </ft:selectors>
+            <ft:requiredWebParts>
+            </ft:requiredWebParts>
+            <ft:preferredWebParts>
+                <ft:webPart>
+                    <ft:name>Lab Reports</ft:name>
+                    <ft:location>body</ft:location>
+                </ft:webPart>
+                <ft:webPart>
+                    <ft:name>Lab Tools</ft:name>
+                    <ft:location>right</ft:location>
+                </ft:webPart>
+            </ft:preferredWebParts>
+        </ft:folderTab>
+        <ft:folderTab>
+            <ft:name>dataBrowser</ft:name>
+            <ft:caption>Data Browser</ft:caption>
+            <ft:selectors>
+                <ft:selector>
+                    <ft:view>dataBrowser</ft:view>
+                </ft:selector>
+            </ft:selectors>
+            <ft:requiredWebParts>
+            </ft:requiredWebParts>
+            <ft:preferredWebParts>
+                <ft:webPart>
+                    <ft:name>Laboratory Data Browser</ft:name>
+                    <ft:location>body</ft:location>
+                </ft:webPart>
+            </ft:preferredWebParts>
+        </ft:folderTab>
+        <!--<ft:folderTab>-->
+            <!--<ft:name>settings</ft:name>-->
+            <!--<ft:caption>Settings</ft:caption>-->
+            <!--<ft:selectors>-->
+                <!--<ft:selector>-->
+                    <!--<ft:view>labSettings</ft:view>-->
+                <!--</ft:selector>-->
+                <!--<ft:selector>-->
+                    <!--<ft:view>assayDefaults</ft:view>-->
+                <!--</ft:selector>-->
+                <!--<ft:selector>-->
+                    <!--<ft:view>itemVisibility</ft:view>-->
+                <!--</ft:selector>-->
+            <!--</ft:selectors>-->
+            <!--<ft:requiredWebParts>-->
+            <!--</ft:requiredWebParts>-->
+            <!--<ft:preferredWebParts>-->
+                <!--<ft:webPart>-->
+                    <!--<ft:name>Lab Settings</ft:name>-->
+                    <!--<ft:location>body</ft:location>-->
+                <!--</ft:webPart>-->
+                <!--<ft:webPart>-->
+                    <!--<ft:name>Lab Tools</ft:name>-->
+                    <!--<ft:location>right</ft:location>-->
+                <!--</ft:webPart>-->
+            <!--</ft:preferredWebParts>-->
+        <!--</ft:folderTab>-->
+    </ft:folderTabs>
+    <ft:modules>
+        <ft:moduleName>Laboratory</ft:moduleName>
+    </ft:modules>
+    <ft:defaultModule>Laboratory</ft:defaultModule>
+    <ft:forceAssayUploadIntoWorkbooks>true</ft:forceAssayUploadIntoWorkbooks>
+</ft:folderType>

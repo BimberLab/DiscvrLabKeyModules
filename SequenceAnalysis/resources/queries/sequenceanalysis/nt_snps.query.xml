@@ -1,0 +1,29 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="nt_snps" tableDbType="TABLE">
+                <columns>
+                      <column columnName="aa_snps" wrappedColumnName="rowid">
+                        <columnTitle>AA SNPs</columnTitle>
+                        <isUnselectable>true</isUnselectable>
+                        <fk>
+                          <fkDbSchema>sequenceanalysis</fkDbSchema>
+                          <fkTable>aa_snps</fkTable>
+                          <fkColumnName>rowid</fkColumnName>
+                          <fkMultiValued>junction</fkMultiValued>
+                          <fkJunctionLookup>nt_snp_id</fkJunctionLookup>
+                        </fk>
+                      </column>
+                      <column columnName="alignment_id">
+                          <columnTitle>Alignment Id</columnTitle>
+                          <url>/query/executeQuery.view?
+                              schemaName=sequenceanalysis&amp;
+                              query.queryName=sequence_alignments&amp;
+                              query.rowid~eq=${alignment_id}&amp;
+                          </url>
+                      </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

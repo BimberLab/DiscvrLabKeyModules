@@ -1,0 +1,43 @@
+/*
+ * Copyright (c) 2012 LabKey Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+select
+  a.analysis_id,
+  a.lineages,
+  max(a.totalLineages) as totalLineages,
+
+  sum(a.total) as total,
+  max(a.total_reads) as total_reads,
+  round(100 * (cast(sum(a.total) as float) / cast(max(a.total_reads) as float)), 2) as percent,
+
+FROM (
+
+  select
+    a.analysis_id,
+    a.rowid,
+
+    group_concat(distinct j.ref_nt_id.lineage, chr(10)) as lineages,
+    count(distinct j.ref_nt_id.lineage) as totalLineages,
+
+    total,
+    cast((select sum(total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = a.analysis_id) as integer) as total_reads,
+
+  from sequenceanalysis.alignment_summary a
+  left join sequenceanalysis.alignment_summary_junction j ON (j.alignment_id = a.rowid and j.status = true)
+  group by a.analysis_id, a.rowid, a.total
+
+) a
+
+GROUP BY a.analysis_id, a.lineages

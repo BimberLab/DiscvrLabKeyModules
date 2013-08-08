@@ -1,0 +1,6 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart" title="Lab Reports">
+    <view name="reportList"/>
+    <locations>
+        <location name="body"/>
+    </locations>
+</webpart>

@@ -1,0 +1,1 @@
+ALTER TABLE laboratory.subjects ADD source varchar(1000);

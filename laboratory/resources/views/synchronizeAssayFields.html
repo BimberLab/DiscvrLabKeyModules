@@ -1,0 +1,41 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        if (!LABKEY.Security.currentUser.isSystemAdmin){
+            window.location = LABKEY.ActionURL.buildURL('project', 'start', 'home');
+        }
+
+        Laboratory.Utils.getImportMethods({
+            success: function(results){
+                var webpart = <%=webpartContext%>;
+                Ext4.get(webpart.wrapperDivId).update(
+                    'This page allows you to synchronize the fields in each existing assay with their file-based definitions.  When an instance of an assay is created, it has a ' +
+                    'certain set of fields in the batch/run/results domains.  These are based on the reference definition of that assay.  ' +
+                    'Fields defined in that definition generally cannot be edited, and code in that assay may expect them to be present.  If the reference of that assay changes, instances of that assay do not ' +
+                    'generally update automatically.  The links below open a page that will compare all instances of that assay type with the current definition and make updates as needed.  Fields will be added or renamed, but never removed. ' +
+                    '<br><br>' +
+                    '<div id="' + webpart.wrapperDivId + '_assayProps"></div>'
+                )
+                var cfg = {
+                    sections: [{
+                        items: []
+                    }]
+                };
+
+                var items = [];
+                Ext4.each(results.providers, function(provider){
+                    items.push({
+                        url: LABKEY.ActionURL.buildURL('laboratory', 'ensureAssayFields', null, {providerName: provider.name, returnURL: LABKEY.ActionURL.buildURL('laboratory', 'synchronizeAssayFields')}),
+                        name: provider.name
+                    })
+                }, this);
+
+                cfg.sections[0].items = LDK.Utils.sortByProperty(items, 'name', false);
+
+                Ext4.create('LDK.panel.NavPanel', cfg).render(webpart.wrapperDivId + '_assayProps');
+            },
+            scope: this
+        });
+    });
+
+</script>

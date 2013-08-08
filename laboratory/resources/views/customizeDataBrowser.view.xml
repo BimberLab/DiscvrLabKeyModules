@@ -1,0 +1,9 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Customize Data Browser">
+    <permissions>
+        <permission name="admin"/>
+    </permissions>
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="laboratory/panel/CustomizeDataBrowserPanel.js"/>
+    </dependencies>
+</view>

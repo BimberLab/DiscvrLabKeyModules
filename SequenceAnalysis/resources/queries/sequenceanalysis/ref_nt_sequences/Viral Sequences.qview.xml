@@ -1,0 +1,20 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <columns>
+       <column name="name" />
+       <column name="subset">
+           <properties>
+               <property name="columnTitle" value="Strain"/>
+           </properties>
+       </column>
+       <column name="species" />
+       <column name="genbank" />
+       <column name="mol_type" />
+       <column name="sequence"/>
+   </columns>
+   <sorts>
+       <sort column="name"/>
+   </sorts>
+   <filters>
+       <filter column="category" operator="eq" value="Virus"/>
+   </filters>
+</customView>

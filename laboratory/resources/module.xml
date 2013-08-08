@@ -1,0 +1,21 @@
+<module xmlns="http://labkey.org/moduleProperties/xml/">
+    <properties>
+        <propertyDescriptor name="GroupName">
+            <description>This is the name of your group, which will appear in various places in the UI</description>
+            <canSetPerContainer>true</canSetPerContainer>
+            <editPermissions>
+                <permission>UPDATE</permission>
+            </editPermissions>
+        </propertyDescriptor>
+    </properties>
+    <requiredModuleContext>
+        <requiredModule name="LDK"/>
+    </requiredModuleContext>
+    <clientDependencies>
+        <dependency path="Ext4"/>
+        <dependency path="Ext4ClientApi"/>
+        <dependency path="clientapi"/>
+        <dependency path="LDK.context"/>
+        <dependency path="laboratory/laboratory"/>
+    </clientDependencies>
+</module>

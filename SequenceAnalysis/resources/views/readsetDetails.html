@@ -1,0 +1,86 @@
+<script type="text/javascript">
+
+Ext4.onReady(function (){
+    var readsetId = LABKEY.ActionURL.getParameter('id');
+
+    if (!readsetId){
+        alert('Must Provide Readset Id');
+        return;
+    }
+
+    var webpart = <%=webpartContext%>;
+
+    Ext4.get(webpart.wrapperDivId).update(
+        '<div id="readsetDetails_'+webpart.wrapperDivId+'"></div>' +
+        '<br>' +
+        '<div id="analyses_'+webpart.wrapperDivId+'"></div>' +
+        '<br>' +
+        '<div id="fileSummary_'+webpart.wrapperDivId+'"></div>' +
+        '<br>' +
+        '<div id="metricsSummary_'+webpart.wrapperDivId+'"></div>' +
+        '<br>' +
+        '<div id="readsetSummary_'+webpart.wrapperDivId+'"></div>'
+    );
+
+    Ext4.create('LDK.panel.DetailsPanel', {
+        title: 'Readset Details',
+        renderTo: 'readsetDetails_'+webpart.wrapperDivId,
+        showBackBtn: false,
+        store: {
+            schemaName: 'sequenceanalysis',
+            queryName: 'sequence_readsets',
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            filterArray: [LABKEY.Filter.create('rowid', readsetId, LABKEY.Filter.Types.EQUAL)]
+        }
+    });
+
+    LABKEY.Query.selectRows({
+        schemaName: 'sequenceanalysis',
+        queryName: 'sequence_readsets',
+        containerPath: Laboratory.Utils.getQueryContainerPath(),
+        columns: 'rowid,name,readset,runid,runid/name',
+        filterArray: [LABKEY.Filter.create('rowid', readsetId, LABKEY.Filter.Types.EQUAL)],
+        scope: this,
+        successCallback: onSuccess
+    });
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'Analyses Using This Readset',
+        schemaName: 'sequenceanalysis',
+        queryName: 'sequence_analyses',
+        maxRows: 10,
+        containerPath: Laboratory.Utils.getQueryContainerPath(),
+        //columns: 'rowid,data,role,data/downloadlink',
+        filterArray: [LABKEY.Filter.create('readset', readsetId, LABKEY.Filter.Types.EQUAL)]
+     }).render('analyses_'+webpart.wrapperDivId);
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'Quality Metrics',
+        schemaName: 'sequenceanalysis',
+        queryName: 'quality_metrics',
+        maxRows: 10,
+        containerPath: Laboratory.Utils.getQueryContainerPath(),
+        columns: 'fileid,metricname,metricvalue,qualvalue,comment,workbook,readset,runid',
+        filterArray: [LABKEY.Filter.create('readset', readsetId, LABKEY.Filter.Types.EQUAL)]
+     }).render('metricsSummary_'+webpart.wrapperDivId);
+
+    function onSuccess(data){
+        if(!data.rows.length) return;
+
+        var row = data.rows[0];
+
+        if(row.runid){
+            LDK.Utils.getReadOnlyQWP({
+                title: 'Files Created',
+                schemaName: 'exp',
+                queryName: 'datainputs',
+                maxRows: 10,
+                containerPath: Laboratory.Utils.getQueryContainerPath(),
+                columns: 'rowid,data,role,data/downloadlink',
+                filterArray: [LABKEY.Filter.create('TargetProtocolApplication/Run', row.runid, LABKEY.Filter.Types.EQUAL)]
+             }).render('fileSummary_'+webpart.wrapperDivId);
+        }
+    }
+});
+
+</script>

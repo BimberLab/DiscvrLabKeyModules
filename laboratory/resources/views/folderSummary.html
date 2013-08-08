@@ -1,0 +1,56 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+
+        if (LABKEY.Security.currentContainer.type == 'workbook')
+            LABKEY.Utils.setWebpartTitle("Workbook Summary", webpart.id);
+
+        Ext4.get(webpart.wrapperDivId).update('Loading...');
+
+        Laboratory.Utils.getDataSummary({
+            scope: this,
+            success: function(results){
+                Ext4.get(webpart.wrapperDivId).update();
+
+                var config = {
+                    renderTo: webpart.wrapperDivId,
+                    width: '75%',
+                    defaults: {
+                        border: false
+                    },
+                    items: [{
+                        html: ''
+                    },{
+                        xtype: 'ldk-navpanel',
+                        sections: []
+                    }]
+                };
+
+                if (LABKEY.Security.currentContainer.type == 'workbook'){
+                    Ext4.apply(config.items[0], {
+                        html: 'Below is a summary of the items loaded into this workbook, not the entire project.  To view the entire project, click the \'Overview\' tab above.',
+                        style: 'padding: 5px;padding-bottom:15px;'
+                    });
+                }
+
+                if(Ext4.isArray(results.data) && results.data.length){
+                    config.items[1].sections.push({
+                        header: 'Types of Data',
+                        items: results.data
+                    });
+                }
+
+                if(Ext4.isArray(results.samples) && results.samples.length){
+                    config.items[1].sections.push({
+                        header: 'Samples and Materials',
+                        items: results.samples
+                    });
+                }
+
+                Ext4.create('LDK.panel.NavPanel', config);
+            }
+        });
+    });
+
+</script>

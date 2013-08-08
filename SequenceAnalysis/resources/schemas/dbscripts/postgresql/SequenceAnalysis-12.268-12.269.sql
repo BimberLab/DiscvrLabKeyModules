@@ -1,0 +1,2 @@
+CREATE INDEX alignment_summary_analysis_id ON sequenceanalysis.alignment_summary (analysis_id);
+CREATE INDEX alignment_summary_junction_analysis_id ON sequenceanalysis.alignment_summary_junction (analysis_id);

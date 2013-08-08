@@ -1,0 +1,30 @@
+<folderType xmlns="http://labkey.org/data/xml/folderType">
+    <name>Sequence Analysis</name>
+    <description>The default folder layout for the sequence analysis module</description>
+    <requiredWebParts>
+        <!--<webPart>-->
+            <!--<name>Workbook Description</name>-->
+            <!--<location>body</location>-->
+        <!--</webPart>-->
+    </requiredWebParts>
+    <preferredWebParts>
+        <webPart>
+            <name>SequenceAnalysis</name>
+            <location>body</location>
+        </webPart>
+        <webPart>
+            <name>Lab Tools</name>
+            <location>right</location>
+        </webPart>
+    </preferredWebParts>
+    <modules>
+        <moduleName>SequenceAnalysis</moduleName>
+        <moduleName>Laboratory</moduleName>
+        <moduleName>Query</moduleName>
+        <moduleName>Pipeline</moduleName>
+        <moduleName>Core</moduleName>
+    </modules>
+    <defaultModule>Core</defaultModule>
+    <!--<workbookType>true</workbookType>-->
+    <folderIconPath>/sequenceanalysis/icons/dna_folder.png</folderIconPath>
+</folderType>

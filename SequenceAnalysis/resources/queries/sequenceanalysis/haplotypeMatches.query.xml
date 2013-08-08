@@ -1,0 +1,37 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="haplotype_matches" tableDbType="TABLE">
+                <tableTitle>Matching Haplotypes</tableTitle>
+                <columns>
+                    <column columnName="haplotype">
+                        <url>/query/executeQuery.view?schemaName=sequenceanalysis&amp;query.queryName=alignment_summary_grouped&amp;query.analysis_id/rowid~eq=${analysis_id}&amp;query.percent~gte=1</url>
+                    </column>
+                    <column columnName="totalLineagesRequiredByHaplotype">
+                        <columnTitle>Number of Required Lineages</columnTitle>
+                        <url>/query/executeQuery.view?schemaName=sequenceanalysis&amp;query.queryName=haplotype_sequences&amp;query.haplotype~eq=${haplotype}</url>
+                    </column>
+                    <column columnName="lineagesPresent">
+                        <displayWidth>150</displayWidth>
+                    </column>
+                    <column columnName="lineagesDefinedInHaplotype">
+                        <columnTitle>Lineages In Haplotype Definition</columnTitle>
+                        <displayWidth>150</displayWidth>
+                    </column>
+                    <column columnName="requiredLineages">
+                        <columnTitle>Lineages Required By Haplotype</columnTitle>
+                        <displayWidth>150</displayWidth>
+                    </column>
+                    <column columnName="pctFound">
+                        <columnTitle>Percent Found</columnTitle>
+                    </column>
+                </columns>
+                <buttonBarOptions includeStandardButtons="true">
+                    <item text=" " requiresSelection="true" insertPosition="end">
+                        <onClick>javascript:void(0);</onClick>
+                    </item>
+                </buttonBarOptions>
+            </table>
+        </tables>
+    </metadata>
+</query>

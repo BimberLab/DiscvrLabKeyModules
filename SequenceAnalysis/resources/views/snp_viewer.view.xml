@@ -1,0 +1,12 @@
+<view xmlns="http://labkey.org/data/xml/view" title="SNP Viewer" frame="portal">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis"/>
+        <dependency path="LDK/ux/ColorField.js"/>
+        <dependency path="ux/CheckCombo/CheckCombo.js"/>
+        <dependency path="ux/CheckCombo/CheckCombo.css"/>
+        <dependency path="SequenceAnalysis/panel/snp_viewer.css"/>
+        <dependency path="SequenceAnalysis/panel/SnpAlignmentConfigPanel.js"/>
+        <dependency path="SequenceAnalysis/panel/SnpAlignmentPanel.js"/>
+    </dependencies>
+</view>

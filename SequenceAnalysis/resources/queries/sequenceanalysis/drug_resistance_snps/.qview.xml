@@ -1,0 +1,49 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <columns>
+       <!--<column name="rowid" />-->
+       <column name="analysis_id" />
+       <column name="analysis_id/readset">
+           <properties>
+               <property name="columnTitle" value="Readset Name"/>
+           </properties>
+       </column>
+       <column name="analysis_id/readset/subjectid">
+           <properties>
+               <property name="columnTitle" value="Subject Id"/>
+           </properties>
+       </column>
+       <column name="analysis_id/readset/sampledate">
+           <properties>
+               <property name="columnTitle" value="Sample Date"/>
+           </properties>
+       </column>
+       <!--<column name="ref_nt_id"/>-->
+       <column name="ref_aa_id" />
+
+       <column name="ref_aa_position" />
+       <column name="ref_aa_insert_index" />
+
+       <column name="ref_aa" />
+       <column name="q_aa" />
+       <column name="ref_nt_positions" />
+
+       <column name="readcount" />
+       <column name="depth" />
+       <!--<column name="incompletecodons" />-->
+       <column name="adj_depth" />
+
+
+       <column name="pct" />
+
+       <column name="class" />
+       <column name="drug" />
+       <column name="analysis_id/workbook" />
+   </columns>
+   <sorts>
+       <sort column="analysis_id/readset/sampleid/samplename"/>
+       <sort column="ref_nt_id/name"/>
+       <sort column="ref_aa_id/name"/>
+       <sort column="ref_aa_position"/>
+       <sort column="ref_aa_insert_index"/>
+   </sorts>
+</customView>

@@ -1,0 +1,13 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="virus_strains" tableDbType="TABLE">
+                <tableTitle>Virus Strains</tableTitle>
+                <tableUrl>/sequenceanalysis/virusStrainDetails.view?virus_strain=${virus_strain}</tableUrl>
+                <columns>
+
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

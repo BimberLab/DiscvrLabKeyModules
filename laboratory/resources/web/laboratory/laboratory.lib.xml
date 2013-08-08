@@ -1,0 +1,26 @@
+<libraries xmlns="http://labkey.org/clientLibrary/xml/">
+    <library compileInProductionMode="true">
+        <script path="laboratory/laboratory.js"/>
+        <script path="laboratory/utils.js"/>
+        <script path="laboratory/buttons.js"/>
+        <script path="laboratory/tabbedReports.js"/>
+        <script path="laboratory/panel/DataExplorer.js"/>
+        <script path="laboratory/panel/TextFileUploadPanel.js"/>
+        <script path="laboratory/window/CopyRunWindow.js"/>
+        <script path="laboratory/window/SaveStandardsWindow.js"/>
+        <script path="laboratory/window/AppendStandardsWindow.js"/>
+        <script path="laboratory/window/AssaySpreadsheetImportWindow.js"/>
+        <script path="laboratory/panel/WellLayoutPanel.js"/>
+        <script path="laboratory/window/WellAssignmentWindow.js"/>
+        <script path="laboratory/panel/AbstractAssayPanel.js"/>
+        <script path="laboratory/panel/AssayImportPanel.js"/>
+        <script path="laboratory/panel/AssayTemplatePanel.js"/>
+        <script path="laboratory/window/WorkbookCreationWindow.js"/>
+        <script path="laboratory/window/WorkbookTagsWindow.js"/>
+    </library>
+    <dependencies>
+        <!--NOTE: this is deliberately left empty, even though it will fail without its dependencies-->
+        <!--Rather that depending on this library, code should use laboratory.context, which will provide the dependencies-->
+        <!--This ensures scripts registered by other modules will also be included-->
+    </dependencies>
+</libraries>

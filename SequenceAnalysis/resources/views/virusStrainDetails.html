@@ -1,0 +1,60 @@
+<script type="text/javascript">
+
+Ext4.onReady(function (){
+    if (!LABKEY.ActionURL.getParameter('virus_strain')){
+        alert('Must Provide Viral Strain');
+        return;
+    }
+
+    var panel = Ext4.create('LDK.panel.DetailsPanel', {
+        title: 'Virus Strain Details:',
+        renderTo: 'strainDetails',
+        showBackBtn: false,
+        store: {
+            schemaName: 'sequenceanalysis',
+            queryName: 'virus_strains',
+            filterArray: [LABKEY.Filter.create('virus_strain', LABKEY.ActionURL.getParameter('virus_strain'), LABKEY.Filter.Types.EQUAL)]
+        }
+    });
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'NT Sequences',
+        schemaName: 'sequenceanalysis',
+        queryName: 'Ref_NT_Sequences',
+        filterArray: [LABKEY.Filter.create('subset', LABKEY.ActionURL.getParameter('virus_strain'), LABKEY.Filter.Types.EQUAL)],
+        sort: 'name'
+     }).render('ntGrid');
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'Virus Proteins',
+        schemaName: 'sequenceanalysis',
+        queryName: 'ref_aa_sequences',
+        filterArray: [LABKEY.Filter.create('ref_nt_id/subset', LABKEY.ActionURL.getParameter('virus_strain'), LABKEY.Filter.Types.EQUAL)],
+        sort: 'ref_nt_id/subset,name'
+     }).render('aaGrid');
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'AA Features',
+        schemaName: 'sequenceanalysis',
+        queryName: 'ref_aa_features',
+        filterArray: [LABKEY.Filter.create('ref_nt_id/subset', LABKEY.ActionURL.getParameter('virus_strain'), LABKEY.Filter.Types.EQUAL)],
+        sort: 'ref_nt_id/subset,name'
+     }).render('aaFeaturesGrid');
+});
+
+</script>
+
+
+<div id='strainDetails'></div>
+<p/>
+
+<div id='ntGrid'></div>
+<p/>
+
+<div id='aaGrid'></div>
+<p/>
+
+<div id='aaFeaturesGrid'></div>
+<p/>
+
+<div id='epitopesGrid'></div>

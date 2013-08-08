@@ -1,0 +1,40 @@
+<templateSchema sourceSchemaName="sequenceanalysis" xmlns="http://labkey.org/data/xml/externalSchema" xmlns:cv="http://labkey.org/data/xml/queryCustomView">
+    <tables>
+        <tableName>MHC_Data_Unified</tableName>
+        <tableName>MHC_Data_Raw</tableName>
+        <tableName>alignment_summary_by_lineage</tableName>
+        <tableName>alignment_summary_grouped</tableName>
+        <tableName>alignment_summary</tableName>
+    </tables>
+    <metadata>
+        <ns:tables xmlns:ns="http://labkey.org/data/xml">
+            <ns:table tableName="MHC_Data_Unified" tableDbType="NOT_IN_DB">
+                <ns:columns>
+                    <ns:column columnName="Id">
+                        <ns:fk>
+                            <ns:fkDbSchema>study</ns:fkDbSchema>
+                            <ns:fkTable>Animal</ns:fkTable>
+                            <ns:fkColumnName>Id</ns:fkColumnName>
+                        </ns:fk>
+                    </ns:column>
+                </ns:columns>
+            </ns:table>
+            <ns:table tableName="alignment_summary_by_lineage" tableDbType="NOT_IN_DB">
+                <ns:filters>
+                    <cv:filter column="analysis_id/makePublic" operator="eq" value="true"/>
+                </ns:filters>
+                <ns:columns>
+
+                </ns:columns>
+            </ns:table>
+            <ns:table tableName="alignment_summary_grouped" tableDbType="NOT_IN_DB">
+                <ns:filters>
+                    <cv:filter column="analysis_id/makePublic" operator="eq" value="true"/>
+                </ns:filters>
+                <ns:columns>
+
+                </ns:columns>
+            </ns:table>
+        </ns:tables>
+    </metadata>
+</templateSchema>

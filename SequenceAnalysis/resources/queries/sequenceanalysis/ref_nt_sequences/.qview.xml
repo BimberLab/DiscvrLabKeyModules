@@ -1,0 +1,21 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <columns>
+       <column name="rowid" />
+       <column name="name" />
+       <column name="category" />
+       <column name="subset" />
+       <column name="locus" />
+       <column name="lineage" />
+       <column name="species" />
+       <column name="genbank" />
+       <column name="ipd_accession" />
+       <column name="mol_type" />
+       <column name="geographic_origin" />
+       <column name="comments" />
+       <column name="aliases" />
+       <!--<column name="sequence"/>-->
+   </columns>
+   <sorts>
+       <sort column="name"/>
+   </sorts>
+</customView>

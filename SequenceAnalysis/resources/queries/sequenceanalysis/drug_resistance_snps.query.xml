@@ -1,0 +1,68 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="drug_resistance_snps" tableDbType="TABLE">
+                <tableTitle>Drug Resistance SNPs</tableTitle>
+                <columns>
+                      <column columnName="ref_nt_id">
+                          <columnTitle>Ref NT Id</columnTitle>
+                          <url>/query/executeQuery.view?
+                              schemaName=sequenceanalysis&amp;
+                              query.queryName=ref_nt_sequences&amp;
+                              query.viewName=Viral Sequences&amp;
+                              query.rowid~eq=${ref_nt_id}&amp;
+                          </url>
+                      </column>
+                      <column columnName="ref_aa_id">
+                          <columnTitle>Ref AA Id</columnTitle>
+                          <url>/query/executeQuery.view?
+                              schemaName=sequenceanalysis&amp;
+                              query.queryName=ref_aa_sequences&amp;
+                              query.rowid~eq=${ref_aa_id}&amp;
+                          </url>
+                      </column>
+                      <column columnName="ref_aa_position">
+                          <columnTitle>Ref AA Position</columnTitle>
+                          <url>/query/executeQuery.view?
+                              schemaName=sequenceanalysis&amp;
+                              query.queryName=aa_snps&amp;
+                              query.analysis_id~eq=${analysis_id}&amp;
+                              query.ref_aa_id~eq=${ref_aa_id}&amp;
+                              query.ref_aa_position~eq=${ref_aa_position}&amp;
+                              query.ref_aa_insert_index~eq=${ref_aa_insert_index}&amp;
+                          </url>
+                      </column>
+                      <column columnName="ref_aa_insert_index">
+                          <columnTitle>Ref AA Index</columnTitle>
+                          <url>/query/executeQuery.view?
+                              schemaName=sequenceanalysis&amp;
+                              query.queryName=aa_snps&amp;
+                              query.analysis_id~eq=${analysis_id}&amp;
+                              query.ref_aa_id~eq=${ref_aa_id}&amp;
+                              query.ref_aa_position~eq=${ref_aa_position}&amp;
+                              query.ref_aa_insert_index~eq=${ref_aa_insert_index}&amp;
+                          </url>
+                      </column>
+                      <column columnName="q_aa">
+                          <columnTitle>Query AA</columnTitle>
+                      </column>
+                      <column columnName="q_codon">
+                          <columnTitle>Query Codon</columnTitle>
+                      </column>
+                      <column columnName="ref_aa">
+                          <columnTitle>Ref AA</columnTitle>
+                      </column>
+                      <column columnName="total_reads">
+                          <columnTitle>Total Reads</columnTitle>
+                      </column>
+                      <column columnName="nt_positions">
+                          <columnTitle>NT Positions</columnTitle>
+                      </column>
+                      <column columnName="incompletecodons">
+                          <columnTitle>Incomplete Codons</columnTitle>
+                      </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -1,0 +1,15 @@
+<script type="text/javascript">
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+        var assayId = LABKEY.ActionURL.getParameter('assayId');
+
+        if (!assayId){
+            Ext4.get(webpart.wrapperDivId).update('Error: must provide the rowId of the assay');
+            return;
+        }
+
+        Ext4.create('Laboratory.panel.AssayTemplatePanel', {
+            assayId: assayId
+        }).render(webpart.wrapperDivId);
+    });
+</script>

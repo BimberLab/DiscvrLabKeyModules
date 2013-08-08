@@ -1,0 +1,33 @@
+<module xmlns="http://labkey.org/moduleProperties/xml/">
+    <properties>
+        <propertyDescriptor name="DNABankContainer">
+            <canSetPerContainer>true</canSetPerContainer>
+            <editPermissions>
+                <permission>ADMIN</permission>
+            </editPermissions>
+            <description>This is the containerPath to the folder holding the primary data for DNA Bank.  Use of slashes is very important - it should be in the format '/myProject/folder'</description>
+        </propertyDescriptor>
+        <propertyDescriptor name="MHCContainer">
+            <canSetPerContainer>true</canSetPerContainer>
+            <editPermissions>
+                <permission>ADMIN</permission>
+            </editPermissions>
+            <description>This is the containerPath to the folder holding the primary data for MHC Typing.  Use of slashes is very important - it should be in the format '/myProject/folder'</description>
+        </propertyDescriptor>
+        <propertyDescriptor name="ParentageContainer">
+            <canSetPerContainer>true</canSetPerContainer>
+            <editPermissions>
+                <permission>ADMIN</permission>
+            </editPermissions>
+            <description>This is the containerPath to the folder holding the primary data for Parentage.  Use of slashes is very important - it should be in the format '/myProject/folder'</description>
+        </propertyDescriptor>
+    </properties>
+    <clientDependencies>
+        <dependency path="Ext4ClientAPI"/>
+    </clientDependencies>
+    <requiredModuleContext>
+        <requiredModule name="LDK" />
+        <requiredModule name="EHR" />
+        <requiredModule name="Laboratory" />
+    </requiredModuleContext>
+</module>

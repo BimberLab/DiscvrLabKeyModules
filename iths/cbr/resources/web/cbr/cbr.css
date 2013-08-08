@@ -1,0 +1,9 @@
+.row-needsattention .td {
+    background-color: red;
+    color: red;
+}
+
+.row-disabled .div {
+    background-color: #bbb;
+    opacity:0.6;
+}

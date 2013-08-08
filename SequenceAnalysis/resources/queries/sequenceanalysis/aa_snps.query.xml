@@ -1,0 +1,72 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="aa_snps" tableDbType="TABLE">
+                <columns>
+                      <column columnName="ref_nt_id">
+                          <columnTitle>Ref NT Id</columnTitle>
+                          <url>/query/executeQuery.view?
+                              schemaName=sequenceanalysis&amp;
+                              query.queryName=ref_nt_sequences&amp;
+                              query.viewName=Viral Sequences&amp;
+                              query.rowid~eq=${ref_nt_id}&amp;
+                          </url>
+                      </column>
+                      <column columnName="analysis_id">
+                          <url>/query/executeQuery.view?
+                              schemaName=sequenceanalysis&amp;
+                              query.queryName=sequence_analyses&amp;
+                              query.rowid~eq=${analysis_id}&amp;
+                          </url>
+                      </column>
+                    <column columnName="alignment_id">
+                        <columnTitle>Alignment Id</columnTitle>
+                        <url>/query/executeQuery.view?
+                            schemaName=sequenceanalysis&amp;
+                            query.queryName=sequence_alignments&amp;
+                            query.rowid~eq=${alignment_id}&amp;
+                        </url>
+                    </column>
+                      <column columnName="nt_snp_id">
+                          <columnTitle>NT SNP Id</columnTitle>
+                          <url>/query/executeQuery.view?
+                              schemaName=sequenceanalysis&amp;
+                              query.queryName=nt_snps&amp;
+                              query.rowid~eq=${nt_snp_id}&amp;
+                          </url>
+                      </column>
+                      <column columnName="ref_aa_id">
+                          <columnTitle>Ref AA Id</columnTitle>
+                          <url>/query/executeQuery.view?
+                              schemaName=sequenceanalysis&amp;
+                              query.queryName=ref_aa_sequences&amp;
+                              query.rowid~eq=${ref_aa_id}&amp;
+                          </url>
+                      </column>
+                      <column columnName="ref_nt_position">
+                          <columnTitle>Ref NT Position</columnTitle>
+                          <url>/query/executeQuery.view?
+                              schemaName=sequenceanalysis&amp;
+                              query.queryName=nt_snps&amp;
+                              query.analysis_id~eq=${analysis_id}&amp;
+                              query.ref_nt_id~eq=${ref_nt_id}&amp;
+                              query.ref_nt_position~eq=${ref_nt_position}&amp;
+                              query.ref_nt_insert_index~eq=${ref_nt_insert_index}&amp;
+                          </url>
+                      </column>
+                      <column columnName="ref_nt_insert_index">
+                          <columnTitle>Ref NT Index</columnTitle>
+                          <url>/query/executeQuery.view?
+                              schemaName=sequenceanalysis&amp;
+                              query.queryName=nt_snps&amp;
+                              query.analysis_id~eq=${analysis_id}&amp;
+                              query.ref_nt_id~eq=${ref_nt_id}&amp;
+                              query.ref_nt_position~eq=${ref_nt_position}&amp;
+                              query.ref_nt_insert_index~eq=${ref_nt_insert_index}&amp;
+                          </url>
+                      </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

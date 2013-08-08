@@ -1,0 +1,6 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart" title="Folder Summary">
+   <view name="folderSummary"/>
+   <locations>
+		<location name="body"/>
+   </locations>
+</webpart>

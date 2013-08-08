@@ -1,0 +1,29 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    var webpart = <%=webpartContext%>;
+    var freezerName = LABKEY.ActionURL.getParameter('freezerName');
+    Ext4.get(webpart.wrapperDivId).update(
+        '<div id="' + webpart.wrapperDivId + '_details"></div>' +
+        '<div style="margin-bottom: 10px;"></div>' +
+        '<div id="' + webpart.wrapperDivId + '_usage"></div>'
+    );
+
+    Ext4.create('LDK.panel.DetailsPanel', {
+        title: 'Freezer Information',
+        store: {
+            schemaName: 'laboratory',
+            queryName: 'freezers',
+            filterArray: [LABKEY.Filter.create('name', freezerName, LABKEY.Filter.Types.EQUALS)]
+        }
+    }).render(webpart.wrapperDivId + '_details');
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'Freezer Usage By Box',
+        schemaName: 'laboratory',
+        queryName: 'freezer_usage_by_box',
+        filterArray: [LABKEY.Filter.create('freezer', freezerName, LABKEY.Filter.Types.EQUALS)]
+    }).render(webpart.wrapperDivId + '_usage');
+});
+
+</script>

@@ -1,0 +1,6 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart" title="Lab Workbooks">
+    <view name="labWorkbooks"/>
+   <locations>
+		<location name="body"/>
+   </locations>
+</webpart>

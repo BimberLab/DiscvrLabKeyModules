@@ -1,0 +1,24 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="workbookId"/>
+        <column name="container/Title">
+            <properties>
+                <property name="columnTitle" value="Title"/>
+            </properties>
+        </column>
+        <column name="container/Description">
+            <properties>
+                <property name="columnTitle" value="Description"/>
+            </properties>
+        </column>
+        <column name="tags" />
+        <column name="container/Created" />
+        <column name="container/CreatedBy" />
+    </columns>
+    <filters>
+        <filter column="container/Name" operator="isnonblank"/>
+    </filters>
+    <sorts>
+        <sort column="-workbookId"/>
+    </sorts>
+</customView>

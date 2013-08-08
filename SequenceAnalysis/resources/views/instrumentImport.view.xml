@@ -1,0 +1,17 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Analyze Sequence Data">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis.css"/>
+        <dependency path="SequenceAnalysis/Utils.js"/>
+        <dependency path="SequenceAnalysis/panel/AdapterPanel.js"/>
+        <dependency path="SequenceAnalysis/panel/AlignerPanel.js"/>
+        <dependency path="SequenceAnalysis/panel/AssemblyPanel.js"/>
+        <dependency path="SequenceAnalysis/panel/DNAPanel.js"/>
+        <dependency path="SequenceAnalysis/panel/RefSequencePanel.js"/>
+        <dependency path="SequenceAnalysis/panel/SamplePanel.js"/>
+        <dependency path="SequenceAnalysis/panel/SnpCallPanel.js"/>
+        <dependency path="SequenceAnalysis/panel/BaseSequencePanel.js"/>
+        <dependency path="SequenceAnalysis/panel/InstrumentImportPanel.js"/>
+    </dependencies>
+</view>

@@ -1,0 +1,39 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="alignment_summary_grouped" tableDbType="TABLE">
+                <tableTitle>Alignment Summary</tableTitle>
+                <pkColumnName>rowids</pkColumnName>
+                <columns>
+                    <column columnName="rowids">
+                        <isKeyField>true</isKeyField>
+                    </column>
+                    <column columnName="alleles">
+                        <displayWidth>200</displayWidth>
+                    </column>
+                    <column columnName="lineages">
+                        <displayWidth>150</displayWidth>
+                    </column>
+                    <column columnName="total_forward">
+                        <columnTitle>Total First-Mate Reads</columnTitle>
+                        <description>The column shows the number of alignments that contain a first-mate or singleton read</description>
+                    </column>
+                    <column columnName="total_reverse">
+                        <columnTitle>Total Second-Mate Reads</columnTitle>
+                        <description>The column shows the number of alignments that contain a second-mate read</description>
+                    </column>
+                    <column columnName="valid_pairs">
+                        <columnTitle>Total Valid Pairs</columnTitle>
+                        <description>The column shows the number of alignments that contain valid paired reads (both forward and reverse)</description>
+                    </column>
+                </columns>
+                <buttonBarOptions includeStandardButtons="true">
+                    <includeScript>/sequenceanalysis/sequenceanalysisButtons.js</includeScript>
+                    <item requiresSelection="true" text="Edit Alignments" insertPosition="end" permission="UPDATE">
+                        <onClick>SequenceAnalysis.Buttons.deactivateAlignments(dataRegionName)</onClick>
+                    </item>
+                </buttonBarOptions>
+            </table>
+        </tables>
+    </metadata>
+</query>

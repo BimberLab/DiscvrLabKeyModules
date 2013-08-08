@@ -1,0 +1,6 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Reports">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="laboratory/panel/ReportListPanel.js"/>
+    </dependencies>
+</view>

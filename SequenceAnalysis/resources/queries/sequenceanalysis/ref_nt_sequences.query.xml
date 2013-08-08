@@ -1,0 +1,29 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+        <table tableName="ref_nt_sequences" tableDbType="TABLE">
+            <buttonBarOptions includeStandardButtons="false">
+                <includeScript>/sequenceanalysis/sequenceanalysisButtons.js</includeScript>
+                <item text="Views">
+                    <originalText>Views</originalText>
+                </item>
+                <!--<item text="Insert New" permission="ADMIN">-->
+                    <!--<target>/sequenceanalysis/insertRefSequence.view</target>-->
+                <!--</item>-->
+                <item text="Delete" permission="ADMIN" requiresSelection="true">
+                    <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
+                </item>
+                <item text="Export">
+                    <originalText>Export</originalText>
+                </item>
+                <item text="Print">
+                    <originalText>Print</originalText>
+                </item>
+                <item text="Page Size">
+                    <originalText>Page Size</originalText>
+                </item>
+            </buttonBarOptions>
+        </table>
+    </tables>
+    </metadata>
+</query>

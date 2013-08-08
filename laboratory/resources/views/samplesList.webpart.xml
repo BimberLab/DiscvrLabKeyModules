@@ -1,0 +1,7 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart" title="Samples and Materials">
+    <view name="samplesList"/>
+   <locations>
+		<location name="body"/>
+		<!--<location name="menu"/>-->
+   </locations>
+</webpart>

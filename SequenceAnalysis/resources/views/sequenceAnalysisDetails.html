@@ -1,0 +1,208 @@
+<script type="text/javascript">
+
+Ext4.onReady(function (){
+    var analysisId = LABKEY.ActionURL.getParameter('id');
+
+    if (!analysisId){
+        alert('Must Provide Analysis Id');
+        return;
+    }
+
+        var webpart = <%=webpartContext%>;
+
+        Ext4.get(webpart.wrapperDivId).update(
+            '<div id="analysisDetails_'+webpart.wrapperDivId+'"></div>' +
+            '<div style="margin-bottom: 10px;"></div>' +
+            '<div id="sampleDetails_'+webpart.wrapperDivId+'"></div>' +
+            '<div style="margin-bottom: 10px;"></div>' +
+            //'<div id="analysisNav_'+webpart.wrapperDivId+'"></div>' +
+            //'<br>' +
+            '<div id="fileSummary_'+webpart.wrapperDivId+'"></div>' +
+            '<br>' +
+            '<div id="qualityMetrics_'+webpart.wrapperDivId+'"></div>' +
+            '<div style="margin-bottom: 10px;"></div>' +
+            '<div id="analysisSummary_'+webpart.wrapperDivId+'"></div>' +
+            '<div style="margin-bottom: 10px;"></div>' +
+            '<div id="coverageReportDiv_'+webpart.wrapperDivId+'">Loading Coverage Summary...</div>' +
+            '<div style="margin-bottom: 10px;"></div>' +
+            '<div id="ntSnpReportDiv_'+webpart.wrapperDivId+'">Loading NT SNP Summary...</div>' +
+            '<div style="margin-bottom: 10px;"></div>' +
+            '<div id="readsetDiv_'+webpart.wrapperDivId+'"/>'
+        );
+
+    Ext4.create('LDK.panel.DetailsPanel', {
+        title: 'Analysis Run Details:',
+        showBackBtn: false,
+        renderTo: 'analysisDetails_'+webpart.wrapperDivId,
+        store: {
+            schemaName: 'sequenceanalysis',
+            queryName: 'sequence_analyses',
+            filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)]
+        }
+    });
+
+    LABKEY.Query.selectRows({
+        schemaName: 'sequenceanalysis',
+        queryName: 'sequence_analyses',
+        columns: 'rowid,readset,runid,runid/name',
+        filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)],
+        scope: this,
+        successCallback: onSuccess
+    });
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'Quality Metrics',
+        schemaName: 'sequenceanalysis',
+        queryName: 'quality_metrics',
+        maxRows: 10,
+        containerPath: Laboratory.Utils.getQueryContainerPath(),
+        columns: 'fileid,metricname,metricvalue,qualvalue,comment,workbook,readset,runid',
+        filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)]
+    }).render('qualityMetrics_'+webpart.wrapperDivId);
+
+
+    function onSuccess(data){
+        if(!data.rows.length) return;
+
+        var row = data.rows[0];
+        var readset = row.readset;
+
+//        var panel = Ext4.create('LDK.panel.WebpartPanel', {
+//            title: 'Reports',
+//            items: [{
+//                xtype: 'ldk-navpanel',
+//                border: false,
+//                colWidth: 450,
+//                sections: [
+//                    {header: 'Raw Data',
+//                    items: [
+//                        {name: 'View Files', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=exp&query.run~eq='+row.runid+'&query.queryName=datas'}
+//                    ]},
+//                    {header: 'Alignment Reports',
+//                    items: [
+//                        {name: 'View/Search All Alignments', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=sequenceanalysis&query.analysis_id~eq='+analysisId+'&query.queryName=sequence_alignments'},
+//                        {name: 'View/Search Sequence Coverage', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=sequenceanalysis&query.analysis_id~eq='+analysisId+'&query.queryName=sequence_coverage'},
+//                        {name: 'Alignment Summary, By Read', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=sequenceanalysis&query.analysis_id~eq='+analysisId+'&query.queryName=alignment_summary_grouped'}
+//                    ]},
+//                    {header: 'NT SNP Reports',
+//                    items: [
+//                        {name: 'NT Mutation Summary, By Position and Base', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=sequenceanalysis&query.analysis_id~eq='+analysisId+'&query.queryName=nt_snps_by_pos'}
+//                    ]},
+//                    {header: 'AA SNP Reports',
+//                    items: [
+//                        {name: 'AA Mutation Summary, By Position and Codon', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=sequenceanalysis&query.analysis_id~eq='+analysisId+'&query.queryName=aa_snps_by_codon'},
+//                        {name: 'Predicted Drug Resistance Mutations', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=sequenceanalysis&query.analysis_id~eq='+analysisId+'&query.queryName=drug_resistance_snps'}
+//                    ]}
+//                ]
+//            }]
+//        }).render('analysisNav_'+webpart.wrapperDivId);
+
+        var panel = Ext4.create('LDK.panel.DetailsPanel', {
+            title: 'Readset Details:',
+            showBackBtn: false,
+            renderTo: 'sampleDetails_'+webpart.wrapperDivId,
+            store: {
+                containerPath: Laboratory.Utils.getQueryContainerPath(),
+                schemaName: 'sequenceanalysis',
+                queryName: 'sequence_readsets',
+                filterArray: [LABKEY.Filter.create('rowid', row.readset, LABKEY.Filter.Types.EQUAL)]
+            }
+        });
+
+        if(row['runid/name']){
+            LABKEY.Query.selectRows({
+                schemaName: 'pipeline',
+                queryName: 'job',
+                containerPath: Laboratory.Utils.getQueryContainerPath(),
+                columns: '*',
+                filterArray: [LABKEY.Filter.create('description', row['runid/name'], LABKEY.Filter.Types.EQUAL)],
+                scope: this,
+                successCallback: function(results){
+                    if(results && results.rows && results.rows[0]){
+                        var jobId = results.rows[0].RowId;
+
+                    }
+                }
+            });
+
+        }
+
+        LDK.Utils.getReadOnlyQWP({
+            title: 'Files Created',
+            schemaName: 'exp',
+            queryName: 'datainputs',
+            maxRows: 10,
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            columns: 'rowid,data,role,data/downloadlink',
+            filterArray: [LABKEY.Filter.create('TargetProtocolApplication/Run', row.runid, LABKEY.Filter.Types.EQUAL)]
+         }).render('fileSummary_'+webpart.wrapperDivId);
+    }
+
+//    new LABKEY.WebPart({
+//        partName: 'Report',
+//        renderTo: 'readSummaryDiv',
+//        partConfig: {
+//            title: 'Alignment Length Distribution',
+//            schemaName: 'sequenceanalysis',
+//            'query.queryName': 'sequence_analyses',
+//            'reportId': 'module:SequenceAnalysis/reports/sequenceanalysis/sequence_analyses/Read Summary.r',
+//            'query.rowid~eq': analysisId,
+//            showSection: 'read_length.png'
+//        },
+//        failure: function(error){
+//            console.log(error)
+//        },
+//        scope: this
+//    }).render();
+
+    LABKEY.WebPart.createReportWebpart({
+        schemaName: 'sequenceanalysis',
+        queryName: 'sequence_analyses',
+        reportName: 'Sequence Coverage Depth Graph',
+        renderTo: 'coverageReportDiv_'+webpart.wrapperDivId,
+        webPartConfig: {
+            title: 'Coverage Depth'
+        },
+        reportProperties: {
+            'query.RowId~eq': analysisId,
+            showSection: 'graph.png'
+        },
+        failure: function(error){
+            console.log(error)
+        },
+        scope: this
+    }).render();
+
+    LABKEY.WebPart.createReportWebpart({
+        schemaName: 'sequenceanalysis',
+        queryName: 'sequence_analyses',
+        reportName: 'NT SNP Summary Graph',
+        renderTo: 'ntSnpReportDiv_'+webpart.wrapperDivId,
+        webPartConfig: {
+            title: 'NT SNP Summary'
+        },
+        reportProperties: {
+            'query.rowid~eq': analysisId,
+            showSection: 'nt_snp_graph.png'
+        },
+        failure: function(error){
+            console.log(error)
+        },
+        scope: this
+    }).render();
+
+    new LABKEY.QueryWebPart({
+        title: 'Result Summary',
+        schemaName: 'sequenceanalysis',
+        queryName: 'sequence_analysis_summary',
+        maxRows: 10,
+        allowChooseQuery: false,
+        showRecordSelectors: true,
+        filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)],
+        scope: this,
+        failure: LDK.Utils.getErrorCallback()
+     }).render('analysisSummary_'+webpart.wrapperDivId);
+
+});
+
+</script>

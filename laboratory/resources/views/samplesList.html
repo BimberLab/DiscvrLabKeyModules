@@ -1,0 +1,63 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    Laboratory.Utils.getDataItems({
+        types: ['samples'],
+        success: onSuccess,
+        scope: this
+    });
+
+    var dataItems;
+    function onSuccess(result){
+        dataItems = result;
+
+        if(result.samples && result.samples.length){
+            var queries = [];
+            Ext4.each(result.samples, function(item){
+                if (item.browseUrl && item.browseUrl.params && item.browseUrl.params['query.queryName']){
+                    Ext4.apply(item, {
+                        schemaName: item.browseUrl.params.schemaName[0],
+                        queryName: item.browseUrl.params['query.queryName'][0]
+                    });
+                    queries.push(item);
+                }
+            }, this);
+
+            Laboratory.Utils.getQueryCounts({
+                success: onFinalSuccess,
+                failure: LDK.Utils.getErrorCallback(),
+                scope: this,
+                queries: queries
+            });
+
+            Laboratory.Utils.getQuerySummaryCounts({
+                schemaName: 'laboratory',
+                queryName: 'samples',
+                fieldNames: ['subjectId', 'sampledate'],
+                success: function(results){
+                    var records = LDK.QueryHelper.getRecordsFromSelectRows(results);
+                    console.log(records);
+                }
+            });
+        }
+        else {
+            onFinalSuccess(result.samples);
+        }
+    }
+
+    function onFinalSuccess(result){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.create('LDK.panel.NavPanel', {
+            renderTo: webpart.wrapperDivId,
+            width: '100%',
+            sections: [{
+                header: 'Samples and Materials',
+                renderer: 'summaryCountRenderer',
+                items: result
+            }]
+        });
+    }
+});
+
+</script>

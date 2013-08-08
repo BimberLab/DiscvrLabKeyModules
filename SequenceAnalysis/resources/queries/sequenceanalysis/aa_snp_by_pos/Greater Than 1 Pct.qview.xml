@@ -1,0 +1,13 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <!--<sorts>-->
+       <!--<sort column="analysis_id/readset/sampleid/samplename"/>-->
+       <!--<sort column="ref_nt_id/name"/>-->
+       <!--<sort column="ref_aa_id/name"/>-->
+       <!--<sort column="ref_aa_position"/>-->
+       <!--<sort column="ref_aa_insert_index"/>-->
+   <!--</sorts>-->
+    <filters>
+        <filter column="adj_percent" operator="gte" value="1"/>
+        <!--<filter column="q_nt" operator="neq" value="N" />-->
+    </filters>
+</customView>

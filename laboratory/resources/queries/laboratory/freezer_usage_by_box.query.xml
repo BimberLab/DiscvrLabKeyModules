@@ -1,0 +1,17 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="freezer_usage_by_box" tableDbType="TABLE">
+                <tableTitle>Freezer Usage By Box</tableTitle>
+                <columns>
+                    <column columnName="total_used">
+                        <url>/query/executeQuery.view?schemaName=laboratory&amp;query.queryName=samples&amp;query.freezer~eq=${freezer}&amp;query.cane~eq=${cane}&amp;query.box~eq=${box}</url>
+                    </column>
+                    <column columnName="container">
+                        <isHidden>true</isHidden>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

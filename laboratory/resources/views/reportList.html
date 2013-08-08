@@ -1,0 +1,10 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+        Ext4.create('Laboratory.panel.ReportListPanel', {
+
+        }).render(webpart.wrapperDivId);
+    });
+
+</script>

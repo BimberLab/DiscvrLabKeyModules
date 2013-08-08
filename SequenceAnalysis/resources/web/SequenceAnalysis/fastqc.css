@@ -1,0 +1,162 @@
+@media screen {
+    div.summary, div.fastqc_overview {
+        top: 3em;
+        margin: 1em 0 0 1em;
+    }
+
+    div.main {
+        top: 4.5em;
+        bottom: 2.3em;
+        left: 18em;
+        right: 0;
+        padding: 0 0 0 1em;
+    }
+
+    div.header {
+        border: 0;
+        margin: 0;
+        padding: 0.5em;
+        font-size: 200%;
+        font-weight: bold;
+        width: 100%;
+    }
+
+    div.footer {
+        background-color: #EEE;
+        border: 0;
+        margin: 0;
+        padding: 0.5em;
+        height: 1.3em;
+        overflow: hidden;
+        font-size: 100%;
+        font-weight: bold;
+        /*position:fixed;*/
+        bottom: 0;
+        width: 100%;
+        z-index: 2;
+    }
+
+    img.indented {
+        margin-left: 1em;
+    }
+}
+
+@media print {
+    .fastqc img {
+        max-width: 100% !important;
+        page-break-inside: avoid;
+    }
+
+    .fastqc h2, .fastqc h3 {
+        page-break-after: avoid;
+    }
+
+    div.header {
+        background-color: #FFF;
+    }
+
+}
+
+/*body {*/
+    /*font-family: sans-serif;*/
+    /*color: #000;*/
+    /*background-color: #FFF;*/
+/*}*/
+
+div.header {
+    border: 0;
+    margin: 0;
+    padding: 0.5em;
+    width: 100%;
+}
+
+#header_title,  #header_title .span, #header_title .h1{
+    display: inline-block;
+    float: left;
+    clear: left;
+}
+
+div.header h3 {
+    font-size: 50%;
+    margin-bottom: 0;
+}
+
+div.summary ul, div.fastqc_overview ul {
+    padding-left: 0;
+    list-style-type: none;
+    margin-left: 1em;
+}
+
+div.fastqc_overview, div.fastqc_overview a {
+    font-weight: bold;
+}
+
+div.summary ul li img {
+    margin-bottom: -0.5em;
+    margin-top: 0.5em;
+}
+
+div.module {
+    padding-bottom: 1.5em;
+    padding-top: 1.5em;
+}
+
+div.footer {
+    /*background-color: #EEE;*/
+    border: 0;
+    margin: 0;
+    padding: 0.5em;
+    font-size: 100%;
+    font-weight: bold;
+    width: 100%;
+}
+
+.fastqc a {
+    color: #000080;
+}
+
+.fastqc a:hover {
+    color: #800000;
+}
+
+.fastqc h2 {
+    color: #800000;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    clear: left;
+}
+
+.fastqc table {
+    margin-left: 1em;
+    text-align: center;
+}
+
+.fastqc th {
+    text-align: center;
+    background-color: #000080;
+    color: #FFF;
+    padding: 0.4em;
+}
+
+.fastqc td {
+    font-family: monospace;
+    text-align: left;
+    background-color: #EEE;
+    color: #000;
+    padding: 0.4em;
+}
+
+.fastqc img {
+    padding-top: 0;
+    margin-top: 0;
+    border-top: 0;
+}
+
+.fastqc p {
+    padding-top: 0;
+    margin-top: 0;
+}
+
+.fastqc h2 img, .summary img {
+    width: 20px;
+}

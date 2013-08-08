@@ -1,0 +1,35 @@
+<!--<script type="text/javascript">-->
+
+<!--LABKEY.requiresExt4ClientAPI();-->
+<!--LABKEY.requiresScript("sequenceanalysis/snp_haplotype.js");-->
+<!--LABKEY.requiresCss("sequenceanalysis/snp_viewer.css");-->
+
+<!--</script>-->
+<script type="text/javascript">
+
+Ext4.onReady(function (){
+    var analysisIds = LABKEY.ActionURL.getParameter('analysisIds');
+
+    if (!analysisIds){
+        alert('Must Provide Analysis Id');
+        return;
+    }
+
+    analysisIds = analysisIds.split(';');
+
+    var webpart = <%=webpartContext%>;
+    Ext4.get(webpart.wrapperDivId).update('This page is designed to study linkage across a complex population such as a viral swarm.  You can enter one or more regions of interest.  The report will scan across all reads that span the region of interest and rebuild their sequence.' +
+        'It will then output all distinct sequences across this region, including their frequency.  It was originally built to study haplotypes across short regions of interest, such cytotoxic T-lymphocyte epitopes, compensatory mutations or drug resistance.' +
+        'This report is meant for research only and is provided without any warranty.' +
+        '<p/>' +
+        SequenceAnalysis.Utils.HEADER_TEXT +
+        '<p/>' +
+        '<div id="snpReportDiv_'+webpart.wrapperDivId+'"></div>');
+
+    new SequenceAnalysis.ext.AlignmentDetailsPanel({
+        analysisIds: analysisIds
+    }).render('snpReportDiv_' + webpart.wrapperDivId);
+
+});
+
+</script>

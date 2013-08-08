@@ -1,0 +1,9 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="MHC_Data_Unified" tableDbType="NOT_IN_DB">
+                <tableTitle>MHC Data</tableTitle>
+            </table>
+        </tables>
+    </metadata>
+</query>

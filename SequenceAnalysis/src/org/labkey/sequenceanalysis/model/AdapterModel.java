@@ -1,0 +1,125 @@
+package org.labkey.sequenceanalysis.model;
+
+import org.biojava3.core.sequence.DNASequence;
+import org.json.JSONArray;
+
+/**
+ * Created with IntelliJ IDEA.
+ * User: bimber
+ * Date: 11/25/12
+ * Time: 12:03 AM
+ */
+public class AdapterModel extends SequenceTag
+{
+    private String _name;
+    private String _sequence;
+    private boolean _trim5;
+    private boolean _trim3;
+    private boolean _palindrome = false;
+
+    public AdapterModel()
+    {
+
+    }
+
+    public static AdapterModel fromJSON(JSONArray adapterJson)
+    {
+        AdapterModel ad = new AdapterModel();
+        ad._name = adapterJson.getString(0);
+        ad._sequence = adapterJson.getString(1);
+        ad._trim5 = adapterJson.getBoolean(2);
+        ad._trim3 = adapterJson.getBoolean(3);
+
+        String mode = adapterJson.getString(4);
+        if(mode.equalsIgnoreCase("palindrome"))
+            ad._palindrome = true;
+
+        return ad;
+    }
+
+    public String getName()
+    {
+        return _name;
+    }
+
+    public String getSequence()
+    {
+        return _sequence;
+    }
+
+    public boolean isTrim5()
+    {
+        return _trim5;
+    }
+
+    public boolean isTrim3()
+    {
+        return _trim3;
+    }
+
+    public boolean isPalindrome()
+    {
+        return _palindrome;
+    }
+
+    public String getFastaLines()
+    {
+        StringBuilder sb = new StringBuilder();
+        if (isPalindrome())
+        {
+            String name = "Prefix" + getName() + "/1";
+            writeSequence(sb, name);
+
+            name = "Prefix" + getName() + "/2";
+            writeSequence(sb, name);
+        }
+        else
+        {
+            writeSequence(sb, getName());
+        }
+
+        return sb.toString();
+    }
+
+    private void writeSequence(StringBuilder sb, String name)
+    {
+        if (_trim5)
+        {
+            sb.append(">").append(name).append(System.getProperty( "line.separator" ));
+            sb.append(getSequence()).append(System.getProperty( "line.separator" ));
+        }
+
+        if (_trim3)
+        {
+            sb.append(">").append(name + "-RC").append(System.getProperty( "line.separator" ));
+            DNASequence seq = new DNASequence(getSequence());
+            sb.append(seq.getReverseComplement().getSequenceAsString()).append(System.getProperty( "line.separator" ));
+        }
+    }
+
+    public void setName(String name)
+    {
+        _name = name;
+    }
+
+    public void setSequence(String sequence)
+    {
+        _sequence = sequence;
+    }
+
+    public void setTrim5(boolean trim5)
+    {
+        _trim5 = trim5;
+    }
+
+    public void setTrim3(boolean trim3)
+    {
+        _trim3 = trim3;
+    }
+
+    public void setPalindrome(boolean palindrome)
+    {
+        _palindrome = palindrome;
+    }
+}
+

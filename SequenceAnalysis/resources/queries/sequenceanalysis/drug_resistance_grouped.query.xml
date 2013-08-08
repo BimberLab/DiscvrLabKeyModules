@@ -1,0 +1,10 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="drug_resistance_grouped" tableDbType="TABLE">
+                <tableTitle>Drug Resistance SNPs</tableTitle>
+                <description>This table displays all drug resistance SNPs, grouped by NT position.</description>
+            </table>
+        </tables>
+    </metadata>
+</query>

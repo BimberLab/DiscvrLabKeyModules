@@ -1,0 +1,55 @@
+<query xmlns="http://labkey.org/data/xml/query">
+  <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="workbooks" tableDbType="TABLE" useColumnOrder="true">
+                <titleColumn>workbookId</titleColumn>
+                <columns>
+                    <column columnName="workbookId" wrappedColumnName="entityId">
+                        <columnTitle>Workbook #</columnTitle>
+                        <fk>
+                            <fkDbSchema>laboratory</fkDbSchema>
+                            <fkTable>workbooks</fkTable>
+                            <fkColumnName>container</fkColumnName>
+                            <fkDisplayColumnName>workbookId</fkDisplayColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="Title">
+                        <displayWidth>300</displayWidth>
+                    </column>
+                    <column columnName="Description">
+                        <inputType>textarea</inputType>
+                        <displayWidth>300</displayWidth>
+                    </column>
+                </columns>
+                <buttonBarOptions position="top" includeStandardButtons="false">
+                    <includeScript>laboratory.context</includeScript>
+                    <item text="Create New Workbook" permission="INSERT">
+                        <onClick>Ext4.create('Laboratory.window.WorkbookCreationWindow', {
+                                canAddToExistingExperiment: false,
+                                controller: 'project',
+                                action: 'begin',
+                                title: 'Create Workbook',
+                                workbookFolderType: 'Expt Workbook'
+                            }).show(arguments[0].srcElement);
+                        </onClick>
+                    </item>
+                    <item text="Delete">
+                        <originalText>Delete</originalText>
+                    </item>
+                    <item text="Views">
+                        <originalText>Views</originalText>
+                    </item>
+                    <item text="Export">
+                        <originalText>Export</originalText>
+                    </item>
+                    <item text="Print">
+                        <originalText>Print</originalText>
+                    </item>
+                    <item text="Page Size">
+                        <originalText>Page Size</originalText>
+                    </item>
+                </buttonBarOptions>
+            </table>
+        </tables>
+    </metadata>
+</query>

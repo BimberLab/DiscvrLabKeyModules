@@ -1,0 +1,1 @@
+ALTER table sequenceanalysis.alignment_summary ADD COLUMN valid_pairs integer;

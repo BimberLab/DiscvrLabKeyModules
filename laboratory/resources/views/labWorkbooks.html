@@ -1,0 +1,94 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.get(webpart.wrapperDivId).update(
+            '<div id="search_'+webpart.wrapperDivId+'"></div>' +
+            '<br>' +
+            '<div id="qwp_'+webpart.wrapperDivId+'"></div>'
+        );
+
+        Ext4.create('Ext.panel.Panel', {
+            border: false,
+            layout: 'hbox',
+            defaults: {
+                border: false,
+                style: 'margin-right: 10px'
+            },
+            items: [{
+                xtype: 'textfield',
+                itemId: 'workbookId',
+                labelWidth: 130,
+                width: 250,
+                emptyText: 'Enter ID',
+                fieldLabel: 'Jump To Workbook'
+            },{
+                xtype: 'button',
+                border: true,
+                text: 'Go',
+                style: 'margin-right: 40px;margin-top: 0px',
+                handler: function(btn){
+                    var field = btn.up('panel').down('#workbookId');
+                    if (!field.getValue()){
+                        Ext4.Msg.alert('Error', 'Must enter a workbook Id');
+                        return;
+                    }
+
+                    Ext4.Msg.wait('Loading...');
+
+                    LABKEY.Query.selectRows({
+                        schemaName: 'laboratory',
+                        queryName: 'workbooks',
+                        columns: 'workbookId,container,container/path',
+                        filterArray: [LABKEY.Filter.create('workbookId', field.getValue())],
+                        scope: this,
+                        error: LDK.Utils.getErrorCallback(),
+                        success: function(results){
+                            Ext4.Msg.hide();
+
+                            if (!results.rows || !results.rows.length){
+                                Ext4.Msg.alert('Error', 'Workbook not found');
+                                return;
+                            }
+
+                            var row = results.rows[0];
+                            LDK.Assert.assertNotEmpty('container/path was empty', row['container/path']);
+
+                            window.location = LABKEY.ActionURL.buildURL('project', 'start', row['container/path']);
+                        }
+                    });
+                }
+            },{
+                xtype: 'textfield',
+                itemId: 'searchText',
+                labelWidth: 130,
+                width: 300,
+                fieldLabel: 'Search Workbooks',
+                emptyText: 'Enter Text'
+            },{
+                xtype: 'button',
+                border: true,
+                text: 'Search',
+                //style: 'margin-top: 3px',
+                handler: function(btn){
+                    var field = btn.up('panel').down('#searchText');
+                    if (!field.getValue()){
+                        Ext4.Msg.alert('Error', 'Must enter a search term');
+                        return;
+                    }
+
+                    window.location = LABKEY.ActionURL.buildURL('search', 'search', null, {container: LABKEY.Security.currentContainer.id, includeWorkbooks: 1, q: field.getValue()})
+                }
+            }]
+
+        }).render('search_'+webpart.wrapperDivId);
+
+        LDK.Utils.getBasicQWP({
+            schemaName: 'laboratory',
+            queryName: 'workbooks',
+            sort: '-workbookId'
+        }).render('qwp_'+webpart.wrapperDivId);
+    });
+
+</script>

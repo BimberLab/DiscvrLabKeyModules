@@ -1,0 +1,27 @@
+<templateSchema sourceSchemaName="assay.GenotypeAssay.Genotype" xmlns="http://labkey.org/data/xml/externalSchema" xmlns:cv="http://labkey.org/data/xml/queryCustomView">
+    <tables>
+        <tableName>Data</tableName>
+        <tableName>Runs</tableName>
+        <tableName>resultSummaryBySubject</tableName>
+    </tables>
+    <metadata>
+        <ns:tables xmlns:ns="http://labkey.org/data/xml">
+            <ns:table tableName="Data" tableDbType="NOT_IN_DB">
+                <ns:columns>
+                    <ns:column columnName="Run">
+                        <ns:fk>
+                            <ns:fkDbSchema>Parentage_Data</ns:fkDbSchema>
+                            <ns:fkTable>Runs</ns:fkTable>
+                            <ns:fkColumnName>RowId</ns:fkColumnName>
+                        </ns:fk>
+                    </ns:column>
+                </ns:columns>
+            </ns:table>
+            <ns:table tableName="Runs" tableDbType="NOT_IN_DB">
+                <ns:columns>
+
+                </ns:columns>
+            </ns:table>
+        </ns:tables>
+    </metadata>
+</templateSchema>

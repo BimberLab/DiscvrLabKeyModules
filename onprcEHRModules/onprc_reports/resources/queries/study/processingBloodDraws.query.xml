@@ -1,0 +1,23 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="processingBloodDraws" tableDbType="NOT_IN_DB">
+                <tableTitle>Blood Draws Needed For Processing</tableTitle>
+                <columns>
+                    <column columnName="isU42">
+                        <columnTitle>Is U42?</columnTitle>
+                    </column>
+                    <column columnName="serologyBloodVol">
+                        <columnTitle>Serology Blood Vol (mL)</columnTitle>
+                    </column>
+                    <column columnName="geneticsBloodVol">
+                        <columnTitle>Genetics Blood Vol (mL)</columnTitle>
+                    </column>
+                    <column columnName="totalBloodDrawVol">
+                        <columnTitle>Total Blood Requested (mL)</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

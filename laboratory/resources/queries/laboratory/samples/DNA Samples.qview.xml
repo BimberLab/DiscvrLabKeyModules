@@ -1,0 +1,50 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="freezerid"/>
+        <column name="samplename"/>
+        <column name="subjectid"/>
+        <!--<column name="species" />-->
+
+        <column name="sampledate" />
+        <column name="processdate" />
+        <column name="sampletype" />
+        <column name="samplesubtype" />
+        <column name="samplesource" />
+        <column name="preparationmethod" />
+        
+        <column name="location" />
+        <column name="freezer" />
+        <column name="cane" />
+        <column name="box" />
+        <column name="box_row" />
+        <column name="box_column" />
+
+        <column name="quantity" />
+        <column name="quantity_units" />
+        <column name="concentration" />
+        <column name="concentration_units" />
+        <column name="additive" />
+
+        <column name="molecule_type" />
+        <!--<column name="ratio" />-->
+        <column name="dna_vector" />
+        <column name="dna_insert" />
+        <!--<column name="sequence" />-->
+
+        <column name="comment" />
+
+        <!--<column name="created" />-->
+        <!--<column name="createdby" />-->
+        <column name="parentsample" />
+        <column name="dateremoved" />
+        <!--<column name="removedby" />-->
+        <column name="workbook" />
+    </columns>
+    <filters>
+        <filter column="dateremoved" operator="isblank"/>
+    </filters>
+    <sorts>
+        <sort column="samplename"/>
+        <sort column="subjectid"/>
+    </sorts>
+</customView>

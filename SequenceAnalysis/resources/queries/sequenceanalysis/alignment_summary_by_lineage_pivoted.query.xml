@@ -1,0 +1,9 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="alignment_summary_by_lineage_pivoted" tableDbType="TABLE">
+                <tableTitle>Alignment Summary By Lineage</tableTitle>
+            </table>
+        </tables>
+    </metadata>
+</query>

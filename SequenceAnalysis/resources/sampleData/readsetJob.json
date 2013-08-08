@@ -1,0 +1,20 @@
+{
+	"protocolName":"@@PROTOCOLNAME@@",
+	"protocolDescription":"This is a pipeline test",
+	"inputfile.inputTreatment":"none",
+	"deleteIntermediateFiles":false,
+	"inputfile.merge":false,
+	"inputfile.merge.basename":"",
+	"inputfile.pairedend":false,
+	"inputfile.barcode":false,
+	"inputfile.scanAllBarcodes":false,
+	"inputfile.barcodeEditDistance":0,
+	"inputfile.barcodeDeletions":0,
+	"inputfile.barcodeOffset":0,
+	"fileNames":"@@FILENAMES@@",
+	"containerId":"@@CONTAINERID@@",
+	"containerPath":"@@CONTAINERPATH@@",
+	"userId":@@USERID@@,
+	"baseUrl":"@@BASEURL@@",
+	"debugMode":false
+}

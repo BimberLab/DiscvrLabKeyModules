@@ -1,0 +1,5 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <filters>
+        <filter column="totalBloodDrawVol" operator="gt" value="0"/>
+    </filters>
+</customView>

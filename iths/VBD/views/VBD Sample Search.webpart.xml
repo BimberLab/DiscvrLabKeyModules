@@ -1,0 +1,6 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart">
+    <view name="samplesearch"/>
+    <locations>
+        <location name="right"/>
+    </locations>
+</webpart>

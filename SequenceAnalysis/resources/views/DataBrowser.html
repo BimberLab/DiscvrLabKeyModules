@@ -1,0 +1,73 @@
+<script type="text/javascript">
+
+Ext4.onReady(function()
+{
+    var summaryQueries;
+    Laboratory.Utils.getQueryCounts({
+        success: function(queries){
+            summaryQueries = queries;
+        },
+        failure: LDK.Utils.getErrorCallback(),
+        scope: this,
+        queries: [{
+            schemaName: 'sequenceanalysis',
+            queryName: 'sequence_readsets',
+            sql: 'SELECT count(*) as total from sequenceanalysis.sequence_readsets s WHERE s.fileid IS NOT NULL',
+            viewName: 'Data Imported',
+            name: 'Total Readsets Imported'
+        },{
+            schemaName: 'sequenceanalysis',
+            queryName: 'sequence_analyses',
+            name: 'Total Analyses Performed'
+        }]
+    });
+
+    createNavMenu();
+
+    function createNavMenu(){
+        if (!LDK.panel.NavPanel || !summaryQueries)
+        {
+            createNavMenu.defer(10);
+            return;
+        }
+
+        var webpart = <%=webpartContext%>;
+
+        Ext4.get(webpart.wrapperDivId).update('This module is designed to manage sequence data and assist with analysis and presentation of results.  ' + SequenceAnalysis.Utils.HEADER_TEXT +
+
+            '<p></p>There two components to this module.  First, it can be used for the management of primary sequence data and to connect these sequences with sample information.  This allows you to identify current or historic data based on sample attributes such as subject Id, sample date, etc.  The second component of this module is data analysis and management of results.  For each readset, analyses can be performed using a variety of reference sequence databases.  The most basic analysis is the alignment of reads against a reference, after which the alignment file can be downloaded and viewed using standard genomic analysis tools.  However, many more specialized analyses are available, including those tailored toward sequence based genotyping and viral analysis.' +
+            '<p></p><div id="sequenceNav_'+webpart.wrapperDivId+'"></div><p></p><div id="sequenceAnalyses_'+webpart.wrapperDivId+'"></div>');
+
+        var config = {
+            width: 550,
+            sections: [
+                {header: 'General Information',
+                items: [
+                    {name: 'Overview of The Sequence Module', url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'instructions')},
+                    //{name: 'Release Notes', url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'releaseNotes')},
+                    {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL("pipeline-status", "showList.view"), renderer: 'defaultRenderer'}
+                ]},
+                {header: 'Summary',
+                renderer: 'summaryCountRenderer',
+                items: [
+
+                ]},
+                {header: 'Browse Results',
+                items: [
+                    //{name: 'View Sequence Analysis Runs', schemaName: 'sequenceanalysis', queryName: 'Sequence_Analyses', showImport: false, renderer: 'queryRenderer'},
+                    //{name: 'View Sequence Readsets', schemaName: 'sequenceanalysis', queryName: 'Sequence_Readsets', showImport: false, renderer: 'queryRenderer'},
+                    {name: 'View Sequence Alignment Summary', schemaName: 'sequenceanalysis', queryName: 'alignment_summary_grouped', showImport: false, renderer: 'queryRenderer'},
+                    {name: 'View NT SNP Summary', schemaName: 'sequenceanalysis', queryName: 'nt_snps_by_pos', viewName: 'Search Panel', showImport: false, renderer: 'queryRenderer'},
+                    {name: 'View AA SNP Summary', schemaName: 'sequenceanalysis', queryName: 'aa_snps_by_codon', viewName: 'Search Panel', showImport: false, renderer: 'queryRenderer'}
+                ]}
+            ]
+        }
+
+        Ext4.each(summaryQueries, function(q){
+            config.sections[1].items.push(q)
+        }, this);
+
+        Ext4.create('LDK.panel.NavPanel', config).render('sequenceNav_'+webpart.wrapperDivId);
+    }
+});
+</script>

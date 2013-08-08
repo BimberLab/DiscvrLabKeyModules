@@ -1,0 +1,32 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" hidden="true">
+   <columns>
+       <!--<column name="rowid" />-->
+       <column name="analysis_id" />
+       <column name="analysis_id/readset/subjectid">
+           <properties>
+               <property name="columnTitle" value="Subject Id"/>
+           </properties>
+       </column>
+       <column name="analysis_id/readset/sampledate">
+           <properties>
+               <property name="columnTitle" value="Sample Date"/>
+           </properties>
+       </column>
+
+       <column name="alignment_id" />
+
+       <column name="ref_nt_id/name" >
+           <properties>
+               <property name="columnTitle" value="Ref NT Name"/>
+           </properties>
+       </column>
+       <column name="ref_nt_position" />
+       <column name="ref_nt_insert_index" />
+
+       <column name="ref_nt" />
+       <column name="q_nt" />
+       <column name="q_nt_position" />
+       <column name="q_nt_insert_index" />
+       <column name="pvalue" />
+   </columns>
+</customView>

@@ -1,0 +1,32 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="freezerid"/>
+        <column name="samplename"/>
+        <column name="subjectid"/>
+        <!--<column name="species" />-->
+
+        <column name="sampledate" />
+        <!--<column name="processdate" />-->
+        <column name="sampletype" />
+        <column name="samplesubtype" />
+        <column name="samplesource" />
+        <column name="preparationmethod" />
+        
+        <column name="location" />
+        <column name="freezer" />
+        <column name="cane" />
+        <column name="box" />
+        <column name="box_row" />
+        <column name="box_column" />
+
+        <column name="parentsample" />
+        <column name="dateremoved" />
+        <!--<column name="removedby" />-->
+        <column name="workbook" />
+    </columns>
+
+    <sorts>
+        <sort column="samplename"/>
+        <sort column="subjectid"/>
+    </sorts>
+</customView>

@@ -1,0 +1,37 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" hidden="true">
+   <columns>
+       <!--<column name="rowid" />-->
+       <column name="analysis_id" />
+       <column name="analysis_id/readset/sampleid/samplename">
+           <properties>
+               <property name="columnTitle" value="Sample Name"/>
+           </properties>
+       </column>
+       <column name="analysis_id/readset/sampledate">
+           <properties>
+               <property name="columnTitle" value="Sample Date"/>
+           </properties>
+       </column>
+
+       <column name="alignment_id" />
+
+       <column name="ref_nt_id/name" >
+           <properties>
+               <property name="columnTitle" value="Ref NT Name"/>
+           </properties>
+       </column>
+       <column name="ref_aa_id/name">
+           <properties>
+               <property name="columnTitle" value="Ref AA Name"/>
+           </properties>
+       </column>
+       <column name="nt_snp_id" />
+       <column name="ref_aa_position" />
+       <column name="ref_aa_insert_index" />
+
+       <column name="ref_aa" />
+       <column name="q_aa" />
+       <column name="q_codon" />
+       <column name="translation_string" />
+   </columns>
+</customView>

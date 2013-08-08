@@ -1,0 +1,7 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart" title="Lab Settings">
+    <view name="labSettings"/>
+   <locations>
+		<location name="body"/>
+		<!--<location name="menu"/>-->
+   </locations>
+</webpart>

@@ -1,0 +1,83 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    Ext4.define('SequenceAnalysis.panel.SplitSplittingPanel', {
+        extend: 'Ext.panel.Panel',
+
+        initComponent: function(){
+            Ext4.apply(this, {
+                border: false,
+                bodyStyle: 'padding: 5px;',
+                items: [{
+                    html: 'This helper was originally created to help split a long sequence into overlapping fragments.  It will take the input string and split it into words of the provided length.',
+                    style: 'padding-bottom: 10px;',
+                    border: false
+                },{
+                    xtype: 'textfield',
+                    fieldLabel: 'Name',
+                    itemId: 'name'
+                },{
+                    xtype: 'textarea',
+                    fieldLabel: 'Sequence',
+                    width: 400,
+                    itemId: 'sequence'
+                },{
+                    xtype: 'numberfield',
+                    fieldLabel: 'Word Size',
+                    itemId: 'wordSize'
+                },{
+                    xtype: 'textarea',
+                    fieldLabel: 'Results 1',
+                    width: 400,
+                    itemId: 'results1'
+                },{
+                    xtype: 'textarea',
+                    fieldLabel: 'Results 2',
+                    width: 400,
+                    itemId: 'results2'
+                }],
+                buttons: [{
+                    text: 'Split',
+                    scope: this,
+                    handler: this.doSplit
+                }]
+            })
+
+            this.callParent(arguments);
+        },
+
+        doSplit: function(btn){
+            var name = this.down('#name').getValue();
+            var sequence = this.down('#sequence').getValue();
+            var wordSize = this.down('#wordSize').getValue();
+            var offset = Math.floor(wordSize / 2);
+
+            var regex1 = new RegExp('.{1,' + wordSize + '}', 'g');
+            var segments1 = sequence.match(regex1);
+
+            var results1 = [];
+            Ext4.each(segments1, function(item, idx){
+                results1.push('>' + name + '_' + idx);
+                results1.push(item);
+            }, this);
+
+            var segments2 = [sequence.substr(0, offset)];
+            var sequence2 = sequence.substr(offset);
+            segments2 = segments2.concat(sequence2.match(regex1));
+
+            var results2 = [];
+            Ext4.each(segments2, function(item, idx){
+                results2.push('>' + name + '_r' + idx);
+                results2.push(item);
+            }, this);
+
+            this.down('#results1').setValue(results1.join('\n'));
+            this.down('#results2').setValue(results2.join('\n'))
+        }
+    });
+
+    var webpart = <%=webpartContext%>;
+    Ext4.create('SequenceAnalysis.panel.SplitSplittingPanel', {}).render(webpart.wrapperDivId);
+});
+</script>
+

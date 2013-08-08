@@ -1,0 +1,50 @@
+<script type="text/javascript">
+    if (!LABKEY.Security.currentUser.isSystemAdmin){
+        window.location = LABKEY.ActionURL.buildURL('project', 'start', 'home');
+    }
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+        Ext4.get(webpart.wrapperDivId).update('Loading...');
+
+        Laboratory.Utils.getDataItems({
+            containerPath: LABKEY.Security.getSharedContainer(),
+            scope: this,
+            types: ['settings'],
+            includeHidden: true,
+            success: function(results){
+                var webpart = <%=webpartContext%>;
+                Ext4.get(webpart.wrapperDivId).update('');
+
+                var config = {
+                    renderTo: webpart.wrapperDivId,
+                    sections: []
+                };
+
+                if (Ext4.isArray(results.settings)){
+                    var categories = [];
+                    var sectionMap = {};
+                    Ext4.each(results.settings, function(item){
+                        if (!sectionMap[item.category]){
+                            sectionMap[item.category] = {
+                                header: item.category,
+                                items: [],
+                                style: 'padding-bottom: 25px;'
+                            }
+                            categories.push(item.category);
+                        }
+                        sectionMap[item.category].items.push(item);
+                    }, this);
+
+                    categories.sort();
+
+                    Ext4.each(categories, function(cat){
+                        config.sections.push(sectionMap[cat]);
+                    }, this);
+                }
+
+                Ext4.create('LDK.panel.NavPanel', config);
+            }
+        });
+    });
+</script>

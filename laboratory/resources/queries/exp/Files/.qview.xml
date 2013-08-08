@@ -1,0 +1,17 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <!--<column name="name"/>-->
+        <column name="ViewFileLink">
+            <properties>
+                <property name="columnTitle" value="File Name"/>
+            </properties>
+        </column>
+        <column name="Created"/>
+        <column name="CreatedBy" />
+        <column name="Folder" />
+        <column name="Thumbnail" />
+    </columns>
+    <sorts>
+        <sort column="Name"/>
+    </sorts>
+</customView>

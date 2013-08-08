@@ -1,0 +1,40 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <columns>
+       <!--<column name="rowid" />-->
+       <column name="analysis_id" />
+       <column name="readname" />
+       <column name="analysis_id/readset/subjectid">
+           <properties>
+               <property name="columnTitle" value="Subject Id"/>
+           </properties>
+       </column>
+       <column name="analysis_id/readset/sampledate">
+           <properties>
+               <property name="columnTitle" value="Sample Date"/>
+           </properties>
+       </column>
+
+       <column name="ref_nt_id" />
+       <column name="read_id/name">
+           <properties>
+               <property name="columnTitle" value="Read Name"/>
+           </properties>
+       </column>
+       <column name="orientation" />
+       <column name="q_start" />
+       <column name="q_stop" />
+       <column name="ref_start" />
+       <column name="ref_stop" />
+       <column name="cigar" />
+       <column name="md_tag" />
+       <column name="num_mismatches" />
+       <column name="matchqual" />
+       <column name="status" />
+       <column name="workbook" />
+   </columns>
+   <sorts>
+       <sort column="analysis_id/readset/name"/>
+       <sort column="ref_nt_id/name"/>
+       <sort column="ref_start"/>
+   </sorts>
+</customView>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+    <bean id="activeMqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <constructor-arg value="tcp://192.168.0.16:61616"/>
+        <!--<property name="userName" value="username" />-->
+        <!--<property name="password" value="password" />-->
+    </bean>
+    
+    <bean id="pipelineJobService" class="org.labkey.pipeline.api.PipelineJobServiceImpl">
+        <property name="appProperties">
+            <bean class="org.labkey.pipeline.api.properties.ApplicationPropertiesImpl">
+                <property name="toolsDirectory" value="/" />
+            </bean>
+        </property>
+        <property name="remoteServerProperties">
+            <bean class="org.labkey.pipeline.api.properties.RemoteServerPropertiesImpl">
+                <property name="location" value="sequenceAnalysis"/>
+            </bean>
+        </property>
+        <property name="configProperties">
+            <bean class="org.labkey.pipeline.api.properties.ConfigPropertiesImpl">
+                <property name="softwarePackages">
+                    <map>
+                        <!--These are required.  They will be used in commands and will set environment vars-->
+                        <entry key="SEQUENCEANALYSIS_CODELOCATION" value="/usr/local/labkey/svn/trunk/server/customModules/SequenceAnalysis/pipeline_code/SequenceTools/"/>
+                        <entry key="SEQUENCEANALYSIS_EXTERNALDIR" value="/usr/local/labkey/svn/trunk/server/customModules/SequenceAnalysis/pipeline_code/external/"/>
+						<entry key="PICARDPATH" value="/usr/local/src/picard-tools-1.56"/>
+                        <entry key="GATKPATH" value="/usr/local/bin/GATK"/>
+                        <entry key="MOSAIK_NETWORKFILEPATH" value="/usr/local/networkFile"/>
+                        <entry key="Perl" value="/usr/bin"/>
+
+                        <!--These can be omitted if they are in the PATH.  These set environment vars used in Perl/BioPerl-->
+                        <!--<entry key="BLATPATH" value="/usr/local/bin"/>-->
+                        <!--<entry key="BOWTIEPATH" value="/usr/local/bin"/>-->
+                        <!--<entry key="BWAPATH" value="/usr/local/bin"/>-->
+                        <!--<entry key="BFASTPATH" value="/usr/local/bin"/>-->
+                        <!--<entry key="FASTXPATH" value="/usr/local/bin"/>-->
+                        <!--<entry key="MOSAIKPATH" value="/usr/local/bin"/>-->
+                        <!--<entry key="SAMTOOLSPATH" value="/usr/local/bin"/>-->
+                        <!--<entry key="ROCHETOOLSPATH" value="/usr/local/bin"/>-->
+                        <!--<entry key="FASTQCPATH" value="/usr/local/bin"/>-->
+                        <!--<entry key="LASTZPATH" value="/usr/local/bin"/>-->
+                        <!--<entry key="CAP3PATH" value="/usr/local/bin"/>-->
+                        <!--<entry key="SEQCRUMBSPATH" value="/usr/local/bin"/>-->
+
+                        <!--These are optional-->
+
+                        <!--The location of an alternate NETRC file to be used by Perl API-->
+                        <!--<entry key="SEQUENCEANALYSIS_NETRC" value="/usr/local/netrc/.netrc"/>-->
+
+                        <!--The number of threads to use, where supported by external tools-->
+                        <!--<entry key="SEQUENCEANALYSIS_MAX_THREADS" value=2/>-->
+
+                    </map>
+                </property>
+            </bean>
+        </property>
+        <property name="statusWriter">
+            <bean class="org.labkey.pipeline.cluster.NoOpPipelineStatusWriter"/>
+        </property>
+        <property name="jobStore">
+            <bean class="org.labkey.pipeline.api.PipelineJobMarshaller"/>
+        </property>
+        <property name="workDirFactory">
+            <bean class="org.labkey.pipeline.api.WorkDirectoryRemote$Factory">
+                <property name="tempDirectory" value="/pipeline"/>
+            </bean>
+        </property>
+        <property name="largeWorkDirFactory">
+            <bean class="org.labkey.pipeline.api.WorkDirectoryLocal$Factory">
+                <!--<property name="outputPermissions" value="0664"/>-->
+            </bean>
+        </property>
+        <property name="pathMapper">
+            <bean class="org.labkey.pipeline.xstream.PathMapperImpl">
+                <property name="localIgnoreCase" value="false"/>
+                <property name="remoteIgnoreCase" value="true"/>
+                <property name="pathMap">
+                    <map>
+                        <entry key="file:/c:/labkey_data/" value="file:/labkey_data/"/>
+                    </map>
+                </property>				
+            </bean>
+        </property>		
+    </bean>
+</beans>    

@@ -1,0 +1,6 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Data Browser">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="laboratory/panel/ProjectFilterType.js"/>
+    </dependencies>
+</view>

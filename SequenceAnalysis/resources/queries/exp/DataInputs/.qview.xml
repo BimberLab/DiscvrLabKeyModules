@@ -1,0 +1,24 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" containerFilter="CurrentAndSubfolders">
+   <columns>
+       <column name="Data" >
+           <properties>
+               <property name="columnTitle" value="Filename"/>
+           </properties>
+       </column>
+       <column name="Role" />
+       <column name="Data/DownloadLink">
+           <properties>
+               <property name="columnTitle" value="Download Link"/>
+           </properties>
+       </column>
+       <column name="TargetProtocolApplication">
+           <properties>
+               <property name="columnTitle" value="Protocol"/>
+           </properties>
+       </column>
+   </columns>
+   <sorts>
+       <sort column="TargetProtocolApplication/ActionSequence"/>
+       <sort column="Data/Name"/>
+   </sorts>
+</customView>

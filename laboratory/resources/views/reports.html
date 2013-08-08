@@ -1,0 +1,34 @@
+<head>
+<script type="text/javascript">
+    Ext4.ns('Laboratory.reports');
+
+    Laboratory.reports.viralLoadGraph = function(){alert('hello')}
+
+    Ext4.onReady(function (){
+        var reportStore = Ext4.create('LABKEY.ext4.Store', {
+            schemaName: 'laboratory',
+            queryName: 'reports',
+            filterArray: [LABKEY.Filter.create('visible', true, LABKEY.Filter.Types.EQUAL)],
+            sort: 'category,sort_order,reporttitle',
+            autoLoad: true,
+            failure: LDK.Utils.getErrorCallback(),
+            listeners: {
+                load: function(store){
+                    var reports = [];
+                    store.each(function(rec){
+                        reports.push(rec);
+                    }, this);
+
+                    var webpart = <%=webpartContext%>;
+                    Ext4.create('LABKEY.ext4.TabbedReportPanel', {
+                        jsReportNamespace: 'Laboratory.reports',
+                        reports: reports
+                    }).render(webpart.wrapperDivId);
+                }
+            }
+        });
+    });
+
+
+</script>
+</head>

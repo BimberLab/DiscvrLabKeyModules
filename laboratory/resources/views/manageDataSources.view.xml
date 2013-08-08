@@ -1,0 +1,12 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Manage Data Sources">
+    <permissions>
+        <permission name="admin"/>
+    </permissions>
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="laboratory/panel/QueryPickerPanel.js"/>
+        <dependency path="laboratory/panel/AdditionalLinksPanel.js"/>
+        <dependency path="laboratory/panel/ManageDataSourcesPanel.js"/>
+        <dependency path="laboratory/panel/ManageDemographicsSourcesPanel.js"/>
+    </dependencies>
+</view>

@@ -1,0 +1,193 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        if (LABKEY.Security.currentContainer.type == 'workbook'){
+            window.location = LABKEY.ActionURL.buildURL('laboratory', 'manageDataSources', LABKEY.Security.currentContainer.parentPath);
+        }
+        else {
+            var webpart = <%=webpartContext%>;
+
+            var titleHtml = '';
+            if (LDK.Utils.isSharedProject()){
+                titleHtml = '<br>You are currently editing the data and demographics sources for the Shared project.  Any items defined here will be available as defaults in any other folders.  This does not automatically enabled these data sources in those folders, but it will allow admins to select them with one-click and simplify config.  Please note that deleting or editing a data source in this folder will not alter any other folders that may have already enabled that data source.<br><br>';
+            }
+
+            Ext4.create('Ext.panel.Panel', {
+                border: false,
+                defaults: {
+                    border: false
+                },
+                items: [{
+                    html: titleHtml
+                },{
+                    html: '<h2>Additional Data and Sample Sources</h2>',
+                    style: 'padding-bottom: 10px;'
+                },{
+                    style: 'padding-left: 10px;',
+                    border: false,
+                    items: [{
+                        border: false,
+                        html: 'Below are the extra data and sample sources registered for this folder.  This allows additional queries, tables or lists to appear in the Laboratory Module UI.  ' +
+                            (LDK.Utils.isSharedProject() ? 'Because this is the shared project, any data sources defined here will be made available as defaults in all other folders.  See note above for further explanation. ' : ''),
+                        style: 'padding-bottom: 10px;'
+                    },{
+                        xtype: 'laboratory-managedatasourcespanel',
+                        itemId: 'manageDataSources',
+                        style: 'padding-bottom: 10px;'
+                    }]
+                },{
+                    html: '<hr>'
+                },{
+                    html: '<h2>Demographics Sources</h2>',
+                    style: 'padding-bottom: 10px;'
+                },{
+                    style: 'padding-left: 10px;',
+                    border: false,
+                    items: [{
+                        border: false,
+                        html: 'A demographics source refers to a table containing information about the subjects present in your data. Each of these sources should point to a table containing information about the subjectIds used in the assays and sample tables. Each target query should have a single primary key, which contains the subjectId. When a demographics source is registered, the columns of that table can automatically be joined into any of the assay or sample tables in this folder.' +
+                                (LDK.Utils.isSharedProject() ? 'Because this is the shared project, any demographics sources defined here will be made available as defaults in all other folders.  See note above for further explanation. ' : ''),
+                        style: 'padding-bottom: 10px;'
+                    },{
+                        xtype: 'laboratory-managedemographicssourcespanel',
+                        itemId: 'manageDemographicsSources'
+                    }]
+                },{
+                },{
+                    html: '<hr>'
+                },{
+                    html: '<h2>Additional Links</h2>',
+                    style: 'padding-bottom: 10px;'
+                },{
+                    style: 'padding-left: 10px;',
+                    hidden: LDK.Utils.isSharedProject(),
+                    border: false,
+                    items: [{
+                        border: false,
+                        html: 'Extra links to interal or external pages can be registered, which will appear on the overview tab.',
+                        style: 'padding-bottom: 10px;'
+                    },{
+                        xtype: 'laboratory-additionallinkspanel',
+                        itemId: 'extraLinks'
+                    }]
+                },{
+                    defaults: {
+                        border: false
+                    },
+                    hidden: !LDK.Utils.isSharedProject() || !LABKEY.Security.currentUser.isSystemAdmin,
+                    items: [{
+                        html: '<hr>'
+                    },{
+                        html: '<h2>Site Summaries</h2>',
+                        style: 'padding-bottom: 10px;'
+                    },{
+                        style: 'padding-left: 10px;',
+                        border: false,
+                        itemId: 'siteSummaryPanel',
+                        defaults: {
+                            border: false
+                        },
+                        items: [{
+                            html: 'The buttons below will load a site-wide summary of all custom demographics or data sources that have been configured.',
+                            style: 'padding-bottom: 10px;'
+                        },{
+                            layout: 'hbox',
+                            defaults: {
+                                style: 'margin-right: 3px;margin-bottom: 5px;'
+                            },
+                            items:  [{
+                                xtype: 'button',
+                                text: 'View Summary of Data Sources',
+                                handler: function(btn){
+                                    btn.up('#siteSummaryPanel').loadSummary('data')
+                                }
+                            },{
+                                xtype: 'button',
+                                text: 'View Summary of Demographics Sources',
+                                handler: function(btn){
+                                    btn.up('#siteSummaryPanel').loadSummary('demographics')
+                                }
+                            }]
+                        },{
+                            itemId: 'siteSummary',
+                            border: false,
+                            defaults: {
+                                border: false
+                            }
+                        }],
+                        loadSummary: function(type){
+                            var target = this.down('#siteSummary');
+                            target.removeAll();
+                            target.add({
+                                html: 'Loading...',
+                                style: 'padding-top: 10px;'
+                            });
+
+                            var method;
+                            if (type == 'demographics')
+                                method = 'getDemographicsSources';
+                            else
+                                method = 'getAdditionalDataSources';
+
+                            Laboratory.Utils[method]({
+                                scope: this,
+                                includeTotals: false,
+                                includeSiteSummary: true,
+                                success: this.onSiteSummaryLoad
+                            });
+
+                        },
+                        onSiteSummaryLoad: function(results){
+                            var toAdd = [];
+                            if (results.siteSummary){
+                                for (var c in results.siteSummary){
+                                    var cfg = {
+                                        containerPath: c,
+                                        border: false,
+                                        style: 'padding-top: 10px;padding-left:10px;',
+                                        items: [{
+                                            html: '<b>' + c +'</b>',
+                                            style: 'padding-bottom: 5px;',
+                                            border: false
+                                        }]
+                                    }
+
+                                    var items = results.siteSummary[c];
+                                    items = LDK.Utils.sortByProperty(items, 'label', false);
+                                    Ext4.each(items, function(source){
+                                        cfg.items.push({
+                                            style: 'padding-left: 10px;;padding-bottom: 5px;',
+                                            border: false,
+                                            html: '<a href="' + LABKEY.ActionURL.buildURL('laboratory', 'manageDataSources', c) + '">' + source.label + ' (' + (!source.containerPath ? "" : '"' + source.containerPath + '".') + source.schemaName + '.' + source.queryName + ')' + '</a>'
+                                        });
+                                    }, this);
+
+                                    toAdd.push(cfg);
+                                }
+                            }
+
+                            var target = this.down('#siteSummary');
+                            target.removeAll();
+
+                            target.add({
+                                html: 'The following sources have been defined:',
+                                style: 'padding-bottom: 5px;padding-top: 10px;'
+                            });
+
+                            if (toAdd.length){
+                                target.add(toAdd);
+                            }
+                            else {
+                                target.add({
+                                    style: 'padding-bottom: 5px;padding-top: 10px;',
+                                    html: 'There are no sources defined anywhere in the site'
+                                })
+                            }
+                        }
+                    }]
+                }]
+            }).render(webpart.wrapperDivId);
+        }
+    });
+
+</script>

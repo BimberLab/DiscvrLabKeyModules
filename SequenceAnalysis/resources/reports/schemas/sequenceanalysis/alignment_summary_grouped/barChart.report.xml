@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ReportDescriptor xmlns="http://labkey.org/query/xml">
+    <label>Bar Graph</label>
+    <category>Sequence</category>
+    <description>This reports shows a bar graph of relative allele frequencies within each analysis</description>
+    <hidden>true</hidden>
+    <Properties>
+        <Prop name="dataRegionName">query</Prop>
+    </Properties>
+</ReportDescriptor>

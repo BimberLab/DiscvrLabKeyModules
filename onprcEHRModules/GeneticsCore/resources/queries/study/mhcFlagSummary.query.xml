@@ -1,0 +1,54 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="mhcFlagSummary" tableDbType="TABLE" useColumnOrder="true">
+                <tableTitle>MHC Blood Draw Flag Summary</tableTitle>
+                <pkColumnName>Id</pkColumnName>
+                <columns>
+                    <column columnName="Id">
+                        <isKeyField>true</isKeyField>
+                    </column>
+                    <column columnName="isMHCRequired">
+                        <columnTitle>Is MHC Typing Required?</columnTitle>
+                    </column>
+                    <column columnName="hasMhcDrawnFlag">
+                        <columnTitle>Has Been Flagged As Blood Drawn?</columnTitle>
+                    </column>
+                    <column columnName="hasMhcRedrawFlag">
+                        <columnTitle>Has Been Flagged As Redraw Needed?</columnTitle>
+                    </column>
+                    <column columnName="hasMHCData">
+                        <columnTitle>Has MHC Data?</columnTitle>
+                    </column>
+                    <column columnName="drawnFlagDateAdded">
+                        <columnTitle>Date MHC Blood Collected Flag Added</columnTitle>
+                    </column>
+                    <column columnName="daysSinceDrawnFlagAdded">
+                        <columnTitle>Days Since MHC Blood Collected Flag Added</columnTitle>
+                    </column>
+                    <column columnName="redrawFlagDateAdded">
+                        <columnTitle>Date MHC Redraw Flag Added</columnTitle>
+                    </column>
+                    <column columnName="daysSinceRedrawFlagAdded">
+                        <columnTitle>Days Since MHC Redraw Flag Added</columnTitle>
+                    </column>
+                </columns>
+                <buttonBarOptions includeStandardButtons="true">
+                    <includeScript>geneticscore.context</includeScript>
+                    <includeScript>laboratory.context</includeScript>
+                    <includeScript>ehr.context</includeScript>
+                    <includeScript>geneticscore/window/ManageFlagsWindow.js</includeScript>
+                    <includeScript>geneticscore/buttons.js</includeScript>
+                    <item text="More Actions" requiresSelection="true" insertPosition="end">
+                        <item text="Add Genetics Flags">
+                            <onClick>GeneticsCore.buttons.manageGeneticsFlags(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'add');</onClick>
+                        </item>
+                        <item text="Remove Genetics Flags">
+                            <onClick>GeneticsCore.buttons.manageGeneticsFlags(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'remove');</onClick>
+                        </item>
+                    </item>
+                </buttonBarOptions>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -1,0 +1,60 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    var webpart = <%=webpartContext%>;
+
+    var domSpec = {
+        tag: 'div',
+        children: [{
+            tag: 'h3',
+            html: 'Step 1: Enter Reference Sequences'
+        },{
+            tag: 'div',
+            id: webpart.wrapperDivId + '-ntFormPanel'
+        }]
+    }
+
+    var el = Ext4.get(webpart.wrapperDivId);
+    Ext4.DomHelper.append(el, domSpec);
+
+    var keyField = LABKEY.ActionURL.getParameter('keyField');
+    var key = LABKEY.ActionURL.getParameter('key');
+
+    if (!key && !keyField){
+//        Ext4.create('LABKEY.ext4.FormPanel', {
+//            title: 'Reference Sequence',
+//            store: {
+//                type: 'labkey-store',
+//                schemaName: 'sequenceanalysis',
+//                queryName: 'ref_nt_sequences',
+//                autoLoad: true,
+//                filterArray: [
+//                    LABKEY.Filter.create(keyField, key, LABKEY.Filter.Types.EQUALS)
+//                ]
+//            },
+//            renderTo: webpart.wrapperDivId + '-ntFormPanel'
+//        })
+
+        new LABKEY.QueryWebPart({
+            renderTo: webpart.wrapperDivId + '-ntFormPanel',
+            title: 'Reference NT Sequences',
+            schemaName: 'sequenceanalysis',
+            queryName: 'ref_nt_sequences',
+            filterArray: [
+                LABKEY.Filter.create(keyField, key, LABKEY.Filter.Types.EQUALS)
+            ],
+            buttonBar: {
+                includeStandardButtons: false,
+                items: [
+                    LABKEY.QueryWebPart.standardButtons.views,
+                    {text: 'Test', url: LABKEY.ActionURL.buildURL('project', 'begin')}
+                ]
+            }
+        });
+    }
+    else {
+
+    }
+});
+
+</script>

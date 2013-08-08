@@ -1,0 +1,47 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <columns>
+       <!--<column name="rowid" />-->
+       <column name="analysis_id" />
+       <column name="analysis_id/readset">
+           <properties>
+               <property name="columnTitle" value="Readset Name"/>
+           </properties>
+       </column>
+       <column name="analysis_id/readset/subjectid">
+           <properties>
+               <property name="columnTitle" value="Subject Id"/>
+           </properties>
+       </column>
+       <column name="analysis_id/readset/sampledate">
+           <properties>
+               <property name="columnTitle" value="Sample Date"/>
+           </properties>
+       </column>
+
+       <column name="ref_nt_id" />
+       <column name="ref_nt_position" />
+       <column name="ref_nt_insert_index" />
+       <column name="depth" />
+       <column name="adj_depth" />
+       <column name="wt" />
+       <column name="total_a" />
+       <column name="total_t" />
+       <column name="total_g" />
+       <column name="total_c" />
+       <column name="total_n" />
+       <column name="total_del" />
+       <column name="avgqual_a" />
+       <column name="avgqual_t" />
+       <column name="avgqual_g" />
+       <column name="avgqual_c" />
+       <column name="avgqual_n" />
+       <column name="avgqual_del" />
+       <column name="workbook" />
+   </columns>
+   <sorts>
+       <sort column="analysis_id/readset/sampleid/samplename"/>
+       <sort column="ref_nt_id/name"/>
+       <sort column="ref_nt_position"/>
+       <sort column="ref_nt_insert_index"/>
+   </sorts>
+</customView>

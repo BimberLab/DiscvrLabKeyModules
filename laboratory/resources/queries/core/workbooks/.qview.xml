@@ -1,0 +1,9 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="workbookId"/>
+        <column name="title"/>
+        <column name="description"/>
+        <column name="createdBy"/>
+        <column name="created"/>
+    </columns>
+</customView>

@@ -1,0 +1,1 @@
+ALTER TABLE laboratory.subjects ADD external_id VARCHAR(1000);

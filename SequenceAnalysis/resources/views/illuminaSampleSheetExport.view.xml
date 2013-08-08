@@ -1,0 +1,7 @@
+<view xmlns="http://labkey.org/data/xml/view">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis"/>
+        <dependency path="sequenceanalysis/panel/IlluminaSampleExportPanel.js"/>
+    </dependencies>
+</view>

@@ -1,0 +1,15 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="Id"/>
+        <column name="Id/utilization/use"/>
+        <column name="Id/curLocation/room"/>
+        <column name="Id/curLocation/cage"/>
+        <column name="isU42"/>
+        <column name="spfStatus"/>
+        <column name="serologyBloodVol"/>
+        <column name="parentageBloodDrawVol"/>
+        <column name="mhcBloodDrawVol"/>
+        <column name="dnaBloodDrawVol"/>
+        <column name="totalBloodDrawVol"/>
+    </columns>
+</customView>

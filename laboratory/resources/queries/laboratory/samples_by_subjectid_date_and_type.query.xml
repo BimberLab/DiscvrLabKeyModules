@@ -1,0 +1,20 @@
+<query xmlns="http://labkey.org/data/xml/query">
+  <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="samples_by_subjectid_and_type" tableDbType="TABLE">
+                <tableTitle>Samples By SubjectId, Sample Date And Type</tableTitle>
+                <javaCustomizer>org.labkey.laboratory.query.SamplesCustomizer</javaCustomizer>
+                <columns>
+                    <column columnName="subjectid">
+                        <isKeyField>true</isKeyField>
+                    </column>
+                    <column columnName="sampledate" />
+                    <column columnName="sampletype" />
+                    <column columnName="total">
+                        <url>/query/executeQuery.view?schemaName=laboratory&amp;query.queryName=samples&amp;query.subjectid~eq=${subjectid}&amp;query.sampledate~eq=${sampledate}&amp;query.sampletype~eq=${sampletype}</url>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

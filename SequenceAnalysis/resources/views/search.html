@@ -1,0 +1,62 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    var metadata = {
+
+    };
+
+    var defaultConfig = {
+        xtype: 'labkey-searchpanel',
+        border: true,
+        schemaName: 'sequenceanalysis',
+        style: 'padding-bottom: 20px;',
+        metadata: {}
+    };
+
+    var configs = [{
+        queryName: 'Sequence_Analyses'
+        ,title: 'Search Sequence Analyses'
+        ,metadata: {}
+    },{
+        queryName: 'Sequence_Readsets'
+        ,title: 'Search Sequence Readsets'
+        ,metadata: {}
+    },{
+        queryName: 'Sequence_Alignments'
+        ,title: 'Search Sequence Alignments'
+        ,metadata: {}
+    },{
+        queryName: 'NT_SNPs'
+        ,title: 'Search NT SNPs'
+        ,metadata: {}
+    },{
+        queryName: 'AA_SNPs'
+        ,title: 'Search AA SNPs'
+        ,metadata: {}
+
+    }];
+
+    var webpart = <%=webpartContext%>;
+    var outerPanel = {
+        items: [],
+        renderTo: webpart.wrapperDivId,
+        border: false,
+        defaults: {
+            border: false
+        }
+    };
+
+    Ext4.each(configs, function(config){
+        Ext4.Object.merge(config, defaultConfig);
+
+        if(metadata[config.queryName]){
+            Ext4.Object.merge(config, metadata[config.queryName]);
+        }
+
+        outerPanel.items.push(config);
+    }, this);
+
+    Ext4.create('Ext.panel.Panel', outerPanel);
+
+});
+</script>

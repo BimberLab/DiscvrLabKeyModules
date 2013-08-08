@@ -1,0 +1,57 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+        var ehrCtx = EHR.Utils.getEHRContext(webpart.wrapperDivId);
+        if(!ehrCtx)
+            return;
+
+        var geneticsCtx = LABKEY.getModuleContext('GeneticsCore');
+        if(!geneticsCtx)
+            return;
+
+        Ext4.create('LDK.panel.NavPanel', {
+            renderTo: webpart.wrapperDivId,
+            sections: [{
+                header: 'Genetics Core Groups',
+                itemDefaults: {
+                    linkCls: 'none',
+                    style: 'font-weight: bold;'
+                },
+                items: [
+                    {name: 'DNA Bank', url: LABKEY.ActionURL.buildURL('project', 'start',  geneticsCtx['DNABankContainer'])},
+                    {name: 'MHC Typing', url: LABKEY.ActionURL.buildURL('project', 'start',  geneticsCtx['MHCContainer'])},
+                    {name: 'Parentage', url: LABKEY.ActionURL.buildURL('project', 'start',  geneticsCtx['ParentageContainer'])}
+                ]
+            },{
+                header: 'Genetics Blood Draws',
+                itemDefaults: {
+                    linkCls: 'none',
+                    style: 'font-weight: bold;'
+                },
+                items: [
+                    {name: 'View Blood Draws By Animal Group, or View Rules Governing Blood Draws', url: LABKEY.ActionURL.buildURL('onprc_ehr', 'groupProcessing',  ehrCtx['EHRStudyContainer'])},
+
+                    {name: 'Animals Needing Any Genetics Blood Draw', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'processingGeneticsBloodDraws', 'query.totalBloodDrawVol~gt': 0})},
+                    {name: 'Animals Needing DNA Bank Blood Draws', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'processingGeneticsBloodDraws', 'query.dnaBloodDrawVol~gt': 0})},
+                    {name: 'Animals Needing MHC Typing Blood Draws', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'processingGeneticsBloodDraws', 'query.mhcBloodDrawVol~gt': 0})},
+                    {name: 'Animals Needing Parentage Blood Draws', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'processingGeneticsBloodDraws', 'query.parentageBloodDrawVol~gt': 0})}
+                ]
+            },{
+                header: 'Auditing',
+                itemDefaults: {
+                    linkCls: 'none',
+                    style: 'font-weight: bold;'
+                },
+                items: [
+                    {name: 'DNA Bank Sample Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  geneticsCtx['DNABankContainer'], {schemaName: 'study', 'query.queryName': 'dnaFlagSummary'})},
+                    {name: 'MHC Data Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'mhcFlagSummary'})},
+                    {name: 'Parentage Data Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'parentageFlagSummary'})},
+
+                    {name: 'Discrepancy Report', url: LABKEY.ActionURL.buildURL('ldk', 'runNotification',  ehrCtx['EHRStudyContainer'], {key: 'org.labkey.GeneticsCore.notification.GeneticsCoreNotification'})}
+                ]
+            }]
+        });
+    });
+
+</script>

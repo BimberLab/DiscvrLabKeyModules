@@ -1,0 +1,50 @@
+<script type="text/javascript">
+
+Ext4.onReady(function (){
+    var runId = LABKEY.ActionURL.getParameter('id');
+
+    if (!runId){
+        alert('Must Provide Run Id');
+        return;
+    }
+
+    var webpart = <%=webpartContext%>;
+
+    Ext4.get(webpart.wrapperDivId).update(
+        '<div id="details_'+webpart.wrapperDivId+'"></div>' +
+        '<br>' +
+        '<div id="readsets_'+webpart.wrapperDivId+'"></div>' +
+        '<br>' +
+        '<div id="metricsSummary_'+webpart.wrapperDivId+'"></div>'
+    );
+
+    Ext4.create('LDK.panel.DetailsPanel', {
+        title: 'Instrument Run Details',
+        renderTo: 'details_'+webpart.wrapperDivId,
+        showBackBtn: false,
+        store: {
+            schemaName: 'sequenceanalysis',
+            queryName: 'instrument_runs',
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            filterArray: [LABKEY.Filter.create('rowid', runId, LABKEY.Filter.Types.EQUAL)]
+        }
+    });
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'Readsets',
+        schemaName: 'sequenceanalysis',
+        queryName: 'sequence_readsets',
+        containerPath: Laboratory.Utils.getQueryContainerPath(),
+        filterArray: [LABKEY.Filter.create('instrument_run_id', runId, LABKEY.Filter.Types.EQUAL)]
+     }).render('readsets_'+webpart.wrapperDivId);
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'Quality Metrics',
+        schemaName: 'sequenceanalysis',
+        queryName: 'quality_metrics',
+        containerPath: Laboratory.Utils.getQueryContainerPath(),
+        filterArray: [LABKEY.Filter.create('runid', runId, LABKEY.Filter.Types.EQUAL)]
+     }).render('metricsSummary_'+webpart.wrapperDivId);
+});
+
+</script>

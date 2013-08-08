@@ -1,0 +1,15 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="haplotype"/>
+        <column name="analysis_id"/>
+        <column name="analysis_id/readset/subjectId"/>
+        <column name="lineagesPresent"/>
+        <column name="requiredLineages"/>
+        <column name="lineagesDefinedInHaplotype"/>
+        <column name="pctFound"/>
+    </columns>
+   <sorts>
+       <sort column="analysis_id"/>
+       <sort column="totalLineagesPresent" descending="true"/>
+   </sorts>
+</customView>

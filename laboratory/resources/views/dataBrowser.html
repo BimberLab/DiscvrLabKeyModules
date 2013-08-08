@@ -1,0 +1,59 @@
+<script type="text/javascript">
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.define('Laboratory.panel.TabbedReportPanel', {
+            extend: 'LDK.panel.TabbedReportPanel',
+
+            initComponent: function(){
+                Ext4.ns('Laboratory.tabbedReports');
+
+                Ext4.apply(this, {
+                    //defaultReport: 'abstract',
+                    reportNamespace: Laboratory.tabbedReports
+                });
+
+                Laboratory.Utils.getDataItems({
+                    types: ['tabbedReports'],
+                    scope: this,
+                    success: this.onDataLoad
+                });
+
+                this.callParent();
+            },
+
+            onDataLoad: function(results){
+                this.reports = [];
+                Ext4.each(results.tabbedReports, function(report){
+                    report.id = report.key.replace(/:/g, '_');
+                    this.reports.push(report);
+                }, this);
+
+                this.reports = LDK.Utils.sortByProperty(this.reports, 'name', false);
+                this.reports = LDK.Utils.sortByProperty(this.reports, 'category', false);
+
+                this.createTabPanel();
+            },
+
+            filterTypes: [{
+                xtype: 'ldk-singlesubjectfiltertype',
+                inputValue: LDK.panel.SingleSubjectFilterType.filterName,
+                label: LDK.panel.SingleSubjectFilterType.label
+            },{
+                xtype: 'ldk-multisubjectfiltertype',
+                inputValue: LDK.panel.MultiSubjectFilterType.filterName,
+                label: LDK.panel.MultiSubjectFilterType.label
+            },{
+                xtype: 'laboratory-projectfiltertype',
+                inputValue: Laboratory.panel.ProjectFilterType.filterName,
+                label: Laboratory.panel.ProjectFilterType.label
+            },{
+                xtype: 'ldk-nofiltersfiltertype',
+                inputValue: LDK.panel.NoFiltersFilterType.filterName,
+                label: LDK.panel.NoFiltersFilterType.label
+            }]
+        });
+
+        Ext4.create('Laboratory.panel.TabbedReportPanel').render(webpart.wrapperDivId);
+    });
+</script>

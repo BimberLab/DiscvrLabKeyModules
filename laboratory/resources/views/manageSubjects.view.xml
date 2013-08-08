@@ -1,0 +1,7 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Manage Subjects and Groups">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="laboratory/panel/QueryPickerPanel.js"/>
+        <dependency path="laboratory/panel/ManageDemographicsPanel.js"/>
+    </dependencies>
+</view>

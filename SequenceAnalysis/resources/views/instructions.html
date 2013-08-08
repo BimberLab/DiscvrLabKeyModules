@@ -1,0 +1,333 @@
+<style type="text/css">
+div.sequenceanalysis li {
+    margin-top: .5em;
+    margin-bottom: .5em;
+}
+</style>
+
+<h3 id="overview">Overview:</h3>
+There are 2 pieces to this module.  First, it is designed to provide a general-purpose system to manage sequence data and connect these files with metadata (such as sample Id, sample type, etc).
+Data can be uploaded manually; however, often a group will configure the system to automatically import data from a sequencer.  Once the sequence data is stored in the system, users can search to find data matching any of the attributes that have been captured.
+Data can be easily downloaded, and the system also provides mechanisms to capture and reports various run metrics.
+<p/>
+The second part of the module is analysis of sequence data.  The goal is to allow a user-friendly way to string together sequence tools to produce and alignment and call SNPs.  The goal is to provide a more user-friendly way to work with command-line tools.  Unlike many solutions, data-management is a key part of the pipeline.  The output of the analysis is stored in a database where it can be tracked, searched and reported through the web interface. This allows you to manage output files, alignment/SNP data as well as settings associated with the run.
+<p/>
+For many applications, generating the alignment or list of SNPs is only part of the battle.
+Making sense of these results is often more difficult.  The volume of information is usually too large to approach like traditional
+sequence data (ie. starting at the alignment and tracking results in excel).  The module has many built-in reports designed to distill the large amount of information.  Many of these reports are general purpose and applicable to many analyses.  However, there are also specialized reports tailored for both viral sequencing and sequence-based genotyping.
+
+<h3 id="features">Unique Features of the Analysis Pipeline:</h3>
+
+The tools in this pipeline can be used to assemble any sort of sequence data.  Managing reference libraries, QC on reads and generating alignments tend to be fairly generic.
+However, the pipeline contains additional reports tailored to both viral sequencing and sequence based genotyping.
+These two applications have characteristics that tend not to be handled well by many of the dominant next-gen analysis tools.
+Dominant next-gen analysis tools tend to be designed to reassembling many reads derived from a small number of distinct input sequences (ie. sequencing a diploid eukaryotic organism).
+Many input reads are combined to form one or a small number of consensus sequences representing the starting sequence (ie. your chromosome).
+A large number of reads can be reduced to a relatively small and less complex piece of information for downstream analyses.
+
+<p/>
+This approach is not always appropriate for your data.  For example, a viral population within the host can be extremely diverse.
+Attempting to represent this population of a single consensus sequence looses some of the most important information provided by single-molecule
+sequencing - the ability to detect the frequency of rare muations and to link these mutations for the purpose of reconstructing haplotypes over local regions.
+
+<p/>
+The characteristics of a viral population are very similar to characterizing a complex, homegenous transcript pool (ie. sequence-based genotyping for complex, polygeneic loci).
+Excellent tools exist for broad characterization of transcription; however, these analyses do not always have the resolution to distinguigh highly
+similar sequences from one another, such as alleles of polygeneic loci.
+This pipeline was designed in part to study complex genetic loci, including major histocompatability class I (MHC) and killer immmunoglobulin-like receptors (KIRs).
+In each of these cases, the subject can express many copies (sometimes an unknown number of copies) of highly related transcripts.  Many next-gen analysis tools can perform
+For these immune loci, lumping all alleles together is often not appropriate, as the identity of the allele(s) provides important functional distinctions.
+
+<p />
+
+
+<h3 id="howItWorks">How It Works:</h3>
+
+It is not essential to understand this to use the pipeline, but it is worth reading.  The concept behind the pipeline is fairly straightforward.
+The pipeline will accept input data, then perform preprocessing such as adapter trimming, separation based on barcodes, etc.  It then aligns
+the data to a reference to produce a BAM file.  These steps are fairly generic.  Next, walks across each base of these alignments to identify positions of difference (SNPs) and scores them based
+on quality scores.  Importantly, it retains in identity of the read associated with each SNP, something not often retained by most next-gen sequencing tools.
+This information is essential for amino acid translations.  Depending on settings, low-confidence SNPs can be filtered out.
+The resulting list of SNPs (phased SNP map) is the basis of downstream reports.  Because individual SNPs can be linked to the flanking sequence of that individual read
+(the alternative is to provide a consensus across all reads), accurate translations can be obtained and highly similar sequences can be distinguished.
+One way to think about this process is that the input of many thousands of reads is reduced to many thousands of SNPs.  It is still a lot of data, but it is less complex and easier to
+manipulate.  These tools provide many reports which seek to take the SNP map and reconstruct useful reports:
+<ul>
+    <li>SNPs can be grouped and the total SNP frequency can be reported across each nucleotide or amino acid or per codon at each AA.  Phase (ie. knowing the bases flanking each NT SNP)
+is especially important for accurate AA translations.
+    </li>
+    <li>Phased SNP data can be used to reconstruct local haplotypes.  In other words, you can find all the distinct sequences in the population across a region of interest.  The latter is limited by
+        the length of the sequence reads, but can be very useful for local features such as immune escape, drug reistance or identifying compensatory mutations.
+    </li>
+    <li>When reporting sequence-based genotyping, each read will align against some number of reference sequences.  Any reference sequence with zero mismatches (or zero high-confidence SNPs, depending on settings) will be reported.
+</ul>
+
+<p>
+The source code for these tools can be found in a subversion repository <a href="https://hedgehog.fhcrc.org/tor/stedi/trunk/server/customModules/SequenceAnalysis/">here</a>.
+
+If you encounter a bug, please submit report <a href="<%=contextPath%>/laboratory<%=containerPath%>/contact.view">here</a>.  While there is no inherent limit to the amount of data that can be analyzed, these tools were developed for applications based on Roche/454 Titamium, which generally produced on the order of 10-100K reads per sample.  The pipeline can work on bigger datasets; however, efficiency was not a primary concern when writing the tools.
+
+<h3 id="pipelineProcess">Steps In The Analysis Pipeline:</h3>
+<div class="sequenceanalysis">
+I. Input File(s):
+<ul>
+    <li>
+        Either SFF, FASTQ or FASTA files are supported
+    </li>
+    <li>
+        Sequences are converted to FASTQ if not already.  Bases of FASTA sequences are assigned an arbitrary quality score of 40.
+    </li>
+</ul>
+II. Pre-processing:
+<ul>
+    <li>
+        Any of the following steps can be performed:
+    </li>
+    <ul>
+        <li>
+            Adapter Trimming: adapters can be trimmed from either the 5' and 3' ends of the molecule.  Fuzzy matching can be used, which permits mismatches within the adapter sequence.
+        </li>
+        <li>Quality Trimming: Two methods are supported.  Depending on your data, one may perform better.  For 454 data, the sliding window tends to clip more bases.
+            <ul>
+            <li>
+                Quality Trimming Using Running Score: Performs a common algorithm for 3' end quality trimming.  The <a href="<%=contextPath%>/sequenceAnalysis/Trim.xls">excel file</a> provides an example of the algorithm
+            </li>
+            <li>
+                Quality Trimming Using Sliding Window: Starting at the 3' end, the algorithm takes a window of the last X bases.  If their average quality score does not pass the specified value, the algorithm moves one base forward and repeats.  This continues until the average of the window passes the minimal quality provided.
+            </li>
+        </ul>
+        <li>
+            Mask Low Quality Bases: Use this option to replace all bases below the specified quality score with N.  Note: some aligners count Ns as mismatches, so do not do this until you consider downstream consequences (poor alignments).  Performed using FASTX Toolkit.
+        </li>
+        <li>
+            If sequences are tagged with molecular barcodes, sequences are split into separate files at this stage.  Barcodes can be identified at either the 5' or 3' end.
+        </li>
+    </ul>
+</ul>
+
+III. Alignment:
+
+<ul>
+    <ul>
+        <li>
+            Alignment to a reference library and creation of a BAM alignment file.  Alignment can be performed using any of the aligners listed <a href="#alignment_engines">here</a>.
+        </li>
+        <li>
+            A BAM alignment, which is a generic alignment format is created by this step.  See <a href="#software_packages">Samtools</a> for more information.  While these tools are not designed for directly viewing the alignment, the BAM alignment can be viewed using many tools include <a href="#resources">these</a>.
+        </li>
+    </ul>
+</ul>
+
+IV. SNP Calling:
+
+<ul>
+    <li>
+        Obtaining phased SNP information is at the heart of this pipeline and is one of the distinguishing features of this analysis.
+    </li>
+    <li>
+        The basic concept is fairly simple: for each alignment, the script iterates through each base of the alignment (sometimes called a walker).  Every base that differs from the reference (a SNP) is recorded, including the name of the associated read (phase).  This produces a map of all SNPs in the alignment.
+    </li>
+    <li>
+        For each SNP, quality scores are considered and low quality SNPs can be discarded.  The general purpose of this process is to remove low confidence SNPs likely produced by sequencing errors.  Discarded SNPs are replaced with Ns.  The pipeline will produce a TSV file summarizing all discarded SNPs, which can be useful for debugging.
+    </li>
+    <li>
+        The following filters can be applied:
+    </li>
+    <ul>
+        <li>
+            Minimum SNP quality: any SNP with a quality score below the defined threshold is converted to an N.
+        </li>
+        <li>
+            Minimum DIP quality: any DIP (deletion/insertion polymorphism) with a quality score below the defined threshold is converted to an N (deletions) or ignored (insertions).
+        </li>
+        <li>
+            Minimum Average SNP quality: at each position, the average quality is calculated for all SNPs of a given base (ie. all A->T mutations at position 200).  If the average of these mutations is below the threshold, all SNPs of that base at converted to N.  This average is calculated prior to the conversion of any bases to Ns.
+        </li>
+    </ul>
+    <li>
+        There will be a file created called 'discarded-snps.tsv', which summarizes any SNPs that were discarded due to low quality.  This is often useful when trying to troubleshoot, or to idenitfy areas with systematically low quality sequence.
+    </li>
+</ul>
+
+V. Downstream Analysis:
+<ul>
+    <li>
+        The above steps are fairly generic sequence processing and analysis.  The following application-specific downstream analysis are available:
+    </li>
+
+<ol>
+    <li>
+        Viral Analysis:
+    </li>
+    <ul>
+        <li>
+            This process is designed to align reads against a reference viral genome, identify and score all positions of difference (SNPs), including phase information (ie. which are linked) and their AA translations.  This information is stored in the LabKey database and a number of summary output files created.
+        </li>
+        <li>
+            Every high confidence SNP is translated based on the sequence of that specific read, not a consensus, which is essential for accurate translations.
+        </li>
+        <li>
+            Translation is only available for supported reference sequences (not user-supplied references) because we annotate the former with the coding regions.
+        </li>
+        <li>
+            If selected, the coverage, NT SNPs and AA SNPs are imported into the LabKey database.  In LabKey, this information can be viewed, sorted and visualized.
+        </li>
+        <li>
+            BWA-SW is currently the recommended aligner for this pipeline.
+        </li>
+        <li>
+            The following tab-delimited files are also created, summarizing the output:
+        </li>
+        <ul>
+            <li>
+                Coverage.txt: contains a summary of the coverage at each position of the reference.  Because the SNP calling process will convert low quality SNPs to N, this file contains both the raw coverage and the 'adjusted coverage', which shows non-N bases.
+            </li>
+            <li>
+                NT_ByPos.txt: Contains one row for each base of the reference sequence, listing the total percent of non-WT bases and their translations
+            </li>
+            <li>
+                NT_ByBase.txt: Same as above, except instead of one row per position, there is one row per position and base (ie. T1004A and T1004C are distinct rows).
+            </li>
+            <li>
+                NT_All.txt: Contains 5 rows for every position of the reference, for A, T, G, C and N. Each row contains the number and frequency of each base in the sample.  This is a long set of data, but can be used to measure changes between samples.
+            </li>
+            <li>
+                AA_ByPos.txt: Similar to NT_ByPos.txt, except contains one row per AA position
+            </li>
+            <li>
+                AA_ByCodon.txt: Similar to AA_ByPos.txt, except contains one row per distinct codon observed at each AA SNP.
+            </li>
+
+        </ul>
+    </ul>
+    <li>
+        Sequence Based Genotyping:
+    </li>
+    <ul>
+        <li>
+            This analysis is designed to compare reads against a library of reference alleles.  For each read, any references that are perfect matches will be reported.
+        </li>
+        <li>
+            For each alignment, the number of mismatches is counted.  Because only high confidence SNPs are considered (see <a href="#snp_calling">here</a> for more detail) many sequence errors will be removed.
+        </li>
+        <li>
+            Mosaik is currently the recommended aligner for this pipeline because it supports alignment of each read against multiple references.
+        </li>
+        <li>
+            Calling of hits is heavily dependent on the reference database.  If your sample has many novel sequences, these will not hit a reference.  To aid in this analysis, unaligned reads can be optionally assembled against each other using CAP3.  The resulting contigs are reported, which may be candidates for addition to the reference library.
+        </li>
+        <li>
+            If selected, the matches are imported into the LabKey database.  In LabKey, this information can be viewed, sorted and visualized.
+        </li>
+    </ul>
+</ol>
+
+</ul>
+
+
+<p>
+<h3 id="software_packages">Software Utilized by These Tools:</h3>
+These tools take advantage the following open source software packages.  We thank the authors of these projects for their work:
+<ul>
+    <li>
+        <a href="http://www.bioperl.org/wiki/Main_Page">BioPerl</a>
+    </li>
+    <li>
+        <a href="http://search.cpan.org/~lds/Bio-SamTools/">Bio-SamTools</a>
+    </li>
+    <li>
+        <a href="http://samtools.sourceforge.net/index.shtml">Samtools</a>
+    </li>
+    <li>
+        <a href="http://picard.sourceforge.net/index.shtml">Picard Tools</a>
+    </li>
+    <li>
+        <a href="http://www.usadellab.org/cms/index.php?page=trimmomatic">Trimmomatic</a>
+    </li>
+    <li>
+        <a href="http://hannonlab.cshl.edu/fastx_toolkit/">FASTX Toolkit</a>
+    </li>
+    <li>
+        <a href="http://www.bioinformatics.bbsrc.ac.uk/projects/fastqc/">FastQC</a>
+    </li>
+</ul>
+
+<p>
+<h3 id="alignment_engines">Alignment Engines:</h3>
+The following aligners are supported.  We thank the authors of these projects for their work.  If you have questions or would like to request support for a different alignment engine, contact us <a href="<%=contextPath%>/laboratory<%=containerPath%>/contact.view">here</a>
+<ul>
+    <li>
+        <a href="http://bio-bwa.sourceforge.net/">BWA / BWA-SW</a>
+    </li>
+    <!--<li>-->
+        <!--<a href="http://bowtie-bio.sourceforge.net/index.shtml">Bowtie</a>-->
+    <!--</li>-->
+    <!--<li>-->
+        <!--<a href="http://hgwdev.cse.ucsc.edu/~kent/src/">BLAT</a>-->
+    <!--</li>-->
+    <li>
+        <a href="http://www.bx.psu.edu/miller_lab/">LASTZ</a>
+    </li>
+    <li>
+        <a href="http://code.google.com/p/mosaik-aligner/">Mosaik</a>
+    </li>
+</ul>
+
+
+
+
+<p>
+<h3 id="resources">Suggested Resources:</h3>
+
+This pipeline and reports are designed to process, align and extract information from sequence data.  They are not designed to view the resulting alignment (although a SNP viewer was recently added).  The following are free tools for viewing the BAM alignment file:<br>
+<ul>
+    <li>
+        <a href="http://bioinf.scri.ac.uk/tablet/index.shtml">Tablet:</a> allows viewing of BAM alignment
+    </li>
+    <li>
+        <a href="http://www.broadinstitute.org/igv/">Integrative Genomics Viewer (IGV):</a> allows viewing of BAM alignment
+    </li>
+</ul>
+
+
+
+<p>
+<h3 id="publications">Publications Using This Pipeline:</h3>
+
+The following publications used this pipeline, or earlier forms of it.  If you have used these tools in a publication, please let us know.<br>
+<ul>
+    <a href="http://www.ncbi.nlm.nih.gov/pubmed/21994463">Pyrosequencing Reveals Restricted Patterns of CD8+ T Cell Escape-Associated Compensatory Mutations in SIV.</a><br>
+    Burwitz BJ, Sacha JB, Reed JS, Newman LP, Norante FA, Bimber BN, Wilson NA, Watkins DI, O'Connor DH.<br>
+    J Virol. 2011 Oct 12.
+<p/>
+    <a href="http://www.ncbi.nlm.nih.gov/pubmed/21762519">Differential MHC class I expression in distinct leukocyte subsets.</a><br>
+    Greene JM, Wiseman RW, Lank SM, Bimber BN, Karl JA, Burwitz BJ, Lhost JJ, Hawkins OE, Kunstman KJ, Broman KW, Wolinsky SM, Hildebrand WH, O'Connor DH.<br>
+    BMC Immunol. 2011 Jul 15;12:39.<br>
+<p/>
+    <a href="http://www.ncbi.nlm.nih.gov/pubmed/21645414">Characterization of killer immunoglobulin-like receptor genetics and comprehensive genotyping by pyrosequencing in rhesus macaques.</a><br>
+    Moreland AJ, Guethlein LA, Reeves RK, Broman KW, Johnson RP, Parham P, O'Connor DH, Bimber BN.  <br>
+    BMC Genomics. 2011 Jun 7;12:295.
+<p/>
+    <a href="http://www.ncbi.nlm.nih.gov/pubmed/21423672">KIR polymorphisms modulate peptide-dependent binding to an MHC class I ligand with a Bw6 motif</a><br>
+    Colantonio AD, Bimber BN, Neidermyer WJ Jr, Reeves RK, Alter G, Altfeld M, Johnson RP, Carrington M, O'Connor DH, Evans DT.<br>
+    PLoS Pathog. 2011 Mar;7(3):e1001316.
+<p/>
+    <a href="http://www.ncbi.nlm.nih.gov/pubmed/20844037">Whole-genome characterization of human and simian immunodeficiency virus intrahost diversity by ultradeep pyrosequencing.<br></a>
+    Bimber BN, Dudley DM, Lauck M, Becker EA, Chin EN, Lank SM, Grunenwald HL, Caruccio NC, Maffitt M, Wilson NA, Reed JS, Sosman JM, Tarosso LF, Sanabani S, Kallas EG, Hughes AL, O'Connor DH.<br>
+    J Virol. 2010 Nov;84(22):12087-92.
+<p/>
+    <a href="http://www.ncbi.nlm.nih.gov/pubmed/19515775">Ultra-deep pyrosequencing detects complex patterns of CD8+ T-lymphocyte escape in SIV-infected macaques.</a><br>
+    Bimber BN, Burwitz BJ, O'Connor S, Detmer A, Gostick E, Lank SM, Price DA, Hughes A, O'Connor D.<br>
+    J Virol. 2009 Aug;83(16):8247-53.
+
+</ul>
+<p />
+<!--<h3 id="citation">Citing This Pipeline:</h3>-->
+<!--If you use this pipeline in a publication, we ask that you please include a note along these lines acknowledging these tools:-->
+<!--<p />-->
+<!--These data were analyzed using-->
+<!--The source code for this pipeline can be obtained from a subversion repository (https://hedgehog.fhcrc.org/tor/stedi/trunk/server/customModules/SequenceAnalysis).-->
+<!--Guest access to this repository can be found at the following URL: https://www.labkey.org/wiki/home/Documentation/page.view?name=svn.-->
+<!--The pipeline itself has been integrated into the LabKey Software platform as the SequenceAnalysis module, which provides a graphical, web-based platform to initiate analysis pipelines and-->
+<!--view results. LabKey is a free, open source software package available at www.labkey.org, or online through hosted.labkey.com.-->
+</div>

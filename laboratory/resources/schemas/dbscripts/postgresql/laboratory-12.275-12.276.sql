@@ -1,0 +1,1 @@
+alter table laboratory.samples rename column collectdate to processdate;

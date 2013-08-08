@@ -1,0 +1,6 @@
+<view xmlns="http://labkey.org/data/xml/view"
+       title="Browse Samples">
+    <permissions>
+        <permission name="update"/>
+    </permissions>
+</view>

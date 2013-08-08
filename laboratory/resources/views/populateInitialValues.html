@@ -1,0 +1,32 @@
+<script type="text/javascript">
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.create('Ext.panel.Panel', {
+            border: false,
+            items: [{
+                xtype: 'button',
+                text: 'Populate Default Values For Reference Tables',
+                handler: function(){
+                    Ext4.Msg.wait('Saving...');
+
+                    LABKEY.Ajax.request({
+                        url : LABKEY.ActionURL.buildURL('laboratory', 'populateDefaults'),
+                        params: {
+                            tableNames: ['sample_type']
+                        },
+                        method : 'POST',
+                        scope: this,
+                        failure: LDK.Utils.getErrorCallback(),
+                        success: function(result){
+                            Ext4.Msg.hide();
+                            Ext4.Msg.alert('Success', 'Default Values Populated', function(){
+                                window.location = LABKEY.ActionURL.buildURL('project', 'start');
+                            }, this);
+                        }
+                    });
+                }
+            }]
+        }).render(webpart.wrapperDivId);
+    });
+</script>

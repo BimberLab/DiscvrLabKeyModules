@@ -1,0 +1,54 @@
+<script type="text/javascript">
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.create('Ext.form.Panel', {
+            border: false,
+            width: 600,
+            defaults: {
+                border: false
+            },
+            items: [{
+                html: 'If you have any questions, comments or feature requests, please feel free to contact us using the form below',
+                style: 'padding-bottom: 20px;'
+            },{
+                xtype: 'textfield',
+                itemId: 'email',
+                fieldLabel: 'Email',
+                allowBlank: false,
+                vtype: 'email',
+                width: 600,
+                value: LABKEY.Security.currentUser.email
+            },{
+                xtype: 'textarea',
+                itemId: 'message',
+                fieldLabel: 'Message',
+                height: 200,
+                width: 600
+            }],
+            buttons: [{
+                text: 'Submit',
+                handler: function(btn){
+                    var email = btn.up('panel').down('#email').getValue();
+                    var message = btn.up('panel').down('#message').getValue();
+
+                    if (!email || !message){
+                        alert('Error: must provide an email and a message');
+                        return;
+                    }
+
+                    Laboratory.Utils.sendSupportMessage({
+                        email: email,
+                        message: message,
+                        success: function(){
+                            alert('You message has been sent');
+                        },
+                        failure: LDK.Utils.getErrorCallback({
+                            alertOnError: true
+                        })
+                    });
+                }
+            }]
+        }).render(webpart.wrapperDivId);
+    });
+</script>

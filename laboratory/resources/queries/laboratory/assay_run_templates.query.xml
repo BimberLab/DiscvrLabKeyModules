@@ -1,0 +1,32 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="assay_run_templates" tableDbType="TABLE">
+                <!--<buttonBarOptions includeStandardButtons="false">-->
+                    <!--<includeScript>/laboratory/buttons.js</includeScript>-->
+                    <!--<item text="Views">-->
+                        <!--<originalText>Views</originalText>-->
+                    <!--</item>-->
+                    <!--<item text="Import Data">-->
+                        <!--<originalText>Import Data</originalText>-->
+                    <!--</item>-->
+                    <!--<item text="Delete">-->
+                        <!--<originalText>Delete</originalText>-->
+                    <!--</item>-->
+                    <!--<item text="Export">-->
+                        <!--<originalText>Export</originalText>-->
+                    <!--</item>-->
+                    <!--<item text="Print">-->
+                        <!--<originalText>Print</originalText>-->
+                    <!--</item>-->
+                    <!--<item text="Page Size">-->
+                        <!--<originalText>Page Size</originalText>-->
+                    <!--</item>-->
+                    <!--<item text="Complete Run" permission="INSERT">-->
+                        <!--<onClick>Laboratory.completeTemplate(dataRegionName)</onClick>-->
+                    <!--</item>-->
+                <!--</buttonBarOptions>-->
+            </table>
+        </tables>
+    </metadata>
+</query>

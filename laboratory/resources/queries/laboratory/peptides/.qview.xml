@@ -1,0 +1,18 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="peptideId"/>
+        <column name="name"/>
+        <column name="short_name"/>
+        <column name="sequence"/>
+        <column name="modification"/>
+        <column name="concentration"/>
+        <column name="vendor"/>
+        <column name="mw"/>
+        <column name="comment" />
+        <column name="workbook" />
+    </columns>
+    <sorts>
+        <sort column="peptideId"/>
+    </sorts>
+</customView>
+

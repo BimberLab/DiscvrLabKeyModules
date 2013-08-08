@@ -1,0 +1,30 @@
+<folderType xmlns="http://labkey.org/data/xml/folderType">
+    <name>Study Workbook</name>
+    <description>Workbook template for holding a study</description>
+    <requiredWebParts>
+        <webPart>
+            <name>Workbook Description</name>
+            <location>body</location>
+        </webPart>
+        <webPart>
+            <name>Study Data Tools</name>
+            <location>right</location>
+        </webPart>
+    </requiredWebParts>
+    <preferredWebParts>
+        <webPart>
+            <name>Study Overview</name>
+            <location>body</location>
+        </webPart>
+    </preferredWebParts>
+    <modules>
+        <moduleName>Pipeline</moduleName>
+        <moduleName>Experiment</moduleName>
+        <moduleName>Query</moduleName>
+        <moduleName>Study</moduleName>
+        <moduleName>Core</moduleName>
+    </modules>
+    <defaultModule>Study</defaultModule>
+    <workbookType>true</workbookType>
+    <forceAssayUploadIntoWorkbooks>true</forceAssayUploadIntoWorkbooks>
+</folderType>

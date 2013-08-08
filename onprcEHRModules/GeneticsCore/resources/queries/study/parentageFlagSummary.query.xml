@@ -1,0 +1,57 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="parentageFlagSummary" tableDbType="TABLE" useColumnOrder="true">
+                <tableTitle>Parentage Blood Draw Flag Summary</tableTitle>
+                <pkColumnName>Id</pkColumnName>
+                <columns>
+                    <column columnName="Id">
+                        <isKeyField>true</isKeyField>
+                    </column>
+                    <column columnName="isParentageRequired">
+                        <columnTitle>Is Parentage Required?</columnTitle>
+                    </column>
+                    <column columnName="hasParentageDrawnFlag">
+                        <columnTitle>Has Been Flagged As Blood Drawn?</columnTitle>
+                    </column>
+                    <column columnName="hasParentageRedrawFlag">
+                        <columnTitle>Has Been Flagged As Redraw Needed?</columnTitle>
+                    </column>
+                    <column columnName="hasParentageCalls">
+                        <columnTitle>Has Genentic Parentage Calls?</columnTitle>
+                    </column>
+                    <column columnName="hasParentageData">
+                        <columnTitle>Has Parentage STR Data?</columnTitle>
+                    </column>
+                    <column columnName="drawnFlagDateAdded">
+                        <columnTitle>Date Parentage Blood Collected Flag Added</columnTitle>
+                    </column>
+                    <column columnName="daysSinceDrawnFlagAdded">
+                        <columnTitle>Days Since Parentage Blood Collected Flag Added</columnTitle>
+                    </column>
+                    <column columnName="redrawFlagDateAdded">
+                        <columnTitle>Date Parentage Redraw Flag Added</columnTitle>
+                    </column>
+                    <column columnName="daysSinceRedrawFlagAdded">
+                        <columnTitle>Days Since Parentage Redraw Flag Added</columnTitle>
+                    </column>
+                </columns>
+                <buttonBarOptions includeStandardButtons="true">
+                    <includeScript>geneticscore.context</includeScript>
+                    <includeScript>laboratory.context</includeScript>
+                    <includeScript>ehr.context</includeScript>
+                    <includeScript>geneticscore/window/ManageFlagsWindow.js</includeScript>
+                    <includeScript>geneticscore/buttons.js</includeScript>
+                    <item text="More Actions" requiresSelection="true" insertPosition="end">
+                        <item text="Add Genetics Flags">
+                            <onClick>GeneticsCore.buttons.manageGeneticsFlags(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'add');</onClick>
+                        </item>
+                        <item text="Remove Genetics Flags">
+                            <onClick>GeneticsCore.buttons.manageGeneticsFlags(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'remove');</onClick>
+                        </item>
+                    </item>
+                </buttonBarOptions>
+            </table>
+        </tables>
+    </metadata>
+</query>

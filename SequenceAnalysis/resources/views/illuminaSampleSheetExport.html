@@ -1,0 +1,29 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    var webpart = <%=webpartContext%>;
+
+    var pks = LABKEY.ActionURL.getParameterArray('pks');
+    var schemaName = LABKEY.ActionURL.getParameter('schemaName');
+    var queryName = LABKEY.ActionURL.getParameter('queryName');
+
+    LABKEY.Query.selectRows({
+         schemaName: schemaName,
+         queryName: queryName,
+         filterArray: [
+             LABKEY.Filter.create('rowid', pks.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
+         ],
+         sort: 'rowid,barcode5,barcode3',
+         columns: 'rowid,name,barcode5,barcode3,barcode5/sequence,barcode3/sequence,platform,sampleid',
+         scope: this,
+         success: function(result){
+             if(result && result.rows.length){
+                 Ext4.create('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
+                     rows: result.rows,
+                 }).render(webpart.wrapperDivId);
+             }
+         }
+     });
+ });
+
+</script>

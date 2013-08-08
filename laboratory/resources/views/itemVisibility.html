@@ -1,0 +1,14 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    if (LABKEY.Security.currentContainer.type == 'workbook'){
+        window.location = LABKEY.ActionURL.buildURL('laboratory', 'itemVisibility', LABKEY.Security.currentContainer.parentPath);
+    }
+
+    var webpart = <%=webpartContext%>;
+    Ext4.create('Laboratory.panel.ItemVisibilityPanel', {
+
+    }).render(webpart.wrapperDivId);
+});
+
+</script>

@@ -1,0 +1,42 @@
+<script type="text/javascript">
+    Ext4.onReady(function(){
+        if (LABKEY.Security.currentContainer.path != '/'){
+            Ext4.Msg.alert('Error', 'This page can only be viewed from the site root', function(){
+                window.location = LABKEY.ActionURL.buildURL('project', 'home');
+            }, this);
+        }
+        else
+        {
+            var webpart = <%=webpartContext%>;
+            Ext4.create('Ext.panel.Panel', {
+                border: false,
+                defaults: {
+                    border: false
+                },
+                bodyStyle: 'padding: 5px;margin-bottom:10px;',
+                items: [{
+                    html: 'The majority of this module\'s settings are controlled through the Laboratory Module Admin page, which can be found here: ' +  '<a href="' + LABKEY.ActionURL.buildURL('laboratory', 'siteLabSettings', '/') + '">Laboratory Module Site Admin</a>',
+                    style: 'padding-bottom: 10px;'
+                },{
+                    style: 'padding-top: 10px;padding-bottom:10px;',
+                    html: 'This page does provide helpers to ensure the sequence module\'s remote pipeline is configured correctly.  These are automated tests that will attempt to perform several sequence analysis and import pipeline jobs that exercise most aspects of the pipeline.  If you have configured the sequence pipeline and installed the external tools, you must then perform one additional step to enable these tests.  Have your site admin modify the tomcat startup script and include the following additional param in the CATALINA_OPTIONS setting:<br><br>' +
+                        '-DsequencePipelineEnabled=true<br><br>' +
+                        'Please see the <b><a href="https://www.labkey.org/wiki/home/Documentation/page.view?name=configWebappMemory">documentation on configuring webapp memory</a></b>, which is analogous to the setting you need to add.  Once you have done this, click the links below to run the tests:'
+                },{
+                    xtype: 'labkey-linkbutton',
+                    linkCls: 'labkey-text-link',
+                    text: 'Run Sequence Analysis Test',
+                    href: LABKEY.ActionURL.buildURL('junit', 'run', null, {testCase: 'org.labkey.sequenceanalysis.TestHelper$SequenceAnalysisPipelineTestCase'})
+                },{
+                    xtype: 'labkey-linkbutton',
+                    linkCls: 'labkey-text-link',
+                    text: 'Run Sequence Import Test',
+                    href: LABKEY.ActionURL.buildURL('junit', 'run', null, {testCase: 'org.labkey.sequenceanalysis.TestHelper$SequenceImportPipelineTestCase'})
+                },{
+                    style: 'margin-top:10px;margin-bottom:10px;',
+                    html: 'If tests fail, please check your site log file for additional information.  Note: if you did not enable the startup param, the tests will pass without actually exercising the pipeline (this is by design).  However, your site log file should contain the line "Sequence pipeline is not enabled on this server, so some tests will be skipped"<br>'
+                }]
+            }).render(webpart.wrapperDivId);
+        }
+    });
+</script>

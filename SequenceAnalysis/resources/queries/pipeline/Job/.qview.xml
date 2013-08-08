@@ -1,0 +1,12 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" containerFilter="CurrentAndSubfolders">
+   <columns>
+       <column name="Status" />
+       <column name="Created" />
+       <column name="Description" />
+       <column name="workbook"/>
+
+   </columns>
+   <sorts>
+       <sort column="Created" descending="true"/>
+   </sorts>
+</customView>

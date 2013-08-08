@@ -1,0 +1,9 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Item Visibility">
+    <permissions>
+        <permission name="admin"/>
+    </permissions>
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="laboratory/panel/ItemVisibilityPanel.js"/>
+    </dependencies>
+</view>

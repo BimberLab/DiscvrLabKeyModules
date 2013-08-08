@@ -1,0 +1,6 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <filters>
+        <filter column="pct" operator="gte" value="1"/>
+        <filter column="q_nt" operator="neq" value="N" />
+    </filters>
+</customView>

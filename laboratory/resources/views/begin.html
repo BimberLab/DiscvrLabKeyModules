@@ -1,0 +1,50 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    var webpart = <%=webpartContext%>;
+    Ext4.get(webpart.wrapperDivId).update('Loading...');
+
+    Laboratory.Utils.getDataItems({
+        types: ['data', 'samples', 'misc'],
+        success: function(result){
+            Ext4.get(webpart.wrapperDivId).update('');
+
+            var config = {
+                renderTo: webpart.wrapperDivId,
+                width: '100%',
+                sections: [
+                    {header: 'Workbooks',
+                    renderer: 'workbookRenderer',
+                    items: [
+                        {name: 'View and Edit Workbooks', schemaName: 'laboratory', queryName: 'Workbooks'}
+                    ]}
+                ]
+            };
+
+            if(Ext4.isArray(result.data) && result.data.length){
+                config.sections.push({
+                    header: 'Types of Data',
+                    items: result.data
+                });
+            }
+
+            if(Ext4.isArray(result.samples) && result.samples.length){
+                config.sections.push({
+                    header: 'Samples and Materials',
+                    items: result.samples
+                });
+            }
+
+            if(Ext4.isArray(result.misc) && result.misc.length){
+                config.sections.push({
+                    header: 'Miscellaneous',
+                    items: result.misc
+                });
+            }
+
+            Ext4.create('LDK.panel.NavPanel', config);
+        }
+    });
+});
+
+</script>
