@@ -63,6 +63,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
         return 12.297;
     }
 
+    @NotNull
     protected Collection<WebPartFactory> createWebPartFactories()
     {
         return new ArrayList<WebPartFactory>(Arrays.asList(
@@ -76,7 +77,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
                         return new HtmlView("This container is not a workbook");
                     }
 
-                    JspView view = new JspView("/org/labkey/laboratory/view/workbookHeader.jsp", model);
+                    JspView<WorkbookModel> view = new JspView<>("/org/labkey/laboratory/view/workbookHeader.jsp", model);
                     view.setTitle("Workbook Header");
                     view.setFrame(WebPartView.FrameType.NONE);
                     return view;
@@ -135,8 +136,8 @@ public class LaboratoryModule extends ExtendedSimpleModule
     {
         // allow other modules to register with EHR service, and include their dependencies automatically
         // whenever laboratory context is requested
-        LinkedHashSet<ClientDependency> ret = new LinkedHashSet<ClientDependency>();
-        ret.addAll(_clientDependencies);
+        LinkedHashSet<ClientDependency> ret = new LinkedHashSet<>();
+        ret.addAll(super.getClientDependencies(c, u));
         ret.addAll(LaboratoryService.get().getRegisteredClientDependencies(c, u));
 
         return ret;
