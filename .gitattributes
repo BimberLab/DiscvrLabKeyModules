@@ -1,11 +1,12 @@
 * text=auto !eol
 /build.xml -text
-iths/VBD/views/VBD[!!-~]Sample[!!-~]Search.webpart.xml -text
-iths/VBD/views/samplesearch.html -text
-iths/VBD/views/samplesearch.view.xml -text
-iths/VBD/views/searchresults.html -text
-iths/VBD/views/searchresults.view.xml -text
-iths/VBD/web/VBD/VBDSearchFilterPanel.js -text
+iths/VBD/module.properties -text
+iths/VBD/resources/views/VBD[!!-~]Sample[!!-~]Search.webpart.xml -text
+iths/VBD/resources/views/samplesearch.html -text
+iths/VBD/resources/views/samplesearch.view.xml -text
+iths/VBD/resources/views/searchresults.html -text
+iths/VBD/resources/views/searchresults.view.xml -text
+iths/VBD/resources/web/VBD/VBDSearchFilterPanel.js -text
 iths/cbr/build.xml -text
 iths/cbr/module.properties -text
 iths/cbr/resources/schemas/cbr.xml -text
