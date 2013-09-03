@@ -1,22 +1,11 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<project name="Standalone Build" default="build_module" basedir=".">
-
-    <!-- -->
+<project name="Standalone Build" default="build_module" basedir="../../../server">
+    <dirname property="moduleDir" file="${ant.file}"/>
     <property name="module.name" value="ONPRC_Reports" />
 
-    <property environment="env"/>
     <target name="init">
-        <fail unless="module.name"
-              message="module.name must be set in build.xml"/>
-        <condition property="module.name.isempty" value="true">
-            <equals arg1="${module.name}" arg2="" />
-        </condition>
-        <fail if="module.name.isempty" message="module.name must be set in build.xml" />
-
-        <property name="labkey.root" value="../../../" />
-        <property name="build.dir" value="${labkey.root}${file.separator}..${file.separator}build" />
-        <property name="main.build.xml" value="${labkey.root}/server/build.xml" />
+        <property name="build.dir" value="${basedir}${file.separator}..${file.separator}build" />
         <property name="jsdoc.root" value="${labkey.root}/tools/jsdoc-toolkit" />
     </target>
 
@@ -24,17 +13,15 @@
     <target name="build_module"
             depends="init"
             description="Builds local module only.  Deploys local module into LabKey installation.">
-        <ant antfile="${main.build.xml}"
+        <ant antfile="${basedir}/build.xml"
              target="sub_build_module"
-             inheritall="false">
-            <property name="moduleDir" value="${basedir}"/>
-            <property name="moduleName" value="${module.name}"/>
+             inheritall="true">
         </ant>
     </target>
 
     <target name="jsdoc" depends="init" unless="devMode">
-        <uptodate targetfile="${build.dir}/modules/${module.name}/web/docs/files.html" property="jsdoc_uptodate" >
-            <srcfiles dir="${module.name}${file.separator}web${file.separator}clientapi" />
+        <uptodate targetfile="${moduleDir}/web/docs/files.html" property="jsdoc_uptodate" >
+            <srcfiles dir="${moduleDir}${file.separator}web${file.separator}clientapi" />
         </uptodate>
         <antcall target="jsdoc_if_dirty" />
     </target>

@@ -7,7 +7,6 @@ iths/VBD/resources/views/samplesearch.view.xml -text
 iths/VBD/resources/views/searchresults.html -text
 iths/VBD/resources/views/searchresults.view.xml -text
 iths/VBD/resources/web/VBD/VBDSearchFilterPanel.js -text
-iths/cbr/build.xml -text
 iths/cbr/module.properties -text
 iths/cbr/resources/schemas/cbr.xml -text
 iths/cbr/resources/schemas/dbscripts/postgresql/cbr-0.00-0.01.sql -text
@@ -24,7 +23,6 @@ iths/cbr/resources/web/cbr/SampleBrowserPanel.js -text
 iths/cbr/resources/web/cbr/cbr.css -text
 iths/cbr/tools/cbr_data_transfer.sql -text
 labModules/SequenceAnalysis/.project -text
-labModules/SequenceAnalysis/build.xml -text
 labModules/SequenceAnalysis/lib/biojava3-core-3.0.4.jar -text
 labModules/SequenceAnalysis/lib/jbzip2-0.9.jar -text
 labModules/SequenceAnalysis/module.properties -text
@@ -513,7 +511,6 @@ labModules/SequenceAnalysis/tools/pipeline_config/pipelineConfig_debug.xml -text
 labModules/SequenceAnalysis/tools/pipeline_config/pipelineConfig_remote.xml -text
 labModules/SequenceAnalysis/webapp/WEB-INF/SequenceAnalysis/sequenceanalysisContext.xml -text
 labModules/laboratory/Laboratory.iml -text
-labModules/laboratory/build.xml -text
 labModules/laboratory/module.properties -text
 labModules/laboratory/resources/folderTypes/Expt[!!-~]Workbook.folderType.xml -text
 labModules/laboratory/resources/folderTypes/Laboratory.folderType.xml -text
