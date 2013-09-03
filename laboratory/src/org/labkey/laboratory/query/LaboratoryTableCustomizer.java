@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -796,7 +797,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         }
 
         //ensure client dependencies
-        Set<String> scripts = new HashSet<String>();
+        Set<String> scripts = new LinkedHashSet<String>();
         scripts.add("laboratory.context");
         String[] existingScripts = cfg.getScriptIncludes();
         if (existingScripts != null)

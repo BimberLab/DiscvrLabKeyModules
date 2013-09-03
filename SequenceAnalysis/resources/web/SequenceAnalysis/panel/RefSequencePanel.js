@@ -101,7 +101,7 @@ Ext4.define('SequenceAnalysis.panel.RefSequencePanel', {
                 itemId: 'dbprefix',
                 value: ''
             },{
-                xtype: 'labkey-linkbutton',
+                xtype: 'ldk-linkbutton',
                 text: 'Click here to view reference sequences',
                 linkPrefix: '[',
                 linkSuffix: ']',

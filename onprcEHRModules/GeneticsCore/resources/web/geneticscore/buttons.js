@@ -76,7 +76,7 @@ GeneticsCore.buttons = new function(){
                 return;
             }
 
-            if (!ctx.EHRStudyContainerInfo || ctx.EHRStudyContainerInfo.effectivePermissions.indexOf(EHR.permission.DATA_ENTRY) == -1){
+            if (!ctx.EHRStudyContainerInfo || ctx.EHRStudyContainerInfo.effectivePermissions.indexOf(EHR.Security.Permissions.DATA_ENTRY) == -1){
                 alert('You do not have data entry permission in EHR');
                 return;
             }

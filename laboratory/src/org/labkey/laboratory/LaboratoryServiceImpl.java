@@ -534,10 +534,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
         {
             for (TabbedReportItem item : dp.getTabbedReportItems(c, u))
             {
-                if (item.isVisible(c, u))
-                {
-                    items.add(item);
-                }
+                items.add(item);
             }
         }
         return items;

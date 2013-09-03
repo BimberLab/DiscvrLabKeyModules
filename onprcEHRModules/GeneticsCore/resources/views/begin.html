@@ -44,11 +44,11 @@
                     style: 'font-weight: bold;'
                 },
                 items: [
-                    {name: 'DNA Bank Sample Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  geneticsCtx['DNABankContainer'], {schemaName: 'study', 'query.queryName': 'dnaFlagSummary'})},
+                    {name: 'DNA Bank Sample Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'dnaFlagSummary'})},
                     {name: 'MHC Data Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'mhcFlagSummary'})},
                     {name: 'Parentage Data Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'parentageFlagSummary'})},
 
-                    {name: 'Discrepancy Report', url: LABKEY.ActionURL.buildURL('ldk', 'runNotification',  ehrCtx['EHRStudyContainer'], {key: 'org.labkey.GeneticsCore.notification.GeneticsCoreNotification'})}
+                    {name: 'Genetics Blood Draw Discrepancy Report', url: LABKEY.ActionURL.buildURL('ldk', 'runNotification',  ehrCtx['EHRStudyContainer'], {key: 'org.labkey.GeneticsCore.notification.GeneticsCoreNotification'})}
                 ]
             }]
         });

@@ -460,7 +460,7 @@ SequenceAnalysis.Buttons = new function(){
                             layout: 'hbox',
                             style: 'padding-bottom: 5px;padding-left:5px;',
                             items: [{
-                                xtype: 'labkey-linkbutton',
+                                xtype: 'ldk-linkbutton',
                                 style: 'margin-left:5px;',
                                 text: '[Check All]',
                                 handler: function(btn){
@@ -472,7 +472,7 @@ SequenceAnalysis.Buttons = new function(){
                                 border: false,
                                 html: '&nbsp;'
                             },{
-                                xtype: 'labkey-linkbutton',
+                                xtype: 'ldk-linkbutton',
                                 style: 'margin-left:5px;',
                                 text: '[Uncheck All]',
                                 handler: function(btn){

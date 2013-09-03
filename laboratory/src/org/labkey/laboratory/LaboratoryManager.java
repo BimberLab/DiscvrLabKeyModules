@@ -322,7 +322,7 @@ public class LaboratoryManager
     {
         if (tableNames == null)
         {
-            tableNames = new ArrayList<String>();
+            tableNames = new ArrayList<>();
             tableNames.add(LaboratorySchema.TABLE_SAMPLE_TYPE);
         }
 
@@ -359,7 +359,7 @@ public class LaboratoryManager
             @Override
             public void exec(ResultSet rs) throws SQLException
             {
-                Map<String, Object> row = new CaseInsensitiveHashMap<Object>();
+                Map<String, Object> row = new CaseInsensitiveHashMap<>();
                 for (String col : columns)
                 {
                     row.put(col, rs.getObject(col));

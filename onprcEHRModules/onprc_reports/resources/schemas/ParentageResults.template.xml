@@ -3,6 +3,7 @@
         <tableName>Data</tableName>
         <tableName>Runs</tableName>
         <tableName>resultSummaryBySubject</tableName>
+        <tableName>resultSummaryBySubjectAndMethod</tableName>
     </tables>
     <metadata>
         <ns:tables xmlns:ns="http://labkey.org/data/xml">

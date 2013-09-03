@@ -10,7 +10,8 @@ SELECT
   t.parentageBloodDrawVol,
   t.mhcBloodDrawVol,
   t.dnaBloodDrawVol,
-  (t.parentageBloodDrawVol + t.mhcBloodDrawVol + t.dnaBloodDrawVol) as totalBloodDrawVol
+  (t.parentageBloodDrawVol + t.mhcBloodDrawVol + t.dnaBloodDrawVol) as totalBloodDrawVol,
+  'EDTA' as tube_type
 
 FROM (
 
@@ -28,23 +29,21 @@ SELECT
     WHEN (f.flags LIKE '%Parentage Blood Draw Needed%') THEN 1
     WHEN (f.flags LIKE '%Parentage Blood Draw Collected%') THEN 0
     WHEN (gp.Id IS NOT NULL) THEN 0
-
-    --TODO: I think this should get removed
     WHEN (pd.subjectId IS NOT NULL) THEN 0
     ELSE 1
   END as parentageBloodDrawVol,
   --Note: MHC draws are being taken on all U42 Animals (Males and females) and non-U42 males only
   --Note: if changing this logic, mhcFlagSummary.sql should also be updated
   CASE
-    WHEN (f.flags LIKE '%MHC Blood Draw Needed%') THEN 2
+    WHEN (f.flags LIKE '%MHC Blood Draw Needed%') THEN 1
     WHEN (f.flags LIKE '%MHC Blood Draw Collected%') THEN 0
-    WHEN (d.species = 'RHESUS MACAQUE' AND d.geographic_origin = 'India' AND m.Id IS NULL AND (a.Id IS NOT NULL OR d.gender = 'm')) THEN 2
+    WHEN (d.species = 'RHESUS MACAQUE' AND d.geographic_origin = 'India' AND m.Id IS NULL AND (a.Id IS NOT NULL OR d.gender = 'm')) THEN 1
     ELSE 0
   END as mhcBloodDrawVol,
   CASE
-    WHEN (f.flags LIKE '%DNA Bank Blood Draw Needed%') THEN 5
+    WHEN (f.flags LIKE '%DNA Bank Blood Draw Needed%') THEN 6
     WHEN (f.flags LIKE '%DNA Bank Blood Draw Collected%') THEN 0
-    WHEN (s.subjectId IS NULL) THEN 5  --timestampdiff('SQL_TSI_DAY', curdate(), d.birth) > 365 AND
+    WHEN (s.subjectId IS NULL) THEN 6  --timestampdiff('SQL_TSI_DAY', curdate(), d.birth) > 365 AND
     ELSE 0
   END as dnaBloodDrawVol
   
@@ -54,9 +53,9 @@ FROM study.Demographics d
 LEFT JOIN (
     SELECT
       pd.subjectId,
-      count(*) as total
-    FROM Parentage_Data.Data pd
-    WHERE pd.run.method = 'UC Davis'
+      count(pd.subjectId) as total
+    FROM Parentage_Data.resultSummaryBySubjectAndMethod pd
+    WHERE pd.method = 'UC Davis'
     GROUP BY pd.subjectId
 ) pd ON (d.Id = pd.subjectId)
 

@@ -212,7 +212,7 @@ Ext4.define('SequenceAnalysis.panel.DNAPanel', {
                 name: 'dbprefix',
                 value: ''
             },{
-                xtype: 'labkey-linkbutton',
+                xtype: 'ldk-linkbutton',
                 text: 'Click here to view reference sequences',
                 linkPrefix: '[',
                 linkSuffix: ']',

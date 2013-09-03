@@ -420,7 +420,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     html: 'This allows you to add readsets from an excel file.  Just download the template using the link below, fill it out, then cut/paste it into the box below.  Note that all fields are case-sensitive and the import will fail if the case does not match.<br><br>If you are using file/barcode combinations imported previously, if you enter only the file/barcodes the rest of the information will populate automatically.',
                     style: 'padding-bottom: 10px;'
                 },{
-                    xtype: 'labkey-linkbutton',
+                    xtype: 'ldk-linkbutton',
                     text: 'Download Excel Template For Samples Without Preexisting Readsets',
                     linkPrefix: '[',
                     linkSuffix: ']',
@@ -448,7 +448,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                         LABKEY.Utils.convertToExcel(config);
                     }
                 },{
-                    xtype: 'labkey-linkbutton',
+                    xtype: 'ldk-linkbutton',
                     text: 'Download Excel Template To Enter Samples Using Readset Id',
                     linkPrefix: '[',
                     linkSuffix: ']',

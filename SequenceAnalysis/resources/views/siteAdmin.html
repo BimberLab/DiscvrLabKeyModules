@@ -23,12 +23,12 @@
                         '-DsequencePipelineEnabled=true<br><br>' +
                         'Please see the <b><a href="https://www.labkey.org/wiki/home/Documentation/page.view?name=configWebappMemory">documentation on configuring webapp memory</a></b>, which is analogous to the setting you need to add.  Once you have done this, click the links below to run the tests:'
                 },{
-                    xtype: 'labkey-linkbutton',
+                    xtype: 'ldk-linkbutton',
                     linkCls: 'labkey-text-link',
                     text: 'Run Sequence Analysis Test',
                     href: LABKEY.ActionURL.buildURL('junit', 'run', null, {testCase: 'org.labkey.sequenceanalysis.TestHelper$SequenceAnalysisPipelineTestCase'})
                 },{
-                    xtype: 'labkey-linkbutton',
+                    xtype: 'ldk-linkbutton',
                     linkCls: 'labkey-text-link',
                     text: 'Run Sequence Import Test',
                     href: LABKEY.ActionURL.buildURL('junit', 'run', null, {testCase: 'org.labkey.sequenceanalysis.TestHelper$SequenceImportPipelineTestCase'})

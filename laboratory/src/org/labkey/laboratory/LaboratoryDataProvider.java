@@ -80,7 +80,7 @@ public class LaboratoryDataProvider extends AbstractDataProvider
 
     public List<NavItem> getSampleNavItems(Container c, User u)
     {
-        List<NavItem> items = new ArrayList<NavItem>();
+        List<NavItem> items = new ArrayList<>();
         if (c.getActiveModules().contains(getOwningModule()))
         {
             items.add(new SimpleQueryNavItem(this, LaboratoryModule.SCHEMA_NAME, "Samples", LaboratoryService.NavItemCategory.samples.name()));
@@ -93,7 +93,7 @@ public class LaboratoryDataProvider extends AbstractDataProvider
 
     public List<NavItem> getReportItems(Container c, User u)
     {
-        List<NavItem> items = new ArrayList<NavItem>();
+        List<NavItem> items = new ArrayList<>();
         if (c.getActiveModules().contains(getOwningModule()))
         {
             String category = "Samples"; //note, this is how they appear in the reports panel

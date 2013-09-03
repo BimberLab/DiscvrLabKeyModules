@@ -285,7 +285,7 @@ public class SequenceAnalysisManager
     public static File getSamJar()
     {
         File samJar = new File(ModuleLoader.getInstance().getWebappDir(), "WEB-INF/lib");
-        samJar = new File(samJar, "sam-1.82.jar");
+        samJar = new File(samJar, "sam-1.96.jar");
         if(!samJar.exists())
             throw new RuntimeException("Not found: " + samJar.getPath());
 

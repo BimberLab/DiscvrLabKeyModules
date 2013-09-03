@@ -1456,6 +1456,7 @@ public class LaboratoryController extends SpringActionController
 
             Map<String, Object> results = new HashMap<>();
             PropertyManager.PropertyMap map = PropertyManager.getWritableProperties(getContainer(), NavItem.PROPERTY_CATEGORY, true);
+            map.clear();
 
             JSONObject json = new JSONObject(form.getJsonData());
             Set<Module> activeModules = getContainer().getActiveModules();

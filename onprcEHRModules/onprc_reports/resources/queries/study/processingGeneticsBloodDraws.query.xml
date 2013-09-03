@@ -26,6 +26,9 @@
                         <columnTitle>Total Blood Draw (mL)</columnTitle>
                         <facetingBehavior>ALWAYS_OFF</facetingBehavior>
                     </column>
+                    <column columnName="tube_type">
+                        <columnTitle>Tube Type</columnTitle>
+                    </column>
                 </columns>
                 <buttonBarOptions includeStandardButtons="true">
                     <includeScript>geneticscore.context</includeScript>

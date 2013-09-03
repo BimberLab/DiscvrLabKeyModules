@@ -12,6 +12,7 @@ import org.labkey.api.module.SimpleModuleContainerListener;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.view.HttpView;
 import org.labkey.laboratory.query.LaboratoryWorkbooksTable;
 
@@ -84,7 +85,7 @@ public class LaboratoryContainerListener extends SimpleModuleContainerListener
                 if (u == null && HttpView.hasCurrentView())
                     u = HttpView.currentView().getViewContext().getUser();
 
-                if (u == null)
+                if (u == null || !ce.container.hasPermission(u, InsertPermission.class))
                     return;
 
                 if (ce.container.getActiveModules().contains(ModuleLoader.getInstance().getModule(LaboratoryModule.class)))
@@ -102,6 +103,10 @@ public class LaboratoryContainerListener extends SimpleModuleContainerListener
                     try
                     {
                         LaboratoryManager.get().populateDefaultData(u, ce.container, null);
+                    }
+                    catch (IllegalArgumentException e)
+                    {
+                        _log.error("Unable to populate defaults in laboratory module tables", e);
                     }
                     catch (BatchValidationException e)
                     {

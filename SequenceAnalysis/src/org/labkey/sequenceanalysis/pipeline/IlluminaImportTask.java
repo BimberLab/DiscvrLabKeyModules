@@ -374,6 +374,21 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         {
             throw new PipelineJobException(e);
         }
+        finally
+        {
+            if (reader != null)
+            {
+                try
+                {
+                    reader.close();
+                }
+                catch (IOException e)
+                {
+                    //ignore
+                }
+
+            }
+        }
     }
 
     //not very efficient, but we only expect a handful of samples per run

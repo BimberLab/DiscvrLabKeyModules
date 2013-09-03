@@ -40,7 +40,7 @@
                     style: 'padding-bottom: 10px;',
                     html: 'The subjects is your data can be assigned to groups, which may represent a study, project or other grouping.  Each assignment has a start and end date (enddate is optional; blank indicates the subject is still assigned).  Entering this information provides several benefits.  For any data point or sample, so long as it contains a subjectId, the system can automatically tell you the groups to which it belongs.  This allows datasets to be filtered by group, without needing to tag each individiual data point.  In addition to filtering, the system can automatically calculate dates relative to the start (ie. days post start, weeks post start, etc).'
                 },{
-                    xtype: 'labkey-linkbutton',
+                    xtype: 'ldk-linkbutton',
                     text: 'Manage Groups and Enrollment',
                     href: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'laboratory', 'query.queryName': 'project_usage'})
                 }]
@@ -58,7 +58,7 @@
                     style: 'padding-bottom: 10px;',
                     html: 'For each subject, you can enter any number of \'major events\'.  These could include events such as vaccination, dates of surgeries or other events of relevance to your work.  If events are entered, the system is able to automatically calculate dates relative to these events.  In other words, you may have imported a freezer achive containing 100s or 1000s of samples.  Each of these freezer records contains the subjectId and sample date.  Rather than needing to tag each record with \'days post vaccination\', this number can be automatically calculated.  This is especially useful if you need to view relative dates for historic samples where an import event was not anticipated.'
                 },{
-                    xtype: 'labkey-linkbutton',
+                    xtype: 'ldk-linkbutton',
                     text: 'Manage Events for Subjects',
                     href: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'laboratory', 'query.queryName': 'major_events'})
                 }]

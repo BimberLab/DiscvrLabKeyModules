@@ -15,6 +15,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
+import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 
@@ -105,7 +106,8 @@ public class GeneticsCoreNotification implements Notification
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromString("isActive"), true, CompareType.EQUAL);
-        filter.addCondition(FieldKey.fromString("flag"), flag, CompareType.EQUAL);
+        filter.addCondition(FieldKey.fromString("category"), "Genetics", CompareType.EQUAL);
+        filter.addCondition(FieldKey.fromString("value"), flag, CompareType.EQUAL);
 
         TableInfo ti = QueryService.get().getUserSchema(u, c, "study").getTable("Animal Record Flags");
         TableSelector ts = new TableSelector(ti, PageFlowUtil.set("Id"), filter, null);
@@ -115,7 +117,7 @@ public class GeneticsCoreNotification implements Notification
             ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, "study", "processingGeneticsBloodDraws");
             url.addParameter("query.flags~contains", flag);
 
-            msg.append("<b>WARNING: There are " + count + " animals actively flagged as '" + flag + "'.  If these animals have been drawn, this flag should be removed to avoid confusion.</b>  <a href='" + url.toString() + "'>Click here to view these animals</a><hr>");
+            msg.append("<b>WARNING: There are " + count + " animals actively flagged as '" + flag + "'.  If these animals have been drawn, this flag should be removed to avoid confusion.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view these animals</a><hr>");
         }
     }
 
@@ -142,7 +144,7 @@ public class GeneticsCoreNotification implements Notification
             url.addParameter("query.drawnFlagDateAdded~datelte", "-180d");
             url.addParameter("query.hasMHCData~eq", false);
 
-            msg.append("<b>WARNING: There are " + count + " animals that have been flagged as drawn for MHC typing more than 6 months ago that lack MHC data.</b>  <a href='" + url.toString() + "'>Click here to view these animals</a><hr>");
+            msg.append("<b>WARNING: There are " + count + " animals that have been flagged as drawn for MHC typing more than 6 months ago that lack MHC data.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view these animals</a><hr>");
         }
     }
 
@@ -177,15 +179,35 @@ public class GeneticsCoreNotification implements Notification
             url.addParameter("query.flags~contains", flag1);
             url.addParameter("query.flags~contains", flag2);
 
-            msg.append("<b>WARNING: There are " + count + " animals that have been flagged as drawn for " + noun + " and needing blood draw for " + noun + ".  One of these conflicting flags should be removed</b>  <a href='" + url.toString() + "'>Click here to view these animals</a><hr>");
+            msg.append("<b>WARNING: There are " + count + " animals that have been flagged as drawn for " + noun + " and needing blood draw for " + noun + ".  One of these conflicting flags should be removed</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view these animals</a><hr>");
         }
     }
 
     public void getDNADiscrepancies(Container c, User u, StringBuilder msg)
     {
-//        String queryName = "dnaFlagSummary";
-//
+        String queryName = "dnaFlagSummary";
+        SimpleFilter filter = new SimpleFilter();
 
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.add(Calendar.DATE, -180);
+
+        filter.addCondition(FieldKey.fromString("hasBloodDrawnFlag"), true, CompareType.EQUAL);
+        filter.addCondition(FieldKey.fromString("drawnFlagDateAdded"), cal.getTime(), CompareType.DATE_LTE);
+        filter.addCondition(FieldKey.fromString("hasSample"), false, CompareType.EQUAL);
+
+        TableInfo ti = QueryService.get().getUserSchema(u, c, "study").getTable(queryName);
+        TableSelector ts = new TableSelector(ti, PageFlowUtil.set("Id"), filter, null);
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, "study", queryName);
+            url.addParameter("query.hasBloodDrawnFlag~eq", true);
+            url.addParameter("query.drawnFlagDateAdded~datelte", "-180d");
+            url.addParameter("query.hasSample~eq", false);
+
+            msg.append("<b>WARNING: There are " + count + " animals that have been flagged as drawn for DNA Bank more than 6 months ago that lack an appropriate sample in the freezer.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view these animals</a><hr>");
+        }
     }
 
     public void getParentageDiscrepancies(Container c, User u, StringBuilder msg)
@@ -211,7 +233,7 @@ public class GeneticsCoreNotification implements Notification
             url.addParameter("query.drawnFlagDateAdded~datelte", "-180d");
             url.addParameter("query.hasParentageData~eq", false);
 
-            msg.append("<b>WARNING: There are " + count + " animals that have been flagged as drawn for Parentage more than 6 months ago that lack Parentage data.</b>  <a href='" + url.toString() + "'>Click here to view these animals</a><hr>");
+            msg.append("<b>WARNING: There are " + count + " animals that have been flagged as drawn for Parentage more than 6 months ago that lack Parentage data.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view these animals</a><hr>");
         }
     }
 }

@@ -69,6 +69,7 @@ Ext4.define('Laboratory.panel.ItemVisibilityPanel', {
                 border: false
             },
             style: 'margin-bottom: 20px;',
+            itemCategory: name,
             items: [{
                 html: '<b>' + label + '</b>',
                 style: 'padding-bottom: 5px;'

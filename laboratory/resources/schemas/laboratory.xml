@@ -468,6 +468,7 @@
                 <ns:shownInUpdateView>false</ns:shownInUpdateView>
                 <ns:isUserEditable>false</ns:isUserEditable>
                 <ns:columnTitle>Row Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
             </ns:column>
             <ns:column columnName="antibodyId">
                 <ns:columnTitle>Antibody Id</ns:columnTitle>
@@ -485,8 +486,8 @@
             <ns:column columnName="antigen">
                 <ns:columnTitle>Antigen</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="concentration">
-                <ns:nullable>true</ns:nullable>
+            <ns:column columnName="specificity">
+                <ns:columnTitle>Specificity</ns:columnTitle>
             </ns:column>
             <ns:column columnName="clonality">
                 <ns:columnTitle>Clonality</ns:columnTitle>
@@ -502,7 +503,25 @@
                     <ns:fkDisplayColumnName useRawValue="true"/>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="vendor">
+            <ns:column columnName="mw">
+                <ns:columnTitle>MW (kDa)</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="concentration">
+                <ns:nullable>true</ns:nullable>
+            </ns:column>
+            <ns:column columnName="source">
+                <ns:nullable>true</ns:nullable>
+            </ns:column>
+            <ns:column columnName="catalog">
+                <ns:columnTitle>Catalog #</ns:columnTitle>
+                <ns:nullable>true</ns:nullable>
+            </ns:column>
+            <ns:column columnName="applications">
+                <ns:columnTitle>Applications</ns:columnTitle>
+                <ns:nullable>true</ns:nullable>
+                <ns:inputType>textarea</ns:inputType>
+            </ns:column>
+            <ns:column columnName="location">
                 <ns:nullable>true</ns:nullable>
             </ns:column>
             <ns:column columnName="comment">
