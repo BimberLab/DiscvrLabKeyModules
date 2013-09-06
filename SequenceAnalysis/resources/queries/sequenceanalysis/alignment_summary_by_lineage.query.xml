@@ -1,7 +1,7 @@
 <query xmlns="http://labkey.org/data/xml/query">
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
-            <table tableName="alignment_summary_grouped" tableDbType="TABLE">
+            <table tableName="alignment_summary_by_lineage" tableDbType="TABLE">
                 <tableTitle>Alignment Summary By Lineage</tableTitle>
                 <columns>
                     <column columnName="lineages">

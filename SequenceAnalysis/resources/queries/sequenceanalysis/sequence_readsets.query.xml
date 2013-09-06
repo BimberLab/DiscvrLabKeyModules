@@ -1,7 +1,7 @@
 <query xmlns="http://labkey.org/data/xml/query">
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
-        <table tableName="sequence_analyses" tableDbType="TABLE">
+        <table tableName="sequence_readsets" tableDbType="TABLE">
             <columns>
 
             </columns>

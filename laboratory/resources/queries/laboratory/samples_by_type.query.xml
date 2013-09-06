@@ -1,7 +1,7 @@
 <query xmlns="http://labkey.org/data/xml/query">
   <metadata>
         <tables xmlns="http://labkey.org/data/xml">
-            <table tableName="Samples_By_Type" tableDbType="TABLE">
+            <table tableName="samples_by_type" tableDbType="TABLE">
                 <tableTitle>Samples By Type</tableTitle>
                 <columns>
                     <column columnName="sampletype" />

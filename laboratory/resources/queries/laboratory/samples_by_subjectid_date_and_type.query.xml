@@ -1,7 +1,7 @@
 <query xmlns="http://labkey.org/data/xml/query">
   <metadata>
         <tables xmlns="http://labkey.org/data/xml">
-            <table tableName="samples_by_subjectid_and_type" tableDbType="TABLE">
+            <table tableName="samples_by_subjectid_date_and_type" tableDbType="TABLE">
                 <tableTitle>Samples By SubjectId, Sample Date And Type</tableTitle>
                 <javaCustomizer>org.labkey.laboratory.query.SamplesCustomizer</javaCustomizer>
                 <columns>

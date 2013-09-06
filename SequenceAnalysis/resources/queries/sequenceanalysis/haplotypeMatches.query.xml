@@ -1,7 +1,7 @@
 <query xmlns="http://labkey.org/data/xml/query">
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
-            <table tableName="haplotype_matches" tableDbType="TABLE">
+            <table tableName="haplotypeMatches" tableDbType="TABLE">
                 <tableTitle>Matching Haplotypes</tableTitle>
                 <columns>
                     <column columnName="haplotype">
