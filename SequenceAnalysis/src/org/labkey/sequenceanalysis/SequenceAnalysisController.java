@@ -1036,13 +1036,13 @@ public class SequenceAnalysisController extends SpringActionController
             {
                 for (File f : files)
                 {
-                    if(!f.exists())
+                    if (!f.exists())
                     {
                         throw new NotFoundException("File " + f.getPath() + " does not exist");
                     }
                     in = new FileInputStream(f);
 
-                    if(!gz.isType(f))
+                    if (!gz.isType(f))
                     {
                         gis = new GZIPInputStream(in);
                         IOUtils.copy(gis, response.getOutputStream());

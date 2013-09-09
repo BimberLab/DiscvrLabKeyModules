@@ -279,7 +279,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
         });
     },
 
-    populatePreviewTab: function(){;
+    populatePreviewTab: function(){
         var previewTab = this.down('#previewTab');
 
         var items = this.generateTemplatePreview();
@@ -447,7 +447,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
 
                     rows.push({
                         xtype: 'displayfield',
-                        fieldLabel: row[0],
+                        fieldLabel: row[0] ? row[0].toString() : '',
                         value: value
                     });
                 }, this);

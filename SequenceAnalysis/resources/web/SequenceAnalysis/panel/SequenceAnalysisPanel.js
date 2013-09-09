@@ -594,11 +594,11 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 xtype: 'refsequencepanel'
             },{
                 xtype: 'displayfield',
-                fieldLabel: 'Aligner Settings'
+                fieldLabel: 'Alignment Settings'
             },{
                 xtype: 'alignerpanel',
                 value: 'bwasw'
-            })
+            });
 
             this.down('#reportPanel').setDisabled(false);
             this.down('#snpPanel').setDisabled(false);
