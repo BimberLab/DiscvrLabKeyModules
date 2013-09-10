@@ -3,6 +3,7 @@
         <tables xmlns="http://labkey.org/data/xml">
         <table tableName="ref_aa_sequences" tableDbType="TABLE">
             <buttonBarOptions includeStandardButtons="false">
+                <includeScript>laboratory.context</includeScript>
                 <includeScript>/sequenceanalysis/sequenceanalysisButtons.js</includeScript>
                 <item text="Views">
                     <originalText>Views</originalText>

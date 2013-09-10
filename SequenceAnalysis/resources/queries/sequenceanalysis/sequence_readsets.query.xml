@@ -6,6 +6,7 @@
 
             </columns>
             <buttonBarOptions includeStandardButtons="false">
+                <includeScript>laboratory.context</includeScript>
                 <includeScript>/sequenceanalysis/sequenceanalysisButtons.js</includeScript>
                 <item text="Views">
                     <originalText>Views</originalText>

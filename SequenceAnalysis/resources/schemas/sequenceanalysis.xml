@@ -999,7 +999,7 @@
         <ns:tableTitle>Reference AA Features</ns:tableTitle>
         <ns:pkColumnName>rowid</ns:pkColumnName>
         <ns:tableUrl>/query/recordDetails.view?schemaName=sequenceanalysis&amp;query.queryName=Ref_AA_Features&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
-        <ns:updateUrl>/query/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=Ref_AA_Features&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
+        <ns:updateUrl>/ldk/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=Ref_AA_Features&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
         <ns:columns>
@@ -1078,7 +1078,7 @@
         <ns:tableTitle>Reference NT Features</ns:tableTitle>
         <ns:pkColumnName>rowid</ns:pkColumnName>
         <ns:tableUrl>/query/recordDetails.view?schemaName=sequenceanalysis&amp;query.queryName=Ref_NT_Features&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
-        <ns:updateUrl>/query/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=Ref_NT_Features&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
+        <ns:updateUrl>/ldk/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=Ref_NT_Features&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
         <ns:columns>
@@ -1343,7 +1343,7 @@
         <ns:pkColumnName>rowid</ns:pkColumnName>
         <ns:tableUrl>/sequenceanalysis/readsetDetails.view?id=${rowid}</ns:tableUrl>
         <ns:importUrl>/query/importData.view?schemaName=sequenceanalysis&amp;query.queryName=Sequence_Readsets&amp;keyField=rowid&amp;</ns:importUrl>
-        <ns:updateUrl>/query/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=Sequence_Readsets&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
+        <ns:updateUrl>/ldk/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=Sequence_Readsets&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:deleteUrl></ns:deleteUrl>
         <ns:titleColumn>name</ns:titleColumn>
@@ -1653,7 +1653,7 @@
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Quality Metrics</ns:tableTitle>
         <ns:tableUrl>/query/recordDetails.view?schemaName=sequenceanalysis&amp;query.queryName=Quality_Metrics&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
-        <ns:updateUrl>/query/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=Quality_Metrics&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
+        <ns:updateUrl>/ldk/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=Quality_Metrics&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
         <ns:importUrl></ns:importUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:columns>
@@ -1765,7 +1765,7 @@
         <ns:tableTitle>Instrument Runs</ns:tableTitle>
         <ns:tableUrl>/sequenceanalysis/instrumentRunDetails.view?id=${rowid}</ns:tableUrl>
         <ns:importUrl>/query/importData.view?schemaName=sequenceanalysis&amp;query.queryName=Instrument_Runs&amp;keyField=rowid&amp;</ns:importUrl>
-        <ns:updateUrl>/query/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=Instrument_Runs&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
+        <ns:updateUrl>/ldk/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=Instrument_Runs&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:columns>
             <ns:column columnName="rowid">
@@ -2129,6 +2129,7 @@
             </ns:column>
         </ns:columns>
         <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:includeScript>laboratory.context</ns:includeScript>
             <ns:includeScript>/sequenceanalysis/window/IlluminaApplicationWindow.js</ns:includeScript>
             <ns:includeScript>/sequenceanalysis/sequenceanalysisButtons.js</ns:includeScript>
             <ns:item insertPosition="beginning" text="Import New Application">
@@ -2173,6 +2174,7 @@
             </ns:column>
         </ns:columns>
         <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:includeScript>laboratory.context</ns:includeScript>
             <ns:includeScript>/sequenceanalysis/window/IlluminaSampleKitWindow.js</ns:includeScript>
             <ns:includeScript>/sequenceanalysis/sequenceanalysisButtons.js</ns:includeScript>
             <ns:item insertPosition="beginning" text="Import New Sample Kit">

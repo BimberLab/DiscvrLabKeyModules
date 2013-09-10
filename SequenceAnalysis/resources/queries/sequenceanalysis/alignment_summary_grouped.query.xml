@@ -28,6 +28,7 @@
                     </column>
                 </columns>
                 <buttonBarOptions includeStandardButtons="true">
+                    <includeScript>laboratory.context</includeScript>
                     <includeScript>/sequenceanalysis/sequenceanalysisButtons.js</includeScript>
                     <item requiresSelection="true" text="Edit Alignments" insertPosition="end" permission="UPDATE">
                         <onClick>SequenceAnalysis.Buttons.deactivateAlignments(dataRegionName)</onClick>

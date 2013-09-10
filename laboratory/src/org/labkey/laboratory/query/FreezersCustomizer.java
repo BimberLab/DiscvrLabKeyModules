@@ -38,7 +38,7 @@ public class FreezersCustomizer implements TableCustomizer
             ati.setDetailsURL(DetailsURL.fromString("/laboratory/freezerDetails.view?freezerName=${name}"));
             ati.setImportURL(DetailsURL.fromString("/query/importData.view?schemaName=" + schemaName + "&query.queryName=" + queryName + "&keyField=" + keyField + "&columns=*"));
             ati.setInsertURL(AbstractTableInfo.LINK_DISABLER);
-            ati.setUpdateURL(DetailsURL.fromString("/query/manageRecord.view?schemaName=" + schemaName + "&query.queryName=" + queryName + "&keyField=" + keyField + "&key=${" + keyField + "}&columns=*"));
+            ati.setUpdateURL(DetailsURL.fromString("/ldk/manageRecord.view?schemaName=" + schemaName + "&query.queryName=" + queryName + "&keyField=" + keyField + "&key=${" + keyField + "}&columns=*"));
         }
     }
 }

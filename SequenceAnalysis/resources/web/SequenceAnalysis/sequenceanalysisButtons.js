@@ -8,8 +8,8 @@ Ext4.namespace('SequenceAnalysis.Buttons');
 LABKEY.requiresExt4ClientAPI();
 LABKEY.requiresScript('/extWidgets/ImportWizard.js');
 LABKEY.requiresScript('/SequenceAnalysis/window/RunExportWindow.js');
-LABKEY.requiresScript('/LDK/Utils.js');
-LABKEY.requiresScript('/laboratory/utils.js');
+//LABKEY.requiresScript('/LDK/Utils.js');
+//LABKEY.requiresScript('/laboratory/utils.js');
 
 SequenceAnalysis.Buttons = new function(){
     return {

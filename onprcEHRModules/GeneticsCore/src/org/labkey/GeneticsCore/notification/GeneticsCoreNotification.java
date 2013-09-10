@@ -80,7 +80,7 @@ public class GeneticsCoreNotification implements Notification
     @Override
     public String getDescription()
     {
-        return "The report is designed provide a summary of animals requiring blood draws for genetics services, or animals that have been tagged as having blood drawn, but lack data.";
+        return "The report is designed provide a summary of alerts relevant to genetics, including alerts about genetics blood draws, parentage, etc.";
     }
 
     public String getMessage(Container c, User u)
@@ -99,7 +99,21 @@ public class GeneticsCoreNotification implements Notification
         getParentageConflictingFlags(c, u, msg);
         getActiveExclusions(c, u, msg, GeneticsCoreManager.PARENTAGE_DRAW_NEEDED);
 
+        getParentageConflicts(c, u, msg);
+
         return msg.toString();
+    }
+
+    public void getParentageConflicts(Container c, User u, StringBuilder msg)
+    {
+        TableInfo ti = QueryService.get().getUserSchema(u, c, "study").getTable("parentageConflicts");
+        TableSelector ts = new TableSelector(ti, PageFlowUtil.set("Id"));
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, "study", "parentageConflicts");
+            msg.append("<b>WARNING: There are " + count + " animals with duplicate or conflicting parentage calls.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view these animals</a><hr>");
+        }
     }
 
     public void getActiveExclusions(Container c, User u, StringBuilder msg, String flag)

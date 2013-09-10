@@ -727,6 +727,7 @@ labModules/laboratory/resources/web/laboratory/tabbedReports.js -text
 labModules/laboratory/resources/web/laboratory/utils.js -text
 labModules/laboratory/resources/web/laboratory/window/AppendStandardsWindow.js -text
 labModules/laboratory/resources/web/laboratory/window/AssaySpreadsheetImportWindow.js -text
+labModules/laboratory/resources/web/laboratory/window/ChangeAssayResultStatusWindow.js -text
 labModules/laboratory/resources/web/laboratory/window/CopyRunWindow.js -text
 labModules/laboratory/resources/web/laboratory/window/SaveStandardsWindow.js -text
 labModules/laboratory/resources/web/laboratory/window/WellAssignmentWindow.js -text
@@ -789,6 +790,7 @@ onprcEHRModules/README.txt -text
 onprcEHRModules/onprc_reports/ONPRC_Reports.iml -text
 onprcEHRModules/onprc_reports/build.xml -text
 onprcEHRModules/onprc_reports/module.properties -text
+onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Pivoted.sql -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Raw.sql -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Unified.query.xml -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Unified.sql -text

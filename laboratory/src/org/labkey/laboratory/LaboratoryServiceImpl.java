@@ -321,11 +321,11 @@ public class LaboratoryServiceImpl extends LaboratoryService
     {
         Map<String, List<ButtonConfigFactory>> schemaMap = _assayButtons.get(providerName);
         if (schemaMap == null)
-            schemaMap = new CaseInsensitiveHashMap<List<ButtonConfigFactory>>();
+            schemaMap = new CaseInsensitiveHashMap<>();
 
         List<ButtonConfigFactory> list = schemaMap.get(domain);
         if (list == null)
-            list = new ArrayList<ButtonConfigFactory>();
+            list = new ArrayList<>();
 
         list.add(btn);
 

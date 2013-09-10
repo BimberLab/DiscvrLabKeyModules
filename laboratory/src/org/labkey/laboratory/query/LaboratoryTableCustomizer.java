@@ -248,7 +248,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
         List<ColumnInfo> pks = ds.getPkColumns();
         if (pks.size() != 1){
-            _log.error("Table does not have a single PK column: " + ds.getName());
+            _log.warn("Table does not have a single PK column: " + ds.getName());
             return;
         }
 
@@ -305,7 +305,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
         List<ColumnInfo> pks = ds.getPkColumns();
         if (pks.size() != 1){
-            _log.error("Table does not have a single PK column: " + ds.getName());
+            _log.warn("Table does not have a single PK column: " + ds.getName());
             return;
         }
         ColumnInfo pk = pks.get(0);
@@ -408,7 +408,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
         List<ColumnInfo> pks = ds.getPkColumns();
         if (pks.size() != 1){
-            _log.error("Table does not have a single PK column: " + ds.getName());
+            _log.warn("Table does not have a single PK column: " + ds.getName());
             return;
         }
         ColumnInfo pk = pks.get(0);
@@ -602,7 +602,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
         List<ColumnInfo> pks = ds.getPkColumns();
         if (pks.size() != 1){
-            _log.error("Table does not have a single PK column: " + ds.getName());
+            _log.warn("Table does not have a single PK column: " + ds.getName());
             return;
         }
         ColumnInfo pk = pks.get(0);

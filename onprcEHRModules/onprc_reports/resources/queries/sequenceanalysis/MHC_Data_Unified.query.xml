@@ -3,6 +3,11 @@
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="MHC_Data_Unified" tableDbType="NOT_IN_DB">
                 <tableTitle>MHC Data</tableTitle>
+                <columns>
+                    <column columnName="totalLineages">
+                        <isHidden>true</isHidden>
+                    </column>
+                </columns>
             </table>
         </tables>
     </metadata>
