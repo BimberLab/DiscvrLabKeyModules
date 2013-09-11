@@ -46,6 +46,7 @@ Ext4.onReady(function(){
                         {
                             cfg.menu = {
                                 xtype: 'menu',
+                                showSeparator: false,
                                 items: [{
                                     text: i.assayRunTemplateText || 'Prepare Run',
                                     iconCls: 'x-menu-noicon',
@@ -138,34 +139,12 @@ Ext4.onReady(function(){
                 border: false,
                 style: 'margin-left:auto;margin-right:auto;padding:5px;',
                 defaults: {
-                    xtype: 'button',
-                    style: 'margin-left:auto;margin-right:auto;',
-                    align: 'center',
-                    baseCls: 'no-class',  //remove default ext styling
-                    hrefTarget: null,
-                    cls: 'tool-icon',
-                    icon: true,
-                    setIcon: function(){
-                        return this;
-                    },
-                    renderTpl:
-                        '<div id="{id}-btnWrap" style="margin-left:auto;margin-right:auto;padding-bottom:20px;">' +
-                            '<div id="{id}-btnEl" class="tool-icon" role="button">' +
-                                '<tpl if="href"><a href="{href}"></tpl>' +
-                                '<tpl if="!href"><a href="javascript:void(0)"></tpl>' +
-                                '<div><img id="{id}-btnIconEl" src="{icon}"/ ></div>' +
-                                '<span id="{id}-btnInnerEl" >' +
-                                    '{text}' +
-                                '</span>' +
-                                '</a>' +
-                            '</div>' +
-                        '</div>'
+                    xtype: 'laboratory-iconbutton',
+                    align: 'center'
                 },
                 items: [{
                     text: 'Import Data',
-                    renderData: {
-                        icon: LABKEY.ActionURL.getContextPath() + '/study/tools/study_overview.png'
-                    },
+                    icon: LABKEY.ActionURL.getContextPath() + '/study/tools/study_overview.png',
                     disabled: importItems.length == 0,
                     menu: {
                         showSeparator: false,
@@ -173,9 +152,7 @@ Ext4.onReady(function(){
                     }
                 },{
                     text: 'Import Samples',
-                    renderData: {
-                        icon: LABKEY.ActionURL.getContextPath() + '/study/tools/specimen_report.png'
-                    },
+                    icon: LABKEY.ActionURL.getContextPath() + '/study/tools/specimen_report.png',
                     disabled: sampleItems.length == 0,
                     menu: {
                         showSeparator: false,
@@ -183,9 +160,7 @@ Ext4.onReady(function(){
                     }
                 },{
                     text: 'Data Browser',
-                    renderData: {
-                        icon: LABKEY.ActionURL.getContextPath() + '/study/tools/timeline_chart.png'
-                    },
+                    icon: LABKEY.ActionURL.getContextPath() + '/study/tools/timeline_chart.png',
                     href: LABKEY.ActionURL.buildURL('laboratory', 'dataBrowser', Laboratory.Utils.getQueryContainerPath())
                 }]
             };
@@ -193,9 +168,7 @@ Ext4.onReady(function(){
             if(LABKEY.Security.currentUser.isAdmin){
                 config.items.push({
                     text: 'Settings',
-                    renderData: {
-                        icon: LABKEY.ActionURL.getContextPath() + '/study/tools/settings.png'
-                    },
+                    icon: LABKEY.ActionURL.getContextPath() + '/study/tools/settings.png',
                     href: LABKEY.ActionURL.buildURL('laboratory', 'labSettings', Laboratory.Utils.getQueryContainerPath())
                 });
             }

@@ -1,5 +1,6 @@
 <view xmlns="http://labkey.org/data/xml/view" title="Lab Tools">
     <dependencies>
         <dependency path="laboratory.context" />
+        <dependency path="laboratory/button/IconButton.js"/>
     </dependencies>
 </view>
