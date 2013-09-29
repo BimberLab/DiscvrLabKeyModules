@@ -75,7 +75,7 @@ Ext4.define('SequenceAnalysis.panel.InstrumentImportPanel', {
                 displayField: 'platform',
                 valueField: 'platform',
                 allowBlank: false,
-                store: Ext4.create('LABKEY.ext4.Store', {
+                store: Ext4.create('LABKEY.ext4.data.Store', {
                     schemaName: 'sequenceanalysis',
                     queryName: 'sequence_platforms',
                     columns: 'platform',
@@ -95,7 +95,7 @@ Ext4.define('SequenceAnalysis.panel.InstrumentImportPanel', {
                 value: LABKEY.ActionURL.getParameter("instrumentId"),
                 displayField: 'displayname',
                 valueField: 'rowid',
-                store: Ext4.create('LABKEY.ext4.Store', {
+                store: Ext4.create('LABKEY.ext4.data.Store', {
                     schemaName: 'sequenceanalysis',
                     queryName: 'instruments',
                     columns: 'rowid,displayname',

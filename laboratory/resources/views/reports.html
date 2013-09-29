@@ -5,7 +5,7 @@
     Laboratory.reports.viralLoadGraph = function(){alert('hello')}
 
     Ext4.onReady(function (){
-        var reportStore = Ext4.create('LABKEY.ext4.Store', {
+        var reportStore = Ext4.create('LABKEY.ext4.data.Store', {
             schemaName: 'laboratory',
             queryName: 'reports',
             filterArray: [LABKEY.Filter.create('visible', true, LABKEY.Filter.Types.EQUAL)],

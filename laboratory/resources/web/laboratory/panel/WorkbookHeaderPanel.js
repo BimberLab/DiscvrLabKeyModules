@@ -145,6 +145,7 @@ Ext4.define('Laboratory.panel.WebpartHeaderPanel', {
 
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('laboratory', 'updateWorkbook'),
+            method: 'POST',
             params: values,
             failure: LDK.Utils.getErrorCallback()
         });

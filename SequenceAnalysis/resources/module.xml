@@ -1,5 +1,8 @@
 <module xmlns="http://labkey.org/moduleProperties/xml/">
+    <clientDependencies>
+        <dependency path="sequenceanalysis/sequenceAnalysis.lib.xml"/>
+    </clientDependencies>
     <requiredModuleContext>
-
+        <requiredModule name="laboratory"/>
     </requiredModuleContext>
 </module>

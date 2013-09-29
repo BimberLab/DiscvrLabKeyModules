@@ -19,11 +19,7 @@
        <column name="alignmentfile" />
        <column name="reference_library" />
        <column name="description" />
-       <column name="runid/RowId">
-           <properties>
-               <property name="columnTitle" value="Run"/>
-           </properties>
-       </column>
+       <column name="runid"/>
        <column name="runid/JobId">
            <properties>
                <property name="columnTitle" value="Job Id"/>

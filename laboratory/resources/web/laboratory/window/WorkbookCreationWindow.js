@@ -169,7 +169,7 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
             },
             width: 400,
             queryMode: 'local',
-            store: Ext4.create('LABKEY.ext4.Store', {
+            store: Ext4.create('LABKEY.ext4.data.Store', {
                 schemaName: 'laboratory',
                 queryName: 'workbooks',
                 columns: 'workbookId,container/RowId,container/Title,container/CreatedBy,container/Name',

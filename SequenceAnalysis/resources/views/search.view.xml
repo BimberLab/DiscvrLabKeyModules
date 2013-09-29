@@ -2,7 +2,6 @@
     <dependencies>
         <dependency path="laboratory.context"/>
         <dependency path="SequenceAnalysis/sequenceAnalysis"/>
-        <dependency path="Ext4ClientApi"/>
         <dependency path="/extWidgets/SearchPanel.js"/>
     </dependencies>
 </view>

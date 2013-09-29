@@ -277,7 +277,7 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
             }],
             forceFit: true,
             editable: true,
-            store: Ext4.create('LABKEY.ext4.Store', {
+            store: Ext4.create('LABKEY.ext4.data.Store', {
                 schemaName: LDK.AssayUtils.SCHEMA_NAME,
                 queryName: LDK.AssayUtils.getResultQueryName(this.assayDesign.name),
                 viewName: '~~INSERT~~',

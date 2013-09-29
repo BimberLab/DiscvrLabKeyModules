@@ -26,7 +26,8 @@
                     </column>
                 </columns>
                 <buttonBarOptions includeStandardButtons="true">
-                    <includeScript>/sequenceanalysis/sequenceanalysisButtons.js</includeScript>
+                    <includeScript>laboratory.context</includeScript>
+                    <includeScript>sequenceanalysis/sequenceAnalysis</includeScript>
                     <item requiresSelection="true" text="" insertPosition="end">
                         <onClick>javascript:void(0);</onClick>
                     </item>

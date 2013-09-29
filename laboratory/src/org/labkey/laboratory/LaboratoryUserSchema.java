@@ -12,7 +12,7 @@ import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.security.User;
 import org.labkey.laboratory.query.ContainerIncrementingTable;
 import org.labkey.laboratory.query.LaboratoryWorkbooksTable;
-import org.labkey.laboratory.table.ContainerScopedTable;
+import org.labkey.api.ldk.table.ContainerScopedTable;
 
 /**
  * User: bimber

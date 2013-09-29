@@ -91,7 +91,7 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                                 width: 400,
                                 displayField: 'group_name',
                                 valueField: 'group_name',
-                                store: Ext4.create('LABKEY.ext4.Store', {
+                                store: Ext4.create('LABKEY.ext4.data.Store', {
                                     schemaName: 'sequenceanalysis',
                                     queryName: 'adapter_sets',
                                     autoLoad: true

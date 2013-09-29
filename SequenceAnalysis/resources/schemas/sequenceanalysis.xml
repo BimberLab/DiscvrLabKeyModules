@@ -659,6 +659,25 @@
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
         </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="false">
+            <ns:includeScript>laboratory.context</ns:includeScript>
+            <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
+            <ns:item text="Views">
+                <ns:originalText>Views</ns:originalText>
+            </ns:item>
+            <ns:item text="Delete" permission="ADMIN" requiresSelection="true">
+                <ns:onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</ns:onClick>
+            </ns:item>
+            <ns:item text="Export">
+                <ns:originalText>Export</ns:originalText>
+            </ns:item>
+            <ns:item text="Print">
+                <ns:originalText>Print</ns:originalText>
+            </ns:item>
+            <ns:item text="Page Size">
+                <ns:originalText>Page Size</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>        
     </ns:table>
     <ns:table tableName="dna_adapters" tableDbType="TABLE" useColumnOrder="true">
         <ns:auditLogging>DETAILED</ns:auditLogging>
@@ -711,7 +730,7 @@
             </ns:column>
             <ns:column columnName="runid">
                 <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Run Id</ns:columnTitle>
+                <ns:columnTitle>Run</ns:columnTitle>
                 <ns:shownInInsertView>false</ns:shownInInsertView>
                 <ns:shownInUpdateView>true</ns:shownInUpdateView>
                 <ns:isUserEditable>false</ns:isUserEditable>
@@ -719,6 +738,7 @@
                     <ns:fkDbSchema>exp</ns:fkDbSchema>
                     <ns:fkTable>runs</ns:fkTable>
                     <ns:fkColumnName>RowId</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>RowId</ns:fkDisplayColumnName>
                 </ns:fk>
                 <ns:url>/experiment/showRunGraphDetail.view?rowId=${runid}</ns:url>
             </ns:column>
@@ -818,6 +838,75 @@
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
         </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="false">
+            <ns:includeScript>laboratory.context</ns:includeScript>
+            <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
+            <ns:item text="Views">
+                <ns:originalText>Views</ns:originalText>
+            </ns:item>
+            <ns:item text="Delete" permission="DELETE" requiresSelection="true">
+                <ns:onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</ns:onClick>
+            </ns:item>
+            <ns:item text="Export">
+                <ns:originalText>Export</ns:originalText>
+            </ns:item>
+            <ns:item text="Print">
+                <ns:originalText>Print</ns:originalText>
+            </ns:item>
+            <ns:item text="Page Size">
+                <ns:originalText>Page Size</ns:originalText>
+            </ns:item>
+            <ns:item insertPosition="end" requiresSelection="true" text="More Actions">
+                <ns:item text="Re-analyze Selected">
+                    <ns:onClick>SequenceAnalysis.Buttons.performAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null)</ns:onClick>
+                </ns:item>
+                <ns:item text="View FASTQC Report">
+                    <ns:onClick>SequenceAnalysis.Buttons.generateFastQcForAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
+                </ns:item>
+                <ns:item text="Download Sequence Files">
+                    <ns:onClick>SequenceAnalysis.Buttons.downloadFilesForAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
+                </ns:item>
+                <ns:item text="Alignment Reports">
+                    <ns:item text="Alignment Summary">
+                        <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'alignment_summary_grouped'})</ns:onClick>
+                    </ns:item>
+                    <ns:item text="Alignment Summary, By Lineage">
+                        <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'alignment_summary_by_lineage'})</ns:onClick>
+                    </ns:item>
+                    <ns:item text="Alignment Summary, Pivoted By Lineage">
+                        <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'alignment_summary_by_lineage_pivoted'})</ns:onClick>
+                    </ns:item>
+                    <ns:item text="Matching Haplotypes">
+                        <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'haplotypeMatches'})</ns:onClick>
+                    </ns:item>
+                    <ns:item text="View Coverage">
+                        <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'sequence_coverage'})</ns:onClick>
+                    </ns:item>
+                </ns:item>
+                <ns:item text="NT SNP Reports">
+                    <ns:item text="NT Mutation Summary, By Position and Base">
+                        <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'nt_snps_by_pos'})</ns:onClick>
+                    </ns:item>
+                </ns:item>
+                <ns:item text="AA SNP Reports">
+                    <ns:item text="AA Mutation Summary, By Position and Codon">
+                        <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'aa_snps_by_codon'})</ns:onClick>
+                    </ns:item>
+                    <ns:item text="Predicted Drug Resistance Mutations">
+                        <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'drug_resistance_snps'})</ns:onClick>
+                    </ns:item>
+                    <ns:item text="SNP Viewer">
+                        <ns:onClick>SequenceAnalysis.Buttons.viewSNPs(dataRegionName)</ns:onClick>
+                    </ns:item>
+                    <!--<ns:item text="SNP Haplotype Viewer">-->
+                    <!--<ns:onClick>SequenceAnalysis.Buttons.viewSNPDetails(dataRegionName)</ns:onClick>-->
+                    <!--</ns:item>-->
+                </ns:item>
+                <ns:item text="Publish Records">
+                    <ns:onClick>SequenceAnalysis.Buttons.publishAnalyses(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
+                </ns:item>
+            </ns:item>
+        </ns:buttonBarOptions>        
     </ns:table>
     <ns:table tableName="aa_snps" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
@@ -1254,6 +1343,28 @@
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
         </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="false">
+            <ns:includeScript>laboratory.context</ns:includeScript>
+            <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
+            <ns:item text="Views">
+                <ns:originalText>Views</ns:originalText>
+            </ns:item>
+            <!--<item text="Insert New" permission="ADMIN">-->
+            <!--<target>/sequenceanalysis/insertRefSequence.view</ns:target>-->
+            <!--</ns:item>-->
+            <ns:item text="Delete" permission="ADMIN" requiresSelection="true">
+                <ns:onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</ns:onClick>
+            </ns:item>
+            <ns:item text="Export">
+                <ns:originalText>Export</ns:originalText>
+            </ns:item>
+            <ns:item text="Print">
+                <ns:originalText>Print</ns:originalText>
+            </ns:item>
+            <ns:item text="Page Size">
+                <ns:originalText>Page Size</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>        
     </ns:table>
     <ns:table tableName="drug_resistance" tableDbType="TABLE" useColumnOrder="true">
         <ns:auditLogging>DETAILED</ns:auditLogging>
@@ -1435,12 +1546,14 @@
                 <ns:shownInInsertView>false</ns:shownInInsertView>
                 <ns:shownInUpdateView>true</ns:shownInUpdateView>
                 <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:columnTitle>Run Id</ns:columnTitle>
+                <ns:columnTitle>Run</ns:columnTitle>
                 <ns:fk>
                     <ns:fkDbSchema>exp</ns:fkDbSchema>
                     <ns:fkTable>runs</ns:fkTable>
                     <ns:fkColumnName>RowId</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>RowId</ns:fkDisplayColumnName>
                 </ns:fk>
+                <ns:url>/experiment/showRunGraphDetail.view?rowId=${runid}</ns:url>
             </ns:column>
             <ns:column columnName="comments">
                 <ns:columnTitle>Comments</ns:columnTitle>
@@ -1478,6 +1591,45 @@
                 </ns:fk>
             </ns:column>
         </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="false">
+            <ns:includeScript>laboratory.context</ns:includeScript>
+            <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
+            <ns:item text="Views">
+                <ns:originalText>Views</ns:originalText>
+            </ns:item>
+            <ns:item text="Import Data" permission="INSERT">
+                <ns:originalText>Import Data</ns:originalText>
+            </ns:item>
+            <ns:item text="Delete" permission="DELETE" requiresSelection="true">
+                <ns:onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</ns:onClick>
+            </ns:item>
+            <ns:item text="Export">
+                <ns:originalText>Export</ns:originalText>
+            </ns:item>
+            <ns:item text="Print">
+                <ns:originalText>Print</ns:originalText>
+            </ns:item>
+            <ns:item text="Page Size">
+                <ns:originalText>Page Size</ns:originalText>
+            </ns:item>
+            <ns:item insertPosition="end" requiresSelection="true" text="More Actions">
+                <ns:item text="View Analyses">
+                    <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {keyField: 'readset', queryName: 'sequence_analyses'})</ns:onClick>
+                </ns:item>
+                <ns:item text="Analyze Selected">
+                    <ns:onClick>SequenceAnalysis.Buttons.performAnalysisFromReadsets(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null)</ns:onClick>
+                </ns:item>
+                <ns:item text="View FASTQC Report">
+                    <ns:onClick>SequenceAnalysis.Buttons.generateFastQc(dataRegionName);</ns:onClick>
+                </ns:item>
+                <ns:item text="Download Sequence Files">
+                    <ns:onClick>SequenceAnalysis.Buttons.downloadFilesForReadset(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
+                </ns:item>
+                <ns:item text="Create Illumina Sample Sheet">
+                    <ns:onClick>SequenceAnalysis.Buttons.generateIlluminaSampleFile(dataRegionName);</ns:onClick>
+                </ns:item>
+            </ns:item>
+        </ns:buttonBarOptions>
     </ns:table>
     <ns:table tableName="haplotype_types" tableDbType="TABLE">
         <ns:auditLogging>DETAILED</ns:auditLogging>
@@ -2131,7 +2283,7 @@
         <ns:buttonBarOptions includeStandardButtons="true">
             <ns:includeScript>laboratory.context</ns:includeScript>
             <ns:includeScript>/sequenceanalysis/window/IlluminaApplicationWindow.js</ns:includeScript>
-            <ns:includeScript>/sequenceanalysis/sequenceanalysisButtons.js</ns:includeScript>
+            <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
             <ns:item insertPosition="beginning" text="Import New Application">
                 <ns:onClick>SequenceAnalysis.Buttons.importApplicationHandler(dataRegionName, arguments[0].srcElement)</ns:onClick>
             </ns:item>
@@ -2176,7 +2328,7 @@
         <ns:buttonBarOptions includeStandardButtons="true">
             <ns:includeScript>laboratory.context</ns:includeScript>
             <ns:includeScript>/sequenceanalysis/window/IlluminaSampleKitWindow.js</ns:includeScript>
-            <ns:includeScript>/sequenceanalysis/sequenceanalysisButtons.js</ns:includeScript>
+            <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
             <ns:item insertPosition="beginning" text="Import New Sample Kit">
                 <ns:onClick>SequenceAnalysis.Buttons.importSampleKitHandler(dataRegionName, arguments[0].srcElement)</ns:onClick>
             </ns:item>

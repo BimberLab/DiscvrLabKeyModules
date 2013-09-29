@@ -79,7 +79,7 @@ Ext4.define('SequenceAnalysis.panel.RefSequencePanel', {
                 allowBlank: false,
                 displayField:'virus_strain',
                 valueField:'virus_strain',
-                store: new LABKEY.ext4.Store({
+                store: new LABKEY.ext4.data.Store({
                     schemaName: 'sequenceanalysis',
                     queryName: 'virus_strains',
                     sort: 'virus_strain',

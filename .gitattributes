@@ -237,22 +237,18 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/perfect_alignment
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/quality_metrics/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/reads_by_match.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_aa_sequences.js -text
-labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_aa_sequences.query.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_nt_sequences.js -text
-labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_nt_sequences.query.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_nt_sequences/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_nt_sequences/Viral[!!-~]Sequences.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_alignments.js -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_alignments/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_analyses.js -text
-labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_analyses.query.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_analyses/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_analysis_summary.query.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_analysis_summary.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_coverage/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_reads/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_readsets.js -text
-labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_readsets.query.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_readsets/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_readsets/Data[!!-~]Imported.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_readsets/Data[!!-~]Not[!!-~]Imported.qview.xml -text
@@ -749,6 +745,7 @@ labModules/laboratory/src/org/labkey/laboratory/LaboratoryUpgradeCode.java -text
 labModules/laboratory/src/org/labkey/laboratory/LaboratoryUserSchema.java -text
 labModules/laboratory/src/org/labkey/laboratory/SampleSetDataProvider.java -text
 labModules/laboratory/src/org/labkey/laboratory/SampleSetNavItem.java -text
+labModules/laboratory/src/org/labkey/laboratory/SamplesCountNavItem.java -text
 labModules/laboratory/src/org/labkey/laboratory/URLDataSource.java -text
 labModules/laboratory/src/org/labkey/laboratory/assay/AssayHelper.java -text
 labModules/laboratory/src/org/labkey/laboratory/assay/ManualEntryAssayImportMethod.java -text
@@ -766,7 +763,7 @@ labModules/laboratory/src/org/labkey/laboratory/query/SamplesCustomizer.java -te
 labModules/laboratory/src/org/labkey/laboratory/query/SubjectsTableCustomizer.java -text
 labModules/laboratory/src/org/labkey/laboratory/query/WorkbookIdDisplayColumn.java -text
 labModules/laboratory/src/org/labkey/laboratory/query/WorkbookModel.java -text
-labModules/laboratory/src/org/labkey/laboratory/table/ContainerScopedTable.java -text
+labModules/laboratory/src/org/labkey/laboratory/table/WrappingTableCustomizer.java -text
 labModules/laboratory/src/org/labkey/laboratory/view/workbookHeader.jsp -text
 onprcEHRModules/GeneticsCore/GeneticsCore.iml -text
 onprcEHRModules/GeneticsCore/build.xml -text
@@ -791,6 +788,7 @@ onprcEHRModules/README.txt -text
 onprcEHRModules/onprc_reports/ONPRC_Reports.iml -text
 onprcEHRModules/onprc_reports/build.xml -text
 onprcEHRModules/onprc_reports/module.properties -text
+onprcEHRModules/onprc_reports/resources/queries/MHC_Data/MHC_Data_Pivoted/Common[!!-~]Alleles.qview.xml -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Pivoted.sql -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Raw.sql -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Unified.query.xml -text

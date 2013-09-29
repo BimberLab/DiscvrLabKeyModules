@@ -87,7 +87,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentConfigPanel', {
                     displayField: 'name',
                     valueField: 'rowid',
                     lazyRender: false,
-                    store: Ext4.create('LABKEY.ext4.Store', {
+                    store: Ext4.create('LABKEY.ext4.data.Store', {
                         schemaName: 'sequenceanalysis',
                         queryName: 'ref_aa_sequences',
                         columns: 'rowid,name,ref_nt_id',

@@ -180,7 +180,7 @@ Ext4.define('Laboratory.panel.DataExplorer', {
 
         if(doCreate){
             storeCfg.autoLoad = true;
-            this.store = Ext4.create('LABKEY.ext4.Store', storeCfg);
+            this.store = Ext4.create('LABKEY.ext4.data.Store', storeCfg);
             //this.store.prefetch();
         }
         else

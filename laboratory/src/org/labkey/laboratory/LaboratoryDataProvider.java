@@ -236,8 +236,16 @@ public class LaboratoryDataProvider extends AbstractDataProvider
         {
             if (nav.isVisible(c, u))
             {
-                SimpleQueryNavItem item = ((SimpleQueryNavItem)nav);
-                items.add(new QueryCountNavItem(this, item.getSchema(), item.getQuery(), item.getCategory(), item.getLabel()));
+                if (nav.getName().equalsIgnoreCase("Samples"))
+                {
+                    SimpleQueryNavItem item = ((SimpleQueryNavItem)nav);
+                    items.add(new SamplesCountNavItem(this, item.getSchema(), item.getQuery(), item.getCategory(), item.getLabel()));
+                }
+                else
+                {
+                    SimpleQueryNavItem item = ((SimpleQueryNavItem)nav);
+                    items.add(new QueryCountNavItem(this, item.getSchema(), item.getQuery(), item.getCategory(), item.getLabel()));
+                }
             }
         }
 

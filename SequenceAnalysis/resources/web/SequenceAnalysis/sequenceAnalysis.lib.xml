@@ -13,5 +13,6 @@
         <dependency path="clientapi"/>
         <dependency path="LDK.context"/>
         <dependency path="laboratory.context"/>
+        <dependency path="extWidgets/ImportWizard.js"/>
     </dependencies>
 </libraries>

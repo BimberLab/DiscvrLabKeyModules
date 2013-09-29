@@ -21,7 +21,7 @@ Ext4.define('SequenceAnalysis.panel.AlignerPanel', {
                 name: 'aligner',
                 allowBlank: false,
                 value: this.value || null,
-                store: Ext4.create('LABKEY.ext4.Store', {
+                store: Ext4.create('LABKEY.ext4.data.Store', {
                     schemaName: 'sequenceanalysis',
                     queryName: 'aligners',
                     columns: '*',

@@ -145,7 +145,7 @@ Laboratory.buttonHandlers = new function(){
             ];
 
             Ext4.QuickTips.init();
-            Ext4.create('LABKEY.ext4.Store', {
+            Ext4.create('LABKEY.ext4.data.Store', {
                 schemaName: dataRegion.schemaName,
                 queryName: dataRegion.queryName,
                 autoLoad: true,

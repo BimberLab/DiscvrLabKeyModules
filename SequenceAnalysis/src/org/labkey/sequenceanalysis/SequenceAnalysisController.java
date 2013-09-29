@@ -17,6 +17,7 @@ package org.labkey.sequenceanalysis;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
@@ -40,7 +41,6 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.gwt.client.util.StringUtils;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryForm;
@@ -496,7 +496,7 @@ public class SequenceAnalysisController extends SpringActionController
         private void appendTotal(StringBuilder sb, String tableName, String noun, List<Object> keys, String filterCol)
         {
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString(filterCol), StringUtils.join(keys, ";"), CompareType.IN);
-            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(tableName), Collections.singleton(filterCol), filter, null);
+            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(tableName), filter, null);
             long total = ts.getRowCount();
             sb.append("<br>" + total + " " + noun);
         }

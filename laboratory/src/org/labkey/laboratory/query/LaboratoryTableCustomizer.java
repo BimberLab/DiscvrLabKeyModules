@@ -161,7 +161,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         Container c = us.getContainer();
         if (!c.getActiveModules(true).contains(ModuleLoader.getInstance().getModule(LaboratoryModule.class)))
         {
-            _log.warn("Laboratory module not enabled in container: " + c.getPath() + ", so LaboratoryTableCustomizer is aborting for table: " + ti.getSelectName());
+            _log.warn("Laboratory module not enabled in container: " + c.getPath() + ", so LaboratoryTableCustomizer is aborting for table: " + ti.getPublicName());
             return;
         }
 
@@ -251,33 +251,38 @@ public class LaboratoryTableCustomizer implements TableCustomizer
             _log.warn("Table does not have a single PK column: " + ds.getName());
             return;
         }
-
-        final String tableName = ds.getName();
-        final String queryName = ds.getPublicName();
-        final String schemaName = ds.getUserSchema().getSchemaPath().toSQLString();
-
         ColumnInfo pk = pks.get(0);
-        final String pkColName = pk.getSelectName();
+        final String pkColSelectName = pk.getSelectName();
+        final String pkColRawName = pk.getName();
+
         WrappedColumn col = new WrappedColumn(pk, name);
         col.setLabel("Major Events");
         col.setDescription("This column shows all major events recorded in this subject\'s history and will calculate the time elapsed between the current sample and these dates.");
         col.setReadOnly(true);
         col.setIsUnselectable(true);
         col.setUserEditable(false);
+
+        final String schemaName = ds.getUserSchema().getSchemaPath().toSQLString();
+        final String subjectSelectName = ds.getSqlDialect().makeLegalIdentifier(subjectColName);
+        final String dateSelectName = dateColName == null ? null : ds.getSqlDialect().makeLegalIdentifier(dateColName);
+        final String colName = ds.getName() + "_majorEvents";
+        final String publicTableName = ds.getPublicName();
+        final String querySelectName = ds.getSqlDialect().makeLegalIdentifier(ds.getPublicName());
+
         col.setFk(new LookupForeignKey(){
             public TableInfo getLookupTableInfo()
             {
-                String name = tableName + "_majorEvents";
-                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, name);
 
-                qd.setSql(getMajorEventsSql(schemaName, queryName, pkColName, subjectColName, dateColName));
+                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, colName);
+
+                qd.setSql(getMajorEventsSql(schemaName, querySelectName, pkColSelectName, subjectSelectName, dateSelectName));
                 qd.setIsTemporary(true);
 
                 List<QueryException> errors = new ArrayList<QueryException>();
                 TableInfo ti = qd.getTable(errors, true);
 
                 if (errors.size() > 0){
-                    _log.error("Problem with table customizer: " + tableName);
+                    _log.error("Problem with table customizer: " + publicTableName);
                     for (QueryException e : errors)
                     {
                         _log.error(e.getMessage());
@@ -286,8 +291,9 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 if (ti != null)
                 {
-                    ti.getColumn(pkColName).setKeyField(true);
-                    ti.getColumn(pkColName).setHidden(true);
+                    ColumnInfo col = ti.getColumn(pkColRawName);
+                    col.setKeyField(true);
+                    col.setHidden(true);
                 }
 
                 return ti;
@@ -309,11 +315,15 @@ public class LaboratoryTableCustomizer implements TableCustomizer
             return;
         }
         ColumnInfo pk = pks.get(0);
-        final String pkColName = pk.getSelectName();
+        final String pkColSelectName = pk.getSelectName();
+        final String pkColRawName = pk.getName();
+        final String publicTableName = ds.getPublicName();
+        final String colName = ds.getName() + "_overlappingProjects";
 
-        final String tableName = ds.getName();
-        final String queryName = ds.getPublicName();
         final String schemaName = ds.getUserSchema().getSchemaPath().toSQLString();
+        final String querySelectName = ds.getSqlDialect().makeLegalIdentifier(ds.getPublicName());
+        final String subjectSelectName = ds.getSqlDialect().makeLegalIdentifier(subjectColName);
+        final String dateSelectName = dateColName == null ? null : ds.getSqlDialect().makeLegalIdentifier(dateColName);
 
         WrappedColumn col = new WrappedColumn(pk, name);
         col.setLabel("Overlapping Groups");
@@ -324,17 +334,16 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         col.setFk(new LookupForeignKey(){
             public TableInfo getLookupTableInfo()
             {
-                String name = tableName + "_overlappingProjects";
-                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, name);
+                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, colName);
 
-                qd.setSql(getOverlapSql(schemaName, queryName, pkColName, subjectColName, dateColName));
+                qd.setSql(getOverlapSql(schemaName, querySelectName, pkColSelectName, subjectSelectName, dateSelectName));
                 qd.setIsTemporary(true);
 
                 List<QueryException> errors = new ArrayList<QueryException>();
                 TableInfo ti = qd.getTable(errors, true);
 
                 if (errors.size() > 0){
-                    _log.error("Problem with table customizer: " + tableName);
+                    _log.error("Problem with table customizer: " + publicTableName);
                     for (QueryException e : errors)
                     {
                         _log.error(e.getMessage());
@@ -343,8 +352,9 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 if (ti != null)
                 {
-                    ti.getColumn(pkColName).setKeyField(true);
-                    ti.getColumn(pkColName).setHidden(true);
+                    ColumnInfo col = ti.getColumn(pkColRawName);
+                    col.setKeyField(true);
+                    col.setHidden(true);
 
                     ti.getColumn("projects").setLabel("Overlapping Groups");
                     ti.getColumn("groups").setLabel("Overlapping Sub-groups");
@@ -357,28 +367,28 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         ds.addColumn(col);
 
         //add pivot column
-        String colName = "overlappingProjectsPivot";
-        WrappedColumn col2 = new WrappedColumn(pk, colName);
+        String pivotColName = "overlappingProjectsPivot";
+        WrappedColumn col2 = new WrappedColumn(pk, pivotColName);
         col2.setLabel("Overlapping Group List");
         col2.setDescription("Shows groups to which this subject belonged at the time of this sample.");
         col2.setHidden(true);
         col2.setReadOnly(true);
         col2.setIsUnselectable(true);
         col2.setUserEditable(false);
+        final String lookupColName = ds.getName() + "_overlappingProjectsPivot";
         col2.setFk(new LookupForeignKey(){
             public TableInfo getLookupTableInfo()
             {
-                String name = tableName + "_overlappingProjectsPivot";
-                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, name);
+                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, lookupColName);
 
-                qd.setSql(getOverlapPivotSql(schemaName, queryName, pkColName, subjectColName, dateColName));
+                qd.setSql(getOverlapPivotSql(schemaName, querySelectName, pkColSelectName, subjectColName, dateColName));
                 qd.setIsTemporary(true);
 
                 List<QueryException> errors = new ArrayList<QueryException>();
                 TableInfo ti = qd.getTable(errors, true);
 
                 if (errors.size() > 0){
-                    _log.error("Problem with table customizer: " + tableName);
+                    _log.error("Problem with table customizer: " + publicTableName);
                     for (QueryException e : errors)
                     {
                         _log.error(e.getMessage());
@@ -387,8 +397,9 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 if (ti != null)
                 {
-                    ti.getColumn(pkColName).setKeyField(true);
-                    ti.getColumn(pkColName).setHidden(true);
+                    ColumnInfo col = ti.getColumn(pkColRawName);
+                    col.setKeyField(true);
+                    col.setHidden(true);
 
                     ti.getColumn("lastStartDate").setLabel("Most Recent Start Date");
                 }
@@ -412,12 +423,14 @@ public class LaboratoryTableCustomizer implements TableCustomizer
             return;
         }
         ColumnInfo pk = pks.get(0);
-        final String pkColName = pk.getSelectName();
-
-        final String tableName = ds.getName();
-        final String queryName = ds.getPublicName();
+        final String pkColSelectName = pk.getSelectName();
+        final String pkColRawName = pk.getName();
         final String schemaName = ds.getUserSchema().getSchemaPath().toSQLString();
+        final String querySelectName = ds.getSqlDialect().makeLegalIdentifier(ds.getPublicName());
+        final String subjectSelectName = ds.getSqlDialect().makeLegalIdentifier(subjectColName);
+        final String publicTableName = ds.getPublicName();
 
+        final String colName = ds.getName() + "_allProjects";
         WrappedColumn col = new WrappedColumn(pk, name);
         col.setLabel("Groups");
         col.setDescription("This column shows all groups to which this subject has ever been a member, regardless of whether that assignment overlaps with the current data point");
@@ -427,17 +440,17 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         col.setFk(new LookupForeignKey(){
             public TableInfo getLookupTableInfo()
             {
-                String name = tableName + "_allProjects";
-                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, name);
 
-                qd.setSql(getOverlapSql(schemaName, queryName, pkColName, subjectColName, null));
+                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, colName);
+
+                qd.setSql(getOverlapSql(schemaName, querySelectName, pkColSelectName, subjectSelectName, null));
                 qd.setIsTemporary(true);
 
                 List<QueryException> errors = new ArrayList<QueryException>();
                 TableInfo ti = qd.getTable(errors, true);
 
                 if (errors.size() > 0){
-                    _log.error("Problem with table customizer: " + tableName);
+                    _log.error("Problem with table customizer: " + publicTableName);
                     for (QueryException e : errors)
                     {
                         _log.error(e.getMessage());
@@ -446,12 +459,9 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 if (ti != null)
                 {
-                    ColumnInfo pkCol = ti.getColumn(pkColName);
-                    if (pkCol != null)
-                    {
-                        pkCol.setKeyField(true);
-                        pkCol.setHidden(true);
-                    }
+                    ColumnInfo col = ti.getColumn(pkColRawName);
+                    col.setKeyField(true);
+                    col.setHidden(true);
 
                     ti.getColumn("projects").setLabel("All Groups/Projects");
                     ti.getColumn("groups").setLabel("All Sub-Groups");
@@ -464,8 +474,9 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         ds.addColumn(col);
 
         //add pivot column
-        String colName = "allProjectsPivot";
-        WrappedColumn col2 = new WrappedColumn(pk, colName);
+        String pivotColName = "allProjectsPivot";
+        final String lookupName = ds.getName() + "_allProjectsPivot";
+        WrappedColumn col2 = new WrappedColumn(pk, pivotColName);
         col2.setLabel("Group Summary List");
         col2.setDescription("Shows groups to which this subject belonged at any point in time.");
         col2.setHidden(true);
@@ -475,17 +486,16 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         col2.setFk(new LookupForeignKey(){
             public TableInfo getLookupTableInfo()
             {
-                String name = tableName + "_allProjectsPivot";
-                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, name);
+                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, lookupName);
 
-                qd.setSql(getOverlapPivotSql(schemaName, queryName, pkColName, subjectColName, null));
+                qd.setSql(getOverlapPivotSql(schemaName, querySelectName, pkColSelectName, subjectSelectName, null));
                 qd.setIsTemporary(true);
 
                 List<QueryException> errors = new ArrayList<QueryException>();
                 TableInfo ti = qd.getTable(errors, true);
 
                 if (errors.size() > 0){
-                    _log.error("Problem with table customizer: " + tableName);
+                    _log.error("Problem with table customizer: " + publicTableName);
                     for (QueryException e : errors)
                     {
                         _log.error(e.getMessage());
@@ -494,8 +504,9 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 if (ti != null)
                 {
-                    ti.getColumn(pkColName).setKeyField(true);
-                    ti.getColumn(pkColName).setHidden(true);
+                    ColumnInfo col = ti.getColumn(pkColRawName);
+                    col.setKeyField(true);
+                    col.setHidden(true);
 
                     ti.getColumn("lastStartDate").setLabel("Most Recent Start Date");
                 }
@@ -507,59 +518,59 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         ds.addColumn(col2);
     }
 
-    private String getOverlapSql(String schemaName, String queryName, String pkColName, String subjectColName, @Nullable String dateColName)
+    private String getOverlapSql(String schemaName, String querySelectName, String pkColSelectName, String subjectSelectName, @Nullable String dateSelectName)
     {
         return "SELECT\n" +
-                "s.\"" + pkColName + "\",\n" +
+                "s." + pkColSelectName + ",\n" +
                 "group_concat(DISTINCT s.project, chr(10)) as projects,\n" +
                 "group_concat(DISTINCT s.projectGroup, chr(10)) as groups,\n" +
                 "\n" +
                 "FROM (\n" +
                 "\n" +
                 "SELECT\n" +
-                "s.\"" + pkColName + "\",\n" +
+                "s." + pkColSelectName + ",\n" +
                 "p.project,\n" +
                 "CASE\n" +
                 "  WHEN p.groupname IS NULL then NULL\n" +
                 "  ELSE (p.project || ' (' || p.groupname || ')')\n" +
                 "END as projectGroup,\n" +
                 "\n" +
-                "FROM " + schemaName + ".\"" + queryName + "\" s\n" +
+                "FROM " + schemaName + "." + querySelectName + " s\n" +
                 "JOIN laboratory.project_usage p\n" +
-                "ON (s.\"" + subjectColName + "\" = p.subjectId" +
-                (dateColName != null ? " AND p.startdate <= s.\"" + dateColName + "\" AND s.\"" + dateColName + "\" <= COALESCE(p.enddate, {fn curdate()})" : "") +
+                "ON (s." + subjectSelectName + " = p.subjectId" +
+                (dateSelectName != null ? " AND p.startdate <= s." + dateSelectName + " AND s." + dateSelectName + " <= COALESCE(p.enddate, {fn curdate()})" : "") +
                 ")\n" +
-                "WHERE s.\"" + subjectColName + "\" IS NOT NULL\n" +
-                (dateColName != null ? " AND s.\"" + dateColName + "\" IS NOT NULL " : "") +
+                "WHERE s." + subjectSelectName + " IS NOT NULL\n" +
+                (dateSelectName != null ? " AND s." + dateSelectName + " IS NOT NULL " : "") +
                 "\n" +
                 ") s\n" +
                 "\n" +
-                "GROUP BY s.\"" + pkColName + "\"";
+                "GROUP BY s." + pkColSelectName + "";
     }
 
-    private String getOverlapPivotSql(String schemaName, String queryName, String pkColName, String subjectColName, @Nullable String dateColName)
+    private String getOverlapPivotSql(String schemaName, String querySelectName, String pkColSelectName, String subjectSelectName, @Nullable String dateSelectName)
     {
         return "SELECT\n" +
-                "s.\"" + pkColName + "\",\n" +
+                "s." + pkColSelectName + ",\n" +
                 "p.project,\n" +
                 "max(p.startdate) as lastStartDate\n" +
                 "\n" +
-                "FROM " + schemaName + ".\"" + queryName + "\" s\n" +
+                "FROM " + schemaName + "." + querySelectName + " s\n" +
                 "JOIN laboratory.project_usage p\n" +
-                "ON (s.\"" + subjectColName + "\" = p.subjectId" +
-                (dateColName != null ? " AND p.startdate <= s.\"" + dateColName + "\" AND s.\"" + dateColName + "\" <= COALESCE(p.enddate, {fn curdate()})" : "") +
+                "ON (s." + subjectSelectName + " = p.subjectId" +
+                (dateSelectName != null ? " AND p.startdate <= s." + dateSelectName + " AND s." + dateSelectName + " <= COALESCE(p.enddate, {fn curdate()})" : "") +
                 ")\n" +
-                "WHERE s.\"" + subjectColName + "\" IS NOT NULL\n" +
-                (dateColName != null ? " AND s.\"" + dateColName + "\" IS NOT NULL " : "") +
+                "WHERE s." + subjectSelectName + " IS NOT NULL\n" +
+                (dateSelectName != null ? " AND s." + dateSelectName + " IS NOT NULL " : "") +
                 "\n" +
-                "GROUP BY s.\"" + pkColName + "\", p.project\n" +
+                "GROUP BY s." + pkColSelectName + ", p.project\n" +
                 "PIVOT lastStartDate by project IN (select distinct project from laboratory.project_usage)";
     }
 
-    private String getMajorEventsSql(String schemaName, String queryName, String pkColName, String subjectColName, @Nullable String dateColName)
+    private String getMajorEventsSql(String schemaName, String querySelectName, String pkColSelectName, String subjectSelectName, @Nullable String dateSelectName)
     {
         return "SELECT\n" +
-            "t.\"" + pkColName + "\",\n" +
+            "t." + pkColSelectName + ",\n" +
             "t.event,\n" +
             "max(date) as eventDate,\n" +
             "max(DaysPostEvent) as DaysPostEvent,\n" +
@@ -572,25 +583,25 @@ public class LaboratoryTableCustomizer implements TableCustomizer
             "FROM (\n" +
             "\n" +
             "SELECT\n" +
-            "s.\"" + pkColName + "\",\n" +
+            "s." + pkColSelectName + ",\n" +
             "p.event,\n" +
             "p.date,\n" +
             "\n" +
-            "TIMESTAMPDIFF('SQL_TSI_DAY', p.date, s.\"" + dateColName + "\") as DaysPostEvent,\n" +
-            "TIMESTAMPDIFF('SQL_TSI_DAY', p.date, s.\"" + dateColName + "\") / 7 as WeeksPostEvent,\n" +
-            "ROUND(CONVERT(TIMESTAMPDIFF('SQL_TSI_DAY', p.date, s.\"" + dateColName + "\"), DOUBLE) / 7.0, 1) as WeeksPostEventDecimal,\n" +
-            "ROUND(CONVERT(age_in_months(p.date, s.\"" + dateColName + "\"), DOUBLE), 1) AS MonthsPostEvent,\n" +
-            "floor(age(p.date, s.\"" + dateColName + "\")) AS YearsPostEvent,\n" +
-                "ROUND(CONVERT(age_in_months(p.date, s.\"" + dateColName + "\"), DOUBLE) / 12, 1) AS YearsPostEventDecimal,\n" +
+            "TIMESTAMPDIFF('SQL_TSI_DAY', p.date, s." + dateSelectName + ") as DaysPostEvent,\n" +
+            "TIMESTAMPDIFF('SQL_TSI_DAY', p.date, s." + dateSelectName + ") / 7 as WeeksPostEvent,\n" +
+            "ROUND(CONVERT(TIMESTAMPDIFF('SQL_TSI_DAY', p.date, s." + dateSelectName + "), DOUBLE) / 7.0, 1) as WeeksPostEventDecimal,\n" +
+            "ROUND(CONVERT(age_in_months(p.date, s." + dateSelectName + "), DOUBLE), 1) AS MonthsPostEvent,\n" +
+            "floor(age(p.date, s." + dateSelectName + ")) AS YearsPostEvent,\n" +
+                "ROUND(CONVERT(age_in_months(p.date, s." + dateSelectName + "), DOUBLE) / 12, 1) AS YearsPostEventDecimal,\n" +
             "\n" +
-            "FROM " + schemaName + ".\"" + queryName + "\" s\n" +
+            "FROM " + schemaName + "." + querySelectName + " s\n" +
             "JOIN laboratory.major_events p\n" +
-            "ON (s.\"" + subjectColName + "\" = p.subjectId)\n" +
-            "WHERE s.\"" + subjectColName + "\" IS NOT NULL\n" +
+            "ON (s." + subjectSelectName + " = p.subjectId)\n" +
+            "WHERE s." + subjectSelectName + " IS NOT NULL\n" +
             "\n" +
             ") t\n" +
             "\n" +
-            "GROUP BY t.\"" + pkColName + "\", t.event\n" +
+            "GROUP BY t." + pkColSelectName + ", t.event\n" +
             "PIVOT DaysPostEvent, WeeksPostEvent, WeeksPostEventDecimal, MonthsPostEvent, YearsPostEvent, YearsPostEventDecimal by event";
     }
 
@@ -606,25 +617,28 @@ public class LaboratoryTableCustomizer implements TableCustomizer
             return;
         }
         ColumnInfo pk = pks.get(0);
-        final String pkColName = pk.getSelectName();
-
-        final String tableName = ds.getName();
-        final String queryName = ds.getPublicName();
-        final String schemaName = ds.getUserSchema().getSchemaPath().toSQLString();
+        final String pkColSelectName = pk.getSelectName();
+        final String pkColRawName = pk.getName();
 
         WrappedColumn col = new WrappedColumn(pk, name);
         col.setLabel("Relative Dates");
         col.setReadOnly(true);
         col.setIsUnselectable(true);
         col.setUserEditable(false);
+
+        final String colName = ds.getName() + "_relativeDates";
+        final String schemaName = ds.getUserSchema().getSchemaPath().toSQLString();
+        final String subjectSelectName = ds.getSqlDialect().makeLegalIdentifier(subjectColName);
+        final String dateSelectName = dateColName == null ? null : ds.getSqlDialect().makeLegalIdentifier(dateColName);
+        final String publicTableName = ds.getSqlDialect().makeLegalIdentifier(ds.getPublicName());
+
         col.setFk(new LookupForeignKey(){
             public TableInfo getLookupTableInfo()
             {
-                String name = tableName + "_relativeDates";
-                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, name);
+                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, colName);
 
                 qd.setSql("SELECT\n" +
-                "t.\"" + pkColName + "\",\n" +
+                "t." + pkColSelectName + ",\n" +
                 "t.project,\n" +
                 "max(startdate) as startDate,\n" +
                 "max(DaysPostStart) as DaysPostStart,\n" +
@@ -637,25 +651,25 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                 "FROM (\n" +
                 "\n" +
                 "SELECT\n" +
-                "s.\"" + pkColName + "\",\n" +
+                "s." + pkColSelectName + ",\n" +
                 "p.project,\n" +
                 "p.startdate,\n" +
                 "\n" +
-                "TIMESTAMPDIFF('SQL_TSI_DAY', p.startdate, s.\"" + dateColName + "\") as DaysPostStart,\n" +
-                "TIMESTAMPDIFF('SQL_TSI_DAY', p.startdate, s.\"" + dateColName + "\") / 7 as WeeksPostStart,\n" +
-                "ROUND(CONVERT(TIMESTAMPDIFF('SQL_TSI_DAY', p.startdate, s.\"" + dateColName + "\"), DOUBLE) / 7.0, 1) as WeeksPostStartDecimal,\n" +
-                "ROUND(CONVERT(age_in_months(p.startdate, s.\"" + dateColName + "\"), DOUBLE), 1) AS MonthsPostStart,\n" +
-                "floor(age(p.startdate, s.\"" + dateColName + "\")) AS YearsPostStart,\n" +
-                "ROUND(CONVERT(age_in_months(p.startdate, s.\"" + dateColName + "\"), DOUBLE) / 12, 1) AS YearsPostStartDecimal,\n" +
+                "TIMESTAMPDIFF('SQL_TSI_DAY', p.startdate, s." + dateSelectName + ") as DaysPostStart,\n" +
+                "TIMESTAMPDIFF('SQL_TSI_DAY', p.startdate, s." + dateSelectName + ") / 7 as WeeksPostStart,\n" +
+                "ROUND(CONVERT(TIMESTAMPDIFF('SQL_TSI_DAY', p.startdate, s." + dateSelectName + "), DOUBLE) / 7.0, 1) as WeeksPostStartDecimal,\n" +
+                "ROUND(CONVERT(age_in_months(p.startdate, s." + dateSelectName + "), DOUBLE), 1) AS MonthsPostStart,\n" +
+                "floor(age(p.startdate, s." + dateSelectName + ")) AS YearsPostStart,\n" +
+                "ROUND(CONVERT(age_in_months(p.startdate, s." + dateSelectName + "), DOUBLE) / 12, 1) AS YearsPostStartDecimal,\n" +
                 "\n" +
-                "FROM " + schemaName + ".\"" + queryName + "\" s\n" +
+                "FROM " + schemaName + "." + publicTableName + " s\n" +
                 "JOIN laboratory.project_usage p\n" +
-                "ON (s.\"" + subjectColName + "\" = p.subjectId AND CONVERT(p.startdate, DATE) <= CONVERT(s.\"" + dateColName + "\", DATE) AND CONVERT(s.\"" + dateColName + "\", DATE) <= CONVERT(COALESCE(p.enddate, {fn curdate()}), DATE))\n" +
-                "WHERE s.\"" + dateColName + "\" IS NOT NULL and s.\"" + subjectColName + "\" IS NOT NULL\n" +
+                "ON (s." + subjectSelectName + " = p.subjectId AND CONVERT(p.startdate, DATE) <= CONVERT(s." + dateSelectName + ", DATE) AND CONVERT(s." + dateSelectName + ", DATE) <= CONVERT(COALESCE(p.enddate, {fn curdate()}), DATE))\n" +
+                "WHERE s." + dateSelectName + " IS NOT NULL and s." + subjectSelectName + " IS NOT NULL\n" +
                 "\n" +
                 ") t\n" +
                 "\n" +
-                "GROUP BY t.\"" + pkColName + "\", t.project\n" +
+                "GROUP BY t." + pkColSelectName + ", t.project\n" +
                 "PIVOT DaysPostStart, WeeksPostStart, WeeksPostStartDecimal, MonthsPostStart, YearsPostStart, YearsPostStartDecimal by project");
 
                 qd.setIsTemporary(true);
@@ -663,7 +677,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                 List<QueryException> errors = new ArrayList<QueryException>();
                 TableInfo ti = qd.getTable(errors, true);
                 if (errors.size() > 0){
-                    _log.error("Problem with table customizer: " + tableName);
+                    _log.error("Problem with table customizer: " + publicTableName);
                     for (QueryException e : errors)
                     {
                         _log.error(e.getMessage());
@@ -672,8 +686,9 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 if (ti != null)
                 {
-                    ti.getColumn(pkColName).setKeyField(true);
-                    ti.getColumn(pkColName).setHidden(true);
+                    ColumnInfo col = ti.getColumn(pkColRawName);
+                    col.setKeyField(true);
+                    col.setHidden(true);
                 }
 
                 return ti;

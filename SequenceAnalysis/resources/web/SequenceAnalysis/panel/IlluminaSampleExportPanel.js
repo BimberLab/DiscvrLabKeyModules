@@ -99,7 +99,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                         allowBlank: false,
                         displayField: 'name',
                         valueField: 'name',
-                        store: Ext4.create('LABKEY.ext4.Store', {
+                        store: Ext4.create('LABKEY.ext4.data.Store', {
                             schemaName: 'sequenceanalysis',
                             queryName: 'illumina_applications',
                             columns: '*',
@@ -144,7 +144,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                         displayField: 'name',
                         valueField: 'name',
                         disabled: true,
-                        store: Ext4.create('LABKEY.ext4.Store', {
+                        store: Ext4.create('LABKEY.ext4.data.Store', {
                             schemaName: 'sequenceanalysis',
                             queryName: 'illumina_sample_kits',
                             columns: '*',
@@ -180,7 +180,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                         editable: false,
                         displayField: 'label',
                         valueField: 'label',
-                        store: Ext4.create('LABKEY.ext4.Store', {
+                        store: Ext4.create('LABKEY.ext4.data.Store', {
                             schemaName: 'sequenceanalysis',
                             queryName: 'illumina_genome_folders',
                             columns: '*',

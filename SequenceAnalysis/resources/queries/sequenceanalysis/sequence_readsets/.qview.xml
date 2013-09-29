@@ -13,11 +13,7 @@
        <column name="barcode3" />
        <column name="platform" />
        <column name="instrument_run_id" />
-       <column name="runid/RowId">
-           <properties>
-               <property name="columnTitle" value="Run"/>
-           </properties>
-       </column>
+       <column name="runid"/>
        <column name="runid/JobId">
            <properties>
                <property name="columnTitle" value="Job Id"/>

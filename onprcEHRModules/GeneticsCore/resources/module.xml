@@ -23,7 +23,7 @@
         </propertyDescriptor>
     </properties>
     <clientDependencies>
-        <dependency path="Ext4ClientAPI"/>
+        <dependency path="clientapi/ext4.lib.xml"/>
     </clientDependencies>
     <requiredModuleContext>
         <requiredModule name="LDK" />

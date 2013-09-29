@@ -61,7 +61,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
 
         this.addEvents('midchange', 'pairedendchange', 'dataready');
 
-        this.barcodeStore = Ext4.create('LABKEY.ext4.Store', {
+        this.barcodeStore = Ext4.create('LABKEY.ext4.data.Store', {
             schemaName: 'sequenceanalysis',
             queryName: 'barcodes',
             autoLoad: true,

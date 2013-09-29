@@ -150,7 +150,7 @@ Ext4.define('Laboratory.window.WellAssignmentWindow', {
         var store = Ext4.StoreMgr.get(this.getStoreId(suffix));
 
         if (!store){
-            store = Ext4.create('LABKEY.ext4.Store', {
+            store = Ext4.create('LABKEY.ext4.data.Store', {
                 storeId: this.getStoreId(suffix),
                 schemaName: 'laboratory',
                 queryName: 'well_layout',

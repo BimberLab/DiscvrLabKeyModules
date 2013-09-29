@@ -35,7 +35,7 @@ FROM (
     cast((select sum(total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = a.analysis_id) as integer) as total_reads,
 
   from sequenceanalysis.alignment_summary a
-  left join sequenceanalysis.alignment_summary_junction j ON (j.alignment_id = a.rowid and j.status = true)
+  join sequenceanalysis.alignment_summary_junction j ON (j.alignment_id = a.rowid and j.status = true)
   group by a.analysis_id, a.rowid, a.total
 
 ) a

@@ -19,7 +19,7 @@ Ext4.define('SequenceAnalysis.panel.DNAPanel', {
                     helpPopup: 'Select the desired species to use in the reference library'
                 },
                 bodyStyle:'padding:0px 0px 5px 0px;',
-                store: Ext4.create('LABKEY.ext4.Store', {
+                store: Ext4.create('LABKEY.ext4.data.Store', {
                     schemaName: 'laboratory',
                     queryName: 'species',
                     autoLoad: true,
@@ -58,7 +58,7 @@ Ext4.define('SequenceAnalysis.panel.DNAPanel', {
                 renderData: {
                     helpPopup: 'Select the DNA regions to use in the reference library'
                 },
-                store: Ext4.create('LABKEY.ext4.Store', {
+                store: Ext4.create('LABKEY.ext4.data.Store', {
                     schemaName: 'sequenceanalysis',
                     queryName: 'dna_region',
                     autoLoad: true,
@@ -97,7 +97,7 @@ Ext4.define('SequenceAnalysis.panel.DNAPanel', {
                     helpPopup: 'Select the desired molecules types to use in the reference library'
                 },
                 bodyStyle:'padding:0px 0px 5px 0px;',
-                store: Ext4.create('LABKEY.ext4.Store', {
+                store: Ext4.create('LABKEY.ext4.data.Store', {
                     schemaName: 'laboratory',
                     queryName: 'dna_mol_type',
                     autoLoad: true,
@@ -136,7 +136,7 @@ Ext4.define('SequenceAnalysis.panel.DNAPanel', {
                     helpPopup: 'Select the desired geographic origins to use in the reference library.  Leave blank for all.'
                 },
                 bodyStyle:'padding:0px 0px 5px 0px;',
-                store: Ext4.create('LABKEY.ext4.Store', {
+                store: Ext4.create('LABKEY.ext4.data.Store', {
                     schemaName: 'laboratory',
                     queryName: 'geographic_origins',
                     sort: 'locus',
@@ -175,7 +175,7 @@ Ext4.define('SequenceAnalysis.panel.DNAPanel', {
                     helpPopup: 'Select the desired loci to use in the reference library'
                 },
                 bodyStyle:'padding:0px 0px 5px 0px;',
-                store: Ext4.create('LABKEY.ext4.Store', {
+                store: Ext4.create('LABKEY.ext4.data.Store', {
                     schemaName: 'sequenceanalysis',
                     queryName: 'dna_loci',
                     sort: 'locus',

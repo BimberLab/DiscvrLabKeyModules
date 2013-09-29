@@ -26,6 +26,7 @@ import org.labkey.api.security.permissions.ReadPermission;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -216,8 +217,10 @@ public class SequenceReadset
      */
     public List<File> getExpDatasForReadset(User user)
     {
-        List<File> files = new ArrayList<>();
+        if (getFileId() == null)
+            return Collections.emptyList();
 
+        List<File> files = new ArrayList<>();
         ExpData data = ExperimentService.get().getExpData(getFileId());
         if (data != null && data.getFile() != null && data.getContainer().hasPermission(user, ReadPermission.class))
         {

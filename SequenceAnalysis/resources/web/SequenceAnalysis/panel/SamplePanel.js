@@ -6,8 +6,9 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
         Ext4.apply(this, {
             width: '100%',
             title: 'Readsets',
+            editingPluginId: 'editingplugin',
             plugins: [Ext4.create('Ext.grid.plugin.CellEditing', {
-                pluginId: 'cellediting',
+                pluginId: 'editingplugin',
                 clicksToEdit: 2,
                 listeners: {
                     beforeedit: function(cell, object){
@@ -171,7 +172,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     displayField: 'tag_name',
                     valueField: 'tag_name',
                     lazyRender: false,
-                    store:  Ext4.create('LABKEY.ext4.Store', {
+                    store:  Ext4.create('LABKEY.ext4.data.Store', {
                         schemaName: 'sequenceanalysis',
                         queryName: 'barcodes',
                         sort: 'group_name,tag_name',
@@ -197,7 +198,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     displayField: 'tag_name',
                     valueField: 'tag_name',
                     lazyRender: false,
-                    store:  Ext4.create('LABKEY.ext4.Store', {
+                    store:  Ext4.create('LABKEY.ext4.data.Store', {
                         schemaName: 'sequenceanalysis',
                         queryName: 'barcodes',
                         sort: 'group_name,tag_name',
@@ -241,7 +242,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     displayField: 'platform',
                     valueField: 'platform',
                     editable: false,
-                    store: Ext4.create('LABKEY.ext4.Store', {
+                    store: Ext4.create('LABKEY.ext4.data.Store', {
                         schemaName: 'sequenceanalysis',
                         queryName: 'sequence_platforms',
                         autoLoad: true
@@ -297,7 +298,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     editable: false,
                     queryMode: 'local',
                     showValueInList: true,
-                    store: Ext4.create('LABKEY.ext4.Store', {
+                    store: Ext4.create('LABKEY.ext4.data.Store', {
                         schemaName: 'sequenceanalysis',
                         queryName: 'instrument_runs',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),

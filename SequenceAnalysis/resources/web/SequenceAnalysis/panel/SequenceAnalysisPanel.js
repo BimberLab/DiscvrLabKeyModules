@@ -435,7 +435,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
     //loads the exp.RowId for each file
     initFiles: function(sql){
-        this.readsetStore = Ext4.create("LABKEY.ext4.Store", {
+        this.readsetStore = Ext4.create("LABKEY.ext4.data.Store", {
             containerPath: this.queryContainer,
             schemaName: 'sequenceanalysis',
             queryName: 'sequence_readsets',

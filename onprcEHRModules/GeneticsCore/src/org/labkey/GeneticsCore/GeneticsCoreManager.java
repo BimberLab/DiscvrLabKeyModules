@@ -45,6 +45,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -73,7 +74,7 @@ public class GeneticsCoreManager
 
     public void ensureFlagActive(User u, Container c, String flag, Date date, String remark, String[] animalIds)
     {
-        final List<String> toAdd = new ArrayList<String>(Arrays.asList(animalIds));
+        final List<String> toAdd = new ArrayList<>(Arrays.asList(animalIds));
         TableSelector ts = getFlagsTableSelector(c, u, flag, animalIds);
         ts.forEach(new Selector.ForEachBlock<ResultSet>()
         {
@@ -84,15 +85,19 @@ public class GeneticsCoreManager
             }
         });
 
+        //remove any IDs not present at the center
+        TableSelector demographics = getDemographicsTableSelector(c, u, flag, animalIds);
+        Collection<String> presentAtCenter = ts.getCollection(String.class);
+
         try
         {
             TableInfo ti = getFlagsTable(c, u);
             QueryUpdateService qus = ti.getUpdateService();
-            List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
+            List<Map<String, Object>> rows = new ArrayList<>();
 
-            for (String animal : toAdd)
+            for (String animal : presentAtCenter)
             {
-                Map<String, Object> row = new CaseInsensitiveHashMap<Object>();
+                Map<String, Object> row = new CaseInsensitiveHashMap<>();
                 row.put("Id", animal);
                 row.put("date", date);
                 row.put("remark", remark);
@@ -192,6 +197,11 @@ public class GeneticsCoreManager
 
     private TableInfo getFlagsTable(Container c, User u)
     {
+        return getEHRTable(c, u, "Animal Record Flags");
+    }
+
+    private TableInfo getEHRTable(Container c, User u, String name)
+    {
         Container ehrContainer = getEHRContainer(u, c);
 
         UserSchema study = QueryService.get().getUserSchema(u, ehrContainer, "study");
@@ -200,7 +210,7 @@ public class GeneticsCoreManager
             throw new IllegalArgumentException("Study schema not found for container: " + ehrContainer.getPath());
         }
 
-        TableInfo flagsTable = study.getTable("Animal Record Flags");
+        TableInfo flagsTable = study.getTable(name);
         if (flagsTable == null)
         {
             throw new IllegalArgumentException("Flags table not found for container: " + ehrContainer.getPath());
@@ -218,5 +228,13 @@ public class GeneticsCoreManager
         filter.addCondition(FieldKey.fromString("Id"), Arrays.asList(animalIds), CompareType.IN);
 
         return new TableSelector(flagsTable, PageFlowUtil.set("lsid", "Id", "date", "enddate", "remark"), filter, null);
+    }
+
+    private TableSelector getDemographicsTableSelector(Container c, User u, String flag, String[] animalIds)
+    {
+        TableInfo ti = getEHRTable(c, u, "Demographics");
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("Id"), Arrays.asList(animalIds), CompareType.IN);
+
+        return new TableSelector(ti, PageFlowUtil.set("Id"), filter, null);
     }
 }

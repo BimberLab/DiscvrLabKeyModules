@@ -195,6 +195,7 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
         var importMethod = this.down('#templateImportMethod').getValue();
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('laboratory', 'saveTemplate'),
+            method: 'POST',
             params: {
                 templateId: this.templateId,
                 title: title,

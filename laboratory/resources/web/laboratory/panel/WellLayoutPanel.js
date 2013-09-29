@@ -156,7 +156,7 @@ Ext4.define('Laboratory.ext.WellLayoutPanel', {
         this.store = Ext4.StoreMgr.get(this.getStoreId());
 
         if (!this.store){
-            this.store = Ext4.create('LABKEY.ext4.Store', {
+            this.store = Ext4.create('LABKEY.ext4.data.Store', {
                 storeId: this.getStoreId(),
                 schemaName: 'laboratory',
                 queryName: 'well_layout',
