@@ -112,7 +112,7 @@ public class SequenceAnalysisController extends SpringActionController
         @Override
         public ModelAndView getView(FastqcForm form, BindException errors) throws Exception
         {
-            if(form.getFilenames() == null && form.getDataIds() == null)
+            if (form.getFilenames() == null && form.getDataIds() == null)
                 errors.reject("Must provide a filename or Exp data Ids");
 
             //resolve files
@@ -120,12 +120,12 @@ public class SequenceAnalysisController extends SpringActionController
 
             String html = "";
 
-            if(form.getFilenames() != null)
+            if (form.getFilenames() != null)
             {
                 for (String fn : form.getFilenames())
                 {
                     WebdavResource r = WebdavService.get().getRootResolver().lookup(Path.parse(fn));
-                    if(r.getFile().exists())
+                    if (r.getFile().exists())
                     {
                         files.add(r.getFile());
                     }
@@ -133,20 +133,20 @@ public class SequenceAnalysisController extends SpringActionController
 
             }
 
-            if(form.getDataIds() != null)
+            if (form.getDataIds() != null)
             {
                 for (int id : form.getDataIds())
                 {
                     ExpData data = ExperimentService.get().getExpData(id);
                     if (data != null && data.getContainer().hasPermission(getUser(), ReadPermission.class))
                     {
-                        if(data.getFile().exists())
+                        if (data.getFile().exists())
                             files.add(data.getFile());
                     }
                 }
             }
 
-            if(form.getReadsets() != null)
+            if (form.getReadsets() != null)
             {
                 for (int id : form.getReadsets())
                 {
@@ -155,7 +155,7 @@ public class SequenceAnalysisController extends SpringActionController
                 }
             }
 
-            if(files.size() == 0)
+            if (files.size() == 0)
             {
                 return new HtmlView("Error: either no files provided or the files did not exist on the server");
             }
@@ -209,7 +209,7 @@ public class SequenceAnalysisController extends SpringActionController
             FileUtils.deleteQuietly(imageFile);
 
             //if the folder if empty, remove it too.  other simultaneous requests might have deleted this folder before we get to it
-            if(parentDir != null && parentDir.exists())
+            if (parentDir != null && parentDir.exists())
             {
                 File[] children = parentDir.listFiles();
                 if (children != null && children.length == 0)
@@ -218,7 +218,7 @@ public class SequenceAnalysisController extends SpringActionController
                     File parent = parentDir.getParentFile();
                     FileUtils.deleteQuietly(parent); //the FASTQ file's folder
 
-                    if(parent != null && parent.getParentFile() != null)
+                    if (parent != null && parent.getParentFile() != null)
                     {
                         File[] children2 = parent.getParentFile().listFiles();
                         if (children2 != null && children2.length == 0)
@@ -237,12 +237,12 @@ public class SequenceAnalysisController extends SpringActionController
         {
             String text = form.getText();
 
-            if(text == null)
+            if (text == null)
             {
                 errors.reject(ERROR_MSG, "Need to provide text");
                 return;
             }
-            if(form.getFileName() == null)
+            if (form.getFileName() == null)
             {
                 errors.reject(ERROR_MSG, "Need to provide a filename");
                 return;
@@ -997,13 +997,13 @@ public class SequenceAnalysisController extends SpringActionController
     {
         public void export(MergeFastqFilesForm form, HttpServletResponse response, BindException errors) throws Exception
         {
-            if(form.getDataIds() == null || form.getDataIds().length == 0)
+            if (form.getDataIds() == null || form.getDataIds().length == 0)
             {
                 throw new NotFoundException("No files provided");
             }
 
             String filename = form.getZipFileName();
-            if(filename == null)
+            if (filename == null)
             {
                 throw new NotFoundException("Must provide a filename for the archive");
             }
@@ -1055,9 +1055,9 @@ public class SequenceAnalysisController extends SpringActionController
             }
             finally
             {
-                if(in != null)
+                if (in != null)
                     in.close();
-                if(gis != null)
+                if (gis != null)
                     gis.close();
             }
         }

@@ -79,7 +79,7 @@ public class FastqcRunner
 
         //remove duplicates
         List<File> tmpList = new ArrayList<>();
-        for (File f: _sequenceFiles)
+        for (File f : _sequenceFiles)
         {
             if (!tmpList.contains(f))
                 tmpList.add(f);
@@ -93,7 +93,7 @@ public class FastqcRunner
         for (File f : _sequenceFiles)
         {
             String bn = getExpectedBasename(f);
-            if(basenames.contains(bn))
+            if (basenames.contains(bn))
             {
                 File copy = new File(getTmpDir(), (new GUID()).toString() + "_" + f.getName());
                 try
@@ -162,17 +162,17 @@ public class FastqcRunner
             //cleanup unwanted outputs and unzipped files
             for (File f : _sequenceFiles)
             {
-                if(_unzippedFiles.containsKey(f))
+                if (_unzippedFiles.containsKey(f))
                 {
                     f = _unzippedFiles.get(f);
-                    if(!f.delete())
+                    if (!f.delete())
                     {
                         f.deleteOnExit();
                     }
                 }
 
                 File zip = new File(_tmpDir, getExpectedBasename(f) + "_fastqc.zip");
-                if(!zip.delete())
+                if (!zip.delete())
                 {
                     zip.deleteOnExit();
                 }
@@ -184,7 +184,7 @@ public class FastqcRunner
     {
         String basename = FileUtil.getBaseName(f);
         FileType gz = new FileType(".gz");
-        if(gz.isType(f))
+        if (gz.isType(f))
         {
             basename = FileUtil.getBaseName(basename);
         }
@@ -279,7 +279,7 @@ public class FastqcRunner
                 counter++;
             }
 
-            if(_sequenceFiles.size() > 1)
+            if (_sequenceFiles.size() > 1)
             {
                 header += "</ul><p /></div><hr>";
                 String tag = "<div class=\"fastqc\">";
@@ -305,7 +305,7 @@ public class FastqcRunner
         }
         finally
         {
-            if(is != null)
+            if (is != null)
                 is.close();
         }
 
@@ -324,17 +324,17 @@ public class FastqcRunner
         File file = null;
         for (Resource r : resource.list())
         {
-            if(r instanceof FileResource)
+            if (r instanceof FileResource)
             {
                 file = ((FileResource) r).getFile().getParentFile();
                 break;
             }
         }
 
-        if(file == null)
+        if (file == null)
             throw new FileNotFoundException("Not found: " + path);
 
-        if(!file.exists())
+        if (!file.exists())
             throw new FileNotFoundException("Not found: " + file.getPath());
 
         return file;
@@ -353,7 +353,7 @@ public class FastqcRunner
 
         File bzJar = lookupFile("lib");
         bzJar = new File(bzJar, "jbzip2-0.9.jar");
-        if(!bzJar.exists())
+        if (!bzJar.exists())
             throw new RuntimeException("Not found: " + bzJar.getPath());
 
         classPath.add(".");
@@ -364,7 +364,7 @@ public class FastqcRunner
         params.add("-classpath");
         params.add(StringUtils.join(classPath, File.pathSeparator));
 
-        if(showVersion)
+        if (showVersion)
         {
             params.add("-Dfastqc.show_version=true");
         }
@@ -383,7 +383,7 @@ public class FastqcRunner
     {
         try
         {
-            if(_tmpDir == null)
+            if (_tmpDir == null)
                 _tmpDir = FileUtil.getAbsoluteCaseSensitiveFile(FileUtil.createTempDirectory("fastqc_"));
 
             if (!_tmpDir.exists())
