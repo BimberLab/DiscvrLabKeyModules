@@ -25,10 +25,7 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.ModuleContext;
-import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
-import org.labkey.api.query.QuerySchema;
-import org.labkey.api.query.QueryService;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
@@ -64,6 +61,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         return true;
     }
 
+    @NotNull
     protected Collection<WebPartFactory> createWebPartFactories()
     {
         return Collections.emptyList();
@@ -74,6 +72,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         addController("sequenceanalysis", SequenceAnalysisController.class);
     }
 
+    @NotNull
     @Override
     public Collection<String> getSummary(Container c)
     {
