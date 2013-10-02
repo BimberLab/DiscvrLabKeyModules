@@ -353,7 +353,7 @@ public class FastqcRunner
         List<String> classPath = new ArrayList<>();
         File samJar = SequenceAnalysisManager.getSamJar();
 
-        File bzJar = lookupFile("lib");
+        File bzJar = lookupFile("external");
         bzJar = new File(bzJar, "jbzip2-0.9.jar");
         if (!bzJar.exists())
             throw new RuntimeException("Not found: " + bzJar.getPath());

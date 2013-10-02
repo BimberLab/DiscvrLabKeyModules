@@ -23,7 +23,6 @@ iths/cbr/resources/web/cbr/cbr.css -text
 iths/cbr/tools/cbr_data_transfer.sql -text
 labModules/SequenceAnalysis/.project -text
 labModules/SequenceAnalysis/lib/biojava3-core-3.0.4.jar -text
-labModules/SequenceAnalysis/lib/jbzip2-0.9.jar -text
 labModules/SequenceAnalysis/module.properties -text
 labModules/SequenceAnalysis/pipeline_code/SequenceTools/Bio/Tools/Run/BWA2.pm -text
 labModules/SequenceAnalysis/pipeline_code/SequenceTools/Bio/Tools/Run/BWA2/Config.pm -text
@@ -182,6 +181,7 @@ labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/bbsrc/babraham/FastQ
 labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/bbsrc/babraham/FastQC/Statistics/PearsonCorrelation.class -text
 labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/bbsrc/babraham/FastQC/Utilities/CasavaBasename.class -text
 labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/bbsrc/babraham/FastQC/Utilities/NameFormatException.class -text
+labModules/SequenceAnalysis/resources/external/jbzip2-0.9.jar -text
 labModules/SequenceAnalysis/resources/folderTypes/Sequence[!!-~]Analysis.folderType.xml -text
 labModules/SequenceAnalysis/resources/module.xml -text
 labModules/SequenceAnalysis/resources/queries/exp/DataInputs/.qview.xml -text
