@@ -321,6 +321,8 @@ public class FastqcRunner
     {
         Module module = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
         MergedDirectoryResource resource = (MergedDirectoryResource)module.getModuleResolver().lookup(Path.parse(path));
+        assert resource != null : "Unable to find resource with path: " + path;
+
         File file = null;
         for (Resource r : resource.list())
         {
