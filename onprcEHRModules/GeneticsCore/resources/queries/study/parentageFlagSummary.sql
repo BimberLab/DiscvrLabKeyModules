@@ -1,4 +1,4 @@
--- NOTE: and changes to the logic the this query should also modify processingGeneticsBloodDraws.sql in ONPRC_Reports
+-- NOTE: any changes to the logic the this query should also modify processingGeneticsBloodDraws.sql in ONPRC_Reports
 SELECT
   d.Id,
   d.calculated_status,

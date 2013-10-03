@@ -1,0 +1,8 @@
+<view xmlns="http://labkey.org/data/xml/view" title="SLA ETL Administration">
+    <permissions>
+        <permission name="admin"/>
+    </permissions>
+    <dependencies>
+        <dependency path="sla.context" />
+    </dependencies>
+</view>

@@ -1,0 +1,7 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart" title="Small Lab Animals">
+   <view name="begin"/>
+   <locations>
+		<location name="body"/>
+		<location name="menu"/>
+   </locations>
+</webpart>

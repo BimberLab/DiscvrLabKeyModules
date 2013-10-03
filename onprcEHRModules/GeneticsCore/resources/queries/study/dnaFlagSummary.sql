@@ -1,4 +1,4 @@
--- NOTE: and changes to the logic the this query should also modify processingGeneticsBloodDraws.sql in ONPRC_Reports
+-- NOTE: any changes to the logic the this query should also modify processingGeneticsBloodDraws.sql in ONPRC_Reports
 SELECT
   t.Id,
   t.calculated_status,
@@ -65,7 +65,7 @@ SELECT
   count(*) as total,
   sum(coalesce(s.quantity, 0)) as totalQuantity
 FROM DNA_Bank.samples s
-WHERE s.dateremoved is null and sampleType = 'Whole Blood' and s.container.title = 'DNA Bank'
+WHERE s.dateremoved is null and sampleType = 'Whole Blood' and s.container = '029AF07C-CB06-1030-8D66-5107380A00F7'
 GROUP BY s.subjectId
 ) s1 ON (s1.subjectId = d.Id)
 
@@ -76,7 +76,8 @@ SELECT
   count(*) as total,
   sum(coalesce(s.quantity, 0)) as totalQuantity
 FROM DNA_Bank.samples s
-WHERE s.dateremoved is null and sampleType = 'Buffy Coat' and s.container.title = 'DNA Bank'
+--include DNA Bank workbook only
+WHERE s.dateremoved is null and sampleType = 'Buffy Coat' and s.workbook = '029AF07C-CB06-1030-8D66-5107380A00F7'
 GROUP BY s.subjectId
 ) s2 ON (s2.subjectId = d.Id)
 
@@ -86,7 +87,8 @@ SELECT
   s.sampleType,
   count(*) as total
 FROM DNA_Bank.samples s
-WHERE s.dateremoved is null and s.sampleType = 'gDNA' and s.container.title = 'DNA Bank'
+--include DNA Bank workbook only
+WHERE s.dateremoved is null and s.sampleType = 'gDNA' and s.workbook = '029AF07C-CB06-1030-8D66-5107380A00F7'
 GROUP BY s.subjectId
 ) s3 ON (s3.subjectId = d.Id)
 

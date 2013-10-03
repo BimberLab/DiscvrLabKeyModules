@@ -1,0 +1,25 @@
+<ft:folderType xmlns:ft="http://labkey.org/data/xml/folderType">
+    <ft:name>Small Lab Animal Folder</ft:name>
+    <ft:description>The default folder layout for management of small lab animals</ft:description>
+    <ft:folderTabs>
+        <ft:folderTab>
+            <ft:name>SLA</ft:name>
+            <ft:caption>Small Lab Animals</ft:caption>
+            <ft:selectors>
+            </ft:selectors>
+            <ft:requiredWebParts>
+            </ft:requiredWebParts>
+            <ft:preferredWebParts>
+                <ft:webPart>
+                    <ft:name>Small Lab Animals</ft:name>
+                    <ft:location>body</ft:location>
+                </ft:webPart>
+            </ft:preferredWebParts>
+        </ft:folderTab>
+    </ft:folderTabs>
+    <ft:modules>
+        <ft:moduleName>SLA</ft:moduleName>
+    </ft:modules>
+    <ft:defaultModule>SLA</ft:defaultModule>
+    <ft:forceAssayUploadIntoWorkbooks>false</ft:forceAssayUploadIntoWorkbooks>
+</ft:folderType>
