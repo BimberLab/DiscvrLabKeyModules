@@ -700,6 +700,7 @@ labModules/laboratory/resources/views/synchronizeAssayFields.view.xml -text
 labModules/laboratory/resources/web/laboratory/assayButtons.js -text
 labModules/laboratory/resources/web/laboratory/button/IconButton.js -text
 labModules/laboratory/resources/web/laboratory/buttons.js -text
+labModules/laboratory/resources/web/laboratory/icons/icon_sphere_lg.png -text
 labModules/laboratory/resources/web/laboratory/laboratory.js -text
 labModules/laboratory/resources/web/laboratory/laboratory.lib.xml -text
 labModules/laboratory/resources/web/laboratory/panel/AbstractAssayPanel.js -text

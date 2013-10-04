@@ -48,8 +48,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class GeneticsCoreManager
 {
@@ -72,7 +74,7 @@ public class GeneticsCoreManager
         return _instance;
     }
 
-    public void ensureFlagActive(User u, Container c, String flag, Date date, String remark, String[] animalIds)
+    public Collection<String> ensureFlagActive(User u, Container c, String flag, Date date, String remark, String[] animalIds)
     {
         final List<String> toAdd = new ArrayList<>(Arrays.asList(animalIds));
         TableSelector ts = getFlagsTableSelector(c, u, flag, animalIds);
@@ -85,9 +87,9 @@ public class GeneticsCoreManager
             }
         });
 
-        //remove any IDs not present at the center
-        TableSelector demographics = getDemographicsTableSelector(c, u, flag, animalIds);
-        Collection<String> presentAtCenter = ts.getCollection(String.class);
+        //limit to IDs present at the center
+        TableSelector demographics = getDemographicsTableSelector(c, u, flag, toAdd);
+        Collection<String> presentAtCenter = demographics.getCollection(String.class);
 
         try
         {
@@ -111,6 +113,8 @@ public class GeneticsCoreManager
             BatchValidationException errors = new BatchValidationException();
             if (rows.size() > 0)
                 qus.insertRows(u, ti.getUserSchema().getContainer(), rows, errors, new HashMap<String, Object>());
+
+            return presentAtCenter;
         }
         catch (QueryUpdateServiceException e)
         {
@@ -130,7 +134,7 @@ public class GeneticsCoreManager
         }
     }
 
-    public void terminateFlagsIfExists(User u, Container c, String flag, final Date enddate, String[] animalIds)
+    public Collection<String> terminateFlagsIfExists(User u, Container c, String flag, final Date enddate, String[] animalIds)
     {
         TableSelector ts = getFlagsTableSelector(c, u, flag, animalIds);
 
@@ -139,18 +143,21 @@ public class GeneticsCoreManager
 
         final List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
         final List<Map<String, Object>> oldKeys = new ArrayList<Map<String, Object>>();
+        final Set<String> distinctIds = new HashSet<String>();
         ts.forEach(new Selector.ForEachBlock<ResultSet>()
         {
             @Override
             public void exec(ResultSet rs) throws SQLException
             {
-                Map<String, Object> row = new CaseInsensitiveHashMap<Object>();
+                Map<String, Object> row = new CaseInsensitiveHashMap<>();
                 row.put("enddate", enddate);
                 rows.add(row);
 
-                Map<String, Object> keys = new CaseInsensitiveHashMap<Object>();
+                Map<String, Object> keys = new CaseInsensitiveHashMap<>();
                 keys.put("lsid", rs.getString("lsid"));
                 oldKeys.add(keys);
+
+                distinctIds.add(rs.getString("Id"));
             }
         });
 
@@ -158,6 +165,8 @@ public class GeneticsCoreManager
         {
             if (rows.size() > 0)
                 qus.updateRows(u, ti.getUserSchema().getContainer(), rows, oldKeys, new HashMap<String, Object>());
+
+            return distinctIds;
         }
         catch (InvalidKeyException e)
         {
@@ -210,13 +219,13 @@ public class GeneticsCoreManager
             throw new IllegalArgumentException("Study schema not found for container: " + ehrContainer.getPath());
         }
 
-        TableInfo flagsTable = study.getTable(name);
-        if (flagsTable == null)
+        TableInfo ti = study.getTable(name);
+        if (ti == null)
         {
-            throw new IllegalArgumentException("Flags table not found for container: " + ehrContainer.getPath());
+            throw new IllegalArgumentException("Table not found in container " + ehrContainer.getPath() + ": " + name);
         }
 
-        return flagsTable;
+        return ti;
     }
 
     private TableSelector getFlagsTableSelector(Container c, User u, String flag, String[] animalIds)
@@ -230,10 +239,11 @@ public class GeneticsCoreManager
         return new TableSelector(flagsTable, PageFlowUtil.set("lsid", "Id", "date", "enddate", "remark"), filter, null);
     }
 
-    private TableSelector getDemographicsTableSelector(Container c, User u, String flag, String[] animalIds)
+    private TableSelector getDemographicsTableSelector(Container c, User u, String flag, List<String> animalIds)
     {
         TableInfo ti = getEHRTable(c, u, "Demographics");
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("Id"), Arrays.asList(animalIds), CompareType.IN);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("Id"), animalIds, CompareType.IN);
+        filter.addCondition(FieldKey.fromString("calculated_status"), "Alive", CompareType.EQUAL);
 
         return new TableSelector(ti, PageFlowUtil.set("Id"), filter, null);
     }

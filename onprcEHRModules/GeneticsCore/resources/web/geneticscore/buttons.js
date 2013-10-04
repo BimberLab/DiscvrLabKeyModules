@@ -16,8 +16,10 @@ GeneticsCore.buttons = new function(){
                 return;
             }
 
+            Ext4.Msg.wait('Loading...');
             var subjects = [];
             LABKEY.Query.selectRows({
+                method: 'POST',
                 requiredVersion: 9.1,
                 schemaName: 'laboratory',
                 queryName: 'samples',
@@ -25,6 +27,8 @@ GeneticsCore.buttons = new function(){
                 filterArray: [LABKEY.Filter.create('rowid', checked.join(';'), LABKEY.Filter.Types.IN)],
                 failure: LDK.Utils.getErrorCallback(),
                 success: function(results){
+                    Ext4.Msg.hide();
+
                     var hasError = false;
                     Ext4.each(results.rows, function(r){
                         var row = new LDK.SelectRowsRow(r);
@@ -44,11 +48,14 @@ GeneticsCore.buttons = new function(){
                         mode: 'add',
                         dataRegion: dataRegion,
                         subjectIds: subjects,
-                        successHandler: function(){
+                        successHandler: function(response){
                             Ext4.Msg.hide();
                             this.close();
 
-                            Ext4.Msg.confirm('Success', 'Flags have been added.  Do you want to mark these samples as removed?', function(val){
+                            var added = response.added || [];
+                            var removed = response.removed || [];
+                            var msg = 'Flags have been updated.  A total of ' + added.length + ' animals had flags added and ' + removed.length + ' had flags removed.  These numbers may differ from the total rows selected because flags are only added/removed if the animal needs them.<br>Do you want to mark these samples as removed?';
+                            Ext4.Msg.confirm('Success', msg, function(val){
                                 if (val == 'yes'){
                                     Laboratory.buttonHandlers.markSamplesRemoved(this.dataRegion.name);
                                 }

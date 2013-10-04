@@ -10,6 +10,7 @@ import org.labkey.api.security.permissions.UpdatePermission;
 import org.springframework.validation.BindException;
 
 import java.lang.String;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,7 +61,8 @@ public class GeneticsCoreController extends SpringActionController
                         return null;
                     }
 
-                    GeneticsCoreManager.get().ensureFlagActive(getUser(), getContainer(), form.getFlag(), form.getDate(), form.getRemark(), form.getAnimalIds());
+                    Collection<String> added = GeneticsCoreManager.get().ensureFlagActive(getUser(), getContainer(), form.getFlag(), form.getDate(), form.getRemark(), form.getAnimalIds());
+                    resp.put("added", added);
                 }
                 else if ("remove".equals(mode))
                 {
@@ -70,7 +72,8 @@ public class GeneticsCoreController extends SpringActionController
                         return null;
                     }
 
-                    GeneticsCoreManager.get().terminateFlagsIfExists(getUser(), getContainer(), form.getFlag(), form.getEnddate(), form.getAnimalIds());
+                    Collection<String> removed = GeneticsCoreManager.get().terminateFlagsIfExists(getUser(), getContainer(), form.getFlag(), form.getEnddate(), form.getAnimalIds());
+                    resp.put("removed", removed);
                 }
                 else
                 {

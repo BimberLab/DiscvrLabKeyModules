@@ -36,6 +36,10 @@ Ext4.define('GeneticsCore.window.ManageFlagsWindow', {
                 },
                 border: false,
                 items: [{
+                    html: 'Note: flags will only be added to living animals, and will only be added if a flag of this type does not already exist',
+                    border: false,
+                    style: 'padding-bottom: 10px;'
+                },{
                     xtype: 'datefield',
                     itemId: 'dateField',
                     fieldLabel: this.mode == 'add' ? 'Date' : 'End Date',
@@ -118,14 +122,19 @@ Ext4.define('GeneticsCore.window.ManageFlagsWindow', {
             method: 'POST',
             params: params,
             scope: this,
-            success: this.successHandler,
+            success: LABKEY.Utils.getCallbackWrapper(this.successHandler, this),
             failure: LDK.Utils.getErrorCallback()
         });
     },
 
-    successHandler: function(){
+    successHandler: function(response){
         Ext4.Msg.hide();
-        this.dataRegion.refresh();
         this.close();
+
+        var added = response.added || [];
+        var removed = response.removed || [];
+        Ext4.Msg.alert('Success', 'Flags have been updated.  A total of ' + added.length + ' animals had flags added and ' + removed.length + ' had flags removed.  These numbers may differ from the total rows selected because flags are only added/removed if the animal needs them.', function(){
+            this.dataRegion.refresh();
+        }, this);
     }
 });
