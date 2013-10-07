@@ -27,7 +27,7 @@ Ext4.define('Laboratory.window.ChangeAssayResultStatusWindow', {
     initComponent: function(){
         Ext4.apply(this, {
             modal: true,
-            title: 'Set End Date',
+            title: 'Change Status',
             closeAction: 'destroy',
             width: 380,
             items: [{

@@ -65,7 +65,7 @@ SELECT
   count(*) as total,
   sum(coalesce(s.quantity, 0)) as totalQuantity
 FROM DNA_Bank.samples s
-WHERE s.dateremoved is null and sampleType = 'Whole Blood' and s.container = '029AF07C-CB06-1030-8D66-5107380A00F7'
+WHERE s.dateremoved is null and sampleType = 'Whole Blood' and s.workbook = '029AF07C-CB06-1030-8D66-5107380A00F7'
 GROUP BY s.subjectId
 ) s1 ON (s1.subjectId = d.Id)
 

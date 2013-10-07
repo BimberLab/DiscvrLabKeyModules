@@ -133,7 +133,7 @@ Ext4.define('GeneticsCore.window.ManageFlagsWindow', {
 
         var added = response.added || [];
         var removed = response.removed || [];
-        Ext4.Msg.alert('Success', 'Flags have been updated.  A total of ' + added.length + ' animals had flags added and ' + removed.length + ' had flags removed.  These numbers may differ from the total rows selected because flags are only added/removed if the animal needs them.', function(){
+        Ext4.Msg.alert('Success', 'Flags have been updated.  A total of ' + added.length + ' animals had flags added and ' + removed.length + ' had flags removed.  These numbers may differ from the total rows selected because flags are only added/removed if the animal needs them, and will only be added to animals actively at the center.', function(){
             this.dataRegion.refresh();
         }, this);
     }

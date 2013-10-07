@@ -23,6 +23,12 @@
                     <column columnName="hasParentageData">
                         <columnTitle>Has Parentage STR Data?</columnTitle>
                     </column>
+                    <column columnName="hasFreezerSample">
+                        <columnTitle>Has Freezer Sample?</columnTitle>
+                    </column>
+                    <column columnName="hasFreezerSampleOrData">
+                        <columnTitle>Has Freezer Sample Or Data?</columnTitle>
+                    </column>
                     <column columnName="drawnFlagDateAdded">
                         <columnTitle>Date Parentage Blood Collected Flag Added</columnTitle>
                     </column>

@@ -24,7 +24,15 @@ SELECT
   CASE
     WHEN m.Id is null THEN false
     ELSE true
-  END as hasMHCData
+  END as hasMHCData,
+  CASE
+    WHEN mhc.subjectId is null THEN false
+    ELSE true
+  END as hasFreezerSample,
+  CASE
+    WHEN (mhc.subjectId is null AND m.Id IS NULL) THEN false
+    ELSE true
+  END as hasFreezerSampleOrData
 
 FROM study.Demographics d
 
@@ -55,6 +63,16 @@ FROM study."Animal Record Flags" f
 where f.isActive = true and f.category = 'Genetics' and f.value = 'MHC Blood Draw Needed'
 GROUP BY f.Id
 ) f2 ON (f2.Id = d.Id)
+
+--join to freezer samples
+LEFT JOIN (
+  SELECT
+    m.subjectId,
+    count(*) as total
+  FROM DNA_Bank.mhcSamples m
+  WHERE m.sampletype IN ('RNA', 'Whole Blood')
+  GROUP BY m.subjectId
+) mhc ON (mhc.subjectId = d.Id)
 
 --U42
 LEFT JOIN (

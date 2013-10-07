@@ -27,7 +27,16 @@ SELECT
   CASE
     WHEN pd.subjectId is null THEN false
     ELSE true
-  END as hasParentageData
+  END as hasParentageData,
+
+  CASE
+    WHEN freezer.subjectId is null THEN false
+    ELSE true
+  END as hasFreezerSample,
+  CASE
+    WHEN (freezer.subjectId is null AND pd.subjectId IS NULL) THEN false
+    ELSE true
+  END as hasFreezerSampleOrData
 
 FROM study.Demographics d
 
@@ -69,6 +78,16 @@ FROM study."Animal Record Flags" f
 where f.isActive = true and f.category = 'Genetics' and f.value = 'Parentage Blood Draw Needed'
 GROUP BY f.Id
 ) f2 ON (f2.Id = d.Id)
+
+--join to freezer samples
+LEFT JOIN (
+  SELECT
+    m.subjectId,
+    count(*) as total
+  FROM DNA_Bank.parentageSamples m
+  WHERE m.sampletype IN ('gDNA', 'Whole Blood')
+  GROUP BY m.subjectId
+) freezer ON (freezer.subjectId = d.Id)
 
 --U42
 LEFT JOIN (

@@ -790,6 +790,10 @@ onprcEHRModules/onprc_reports/ONPRC_Reports.iml -text
 onprcEHRModules/onprc_reports/build.xml -text
 onprcEHRModules/onprc_reports/module.properties -text
 onprcEHRModules/onprc_reports/resources/queries/MHC_Data/MHC_Data_Pivoted/Common[!!-~]Alleles.qview.xml -text
+onprcEHRModules/onprc_reports/resources/queries/laboratory/mhcSamples.query.xml -text
+onprcEHRModules/onprc_reports/resources/queries/laboratory/mhcSamples.sql -text
+onprcEHRModules/onprc_reports/resources/queries/laboratory/parentageSamples.query.xml -text
+onprcEHRModules/onprc_reports/resources/queries/laboratory/parentageSamples.sql -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Pivoted.sql -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Raw.sql -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Unified.query.xml -text

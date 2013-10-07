@@ -68,13 +68,13 @@ public class GeneticsCoreNotification implements Notification
     @Override
     public String getCronString()
     {
-        return "0 30 5 ? * WED";
+        return "0 30 5 ? * MON,WED,FRI";
     }
 
     @Override
     public String getScheduleDescription()
     {
-        return "every Wednesday at 5:30AM";
+        return "every Monday, Wednesday and Friday at 5:30AM";
     }
 
     @Override
@@ -99,9 +99,44 @@ public class GeneticsCoreNotification implements Notification
         getParentageConflictingFlags(c, u, msg);
         getActiveExclusions(c, u, msg, GeneticsCoreManager.PARENTAGE_DRAW_NEEDED);
 
+        getMHCFreezerSamplesNotFlagged(c, u, msg);
+        getParentageFreezerSamplesNotFlagged(c, u, msg);
+
         getParentageConflicts(c, u, msg);
 
         return msg.toString();
+    }
+
+    public void getMHCFreezerSamplesNotFlagged(Container c, User u, StringBuilder msg)
+    {
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("hasMhcDrawnFlag"), false);
+        filter.addCondition(FieldKey.fromString("hasMHCData"), false);
+        filter.addCondition(FieldKey.fromString("hasFreezerSample"), true);
+
+        TableInfo ti = QueryService.get().getUserSchema(u, c, "study").getTable("mhcFlagSummary");
+        TableSelector ts = new TableSelector(ti, PageFlowUtil.set("Id"), filter, null);
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, "study", "mhcFlagSummary");
+            msg.append("<b>WARNING: There are " + count + " animals with active MHC freezer samples, but without MHC data and no flag indicating they have been drawn for MHC typing.  These animals should be flagged to avoid duplicate blood draws.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "&" + filter.toQueryString("query") + "'>Click here to view these animals</a><hr>");
+        }
+    }
+
+    public void getParentageFreezerSamplesNotFlagged(Container c, User u, StringBuilder msg)
+    {
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("hasParentageDrawnFlag"), false);
+        filter.addCondition(FieldKey.fromString("hasParentageData"), false);
+        filter.addCondition(FieldKey.fromString("hasFreezerSample"), true);
+
+        TableInfo ti = QueryService.get().getUserSchema(u, c, "study").getTable("parentageFlagSummary");
+        TableSelector ts = new TableSelector(ti, PageFlowUtil.set("Id"), filter, null);
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, "study", "parentageFlagSummary");
+            msg.append("<b>WARNING: There are " + count + " animals with active parentage freezer samples, but without parentage data and no flag indicating they have been drawn for parentage.  These animals should be flagged to avoid duplicate blood draws.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "&" + filter.toQueryString("query") + "'>Click here to view these animals</a><hr>");
+        }
     }
 
     public void getParentageConflicts(Container c, User u, StringBuilder msg)
