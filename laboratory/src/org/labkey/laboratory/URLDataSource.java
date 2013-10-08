@@ -1,5 +1,6 @@
 package org.labkey.laboratory;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
@@ -44,6 +45,9 @@ public class URLDataSource
         String msg = StringExpressionFactory.validateURL(urlExpression);
         if (msg != null)
             throw new IllegalArgumentException("Invalid URL: " + msg);
+
+        if (StringUtils.trimToNull(label) == null)
+            throw new IllegalArgumentException("Label must not be blank");
 
         StringExpression url = StringExpressionFactory.createURL(urlExpression);
 

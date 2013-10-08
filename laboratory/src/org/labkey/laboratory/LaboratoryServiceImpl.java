@@ -250,7 +250,18 @@ public class LaboratoryServiceImpl extends LaboratoryService
             @Override
             public int compare(NavItem o1, NavItem o2)
             {
-            return o1.getLabel().compareTo(o2.getLabel());
+                //Issue 18751: NullPointerException from org.labkey.laboratory.LaboratoryServiceImpl
+                if (o1.getLabel() == null)
+                {
+                    _log.error("NavItem has a null label: " + o1.getPropertyManagerKey());
+                }
+
+                if (o2.getLabel() == null)
+                {
+                    _log.error("NavItem has a null label: " + o2.getPropertyManagerKey());
+                }
+
+                return o1.getLabel() == null ? -1 : o1.getLabel().compareTo(o2.getLabel());
             }
         });
     }

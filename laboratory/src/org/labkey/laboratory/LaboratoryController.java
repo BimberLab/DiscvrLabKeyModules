@@ -1297,11 +1297,16 @@ public class LaboratoryController extends SpringActionController
             for (JSONObject obj : json.toJSONObjectArray())
             {
                 String containerId = obj.containsKey("containerId") ? StringUtils.trimToNull(obj.getString("containerId")) : null;
-                String schemaName = obj.getString("schemaName");
-                String queryName = obj.getString("queryName");
-                String category = obj.getString("category");
-                String itemType = obj.getString("itemType");
-                String label = obj.getString("label");
+                String schemaName = StringUtils.trimToNull(obj.getString("schemaName"));
+                String queryName = StringUtils.trimToNull(obj.getString("queryName"));
+                String category = StringUtils.trimToNull(obj.getString("category"));
+                String itemType = StringUtils.trimToNull(obj.getString("itemType"));
+                String label = StringUtils.trimToNull(obj.getString("label"));
+                if (label == null || queryName == null || schemaName == null)
+                {
+                    errors.reject(ERROR_MSG, "Must contain a label, schemaName and queryName");
+                    return null;
+                }
 
                 Container c = containerId == null ? getContainer() : ContainerManager.getForId(containerId);
                 if (c == null)
