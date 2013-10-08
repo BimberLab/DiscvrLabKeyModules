@@ -77,8 +77,7 @@ public class SampleSetDataProvider extends AbstractDataProvider
         //also append all sample sets in this container
         List<NavItem> navItems = new ArrayList<NavItem>();
 
-        ExpSampleSet[] sampleSets = ExperimentService.get().getSampleSets(c, u, true);
-        for (ExpSampleSet ss : sampleSets)
+        for (ExpSampleSet ss : ExperimentService.get().getSampleSets(c, u, true))
         {
             navItems.add(new SampleSetNavItem(this, ss));
         }
@@ -109,8 +108,7 @@ public class SampleSetDataProvider extends AbstractDataProvider
     public List<NavItem> getSummary(Container c, User u)
     {
         List<NavItem> items = new ArrayList<NavItem>();
-        ExpSampleSet[] sampleSets = ExperimentService.get().getSampleSets(c, u, true);
-        for (ExpSampleSet ss : sampleSets)
+        for (ExpSampleSet ss : ExperimentService.get().getSampleSets(c, u, true))
         {
             SampleSetNavItem nav = new SampleSetNavItem(this, ss);
             Integer total = 0;
@@ -135,8 +133,7 @@ public class SampleSetDataProvider extends AbstractDataProvider
     public List<NavItem> getSubjectIdSummary(Container c, User u, String subjectId)
     {
         List<NavItem> items = new ArrayList<NavItem>();
-        ExpSampleSet[] sampleSets = ExperimentService.get().getSampleSets(c, u, true);
-        for (ExpSampleSet ss : sampleSets)
+        for (ExpSampleSet ss : ExperimentService.get().getSampleSets(c, u, true))
         {
             UserSchema us = QueryService.get().getUserSchema(u, c, "Samples");
             if (us != null)
