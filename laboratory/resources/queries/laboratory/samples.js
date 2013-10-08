@@ -63,7 +63,7 @@ function beforeUpsert(row, errors){
 //            var normalizedVal = helper.getLookupValue(val, f);
 //
 //            if (LABKEY.ExtAdapter.isEmpty(normalizedVal))
-//                errors[f] = 'Unknown value for field: ' + f + '. Value was: ' + val;
+//                errors[f] = ['Unknown value for field: ' + f + '. Value was: ' + val];
 //            else
 //                row[f] = normalizedVal;  //cache value for purpose of normalizing case
 //        }
