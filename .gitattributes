@@ -71,6 +71,8 @@ labModules/SequenceAnalysis/pipeline_code/external/picard/SamToFastq.jar -text
 labModules/SequenceAnalysis/pipeline_code/external/trimmomatic/LICENSE -text
 labModules/SequenceAnalysis/pipeline_code/external/trimmomatic/trimmomatic-0.22.jar -text
 labModules/SequenceAnalysis/pipeline_code/sequence_tools_install.sh -text
+labModules/SequenceAnalysis/resources/credits/executables.txt -text
+labModules/SequenceAnalysis/resources/credits/jars.txt -text
 labModules/SequenceAnalysis/resources/external/fastqc/Contaminants/contaminant_list.txt -text
 labModules/SequenceAnalysis/resources/external/fastqc/Help/1[!!-~]Introduction/1.1[!!-~]What[!!-~]is[!!-~]FastQC.html -text
 labModules/SequenceAnalysis/resources/external/fastqc/Help/2[!!-~]Basic[!!-~]Operations/2.1[!!-~]Opening[!!-~]a[!!-~]sequence[!!-~]file.html -text
@@ -428,8 +430,6 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/snp_haplotype.js -tex
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/IlluminaApplicationWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/IlluminaSampleKitWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/RunExportWindow.js -text
-labModules/SequenceAnalysis/src/META-INF/sequenceanalysis/executables.txt -text
-labModules/SequenceAnalysis/src/META-INF/sequenceanalysis/jars.txt -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/AnalysesTableCustomizer.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisContainerListener.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisController.java -text
