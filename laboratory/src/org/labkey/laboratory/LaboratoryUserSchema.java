@@ -30,15 +30,11 @@ public class LaboratoryUserSchema extends SimpleUserSchema
     {
         final DbSchema dbSchema = DbSchema.get(LaboratoryModule.SCHEMA_NAME);
 
-        DefaultSchema.registerProvider(LaboratoryModule.SCHEMA_NAME, new DefaultSchema.SchemaProvider()
+        DefaultSchema.registerProvider(LaboratoryModule.SCHEMA_NAME, new DefaultSchema.SchemaProvider(m)
         {
-            public QuerySchema getSchema(final DefaultSchema schema)
+            public QuerySchema createSchema(final DefaultSchema schema, Module module)
             {
-                if (schema.getContainer().getActiveModules().contains(m))
-                {
-                    return new LaboratoryUserSchema(schema.getUser(), schema.getContainer(), dbSchema);
-                }
-                return null;
+                return new LaboratoryUserSchema(schema.getUser(), schema.getContainer(), dbSchema);
             }
         });
     }
