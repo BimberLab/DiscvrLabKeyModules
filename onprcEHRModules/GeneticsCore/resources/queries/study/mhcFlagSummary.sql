@@ -34,13 +34,13 @@ SELECT
     ELSE true
   END as hasFreezerSampleOrData
 
-FROM study.Demographics d
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.Demographics d
 
 LEFT JOIN (
   SELECT
   m.Id,
   count(*) as total
-  FROM MHC_Data.MHC_Data_Raw m
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.MHC_Data.MHC_Data_Raw m
   GROUP BY m.Id
 ) m ON (m.Id = d.Id)
 
@@ -49,8 +49,8 @@ LEFT JOIN (
   f.Id,
     max(f.date) as lastDate,
   count(*) as total
-  FROM study."Animal Record Flags" f
-  where f.isActive = true and f.category = 'Genetics' and f.value = 'MHC Blood Draw Collected'
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
+  where f.isActive = true and f.category = 'Genetics' and f.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.MHC_DRAW_COLLECTED')
   GROUP BY f.Id
 ) f ON (f.Id = d.Id)
 
@@ -59,8 +59,8 @@ SELECT
   f.Id,
   max(f.date) as lastDate,
   count(*) as total
-FROM study."Animal Record Flags" f
-where f.isActive = true and f.category = 'Genetics' and f.value = 'MHC Blood Draw Needed'
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
+where f.isActive = true and f.category = 'Genetics' and f.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.MHC_DRAW_NEEDED')
 GROUP BY f.Id
 ) f2 ON (f2.Id = d.Id)
 
@@ -69,7 +69,7 @@ LEFT JOIN (
   SELECT
     m.subjectId,
     count(*) as total
-  FROM DNA_Bank.mhcSamples m
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.DNA_Bank.mhcSamples m
   WHERE m.sampletype IN ('RNA', 'Whole Blood')
   GROUP BY m.subjectId
 ) mhc ON (mhc.subjectId = d.Id)
@@ -79,7 +79,7 @@ LEFT JOIN (
   SELECT
     a.Id,
     count(*) as total
-  FROM study.assignment a
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.assignment a
   WHERE a.isActive = true and a.project.name = '0492-02'
   GROUP BY a.Id
 ) a ON (a.Id = d.Id)

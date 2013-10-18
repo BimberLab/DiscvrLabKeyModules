@@ -38,13 +38,13 @@ SELECT
     ELSE true
   END as hasFreezerSampleOrData
 
-FROM study.Demographics d
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.Demographics d
 
 LEFT JOIN (
   SELECT
     pd.subjectId,
     count(*) as total
-  FROM Parentage_Data.Data pd
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.Parentage_Data.Data pd
   WHERE pd.run.method = 'UC Davis'
   GROUP BY pd.subjectId
 ) pd ON (d.Id = pd.subjectId)
@@ -54,7 +54,7 @@ LEFT JOIN (
   SELECT
     pd.Id,
     count(distinct pd.relationship) as total
-  FROM Study.Parentage pd
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.Study.Parentage pd
   WHERE pd.method = 'Genetic'
   GROUP BY pd.Id
 ) gp ON (d.Id = gp.Id)
@@ -64,8 +64,8 @@ LEFT JOIN (
   f.Id,
     max(f.date) as lastDate,
   count(*) as total
-  FROM study."Animal Record Flags" f
-  where f.isActive = true and f.category = 'Genetics' and f.value = 'Parentage Blood Draw Collected'
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
+  where f.isActive = true and f.category = 'Genetics' and f.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.PARENTAGE_DRAW_COLLECTED')
   GROUP BY f.Id
 ) f ON (f.Id = d.Id)
 
@@ -74,8 +74,8 @@ SELECT
   f.Id,
   max(f.date) as lastDate,
   count(*) as total
-FROM study."Animal Record Flags" f
-where f.isActive = true and f.category = 'Genetics' and f.value = 'Parentage Blood Draw Needed'
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
+where f.isActive = true and f.category = 'Genetics' and f.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.PARENTAGE_DRAW_NEEDED')
 GROUP BY f.Id
 ) f2 ON (f2.Id = d.Id)
 
@@ -84,7 +84,7 @@ LEFT JOIN (
   SELECT
     m.subjectId,
     count(*) as total
-  FROM DNA_Bank.parentageSamples m
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.DNA_Bank.parentageSamples m
   WHERE m.sampletype IN ('gDNA', 'Whole Blood')
   GROUP BY m.subjectId
 ) freezer ON (freezer.subjectId = d.Id)
@@ -94,7 +94,7 @@ LEFT JOIN (
   SELECT
     a.Id,
     count(*) as total
-  FROM study.assignment a
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.assignment a
   WHERE a.isActive = true and a.project.name = '0492-02'
   GROUP BY a.Id
 ) a ON (a.Id = d.Id)

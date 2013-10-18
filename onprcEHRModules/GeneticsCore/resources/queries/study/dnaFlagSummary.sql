@@ -36,13 +36,13 @@ SELECT
   coalesce(s2.totalQuantity, 0) as activeBuffyCoatQuantity,
   coalesce(s3.total, 0) as activeGDNA
 
-FROM study.Demographics d
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.Demographics d
 
 LEFT JOIN (
   SELECT
   f.Id,
   group_concat(f.value, chr(10)) as flags
-  FROM study."Animal Record Flags" f
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
   where f.isActive = true and f.category = 'Genetics'
   GROUP BY f.Id
 ) f ON (f.Id = d.Id)
@@ -52,8 +52,8 @@ LEFT JOIN (
     f.Id,
     max(f.date) as lastDate,
     count(*) as total
-  FROM study."Animal Record Flags" f
-  where f.isActive = true and f.category = 'Genetics' and f.value = 'DNA Bank Blood Draw Collected'
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
+  where f.isActive = true and f.category = 'Genetics' and f.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.DNA_DRAW_COLLECTED')
   GROUP BY f.Id
 ) dc ON (dc.Id = d.Id)
 
@@ -64,7 +64,7 @@ SELECT
   s.sampleType,
   count(*) as total,
   sum(coalesce(s.quantity, 0)) as totalQuantity
-FROM DNA_Bank.samples s
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.DNA_Bank.samples s
 WHERE s.dateremoved is null and sampleType = 'Whole Blood' and s.workbook = '029AF07C-CB06-1030-8D66-5107380A00F7'
 GROUP BY s.subjectId
 ) s1 ON (s1.subjectId = d.Id)
@@ -75,7 +75,7 @@ SELECT
   s.sampleType,
   count(*) as total,
   sum(coalesce(s.quantity, 0)) as totalQuantity
-FROM DNA_Bank.samples s
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.DNA_Bank.samples s
 --include DNA Bank workbook only
 WHERE s.dateremoved is null and sampleType = 'Buffy Coat' and s.workbook = '029AF07C-CB06-1030-8D66-5107380A00F7'
 GROUP BY s.subjectId
@@ -86,7 +86,7 @@ SELECT
   s.subjectId,
   s.sampleType,
   count(*) as total
-FROM DNA_Bank.samples s
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.DNA_Bank.samples s
 --include DNA Bank workbook only
 WHERE s.dateremoved is null and s.sampleType = 'gDNA' and s.workbook = '029AF07C-CB06-1030-8D66-5107380A00F7'
 GROUP BY s.subjectId
