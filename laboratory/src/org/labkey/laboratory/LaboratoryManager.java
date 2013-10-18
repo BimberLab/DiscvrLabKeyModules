@@ -270,7 +270,7 @@ public class LaboratoryManager
 
     public void updateWorkbookTags(User u, Container c, Collection<String> tags, boolean doMerge)
     {
-        assert u != null;
+        assert u != null : "No user provided";
 
         TableInfo ti = LaboratorySchema.getInstance().getTable(LaboratorySchema.TABLE_WORKBOOK_TAGS);
         try
@@ -337,7 +337,7 @@ public class LaboratoryManager
 
     private void populateDefaultDataForTable(User u, Container c, String schema, String query, final Set<String> columns) throws BatchValidationException
     {
-        assert u != null;
+        assert u != null : "No user provided";
 
         UserSchema us = QueryService.get().getUserSchema(u, c, schema);
         if (us == null)
