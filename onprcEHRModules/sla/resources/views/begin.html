@@ -3,14 +3,14 @@
     Ext4.onReady(function (){
         var webpart = <%=webpartContext%>;
 
-        Ext4.create('Ext4.panel.Panel', {
+        Ext4.create('Ext.panel.Panel', {
             border: false,
             defaults: {
                 border: false
             },
             items: [{
                 html: 'This is the start of the ONPRC SLA Module.  It will initially provide only an ETL of housing/census and purchase data into LabKey.',
-                style: 'paddig-bottom: 10px;'
+                style: 'padding-bottom: 10px;'
             },{
                 xtype: 'ldk-navpanel',
                 sections: [{
