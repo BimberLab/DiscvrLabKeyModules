@@ -56,6 +56,7 @@ import org.labkey.api.util.ResultSetUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HttpView;
 import org.labkey.api.view.ViewContext;
+import org.labkey.sla.SLAModule;
 import org.labkey.sla.SLASchema;
 
 import java.io.Closeable;
@@ -974,13 +975,9 @@ public class ETLRunnable implements Runnable
         return map;
     }
 
-    /**
-     * @param path relative to onprc_ehr/resources/org.labkey.onprc_ehr.etl dir
-     * @return MergedDirectoryResource object for the specified file or directory
-     */
     private MergedDirectoryResource getResource(String path)
     {
-        return ((MergedDirectoryResource)ModuleLoader.getInstance().getModule("ONPRC_EHR").getModuleResource("/etl/" + path));
+        return ((MergedDirectoryResource)ModuleLoader.getInstance().getModule(SLAModule.class).getModuleResource("/etl/" + path));
     }
 
     private static void close(Closeable o)
