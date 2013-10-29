@@ -112,6 +112,8 @@ public class GeneticsCoreNotification implements Notification
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("hasMhcDrawnFlag"), false);
         filter.addCondition(FieldKey.fromString("hasMHCData"), false);
         filter.addCondition(FieldKey.fromString("hasFreezerSample"), true);
+        filter.addCondition(FieldKey.fromString("calculated_status"), "Alive");
+        filter.addCondition(FieldKey.fromString("isMHCRequired"), true);
 
         TableInfo ti = QueryService.get().getUserSchema(u, c, "study").getTable("mhcFlagSummary");
         TableSelector ts = new TableSelector(ti, PageFlowUtil.set("Id"), filter, null);
@@ -119,7 +121,7 @@ public class GeneticsCoreNotification implements Notification
         if (count > 0)
         {
             ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, "study", "mhcFlagSummary");
-            msg.append("<b>WARNING: There are " + count + " animals with active MHC freezer samples, but without MHC data and no flag indicating they have been drawn for MHC typing.  These animals should be flagged to avoid duplicate blood draws.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "&" + filter.toQueryString("query") + "'>Click here to view these animals</a><hr>");
+            msg.append("<b>WARNING: There are " + count + " living animals that normally require MHC typing, with active MHC freezer samples, but without MHC data and no flag indicating they have been drawn for MHC typing.  These animals should be flagged to avoid duplicate blood draws.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "&" + filter.toQueryString("query") + "'>Click here to view these animals</a><hr>");
         }
     }
 
@@ -128,6 +130,7 @@ public class GeneticsCoreNotification implements Notification
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("hasParentageDrawnFlag"), false);
         filter.addCondition(FieldKey.fromString("hasParentageData"), false);
         filter.addCondition(FieldKey.fromString("hasFreezerSample"), true);
+        filter.addCondition(FieldKey.fromString("calculated_status"), "Alive");
 
         TableInfo ti = QueryService.get().getUserSchema(u, c, "study").getTable("parentageFlagSummary");
         TableSelector ts = new TableSelector(ti, PageFlowUtil.set("Id"), filter, null);
@@ -135,7 +138,7 @@ public class GeneticsCoreNotification implements Notification
         if (count > 0)
         {
             ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, "study", "parentageFlagSummary");
-            msg.append("<b>WARNING: There are " + count + " animals with active parentage freezer samples, but without parentage data and no flag indicating they have been drawn for parentage.  These animals should be flagged to avoid duplicate blood draws.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "&" + filter.toQueryString("query") + "'>Click here to view these animals</a><hr>");
+            msg.append("<b>WARNING: There are " + count + " living animals with active parentage freezer samples, but without parentage data and no flag indicating they have been drawn for parentage.  These animals should be flagged to avoid duplicate blood draws.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "&" + filter.toQueryString("query") + "'>Click here to view these animals</a><hr>");
         }
     }
 

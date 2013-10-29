@@ -1,0 +1,36 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <columns>
+       <column name="rowid" />
+       <column name="runid/JobId/description"/>
+       <column name="type" />
+       <column name="readset" />
+       <column name="readset/subjectid" >
+           <properties>
+               <property name="columnTitle" value="Subject Id"/>
+           </properties>
+       </column>
+       <column name="readset/sampledate">
+           <properties>
+               <property name="columnTitle" value="Sample Date"/>
+           </properties>
+       </column>
+       <column name="inputfile" />
+       <column name="inputfile2" />
+       <column name="alignmentfile" />
+       <column name="reference_library" />
+       <column name="description" />
+       <column name="synopsis" />
+       <column name="runid"/>
+       <column name="runid/JobId">
+           <properties>
+               <property name="columnTitle" value="Job Id"/>
+           </properties>
+       </column>
+       <column name="created" />
+       <column name="workbook" />
+       <column name="makePublic"/>
+   </columns>
+   <sorts>
+       <sort column="rowid" descending="true"/>
+   </sorts>
+</customView>

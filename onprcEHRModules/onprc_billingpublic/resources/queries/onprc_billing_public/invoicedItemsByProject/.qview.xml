@@ -1,0 +1,16 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="invoiceId"/>
+        <column name="invoiceId/billingPeriodStart"/>
+        <column name="invoiceId/billingPeriodEnd"/>
+        <column name="project"/>
+        <column name="numItems"/>
+        <column name="total"/>
+        <column name="summaryByItem"/>
+        <column name="allItems"/>
+    </columns>
+    <sorts>
+        <sort column="invoiceId/rowid" descending="true"/>
+        <sort column="project/displayName"/>
+    </sorts>
+</customView>

@@ -330,8 +330,8 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
         if (uploadType == 'text'){
             var text = this.down('#fileContent').getValue() || '';
             if(text.replace(/\s/g, '') == ''){
-                alert('You must enter either cut/paste from a spreadsheet or choose a file to import');
                 Ext4.Msg.hide();
+                Ext4.Msg.alert('Error', 'You must either cut/paste from a spreadsheet or choose a file to import');
                 return;
             }
             this.form.baseParams = {fileName: nameField.getValue() + '.tsv'};
@@ -342,8 +342,8 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
             this.form.baseParams = {};
 
             if(!this.down('#upload-run-field').getValue()){
-                alert('You must enter either a file or cut/paste from a spreadsheet');
                 Ext4.Msg.hide();
+                Ext4.Msg.alert('Error', 'You must either cut/paste from a spreadsheet or choose a file to import');
                 return;
             }
         }

@@ -1,0 +1,31 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    var webpart = <%=webpartContext%>;
+    var ctx = EHR.Utils.getEHRContext(webpart.wrapperDivId);
+    if(!ctx)
+        return;
+
+    Ext4.widget({
+        xtype: 'panel',
+        border: false,
+        items: [{
+            html: 'Below are the projects are you authorized to view.  Click the project name to view more detail for each billing period.  If you believe there is an error in this list of projects, please use the help menu above to enter an issue.',
+            style: 'padding-bottom: 10px;',
+            border: false
+        },{
+            xtype: 'ldk-querypanel',
+            queryConfig: {
+                frame: 'none',
+                buttonBar: {
+                    //position: 'none'
+                },
+                schemaName: 'onprc_billing_public',
+                queryName: 'projects'
+            }
+        }]
+    }).render(webpart.wrapperDivId);
+});
+
+</script>
+

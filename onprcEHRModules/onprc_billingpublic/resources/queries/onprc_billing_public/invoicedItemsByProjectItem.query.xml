@@ -1,0 +1,32 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="invoicedItemsByProjectItem" tableDbType="TABLE">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Invoices By Project And Item</tableTitle>
+                <columns>
+                    <column columnName="invoiceId">
+                        <fk>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
+                            <fkTable>publicInvoiceRuns</fkTable>
+                            <fkColumnName>objectid</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="numItems">
+                        <columnTitle># Items</columnTitle>
+                        <url>/query/executeQuery.view?schemaName=onprc_billing_public&amp;
+                            queryName=publicInvoicedItems&amp;
+                            query.invoiceId/rowid~eq=${invoiceId/rowid}&amp;
+                            query.project~eq=${project}&amp;
+                            query.item~eq=${item}
+                        </url>
+                    </column>
+                    <column columnName="total">
+                        <columnTitle>Total</columnTitle>
+                        <formatString>$###,##0.00</formatString>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

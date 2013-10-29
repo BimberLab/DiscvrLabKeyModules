@@ -1,0 +1,5 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All Projects">
+    <!--<sorts>-->
+        <!--<sort column="OGA_PROJECT_NUMBER" />-->
+    <!--</sorts>-->
+</customView>

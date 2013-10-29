@@ -387,6 +387,60 @@ ln -s $LKSRC_DIR/seq_crumbs-0.1.6-x64-linux/convert_format $LKTOOLS_DIR
 
 
 #
+#FLASH
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install FLASH"
+echo ""
+cd $LKSRC_DIR
+
+echo "Cleaning up previous installs"
+rm -Rf FLASH-1.2.7.tar.gz
+rm -Rf FLASH-1.2.7.tar
+rm -Rf FLASH-1.2.7
+rm -Rf $LKTOOLS_DIR/flash
+
+wget http://downloads.sourceforge.net/project/flashpage/FLASH-1.2.7.tar.gz
+gunzip FLASH-1.2.7.tar.gz
+tar -xf FLASH-1.2.7.tar
+echo "Compressing TAR"
+gzip FLASH-1.2.7.tar
+cd FLASH-1.2.7
+make
+ln -s $LKSRC_DIR/FLASH-1.2.7/flash $LKTOOLS_DIR
+
+
+#
+#Mira
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install Mira Assembler"
+echo ""
+cd $LKSRC_DIR
+
+echo "Cleaning up previous installs"
+rm -Rf mira_4.0rc4_linux-gnu_x86_64_static.tar.bz2
+rm -Rf mira_4.0rc4_linux-gnu_x86_64_static.tar
+rm -Rf mira_4.0rc4_linux-gnu_x86_64_static
+rm -Rf $LKTOOLS_DIR/mira
+rm -Rf $LKTOOLS_DIR/miraconvert
+
+wget http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira_4.0rc4_linux-gnu_x86_64_static.tar.bz2
+bunzip2 mira_4.0rc4_linux-gnu_x86_64_static.tar.bz2
+tar -xf mira_4.0rc4_linux-gnu_x86_64_static.tar
+echo "Compressing TAR"
+bzip2 mira_4.0rc4_linux-gnu_x86_64_static.tar
+cd mira_4.0rc4_linux-gnu_x86_64_static
+
+ln -s $LKSRC_DIR/mira_4.0rc4_linux-gnu_x86_64_static/bin/mira $LKTOOLS_DIR
+ln -s $LKSRC_DIR/mira_4.0rc4_linux-gnu_x86_64_static/bin/miraconvert $LKTOOLS_DIR
+
+
+#
 #velvet
 #
 
@@ -399,10 +453,11 @@ cd $LKSRC_DIR
 
 echo "Cleaning up previous installs"
 rm -Rf velvet_1.2.09.tgz
+rm -Rf velvet_1.2.09.tar.gz
 rm -Rf velvet_1.2.09.tar
-rm -Rf velvet-1.2.09
-rm -Rf $LKTOOLS_DIR/velgetg
-rm -Rf $LKTOOLS_DIR/velgeth
+rm -Rf velvet_1.2.09
+rm -Rf $LKTOOLS_DIR/velvetg
+rm -Rf $LKTOOLS_DIR/velveth
 
 wget http://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.09.tgz
 gunzip velvet_1.2.09.tgz
@@ -410,9 +465,9 @@ tar -xf velvet_1.2.09.tar
 echo "Compressing TAR"
 gzip velvet_1.2.09.tar
 cd velvet_1.2.09
-make
-ln -s $LKSRC_DIR/velvet-1.2.09/velvetg $LKTOOLS_DIR
-ln -s $LKSRC_DIR/velvet-1.2.09/velveth $LKTOOLS_DIR
+make OPENMP=1 LONGSEQUENCES=1
+ln -s $LKSRC_DIR/velvet_1.2.09/velvetg $LKTOOLS_DIR
+ln -s $LKSRC_DIR/velvet_1.2.09/velveth $LKTOOLS_DIR
 
 
 #
@@ -453,8 +508,9 @@ cd $LKSRC_DIR
 rm -Rf amos-3.1.0.tar.gz
 rm -Rf amos-3.1.0.tar
 rm -Rf amos-3.1.0
-rm -Rf $LKSRC_DIR/amos-3.1.0/bank2fasta
-rm -Rf $LKSRC_DIR/amos-3.1.0/bank2config
+rm -Rf $LKTOOLS_DIR/bank2fasta
+rm -Rf $LKTOOLS_DIR/bank2config
+rm -Rf $LKTOOLS_DIR/bank-transact
 
 wget http://downloads.sourceforge.net/project/amos/amos/3.1.0/amos-3.1.0.tar.gz?r=&ts=1368671864&use_mirror=superb-dca2
 gunzip amos-3.1.0.tar.gz
@@ -466,6 +522,7 @@ make install
 
 ln -s $LKSRC_DIR/amos-3.1.0/bank2fasta $LKTOOLS_DIR
 ln -s $LKSRC_DIR/amos-3.1.0/bank2contig $LKTOOLS_DIR
+ln -s $LKSRC_DIR/amos-3.1.0/bank-transact $LKTOOLS_DIR
 
 
 #

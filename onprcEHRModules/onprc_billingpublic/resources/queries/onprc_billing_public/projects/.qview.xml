@@ -1,0 +1,20 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="project"/>
+        <column name="project/title"/>
+        <column name="project/investigatorId"/>
+        <column name="project/protocol">
+            <properties>
+                <property name="columnTitle" value="IACUC Protocol"/>
+            </properties>
+        </column>
+        <column name="project/protocol/investigatorId">
+            <properties>
+                <property name="columnTitle" value="Protocol Investigator"/>
+            </properties>
+        </column>
+    </columns>
+    <sorts>
+        <sort column="project/displayName"/>
+    </sorts>
+</customView>

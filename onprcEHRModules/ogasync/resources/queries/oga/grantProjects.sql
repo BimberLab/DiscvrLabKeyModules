@@ -1,0 +1,4 @@
+SELECT
+v.*
+
+FROM oga.ZGMS_PRIM_ALL_V v

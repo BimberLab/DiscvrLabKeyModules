@@ -5,7 +5,7 @@ Ext4.define('Laboratory.window.ChangeAssayResultStatusWindow', {
     extend: 'Ext.window.Window',
 
     statics: {
-        buttonHandler: function(dataRegionName){
+        buttonHandler: function(dataRegionName, schemaName, queryName){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             if (!dataRegion || !dataRegion.getChecked() || !dataRegion.getChecked().length){
                 Ext4.Msg.alert('Error', '');
@@ -19,8 +19,10 @@ Ext4.define('Laboratory.window.ChangeAssayResultStatusWindow', {
             }
 
             Ext4.create('Laboratory.window.ChangeAssayResultStatusWindow', {
-                dataRegionName: dataRegionName
-            }).show();
+                dataRegionName: dataRegionName,
+                schemaName: schemaName,
+                queryName: queryName
+        }).show();
         }
     },
 
@@ -76,8 +78,9 @@ Ext4.define('Laboratory.window.ChangeAssayResultStatusWindow', {
         var keyField = dataRegion.pkCols[0];
 
         LABKEY.Query.selectRows({
-            schemaName: dataRegion.schemaName,
-            queryName: dataRegion.queryName,
+            method: 'POST',
+            schemaName: this.schemaName || dataRegion.schemaName,
+            queryName: this.queryName || dataRegion.queryName,
             filterArray: [
                 LABKEY.Filter.create(keyField, checked.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
             ],
@@ -101,8 +104,9 @@ Ext4.define('Laboratory.window.ChangeAssayResultStatusWindow', {
 
                 if(toUpdate.length){
                     LABKEY.Query.updateRows({
-                        schemaName: dataRegion.schemaName,
-                        queryName: dataRegion.queryName,
+                        method: 'POST',
+                        schemaName: this.schemaName || dataRegion.schemaName,
+                        queryName: this.queryName || dataRegion.queryName,
                         rows: toUpdate,
                         scope: this,
                         success: function(){

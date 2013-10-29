@@ -703,6 +703,7 @@
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Sequence Analyses</ns:tableTitle>
         <ns:pkColumnName>rowid</ns:pkColumnName>
+        <ns:titleColumn>rowid</ns:titleColumn>
         <ns:tableUrl>/sequenceanalysis/sequenceAnalysisDetails.view?id=${rowid}</ns:tableUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>

@@ -1,0 +1,20 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="projects" tableDbType="TABLE">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Invoiced Items</tableTitle>
+                <tableUrl>/query/executeQuery.view?schemaName=onprc_billing_public&amp;query.queryName=invoicedItemsByProject&amp;query.project/displayName~eq=${project/displayName}</tableUrl>
+                <columns>
+                    <column columnName="project">
+                        <url>/query/executeQuery.view?
+                            schemaName=onprc_billing_public&amp;
+                            query.queryName=invoicedItemsByProject&amp;
+                            query.project/displayName~eq=${project/displayName}
+                        </url>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

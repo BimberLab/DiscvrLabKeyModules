@@ -1,0 +1,39 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="grantProjects" tableDbType="NOT_IN_DB" useColumnOrder="true">
+                <tableTitle>OGA Grant Projects</tableTitle>
+                <columns>
+                    <column columnName="OGA_PROJECT_NUMBER">
+                        <columnTitle>OGA Project Number</columnTitle>
+                    </column>
+                    <column columnName="OGA_AWARD_NUMBER">
+                        <columnTitle>OGA Award Number</columnTitle>
+                    </column>
+                    <column columnName="AGENCY_AWARD_NUMBER">
+                        <columnTitle>Agency Award Number</columnTitle>
+                    </column>
+                    <column columnName="PI">
+                        <columnTitle>PI</columnTitle>
+                    </column>
+                    <column columnName="PI_EMP_NUM">
+                        <columnTitle>PI Employee Number</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="PROJECT_TITLE">
+                        <columnTitle>Project Title</columnTitle>
+                    </column>
+                    <column columnName="ALIAS">
+                        <columnTitle>Active Alias</columnTitle>
+                    </column>
+                    <column columnName="PROJECT_STATUS">
+                        <columnTitle>Project Status</columnTitle>
+                    </column>
+                    <column columnName="AWARD_STATUS">
+                        <columnTitle>Award Status</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

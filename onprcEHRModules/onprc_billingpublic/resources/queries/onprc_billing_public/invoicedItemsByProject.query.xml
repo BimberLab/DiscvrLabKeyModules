@@ -1,0 +1,48 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="invoicedItemsByProject" tableDbType="TABLE">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Invoices By Project</tableTitle>
+                <!--<tableUrl>/query/executeQuery.view?schemaName=onprc_billing_public&amp;queryName=invoicedItemsByProjectItem&amp;query.invoiceId/rowid~eq=${invoiceId/rowid}&amp;query.project~eq=${project}</tableUrl>-->
+                <columns>
+                    <column columnName="invoiceId">
+                        <fk>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
+                            <fkTable>publicInvoiceRuns</fkTable>
+                            <fkColumnName>objectid</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="numItems">
+                        <columnTitle># Items</columnTitle>
+                        <url>/query/executeQuery.view?schemaName=onprc_billing_public&amp;
+                            queryName=invoicedItemsByProjectItem&amp;
+                            query.invoiceId/rowid~eq=${invoiceId/rowid}&amp;
+                            query.project~eq=${project}
+                        </url>
+                    </column>
+                    <column columnName="total">
+                        <columnTitle>Total</columnTitle>
+                        <formatString>$###,##0.00</formatString>
+                    </column>
+                    <column columnName="summaryByItem">
+                        <columnTitle></columnTitle>
+                        <url>/query/executeQuery.view?schemaName=onprc_billing_public&amp;
+                            queryName=invoicedItemsByProjectItem&amp;
+                            query.invoiceId/rowid~eq=${invoiceId/rowid}&amp;
+                            query.project~eq=${project}
+                        </url>
+                    </column>
+                    <column columnName="allItems">
+                        <columnTitle></columnTitle>
+                        <url>/query/executeQuery.view?schemaName=onprc_billing_public&amp;
+                            queryName=publicInvoicedItems&amp;
+                            query.invoiceId/rowid~eq=${invoiceId/rowid}&amp;
+                            query.project~eq=${project}
+                        </url>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

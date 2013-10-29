@@ -2,7 +2,7 @@
 
 <project name="Standalone Build" default="build_module" basedir="../../../server">
     <dirname property="moduleDir" file="${ant.file}"/>
-    <property name="module.name" value="GeneticsCore" />
+    <property name="module.name" value="ONPRC_BilingPublic" />
 
     <target name="init">
         <property name="build.dir" value="${basedir}${file.separator}..${file.separator}build" />

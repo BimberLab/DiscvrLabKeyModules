@@ -150,7 +150,7 @@ public class AvgBaseQualityAggregator
             SamLocusIterator.LocusInfo locus = it.next();
             idx++;
 
-            if (idx % 1000 == 0)
+            if (idx % 2500 == 0)
             {
                 _logger.info("processed " + idx + " loci in AvgBaseQualityAggregator");
             }

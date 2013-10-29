@@ -1,0 +1,10 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <sorts>
+        <sort column="invoiceId/rowid" descending="true"/>
+        <sort column="project/displayName"/>
+        <sort column="total" descending="true"/>
+    </sorts>
+    <aggregates>
+        <aggregate column="total" type="SUM"/>
+    </aggregates>
+</customView>

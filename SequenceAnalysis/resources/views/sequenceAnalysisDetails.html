@@ -37,6 +37,7 @@ Ext4.onReady(function (){
         store: {
             schemaName: 'sequenceanalysis',
             queryName: 'sequence_analyses',
+            viewName: 'Detailed',
             filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)]
         }
     });

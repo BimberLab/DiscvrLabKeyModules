@@ -1,0 +1,8 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="Active Projects">
+    <!--<sorts>-->
+        <!--<sort column="OGA_PROJECT_NUMBER" />-->
+    <!--</sorts>-->
+    <filters>
+        <filter column="PROJECT_STATUS" operator="eq" value="ACTIVE"/>
+    </filters>
+</customView>
