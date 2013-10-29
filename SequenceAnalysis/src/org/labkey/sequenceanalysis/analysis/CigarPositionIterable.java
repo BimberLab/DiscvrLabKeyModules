@@ -264,7 +264,7 @@ public class CigarPositionIterable implements Iterable<CigarPositionIterable.Pos
          */
         public boolean isSkipped()
         {
-            return _op.equals(CigarOperator.SOFT_CLIP) || _op.equals(CigarOperator.SKIPPED_REGION);
+            return _op.equals(CigarOperator.SOFT_CLIP) || _op.equals(CigarOperator.HARD_CLIP) || _op.equals(CigarOperator.SKIPPED_REGION);
         }
 
         /**
