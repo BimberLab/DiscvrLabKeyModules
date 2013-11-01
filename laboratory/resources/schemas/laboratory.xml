@@ -1277,8 +1277,7 @@
                     canAddToExistingExperiment: false,
                     controller: 'project',
                     action: 'begin',
-                    title: 'Create Workbook',
-                    workbookFolderType: 'Expt Workbook'
+                    title: 'Create Workbook'
                     }).show(arguments[0].srcElement);
                 </ns:onClick>
             </ns:item>

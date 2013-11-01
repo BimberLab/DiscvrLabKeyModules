@@ -504,6 +504,16 @@ public class SequencePipelineSettings
         return StringUtils.isEmpty(_params.get("sbt.minPctToImport")) ? null : Double.parseDouble(_params.get("sbt.minPctToImport"));
     }
 
+    public Double getSBTminCountForRef()
+    {
+        return StringUtils.isEmpty(_params.get("sbt.minCountForRef")) ? null : Double.parseDouble(_params.get("sbt.minCountForRef"));
+    }
+
+    public Double getSBTminPctForRef()
+    {
+        return StringUtils.isEmpty(_params.get("sbt.minPctForRef")) ? null : Double.parseDouble(_params.get("sbt.minPctForRef"));
+    }
+
     public boolean isAutomatedImport()
     {
         return ("true".equals(_params.get("automatedImport")));

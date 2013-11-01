@@ -35,14 +35,17 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.MergedDirectoryResource;
 import org.labkey.api.resource.Resource;
+import org.labkey.api.security.User;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.TestContext;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -53,6 +56,7 @@ import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -485,6 +489,26 @@ public class BamIterator
 
                 ContainerManager.delete(project, TestContext.get().getUser());
             }
+        }
+    }
+
+    public void saveSynopsis (User u, AnalysisModel model) throws PipelineJobException
+    {
+        StringBuilder synopsis = new StringBuilder();
+        for (AlignmentAggregator a : _alignmentAggregators)
+        {
+            synopsis.append(a.getSynopsis());
+        }
+
+        try
+        {
+            model.setSynopsis(synopsis.toString());
+            TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
+            Table.update(u, ti, model, model.getRowId());
+        }
+        catch (SQLException e)
+        {
+            throw  new PipelineJobException(e);
         }
     }
 }

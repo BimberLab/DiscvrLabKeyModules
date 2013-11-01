@@ -438,6 +438,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisExpe
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisManager.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisModule.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisSchema.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisServiceImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceDataProvider.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceNavItem.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceReadset.java -text
@@ -474,8 +475,10 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceAna
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceNormalizationTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequencePipelineSettings.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceTaskHelper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/AbstractAlignerWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/AbstractCommandWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/AbstractRunner.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/AlignerWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/BWARunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/BowtieRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/BuildBamIndexRunner.java -text
@@ -485,12 +488,14 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/FastqToSamRunner
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/FastqcRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/FixMateInformationRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/MergeSamFilesRunner.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/MiraRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/MosaikRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/PicardRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/SFFExtractRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/SamToFastqRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/SamtoolsRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/SeqCrumbsRunner.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/SequenceAlignerFactory.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/TrimmomaticRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/AbstractSequenceMatcher.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/Barcoder.java -text

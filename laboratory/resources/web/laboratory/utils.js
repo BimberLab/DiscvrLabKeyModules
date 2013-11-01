@@ -459,6 +459,12 @@ Laboratory.Utils = new function(){
                 }),
                 success: LABKEY.Utils.getCallbackWrapper(LABKEY.Utils.getOnSuccess(config), config.scope)
             });
+        },
+
+        getDefaultWorkbookFolderType: function(){
+            var ctx = LABKEY.getModuleContext('laboratory');
+            LDK.Assert.assertNotEmpty('laboratory module context not found', ctx);
+            return ctx ? ctx['DefaultWorkbookFolderType'] : null;
         }
     }
 }

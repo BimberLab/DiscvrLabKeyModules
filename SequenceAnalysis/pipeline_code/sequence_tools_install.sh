@@ -561,7 +561,7 @@ cpan -i Statistics::Descriptive
 cpan -i Math::Round
 cpan -i List::Util
 cpan -i IPC::Run
-cpan -i Labkey::Query
+cpan -i LabKey::Query
 cpan -i File::Util
 cpan -i Algorithm::Diff
 cpan -i File::Sort

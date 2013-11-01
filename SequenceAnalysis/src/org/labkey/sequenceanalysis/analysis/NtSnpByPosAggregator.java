@@ -201,4 +201,14 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
     {
         _coverageAggregator = coverageAggregator;
     }
+
+    public String getSynopsis()
+    {
+        return "NT SNP By Pos Aggregator:\n" +
+                "\tMinSnpQual: " + _minSnpQual + "\n" +
+                "\tMinAvgSnpQual: " + _minAvgSnpQual + "\n" +
+                "\tMinDipQual: " + _minDipQual + "\n" +
+                "\tMinAvgDipQual: " + _minAvgDipQual + "\n"
+                ;
+    }
 }

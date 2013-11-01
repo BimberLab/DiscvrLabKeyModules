@@ -436,4 +436,14 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
             throw new RuntimeSQLException(e);
         }
     }
+
+    public String getSynopsis()
+    {
+        return "NT Coverage Aggregator:\n" +
+                "\tMinSnpQual: " + _minSnpQual + "\n" +
+                "\tMinAvgSnpQual: " + _minAvgSnpQual + "\n" +
+                "\tMinDipQual: " + _minDipQual + "\n" +
+                "\tMinAvgDipQual: " + _minAvgDipQual + "\n"
+                ;
+    }
 }

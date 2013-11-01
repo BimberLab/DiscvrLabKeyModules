@@ -193,7 +193,7 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
                 idx++;
                 if (idx != snp.getInsertIndex())
                 {
-                    _log.info("resetting snp insert index at position " + snp.getLastRefPosition());
+                    //_log.info("resetting snp insert index at position " + snp.getLastRefPosition());
                     snp.setInsertIndex(idx);
                 }
             }

@@ -20,8 +20,7 @@ Laboratory.buttonHandlers = new function(){
                         queryName: query,
                         keyField: keyField
                     },
-                    title: 'Import Data',
-                    workbookFolderType: 'Expt Workbook'
+                    title: 'Import Data'
                 }).show(target);
             }
         },

@@ -128,7 +128,7 @@ public class PreprocessTask
             {
                 //create FASTA
                 File fasta = createAdapterFasta(workingDir);
-                trimmer.setAdapterClipping(fasta.getName(), _settings.getAdapterSeedMismatches(), _settings.getPalindromeClipThreshold(), _settings.getSimpleClipThreshold());
+                trimmer.setAdapterClipping(fasta.getPath(), _settings.getAdapterSeedMismatches(), _settings.getPalindromeClipThreshold(), _settings.getSimpleClipThreshold());
             }
 
             if (_settings.doHeadCrop())

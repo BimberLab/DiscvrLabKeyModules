@@ -30,6 +30,7 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.module.FolderType;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.BatchValidationException;
@@ -69,6 +70,7 @@ import java.util.Set;
 public class LaboratoryManager
 {
     private static LaboratoryManager _instance = new LaboratoryManager();
+    public static final String DEFAULT_WORKBOOK_FOLDERTYPE_PROPNAME = "DefaultWorkbookFolderType";
 
     private LaboratoryManager()
     {
@@ -206,7 +208,8 @@ public class LaboratoryManager
     public void resetLaboratoryFolderTypes(User u, Container c, boolean includeChildren)
     {
         FolderType lab = ModuleLoader.getInstance().getFolderType("Laboratory Folder");
-        FolderType expt = ModuleLoader.getInstance().getFolderType("Expt Workbook");
+        String folderType = LaboratoryService.get().getDefaultWorkbookFolderType(c);
+        FolderType expt = ModuleLoader.getInstance().getFolderType(folderType);
         FolderType custom = ModuleLoader.getInstance().getFolderType("None");
         assert lab != null && expt != null && custom != null;
 

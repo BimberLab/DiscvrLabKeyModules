@@ -258,7 +258,7 @@ SequenceAnalysis.Buttons = new function(){
                                 path: './',
                                 readsets: readsets.join(';')
                             },
-                            workbookFolderType: 'Expt Workbook'
+                            workbookFolderType: Laboratory.Utils.getDefaultWorkbookFolderType()
                         }).show(btnEl);
                     }
                 },
@@ -288,7 +288,7 @@ SequenceAnalysis.Buttons = new function(){
                     path: './',
                     readsets: checked.join(';')
                 },
-                workbookFolderType: 'Expt Workbook'
+                workbookFolderType: Laboratory.Utils.getDefaultWorkbookFolderType()
             }).show(btnEl);
         },
 

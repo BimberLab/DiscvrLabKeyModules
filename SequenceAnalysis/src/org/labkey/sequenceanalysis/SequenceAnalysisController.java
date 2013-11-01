@@ -450,8 +450,9 @@ public class SequenceAnalysisController extends SpringActionController
             if (SequenceAnalysisSchema.TABLE_ANALYSES.equals(_table.getName()))
             {
                 msg.append("analyses " + StringUtils.join(keys, ", ") + "?  This will delete the analyses, plus all associated data.  This includes:<br>");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENTS, "alignments", keys, "analysis_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "alignment records", keys, "analysis_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENTS, "Alignments", keys, "analysis_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "analysis_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "analysis_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNPS, "NT SNPs", keys, "analysis_id");
@@ -460,9 +461,10 @@ public class SequenceAnalysisController extends SpringActionController
             else if (SequenceAnalysisSchema.TABLE_READSETS.equals(_table.getName()))
             {
                 msg.append("readsets " + StringUtils.join(keys, ", ") + "?  This will delete the readsets, plus all associated data.  This includes:<br>");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ANALYSES, "analyses", keys, "readset");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENTS, "alignments", keys, "analysis_id/readset");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "alignment records", keys, "analysis_id/readset");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_ANALYSES, "Analyses", keys, "readset");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENTS, "Alignments", keys, "analysis_id/readset");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id/readset");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNPS, "NT SNPs", keys, "analysis_id/readset");
@@ -471,11 +473,11 @@ public class SequenceAnalysisController extends SpringActionController
             else if (SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES.equals(_table.getName()))
             {
                 msg.append("NT reference sequences " + StringUtils.join(keys, ", ") + "?  This will delete the reference sequences, plus all associated data.  This includes:<br>");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES, "reference AA sequences", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_FEATURES, "NT features", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "coverage positions", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENTS, "alignments", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION, "alignment records", keys, "ref_nt_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES, "Reference AA Sequences", keys, "ref_nt_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_FEATURES, "NT Features", keys, "ref_nt_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "ref_nt_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENTS, "Alignments", keys, "ref_nt_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION, "Alignment Records", keys, "ref_nt_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "ref_nt_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "ref_nt_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNPS, "NT SNPs", keys, "ref_nt_id");
@@ -809,6 +811,8 @@ public class SequenceAnalysisController extends SpringActionController
                 {
                     agg.saveToDb(getUser(), c, m);
                 }
+
+                bi.saveSynopsis(getUser(), m);
             }
 
             resultProperties.put("success", true);

@@ -140,7 +140,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         PipelineJob job = getJob();
         _taskHelper = new SequenceTaskHelper(job, _wd.getDir());
 
-        job.getLogger().info("Starting analysis");
+        job.getLogger().info("Starting alignment");
 
         List<RecordedAction> actions = new ArrayList<>();
 

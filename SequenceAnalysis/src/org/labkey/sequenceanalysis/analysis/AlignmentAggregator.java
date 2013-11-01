@@ -31,4 +31,6 @@ import java.util.Map;
 public interface AlignmentAggregator extends BamAggregator
 {
     public void inspectAlignment(SAMRecord record, @Nullable ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, @Nullable CigarPositionIterable cpi);
+
+    public String getSynopsis();
 }

@@ -7,6 +7,14 @@
                 <permission>UPDATE</permission>
             </editPermissions>
         </propertyDescriptor>
+        <propertyDescriptor name="DefaultWorkbookFolderType">
+            <description>This is the folder type used when creating new workbooks in Laboratory folders.  Defaults to Expt Workbook</description>
+            <canSetPerContainer>true</canSetPerContainer>
+            <defaultValue>Expt Workbook</defaultValue>
+            <editPermissions>
+                <permission>UPDATE</permission>
+            </editPermissions>
+        </propertyDescriptor>
     </properties>
     <requiredModuleContext>
         <requiredModule name="LDK"/>

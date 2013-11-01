@@ -109,4 +109,9 @@ public class MetricsAggregator implements AlignmentAggregator
             throw new RuntimeSQLException(e);
         }
     }
+
+    public String getSynopsis()
+    {
+        return "MetricsAggregator\n";
+    }
 }

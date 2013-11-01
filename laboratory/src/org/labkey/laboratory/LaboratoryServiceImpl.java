@@ -39,6 +39,8 @@ import org.labkey.api.laboratory.assay.SimpleAssayDataProvider;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.ldk.table.ButtonConfigFactory;
 import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
@@ -305,6 +307,13 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
         schemaMap.put(query, list);
         _queryButtons.put(schema, schemaMap);
+    }
+
+    public String getDefaultWorkbookFolderType(Container c)
+    {
+        Module labModule = ModuleLoader.getInstance().getModule(LaboratoryModule.class);
+        ModuleProperty mp = labModule.getModuleProperties().get(LaboratoryManager.DEFAULT_WORKBOOK_FOLDERTYPE_PROPNAME);
+        return mp.getEffectiveValue(c);
     }
 
     public List<ButtonConfigFactory> getQueryButtons(TableInfo ti)

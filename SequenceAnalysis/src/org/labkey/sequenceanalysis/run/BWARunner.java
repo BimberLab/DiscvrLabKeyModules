@@ -4,6 +4,8 @@ import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.view.template.ClientDependency;
+import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -15,11 +17,21 @@ import java.util.List;
  * Date: 12/16/12
  * Time: 11:16 AM
  */
-public class BWARunner extends AbstractCommandWrapper
+public class BWARunner extends AbstractAlignerWrapper
 {
     public BWARunner(Logger logger)
     {
         super(logger);
+    }
+
+    public String getName()
+    {
+        return "BWA";
+    }
+
+    public String getDescription()
+    {
+        return null;
     }
 
     protected File getExe()
@@ -28,6 +40,7 @@ public class BWARunner extends AbstractCommandWrapper
         return new File(path, "bwa");
     }
 
+    @Override
     public void createIndex(File fasta) throws PipelineJobException
     {
         _logger.info("Creating BWA index");
@@ -42,5 +55,11 @@ public class BWARunner extends AbstractCommandWrapper
         args.add(new File(fasta.getParentFile(), outPrefix).getPath());
         args.add(fasta.getPath());
         doExecute(getWorkingDir(fasta), args);
+    }
+
+    @Override
+    public File doAlignment(File inputFastq, String basename, SequencePipelineSettings settings) throws PipelineJobException
+    {
+        return null;
     }
 }

@@ -398,7 +398,11 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             getJob().getLogger().info("Inspection complete");
 
             for (AlignmentAggregator a : aggregators)
+            {
                 a.saveToDb(getJob().getUser(), getJob().getContainer(), model);
+            }
+
+            bi.saveSynopsis(getJob().getUser(), model);
 
             return action;
         }

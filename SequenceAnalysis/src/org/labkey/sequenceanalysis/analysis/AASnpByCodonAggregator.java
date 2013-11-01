@@ -337,4 +337,14 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
             return _readnames.size();
         }
     }
+
+    public String getSynopsis()
+    {
+        return "AA SNP By Codon Aggregator:\n" +
+                "\tMinSnpQual: " + _minSnpQual + "\n" +
+                "\tMinAvgSnpQual: " + _minAvgSnpQual + "\n" +
+                "\tMinDipQual: " + _minDipQual + "\n" +
+                "\tMinAvgDipQual: " + _minAvgDipQual + "\n"
+                ;
+    }
 }

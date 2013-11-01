@@ -424,6 +424,19 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 },{
                     xtype: 'numberfield',
                     minValue: 0,
+                    fieldLabel: 'Min Read # Per Reference',
+                    name: 'sbt.minCountForRef',
+                    helpPopup: 'If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this many reads across each sample.  This can be a way to reduce ambiguity among allele calls.'
+                },{
+                    xtype: 'numberfield',
+                    minValue: 0,
+                    maxValue: 100,
+                    fieldLabel: 'Min Read Pct Per Reference',
+                    name: 'sbt.minPctForRef',
+                    helpPopup: 'If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this percent of total from each sample.  This can be a way to reduce ambiguity among allele calls.'
+                },{
+                    xtype: 'numberfield',
+                    minValue: 0,
                     fieldLabel: 'Min Pct Retained To Import',
                     disabled: true,
                     name: 'sbt.minPctToImport',

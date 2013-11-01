@@ -82,7 +82,7 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
                 isWorkbook: true,
                 title: panel.down('#titleField').getValue(),
                 description: panel.down('#descriptionField').getValue(),
-                folderType: panel.workbookFolderType,
+                folderType: Laboratory.Utils.getDefaultWorkbookFolderType(),
                 success: function(data){
                     Ext4.Msg.hide();
                     this.doLoad(data.path);
@@ -152,7 +152,6 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
     },
 
     renderExistingWorkbookForm: function(){
-        console.log('called2')
         var target = this.down('#renderArea');
         target.removeAll();
         target.add({
