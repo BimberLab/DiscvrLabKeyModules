@@ -176,7 +176,7 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
                 Table.insert(u, ti, row);
 
                 processed++;
-                if (processed % 5000 == 0)
+                if (_logProgress && processed % 5000 == 0)
                 {
                     _log.info("processed " + processed + " positions for DB insert in NTSnpByPosAggregator");
                 }

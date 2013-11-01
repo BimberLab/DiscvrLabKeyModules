@@ -45,6 +45,7 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
     protected int _minAvgDipQual = 0;
     protected int _minDipQual = 0;
     protected AvgBaseQualityAggregator _avgQualAggregator;
+    protected boolean _logProgress = true;
 
     public AbstractAlignmentAggregator(SequencePipelineSettings settings, Logger log, AvgBaseQualityAggregator avgQualAggregator)
     {
@@ -200,6 +201,11 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
         }
 
         return snps;
+    }
+
+    public void setLogProgress(boolean logProgress)
+    {
+        _logProgress = logProgress;
     }
 
     protected class CacheKeyInfo

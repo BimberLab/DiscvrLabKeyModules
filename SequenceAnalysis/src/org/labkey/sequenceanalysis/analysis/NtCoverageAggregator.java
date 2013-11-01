@@ -413,7 +413,7 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
                     }
 
                     processed++;
-                    if (processed % 10000 == 0)
+                    if (_logProgress && processed % 10000 == 0)
                     {
                         _log.info("processed " + processed + " positions for DB insert in NTCoverageAggregator");
                     }

@@ -360,7 +360,7 @@ public class BamIterator
                 oneOf(log2).info("Saving Coverage Results to DB");
                 oneOf(log2).info("\tReference sequences saved: 1");
                 oneOf(log2).info("\tPositions saved by reference (may include indels, so total could exceed reference length):");
-                oneOf(log2).info("\t1|SIVmac239: 11503");
+                oneOf(log2).info("\t1|SIVmac239: 8892");
             }});
 
             final Logger log3 = mock.mock(Logger.class, "log3");
@@ -368,7 +368,7 @@ public class BamIterator
                 oneOf(log3).info("Saving NT SNP results to DB");
                 oneOf(log3).info("\tReference sequences saved: 1");
                 oneOf(log3).info("\tSNPs saved by reference:");
-                oneOf(log3).info("\tSIVmac239: 440");
+                oneOf(log3).info("\tSIVmac239: 473");
             }});
 
             final Logger log4 = mock.mock(Logger.class, "log4");
@@ -376,23 +376,27 @@ public class BamIterator
                 oneOf(log4).info("Saving AA SNP Results to DB");
                 oneOf(log4).info("\tTotal AA Reference sequences encountered: 11");
                 oneOf(log4).info("\tSNPs saved by reference:");
-                oneOf(log4).info("\t1|SIVmac239 Nef: 13");
-                oneOf(log4).info("\t1|SIVmac239 Tat: 37");
-                oneOf(log4).info("\t1|SIVmac239 Env ARF 10: 13");
-                oneOf(log4).info("\t1|SIVmac239 vpX: 23");
-                oneOf(log4).info("\t1|SIVmac239 Env: 72");
-                oneOf(log4).info("\t1|SIVmac239 Rev: 10");
-                oneOf(log4).info("\t1|SIVmac239 Vif: 47");
-                oneOf(log4).info("\t1|SIVmac239 Gag: 39");
-                oneOf(log4).info("\t1|SIVmac239 Env ARF 1: 7");
-                oneOf(log4).info("\t1|SIVmac239 vpR: 23");
-                oneOf(log4).info("\t1|SIVmac239 Pol: 162");
+                oneOf(log4).info("\t1|SIVmac239 Nef: 9");
+                oneOf(log4).info("\t1|SIVmac239 Tat: 22");
+                oneOf(log4).info("\t1|SIVmac239 Env ARF 10: 10");
+                oneOf(log4).info("\t1|SIVmac239 vpX: 14");
+                oneOf(log4).info("\t1|SIVmac239 Env: 50");
+                oneOf(log4).info("\t1|SIVmac239 Rev: 9");
+                oneOf(log4).info("\t1|SIVmac239 Vif: 20");
+                oneOf(log4).info("\t1|SIVmac239 Gag: 23");
+                oneOf(log4).info("\t1|SIVmac239 Env ARF 1: 6");
+                oneOf(log4).info("\t1|SIVmac239 vpR: 10");
+                oneOf(log4).info("\t1|SIVmac239 Pol: 86");
             }});
 
             NtCoverageAggregator agg2 = new NtCoverageAggregator(settings, log2, agg1);
+            agg2.setLogProgress(false);
             NtSnpByPosAggregator agg3 = new NtSnpByPosAggregator(settings, log3, agg1);
+            agg3.setLogProgress(false);
             AASnpByCodonAggregator agg4 = new AASnpByCodonAggregator(settings, log4, agg1);
+            agg4.setLogProgress(false);
             AASnpByReadAggregator agg5 = new AASnpByReadAggregator(settings, _log, agg1);
+            agg5.setLogProgress(false);
 
             BamIterator bi = new BamIterator(_bam, _refFasta, _log);
             bi.addAggregators(Arrays.asList((AlignmentAggregator)agg2, agg3, agg4, agg5));
@@ -406,17 +410,17 @@ public class BamIterator
             agg2.saveToDb(TestContext.get().getUser(), _project, m);
             TableSelector coverage = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_COVERAGE), new SimpleFilter(FieldKey.fromString("analysis_id"), m.getRowId()), null);
             long coverageCount = coverage.getRowCount();
-            Assert.assertEquals("Incorrect coverage count", 11503L, coverageCount);
+            Assert.assertEquals("Incorrect coverage count", 8892L, coverageCount);
 
             agg3.saveToDb(TestContext.get().getUser(), _project, m);
             TableSelector ntPos = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS), new SimpleFilter(FieldKey.fromString("analysis_id"), m.getRowId()), null);
             long ntPosCount = ntPos.getRowCount();
-            Assert.assertEquals("Incorrect NT pos count", 440L, ntPosCount);
+            Assert.assertEquals("Incorrect NT pos count", 473L, ntPosCount);
 
             agg4.saveToDb(TestContext.get().getUser(), _project, m);
             TableSelector aaByCodon = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON), new SimpleFilter(FieldKey.fromString("analysis_id"), m.getRowId()), null);
             long aaByCodonCount = aaByCodon.getRowCount();
-            Assert.assertEquals("Incorrect AA codon count", 446L, aaByCodonCount);
+            Assert.assertEquals("Incorrect AA codon count", 259L, aaByCodonCount);
 
             List<Map<String, Object>> results = agg5.getResults(TestContext.get().getUser(), _project, m);
 
