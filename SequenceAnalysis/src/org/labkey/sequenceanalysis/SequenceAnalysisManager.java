@@ -19,11 +19,11 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
-import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SchemaTableInfo;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -38,7 +38,6 @@ import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.util.Path;
-import org.labkey.api.util.ResultSetUtil;
 import org.labkey.api.view.UnauthorizedException;
 
 import java.io.File;
@@ -47,7 +46,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class SequenceAnalysisManager
 {
@@ -356,27 +354,9 @@ public class SequenceAnalysisManager
 
     public String getNTRefForAARef(Integer refId)
     {
-        Table.TableResultSet results = null;
-        try
-        {
-            SQLFragment sql = new SQLFragment("SELECT name FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES + " a " +
-                " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES + " n ON (n.rowid = a.ref_nt_id) WHERE a.rowid = ?", refId);
+        SQLFragment sql = new SQLFragment("SELECT name FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES + " a " +
+            " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES + " n ON (n.rowid = a.ref_nt_id) WHERE a.rowid = ?", refId);
 
-            results = Table.executeQuery(SequenceAnalysisSchema.getInstance().getSchema(), sql);
-            if (results.getSize() == 0)
-                return null;
-
-            Map<String, Object> row = results.getRowMap();
-            return (String)row.get("name");
-        }
-        catch (SQLException e)
-        {
-            ResultSetUtil.close(results);
-        }
-        finally
-        {
-
-        }
-        return null;
+        return new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), sql).getObject(String.class);
     }
 }
