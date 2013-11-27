@@ -51,7 +51,7 @@ public class LaboratoryUpgradeCode implements UpgradeCode
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("quantity_string"), null, CompareType.NONBLANK);
             filter.addCondition(FieldKey.fromString("quantity"), null, CompareType.ISBLANK);
 
-            TableSelector ts = new TableSelector(ti, Table.ALL_COLUMNS, filter, null);
+            TableSelector ts = new TableSelector(ti, filter, null);
             ts.forEach(new Selector.ForEachBlock<ResultSet>()
             {
                 @Override

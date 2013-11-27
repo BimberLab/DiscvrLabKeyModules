@@ -66,7 +66,7 @@ public class AnalysisModel
     {
         TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), analysisId);
-        TableSelector ts = new TableSelector(ti, Table.ALL_COLUMNS, filter, null);
+        TableSelector ts = new TableSelector(ti, filter, null);
         AnalysisModel[] rows = ts.getArray(AnalysisModel.class);
         if (rows.length != 1)
             throw new RuntimeException("Unable to find analysis: " + analysisId);

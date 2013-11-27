@@ -951,7 +951,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
 
             TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
-            TableSelector ts = new TableSelector(ti, Table.ALL_COLUMNS, new SimpleFilter(FieldKey.fromString("analysis_id"), form.getAnalysisId()), null);
+            TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("analysis_id"), form.getAnalysisId()), null);
             AnalysisModel[] records = ts.getArray(AnalysisModel.class);
             if (records.length != 1)
             {

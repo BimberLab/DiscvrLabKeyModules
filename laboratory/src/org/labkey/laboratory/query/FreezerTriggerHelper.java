@@ -119,7 +119,7 @@ public class FreezerTriggerHelper
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("freezer"), freezer, CompareType.EQUAL);
         filter.addCondition(FieldKey.fromString("dateremoved"), null, CompareType.ISBLANK);
 
-        TableSelector ts = new TableSelector(_table, Table.ALL_COLUMNS, filter, null);
+        TableSelector ts = new TableSelector(_table, filter, null);
 
         final Map<String, Integer> keys = new HashMap<String, Integer>();
         ts.forEach(new Selector.ForEachBlock<ResultSet>()

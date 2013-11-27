@@ -62,9 +62,9 @@ public class TranslatingReferenceSequence
     {
         TableInfo tableNt = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
         SimpleFilter ntFilter = new SimpleFilter(FieldKey.fromString("rowid"), _id);
-        TableSelector tsNt = new TableSelector(tableNt, Table.ALL_COLUMNS, ntFilter, null);
+        TableSelector tsNt = new TableSelector(tableNt, ntFilter, null);
         SequenceModel[] nts = tsNt.getArray(SequenceModel.class);
-        if (nts == null || nts.length == 0)
+        if (nts.length == 0)
             throw new RuntimeException("Unable to find NT Reference sequence with RowId: " + _id);
 
         _nt = nts[0];
@@ -72,7 +72,7 @@ public class TranslatingReferenceSequence
         //then cache AA records
         TableInfo tableAa = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES);
         SimpleFilter aaFilter = new SimpleFilter(FieldKey.fromString("ref_nt_id"), _id);
-        TableSelector ts = new TableSelector(tableAa, Table.ALL_COLUMNS, aaFilter, null);
+        TableSelector ts = new TableSelector(tableAa, aaFilter, null);
         _peptides = ts.getArray(SequenceModel.class);
     }
 

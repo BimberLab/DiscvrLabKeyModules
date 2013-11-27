@@ -182,7 +182,7 @@ public class LaboratoryManager
     public WorkbookModel getWorkbookModel(Container c)
     {
         TableInfo ti = LaboratorySchema.getInstance().getSchema().getTable(LaboratorySchema.TABLE_WORKBOOKS);
-        TableSelector ts = new TableSelector(ti, Table.ALL_COLUMNS, new SimpleFilter(FieldKey.fromString(LaboratoryWorkbooksTable.WORKBOOK_COL), c.getId()), null);
+        TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString(LaboratoryWorkbooksTable.WORKBOOK_COL), c.getId()), null);
         WorkbookModel[] arr = ts.getArray(WorkbookModel.class);
         WorkbookModel m =  arr.length == 0 ? null : arr[0];
         if (m == null)
