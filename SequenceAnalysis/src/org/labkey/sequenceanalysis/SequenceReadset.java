@@ -23,6 +23,7 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.query.FieldKey;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -59,7 +60,7 @@ public class SequenceReadset
 
     public static SequenceReadset getFromId(Container c, int rowId)
     {
-        SimpleFilter filter = new SimpleFilter("RowId", rowId);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("RowId"), rowId);
         //NOTE: workbooks / parent prove a problem, so we omit container for now
         //filter.addCondition("Container", c);
         TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_READSETS), filter, null);
