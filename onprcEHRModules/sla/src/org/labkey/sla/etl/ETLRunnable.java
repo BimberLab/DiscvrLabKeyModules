@@ -30,6 +30,7 @@ import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -85,7 +86,6 @@ import java.util.TreeMap;
 
 public class ETLRunnable implements Runnable
 {
-
     public final static String TIMESTAMP_PROPERTY_DOMAIN = "org.labkey.sla.etl.timestamp";
     public final static String ROWVERSION_PROPERTY_DOMAIN = "org.labkey.sla.etl.rowversion";
     public final static String CONFIG_PROPERTY_DOMAIN = "org.labkey.sla.etl.config";
@@ -840,8 +840,8 @@ public class ETLRunnable implements Runnable
 
     boolean isEmpty(TableInfo tinfo) throws SQLException
     {
-        SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ").append(tinfo.getFromSQL("x"));
-        return Table.executeSingleton(tinfo.getSchema(), sql.getSQL(), sql.getParamsArray(), Long.class) == 0;
+        SQLFragment sql = new SQLFragment("SELECT * FROM ").append(tinfo.getFromSQL("x"));
+        return !new SqlSelector(tinfo.getSchema(), sql).exists();
     }
 
     /**
