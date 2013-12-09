@@ -52,8 +52,8 @@ FROM study.Demographics d
 --determine if animal has raw STR data performed by UC Davis
 LEFT JOIN (
     SELECT
-      pd.subjectId,
-      count(pd.subjectId) as total
+      pd.subjectId
+      --count(pd.subjectId) as total
     FROM Parentage_Data.resultSummaryBySubjectAndMethod pd
     WHERE pd.method = 'UC Davis'
     GROUP BY pd.subjectId
@@ -62,8 +62,8 @@ LEFT JOIN (
 --determine if we have actual genetic parentage calls
 LEFT JOIN (
     SELECT
-      pd.Id,
-      count(distinct pd.relationship) as total
+      pd.Id
+      --count(distinct pd.relationship) as total
     FROM Study.Parentage pd
     WHERE pd.method = 'Genetic'
     GROUP BY pd.Id
@@ -71,8 +71,8 @@ LEFT JOIN (
 
 LEFT JOIN (
   SELECT
-    m.Id,
-    count(*) as total
+    m.Id
+    --count(*) as total
   FROM MHC_Data.MHC_Data_Raw m
   GROUP BY m.Id
 ) m ON (m.Id = d.Id)
@@ -85,8 +85,8 @@ LEFT JOIN (
     SELECT
       s.subjectId,
       s.sampleType,
-      sum(coalesce(s.quantity, 0)) as quantity,
-      count(*) as total
+      sum(coalesce(s.quantity, 0)) as quantity
+      --count(*) as total
     FROM DNA_Bank.samples s
     WHERE s.dateremoved is null and s.sampleType IN ('gDNA', 'Buffy coat', 'Whole Blood')
     GROUP BY s.subjectId, s.sampleType
@@ -103,8 +103,8 @@ LEFT JOIN (
 LEFT JOIN (
   SELECT
     f.Id,
-    group_concat(distinct f.value, chr(10)) as flags,
-    count(*) as total
+    group_concat(distinct f.value, chr(10)) as flags
+    --count(*) as total
   FROM study."Animal Record Flags" f
   WHERE f.category = 'Genetics' And f.isActive = true
   GROUP BY f.Id
@@ -113,8 +113,8 @@ LEFT JOIN (
 --U42
 LEFT JOIN (
   SELECT
-    a.Id,
-    count(*) as total
+    a.Id
+    --count(*) as total
   FROM study.assignment a
   WHERE a.isActive = true and a.project.name = '0492-02'
   GROUP BY a.Id

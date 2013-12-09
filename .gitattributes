@@ -301,6 +301,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.268-12.269.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.269-12.270.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.270-12.271.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.271-12.272.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -348,6 +349,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.268-12.269.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.269-12.270.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.270-12.271.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.271-12.272.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -529,6 +531,7 @@ labModules/laboratory/resources/queries/laboratory/freezer_space_summary.query.x
 labModules/laboratory/resources/queries/laboratory/freezer_space_summary.sql -text
 labModules/laboratory/resources/queries/laboratory/freezer_usage_by_box.query.xml -text
 labModules/laboratory/resources/queries/laboratory/freezer_usage_by_box.sql -text
+labModules/laboratory/resources/queries/laboratory/major_events/.qview.xml -text
 labModules/laboratory/resources/queries/laboratory/peptides.js -text
 labModules/laboratory/resources/queries/laboratory/peptides/.qview.xml -text
 labModules/laboratory/resources/queries/laboratory/samples.js -text
@@ -757,6 +760,7 @@ labModules/laboratory/src/org/labkey/laboratory/URLDataSource.java -text
 labModules/laboratory/src/org/labkey/laboratory/assay/AssayHelper.java -text
 labModules/laboratory/src/org/labkey/laboratory/assay/ManualEntryAssayImportMethod.java -text
 labModules/laboratory/src/org/labkey/laboratory/assay/RunUploadContext.java -text
+labModules/laboratory/src/org/labkey/laboratory/notification/LabSummaryNotification.java -text
 labModules/laboratory/src/org/labkey/laboratory/query/AssayRunTemplatesCustomizer.java -text
 labModules/laboratory/src/org/labkey/laboratory/query/ContainerIncrementingTable.java -text
 labModules/laboratory/src/org/labkey/laboratory/query/DefaultAssayCustomizer.java -text
@@ -856,6 +860,12 @@ onprcEHRModules/onprc_reports/src/org/labkey/onprc_reports/ONPRC_ReportsManager.
 onprcEHRModules/onprc_reports/src/org/labkey/onprc_reports/ONPRC_ReportsModule.java -text
 onprcEHRModules/sla/SLA.iml -text
 onprcEHRModules/sla/module.properties -text
+onprcEHRModules/sla/resources/etl/sla/census.sql -text
+onprcEHRModules/sla/resources/etl/sla/emailList.sql -text
+onprcEHRModules/sla/resources/etl/sla/purchase.sql -text
+onprcEHRModules/sla/resources/etl/sla/purchasedetails.sql -text
+onprcEHRModules/sla/resources/etl/sla/requestors.sql -text
+onprcEHRModules/sla/resources/etl/sla/vendors.sql -text
 onprcEHRModules/sla/resources/folderTypes/SLA.folderType.xml -text
 onprcEHRModules/sla/resources/module.xml -text
 onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-0.00-13.21.sql -text

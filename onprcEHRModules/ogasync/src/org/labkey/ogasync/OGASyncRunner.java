@@ -9,6 +9,7 @@ import org.labkey.api.data.ExecutingSelector;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -92,6 +93,7 @@ public class OGASyncRunner implements Job
             doMergeInvestigators(u, c, sourceTable, targetSchema);
             doMergeGrants(u, c, sourceTable, targetSchema);
             doMergeGrantProjects(u, c, sourceTable, targetSchema);
+            doMergeAccounts(u, c, sourceTable, targetSchema);
         }
         catch (SQLException e)
         {
@@ -130,7 +132,6 @@ public class OGASyncRunner implements Job
         fieldMap.put(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER, "PDFM_EMP_NUM");
         fieldMap.put("investigatorName", "PI");
 
-        fieldMap.put("alias", "ALIAS");
         fieldMap.put("projectTitle", "PROJECT_TITLE");
         fieldMap.put("projectDescription", "PROJECT_DESCRIPTION");
         fieldMap.put("organization", "ORG");
@@ -140,13 +141,31 @@ public class OGASyncRunner implements Job
 
         fieldMap.put("protocolNumber", "IACUC_NUMBER");
         fieldMap.put(PROJECT_STATUS, "PROJECT_STATUS");
-        fieldMap.put("aliasEnabled", "ALIAS_ENABLED_FLAG");
         fieldMap.put("applicationType", "APPLICATION_TYPE");
         fieldMap.put("activityType", "ACTIVITY_TYPE");
         fieldMap.put("ogaProjectId", "PROJECT_ID");
 
         TableSelector ts = new TableSelector(sourceTable, new HashSet<>(fieldMap.values()));
         doMerge(u, c, targetTable, ts, "projectNumber", fieldMap);
+    }
+
+    public void doMergeAccounts(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException
+    {
+        TableInfo targetTable = targetSchema.getTable("aliases");
+        Map<String, String> fieldMap = new HashMap<>();
+
+        fieldMap.put("alias", "ALIAS");
+        fieldMap.put("aliasEnabled", "ALIAS_ENABLED_FLAG");
+
+        fieldMap.put("projectNumber", "OGA_PROJECT_NUMBER");
+        fieldMap.put("grantNumber", "OGA_AWARD_NUMBER");
+        fieldMap.put("agencyAwardNumber", "AGENCY_AWARD_NUMBER");
+        fieldMap.put(INVESTIGATOR_EMPLOYYE_ID_NUMBER, "PI_EMP_NUM");
+        fieldMap.put(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER, "PDFM_EMP_NUM");
+        fieldMap.put("investigatorName", "PI");
+
+        TableSelector ts = new TableSelector(sourceTable, new HashSet<>(fieldMap.values()));
+        doMerge(u, c, targetTable, ts, "alias", fieldMap);
     }
 
     public void doMergeGrants(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException
@@ -213,6 +232,10 @@ public class OGASyncRunner implements Job
     {
         _log.info("starting to merge table: " + targetTable.getName());
         ExperimentService.get().ensureTransaction();
+
+        _log.info("truncating table");
+        SqlExecutor ex = new SqlExecutor(targetTable.getSchema().getScope());
+        ex.execute(new SQLFragment("DELETE FROM " + targetTable.getSelectName() + " WHERE container = ?", c.getId()));
 
         try
         {

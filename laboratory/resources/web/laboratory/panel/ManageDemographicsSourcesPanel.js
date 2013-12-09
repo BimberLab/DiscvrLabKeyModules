@@ -212,7 +212,7 @@ Ext4.define('Laboratory.panel.ManageDemographicsSourcesPanel', {
                             scope: this,
                             success: function(results){
                                 Ext4.each(results.columns, function(col){
-                                    if (col.isKeyField !== false && col.jsonType == 'string'){
+                                    if (col.jsonType == 'string'){
                                         this.store.add(LDK.StoreUtils.createModelInstance(this.store, {
                                             name: col.name,
                                             caption: col.caption

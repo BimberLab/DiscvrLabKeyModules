@@ -5,7 +5,11 @@
         <column name="Id/demographics/geographic_origin"/>
         <column name="Mamu-A1*001g::result"/>
         <column name="Mamu-A1*002g::result"/>
+        <column name="Mamu-B*001g::result"/>
         <column name="Mamu-B*008g::result"/>
         <column name="Mamu-B*017g::result"/>
+        <column name="Mamu-DPB*106::result"/>
+        <column name="Mamu-DPB*10401/06/11::result"/>
+        <column name="Mamu-DPB*w201::result"/>
     </columns>
 </customView>

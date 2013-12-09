@@ -13,6 +13,7 @@ import org.labkey.api.laboratory.QueryTabbedReportItem;
 import org.labkey.api.laboratory.ReportItem;
 import org.labkey.api.laboratory.SimpleQueryNavItem;
 import org.labkey.api.laboratory.SimpleUrlNavItem;
+import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.module.Module;
@@ -152,9 +153,9 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
         return _module;
     }
 
-    public List<NavItem> getSummary(Container c, User u)
+    public List<SummaryNavItem> getSummary(Container c, User u)
     {
-        List<NavItem> items = new ArrayList<NavItem>();
+        List<SummaryNavItem> items = new ArrayList<>();
 
         LaboratoryServiceImpl service = (LaboratoryServiceImpl)LaboratoryServiceImpl.get();
         Set<AdditionalDataSource> sources = service.getAdditionalDataSources(c, u);
@@ -163,7 +164,9 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
             TableInfo ti = source.getTableInfo(c, u);
             if (ti != null)
             {
-                items.add(new QueryCountNavItem(this, ti.getSchema().getName(), ti.getName(), source.getCategory(), source.getLabel()));
+                assert ti.getPublicSchemaName() != null;
+                assert ti.getPublicName() != null;
+                items.add(new QueryCountNavItem(this, ti.getPublicSchemaName(), ti.getPublicName(), source.getCategory(), source.getLabel()));
             }
         }
 

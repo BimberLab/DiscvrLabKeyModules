@@ -26,6 +26,7 @@ import org.labkey.api.exp.api.ExpSampleSet;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.laboratory.AbstractDataProvider;
 import org.labkey.api.laboratory.QueryCountNavItem;
+import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.laboratory.SingleNavItem;
 import org.labkey.api.module.Module;
@@ -105,25 +106,15 @@ public class SampleSetDataProvider extends AbstractDataProvider
         return null;
     }
 
-    public List<NavItem> getSummary(Container c, User u)
+    public List<SummaryNavItem> getSummary(Container c, User u)
     {
-        List<NavItem> items = new ArrayList<NavItem>();
+        List<SummaryNavItem> items = new ArrayList<>();
         for (ExpSampleSet ss : ExperimentService.get().getSampleSets(c, u, true))
         {
             SampleSetNavItem nav = new SampleSetNavItem(this, ss);
-            Integer total = 0;
             if (nav.isVisible(c, u))
             {
-                for (ExpMaterial m : ss.getSamples())
-                {
-                    Container runContainer = m.getContainer();
-                    if (runContainer.equals(c) || (runContainer.isWorkbookOrTab() && c.equals(runContainer.getParent())))
-                    {
-                        total++;
-                    }
-                }
-
-                items.add(new SingleNavItem(this, ss.getName(), total.toString(), new DetailsURL(nav.getBrowseUrl(c, u)), "Samples"));
+                items.add(new QueryCountNavItem(this, "Samples", ss.getName(), "Samples", ss.getName()));
             }
         }
 

@@ -24,6 +24,7 @@ import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.laboratory.AbstractDataProvider;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.QueryTabbedReportItem;
+import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
 import org.labkey.api.laboratory.assay.AssayNavItem;
 import org.labkey.api.ldk.AbstractNavItem;
@@ -149,9 +150,9 @@ public class SequenceDataProvider extends AbstractDataProvider
         return _module;
     }
 
-    public List<NavItem> getSummary(Container c, User u)
+    public List<SummaryNavItem> getSummary(Container c, User u)
     {
-        List<NavItem> items = new ArrayList<>();
+        List<SummaryNavItem> items = new ArrayList<>();
 
         NavItem nav = new SequenceNavItem(this);
         if (nav.isVisible(c, u))

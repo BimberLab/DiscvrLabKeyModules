@@ -15,21 +15,35 @@
  */
 package org.labkey.laboratory;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.cache.CacheManager;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.data.RuntimeSQLException;
+import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
+import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.ChangePropertyDescriptorException;
+import org.labkey.api.exp.OntologyManager;
+import org.labkey.api.exp.PropertyDescriptor;
+import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.exp.property.Domain;
+import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.module.FolderType;
 import org.labkey.api.module.ModuleLoader;
@@ -42,12 +56,21 @@ import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
+import org.labkey.api.study.DataSet;
+import org.labkey.api.study.Study;
+import org.labkey.api.study.StudyService;
+import org.labkey.api.study.assay.AssayProtocolSchema;
+import org.labkey.api.study.assay.AssayProvider;
+import org.labkey.api.study.assay.AssayService;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.ResultSetUtil;
 import org.labkey.api.view.Portal;
 import org.labkey.laboratory.query.ContainerIncrementingTable;
 import org.labkey.laboratory.query.LaboratoryWorkbooksTable;
 import org.labkey.laboratory.query.WorkbookModel;
 
+import java.beans.Introspector;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -71,6 +94,7 @@ public class LaboratoryManager
 {
     private static LaboratoryManager _instance = new LaboratoryManager();
     public static final String DEFAULT_WORKBOOK_FOLDERTYPE_PROPNAME = "DefaultWorkbookFolderType";
+    private static final Logger _log = Logger.getLogger(LaboratoryManager.class);
 
     private LaboratoryManager()
     {
@@ -459,5 +483,200 @@ public class LaboratoryManager
         {
             ExperimentService.get().closeTransaction();
         }
+    }
+
+    public List<String> createIndexes(User u, boolean commitChanges, boolean rebuildIndexes)
+    {
+        List<String> messages = new ArrayList<>();
+
+        try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
+        {
+            //add indexes to assays first
+            Map<String, List<List<String>>> assayIndexes = ((LaboratoryServiceImpl)LaboratoryServiceImpl.get()).getAssayIndexes();
+            DbSchema assayResultSchema = DbSchema.get("assayresult");
+            Set<String> distinctIndexes = new HashSet<>();
+            for (ExpProtocol p : ExperimentService.get().getAllExpProtocols())
+            {
+                AssayProvider ap = AssayService.get().getProvider(p);
+                if (ap == null)
+                    continue;
+
+                if (!assayIndexes.containsKey(ap.getName()))
+                    continue;
+
+                List<List<String>> indexes = assayIndexes.get(ap.getName());
+                Domain d = ap.getResultsDomain(p);
+                String tableName = d.getStorageTableName();
+                TableInfo realTable = assayResultSchema.getTable(tableName);
+                if (realTable == null)
+                {
+                    messages.add("Unable to find table for assay protocol: " + p.getName());
+                    continue;
+                }
+
+                processIndexes(assayResultSchema, realTable, indexes, distinctIndexes, messages, commitChanges, rebuildIndexes);
+            }
+
+            Map<String, Map<String, List<List<String>>>> tableIndexes = ((LaboratoryServiceImpl)LaboratoryServiceImpl.get()).getTableIndexes();
+            for (String schemaName : tableIndexes.keySet())
+            {
+                DbSchema schema = DbSchema.get(schemaName);
+                if (schema == null)
+                {
+                    messages.add("Unable to find schema: " + schemaName);
+                    continue;
+                }
+
+                for (String queryName : tableIndexes.get(schemaName).keySet())
+                {
+                    TableInfo ti = schema.getTable(queryName);
+                    if (ti == null)
+                    {
+                        messages.add("Unable to find table: " + queryName);
+                        continue;
+                    }
+
+                    processIndexes(schema, ti, tableIndexes.get(schemaName).get(queryName), distinctIndexes, messages, commitChanges, rebuildIndexes);
+                }
+            }
+
+            transaction.commit();
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeSQLException(e);
+
+        }
+
+        return messages;
+    }
+
+    private void processIndexes(DbSchema schema, TableInfo realTable, List<List<String>> indexes, Set<String> distinctIndexes, List<String> messages, boolean commitChanges, boolean rebuildIndexes) throws SQLException
+    {
+        for (List<String> indexCols : indexes)
+        {
+            boolean missingCols = false;
+
+            List<String> cols = new ArrayList<>();
+            String[] includedCols = null;
+            Map<String, String> directionMap = new HashMap<>();
+
+            for (String name : indexCols)
+            {
+                String[] tokens = name.split(":");
+                if (tokens[0].equalsIgnoreCase("include"))
+                {
+                    if (tokens.length > 1)
+                    {
+                        includedCols = tokens[1].split(",");
+                    }
+                }
+                else
+                {
+                    cols.add(tokens[0]);
+                    if (tokens.length > 1)
+                        directionMap.put(tokens[0], tokens[1]);
+                }
+            }
+
+            for (String col : cols)
+            {
+                if (realTable.getColumn(col) == null)
+                {
+                    messages.add("Table: " + realTable.getName() + " does not have column " + col + ", so indexing will be skipped");
+                    missingCols = true;
+                }
+            }
+
+            if (missingCols)
+                continue;
+
+            String idxPrefix = "LABORATORY_IDX_";
+            String indexName = idxPrefix + realTable.getName() + "_" + StringUtils.join(cols, "_");
+            if (includedCols != null)
+            {
+                indexName += "_include_" + StringUtils.join(includedCols, "_");
+            }
+
+            if (distinctIndexes.contains(indexName))
+                throw new RuntimeException("An index has already been created with the name: " + indexName);
+            distinctIndexes.add(indexName);
+
+            Set<String> indexNames = new CaseInsensitiveHashSet();
+            DatabaseMetaData meta = schema.getScope().getConnection().getMetaData();
+            ResultSet rs = null;
+            try
+            {
+                rs = meta.getIndexInfo(schema.getScope().getDatabaseName(), schema.getName(), realTable.getName(), false, false);
+                while (rs.next())
+                {
+                    indexNames.add(rs.getString("INDEX_NAME"));
+                }
+            }
+            finally
+            {
+                ResultSetUtil.close(rs);
+            }
+
+            boolean exists = indexNames.contains(indexName);
+            if (exists && rebuildIndexes)
+            {
+                if (commitChanges)
+                {
+                    dropIndex(schema, realTable, indexName, cols, realTable.getName(), messages);
+                }
+                else
+                {
+                    messages.add("Will drop/recreate index on column(s): " + StringUtils.join(cols, ", ") + " for table: " + schema.getName() + "." + realTable.getName());
+                }
+                exists = false;
+            }
+
+            if (!exists)
+            {
+                if (commitChanges)
+                {
+                    List<String> columns = new ArrayList<>();
+                    for (String name : cols)
+                    {
+                        if (schema.getSqlDialect().isSqlServer() && directionMap.containsKey(name))
+                            name += " " + directionMap.get(name);
+
+                        columns.add(name);
+                    }
+
+                    createIndex(schema, realTable, realTable.getName(), indexName, columns, includedCols, messages);
+                }
+                else
+                {
+                    messages.add("Missing index on column(s): " + StringUtils.join(indexCols, ", ") + (includedCols != null ? " include: " + StringUtils.join(includedCols, ",") : "") + " for table: " + schema.getName() + "." + realTable.getName());
+                }
+            }
+        }
+    }
+
+    private void createIndex(DbSchema schema, TableInfo realTable, String tableName, String indexName, List<String> columns, String[] includedCols, List<String> messages)
+    {
+        messages.add("Creating index on column(s): " + StringUtils.join(columns, ", ") + " for table: " + schema.getName() + "." + tableName);
+        String sqlString = "CREATE INDEX " + indexName + " ON " + realTable.getSelectName() + "(" + StringUtils.join(columns, ", ") + ")";
+        if (schema.getSqlDialect().isSqlServer())
+        {
+            if (includedCols != null)
+                sqlString += " INCLUDE (" + StringUtils.join(includedCols, ", ") + ") ";
+
+            sqlString += " WITH (DATA_COMPRESSION = ROW)";
+        }
+        SQLFragment sql = new SQLFragment(sqlString);
+        SqlExecutor se = new SqlExecutor(schema);
+        se.execute(sql);
+    }
+
+    private void dropIndex(DbSchema schema, TableInfo realTable, String indexName, List<String> cols, String tableName, List<String> messages)
+    {
+        messages.add("Dropping index on column(s): " + StringUtils.join(cols, ", ") + " for table: " + schema.getName() + "." + tableName);
+        String sqlString = "DROP INDEX " + indexName + " ON " + realTable.getSelectName();
+        SQLFragment sql = new SQLFragment(sqlString);
+        SqlExecutor se = new SqlExecutor(schema);
+        se.execute(sql);
     }
 }

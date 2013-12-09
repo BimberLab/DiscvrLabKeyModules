@@ -151,6 +151,44 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
+    @RequiresPermissionClass(AdminPermission.class)
+    public class EnsureIndexesAction extends ConfirmAction<Object>
+    {
+        public void validateCommand(Object form, Errors errors)
+        {
+
+        }
+
+        public URLHelper getSuccessURL(Object form)
+        {
+            return getContainer().getStartURL(getUser());
+        }
+
+        public ModelAndView getConfirmView(Object form, BindException errors) throws Exception
+        {
+            if (!getUser().isSiteAdmin())
+            {
+                throw new UnauthorizedException("Only site admins can view this page");
+            }
+
+            StringBuilder msg = new StringBuilder();
+            msg.append("Certain assays can have performance improved by the addition of indexes, which can be suggested by modules.  The following indexes are recommended for the assays installed on this server:<p>");
+
+            List<String> msgs = LaboratoryManager.get().createIndexes(getUser(), false, false);
+            msg.append(StringUtils.join(msgs, "<br>"));
+
+            msg.append("<p>Do you want to continue?");
+
+            return new HtmlView(msg.toString());
+        }
+
+        public boolean handlePost(Object form, BindException errors) throws Exception
+        {
+            LaboratoryManager.get().createIndexes(getUser(), true, true);
+            return true;
+        }
+    }
+
     public static class PlanExptRunForm
     {
         private Integer _assayId;
@@ -1836,7 +1874,7 @@ public class LaboratoryController extends SpringActionController
                 {
                     List<NavItem> list = items.get(item.getCategory());
                     if (list == null)
-                        list = new ArrayList<NavItem>();
+                        list = new ArrayList<>();
 
                     list.add(item);
 

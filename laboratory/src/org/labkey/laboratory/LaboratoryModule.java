@@ -21,6 +21,7 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
+import org.labkey.api.ldk.notification.NotificationService;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.User;
@@ -34,6 +35,7 @@ import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.ClientDependency;
+import org.labkey.laboratory.notification.LabSummaryNotification;
 import org.labkey.laboratory.query.WorkbookModel;
 
 import java.util.ArrayList;
@@ -110,6 +112,10 @@ public class LaboratoryModule extends ExtendedSimpleModule
         DetailsURL details = DetailsURL.fromString("/laboratory/siteLabSettings.view");
         details.setContainerContext(ContainerManager.getSharedContainer());
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "laboratory module admin", details.getActionURL());
+        NotificationService.get().registerNotification(new LabSummaryNotification(this));
+
+        LaboratoryService.get().registerTableIndex("core", "containers", Arrays.asList("RowId", "Parent", "EntityId", "Type"));
+        LaboratoryService.get().registerTableIndex("exp", "data", Arrays.asList("RowId", "RunId", "Container"));
     }
 
     @Override

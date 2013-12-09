@@ -33,6 +33,7 @@ public class LaboratorySchema
     public static final String TABLE_ANTIBODIES = "antibodies";
     public static final String TABLE_SUBJECTS = "subjects";
     public static final String TABLE_FREEZERS = "freezers";
+    public static final String TABLE_MAJOR_EVENTS = "major_events";
     public static final String TABLE_SAMPLE_TYPE = "sample_type";
     public static final String TABLE_WORKBOOKS = "workbooks";
     public static final String TABLE_WORKBOOK_TAGS = "workbook_tags";

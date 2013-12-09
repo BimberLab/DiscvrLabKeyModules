@@ -15,6 +15,8 @@ import org.labkey.api.query.QueryException;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.study.DataSet;
+import org.labkey.api.study.DataSetTable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -148,9 +150,22 @@ public class DemographicsSource extends AbstractDataSource
         }
         targetColumn = col.getName(); //normalize string
 
+        //NOTE: this is not an ideal solution.  for now, special-case demographics datasets.
+        //It is problematic to flag the participant column as a keyfield, since other places in the code expect a single PK column
         if (!ti.getPkColumnNames().contains(targetColumn))
         {
-            throw new IllegalArgumentException("Target column is not a key field: " + targetColumn);
+            if (ti instanceof DataSetTable)
+            {
+                DataSet ds = ((DataSetTable)ti).getDataSet();
+                if (!(ds.isDemographicData() && ds.getStudy().getSubjectColumnName().equalsIgnoreCase(col.getName())))
+                {
+                    throw new IllegalArgumentException("Target column is not a key field: " + targetColumn);
+                }
+            }
+            else
+            {
+                throw new IllegalArgumentException("Target column is not a key field: " + targetColumn);
+            }
         }
 
         if (!col.getJdbcType().equals(JdbcType.VARCHAR))

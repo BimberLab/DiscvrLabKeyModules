@@ -13,6 +13,11 @@
                 <property name="columnTitle" value="Protocol Investigator"/>
             </properties>
         </column>
+        <column name="project/protocol/investigatorId/financialAnalyst">
+            <properties>
+                <property name="columnTitle" value="Financial Analyst"/>
+            </properties>
+        </column>
     </columns>
     <sorts>
         <sort column="project/displayName"/>

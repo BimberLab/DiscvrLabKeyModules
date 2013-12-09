@@ -17,11 +17,13 @@ package org.labkey.laboratory;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
+import org.labkey.api.attachments.AttachmentDirectory;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.files.FileContentService;
 import org.labkey.api.laboratory.AbstractDataProvider;
 import org.labkey.api.laboratory.DetailsUrlNavItem;
 import org.labkey.api.laboratory.JSTabbedReportItem;
@@ -31,13 +33,18 @@ import org.labkey.api.laboratory.QueryTabbedReportItem;
 import org.labkey.api.laboratory.ReportItem;
 import org.labkey.api.laboratory.SimpleQueryNavItem;
 import org.labkey.api.laboratory.SimpleSettingsItem;
+import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.module.Module;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.services.ServiceRegistry;
+import org.labkey.api.study.Study;
+import org.labkey.api.study.StudyService;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
@@ -119,11 +126,11 @@ public class LaboratoryDataProvider extends AbstractDataProvider
             item4.setOwnerKey(owner3.getPropertyManagerKey());
             items.add(item4);
 
-//            for (Study study : StudyService.get().getAllStudies(c, u))
-//            {
-//                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/study/begin.view", study.getContainer()), study.getLabel(), "Studies"));
-//            }
-//
+            for (Study study : StudyService.get().getAllStudies(c, u))
+            {
+                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/study/begin.view", study.getContainer()), study.getLabel(), "Studies"));
+            }
+
 //            FileContentService service = ServiceRegistry.get().getService(FileContentService.class);
 //            for (AttachmentDirectory dir : service.getRegisteredDirectories(c))
 //            {
@@ -137,6 +144,11 @@ public class LaboratoryDataProvider extends AbstractDataProvider
             ReportItem item6 = new ReportItem(this, LaboratoryModule.SCHEMA_NAME, "Antibodies", category, "View All Antibodies");
             item6.setOwnerKey(owner4.getPropertyManagerKey());
             items.add(item6);
+
+            DetailsUrlNavItem owner5 = new DetailsUrlNavItem(this, new DetailsURL(QueryService.get().urlFor(u, c, QueryAction.executeQuery, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS)), "Major Events", LaboratoryService.NavItemCategory.misc.name());
+            ReportItem item7 = new ReportItem(this, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS, category, "View All Major Events");
+            item7.setOwnerKey(owner5.getPropertyManagerKey());
+            items.add(item7);
         }
 
         return Collections.unmodifiableList(items);
@@ -165,6 +177,7 @@ public class LaboratoryDataProvider extends AbstractDataProvider
                 items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/resetLaboratoryFolders.view", ContainerManager.getRoot()), "Reset Tabs and Webparts", general));
                 items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/initWorkbooks.view", ContainerManager.getRoot()), "Initialize Workbooks", general));
                 items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/initContainerIncrementingTable.view", ContainerManager.getRoot()), "Initialize Autoincrementing Tables", general));
+                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/ensureIndexes.view", ContainerManager.getRoot()), "Ensure Indexes Exist", general));
             }
         }
         else
@@ -207,6 +220,7 @@ public class LaboratoryDataProvider extends AbstractDataProvider
         if (c.getActiveModules().contains(getOwningModule()))
         {
             items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/manageSubjects.view", c), "Manage Subjects and Groups", "Subjects and Projects"));
+            items.add(new DetailsUrlNavItem(this, new DetailsURL(QueryService.get().urlFor(u, c, QueryAction.executeQuery, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS)), "Major Events", LaboratoryService.NavItemCategory.misc.name()));
         }
 
         return Collections.unmodifiableList(items);
@@ -228,9 +242,9 @@ public class LaboratoryDataProvider extends AbstractDataProvider
         return _module;
     }
 
-    public List<NavItem> getSummary(Container c, User u)
+    public List<SummaryNavItem> getSummary(Container c, User u)
     {
-        List<NavItem> items = new ArrayList<NavItem>();
+        List<SummaryNavItem> items = new ArrayList<>();
 
         for (NavItem nav : getSampleNavItems(c, u))
         {
@@ -296,6 +310,12 @@ public class LaboratoryDataProvider extends AbstractDataProvider
 
         TabbedReportItem subSummary = new JSTabbedReportItem(this, "subjectSummary", "Subject Summary", "General", "subjectSummary");
         items.add(subSummary);
+
+        DetailsUrlNavItem owner = new DetailsUrlNavItem(this, new DetailsURL(QueryService.get().urlFor(u, c, QueryAction.executeQuery, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS)), "Major Events", LaboratoryService.NavItemCategory.misc.name());
+        TabbedReportItem item2 = new QueryTabbedReportItem(this, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS, "Major Events", "General");
+        item2.setVisible(owner.isVisible(c, u));
+        item2.setOwnerKey(owner.getPropertyManagerKey());
+        items.add(item2);
 
         return Collections.unmodifiableList(items);
     }

@@ -245,7 +245,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
         AssayHelper.ensureAssayFields(u, providerName);
     }
 
-    public void sortNavItems(List<NavItem> navItems)
+    public void sortNavItems(List<? extends NavItem> navItems)
     {
         Collections.sort(navItems, new Comparator<NavItem>()
         {
@@ -256,14 +256,16 @@ public class LaboratoryServiceImpl extends LaboratoryService
                 if (o1.getLabel() == null)
                 {
                     _log.error("NavItem has a null label: " + o1.getPropertyManagerKey());
+                    return -1;
                 }
 
                 if (o2.getLabel() == null)
                 {
                     _log.error("NavItem has a null label: " + o2.getPropertyManagerKey());
+                    return 1;
                 }
 
-                return o1.getLabel() == null ? -1 : o1.getLabel().compareTo(o2.getLabel());
+                return o1.getLabel() == null ? -1 : o1.getLabel().toLowerCase().compareTo(o2.getLabel().toLowerCase());
             }
         });
     }
@@ -558,5 +560,45 @@ public class LaboratoryServiceImpl extends LaboratoryService
             }
         }
         return items;
+    }
+
+    private Map<String, List<List<String>>> _assayResultIndexes = new HashMap<>();
+    private Map<String, Map<String, List<List<String>>>> _tableIndexes = new HashMap<>();
+
+    public void registerAssayResultsIndex(String providerName, List<String> columnsToIndex)
+    {
+        List<List<String>> indexes = _assayResultIndexes.get(providerName);
+        if (indexes == null)
+            indexes = new ArrayList<>();
+
+        indexes.add(columnsToIndex);
+
+        _assayResultIndexes.put(providerName, indexes);
+    }
+
+    public void registerTableIndex(String schemaName, String queryName, List<String> columnsToIndex)
+    {
+        Map<String, List<List<String>>> indexesForSchema = _tableIndexes.get(schemaName);
+        if (indexesForSchema == null)
+            indexesForSchema = new HashMap<>();
+
+        List<List<String>> indexes = indexesForSchema.get(queryName);
+        if (indexes == null)
+            indexes = new ArrayList<>();
+
+        indexes.add(columnsToIndex);
+
+        indexesForSchema.put(queryName, indexes);
+        _tableIndexes.put(schemaName, indexesForSchema);
+    }
+
+    public Map<String, List<List<String>>> getAssayIndexes()
+    {
+        return Collections.unmodifiableMap(_assayResultIndexes);
+    }
+
+    public Map<String, Map<String, List<List<String>>>> getTableIndexes()
+    {
+        return Collections.unmodifiableMap(_tableIndexes);
     }
 }
