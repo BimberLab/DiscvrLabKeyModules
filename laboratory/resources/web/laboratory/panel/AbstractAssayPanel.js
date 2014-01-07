@@ -34,12 +34,12 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
 
             domainFields[i].domain = domainFields[i].domain || domain;
 
-            if (LABKEY.ext.Ext4Helper.shouldShowInInsertView(domainFields[i])){
+            if (LABKEY.ext4.Util.shouldShowInInsertView(domainFields[i])){
                 var fieldObj = this.getFieldConfig(domainFields[i]);
                 if (!fieldObj)
                     continue;
 
-                var editor = LABKEY.ext.Ext4Helper.getFormEditorConfig(fieldObj);
+                var editor = LABKEY.ext4.Util.getFormEditorConfig(fieldObj);
 
                 if (fieldObj.getInitialValue){
                     try
@@ -116,7 +116,7 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
 
     getFieldConfig: function(fieldObj){
         if(!fieldObj.jsonType)
-            fieldObj.jsonType = LABKEY.ext.Ext4Helper.findJsonType(fieldObj);
+            fieldObj.jsonType = LABKEY.ext4.Util.findJsonType(fieldObj);
 
         //TODO: this needs to be somewhere more central
         fieldObj.fieldLabel = Ext4.util.Format.htmlEncode(fieldObj.label || fieldObj.caption || fieldObj.header || fieldObj.name);
@@ -290,7 +290,7 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
                     //provide a mechanism to promote specific fields to be set globally, rather than per result
                     for (var i=0;i<columns.length;i++){
                         var col = columns[i];
-                        var meta = LABKEY.ext.Ext4Helper.findFieldMetadata(grid.store, col.dataIndex);
+                        var meta = LABKEY.ext4.Util.findFieldMetadata(grid.store, col.dataIndex);
                         if(meta.setGlobally){
                             col.hidden = true;
                         }
@@ -608,7 +608,7 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
         columnNames = Ext4.unique(columnNames);
         Ext4.each(columnNames, function(fn){
             var field = meta.map[fn];
-            if (LABKEY.ext.Ext4Helper.shouldShowInInsertView(field) && !field.setGlobally){
+            if (LABKEY.ext4.Util.shouldShowInInsertView(field) && !field.setGlobally){
                 var col = LDK.StoreUtils.getColumnConfigForField(field);
                 columns.push(col);
             }

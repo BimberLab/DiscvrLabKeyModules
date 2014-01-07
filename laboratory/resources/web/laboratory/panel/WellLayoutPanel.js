@@ -144,7 +144,7 @@ Ext4.define('Laboratory.ext.WellLayoutPanel', {
     },
 
     getStoreId: function(){
-        return LABKEY.ext.Ext4Helper.getLookupStoreId({
+        return LABKEY.ext4.Util.getLookupStoreId({
             lookup: {
                 schemaName: 'laboratory',
                 queryName: 'well_layout'

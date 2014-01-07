@@ -73,11 +73,11 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
                     }
                     else if (itemType.equals(LaboratoryService.NavItemCategory.reports))
                     {
-                        items.add(new ReportItem(this, source.getSchemaName(), source.getQueryName(), source.getCategory()));
+                        items.add(new ReportItem(this, source.getSchemaName(), source.getQueryName(), source.getCategory(), source.getLabel()));
                     }
                     else
                     {
-                        items.add(new SimpleQueryNavItem(this, source.getSchemaName(), source.getQueryName(), source.getCategory()));
+                        items.add(new SimpleQueryNavItem(this, source.getSchemaName(), source.getQueryName(), source.getCategory(), source.getLabel()));
                     }
                 }
             }

@@ -138,7 +138,7 @@ Ext4.define('Laboratory.window.WellAssignmentWindow', {
     },
 
     getStoreId: function(suffix){
-        return LABKEY.ext.Ext4Helper.getLookupStoreId({
+        return LABKEY.ext4.Util.getLookupStoreId({
             lookup: {
                 schemaName: 'laboratory',
                 queryName: 'well_layout'

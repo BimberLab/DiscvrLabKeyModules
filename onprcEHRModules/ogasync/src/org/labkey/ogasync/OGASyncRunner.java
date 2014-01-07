@@ -163,6 +163,7 @@ public class OGASyncRunner implements Job
         fieldMap.put(INVESTIGATOR_EMPLOYYE_ID_NUMBER, "PI_EMP_NUM");
         fieldMap.put(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER, "PDFM_EMP_NUM");
         fieldMap.put("investigatorName", "PI");
+        fieldMap.put("category", null);  //special case handling below
 
         TableSelector ts = new TableSelector(sourceTable, new HashSet<>(fieldMap.values()));
         doMerge(u, c, targetTable, ts, "alias", fieldMap);
@@ -178,9 +179,9 @@ public class OGASyncRunner implements Job
         //fieldMap.put("grantType", "");
         //fieldMap.put("", "AWARD_NUMBER");
         fieldMap.put("agencyAwardNumber", "AGENCY_AWARD_NUMBER");
-        fieldMap.put(INVESTIGATOR_EMPLOYYE_ID_NUMBER, "PI_EMP_NUM");
+        //fieldMap.put(INVESTIGATOR_EMPLOYYE_ID_NUMBER, "PI_EMP_NUM");
         fieldMap.put(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER, "ADFM_EMP_NUM");
-        fieldMap.put("investigatorName", "PI");
+        //fieldMap.put("investigatorName", "PI");
         fieldMap.put("title", "PROJECT_TITLE");
         fieldMap.put(AWARD_STATUS, "AWARD_STATUS");
         fieldMap.put("projectDescription", "PROJECT_DESCRIPTION");
@@ -235,7 +236,7 @@ public class OGASyncRunner implements Job
 
         _log.info("truncating table");
         SqlExecutor ex = new SqlExecutor(targetTable.getSchema().getScope());
-        ex.execute(new SQLFragment("DELETE FROM " + targetTable.getSelectName() + " WHERE container = ?", c.getId()));
+        ex.execute(new SQLFragment("DELETE FROM " + targetTable.getSelectName() + " WHERE container = ?" + (targetTable.getName().equalsIgnoreCase("aliases") ? " AND (category IS NULL OR category = 'OGA')" : ""), c.getId()));
 
         try
         {
@@ -265,7 +266,7 @@ public class OGASyncRunner implements Job
 
                     for (String key : fieldMap.keySet())
                     {
-                        if (!columnNames.contains(fieldMap.get(key)))
+                        if (fieldMap.get(key) != null && !columnNames.contains(fieldMap.get(key)))
                         {
                             _log.error("Unknown column: " + fieldMap.get(key));
                         }
@@ -275,7 +276,11 @@ public class OGASyncRunner implements Job
                             {
                                 row.put("investigatorId", resolveInvestigatorId(c, u, rs.getString(fieldMap.get(key))));
                             }
-                            if (key.equals(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER))
+                            else if (targetTable.getName().equalsIgnoreCase("aliases") && "category".equals(key))
+                            {
+                                row.put("category", "OGA");
+                            }
+                            else if (key.equals(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER))
                             {
                                 row.put("fiscalAuthority", resolveFinancialAnalystId(c, u, rs.getString(fieldMap.get(key))));
                             }

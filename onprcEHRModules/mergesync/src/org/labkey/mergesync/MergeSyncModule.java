@@ -14,29 +14,28 @@
  * limitations under the License.
  */
 
-package org.labkey.sla;
+package org.labkey.mergesync;
 
 import org.jetbrains.annotations.NotNull;
-import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.ldk.ExtendedSimpleModule;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.ehr.EHRService;
+import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.resource.Resource;
 import org.labkey.api.settings.AdminConsole;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
-import org.labkey.sla.etl.ETL;
-import org.labkey.sla.etl.ETLAuditProvider;
-import org.labkey.sla.etl.ETLAuditViewFactory;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-public class SLAModule extends ExtendedSimpleModule
+public class MergeSyncModule extends DefaultModule
 {
-    public static final String NAME = "SLA";
-    public static final String CONTROLLER_NAME = "sla";
+    public static final String NAME = "MergeSync";
 
     @Override
     public String getName()
@@ -47,7 +46,7 @@ public class SLAModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 13.22;
+        return 0.01;
     }
 
     @Override
@@ -57,24 +56,30 @@ public class SLAModule extends ExtendedSimpleModule
     }
 
     @Override
+    protected Collection<WebPartFactory> createWebPartFactories()
+    {
+        return Collections.emptyList();
+    }
+
+    @Override
     protected void init()
     {
-        addController(CONTROLLER_NAME, SLAController.class);
+        addController(MergeSyncController.NAME, MergeSyncController.class);
     }
 
     @Override
-    protected void doStartupAfterSpringConfig(ModuleContext moduleContext)
+    public void doStartup(ModuleContext moduleContext)
     {
-        ETL.init(1);
-        AuditLogService.get().addAuditViewFactory(ETLAuditViewFactory.getInstance());
-        AuditLogService.registerAuditType(new ETLAuditProvider());
+        Resource r = getModuleResource("/scripts/mergesync/mergesync.js");
+        assert r != null;
+        EHRService.get().registerTriggerScript(this, r);
+        DetailsURL details = DetailsURL.fromString("/mergeSync/begin.view", ContainerManager.getSharedContainer());
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "merge sync admin", details.getActionURL());
 
-        DetailsURL details = DetailsURL.fromString("/sla/etlAdmin.view", ContainerManager.getSharedContainer());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "sla etl admin", details.getActionURL());
+        MergeSyncManager.get().init();
     }
 
     @Override
-    @NotNull
     public Collection<String> getSummary(Container c)
     {
         return Collections.emptyList();
@@ -84,6 +89,6 @@ public class SLAModule extends ExtendedSimpleModule
     @NotNull
     public Set<String> getSchemaNames()
     {
-        return Collections.singleton(SLASchema.NAME);
+        return Collections.singleton(MergeSyncSchema.NAME);
     }
 }

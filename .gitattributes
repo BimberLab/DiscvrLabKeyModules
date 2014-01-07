@@ -302,6 +302,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.269-12.270.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.270-12.271.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.271-12.272.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.272-12.273.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -350,6 +351,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.269-12.270.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.270-12.271.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.271-12.272.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.272-12.273.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -796,6 +798,20 @@ onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreManager.jav
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreModule.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/notification/GeneticsCoreNotification.java -text
 onprcEHRModules/README.txt -text
+onprcEHRModules/mergesync/MergeSync.iml -text
+onprcEHRModules/mergesync/build.xml -text
+onprcEHRModules/mergesync/module.properties -text
+onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.00-0.01.sql -text
+onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.00-0.01.sql -text
+onprcEHRModules/mergesync/resources/schemas/mergesync.xml -text
+onprcEHRModules/mergesync/resources/scripts/mergesync/mergesync.js -text
+onprcEHRModules/mergesync/resources/views/begin.html -text
+onprcEHRModules/mergesync/resources/views/begin.view.xml -text
+onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncController.java -text
+onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncManager.java -text
+onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncModule.java -text
+onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncRunner.java -text
+onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncSchema.java -text
 onprcEHRModules/ogasync/build.xml -text
 onprcEHRModules/ogasync/module.properties -text
 onprcEHRModules/ogasync/ogaSync.iml -text
@@ -869,7 +885,9 @@ onprcEHRModules/sla/resources/etl/sla/vendors.sql -text
 onprcEHRModules/sla/resources/folderTypes/SLA.folderType.xml -text
 onprcEHRModules/sla/resources/module.xml -text
 onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-0.00-13.21.sql -text
+onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.21-13.22.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-0.00-13.21.sql -text
+onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-13.21-13.22.sql -text
 onprcEHRModules/sla/resources/schemas/sla.xml -text
 onprcEHRModules/sla/resources/views/begin.html -text
 onprcEHRModules/sla/resources/views/begin.view.xml -text

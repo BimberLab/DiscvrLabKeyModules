@@ -161,6 +161,10 @@ public class GeneticsCoreNotification implements Notification
         filter.addCondition(FieldKey.fromString("category"), "Genetics", CompareType.EQUAL);
         filter.addCondition(FieldKey.fromString("value"), flag, CompareType.EQUAL);
 
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.MONTH, -6);
+        filter.addCondition(FieldKey.fromString("date"), cal.getTime(), CompareType.DATE_LTE);
+
         TableInfo ti = QueryService.get().getUserSchema(u, c, "study").getTable("Animal Record Flags");
         TableSelector ts = new TableSelector(ti, PageFlowUtil.set("Id"), filter, null);
         long count = ts.getRowCount();
@@ -169,7 +173,7 @@ public class GeneticsCoreNotification implements Notification
             ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, "study", "processingGeneticsBloodDraws");
             url.addParameter("query.flags~contains", flag);
 
-            msg.append("<b>WARNING: There are " + count + " animals actively flagged as '" + flag + "'.  If these animals have been drawn, this flag should be removed to avoid confusion.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view these animals</a><hr>");
+            msg.append("<b>WARNING: There are " + count + " animals actively flagged as '" + flag + "', which have been flagged for more than 6 months.  If these animals have been drawn, this flag should be removed to avoid confusion.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view all animals with this flag</a><hr>");
         }
     }
 

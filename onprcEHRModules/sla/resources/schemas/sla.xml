@@ -17,22 +17,29 @@
 
  -->
 <tables xmlns="http://labkey.org/data/xml">
-    <!--The tables we probably need are: census, orders, vendors, purchases, and some other reference tables-->
     <table tableName="census" tableDbType="TABLE">
         <tableTitle>SLA Census</tableTitle>
         <columns>
             <column columnName="rowid" />
             <column columnName="project" />
-            <column columnName="countDate" />
-            <column columnName="investigatorId" />
+            <column columnName="date" />
+            <column columnName="investigatorid">
+                <fk>
+                    <fkDbSchema>onprc_ehr</fkDbSchema>
+                    <fkTable>investigators</fkTable>
+                    <fkColumnName>objectid</fkColumnName>
+                </fk>
+            </column>
             <column columnName="room" />
             <column columnName="species" />
-            <column columnName="cageType" />
-            <column columnName="cageSize" />
-            <column columnName="countType" />
-            <column columnName="animalCount" />
-            <column columnName="cageCount" />
-            <column columnName="DLAMInventory" />
+            <column columnName="cagetype" />
+            <column columnName="cagesize" />
+            <column columnName="counttype" />
+            <column columnName="animalcount" />
+            <column columnName="cagecount" />
+            <column columnName="dlaminventory">
+                <columnTitle>DLAM Inventory</columnTitle>
+            </column>
             <column columnName="objectid" />
             <column columnName="container" />
             <column columnName="createdby" />
@@ -59,30 +66,32 @@
     <table tableName="purchase" tableDbType="TABLE">
         <tableTitle>SLA Purchases</tableTitle>
         <columns>
-            <column columnName="rowId" />
+            <column columnName="rowid" />
             <column columnName="project" />
-            <column columnName="userId" />
-            <!--<column columnName="priInvPhone" />-->
-            <!--<column columnName="PriInvEmail" />-->
-            <column columnName="RequestorID" />
-            <column columnName="VendorId" />
-            <!--<column columnName="Username" />-->
             <column columnName="account" />
-            <column columnName="hazardousAgentsUsed" />
-            <column columnName="hazardsList" />
-            <column columnName="DOBRequired" />
-            <column columnName="additionalVendorInfo" />
-            <column columnName="otherVendor" />
-            <column columnName="vendorContact" />
-            <column columnName="confirmationNum" />
-            <column columnName="housingConfirmed" />
-            <column columnName="IACUCConfirmed" />
-            <column columnName="requestDate" />
-            <column columnName="orderDate" />
-            <column columnName="adminComments" />
-            <column columnName="DARComments" />
-            <column columnName="orderedBy" />
-            <!--<column columnName="projFundingSource" />-->
+            <column columnName="requestorid">
+                <fk>
+                    <fkDbSchema>sla</fkDbSchema>
+                    <fkTable>requestors</fkTable>
+                    <fkColumnName>objectid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="vendorid">
+                <fk>
+                    <fkDbSchema>sla</fkDbSchema>
+                    <fkTable>vendors</fkTable>
+                    <fkColumnName>objectid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="hazardslist" />
+            <column columnName="dobrequired" />
+            <column columnName="comments" />
+            <column columnName="confirmationnum" />
+            <column columnName="housingconfirmed" />
+            <column columnName="iacucconfirmed" />
+            <column columnName="requestdate" />
+            <column columnName="orderdate" />
+            <column columnName="orderedby" />
 
             <column columnName="objectid" />
             <column columnName="container" />
@@ -97,27 +106,34 @@
         <tableTitle>SLA Purchase Details</tableTitle>
         <columns>
             <column columnName="rowid" />
-            <column columnName="purchaseId" />
+            <column columnName="purchaseid">
+                <fk>
+                    <fkDbSchema>sla</fkDbSchema>
+                    <fkTable>purchases</fkTable>
+                    <fkColumnName>objectid</fkColumnName>
+                </fk>
+            </column>
             <column columnName="species" />
             <column columnName="age" />
             <column columnName="weight" />
+            <column columnName="weight_units" />
             <column columnName="gestation" />
             <column columnName="gender" />
             <column columnName="strain" />
             <column columnName="cageid" />
-            <column columnName="numAnimalsOrdered" />
-            <column columnName="numAnimalsReceived" />
-            <column columnName="boxesQuantity" />
-            <column columnName="costPerAnimal" />
-            <column columnName="shippingCost" />
-            <column columnName="totalCost" />
-            <column columnName="housingInstructions" />
-            <column columnName="requestedArrivalDate" />
-            <column columnName="expectedArrivalDate" />
-            <column columnName="receivedDate" />
-            <column columnName="receivedBy" />
-            <column columnName="cancelledBy" />
-            <column columnName="dateCancelled" />
+            <column columnName="animalsordered" />
+            <column columnName="animalsreceived" />
+            <column columnName="boxesquantity" />
+            <column columnName="costperanimal" />
+            <column columnName="shippingcost" />
+            <column columnName="totalcost" />
+            <column columnName="housinginstructions" />
+            <column columnName="requestedarrivaldate" />
+            <column columnName="expectedarrivaldate" />
+            <column columnName="receiveddate" />
+            <column columnName="receivedby" />
+            <column columnName="cancelledby" />
+            <column columnName="datecancelled" />
 
             <column columnName="objectid" />
             <column columnName="container" />
@@ -129,49 +145,30 @@
     </table>
     <table tableName="vendors" tableDbType="TABLE">
         <columns>
-            <column columnName="RowID" />
-            <column columnName="SLAVendorName" />
-            <column columnName="Phone1" />
-            <column columnName="Phone2" />
-            <column columnName="FundingSourceRequired" />
-            <column columnName="Comments" />
+            <column columnName="rowid" />
+            <column columnName="name" />
+            <column columnName="phone1" />
+            <column columnName="phone2" />
+            <column columnName="fundingsourcerequired" />
+            <column columnName="comments" />
 
-            <column columnName="objectID" />
-            <column columnName="Container" />
-            <column columnName="CreatedBy" />
-            <column columnName="Created" />
-            <column columnName="ModifiedBy" />
-            <column columnName="Modified" />
+            <column columnName="objectid" />
+            <column columnName="container" />
+            <column columnName="createdby" />
+            <column columnName="created" />
+            <column columnName="modifiedby" />
+            <column columnName="modified" />
         </columns>
     </table>
-
-    <!--Why isnt this the same a srequestors?-->
-    <!--<table tableName="emailList" tableDbType="TABLE">-->
-    <!--<columns>-->
-    <!--<column columnName="RowID" />-->
-    <!--<column columnName="Name" />-->
-    <!--<column columnName="Email" />-->
-    <!--<column columnName="PrimaryNotifier" />-->
-
-    <!--<column columnName="objectID" />-->
-    <!--<column columnName="Container" />-->
-    <!--<column columnName="CreatedBy" />-->
-    <!--<column columnName="Created" />-->
-    <!--<column columnName="ModifiedBy" />-->
-    <!--<column columnName="Modified" />-->
-    <!--</columns>-->
-    <!--</table>-->
     <table tableName="requestors" tableDbType="TABLE">
         <columns>
-            <column columnName="rowId" />
-            <column columnName="requestorId" />
-            <column columnName="lastName" />
-            <column columnName="firstName" />
+            <column columnName="rowid" />
+            <column columnName="lastname" />
+            <column columnName="firstname" />
             <column columnName="initials" />
-            <column columnName="userid" />
             <column columnName="phone" />
             <column columnName="email" />
-
+            <column columnName="userid" />
             <column columnName="objectid" />
             <column columnName="container" />
             <column columnName="createdby" />

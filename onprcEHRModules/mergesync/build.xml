@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="Standalone Build" default="build_module" basedir="../../../server">
+    <dirname property="moduleDir" file="${ant.file}"/>
+    <property name="module.name" value="mergesync" />
+
+    <target name="init">
+        <property name="build.dir" value="${basedir}${file.separator}..${file.separator}build" />
+        <property name="jsdoc.root" value="${labkey.root}/tools/jsdoc-toolkit" />
+    </target>
+
+    <target name="build" depends="build_module" />
+    <target name="build_module"
+            depends="init"
+            description="Builds local module only.  Deploys local module into LabKey installation.">
+        <ant antfile="${basedir}/build.xml"
+             target="sub_build_module"
+             inheritall="true">
+        </ant>
+    </target>
+</project>

@@ -18,11 +18,27 @@
                             <fkColumnName>objectid</fkColumnName>
                         </fk>
                     </column>
+                    <column columnName="debitedaccount">
+                        <fk>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
+                            <fkTable>aliases</fkTable>
+                            <fkColumnName>alias</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
+                    </column>
+                    <column columnName="creditedaccount">
+                        <fk>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
+                            <fkTable>aliases</fkTable>
+                            <fkColumnName>alias</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
+                    </column>
                     <column columnName="invoiceDate">
                         <isHidden>true</isHidden>
                     </column>
                     <column columnName="transactionNumber">
-                        <isHidden>true</isHidden>
+                        <isHidden>false</isHidden>
                     </column>
                     <column columnName="chargeId">
                         <isHidden>true</isHidden>

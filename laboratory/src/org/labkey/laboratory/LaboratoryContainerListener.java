@@ -53,7 +53,7 @@ public class LaboratoryContainerListener extends SimpleModuleContainerListener
         }
 
         //attempt to populate default values on load
-        if (!c.isWorkbook() && c.getActiveModules().contains(ModuleLoader.getInstance().getModule(LaboratoryModule.class)))
+        if (user != null && !c.isWorkbook() && c.getActiveModules().contains(ModuleLoader.getInstance().getModule(LaboratoryModule.class)))
         {
             try
             {

@@ -33,7 +33,7 @@ CREATE TABLE sla.census
     AnimalCount INTEGER,
     CageCount INTEGER,
     DLAMInventory INTEGER,
-    objectID ENTITYID,
+    objectid ENTITYID,
 
     Container ENTITYID NOT NULL,
     CreatedBy USERID,
