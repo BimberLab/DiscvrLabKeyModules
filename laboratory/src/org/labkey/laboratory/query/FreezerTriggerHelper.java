@@ -56,7 +56,7 @@ public class FreezerTriggerHelper
         if (_table == null)
             throw new IllegalArgumentException("Unable to find table laboratory.samples");
 
-        assert MemTracker.put(this);
+        MemTracker.getInstance().put(this);
     }
 
     public static FreezerTriggerHelper create(String containerId, int userId)

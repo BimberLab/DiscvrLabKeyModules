@@ -44,7 +44,7 @@ public class SequenceModel
 
     public SequenceModel()
     {
-        assert MemTracker.put(this);
+        MemTracker.getInstance().put(this);
     }
 
     public int getRowId()
