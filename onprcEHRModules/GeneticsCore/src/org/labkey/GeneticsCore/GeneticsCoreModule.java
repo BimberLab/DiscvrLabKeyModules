@@ -26,7 +26,7 @@ import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.notification.NotificationService;
 import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleContext;
-import org.labkey.api.security.User;
+import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
 
 import java.util.Collection;
@@ -74,6 +74,7 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
         addController(CONTROLLER_NAME, GeneticsCoreController.class);
     }
 
+    @NotNull
     @Override
     public Collection<String> getSummary(Container c)
     {
@@ -94,11 +95,13 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
         return Collections.emptySet();
     }
 
+    @NotNull
     @Override
-    public JSONObject getPageContextJson(User u, Container c)
+    public JSONObject getPageContextJson(ViewContext context)
     {
-        JSONObject json = super.getPageContextJson(u, c);
-        Map<String, Object> map = new HashMap<String, Object>();
+        JSONObject json = super.getPageContextJson(context);
+
+        Map<String, Object> map = new HashMap<>();
         map.put("DNA_DRAW_COLLECTED", GeneticsCoreManager.DNA_DRAW_COLLECTED);
         map.put("DNA_DRAW_NEEDED", GeneticsCoreManager.DNA_DRAW_NEEDED);
         map.put("PARENTAGE_DRAW_COLLECTED", GeneticsCoreManager.PARENTAGE_DRAW_COLLECTED);
