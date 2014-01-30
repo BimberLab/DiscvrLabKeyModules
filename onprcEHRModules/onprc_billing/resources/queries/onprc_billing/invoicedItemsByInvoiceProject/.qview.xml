@@ -1,0 +1,23 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="invoiceId"/>
+        <column name="project"/>
+        <column name="project/protocol"/>
+        <column name="project/investigatorid"/>
+        <column name="project/investigatorid/division"/>
+        <column name="project/protocol/investigatorid">
+            <properties>
+                <property name="columnTitle" value="Protocol Investigator"/>
+            </properties>
+        </column>
+        <column name="numItems"/>
+        <column name="total"/>
+    </columns>
+    <sorts>
+        <sort column="invoiceId/rowid" descending="true"/>
+        <sort column="total" descending="true"/>
+    </sorts>
+    <aggregates>
+        <aggregate column="total" type="SUM"/>
+    </aggregates>
+</customView>

@@ -95,6 +95,6 @@ LEFT JOIN (
     a.Id,
     count(*) as total
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.assignment a
-  WHERE a.isActive = true and a.project.name = '0492-02'
+  WHERE a.isActive = true and a.project.name = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.U42_PROJECT')
   GROUP BY a.Id
 ) a ON (a.Id = d.Id)

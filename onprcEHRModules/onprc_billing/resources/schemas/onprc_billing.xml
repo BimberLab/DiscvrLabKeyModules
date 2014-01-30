@@ -1,0 +1,1047 @@
+<ns:tables xmlns:ns="http://labkey.org/data/xml">
+    <ns:table tableName="chargeRates" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Charge Rates</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:columns>
+            <ns:column columnName="rowId"/>
+            <ns:column columnName="chargeId"/>
+            <ns:column columnName="unitCost">
+                <ns:columnTitle>Unit Cost</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="subsidy">
+                <ns:columnTitle>Base Grant Subsidy (%)</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="startDate">
+                <ns:columnTitle>Start Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="endDate">
+                <ns:columnTitle>End Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="clinicalFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>Clinical Fee Structure</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowId"/>
+            <ns:column columnName="procedureId">
+                <ns:columnTitle>Procedure Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="snomed">
+                <ns:columnTitle>SNOMED</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="active">
+                <ns:columnTitle>Is Active?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="objectid"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="chargeRateExemptions" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>Exemptions to Default Rates</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowId"/>
+            <ns:column columnName="project"/>
+            <ns:column columnName="chargeId"/>
+            <ns:column columnName="unitCost">
+                <ns:columnTitle>Unit Cost</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="remark">
+                <ns:columnTitle>Remark</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="startDate">
+                <ns:columnTitle>Start Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="endDate">
+                <ns:columnTitle>End Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="chargeableItems" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>Chargeable Items</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="name">
+                <ns:columnTitle>Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="shortName">
+                <ns:columnTitle>Short Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="category">
+                <ns:columnTitle>Category</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="comment">
+                <ns:columnTitle>Comment</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="itemCode">
+                <ns:columnTitle>Item Code</ns:columnTitle>
+                <ns:description>A code used to refer to identify this item, which is primarily used when exporting or communicating with external billing systems</ns:description>
+            </ns:column>
+            <ns:column columnName="departmentCode">
+                <ns:columnTitle>Department Code</ns:columnTitle>
+                <ns:description>A code used to categorize these items by department, primarily used when exporting or communicating with external billing systems.  Similar to itemCode</ns:description>
+            </ns:column>
+                <ns:column columnName="allowscustomunitcost">
+                <ns:columnTitle>Allow Custom Unit Cost?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="active">
+                <ns:columnTitle>Is Active?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="invoicedItems" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>Invoiced Items</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowId">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:isKeyField>false</ns:isKeyField>
+            </ns:column>
+            <ns:column columnName="invoiceId">
+                <ns:columnTitle>Invoice</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>invoiceRuns</ns:fkTable>
+                    <ns:fkColumnName>objectid</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>rowid</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="transactionNumber">
+                <ns:columnTitle>Transaction Number</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="invoiceDate">
+                <ns:columnTitle>Invoice Date</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Id">
+                <ns:conceptURI>http://cpas.labkey.com/Study#ParticipantId</ns:conceptURI>
+            </ns:column>
+            <ns:column columnName="date">
+                <ns:columnTitle>Transaction Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="item">
+                <ns:columnTitle>Item</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="itemCode">
+                <ns:columnTitle>Item Code</ns:columnTitle>
+                <ns:description>A code used to refer to identify this item, which is primarily used when exporting or communicating with external billing systems</ns:description>
+            </ns:column>
+            <ns:column columnName="category">
+                <ns:columnTitle>Category</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="servicecenter">
+                <ns:columnTitle>Service Center</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="project">
+                <ns:columnTitle>Project</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="debitedaccount">
+                <ns:columnTitle>Debited Alias</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="creditedaccount">
+                <ns:columnTitle>Credited Alias</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="faid">
+                <ns:columnTitle>FAID</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>fiscalAuthorities</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>lastName</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="investigatorId">
+
+            </ns:column>
+            <ns:column columnName="lastName">
+                <ns:columnTitle>Last Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="firstName">
+                <ns:columnTitle>First Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="department">
+                <ns:columnTitle>Department</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="mailcode">
+                <ns:columnTitle>Mail Code</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="contactPhone">
+                <ns:columnTitle>Contact Phone</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="chargeId">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="cageId">
+                <ns:columnTitle>Cage Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="objectid">
+                <ns:columnTitle>Key</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:isKeyField>true</ns:isKeyField>
+                <ns:shownInDetailsView>false</ns:shownInDetailsView>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+            </ns:column>
+            <ns:column columnName="quantity">
+                <ns:columnTitle>Quantity</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="unitCost">
+                <ns:columnTitle>Unit Cost</ns:columnTitle>
+                <ns:formatString>$###,##0.00</ns:formatString>
+            </ns:column>
+            <ns:column columnName="totalcost">
+                <ns:columnTitle>Total Cost</ns:columnTitle>
+                <ns:formatString>$###,##0.00</ns:formatString>
+            </ns:column>
+            <ns:column columnName="credit">
+                <ns:columnTitle>Is Credit?</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="rateId">
+                <ns:columnTitle>Rate Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="exemptionId">
+                <ns:columnTitle>Exception Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="creditaccountid">
+                <ns:columnTitle>Credit Account Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="comment">
+                <ns:columnTitle>Comment</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="transactionType">
+                <ns:columnTitle>Transaction Type</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="sourceRecord">
+                <ns:columnTitle>Source Record</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="sourceRecord2">
+                <ns:columnTitle>Source Record 2</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="issueId">
+                <ns:columnTitle>Issue #</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="chargeType">
+                <ns:columnTitle>Charge Type</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="billingId">
+                <ns:columnTitle>Billing Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="invoiceNumber">
+                <ns:columnTitle>Invoice Number</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:includeScript>ehr.context</ns:includeScript>
+            <ns:includeScript>/onprc_billing/window/ReverseChargeWindow.js</ns:includeScript>
+            <ns:item insertPosition="end" text="More Actions" permissionClass="org.labkey.onprc_billing.security.ONPRCBillingAdminPermission">
+                <ns:item text="Reverse/Adjust Selected Charges">
+                    <ns:onClick>ONPRC_Billing.window.ReverseChargeWindow.buttonHandler(dataRegionName);</ns:onClick>
+                </ns:item>
+            </ns:item>
+        </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="creditAccount" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>Aliases Receiving Credits For Each Charge</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowId">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="chargeId"/>
+            <ns:column columnName="account"/>
+            <ns:column columnName="startDate">
+                <ns:columnTitle>Start Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="endDate">
+                <ns:columnTitle>End Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="miscCharges" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>Other Charges</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:columnTitle>Id</ns:columnTitle>
+                <ns:facetingBehavior>ALWAYS_OFF</ns:facetingBehavior>
+            </ns:column>
+            <ns:column columnName="date">
+                <ns:columnTitle>Date</ns:columnTitle>
+                <ns:formatString>yyyy-MM-dd</ns:formatString>
+            </ns:column>
+            <ns:column columnName="project"/>
+            <ns:column columnName="account">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="chargeId"/>
+            <ns:column columnName="item">
+                <ns:columnTitle>Item</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="quantity">
+                <ns:columnTitle>Quantity</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="unitCost">
+                <ns:columnTitle>Unit Cost</ns:columnTitle>
+                <ns:formatString>$###,##0.00</ns:formatString>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="totalcost">
+                <ns:columnTitle>Total Cost</ns:columnTitle>
+                <ns:formatString>$###,##0.00</ns:formatString>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="comment">
+                <ns:columnTitle>Comment</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="billingDate">
+                <ns:columnTitle>Date Charge Entered</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="category">
+                <ns:columnTitle>Category</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="invoiceId">
+                <ns:columnTitle>Invoice</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>invoiceRuns</ns:fkTable>
+                    <ns:fkColumnName>objectid</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>rowid</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="creditedaccount">
+                <ns:columnTitle>Credit Alias</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>aliases</ns:fkTable>
+                    <ns:fkColumnName>aliases</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>aliases</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="debitedaccount">
+                <ns:columnTitle>Debit Alias</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>aliases</ns:fkTable>
+                    <ns:fkColumnName>aliases</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>aliases</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="sourceInvoicedItem">
+                <ns:columnTitle>Source Record</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>invoicedItems</ns:fkTable>
+                    <ns:fkColumnName>objectid</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>rowid</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="chargeType">
+                <ns:columnTitle>Charge Type</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="issueId">
+                <ns:columnTitle>Issue #</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="invoicedItemId">
+                <ns:columnTitle>Invoiced Item</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>invoicedItems</ns:fkTable>
+                    <ns:fkColumnName>objectid</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>rowid</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="QCState">
+                <ns:columnTitle>Status</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="taskid">
+                <ns:columnTitle>Task Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="requestid">
+                <ns:columnTitle>Request Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="objectid"/>
+            <ns:column columnName="container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="parentid">
+                <ns:isHidden>true</ns:isHidden>
+                <ns:columnTitle>Encounter Id</ns:columnTitle>
+                <ns:facetingBehavior>ALWAYS_OFF</ns:facetingBehavior>
+            </ns:column>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="perDiemFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Per Diem Fee Structure</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:columns>
+            <ns:column columnName="rowId">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="chargeId"/>
+            <ns:column columnName="housingType">
+                <ns:columnTitle>Housing Type</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
+                    <ns:fkTable>housingTypes</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>value</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="housingDefinition">
+                <ns:columnTitle>Housing Definition</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
+                    <ns:fkTable>housingDefinition</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>value</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="tier">
+                <ns:columnTitle>Tier</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="active">
+                <ns:columnTitle>Is Active?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="objectid"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="slaPerDiemFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>SLA Per Diem Fee Structure</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="chargeid"/>
+            <ns:column columnName="cagetype">
+                <ns:columnTitle>Cage Type</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>sla</ns:fkDbSchema>
+                    <ns:fkTable>cageTypes</ns:fkTable>
+                    <ns:fkColumnName>value</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>value</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="cagesize">
+                <ns:columnTitle>Cage Size</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>sla</ns:fkDbSchema>
+                    <ns:fkTable>cageSize</ns:fkTable>
+                    <ns:fkColumnName>value</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>value</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="species">
+                <ns:columnTitle>Species</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="active">
+                <ns:columnTitle>Is Active?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="objectid"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="invoiceRuns" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>Billing Periods</ns:tableTitle>
+        <ns:tableUrl>/onprc_billing/invoiceRunDetails.view?invoiceRunId=${objectid}</ns:tableUrl>
+        <ns:columns>
+            <ns:column columnName="rowId">
+                <ns:columnTitle>Invoice Id</ns:columnTitle>
+                <!--<ns:isHidden>true</ns:isHidden>-->
+            </ns:column>
+            <ns:column columnName="runDate">
+                <ns:columnTitle>Run Date</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="billingPeriodStart">
+                <ns:columnTitle>Billing Period Start</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="billingPeriodEnd">
+                <ns:columnTitle>Billing Period End</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="invoiceNumber">
+                <ns:columnTitle>Invoice #</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="dataSources">
+                <ns:columnTitle>Data Sources</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="comment">
+                <ns:columnTitle>Comment</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="status">
+                <ns:columnTitle>Status</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+            </ns:column>
+            <ns:column columnName="objectid">
+                <ns:isHidden>true</ns:isHidden>
+                <ns:shownInDetailsView>false</ns:shownInDetailsView>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+            </ns:column>
+            <ns:column columnName="container">
+                <!--<ns:isHidden>true</ns:isHidden>-->
+            </ns:column>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="false">
+            <ns:includeScript>/onprc_billing/BillingUtils.js</ns:includeScript>
+            <ns:item text="Views">
+                <ns:originalText>Views</ns:originalText>
+            </ns:item>
+            <ns:item text="Delete" permission="DELETE" requiresSelection="true">
+                <ns:onClick>ONPRC.BillingUtils.deleteInvoiceRuns(dataRegionName);</ns:onClick>
+            </ns:item>
+            <ns:item text="Export">
+                <ns:originalText>Export</ns:originalText>
+            </ns:item>
+            <ns:item text="Page Size">
+                <ns:originalText>Page Size</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="leaseFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>Lease Fee Definition</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowId">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="minAge">
+                <ns:columnTitle>Min Age</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="maxAge">
+                <ns:columnTitle>Max Age</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="assignCondition">
+                <ns:columnTitle>Assign Condition</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="releaseCondition">
+                <ns:columnTitle>Release Condition</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="chargeId"/>
+            <ns:column columnName="active">
+                <ns:columnTitle>Is Active?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="objectid"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="fiscalAuthorities" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Financial Analysts</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="lastName">
+                <ns:columnTitle>Last Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="firstName">
+                <ns:columnTitle>First Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="faid">
+                <ns:columnTitle>FAID</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="position">
+                <ns:columnTitle>Position</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="address">
+                <ns:columnTitle>Address</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="city">
+                <ns:columnTitle>City</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="state">
+                <ns:columnTitle>State</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="country">
+                <ns:columnTitle>County</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="zip">
+                <ns:columnTitle>ZIP</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="phoneNumber">
+                <ns:columnTitle>Phone Number</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="employeeid">
+                <ns:columnTitle>Employee Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="active">
+                <ns:columnTitle>Is Active?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="objectid"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="grants" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Grants</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableUrl>/query/recordDetails.view?schemaName=onprc_billing&amp;query.queryName=grants&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="grantNumber">
+                <ns:columnTitle>Grant</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="agencyAwardNumber">
+                <ns:columnTitle>Agency Award Number</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="investigatorId">
+                <ns:columnTitle>Investigator</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="investigatorName">
+                <ns:columnTitle>Investigator Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="title">
+                <ns:columnTitle>Title</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="startDate">
+                <ns:columnTitle>Start Date</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="endDate">
+                <ns:columnTitle>End Date</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="fiscalAuthority">
+                <ns:columnTitle>Fiscal Authority</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="applicationType">
+                <ns:columnTitle>Application Type</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="activityType">
+                <ns:columnTitle>Activity Type</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="fundingAgency">
+                <ns:columnTitle>Funding Agency</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="grantType">
+                <ns:columnTitle>Grant Type</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="awardStatus">
+                <ns:columnTitle>Award Status</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="budgetStartDate">
+                <ns:columnTitle>Budget Start Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="budgetEndDate">
+                <ns:columnTitle>Budget End Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="comment">
+                <ns:columnTitle>Comment</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="ogaAwardId">
+                <ns:columnTitle>OGA Award Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="procedureFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Procedure Fee Structure</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="procedureId">
+                <ns:columnTitle>Procedure Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="chargetype">
+                <ns:columnTitle>Charge Type</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
+                    <ns:fkTable>procedureChargeType</ns:fkTable>
+                    <ns:fkColumnName>value</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="chargeId">
+                <ns:columnTitle>Charge Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="active">
+                <ns:columnTitle>Is Active?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="objectid"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="projectAccountHistory" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Project Alias History</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="project"/>
+            <ns:column columnName="account"/>
+            <ns:column columnName="startdate">
+                <ns:columnTitle>Start Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="enddate">
+                <ns:columnTitle>End Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="objectid"/>
+            <ns:column columnName="createdby"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedby"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="grantProjects" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Grant Projects</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableUrl>/query/recordDetails.view?schemaName=onprc_billing&amp;query.queryName=grantProjects&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
+        <ns:columns>
+            <ns:column columnName="rowid"/>
+            <ns:column columnName="projectNumber">
+                <ns:columnTitle>OGA Project Number</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="grantNumber">
+                <ns:columnTitle>OGA Grant Number</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="fundingAgency">
+                <ns:columnTitle>Funding Agency</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="grantType">
+                <ns:columnTitle>Grant Type</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="agencyAwardNumber">
+                <ns:columnTitle>Agency Award Number</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="investigatorId">
+                <ns:columnTitle>Investigator</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="investigatorName">
+                <ns:columnTitle>Investigator Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="projectTitle">
+                <ns:columnTitle>Project Title</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="projectDescription">
+                <ns:columnTitle>Project Description</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="organization">
+                <ns:columnTitle>Organization</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="protocolNumber">
+                <ns:columnTitle>IACUC Protocol Number</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="projectStatus">
+                <ns:columnTitle>Project Status</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="ogaProjectId">
+                <ns:columnTitle>OGA Project Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="budgetStartDate">
+                <ns:columnTitle>Current Budget Start Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="budgetEndDate">
+                <ns:columnTitle>Current Budget End Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="fiscalAuthority">
+                <ns:columnTitle>Fiscal Authority</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="comment">
+                <ns:columnTitle>Comment</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="aliases" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Aliases</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableUrl>/query/recordDetails.view?schemaName=onprc_billing&amp;query.queryName=aliases&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
+        <ns:columns>
+            <ns:column columnName="rowid"/>
+            <ns:column columnName="alias">
+                <ns:columnTitle>Alias</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="category">
+                <ns:columnTitle>Category</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="aliasEnabled">
+                <ns:columnTitle>Alias Enabled</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="projectNumber">
+                <ns:columnTitle>OGA Project Number</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="grantNumber">
+                <ns:columnTitle>OGA Grant Number</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="agencyAwardNumber">
+                <ns:columnTitle>Agency Award Number</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="investigatorId">
+                <ns:columnTitle>Investigator</ns:columnTitle>
+                <ns:shownInInsertView>true</ns:shownInInsertView>
+            </ns:column>
+            <ns:column columnName="investigatorName">
+                <ns:columnTitle>Investigator Name</ns:columnTitle>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+            </ns:column>
+            <ns:column columnName="fiscalAuthority">
+                <ns:columnTitle>Fiscal Authority</ns:columnTitle>
+                <ns:shownInInsertView>true</ns:shownInInsertView>
+            </ns:column>
+            <ns:column columnName="fiscalAuthorityName">
+                <ns:columnTitle>Fiscal Authority Name</ns:columnTitle>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+            </ns:column>
+            <ns:column columnName="faRate">
+                <ns:columnTitle>F&amp;A Rate</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="faSchedule">
+                <ns:columnTitle>F&amp;A Schedule</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="iacucFundingSources" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Approved IACUC Funding Sources</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:columns>
+            <ns:column columnName="rowid"/>
+            <ns:column columnName="protocol">
+                <ns:columnTitle>IACUC Protocol</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="grantNumber">
+                <ns:columnTitle>OGA Grant Number</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="projectNumber">
+                <ns:columnTitle>OGA Project Number</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="startDate">
+                <ns:columnTitle>Start Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="endDate">
+                <ns:columnTitle>End Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="labworkFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Labwork Fee Structure</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="servicename">
+                <ns:columnTitle>Service/Panel Name</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
+                    <ns:fkTable>labwork_services</ns:fkTable>
+                    <ns:fkColumnName>servicename</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="chargetype">
+                <ns:columnTitle>Charge Type</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
+                    <ns:fkTable>procedureChargeType</ns:fkTable>
+                    <ns:fkColumnName>value</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="chargeId">
+                <ns:columnTitle>Charge Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="active">
+                <ns:columnTitle>Is Active?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="objectid"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="dataAccess" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Billing Data Read Access</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:pkColumnName>rowid</ns:pkColumnName>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+                <ns:isAutoInc>true</ns:isAutoInc>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:isUserEditable>false</ns:isUserEditable>
+            </ns:column>
+            <ns:column columnName="userid">
+                <ns:columnTitle>User With Access</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>UsersAndGroups</ns:fkTable>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="investigatorid">
+                <ns:columnTitle>Investigator Id</ns:columnTitle>
+                <ns:description>If a value is entered, the user will be given read access to any billing records from this investigator</ns:description>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_ehr</ns:fkDbSchema>
+                    <ns:fkTable>investigators</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="project">
+                <ns:columnTitle>Project</ns:columnTitle>
+                <ns:description>If a value is entered, the user will be given read access to any billing records from this project</ns:description>
+                <ns:fk>
+                    <ns:fkDbSchema>ehr</ns:fkDbSchema>
+                    <ns:fkTable>project</ns:fkTable>
+                    <ns:fkColumnName>project</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="alldata">
+                <ns:columnTitle>Can Read All Data?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="createdby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+    </ns:table>
+</ns:tables>

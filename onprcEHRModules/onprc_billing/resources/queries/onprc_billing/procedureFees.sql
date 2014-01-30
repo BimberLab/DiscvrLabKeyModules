@@ -1,0 +1,47 @@
+/*
+ * Copyright (c) 2013 LabKey Corporation
+ *
+ * Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
+ */
+--this query displays all animals co-housed with each housing record
+--to be considered co-housed, they only need to overlap by any period of time
+
+PARAMETERS(StartDate TIMESTAMP, EndDate TIMESTAMP)
+
+SELECT
+  e.Id,
+  e.date,
+  e.project,
+  e.project.account,
+  e.procedureId,
+  p.chargeId,
+  e.objectid as sourceRecord,
+  e.taskid
+
+FROM study.encounters e
+JOIN onprc_billing.procedureFeeDefinition p ON (p.procedureId = e.procedureId and e.chargetype = p.chargetype AND p.active = true)
+
+WHERE e.dateOnly >= CAST(StartDate as date) AND e.dateOnly <= CAST(EndDate as date)
+AND e.qcstate.publicdata = true
+
+UNION ALL
+
+--Blood draws.  Note: group by task/date to create 1 charge per batch of draws
+SELECT
+  e.Id,
+  e.dateOnly as date,
+  e.project,
+  e.project.account,
+  null as procedureId,
+  (select rowid from onprc_billing.chargeableItems ci where ci.name = 'Blood Draw' and ci.active = true) as chargeId,
+  max(e.objectid) as sourceRecord,
+  e.taskid
+
+FROM study.blood e
+WHERE e.dateOnly >= CAST(StartDate as date) AND e.dateOnly <= CAST(EndDate as date)
+and e.chargetype != 'No Charge' and e.chargetype != 'Research Staff'
+and (e.reason IS NULL or e.reason != 'Clinical')
+AND e.qcstate.publicdata = true
+GROUP BY e.Id, e.dateOnly, e.project, e.project.account, e.taskid
+
+--TODO: injections

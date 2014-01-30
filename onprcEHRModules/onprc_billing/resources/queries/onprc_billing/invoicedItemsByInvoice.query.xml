@@ -1,0 +1,17 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="invoicedItemsByInvoice" tableDbType="TABLE">
+                <tableTitle>Summary By Billing Period</tableTitle>
+                <columns>
+                    <column columnName="numItems">
+                        <columnTitle>Total Charges</columnTitle>
+                    </column>
+                    <column columnName="total">
+                        <formatString>$###,##0.00</formatString>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

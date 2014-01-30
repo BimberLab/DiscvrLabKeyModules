@@ -1,0 +1,6 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Invoice Run Details">
+    <dependencies>
+        <dependency path="ehr.context" />
+        <dependency path="sla.context" />
+    </dependencies>
+</view>

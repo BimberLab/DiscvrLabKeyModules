@@ -1,0 +1,17 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All Grants">
+    <columns>
+        <column name="grantNumber"/>
+        <column name="agencyAwardNumber"/>
+        <column name="investigatorName"/>
+        <column name="title"/>
+        <column name="applicationType"/>
+        <column name="activityType"/>
+        <column name="fundingAgency"/>
+        <column name="budgetStartDate"/>
+        <column name="budgetEndDate"/>
+        <column name="awardStatus"/>
+    </columns>
+    <sorts>
+        <sort column="grantNumber" descending="false"/>
+    </sorts>
+</customView>

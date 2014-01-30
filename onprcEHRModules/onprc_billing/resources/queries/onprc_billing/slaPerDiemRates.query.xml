@@ -1,0 +1,89 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="slaPerDiemRates" tableDbType="TABLE">
+                <tableTitle>SLA Per Diem Charges</tableTitle>
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <columns>
+                    <column columnName="investigatorId">
+                        <columnTitle>Investigator</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="isExemption">
+                        <columnTitle>Is Special Fee?</columnTitle>
+                    </column>
+                    <column columnName="unitCost">
+                        <columnTitle>Unit Cost</columnTitle>
+                        <formatString>$###,##0.00</formatString>
+                    </column>
+                    <column columnName="totalCost">
+                        <columnTitle>Total Cost</columnTitle>
+                        <formatString>$###,##0.00</formatString>
+                    </column>
+                    <column columnName="creditAccount">
+                        <columnTitle>Credit Alias</columnTitle>
+                    </column>
+                    <column columnName="creditAccountId">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="endDate">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="lacksRate">
+                        <columnTitle>Lacks Unit Cost?</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="rateId">
+                        <columnTitle>Rate Id</columnTitle>
+                        <isHidden>true</isHidden>
+                        <url>/query/executeQuery.view?schemaName=onprc_billing_public&amp;query.queryName=chargeRates&amp;query.rowid~eq=${rateid}</url>
+                    </column>
+                    <column columnName="exemptionId">
+                        <columnTitle>Exemption Id</columnTitle>
+                        <isHidden>true</isHidden>
+                        <url>/query/executeQuery.view?schemaName=onprc_billing_public&amp;query.queryName=chargeRateExemptions&amp;query.rowid~eq=${exemptionId}</url>
+                    </column>
+                    <column columnName="sourceRecord">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="isMiscCharge">
+                        <columnTitle>Is Manually Entered?</columnTitle>
+                    </column>
+                    <column columnName="isAdjustment">
+                        <columnTitle>Is Adjustment/Reversal?</columnTitle>
+                    </column>
+                    <column columnName="matchesProject">
+                        <columnTitle>Assigned To Project On This Date?</columnTitle>
+                    </column>
+                    <column columnName="isMissingAccount">
+                        <columnTitle>Missing Alias?</columnTitle>
+                    </column>
+                    <column columnName="isMissingFaid">
+                        <columnTitle>Missing FAID?</columnTitle>
+                    </column>
+                    <column columnName="isExpiredAccount">
+                        <columnTitle>Expired Alias?</columnTitle>
+                    </column>
+                    <column columnName="isMultipleProjects">
+                        <columnTitle>Overlapping Research Projects?</columnTitle>
+                    </column>
+                    <column columnName="isOldCharge">
+                        <columnTitle>>45 Days Old?</columnTitle>
+                    </column>
+                    <column columnName="item">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="category">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="startDate">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="cagecount">
+                        <isHidden>true</isHidden>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -1,0 +1,36 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="publicInvoicedItems" tableDbType="TABLE">
+                <tableTitle>Invoiced Items</tableTitle>
+                <columns>
+                    <column columnName="rowid">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="sourceRecord">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="itemcode">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="servicecenter">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="firstName">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="lastName">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="invoiceId">
+                        <fk>
+                            <fkDbSchema>onprc_billing</fkDbSchema>
+                            <fkTable>invoiceRuns</fkTable>
+                            <fkColumnName>objectid</fkColumnName>
+                        </fk>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

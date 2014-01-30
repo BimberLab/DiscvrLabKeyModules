@@ -1,0 +1,12 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="chargesMissingRate" tableDbType="TABLE">
+                <tableTitle>Actives Charges Missing Either Rate or Credit Alias</tableTitle>
+                <columns>
+
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

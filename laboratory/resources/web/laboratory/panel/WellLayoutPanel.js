@@ -69,7 +69,7 @@ Ext4.define('Laboratory.ext.WellLayoutPanel', {
             }
             wellMap[well] = rec;
 
-            var wellRecordIdx = this.store.find(this.displayWell, well);
+            var wellRecordIdx = this.store.findExact(this.displayWell, well);
             if (wellRecordIdx == -1){
                 unknownWells.push(well);
             }

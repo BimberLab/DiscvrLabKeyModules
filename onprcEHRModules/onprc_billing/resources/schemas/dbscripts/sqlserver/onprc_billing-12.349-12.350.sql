@@ -1,0 +1,1 @@
+ALTER TABLE onprc_billing.invoicedItems ADD chargetype varchar(100);

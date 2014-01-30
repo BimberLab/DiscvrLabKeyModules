@@ -1,0 +1,308 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    var webpart = <%=webpartContext%>;
+    var ctx = EHR.Utils.getEHRContext(webpart.wrapperDivId);
+    if(!ctx)
+        return;
+
+    var invoiceRunId = LABKEY.ActionURL.getParameter('invoiceRunId');
+    if (!invoiceRunId){
+        Ext4.Msg.alert('Error', 'Must provide an invoiceId');
+        return;
+    }
+
+    var domSpec = [{
+        tag: 'div',
+        style: 'padding-bottom: 10px;',
+        id: 'invoiceDetails_' + webpart.wrapperDivId
+    },{
+        tag: 'div',
+        style: 'padding-bottom: 10px;',
+        id: 'tabpanel_' + webpart.wrapperDivId
+    }];
+
+    var el = Ext4.get(webpart.wrapperDivId);
+    Ext4.DomHelper.append(el, domSpec);
+
+    var mainPanel = Ext4.widget({
+        xtype: 'panel',
+        itemId: 'invoicePanel',
+        border: false,
+        items: [{
+            border: false,
+            xtype: 'labkey-detailspanel',
+            showTitle: false,
+            showBackBtn: false,
+            store: {
+                schemaName: 'onprc_billing',
+                queryName: 'invoiceRuns',
+                filterArray: [
+                    LABKEY.Filter.create('objectid', invoiceRunId, LABKEY.Filter.Types.EQUAL)
+                ],
+                listeners: {
+                    load: function(store){
+                        var rec = store.getAt(0);
+                        if (!rec)
+                            return;
+
+                        var status = rec.get('status');
+                        if (status != 'Finalized' && LABKEY.Security.currentUser.canUpdate){
+                            var panel = Ext4.ComponentQuery.query('#invoicePanel')[0];
+                            var btn = panel.down('#finalizeBtn');
+                            btn.setDisabled(false);
+                        }
+
+                        Ext4.define('ONPRC_Billing.panel.InvoiceDetailsPanel', {
+                            extend: 'Ext.panel.Panel',
+
+                            initComponent: function(){
+                                var ctx = EHR.Utils.getEHRContext(webpart.wrapperDivId);
+                                var slaCtx = LABKEY.getModuleContext('sla');
+                                var slaContainer = slaCtx ? slaCtx.SLAContainer : null;
+
+                                var startDate = rec.get('billingPeriodStart') ? rec.get('billingPeriodStart').clearTime() : null;
+                                var endDate = rec.get('billingPeriodEnd') ? rec.get('billingPeriodEnd').clearTime() : null;
+                                var startDateString = startDate ? startDate.format('Y-m-d') : '';
+                                var endDateString = endDate ? endDate.format('Y-m-d') : '';
+
+                                var interval = 0;
+                                if (startDate && endDate){
+                                    interval = endDate.getTime() - startDate.getTime();
+                                    interval = Math.floor(1 + (interval / (1000 * 60 * 60 * 24)));
+                                }
+
+                                Ext4.apply(this, {
+                                    items: [{
+                                        xtype: 'ldk-querytabpanel',
+                                        border: true,
+                                        defaults: {
+                                            border: false
+                                        },
+                                        listeners: {
+                                            scope: this,
+                                            resize: function(panel, width, height, oldWidth){
+                                                if (width === oldWidth){
+                                                    return;
+                                                }
+
+                                                var owner = panel.up('panel');
+                                                if (owner.getWidth() < width){
+                                                    owner.setWidth(width + 20);
+                                                }
+                                            }
+                                        },
+                                        items: [{
+                                            title: 'Summary',
+                                            xtype: 'ldk-querypanel',
+                                            queryConfig: {
+                                                schemaName: 'onprc_billing',
+                                                queryName: 'invoicedItemsByInvoice',
+                                                filters: [LABKEY.Filter.create('invoiceId', this.invoiceRunId, LABKEY.Filter.Types.EQUAL)],
+                                                failure: LDK.Utils.getErrorCallback(),
+                                                scope: this,
+                                                success: this.onDataRegionLoad
+                                            }
+                                        },{
+                                            title: 'Total Charges By Category',
+                                            xtype: 'ldk-querypanel',
+                                            queryConfig: {
+                                                schemaName: 'onprc_billing',
+                                                queryName: 'invoicedItemsByInvoiceCategory',
+                                                filters: [LABKEY.Filter.create('invoiceId', this.invoiceRunId, LABKEY.Filter.Types.EQUAL)],
+                                                failure: LDK.Utils.getErrorCallback(),
+                                                scope: this,
+                                                success: this.onDataRegionLoad
+                                            }
+                                        },{
+                                            title: 'Total Charges By ONPRC Project',
+                                            xtype: 'ldk-querypanel',
+                                            queryConfig: {
+                                                schemaName: 'onprc_billing',
+                                                queryName: 'invoicedItemsByInvoiceProject',
+                                                filters: [LABKEY.Filter.create('invoiceId', this.invoiceRunId, LABKEY.Filter.Types.EQUAL)],
+                                                failure: LDK.Utils.getErrorCallback(),
+                                                scope: this,
+                                                success: this.onDataRegionLoad
+                                            }
+                                        },{
+                                            title: 'Total Charges By Grant Project',
+                                            xtype: 'ldk-querypanel',
+                                            queryConfig: {
+                                                schemaName: 'onprc_billing',
+                                                queryName: 'invoicedItemsByInvoiceGrantProject',
+                                                filters: [LABKEY.Filter.create('invoiceId', this.invoiceRunId, LABKEY.Filter.Types.EQUAL)],
+                                                failure: LDK.Utils.getErrorCallback(),
+                                                scope: this,
+                                                success: this.onDataRegionLoad
+                                            }
+                                        },{
+                                            title: 'Total Charges By Division',
+                                            xtype: 'ldk-querypanel',
+                                            queryConfig: {
+                                                schemaName: 'onprc_billing',
+                                                queryName: 'invoicedItemsByInvoiceDivision',
+                                                filters: [LABKEY.Filter.create('invoiceId', this.invoiceRunId, LABKEY.Filter.Types.EQUAL)],
+                                                failure: LDK.Utils.getErrorCallback()
+                                            }
+                                        },{
+                                            title: 'Total Revenue By Alias',
+                                            xtype: 'ldk-querypanel',
+                                            queryConfig: {
+                                                schemaName: 'onprc_billing',
+                                                queryName: 'invoicedItemsByInvoiceCreditAccount',
+                                                filters: [LABKEY.Filter.create('invoiceId', this.invoiceRunId, LABKEY.Filter.Types.EQUAL)],
+                                                failure: LDK.Utils.getErrorCallback(),
+                                                scope: this,
+                                                success: this.onDataRegionLoad
+                                            }
+                                        },{
+                                            title: 'Total Charges By Item',
+                                            xtype: 'ldk-querypanel',
+                                            queryConfig: {
+                                                schemaName: 'onprc_billing',
+                                                queryName: 'invoicedItemsByInvoiceItem',
+                                                filters: [LABKEY.Filter.create('invoiceId', this.invoiceRunId, LABKEY.Filter.Types.EQUAL)],
+                                                failure: LDK.Utils.getErrorCallback(),
+                                                scope: this,
+                                                success: this.onDataRegionLoad
+                                            }
+                                        },{
+                                            title: 'All Items',
+                                            defaults: {
+                                                border: false
+                                            },
+                                                xtype: 'ldk-querypanel',
+                                                queryConfig: {
+                                                    showDetailsColumn: true,
+                                                    schemaName: 'onprc_billing',
+                                                    queryName: 'invoicedItems',
+                                                    filters: [LABKEY.Filter.create('invoiceId', this.invoiceRunId, LABKEY.Filter.Types.EQUAL)],
+                                                    failure: LDK.Utils.getErrorCallback(),
+                                                    scope: this,
+                                                    success: this.onDataRegionLoad
+                                                }
+                                        },{
+                                            xtype: 'ldk-navpanel',
+                                            title: 'More Reports',
+                                            sections: [{
+                                                header: 'IBS Sheets',
+                                                items: [
+                                                    {name: 'Download IBS Spreadsheet (All Items)', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargesIBS', 'query.invoiceId~eq': this.invoiceRunId})},
+                                                    {name: 'Download IBS Spreadsheet (PDAR - Leases)', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargesIBS', 'query.invoiceId~eq': this.invoiceRunId, 'query.servicecenter~eq': 'PDAR', 'query.category~in': 'Lease Fees;Lease Setup Fees;Lease Fee Adjustment'})},
+                                                    {name: 'Download IBS Spreadsheet (PDAR - Per Diems)', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargesIBS', 'query.invoiceId~eq': this.invoiceRunId, 'query.servicecenter~eq': 'PDAR', 'query.category~eq': 'Animal Per Diem'})},
+                                                    {name: 'Download IBS Spreadsheet (PDAR - Other)', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargesIBS', 'query.invoiceId~eq': this.invoiceRunId, 'query.servicecenter~eq': 'PDAR', 'query.category~notin': 'Animal Per Diem;Lease Fees;Lease Setup Fees;Lease Fee Adjustment'})},
+                                                    {name: 'Download IBS Spreadsheet (PSURG)', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargesIBS', 'query.invoiceId~eq': this.invoiceRunId, 'query.servicecenter~eq': 'PSURG'})},
+                                                    {name: 'Download IBS Spreadsheet (SLAU)', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargesIBS', 'query.invoiceId~eq': this.invoiceRunId, 'query.servicecenter~eq': 'SLAU'})},
+                                                    {name: 'Download IBS Spreadsheet (Other)', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargesIBS', 'query.invoiceId~eq': this.invoiceRunId, 'query.servicecenter~notin': 'PDAR;PSURG;SLAU'})}
+                                                ]
+                                            },{
+                                                header: 'Charge Calculations For This Billing Period',
+                                                items: [
+                                                    {name: 'Labwork Fees', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'onprc_billing', 'query.queryName': 'labworkFeeRates', 'query.param.StartDate': startDateString, 'query.param.EndDate': endDateString})},
+                                                    {name: 'Lease Fees', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'onprc_billing', 'query.queryName': 'leaseFeeRates', 'query.param.StartDate': startDateString, 'query.param.EndDate': endDateString})},
+                                                    {name: 'Per Diems', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'onprc_billing', 'query.queryName': 'perDiemRates', 'query.param.StartDate': startDateString, 'query.param.EndDate': endDateString, 'query.param.NumDays': interval})},
+                                                    {name: 'Procedure Fees', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'onprc_billing', 'query.queryName': 'procedureFeeRates', 'query.param.StartDate': startDateString, 'query.param.EndDate': endDateString})},
+                                                    {name: 'Other Charges', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'onprc_billing', 'query.queryName': 'miscChargesFeeRates', 'query.param.StartDate': startDateString, 'query.param.EndDate': endDateString})},
+                                                    {name: 'SLA Per Diems', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', slaContainer, {schemaName: 'onprc_billing', 'query.queryName': 'slaPerDiemRates', 'query.param.StartDate': startDateString, 'query.param.EndDate': endDateString})}
+                                                ]
+                                            },{
+                                                header: 'Raw Data',
+                                                items: [
+                                                    {name: 'Total Charges By Category', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'invoicedItemsByInvoiceCategory', 'query.invoiceId~eq': this.invoiceRunId})},
+                                                    {name: 'Total Charges By ONPRC Project', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'invoicedItemsByInvoiceProject', 'query.invoiceId~eq': this.invoiceRunId})},
+                                                    {name: 'Total Charges By Grant Project', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'invoicedItemsByInvoiceGrantProject', 'query.invoiceId~eq': this.invoiceRunId})},
+                                                    {name: 'Total Charges By Division', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'invoicedItemsByInvoiceDivision', 'query.invoiceId~eq': this.invoiceRunId})},
+                                                    {name: 'Total Revenue By Alias', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'invoicedItemsByInvoiceCreditAccount', 'query.invoiceId~eq': this.invoiceRunId})},
+                                                    {name: 'Total Charges By Item', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'invoicedItemsByInvoiceItem', 'query.invoiceId~eq': this.invoiceRunId})},
+                                                    {name: 'All Items', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'invoicedItems', 'query.invoiceId~eq': this.invoiceRunId})}
+                                                ]
+                                            }]
+                                        }]
+                                    }]
+                                });
+
+                                this.callParent(arguments);
+                            },
+                            bodyStyle: 'padding: 10px;',
+                            border: false,
+                            defaults: {
+                                border: false
+                            },
+                            onDataRegionLoad: function(dr){
+                                var itemWidth = Ext4.get('dataregion_'+dr.id).getSize().width + 150;
+                                this.down('ldk-querytabpanel').doResize(itemWidth);
+                            }
+                        });
+
+                        Ext4.create('ONPRC_Billing.panel.InvoiceDetailsPanel', {
+                            invoiceRunId: invoiceRunId,
+                            billingPeriodStart: rec.get('billingPeriodStart'),
+                            billingPeriodEnd: rec.get('billingPeriodEnd')
+                        }).render('tabpanel_' + webpart.wrapperDivId);
+                    }
+                }
+            }
+        },{
+            xtype: 'button',
+            text: 'Finalize Invoice',
+            hidden: true,
+            disabled: true,
+            style: 'margin-left: 10px;margin-bottom: 10px;',
+            itemId: 'finalizeBtn',
+            handler: function(btn){
+                var record = btn.up('#invoicePanel').down('labkey-detailspanel').store.getAt(0);
+                LDK.Assert.assertNotEmpty('unable to find record', record);
+
+                Ext4.create('Ext.window.Window', {
+                    title: 'Finalize Invoice',
+                    record: record,
+                    width: 400,
+                    bodyStyle: 'padding: 5px;',
+                    modal: true,
+                    closeAction: 'destroy',
+                    defaults: {
+                        border: false
+                    },
+                    items: [{
+                        html: 'After a billing run is performed, there is a short period when financial analysts are able to make adjustments or changes.  These changes will be applied to the current billing period.  Once is run has been marked as finalized, these changes can no longer be to this run, and future adjustments will be applied to the next billing period.  Are you sure you want to do this?'
+                    }],
+                    buttons: [{
+                        text: 'Submit',
+                        scope: this,
+                        handler: function(btn){
+                            var win = btn.up('window');
+                            var rec = win.record;
+
+                            win.close();
+                            Ext4.Msg.wait('Saving...');
+
+                            LABKEY.Query.updateRows({
+                                schemaName: 'onprc_billing',
+                                queryName: 'invoiceRuns',
+                                rows: [{
+                                    objectid: record.get('objectid'),
+                                    status: 'Finalized'
+                                }],
+                                failure: LDK.Utils.getErrorCallback(),
+                                success: function(){
+                                    Ext4.Msg.hide();
+                                    window.location.reload();
+                                }
+                            })
+                        }
+                    },{
+                        text: 'Cancel',
+                        scope: this,
+                        handler: function(btn){
+                            btn.up('window').close();
+                        }
+                    }]
+                }).show();
+            }
+        }]
+    }).render('invoiceDetails_' + webpart.wrapperDivId);
+});
+
+</script>
+

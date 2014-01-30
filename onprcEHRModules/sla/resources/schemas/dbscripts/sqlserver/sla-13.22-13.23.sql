@@ -1,0 +1,7 @@
+ALTER TABLE sla.census DROP CONSTRAINT PK_Census;
+GO
+ALTER TABLE sla.census ALTER COLUMN objectid ENTITYID NOT NULL;
+GO
+ALTER TABLE sla.census DROP COLUMN rowid;
+
+ALTER TABLE sla.census ADD CONSTRAINT PK_Census PRIMARY KEY (objectid);

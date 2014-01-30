@@ -1,0 +1,31 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="Id"/>
+        <column name="date"/>
+        <column name="billingDate"/>
+        <column name="project"/>
+        <column name="account"/>
+        <column name="creditAccount"/>
+        <column name="chargeId"/>
+        <column name="unitcost"/>
+        <column name="quantity"/>
+        <column name="chargetype"/>
+        <column name="comment"/>
+        <column name="invoiceId"/>
+        <column name="createdby"/>
+        <column name="taskid"/>
+        <column name="category"/>
+        <column name="isExemption"/>
+        <column name="isAdjustment"/>
+        <column name="lacksRate"/>
+        <column name="matchesProject"/>
+        <column name="assignmentAtTime"/>
+        <column name="isMissingAccount"/>
+        <column name="isMissingFaid"/>
+        <column name="isExpiredAccount"/>
+    </columns>
+    <sorts>
+        <sort column="date" descending="true"/>
+        <sort column="Id"/>
+    </sorts>
+</customView>

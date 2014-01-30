@@ -209,14 +209,14 @@ Ext4.define('Laboratory.window.WellAssignmentWindow', {
                     return;
                 }
 
-                var idx = field.store.find('rowid', val);
+                var idx = field.store.findExact('rowid', val);
                 var comboRec = field.store.getAt(idx);
                 if (!comboRec){
                     alert('Unrecognized well: ' + val);
                     return false;
                 }
 
-                var wellIdx = this.wellStore.find('well_96', comboRec.get(this.displayWellField));
+                var wellIdx = this.wellStore.findExact('well_96', comboRec.get(this.displayWellField));
                 categoryStarts[field.category] = wellIdx;
             }, this);
 
@@ -233,7 +233,7 @@ Ext4.define('Laboratory.window.WellAssignmentWindow', {
                 if (ignoredCategories.indexOf(category) != -1){
                     var well = record.get(this.wellField);
                     if (well){
-                        var wellIdx = this.wellStore.find('well_96', well);
+                        var wellIdx = this.wellStore.findExact('well_96', well);
                         if (wellIdx > -1)
                             occupiedWells.push(wellIdx);
                     }

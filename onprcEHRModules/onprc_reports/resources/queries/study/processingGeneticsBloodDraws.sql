@@ -73,7 +73,7 @@ LEFT JOIN (
   SELECT
     m.Id
     --count(*) as total
-  FROM MHC_Data.MHC_Data_Raw m
+  FROM MHC_Data.MHC_Data_Animals m
   GROUP BY m.Id
 ) m ON (m.Id = d.Id)
 
@@ -116,7 +116,7 @@ LEFT JOIN (
     a.Id
     --count(*) as total
   FROM study.assignment a
-  WHERE a.isActive = true and a.project.name = '0492-02'
+  WHERE a.isActive = true and a.project.name = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.U42_PROJECT')
   GROUP BY a.Id
 ) a ON (a.Id = d.Id)
 

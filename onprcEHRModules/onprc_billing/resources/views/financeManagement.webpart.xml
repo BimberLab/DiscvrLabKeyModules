@@ -1,0 +1,6 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart" title="ONPRC Finance">
+   <view name="financeManagement"/>
+   <locations>
+		<location name="body"/>
+   </locations>    
+</webpart>

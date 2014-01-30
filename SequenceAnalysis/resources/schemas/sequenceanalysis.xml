@@ -813,7 +813,7 @@
             </ns:column>
             <ns:column columnName="makePublic">
                 <ns:isHidden>false</ns:isHidden>
-                <ns:columnTitle>Is Public?</ns:columnTitle>
+                <ns:columnTitle>Is Cached?</ns:columnTitle>
             </ns:column>
             <ns:column columnName="container">
             </ns:column>
@@ -902,9 +902,6 @@
                     <!--<ns:item text="SNP Haplotype Viewer">-->
                     <!--<ns:onClick>SequenceAnalysis.Buttons.viewSNPDetails(dataRegionName)</ns:onClick>-->
                     <!--</ns:item>-->
-                </ns:item>
-                <ns:item text="Publish Records">
-                    <ns:onClick>SequenceAnalysis.Buttons.publishAnalyses(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
                 </ns:item>
             </ns:item>
         </ns:buttonBarOptions>        

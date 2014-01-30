@@ -185,7 +185,7 @@ Ext4.define('Laboratory.panel.QueryPickerPanel', {
                     var panel = field.up('panel');
 
                     //var qd = records[0].get('queryDef');
-                    var recIdx = field.store.find(field.valueField, val);
+                    var recIdx = field.store.findExact(field.valueField, val);
                     var qd = recIdx == -1 ? null : field.store.getAt(recIdx).get('queryDef');
                     panel.onQueryChange(qd);
                 }

@@ -1,0 +1,260 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+        var ctx = EHR.Utils.getEHRContext(webpart.wrapperDivId);
+        if(!ctx)
+            return;
+
+        Ext4.define('ONPRC_Billing.panel.InvoiceEstimatePanel', {
+            extend: 'Ext.panel.Panel',
+
+            initComponent: function(){
+                LABKEY.ExtAdapter.apply(this, {
+                    border: false,
+                    defaults: {
+                        border: false
+                    },
+                    items: [{
+                        html: 'Loading...'
+                    }]
+                });
+
+                this.callParent(arguments);
+
+                this.loadBillingPeriod();
+            },
+
+            loadBillingPeriod: function(){
+                LABKEY.Query.selectRows({
+                    requiredVersion: 9.1,
+                    schemaName: 'onprc_billing',
+                    queryName: 'invoiceRuns',
+                    sort: '-billingPeriodEnd',
+                    maxRows: 1,
+                    scope: this,
+                    failure: LDK.Utils.getErrorCallback(),
+                    success: this.onLoad
+                });
+            },
+
+            onLoad: function(results){
+                LDK.Assert.assertNotEmpty('selectRowsResponse was null', results);
+
+                //if we have no previous runs, assume we use the first available start date
+                var lastEnd;
+                if (!results || !results.rows || !results.rows.length){
+                    lastEnd = new Date();
+                }
+                else {
+                    var row  = new LDK.SelectRowsRow(results.rows[0]);
+                    lastEnd = row.getDateValue('billingPeriodEnd');
+                    lastEnd = Ext4.Date.add(lastEnd, Ext4.Date.DAY, 1);
+                }
+
+                var params = {};
+                params.startDate = ONPRC.BillingUtils.getBillingPeriodStart(lastEnd);
+                params.endDate = ONPRC.BillingUtils.getBillingPeriodEnd(lastEnd);
+
+                this.removeAll();
+                this.add(this.getItems(params));
+
+                this.down('#submitBtn').setDisabled(false);
+            },
+
+            getItems: function(ctx){
+                ctx = ctx || {};
+
+                return  [{
+                    xtype: 'panel',
+                    style: 'margin-bottom: 20px',
+                    width: 460,
+                    defaults: {
+                        border: false,
+                        labelWidth: 150,
+                        width: 450
+                    },
+                    items: [{
+                        html: 'This page is designed to summarize projected charges for a project over the date range selected.  Note: if you run this over a range that has already been invoiced, these numbers may not reflect manual adjustments or reversals.  This page is primarily designed to allow FAs to monitor projected charges over the course of a billing period.',
+                        style: 'padding-bottom: 20px;'
+                    },{
+                        xtype: 'ehr-projectfield',
+                        itemId: 'projectField'
+                    },{
+                        xtype: 'datefield',
+                        itemId: 'startDate',
+                        fieldLabel: 'Start Date',
+                        value: ctx.startDate
+                    },{
+                        xtype: 'datefield',
+                        itemId: 'endDate',
+                        fieldLabel: 'End Date',
+                        value: ctx.endDate
+                    }],
+                    buttons: [{
+                        text: 'Submit',
+                        itemId: 'submitBtn',
+                        disabled: true,
+                        scope: this,
+                        handler: this.onSubmit
+                    }]
+                },{
+                    border: false,
+                    itemId: 'qwpSection'
+                }]
+            },
+
+            onSubmit: function(btn){
+                var ctx = EHR.Utils.getEHRContext();
+                var target = this.down('#qwpSection');
+                target.removeAll();
+
+                var projectField = this.down('#projectField');
+                var project = projectField.getValue();
+                var startDate = this.down('#startDate').getValue();
+                var endDate = this.down('#endDate').getValue();
+
+                if (!project || !startDate || !endDate){
+                    Ext4.Msg.alert('Error', 'Must enter a project, start date and end date');
+                    return;
+                }
+
+                var projectName = projectField.store.getAt(projectField.store.findExact('project', project)).get('displayName');
+
+                var interval = 0;
+                if (startDate && endDate){
+                    interval = endDate.getTime() - startDate.getTime();
+                    interval = Math.floor(1 + (interval / (1000 * 60 * 60 * 24)));
+                }
+                var slaCtx = LABKEY.getModuleContext('sla');
+                var slaContainer = slaCtx ? slaCtx.SLAContainer : null;
+
+                var toAdd = [{
+                    xtype: 'ldk-querypanel',
+                    style: 'margin-bottom: 20px;',
+                    queryConfig: {
+                        title: 'Per Diems: ' + projectName,
+                        containerPath: ctx.EHRStudyContainer,
+                        schemaName: 'onprc_billing',
+                        queryName: 'perDiemRates',
+                        filterArray: [
+                            LABKEY.Filter.create('project', project, LABKEY.Filter.Types.EQUAL)
+                        ],
+                        parameters: {
+                            numDays: interval,
+                            startDate: startDate.format('Y-m-d'),
+                            endDate: endDate.format('Y-m-d')
+                        },
+                        aggregates: [
+                            {column: 'totalCost', type: LABKEY.AggregateTypes.SUM, label: 'Total'}
+                        ]
+                    }
+                },{
+                    xtype: 'ldk-querypanel',
+                    style: 'margin-bottom: 20px;',
+                    queryConfig: {
+                        title: 'Lease Fees: ' + projectName,
+                        containerPath: ctx.EHRStudyContainer,
+                        schemaName: 'onprc_billing',
+                        queryName: 'leaseFeeRates',
+                        filterArray: [
+                            LABKEY.Filter.create('project', project, LABKEY.Filter.Types.EQUAL)
+                        ],
+                        parameters: {
+                            startDate: startDate.format('Y-m-d'),
+                            endDate: endDate.format('Y-m-d')
+                        },
+                        aggregates: [
+                            {column: 'totalCost', type: LABKEY.AggregateTypes.SUM, label: 'Total'}
+                        ]
+                    }
+                },{
+                    xtype: 'ldk-querypanel',
+                    style: 'margin-bottom: 20px;',
+                    queryConfig: {
+                        title: 'Procedure Fees: ' + projectName,
+                        containerPath: ctx.EHRStudyContainer,
+                        schemaName: 'onprc_billing',
+                        queryName: 'procedureFeeRates',
+                        filterArray: [
+                            LABKEY.Filter.create('project', project, LABKEY.Filter.Types.EQUAL)
+                        ],
+                        parameters: {
+                            startDate: startDate.format('Y-m-d'),
+                            endDate: endDate.format('Y-m-d')
+                        },
+                        aggregates: [
+                            {column: 'totalCost', type: LABKEY.AggregateTypes.SUM, label: 'Total'}
+                        ]
+                    }
+                },{
+                    xtype: 'ldk-querypanel',
+                    style: 'margin-bottom: 20px;',
+                    queryConfig: {
+                        title: 'Labwork Fees: ' + projectName,
+                        containerPath: ctx.EHRStudyContainer,
+                        schemaName: 'onprc_billing',
+                        queryName: 'labworkFeeRates',
+                        filterArray: [
+                            LABKEY.Filter.create('project', project, LABKEY.Filter.Types.EQUAL)
+                        ],
+                        parameters: {
+                            startDate: startDate.format('Y-m-d'),
+                            endDate: endDate.format('Y-m-d')
+                        },
+                        aggregates: [
+                            {column: 'totalCost', type: LABKEY.AggregateTypes.SUM, label: 'Total'}
+                        ]
+                    }
+                },{
+                    xtype: 'ldk-querypanel',
+                    style: 'margin-bottom: 20px;',
+                    queryConfig: {
+                        title: 'SLA Per Diems: ' + projectName,
+                        containerPath: slaContainer,
+                        schemaName: 'onprc_billing',
+                        queryName: 'slaPerDiemRates',
+                        filterArray: [
+                            LABKEY.Filter.create('project', project, LABKEY.Filter.Types.EQUAL)
+                        ],
+                        parameters: {
+                            numDays: interval,
+                            startDate: startDate.format('Y-m-d'),
+                            endDate: endDate.format('Y-m-d')
+                        },
+                        aggregates: [
+                            {column: 'totalCost', type: LABKEY.AggregateTypes.SUM, label: 'Total'}
+                        ]
+                    }
+                },{
+                    xtype: 'ldk-querypanel',
+                    style: 'margin-bottom: 20px;',
+                    queryConfig: {
+                        title: 'Misc Fees: ' + projectName,
+                        containerPath: ctx.EHRStudyContainer,
+                        schemaName: 'onprc_billing',
+                        queryName: 'miscChargesFeeRates',
+                        filterArray: [
+                            LABKEY.Filter.create('project', project, LABKEY.Filter.Types.EQUAL)
+                        ],
+                        parameters: {
+                            startDate: startDate.format('Y-m-d'),
+                            endDate: endDate.format('Y-m-d')
+                        },
+                        aggregates: [
+                            {column: 'totalCost', type: LABKEY.AggregateTypes.SUM, label: 'Total'}
+                        ]
+                    }
+                }];
+
+
+                target.add(toAdd);
+            }
+        });
+
+        Ext4.create('ONPRC_Billing.panel.InvoiceEstimatePanel', {
+
+        }).render(webpart.wrapperDivId);
+    });
+
+</script>

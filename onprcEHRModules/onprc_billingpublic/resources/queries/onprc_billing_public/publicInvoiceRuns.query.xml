@@ -3,7 +3,7 @@
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="publicInvoiceRuns" tableDbType="TABLE">
                 <tableTitle>Billing Periods</tableTitle>
-                <tableUrl>/onprc_billingpublic/invoiceDetails.view?invoiceId=${rowId}</tableUrl>
+                <!--<tableUrl>/onprc_billingpublic/invoiceDetails.view?invoiceId=${rowId}</tableUrl>-->
                 <titleColumn>rowid</titleColumn>
                 <columns>
                     <column columnName="objectid">

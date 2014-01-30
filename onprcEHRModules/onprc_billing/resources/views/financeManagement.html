@@ -1,0 +1,81 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+        var ctx = EHR.Utils.getEHRContext(webpart.wrapperDivId);
+        if(!ctx)
+            return;
+
+        var billingCtx = LABKEY.getModuleContext('onprc_billing');
+        var issuesContainer = billingCtx ? billingCtx.IssuesContainer : null;
+
+        Ext4.create('Ext.panel.Panel', {
+            renderTo: webpart.wrapperDivId,
+            bodyStyle: 'padding: 10px;',
+            border: false,
+            items: [{
+                html: 'This is the homepage for finance data in PRIMe.  There are several components:<br><ul>' +
+                    '<li>Historic billing data and income can be summarized per billing period, or across date ranges.  Click the \'Billing Periods\' link, and then click \'Details\' for the billing period of interest.</li>' +
+                    '<li>There are reference tables for IACUC protocols, projects, aliases, etc.</li>' +
+                    '<li>There is a report to summarize current and projected billing for this period.  The summary is sent as a daily email, but can also be run on demand using the \'Discrepancy Report\' link below</li>' +
+                    '<li>The process to calculate monthly billing can be initiated using the \'Perform Billing Run\' link below</li>' +
+                    '</ul>',
+                border: false,
+                style: 'padding-bottom: 10px;'
+            },{
+                xtype: 'ldk-navpanel',
+                itemDefaults: {
+                    linkCls: 'none'
+                },
+                sections: [{
+                    header: 'Historic Billing Data',
+                    items: [
+                        {name: 'Billing Periods', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'invoiceRuns'})},
+                        {name: 'Monthly Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'invoiceRunMonthlySummary'})},
+                        {name: 'All Invoiced Items', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'invoicedItems'})},
+                        {name: 'Access To Billing Data', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'dataAccess'})}
+                    ]
+                },{
+                    header: 'Current Billing Period / Adjustments',
+                    items: [
+                        {name: 'Billing Period Summary / Discrepancy Report', url: LABKEY.ActionURL.buildURL('ldk', 'runNotification', ctx.EHRStudyContainer, {key: 'org.labkey.onprc_billing.notification.FinanceNotification'})},
+                        {name: 'Estimated Charges By Project', url: LABKEY.ActionURL.buildURL('onprc_billing', 'invoiceEstimate', null)},
+                        {name: 'View Adjustments Not Yet Billed', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'miscChargesWithRates', 'query.sourceInvoicedItem~isnonblank': null, 'query.invoiceId/rowId~isblank': null})},
+                        {name: 'View All Manually Entered Charges Not Yet Billed', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'miscChargesWithRates', 'query.invoiceId/rowId~isblank': null})},
+                        {name: 'Perform Billing Run', url: LABKEY.ActionURL.buildURL('onprc_billing', 'billingPipeline', null)},
+                        {name: 'Enter New Charges', url: LABKEY.ActionURL.buildURL('ehr', 'dataEntryForm', ctx.EHRStudyContainer, {formType: 'ChargesAdvanced'})}
+                    ].concat(issuesContainer ? [{name: 'Finance Issue Tracker', url: LABKEY.ActionURL.buildURL('issues', 'begin', issuesContainer)}] : [])
+                },{
+                    header: 'Reference Tables',
+                    items: [
+                        {name: 'IACUC Protocols', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'ehr', 'query.queryName': 'protocol'})},
+                        {name: 'ONPRC Projects', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'ehr', 'query.queryName': 'project'})},
+
+                        {name: 'Grants', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'grants', 'query.viewName': 'Active Grants'})},
+                        {name: 'Grant Projects', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'grantProjects', 'query.viewName': 'Active Grant Projects'})},
+                        {name: 'Aliases', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'aliases', 'query.viewName': 'Active Aliases'})},
+
+                        //{name: 'Approved IACUC Funding Sources', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'iacucFundingSources'})},
+
+                        {name: 'Investigators', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_ehr', 'query.queryName': 'investigators'})},
+                        {name: 'Financial Analysts', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'fiscalAuthorities'})}
+                    ]
+                },{
+                    header: 'Rates and Fee Structure',
+                    items: [
+                        {name: 'Chargeable Items', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'chargeableItems'})},
+                        {name: 'Standard Rates', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRates'})},
+                        {name: 'Rate Exemptions', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRateExemptions'})},
+                        {name: 'Aliases Receiving Credit Per Item', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'creditAccount'})},
+
+                        {name: 'Labwork Fee Structure', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'labworkFeeDefinition'})},
+                        {name: 'Lease Fee Structure', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'leaseFeeDefinition'})},
+                        {name: 'Per Diem Fee Structure', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'perDiemFeeDefinition'})},
+                        {name: 'Procedure Fee Structure', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'procedureFeeDefinition'})}
+                    ]
+                }]
+            }]
+        });
+    });
+
+</script>

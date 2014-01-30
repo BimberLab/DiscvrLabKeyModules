@@ -1,0 +1,10 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <sorts>
+        <sort column="assignCondition"/>
+        <sort column="releaseCondition"/>
+        <sort column="minAge"/>
+    </sorts>
+    <filters>
+        <filter column="active" operator="eq" value="true"/>
+    </filters>
+</customView>

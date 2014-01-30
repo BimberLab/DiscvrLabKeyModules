@@ -1,0 +1,6 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Billing Period Summary By Project">
+    <dependencies>
+        <dependency path="ehr.context" />
+        <dependency path="onprc_billing/BillingUtils.js" />
+    </dependencies>
+</view>

@@ -1,23 +1,26 @@
-Select distinct
-sl.RequestorId,
-rt.DeptCode,
-rt.Lastname, rt.firstname, rt.initials,
+Select 
+rt.Lastname,
+rt.firstname,
+max(rt.initials) as initials,
 
+max(
 case rt.phonenumber
-when  '' then sl.RequestorPhone
-when  null then sl.RequestorPhone
-else rt.phonenumber
-End PhoneNumber,
+  when  '' then sl.RequestorPhone
+  when  null then sl.RequestorPhone
+  else rt.phonenumber
+End) as phone,
 
-case rt.emailaddress
-when  '' then sl.RequestorEmail
-when  null then sl.RequestorEmail
-else rt.emailaddress
-End emailaddress,
+(SELECT max(userid) as userid FROM labkey.core.users u WHERE email =
+case max(rt.emailaddress)
+  when  '' then max(sl.RequestorEmail)
+  when  null then max(sl.RequestorEmail)
+  else max(rt.emailaddress)
+End) as userid,
+max(CAST(rt.objectid as varchar(36))) as objectid
 
-rt.objectid,
-ActiveFrom as Created,
-InactiveFrom as Modified
+From sla_purchase sl
+LEFT JOIN Ref_Technicians rt ON (rt.id = sl.RequestorID and rt.DeptCode = 8)
+--and (rt.ts > ? OR sl.ts > ?)
 
-From Ref_Technicians  rt, sla_purchase sl Where rt.id = sl.RequestorID and rt.DeptCode =8
-and (rt.ts > ? OR sl.ts > ?)
+GROUP BY rt.lastname, rt.firstname 
+having max(sl.ts) > ?

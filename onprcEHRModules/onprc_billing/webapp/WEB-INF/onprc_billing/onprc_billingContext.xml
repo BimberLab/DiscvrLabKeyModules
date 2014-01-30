@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+    <bean id="billingPipelineRegistry" class="org.labkey.api.pipeline.TaskPipelineRegistrar">
+        <property name="factoryImpls">
+            <list>
+                <bean class="org.labkey.onprc_billing.pipeline.BillingTask$Factory"/>
+            </list>
+        </property>
+        <property name="pipelines">
+            <list>
+                <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
+                    <constructor-arg type="java.lang.Class" value="org.labkey.onprc_billing.pipeline.BillingPipelineJob"/>
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <value type="java.lang.Class">org.labkey.onprc_billing.pipeline.BillingTask</value>
+                        </list>
+                    </property>
+                </bean>
+            </list>
+        </property>
+    </bean>
+</beans>

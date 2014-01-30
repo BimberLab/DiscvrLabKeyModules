@@ -37,6 +37,7 @@ import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.QueryUpdateServiceException;
+import org.labkey.api.query.Queryable;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.util.PageFlowUtil;
@@ -57,11 +58,17 @@ public class GeneticsCoreManager
 {
     private static final GeneticsCoreManager _instance = new GeneticsCoreManager();
 
+    @Queryable
     public static final String DNA_DRAW_COLLECTED = "DNA Bank Blood Draw Collected";
+    @Queryable
     public static final String DNA_DRAW_NEEDED = "DNA Bank Blood Draw Needed";
+    @Queryable
     public static final String PARENTAGE_DRAW_COLLECTED = "Parentage Blood Draw Collected";
+    @Queryable
     public static final String PARENTAGE_DRAW_NEEDED = "Parentage Blood Draw Needed";
+    @Queryable
     public static final String MHC_DRAW_COLLECTED = "MHC Blood Draw Collected";
+    @Queryable
     public static final String MHC_DRAW_NEEDED = "MHC Blood Draw Needed";
 
     private GeneticsCoreManager()

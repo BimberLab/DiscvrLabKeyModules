@@ -1,0 +1,21 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="aliases" tableDbType="TABLE">
+                <tableTitle>Aliases</tableTitle>
+                <columns>
+                    <column columnName="projectNumber">
+                        <fk>
+                            <fkDbSchema>onprc_billing</fkDbSchema>
+                            <fkTable>grantProjects</fkTable>
+                            <fkColumnName>projectNumber</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="aliasEnabled">
+                        <columnTitle>Alias Enabled</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

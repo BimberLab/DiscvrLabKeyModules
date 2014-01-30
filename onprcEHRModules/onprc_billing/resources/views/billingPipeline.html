@@ -1,0 +1,150 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+        var ctx = EHR.Utils.getEHRContext(webpart.wrapperDivId);
+        if(!ctx)
+            return;
+
+        Ext4.define('ONPRC_Billing.panel.BillingPipelinePanel', {
+            extend: 'Ext.panel.Panel',
+
+            initComponent: function(){
+                LABKEY.ExtAdapter.apply(this, {
+                    border: false,
+                    width: 460,
+                    bodyStyle: 'padding: 5px;',
+                    defaults: {
+                        border: false,
+                        width: 450,
+                        labelWidth: 180
+                    },
+                    items: [{
+                        html: 'Loading...'
+                    }],
+                    buttons: [{
+                        text: 'Submit',
+                        itemId: 'submitBtn',
+                        handler: this.startAnalysis,
+                        disabled: true,
+                        scope: this
+                    }]
+                });
+
+                this.callParent(arguments);
+
+                this.loadBillingPeriod();
+            },
+
+            loadBillingPeriod: function(){
+                LABKEY.Query.selectRows({
+                    requiredVersion: 9.1,
+                    schemaName: 'onprc_billing',
+                    queryName: 'invoiceRuns',
+                    sort: '-billingPeriodEnd',
+                    maxRows: 1,
+                    scope: this,
+                    failure: LDK.Utils.getErrorCallback(),
+                    success: this.onLoad
+                });
+            },
+
+            onLoad: function(results){
+                LDK.Assert.assertNotEmpty('selectRowsResponse was null', results);
+
+                //if we have no previous runs, assume we use the first available start date
+                var lastEnd;
+                if (!results || !results.rows || !results.rows.length){
+                    lastEnd = new Date();
+                }
+                else {
+                    var row  = new LDK.SelectRowsRow(results.rows[0]);
+                    lastEnd = row.getDateValue('billingPeriodEnd');
+                    lastEnd = Ext4.Date.add(lastEnd, Ext4.Date.DAY, 1);
+                }
+
+                var params = {};
+                params.startDate = ONPRC.BillingUtils.getBillingPeriodStart(lastEnd);
+                params.endDate = ONPRC.BillingUtils.getBillingPeriodEnd(lastEnd);
+
+                this.removeAll();
+                this.add(this.getItems(params));
+
+                this.down('#submitBtn').setDisabled(false);
+            },
+
+            getItems: function(ctx){
+                ctx = ctx || {};
+
+                return  [{
+                    html: 'This will kick off a pipeline job to calculate the charges for a billing period.'  +
+                    '<p>NOTE: In addition to caching the list of charges for this period, the billing run will mark any manually entered charges as associated with this billing period.  Therefore this action should only be performed when you want to create the official record, and should not be performed as a test.',
+                    style: 'padding-bottom: 20px;'
+                },{
+                    xtype: 'textfield',
+                    itemId: 'protocolName',
+                    fieldLabel: 'Name',
+                    value: 'Billing_Run_' + (new Date()).format('Y-m-d_h_m')
+                },{
+                    xtype: 'datefield',
+                    itemId: 'startDate',
+                    fieldLabel: 'Start Date',
+                    value: ctx.startDate
+                },{
+                    xtype: 'datefield',
+                    itemId: 'endDate',
+                    fieldLabel: 'End Date',
+                    value: ctx.endDate
+                },{
+                    xtype: 'textarea',
+                    itemId: 'comment',
+                    height: 150,
+                    fieldLabel: 'Comment'
+                }]
+            },
+
+            getParameters: function(){
+                var params = {
+                    protocolName: this.down('#protocolName').getValue(),
+                    startDate: this.down('#startDate').getValue(),
+                    endDate: this.down('#endDate').getValue(),
+                    comment: this.down('#comment').getValue()
+                };
+
+                return params;
+            },
+
+            startAnalysis: function(btn){
+                btn.setDisabled(true);
+                var jsonParameters = this.getParameters();
+
+                if (!jsonParameters.protocolName || !jsonParameters.startDate || !jsonParameters.endDate){
+                    Ext4.Msg.alert('Error', 'Must provide a protocol name, start date, and end date');
+                    btn.setDisabled(false);
+                    return;
+                }
+
+                LABKEY.Ajax.request({
+                    url: LABKEY.ActionURL.buildURL('onprc_billing', 'RunBillingPipeline'),
+                    params: jsonParameters,
+                    scope: this,
+                    success: function() {
+                        Ext4.Msg.alert('Success', 'Run Started!', function(){
+                            btn.setDisabled(false);
+                            window.location = LABKEY.ActionURL.buildURL("pipeline-status", "showList.view", null, {'StatusFiles.Status~neqornull': 'COMPLETE'});
+                        });
+                    },
+                    failure: LABKEY.Utils.getCallbackWrapper(function(error){
+                        var msg = error.exception ? ': ' + error.exception : '';
+                        Ext4.Msg.alert('Error', 'There was an error' + msg);
+                        console.log(error);
+                        btn.setDisabled(false);
+                    }, this)
+                });
+            }
+        });
+
+        Ext4.create('ONPRC_Billing.panel.BillingPipelinePanel', {}).render(webpart.wrapperDivId);
+    });
+
+</script>

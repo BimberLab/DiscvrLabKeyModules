@@ -17,6 +17,7 @@ package org.labkey.laboratory;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
+import org.labkey.api.action.AbstractFileUploadAction;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
@@ -41,9 +42,11 @@ import org.labkey.api.ldk.table.ButtonConfigFactory;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.module.ModuleProperty;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.study.assay.AssayProvider;
 import org.labkey.api.study.assay.AssayService;
 import org.labkey.api.util.Pair;
@@ -167,6 +170,25 @@ public class LaboratoryServiceImpl extends LaboratoryService
                 return dp;
         }
         return new SimpleAssayDataProvider(ap.getName());
+    }
+
+    public Pair<ExpExperiment, ExpRun> saveAssayBatch(List<Map<String, Object>> results, JSONObject json, String basename, ViewContext ctx, AssayProvider provider, ExpProtocol protocol) throws ValidationException
+    {
+        if (!PipelineService.get().hasValidPipelineRoot(protocol.getContainer()))
+            throw new ValidationException("Pipeline root must be configured before uploading assay files");
+
+        AssayFileWriter writer = new AssayFileWriter();
+        try
+        {
+            File targetDirectory = writer.ensureUploadDirectory(ctx.getContainer());
+            File file = writer.findUniqueFileName(basename, targetDirectory);
+
+            return this.saveAssayBatch(results, json, file, basename, ctx, provider, protocol);
+        }
+        catch (ExperimentException e)
+        {
+            throw new ValidationException(e.getMessage());
+        }
     }
 
     public Pair<ExpExperiment, ExpRun> saveAssayBatch(List<Map<String, Object>> results, JSONObject json, File file, String fileName, ViewContext ctx, AssayProvider provider, ExpProtocol protocol) throws ValidationException

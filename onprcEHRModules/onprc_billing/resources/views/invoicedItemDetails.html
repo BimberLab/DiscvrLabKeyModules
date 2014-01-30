@@ -1,0 +1,65 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    var webpart = <%=webpartContext%>;
+    var ctx = EHR.Utils.getEHRContext(webpart.wrapperDivId);
+    if(!ctx)
+        return;
+
+    var invoicedItem = LABKEY.ActionURL.getParameter('invoicedItem');
+    if (!invoicedItem){
+        Ext4.Msg.alert('Error', 'Must provide an item');
+        return;
+    }
+
+    var domSpec = [{
+        tag: 'div',
+        style: 'padding-bottom: 10px;',
+        id: 'invoiceDetails_' + webpart.wrapperDivId
+    },{
+        tag: 'div',
+        style: 'padding-bottom: 10px;',
+        id: 'children_' + webpart.wrapperDivId
+    }];
+
+    var el = Ext4.get(webpart.wrapperDivId);
+    Ext4.DomHelper.append(el, domSpec);
+
+    Ext4.widget({
+        xtype: 'panel',
+        itemId: 'invoicePanel',
+        border: false,
+        items: [{
+            border: false,
+            xtype: 'labkey-detailspanel',
+            showTitle: false,
+            showBackBtn: false,
+            store: {
+                schemaName: 'onprc_billing',
+                queryName: 'invoicedItems',
+                filterArray: [
+                    LABKEY.Filter.create('objectid', invoicedItem, LABKEY.Filter.Types.EQUAL)
+                ]
+            }
+        }]
+    }).render('invoiceDetails_' + webpart.wrapperDivId);
+
+    var ctx = EHR.Utils.getEHRContext(webpart.wrapperDivId);
+    if (ctx){
+        Ext4.create('LDK.panel.QueryPanel', {
+            queryConfig: {
+                title: 'Reversals/Adjustments Associated With This Item',
+                containerPath: ctx ? ctx['EHRStudyContainer'] : null,
+                schemaName: 'onprc_billing',
+                queryName: 'miscCharges',
+                viewName: 'Adjustment Detail',
+                filterArray: [
+                    LABKEY.Filter.create('sourceInvoicedItem', invoicedItem, LABKEY.Filter.Types.EQUAL)
+                ]
+            }
+        }).render('children_' + webpart.wrapperDivId);
+    }
+});
+
+</script>
+

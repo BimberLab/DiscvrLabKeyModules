@@ -2,7 +2,7 @@
     <tables>
         <tableName>MHC_Data_Unified</tableName>
         <tableName>MHC_Data_Pivoted</tableName>
-        <tableName>MHC_Data_Raw</tableName>
+        <tableName>MHC_Data_Animals</tableName>
         <tableName>alignment_summary_by_lineage</tableName>
         <tableName>alignment_summary_grouped</tableName>
         <tableName>alignment_summary</tableName>

@@ -1,0 +1,8 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <sorts>
+        <sort column="grantNumber" descending="false"/>
+    </sorts>
+    <filters>
+        <filter column="awardStatus" operator="eq" value="ACTIVE"/>
+    </filters>
+</customView>

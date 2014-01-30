@@ -9,7 +9,7 @@ SELECT
   m.allele,
   m.result
 FROM sequenceanalysis.MHC_Data_Unified m
-WHERE m.totalLineages = 1
+WHERE m.allele NOT LIKE ('%' || chr(10) || '%')  --exclude multi-lineage hits
 ) m
 
 GROUP BY m.Id, m.allele

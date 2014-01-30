@@ -105,7 +105,7 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
                 return;
             }
 
-            var rec = combo.store.getAt(combo.store.find('container/RowId', rowid));
+            var rec = combo.store.getAt(combo.store.findExact('container/RowId', rowid));
             if(!rec){
                 alert('Must pick a workbook');
                 return;

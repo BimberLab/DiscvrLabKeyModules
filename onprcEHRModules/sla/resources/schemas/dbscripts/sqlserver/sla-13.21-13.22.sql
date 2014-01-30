@@ -23,7 +23,7 @@ EXEC core.fn_dropifexists 'requestors', 'sla', 'TABLE', NULL;
 EXEC core.fn_dropifexists 'vendors', 'sla', 'TABLE', NULL;
 EXEC core.fn_dropifexists 'emailList', 'sla', 'TABLE', NULL;
 
-EXEC core.fn_dropifexists '', 'sla', 'schema', NULL;
+EXEC core.fn_dropifexists '*', 'sla', 'schema', NULL;
 GO
 CREATE SCHEMA sla;
 GO

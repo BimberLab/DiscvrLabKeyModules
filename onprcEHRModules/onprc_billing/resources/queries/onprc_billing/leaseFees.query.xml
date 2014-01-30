@@ -1,0 +1,56 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="leaseFees" tableDbType="TABLE">
+                <tableTitle>Lease Fees Calculation</tableTitle>
+                <columns>
+                    <column columnName="date">
+                        <columnTitle>Billing Date</columnTitle>
+                    </column>
+                    <column columnName="project">
+                        <fk>
+                            <fkDbSchema>ehr</fkDbSchema>
+                            <fkTable>project</fkTable>
+                            <fkColumnName>project</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="chargeId">
+                        <columnTitle>Charge</columnTitle>
+                        <fk>
+                            <fkDbSchema>onprc_billing</fkDbSchema>
+                            <fkTable>chargeableItems</fkTable>
+                            <fkColumnName>rowid</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="taskid">
+                        <fk>
+                            <fkDbSchema>ehr</fkDbSchema>
+                            <fkTable>tasks</fkTable>
+                            <fkColumnName>taskid</fkColumnName>
+                            <fkDisplayColumnName>rowid</fkDisplayColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="leaseCharge1">
+                        <columnTitle>Original Lease Type</columnTitle>
+                        <fk>
+                            <fkDbSchema>onprc_billing</fkDbSchema>
+                            <fkTable>chargeableItems</fkTable>
+                            <fkColumnName>rowid</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="leaseCharge2">
+                        <columnTitle>Final Lease Type</columnTitle>
+                        <fk>
+                            <fkDbSchema>onprc_billing</fkDbSchema>
+                            <fkTable>chargeableItems</fkTable>
+                            <fkColumnName>rowid</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="sourceRecord">
+                        <isHidden>true</isHidden>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -1,0 +1,20 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="alias"/>
+        <column name="category"/>
+        <column name="aliasEnabled"/>
+        <column name="projectNumber"/>
+        <column name="grantNumber"/>
+        <column name="investigatorName"/>
+        <column name="fiscalAuthority"/>
+        <column name="faSchedule"/>
+        <column name="projectNumber/projectTitle"/>
+        <column name="projectNumber/projectDescription"/>
+        <column name="projectNumber/budgetStartDate"/>
+        <column name="projectNumber/budgetEndDate"/>
+        <column name="projectNumber/projectStatus"/>
+    </columns>
+    <sorts>
+        <sort column="alias"/>
+    </sorts>
+</customView>

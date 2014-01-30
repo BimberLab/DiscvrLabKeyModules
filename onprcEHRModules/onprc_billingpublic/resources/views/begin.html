@@ -6,12 +6,20 @@ Ext4.onReady(function(){
     if(!ctx)
         return;
 
+    var billingCtx = LABKEY.getModuleContext('onprc_billing');
+    var billingContainer = billingCtx ? billingCtx.BillingContainer : null;
+
     Ext4.widget({
         xtype: 'panel',
         border: false,
         items: [{
             html: 'Below are the projects are you authorized to view.  Click the project name to view more detail for each billing period.  If you believe there is an error in this list of projects, please use the help menu above to enter an issue.',
             style: 'padding-bottom: 10px;',
+            border: false
+        },{
+            html: '<a href="' + LABKEY.ActionURL.buildURL('project', 'start', billingContainer) + '">Note: Authorized users can click here to view the private section, which may have more detail on charges.</a>',
+            style: 'padding-bottom: 10px;',
+            hidden: !billingContainer,
             border: false
         },{
             xtype: 'ldk-querypanel',

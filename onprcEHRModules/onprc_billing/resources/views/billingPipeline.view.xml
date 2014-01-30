@@ -1,0 +1,6 @@
+<view xmlns="http://labkey.org/data/xml/view" frame="portal" title="Perform Billing Run">
+    <dependencies>
+        <dependency path="ehr.context" />
+        <dependency path="onprc_billing/BillingUtils.js" />
+    </dependencies>
+</view>

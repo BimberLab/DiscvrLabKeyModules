@@ -1,0 +1,18 @@
+<templateSchema sourceSchemaName="onprc_billing" xmlns="http://labkey.org/data/xml/externalSchema" xmlns:cv="http://labkey.org/data/xml/queryCustomView">
+    <tables>
+        <tableName>publicInvoiceRuns</tableName>
+        <tableName>publicInvoicedItems</tableName>
+        <tableName>chargeableItems</tableName>
+        <tableName>fiscalAuthorities</tableName>
+        <tableName>aliases</tableName>
+        <tableName>grants</tableName>
+        <tableName>grantProjects</tableName>
+        <tableName>chargeRates</tableName>
+        <tableName>chargeRateExemptions</tableName>
+    </tables>
+    <metadata>
+        <ns:tables xmlns:ns="http://labkey.org/data/xml">
+
+        </ns:tables>
+    </metadata>
+</templateSchema>

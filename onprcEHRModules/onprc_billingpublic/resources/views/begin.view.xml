@@ -1,5 +1,6 @@
 <view xmlns="http://labkey.org/data/xml/view" title="ONPRC Billing Public Section">
     <dependencies>
         <dependency path="ehr.context" />
+        <dependency path="onprc_billing.context" />
     </dependencies>
 </view>

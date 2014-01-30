@@ -1,12 +1,10 @@
 Select
-SLAVendorName,
+SLAVendorName as name,
 Phone1 ,
 Phone2,
 FundingSourceRequired,
 Comments,
-objectid,
-DateCreated as Created,
-DateDisabled as Modified
+cast(vl.objectid as varchar(36)) as objectid
 
 From Ref_SLAVendors vl
 Where ( vl.ts > ?)

@@ -538,7 +538,7 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
                 scope: this,
                 change: function(field, value){
                     if (value){
-                        var recIdx = field.store.find('rowid', value);
+                        var recIdx = field.store.findExact('rowid', value);
                         var rec = field.store.getAt(recIdx);
 
                         if (rec.get('title')){

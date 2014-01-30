@@ -1,0 +1,12 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="invalidChargeRateExemptionEntries" tableDbType="TABLE">
+                <tableTitle>Invalid Charge Rate Exemption Entries</tableTitle>
+                <columns>
+
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

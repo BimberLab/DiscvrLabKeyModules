@@ -94,7 +94,7 @@ public class ETLRunnable implements Runnable
     private final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
 
     private final static Logger log = Logger.getLogger(ETLRunnable.class);
-    private static final int UPSERT_BATCH_SIZE = 1000;
+    private static final int UPSERT_BATCH_SIZE = 500;
     private boolean isRunning = false;
     private boolean shutdown;
 
@@ -164,6 +164,7 @@ public class ETLRunnable implements Runnable
                 stackSize = HttpView.getStackSize();
                 ViewContext.getMockViewContext(user, container, new ActionURL("sla", "fake.view", container), true);
 
+                QueryService.get().setEnvironment(QueryService.Environment.USER, user);
                 ETLAuditViewFactory.addAuditEntry(container, user, "START", "Starting SLA synchronization", 0);
 
                 for (String tableName : slaQueries.keySet())
@@ -172,7 +173,7 @@ public class ETLRunnable implements Runnable
                     byte[] lastRow = getLastVersion(tableName);
                     String version = lastRow.equals(DEFAULT_VERSION) ? "never" : new String(Base64.encodeBase64(lastRow), "US-ASCII");
                     log.info(String.format("table sla.%s last synced %s", tableName, lastTs == 0 ? "never" : new Date(lastTs).toString()));
-                    log.info(String.format("table v.%s rowversion was %s", tableName, version));
+                    log.info(String.format("table sla.%s rowversion was %s", tableName, version));
                 }
 
                 UserSchema slaSchema = QueryService.get().getUserSchema(user, container, "sla");
@@ -206,6 +207,7 @@ public class ETLRunnable implements Runnable
             }
             finally
             {
+                QueryService.get().clearEnvironment();
                 if (stackSize > -1)
                     HttpView.resetStackSize(stackSize);
             }
@@ -1107,8 +1109,12 @@ public class ETLRunnable implements Runnable
     private final Map<String, String[]> LK_TO_IRIS = new HashMap<String, String[]>()
     {
         {
-            //put("animal_groups", new String[]{"ref_pool"});
-            //put("animal_group_members", new String[]{"ref_pool", "Af_Pool", "Af_Qrf"});
+            put("census", new String[]{"Af_SmallLabAnimals"});
+            put("purchase", new String[]{"SLA_Purchase"});
+            put("purchasedetails", new String[]{"SLA_Purchasedetails"});
+            put("requestors", new String[]{"SLA_Purchase"});
+            put("vendors", new String[]{"Ref_SLAVendors"});
+
         }
     };
 

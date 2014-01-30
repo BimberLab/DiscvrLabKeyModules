@@ -1,0 +1,24 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="invoicedItemsByInvoiceGrantItem" tableDbType="TABLE">
+                <tableTitle>Items By Invoice, Grant and Item</tableTitle>
+                <columns>
+                    <column columnName="numItems">
+                        <columnTitle>Total Charges</columnTitle>
+                        <url>/query/executeQuery.view?schemaName=onprc_billing&amp;
+                            queryName=invoicedItems&amp;
+                            query.invoiceId/rowid~eq=${invoiceId/rowid}&amp;
+                            query.debitedaccount/grantNumber~eq=${grantNumber}&amp;
+                            query.item~eq=${item}
+                        </url>
+                    </column>
+                    <column columnName="total">
+                        <columnTitle>Total</columnTitle>
+                        <formatString>$###,##0.00</formatString>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

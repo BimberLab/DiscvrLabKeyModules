@@ -1,15 +1,10 @@
 
-Select rf.ProjectID as Project,
-CountDate,
+Select
+rf.ProjectID as Project,
+CountDate as date,
 --NOTE: this should be translated into the LK investigator ID, not the IRIS ID
---CASE
---WHEN ri.InvestigatorID IS NULL THEN (select max(i.rowid) from labkey.onprc_ehr.investigators i where i.firstname = ri.firstname and i.lastname = ri.lastname group by i.LastName, i.firstname having count(*) <= 1)
---ELSE (select max(i.rowid) from labkey.onprc_ehr.investigators i where i.firstname = ri.firstname and i.lastname = ri.lastname group by i.LastName, i.firstname having count(*) <= 1)
---END as InvestigatorId,
-CASE
-WHEN ri.InvestigatorID IS NULL THEN (select max(i.InvestigatorID ) from Ref_Investigator i where i.firstname = ri.firstname and i.lastname = ri.lastname group by i.LastName, i.firstname having count(*) <= 1)
-ELSE (select max(i.InvestigatorID ) from Ref_Investigator i where i.firstname = ri.firstname and i.lastname = ri.lastname group by i.LastName, i.firstname having count(*) <= 1)
-END as InvestigatorId,
+(select max(cast(i.objectid as varchar(36))) from labkey.onprc_ehr.investigators i where i.firstname = ri.firstname and i.lastname = ri.lastname group by i.LastName, i.firstname having count(*) <= 1) as InvestigatorId,
+
 rl.Location as Room,
 s1.Value as Species,
 s2.Value as CageType,
@@ -18,7 +13,7 @@ afs.CountType,
 afs.AnimalCount,
 afs.CageCount,
 afs.DLAMInventory,
-afs.objectID
+cast(afs.objectid as varchar(36)) as objectid
 
 From Af_SmallLabAnimals afs
 LEFT JOIN Ref_ProjectsIacuc rf ON (rf.ProjectID = afs.IACUCID )

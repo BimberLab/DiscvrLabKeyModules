@@ -20,11 +20,11 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         });
 
         this.fieldDefaults = {
-            bodyStyle:'padding:5px'
-            ,width: 360
-            ,msgTarget: 'qtip'
-            ,labelWidth: 205
-            ,bubbleEvents: ['add', 'remove']
+            bodyStyle: 'padding:5px',
+            width: 360,
+            msgTarget: 'qtip',
+            labelWidth: 205,
+            bubbleEvents: ['add', 'remove']
         };
 
         Ext4.QuickTips.init({

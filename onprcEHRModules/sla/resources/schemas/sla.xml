@@ -19,11 +19,12 @@
 <tables xmlns="http://labkey.org/data/xml">
     <table tableName="census" tableDbType="TABLE">
         <tableTitle>SLA Census</tableTitle>
+        <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
         <columns>
-            <column columnName="rowid" />
             <column columnName="project" />
             <column columnName="date" />
             <column columnName="investigatorid">
+                <columnTitle>Investigator</columnTitle>
                 <fk>
                     <fkDbSchema>onprc_ehr</fkDbSchema>
                     <fkTable>investigators</fkTable>
@@ -32,7 +33,9 @@
             </column>
             <column columnName="room" />
             <column columnName="species" />
-            <column columnName="cagetype" />
+            <column columnName="cagetype">
+                <columnTitle>Cage Type</columnTitle>
+            </column>
             <column columnName="cagesize" />
             <column columnName="counttype" />
             <column columnName="animalcount" />
@@ -49,6 +52,7 @@
         </columns>
     </table>
     <table tableName="etl_runs" tableDbType="TABLE">
+        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
         <columns>
             <column columnName="rowid"/>
             <column columnName="date">
@@ -65,6 +69,7 @@
     </table>
     <table tableName="purchase" tableDbType="TABLE">
         <tableTitle>SLA Purchases</tableTitle>
+        <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
         <columns>
             <column columnName="rowid" />
             <column columnName="project" />
@@ -101,15 +106,15 @@
             <column columnName="modified" />
         </columns>
     </table>
-
     <table tableName="purchaseDetails" tableDbType="TABLE">
         <tableTitle>SLA Purchase Details</tableTitle>
+        <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
         <columns>
             <column columnName="rowid" />
             <column columnName="purchaseid">
                 <fk>
                     <fkDbSchema>sla</fkDbSchema>
-                    <fkTable>purchases</fkTable>
+                    <fkTable>purchase</fkTable>
                     <fkColumnName>objectid</fkColumnName>
                 </fk>
             </column>
@@ -144,6 +149,8 @@
         </columns>
     </table>
     <table tableName="vendors" tableDbType="TABLE">
+        <tableTitle>SLA Vendors</tableTitle>
+        <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
         <columns>
             <column columnName="rowid" />
             <column columnName="name" />
@@ -161,6 +168,8 @@
         </columns>
     </table>
     <table tableName="requestors" tableDbType="TABLE">
+        <tableTitle>SLA Requestors</tableTitle>
+        <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
         <columns>
             <column columnName="rowid" />
             <column columnName="lastname" />
@@ -169,6 +178,7 @@
             <column columnName="phone" />
             <column columnName="email" />
             <column columnName="userid" />
+            <!--<column columnName="datedisabled" />-->
             <column columnName="objectid" />
             <column columnName="container" />
             <column columnName="createdby" />

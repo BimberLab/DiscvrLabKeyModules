@@ -66,7 +66,7 @@ Ext4.define('Laboratory.ext.AppendStandardsWindow', {
         btn.setDisabled(true);
         var remove = this.down('#removeExisting').getValue();
         var templateField = this.down('#template');
-        var templateRecIdx = templateField.store.find(templateField.valueField, templateField.getValue());
+        var templateRecIdx = templateField.store.findExact(templateField.valueField, templateField.getValue());
         var rec = templateField.store.getAt(templateRecIdx);
         var json = Ext4.decode(rec.get('json'));
 

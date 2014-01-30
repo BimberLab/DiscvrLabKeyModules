@@ -1,0 +1,75 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function (){
+        if (!LABKEY.ActionURL.getParameter('chargeId')){
+            alert('Must Provide A Charge Id');
+            return;
+        }
+
+        var webpart = <%=webpartContext%>;
+        var domSpec = [{
+            tag: 'div',
+            id: 'details_' + webpart.wrapperDivId,
+            style: 'margin-bottom: 20px;'
+        },{
+            tag: 'div',
+            id: 'rates_' + webpart.wrapperDivId,
+            style: 'margin-bottom: 20px;'
+        },{
+            tag: 'div',
+            id: 'exemptions_' + webpart.wrapperDivId,
+            style: 'margin-bottom: 20px;'
+        },{
+            tag: 'div',
+            id: 'creditAccount_' + webpart.wrapperDivId,
+            style: 'margin-bottom: 20px;'
+        }];
+
+        var el = Ext4.get(webpart.wrapperDivId);
+        Ext4.DomHelper.append(el, domSpec);
+
+        var filterArray = [LABKEY.Filter.create('chargeid', LABKEY.ActionURL.getParameter('chargeId'), LABKEY.Filter.Types.EQUAL)];
+
+        Ext4.create('LDK.panel.DetailsPanel', {
+            store: {
+                schemaName: 'onprc_billing',
+                queryName: 'chargeableItems',
+                filterArray: [LABKEY.Filter.create('rowid', LABKEY.ActionURL.getParameter('chargeId'), LABKEY.Filter.Types.EQUAL)]
+            },
+            showBackBtn: false,
+            title: 'Item Details',
+            renderTo: 'details_' + webpart.wrapperDivId
+        });
+
+        Ext4.create('LDK.panel.QueryPanel', {
+            queryConfig: {
+                title: 'Default Rates For This Item (including historic rates)',
+                schemaName: 'onprc_billing',
+                queryName: 'chargeRates',
+                filterArray: filterArray,
+                failure: LDK.Utils.getErrorCallback()
+            }
+        }).render('rates_' + webpart.wrapperDivId);
+
+        Ext4.create('LDK.panel.QueryPanel', {
+            queryConfig: {
+                title: 'Special Fees Associated With This Charge (including historic special fees)',
+                schemaName: 'onprc_billing',
+                queryName: 'chargeRateExemptions',
+                filterArray: filterArray,
+                failure: LDK.Utils.getErrorCallback()
+            }
+        }).render('exemptions_' + webpart.wrapperDivId);
+
+        Ext4.create('LDK.panel.QueryPanel', {
+            queryConfig: {
+                title: 'Alias Receiving Credit For These Charges',
+                schemaName: 'onprc_billing',
+                queryName: 'creditAccount',
+                filterArray: filterArray,
+                failure: LDK.Utils.getErrorCallback()
+            }
+        }).render('creditAccount_' + webpart.wrapperDivId);
+    });
+
+</script>

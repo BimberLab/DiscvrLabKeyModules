@@ -5,8 +5,7 @@ SELECT
   s.shortName,
   s.totalRecords as testsPerformed,
   s.status as result,
-  cast('SSP' as varchar) as type,
-  1 as totalLineages
+  cast('SSP' as varchar) as type
 
 FROM assay.SSP_assay.SSP.SSP_Summary s
 WHERE s.subjectId is not null
@@ -14,17 +13,13 @@ WHERE s.subjectId is not null
 UNION ALL
 
 SELECT
-  a.analysis_id.readset.subjectId as Id,
-  a.lineages as allele,
+  a.subjectId as Id,
+  a.marker as allele,
   null as shortName,
   count(*) as totalTests,
   cast('POS' as varchar) as result,
-  cast('SBT' as varchar) as type,
-  max(a.totalLineages) as totalLineages
+  cast('SBT' as varchar) as type
 
-FROM sequenceanalysis.alignment_summary_by_lineage a
-WHERE a.analysis_id.makePublic = true
-  and a.percent > 1 and a.totalLineages < 3
-  and a.analysis_id.readset.subjectId is not null
-  and a.lineages is not null
-GROUP BY a.analysis_id.readset.subjectId, a.lineages
+FROM assay.GenotypeAssay.Genotype.Data a
+WHERE a.run.assayType = 'SBT'
+GROUP BY a.subjectid, a.marker

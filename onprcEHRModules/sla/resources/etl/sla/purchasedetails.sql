@@ -1,14 +1,18 @@
 Select    
-PurchaseID,
+
+sp.objectid as purchaseid,
 Species,
-Age,
-Weight,
-Gestation,
-Sex,
+Age as ageString,
+Weight as weightString,
+Gestation as gestationString,
+Sex as gender,
 Strain,
+
+--todo: do we need to translate this or lookup to a reference table?
 CageID,
-NumAnimalsOrdered,
-NumAnimalsReceived,
+
+NumAnimalsOrdered as animalsordered,
+NumAnimalsReceived as animalsreceived,
 BoxesQuantity,
 CostPerAnimal,
 ShippingCost,
@@ -20,7 +24,8 @@ ReceivedDate,
 ReceivedBy,
 CancelledBy,
 DateCancelled,
-objectid 
+slp.objectid as objectid
 
 From SLA_Purchasedetails slp
-Where slp.ts > ?
+left join SLA_Purchase sp ON (slp.PurchaseID = sp.PurchaseID)
+Where (slp.ts > ? OR sp.ts > ?)
