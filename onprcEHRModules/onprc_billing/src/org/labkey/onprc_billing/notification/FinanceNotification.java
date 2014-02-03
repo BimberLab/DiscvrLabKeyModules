@@ -182,11 +182,13 @@ public class FinanceNotification extends AbstractNotification
 
         writeResultTable(msg, lastInvoiceDate, start, endDate, projectMap, projectToAccountMap, totalsByCategory, categoryToQuery, containerMap);
 
-        miscChargesLackingProjects(c, u, msg);
-
         getExpiredAliases(c, u , msg);
+        getAliasesDisabled(c, u, msg);
         getProjectsWithoutAliases(c, u, msg);
+        getProjectsNotActive(c, u, msg);
         chargesMissingRates(c, u, msg);
+        getExpiredCreditAliases(c, u, msg);
+        getCreditAliasesDisabled(c, u, msg);
         simpleAlert(c, u , msg, "onprc_billing", "invalidChargeRateEntries", " charge rate records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
         simpleAlert(c, u , msg, "onprc_billing", "invalidChargeRateExemptionEntries", " charge rate exemptions with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
         simpleAlert(c, u , msg, "onprc_billing", "invalidCreditAccountEntries", " credit account records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
@@ -245,6 +247,7 @@ public class FinanceNotification extends AbstractNotification
         new FieldDescriptor("project", false, "Missing Project", true),
         new FieldDescriptor("isMissingAccount", true, "Missing Alias", true),
         new FieldDescriptor("isExpiredAccount", true, "Expired Alias", true),
+        new FieldDescriptor("isAcceptingCharges", true, "Alias Not Accepting Charges", true),
         new FieldDescriptor("lacksRate", true, "Lacks Rate", true),
         new FieldDescriptor("creditAccount", false, "Missing Credit Alias", true),
         new FieldDescriptor("isMissingFaid", true, "Missing FAID", true),
@@ -454,47 +457,6 @@ public class FinanceNotification extends AbstractNotification
         msg.append("<hr><p>");
     }
 
-    private void miscChargesLackingProjects(Container c, User u, final StringBuilder msg)
-    {
-        TableInfo ti = QueryService.get().getUserSchema(u, c, ONPRC_BillingSchema.NAME).getTable(ONPRC_BillingSchema.TABLE_MISC_CHARGES);
-
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("invoiceId"), null, CompareType.ISBLANK);
-        filter.addCondition(FieldKey.fromString("project"), null, CompareType.ISBLANK);
-        TableSelector ts = new TableSelector(ti, PageFlowUtil.set("project"), filter, null);
-        long total = ts.getRowCount();
-        if (total > 0)
-        {
-            msg.append("<b>Warning: There are " + total + " charges listed that lack a project</b><p>");
-            String url = getExecuteQueryUrl(c, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_MISC_CHARGES, null) + "&query.project~isblank";
-            msg.append("<a href='" + url + "&query.project~isblank'>Click here to view them</a>");
-            msg.append("<hr>");
-        }
-
-        SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("invoiceId"), null, CompareType.ISBLANK);
-        filter2.addCondition(FieldKey.fromString("project/account"), null, CompareType.ISBLANK);
-        TableSelector ts2 = new TableSelector(ti, PageFlowUtil.set("project"), filter2, null);
-        long total2 = ts2.getRowCount();
-        if (total2 > 0)
-        {
-            msg.append("<b>Warning: There are " + total2 + " charges listed that list a project without an alias</b><p>");
-            String url2 = getExecuteQueryUrl(c, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_MISC_CHARGES, null) + "&" + filter2.toQueryString("query");
-            msg.append("<a href='" + url2 + "'>Click here to view them</a>");
-            msg.append("<hr>");
-        }
-
-        SimpleFilter filter3 = new SimpleFilter(FieldKey.fromString("invoiceId"), null, CompareType.ISBLANK);
-        filter3.addCondition(FieldKey.fromString("project/enddateCoalesced"), new Date(), CompareType.DATE_GT);
-        TableSelector ts3 = new TableSelector(ti, PageFlowUtil.set("project"), filter3, null);
-        long total3 = ts3.getRowCount();
-        if (total3 > 0)
-        {
-            msg.append("<b>Warning: There are " + total3 + " charges listed without a project</b><p>");
-            String url3 = getExecuteQueryUrl(c, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_MISC_CHARGES, null) + "&" + filter3.toQueryString("query");
-            msg.append("<a href='" + url3 + "'>Click here to view them</a>");
-            msg.append("<hr>");
-        }
-    }
-
     private void chargesMissingRates(Container c, User u, StringBuilder msg)
     {
         Map<String, Object> params = Collections.<String, Object>singletonMap("date", new Date());
@@ -559,7 +521,7 @@ public class FinanceNotification extends AbstractNotification
         return null;
     }
 
-    private void getExpiredAliases(Container c, User u, StringBuilder msg)
+    private void getAliasesDisabled(Container c, User u, StringBuilder msg)
     {
         if (QueryService.get().getUserSchema(u, c, "onprc_billing_public") == null)
         {
@@ -575,15 +537,88 @@ public class FinanceNotification extends AbstractNotification
         long count = ts.getRowCount();
         if (count > 0)
         {
-            msg.append("<b>Warning: there are " + count + " active ONPRC projects with expired aliases.</b><p>");
+            msg.append("<b>Warning: there are " + count + " active ONPRC projects with aliases that are not accepting charges.</b><p>");
             msg.append("<a href='" + getExecuteQueryUrl(c, "ehr", "project", "Alias Info") + "&" + filter.toQueryString("query") + "'>Click here to view them</a>");
             msg.append("<hr>");
         }
+    }
 
+    private void getExpiredAliases(Container c, User u, StringBuilder msg)
+    {
+        if (QueryService.get().getUserSchema(u, c, "onprc_billing_public") == null)
+        {
+            msg.append("<b>Warning: the ONPRC billing schema has not been enabled in this folder, so the expired alias alert cannot run<p><hr>");
+            return;
+        }
+
+        TableInfo ti = QueryService.get().getUserSchema(u, c, "ehr").getTable("project");
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("enddateCoalesced"), "-0d", CompareType.DATE_GTE);
+        filter.addCondition(FieldKey.fromString("account/budgetEndDateCoalesced"), "-0d", CompareType.DATE_LT);
+        filter.addCondition(FieldKey.fromString("account"), null, CompareType.NONBLANK);
+        TableSelector ts = new TableSelector(ti, filter, null);
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            msg.append("<b>Warning: there are " + count + " active ONPRC projects with aliases that have an expired budget period.</b><p>");
+            msg.append("<a href='" + getExecuteQueryUrl(c, "ehr", "project", "Alias Info") + "&" + filter.toQueryString("query") + "'>Click here to view them</a>");
+            msg.append("<hr>");
+        }
+    }
+
+    private void getCreditAliasesDisabled(Container c, User u, StringBuilder msg)
+    {
+        if (QueryService.get().getUserSchema(u, c, "onprc_billing_public") == null)
+        {
+            msg.append("<b>Warning: the ONPRC billing schema has not been enabled in this folder, so the expired alias alert cannot run<p><hr>");
+            return;
+        }
+
+        TableInfo ti = QueryService.get().getUserSchema(u, c, "onprc_billing_public").getTable("creditAccount");
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("chargeId/active"), true, CompareType.EQUAL);
+        filter.addCondition(FieldKey.fromString("account/aliasEnabled"), "Y", CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("account"), null, CompareType.NONBLANK);
+        filter.addCondition(FieldKey.fromString("account"), -1, CompareType.NEQ_OR_NULL);
+        TableSelector ts = new TableSelector(ti, filter, null);
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            msg.append("<b>Warning: there are " + count + " active chargeable items with credit aliases that are not accepting charges.</b><p>");
+            msg.append("<a href='" + getExecuteQueryUrl(c, "onprc_billing_public", "creditAccount", null) + "&" + filter.toQueryString("query") + "'>Click here to view them</a>");
+            msg.append("<hr>");
+        }
+    }
+
+    private void getExpiredCreditAliases(Container c, User u, StringBuilder msg)
+    {
+        if (QueryService.get().getUserSchema(u, c, "onprc_billing_public") == null)
+        {
+            msg.append("<b>Warning: the ONPRC billing schema has not been enabled in this folder, so the expired alias alert cannot run<p><hr>");
+            return;
+        }
+
+        TableInfo ti = QueryService.get().getUserSchema(u, c, "onprc_billing_public").getTable("creditAccount");
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("chargeId/active"), true, CompareType.EQUAL);
+        filter.addCondition(FieldKey.fromString("account/budgetEndDateCoalesced"), "-0d", CompareType.DATE_LT);
+        filter.addCondition(FieldKey.fromString("account"), null, CompareType.NONBLANK);
+        filter.addCondition(FieldKey.fromString("account"), -1, CompareType.NEQ_OR_NULL);
+        TableSelector ts = new TableSelector(ti, filter, null);
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            msg.append("<b>Warning: there are " + count + " active chargeable items using a credit alias with an expired budget period.</b><p>");
+            msg.append("<a href='" + getExecuteQueryUrl(c, "onprc_billing_public", "creditAccount", null) + "&" + filter.toQueryString("query") + "'>Click here to view them</a>");
+            msg.append("<hr>");
+        }
     }
 
     private void getProjectsWithoutAliases(Container c, User u, StringBuilder msg)
     {
+        if (QueryService.get().getUserSchema(u, c, "onprc_billing_public") == null)
+        {
+            msg.append("<b>Warning: the ONPRC billing schema has not been enabled in this folder, so the expired alias alert cannot run<p><hr>");
+            return;
+        }
+
         TableInfo ti = QueryService.get().getUserSchema(u, c, "ehr").getTable("project");
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("enddateCoalesced"), "-0d", CompareType.DATE_GTE);
         filter.addCondition(FieldKey.fromString("account"), null, CompareType.ISBLANK);
@@ -596,5 +631,29 @@ public class FinanceNotification extends AbstractNotification
             msg.append("<hr>");
         }
 
+    }
+
+    private void getProjectsNotActive(Container c, User u, StringBuilder msg)
+    {
+        if (QueryService.get().getUserSchema(u, c, "onprc_billing_public") == null)
+        {
+            msg.append("<b>Warning: the ONPRC billing schema has not been enabled in this folder, so the expired alias alert cannot run<p><hr>");
+            return;
+        }
+
+        TableInfo ti = QueryService.get().getUserSchema(u, c, "ehr").getTable("project");
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("enddateCoalesced"), "-0d", CompareType.DATE_GTE);
+        filter.addCondition(FieldKey.fromString("account/projectNumber/projectStatus"), "ACTIVE", CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("account/projectNumber/projectStatus"), "No Cost Ext", CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("account/projectNumber/projectStatus"), "Partial Setup", CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("account"), null, CompareType.NONBLANK);
+        TableSelector ts = new TableSelector(ti, filter, null);
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            msg.append("<b>Warning: there are " + count + " active ONPRC projects using an alias not marked as ACTIVE.</b><p>");
+            msg.append("<a href='" + getExecuteQueryUrl(c, "ehr", "project", "Alias Info") + "&" + filter.toQueryString("query") + "'>Click here to view them</a>");
+            msg.append("<hr>");
+        }
     }
 }

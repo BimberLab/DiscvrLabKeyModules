@@ -948,7 +948,6 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/slaPerDiemRates.qu
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/slaPerDiemRates.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/slaPerDiems.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/slaPerDiems.sql -text
-onprcEHRModules/onprc_billing/resources/queries/onprc_billing_public/aliases.query.xml -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.30-12.301.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.301-12.302.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.302-12.303.sql -text
@@ -996,6 +995,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billi
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.351-12.352.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.352-12.353.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.353-12.354.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.354-12.355.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.30-12.301.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.301-12.302.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.302-12.303.sql -text
@@ -1043,6 +1043,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billin
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.351-12.352.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.352-12.353.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.353-12.354.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.354-12.355.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing.xml -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing_public.template.xml -text
 onprcEHRModules/onprc_billing/resources/scripts/onprc_billing/billing_triggers.js -text
@@ -1090,6 +1091,8 @@ onprcEHRModules/onprc_billing/webapp/WEB-INF/onprc_billing/onprc_billingContext.
 onprcEHRModules/onprc_billingpublic/ONPRC_BillingPublic.iml -text
 onprcEHRModules/onprc_billingpublic/build.xml -text
 onprcEHRModules/onprc_billingpublic/module.properties -text
+onprcEHRModules/onprc_billingpublic/resources/queries/onprc_billing_public/aliases.query.xml -text
+onprcEHRModules/onprc_billingpublic/resources/queries/onprc_billing_public/aliases/.qview.xml -text
 onprcEHRModules/onprc_billingpublic/resources/queries/onprc_billing_public/invoicedItemsByProject.query.xml -text
 onprcEHRModules/onprc_billingpublic/resources/queries/onprc_billing_public/invoicedItemsByProject.sql -text
 onprcEHRModules/onprc_billingpublic/resources/queries/onprc_billing_public/invoicedItemsByProject/.qview.xml -text

@@ -92,6 +92,9 @@
                     <column columnName="isExpiredAccount">
                         <columnTitle>Expired Alias?</columnTitle>
                     </column>
+                    <column columnName="isAcceptingCharges">
+                        <columnTitle>Alias Accepting Charges?</columnTitle>
+                    </column>
                     <column columnName="isOldCharge">
                         <columnTitle>>45 Days Old?</columnTitle>
                     </column>

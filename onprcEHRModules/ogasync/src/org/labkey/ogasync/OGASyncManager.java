@@ -65,7 +65,8 @@ public class OGASyncManager
     public static final String DATA_SOURCE_PROP_NAME = "dataSourceName";
     public static final String LAST_RUN_PROP_NAME = "lastRun";
     public static final String SCHEMA_PROP_NAME = "schemaName";
-    public static final String QUERY_PROP_NAME = "queryName";
+    public static final String OGA_QUERY_PROP_NAME = "ogaQueryName";
+    public static final String ALL_QUERY_PROP_NAME = "allQueryName";
 
     public static final String CONFIG_PROPERTY_DOMAIN = "org.labkey.ogasync.etl.config";
 
@@ -242,9 +243,18 @@ public class OGASyncManager
     }
 
 
-    public String getQueryName()
+    public String getOgaQueryName()
     {
-        String prop = PropertyManager.getProperties(CONFIG_PROPERTY_DOMAIN).get(QUERY_PROP_NAME);
+        String prop = PropertyManager.getProperties(CONFIG_PROPERTY_DOMAIN).get(OGA_QUERY_PROP_NAME);
+        if (prop == null)
+            return null;
+
+        return prop;
+    }
+
+    public String getAllQueryName()
+    {
+        String prop = PropertyManager.getProperties(CONFIG_PROPERTY_DOMAIN).get(ALL_QUERY_PROP_NAME);
         if (prop == null)
             return null;
 
@@ -321,16 +331,23 @@ public class OGASyncManager
             if (getSchemaName() == null)
                 throw new IllegalArgumentException("Must provide a schemaName");
 
-            if (getQueryName() == null)
-                throw new IllegalArgumentException("Must provide a queryName");
+            if (getOgaQueryName() == null)
+                throw new IllegalArgumentException("Must provide a queryName for OGA aliases");
+
+            if (getAllQueryName() == null)
+                throw new IllegalArgumentException("Must provide a queryName for all aliases");
 
             DbSchema schema = scope.getSchema(getSchemaName());
             if (schema == null)
                 throw new IllegalArgumentException("Unknown schema: " + getSchemaName());
 
-            TableInfo ti = schema.getTable(getQueryName());
+            TableInfo ti = schema.getTable(getOgaQueryName());
             if (ti == null)
-                throw new IllegalArgumentException("Unknown table: " + getQueryName());
+                throw new IllegalArgumentException("Unknown table: " + getOgaQueryName());
+
+            TableInfo ti2 = schema.getTable(getAllQueryName());
+            if (ti2 == null)
+                throw new IllegalArgumentException("Unknown table: " + getOgaQueryName());
         }
     }
 

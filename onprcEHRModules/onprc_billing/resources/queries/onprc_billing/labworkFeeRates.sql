@@ -65,8 +65,14 @@ SELECT
   CASE WHEN p.project.account IS NULL THEN 'Y' ELSE null END as isMissingAccount,
   CASE WHEN ifdefined(p.project.account.fiscalAuthority.faid) IS NULL THEN 'Y' ELSE null END as isMissingFaid,
   CASE
-    WHEN ifdefined(p.project.account.aliasEnabled) IS NULL THEN null
-    WHEN (ifdefined(p.project.account.aliasEnabled) IS NULL OR ifdefined(p.project.account.aliasEnabled) != 'Y') THEN 'Y'
+    WHEN ifdefined(p.project.account.aliasEnabled) IS NULL THEN 'N'
+    WHEN ifdefined(p.project.account.aliasEnabled) != 'Y' THEN 'N'
+    ELSE null
+  END as isAcceptingCharges,
+  CASE
+    WHEN (ifdefined(p.project.account.budgetStartDate) IS NOT NULL AND ifdefined(p.project.account.budgetStartDate) > p.date) THEN 'Prior To Budget Start'
+    WHEN (ifdefined(p.project.account.budgetEndDate) IS NOT NULL AND ifdefined(p.project.account.budgetEndDate) < p.date) THEN 'After Budget End'
+    WHEN (ifdefined(p.project.account.projectNumber.projectStatus) IS NOT NULL AND ifdefined(p.project.account.projectNumber.projectStatus) != 'ACTIVE' AND ifdefined(p.project.account.projectNumber.projectStatus) != 'No Cost Ext' AND ifdefined(p.project.account.projectNumber.projectStatus) != 'Partial Setup') THEN 'Grant Project Not Active'
     ELSE null
   END as isExpiredAccount,
   CASE WHEN (TIMESTAMPDIFF('SQL_TSI_DAY', p.date, curdate()) > 45) THEN 'Y' ELSE null END as isOldCharge
@@ -126,6 +132,7 @@ SELECT
   mc.assignmentAtTime,
   mc.isMissingAccount,
   mc.isMissingFaid,
+  mc.isAcceptingCharges,
   mc.isExpiredAccount,
   mc.isOldCharge
 

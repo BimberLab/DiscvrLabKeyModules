@@ -4,14 +4,14 @@
             <table tableName="aliases" tableDbType="TABLE">
                 <tableTitle>Aliases</tableTitle>
                 <columns>
-                    <column columnName="grant">
+                    <column columnName="grantNumber">
                         <fk>
                             <fkDbSchema>onprc_billing_public</fkDbSchema>
                             <fkTable>grants</fkTable>
                             <fkColumnName>grantNumber</fkColumnName>
                         </fk>
                     </column>
-                    <column columnName="grantProject">
+                    <column columnName="projectNumber">
                         <fk>
                             <fkDbSchema>onprc_billing_public</fkDbSchema>
                             <fkTable>grantProjects</fkTable>

@@ -2,6 +2,7 @@ package org.labkey.ogasync;
 
 import org.apache.log4j.Logger;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
@@ -74,10 +75,10 @@ public class OGASyncRunner implements Job
             return;
         }
 
-        TableInfo sourceTable = getSourceTable();
+        TableInfo sourceTable = getOGAAliasesTable();
         if (sourceTable == null)
         {
-            _log.error("Unable to find source table");
+            _log.error("Unable to find OGA aliases table");
             return;
         }
 
@@ -93,7 +94,9 @@ public class OGASyncRunner implements Job
             doMergeInvestigators(u, c, sourceTable, targetSchema);
             doMergeGrants(u, c, sourceTable, targetSchema);
             doMergeGrantProjects(u, c, sourceTable, targetSchema);
-            doMergeAccounts(u, c, sourceTable, targetSchema);
+            doMergeOGAAccounts(u, c, sourceTable, targetSchema);
+
+            doMergeOtherAccounts(u, c, sourceTable, targetSchema);
         }
         catch (SQLException e)
         {
@@ -104,7 +107,7 @@ public class OGASyncRunner implements Job
         _log.info("Finished OGA Sync");
     }
 
-    private TableInfo getSourceTable()
+    private TableInfo getOGAAliasesTable()
     {
         DbScope scope = DbScope.getDbScope(OGASyncManager.get().getDataSourceName());
         if (scope == null)
@@ -114,7 +117,24 @@ public class OGASyncRunner implements Job
         if (schema == null)
             return null;
 
-        TableInfo ti = schema.getTable(OGASyncManager.get().getQueryName());
+        TableInfo ti = schema.getTable(OGASyncManager.get().getOgaQueryName());
+        if (ti == null)
+            return null;
+
+        return ti;
+    }
+
+    private TableInfo getAllAliasesTable()
+    {
+        DbScope scope = DbScope.getDbScope(OGASyncManager.get().getDataSourceName());
+        if (scope == null)
+            return null;
+
+        DbSchema schema = scope.getSchema(OGASyncManager.get().getSchemaName());
+        if (schema == null)
+            return null;
+
+        TableInfo ti = schema.getTable(OGASyncManager.get().getAllQueryName());
         if (ti == null)
             return null;
 
@@ -146,10 +166,36 @@ public class OGASyncRunner implements Job
         fieldMap.put("ogaProjectId", "PROJECT_ID");
 
         TableSelector ts = new TableSelector(sourceTable, new HashSet<>(fieldMap.values()));
-        doMerge(u, c, targetTable, ts, "projectNumber", fieldMap);
+        doMerge(u, c, targetTable, ts, "projectNumber", fieldMap, null, null);
     }
 
-    public void doMergeAccounts(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException
+    public void doMergeOtherAccounts(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException
+    {
+        TableInfo allAliases = getAllAliasesTable();
+
+        TableInfo targetTable = targetSchema.getTable("aliases");
+        Map<String, String> fieldMap = new HashMap<>();
+
+        fieldMap.put("alias", "ALIAS_NAME");
+        fieldMap.put("aliasEnabled", "ENABLED_FLAG");
+
+        //fieldMap.put(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER, "PDFM_EMP_NUM");
+        fieldMap.put("category", null);
+
+        fieldMap.put("budgetStartDate", "START_DATE_ACTIVE");
+        fieldMap.put("budgetEndDate", "END_DATE_ACTIVE");
+
+        //find existing aliases
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("category"), "Other", CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("container"), c.getId());
+        TableSelector existingTs = new TableSelector(targetTable, PageFlowUtil.set("alias"), filter, null);
+        Collection<String> existingKeys = existingTs.getCollection(String.class);
+
+        TableSelector ts = new TableSelector(allAliases, new HashSet<>(fieldMap.values()));
+        doMerge(u, c, targetTable, ts, "alias", fieldMap, "Other", existingKeys);
+    }
+
+    public void doMergeOGAAccounts(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException
     {
         TableInfo targetTable = targetSchema.getTable("aliases");
         Map<String, String> fieldMap = new HashMap<>();
@@ -165,8 +211,14 @@ public class OGASyncRunner implements Job
         fieldMap.put("investigatorName", "PI");
         fieldMap.put("category", null);  //special case handling below
 
+        fieldMap.put("budgetStartDate", "CURRENT_BUDGET_START_DATE");
+        fieldMap.put("budgetEndDate", "CURRENT_BUDGET_END_DATE");
+
+        fieldMap.put("faRate", "BURDEN_RATE");
+        fieldMap.put("faSchedule", "BURDEN_SCHEDULE");
+
         TableSelector ts = new TableSelector(sourceTable, new HashSet<>(fieldMap.values()));
-        doMerge(u, c, targetTable, ts, "alias", fieldMap);
+        doMerge(u, c, targetTable, ts, "alias", fieldMap, "OGA", null);
     }
 
     public void doMergeGrants(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException
@@ -216,7 +268,7 @@ public class OGASyncRunner implements Job
         sql.append("GROUP BY OGA_AWARD_NUMBER");
 
         SqlSelector ss = new SqlSelector(sourceTable.getSchema(), new SQLFragment(sql.toString()));
-        doMerge(u, c, targetTable, ss, "grantNumber", fieldMap);
+        doMerge(u, c, targetTable, ss, "grantNumber", fieldMap, null, null);
     }
 
     public void doMergeInvestigators(User u, Container c, TableInfo sourceTable, DbSchema targetSchema)
@@ -229,14 +281,14 @@ public class OGASyncRunner implements Job
      * This is not particularly efficient, but it runs in the background once per day,
      * and total rows should not be that large
      */
-    public void doMerge(final User u, final Container c, final TableInfo targetTable, ExecutingSelector selector, final String selectionKey, final Map<String, String> fieldMap) throws SQLException
+    public void doMerge(final User u, final Container c, final TableInfo targetTable, ExecutingSelector selector, final String selectionKey, final Map<String, String> fieldMap, final String category, final Collection<String> existingAliases) throws SQLException
     {
         _log.info("starting to merge table: " + targetTable.getName());
         ExperimentService.get().ensureTransaction();
 
         _log.info("truncating table");
         SqlExecutor ex = new SqlExecutor(targetTable.getSchema().getScope());
-        ex.execute(new SQLFragment("DELETE FROM " + targetTable.getSelectName() + " WHERE container = ?" + (targetTable.getName().equalsIgnoreCase("aliases") ? " AND (category IS NULL OR category = 'OGA')" : ""), c.getId()));
+        ex.execute(new SQLFragment("DELETE FROM " + targetTable.getSelectName() + " WHERE container = ?" + (category != null ? " AND (category IS NULL OR category = '" + category + "')" : ""), c.getId()));
 
         try
         {
@@ -278,7 +330,7 @@ public class OGASyncRunner implements Job
                             }
                             else if (targetTable.getName().equalsIgnoreCase("aliases") && "category".equals(key))
                             {
-                                row.put("category", "OGA");
+                                row.put("category", category);
                             }
                             else if (key.equals(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER))
                             {
@@ -331,23 +383,14 @@ public class OGASyncRunner implements Job
 
                     assert targetTable.getPkColumns().size() == 1 : "Incorrect number of PK columns for table: " + targetTable.getName();
 
-                    row.put("modifiedby", u.getUserId());
-                    row.put("modified", new Date());
-
-                    String pkName = targetTable.getPkColumnNames().get(0);
-                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString(selectionKey), rs.getObject(fieldMap.get(selectionKey)));
-                    filter.addCondition(FieldKey.fromString("container"), c.getId());
-
-                    TableSelector ts = new TableSelector(targetTable, Collections.singleton(pkName), filter, null);
-                    if (ts.exists())
+                    if (existingAliases != null && existingAliases.contains(rs.getString(fieldMap.get("alias"))))
                     {
-                        Object key = ts.getMap().get(pkName);
-                        Table.update(u, targetTable, row, key);
-
-                        totals.put("update", totals.get("update") + 1);
+                        //TODO: consider update
                     }
-                    else
-                    {
+                    else {
+                        row.put("modifiedby", u.getUserId());
+                        row.put("modified", new Date());
+    
                         row.put("createdby", u.getUserId());
                         row.put("created", new Date());
                         Table.insert(u, targetTable, row);

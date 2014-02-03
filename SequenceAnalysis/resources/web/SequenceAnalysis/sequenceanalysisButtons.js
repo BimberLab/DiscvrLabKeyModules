@@ -360,12 +360,12 @@ SequenceAnalysis.Buttons = new function(){
                             }, this);
 
                             for (var alignmentId in alignmentIdMap){
-                                var set = alignmentIdMap[alignmentId];
-                                set = Ext4.unique(set);
-                                set = set.sort();
-                                set = set.join(';');
-                                if (!alleleCombinations[set]){
-                                    alleleCombinations[set] = {
+                                var alleleSet = alignmentIdMap[alignmentId];
+                                alleleSet = Ext4.unique(alleleSet);
+                                alleleSet = alleleSet.sort();
+                                alleleSet = alleleSet.join(';');
+                                if (!alleleCombinations[alleleSet]){
+                                    alleleCombinations[alleleSet] = {
                                         active: alignmentIdMap[alignmentId],
                                         inactive: [],
                                         alignmentIds: [],
@@ -373,30 +373,30 @@ SequenceAnalysis.Buttons = new function(){
                                         inactiveAlleles: {}
                                     }
                                 }
-                                alleleCombinations[set].alignmentIds.push(alignmentId);
+                                alleleCombinations[alleleSet].alignmentIds.push(alignmentId);
 
                                 if (junctionRecordMap[alignmentId]){
                                     Ext4.each(junctionRecordMap[alignmentId], function(row){
                                         var allele = row['ref_nt_id/name'];
                                         if (row.status){
-                                            if (!alleleCombinations[set].alleles[allele])
-                                                alleleCombinations[set].alleles[allele] = {
+                                            if (!alleleCombinations[alleleSet].alleles[allele])
+                                                alleleCombinations[alleleSet].alleles[allele] = {
                                                     total: 0,
                                                     rows: []
                                                 };
 
-                                            alleleCombinations[set].alleles[allele].rows.push(row);
-                                            alleleCombinations[set].alleles[allele].total += row['alignment_id/total'];
+                                            alleleCombinations[alleleSet].alleles[allele].rows.push(row);
+                                            alleleCombinations[alleleSet].alleles[allele].total += row['alignment_id/total'];
                                         }
                                         else {
-                                            if (!alleleCombinations[set].inactiveAlleles[allele])
-                                                alleleCombinations[set].inactiveAlleles[allele] = {
+                                            if (!alleleCombinations[alleleSet].inactiveAlleles[allele])
+                                                alleleCombinations[alleleSet].inactiveAlleles[allele] = {
                                                     total: 0,
                                                     rows: []
                                                 };
 
-                                            alleleCombinations[set].inactiveAlleles[allele].rows.push(row);
-                                            alleleCombinations[set].inactiveAlleles[allele].total += row['alignment_id/total'];
+                                            alleleCombinations[alleleSet].inactiveAlleles[allele].rows.push(row);
+                                            alleleCombinations[alleleSet].inactiveAlleles[allele].total += row['alignment_id/total'];
                                         }
                                     }, this);
                                 }
@@ -422,7 +422,9 @@ SequenceAnalysis.Buttons = new function(){
                         activeCount += readCountMap[id];
                     }, this);
 
-                    for (var refName in record.alleles){
+                    var keys = Ext4.Object.getKeys(record.alleles);
+                    keys = keys.sort();
+                    Ext4.Array.forEach(keys, function(refName){
                         checkboxes.push({
                             xtype: 'checkbox',
                             inputValue: refName,
@@ -430,9 +432,11 @@ SequenceAnalysis.Buttons = new function(){
                             checked: true,
                             rows: record.alleles[refName].rows
                         });
-                    }
+                    }, this);
 
-                    for (var refName in record.inactiveAlleles){
+                    var inactiveKeys = Ext4.Object.getKeys(record.inactiveAlleles);
+                    inactiveKeys = inactiveKeys.sort();
+                    Ext4.Array.forEach(inactiveKeys, function(refName){
                         checkboxes.push({
                             xtype: 'checkbox',
                             inputValue: refName,
@@ -440,7 +444,7 @@ SequenceAnalysis.Buttons = new function(){
                             checked: false,
                             rows: record.inactiveAlleles[refName].rows
                         });
-                    }
+                    }, this);
 
                     items.push({
                         border: false,

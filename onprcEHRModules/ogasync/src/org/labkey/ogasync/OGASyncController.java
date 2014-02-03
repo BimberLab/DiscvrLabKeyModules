@@ -137,7 +137,8 @@ public class OGASyncController extends SpringActionController
 
             configMap.put(OGASyncManager.DATA_SOURCE_PROP_NAME, form.getDataSourceName());
             configMap.put(OGASyncManager.SCHEMA_PROP_NAME, form.getSchemaName());
-            configMap.put(OGASyncManager.QUERY_PROP_NAME, form.getQueryName());
+            configMap.put(OGASyncManager.OGA_QUERY_PROP_NAME, form.getOgaQueryName());
+            configMap.put(OGASyncManager.ALL_QUERY_PROP_NAME, form.getAllQueryName());
 
             if (form.getHourOfDay() != null)
             {
@@ -172,7 +173,8 @@ public class OGASyncController extends SpringActionController
         private Integer _hourOfDay;
         private String _dataSourceName;
         private String _schemaName;
-        private String _queryName;
+        private String _ogaQueryName;
+        private String _allQueryName;
 
         public Boolean getEtlStatus()
         {
@@ -234,14 +236,24 @@ public class OGASyncController extends SpringActionController
             _schemaName = schemaName;
         }
 
-        public String getQueryName()
+        public String getOgaQueryName()
         {
-            return _queryName;
+            return _ogaQueryName;
         }
 
-        public void setQueryName(String queryName)
+        public void setOgaQueryName(String ogaQueryName)
         {
-            _queryName = queryName;
+            _ogaQueryName = ogaQueryName;
+        }
+
+        public String getAllQueryName()
+        {
+            return _allQueryName;
+        }
+
+        public void setAllQueryName(String allQueryName)
+        {
+            _allQueryName = allQueryName;
         }
     }
 
@@ -255,7 +267,7 @@ public class OGASyncController extends SpringActionController
             resultProperties.put("lastRun", OGASyncManager.get().getLastRun());
             resultProperties.put("nextRun", OGASyncManager.get().getNextRun());
 
-            String[] etlConfigKeys = {OGASyncManager.LABKEY_USER_PROP_NAME, OGASyncManager.LABKEY_CONTAINER_PROP_NAME, OGASyncManager.DATA_SOURCE_PROP_NAME, OGASyncManager.SCHEMA_PROP_NAME, OGASyncManager.QUERY_PROP_NAME, OGASyncManager.HOUR_PROP_NAME};
+            String[] etlConfigKeys = {OGASyncManager.LABKEY_USER_PROP_NAME, OGASyncManager.LABKEY_CONTAINER_PROP_NAME, OGASyncManager.DATA_SOURCE_PROP_NAME, OGASyncManager.SCHEMA_PROP_NAME, OGASyncManager.OGA_QUERY_PROP_NAME, OGASyncManager.ALL_QUERY_PROP_NAME, OGASyncManager.HOUR_PROP_NAME};
 
             resultProperties.put("configKeys", etlConfigKeys);
             resultProperties.put("config", PropertyManager.getProperties(OGASyncManager.CONFIG_PROPERTY_DOMAIN));

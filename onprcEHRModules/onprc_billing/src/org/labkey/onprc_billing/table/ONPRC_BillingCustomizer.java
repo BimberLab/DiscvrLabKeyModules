@@ -9,6 +9,7 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.ehr.EHRService;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.table.AbstractTableCustomizer;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
@@ -57,6 +58,14 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             else if (matches(table, "onprc_billing", "chargeableItems"))
             {
                 customizeChargeableItems((AbstractTableInfo) table);
+            }
+            else if (matches(table, "onprc_billing_public", "chargeableItems"))
+            {
+                customizeChargeableItems((AbstractTableInfo) table);
+            }
+            else if (matches(table, "onprc_billing", "aliases"))
+            {
+                customizeAliases((AbstractTableInfo) table);
             }
         }
     }
@@ -265,6 +274,11 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             col.setIsUnselectable(true);
             ti.addColumn(col);
         }
+    }
+
+    private void customizeAliases(AbstractTableInfo ti)
+    {
+        LDKService.get().appendCalculatedDateColumns(ti, null, "budgetEndDate");
     }
 
     private void customizeInvoiceRuns(AbstractTableInfo table)

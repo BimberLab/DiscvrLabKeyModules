@@ -28,7 +28,7 @@ FROM (
     a.analysis_id,
     a.rowid,
 
-    group_concat(distinct j.ref_nt_id.lineage, chr(10)) as lineages,
+    group_concat(distinct coalesce(j.ref_nt_id.lineage, j.ref_nt_id.name), chr(10)) as lineages,
     count(distinct j.ref_nt_id.lineage) as totalLineages,
 
     total,

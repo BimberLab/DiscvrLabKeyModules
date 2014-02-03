@@ -900,6 +900,12 @@
                 <ns:columnTitle>Fiscal Authority Name</ns:columnTitle>
                 <ns:shownInInsertView>false</ns:shownInInsertView>
             </ns:column>
+            <ns:column columnName="budgetStartDate">
+                <ns:columnTitle>Alias Start Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="budgetEndDate">
+                <ns:columnTitle>Alias End Date</ns:columnTitle>
+            </ns:column>
             <ns:column columnName="faRate">
                 <ns:columnTitle>F&amp;A Rate</ns:columnTitle>
             </ns:column>
