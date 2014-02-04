@@ -117,7 +117,7 @@ public class DefaultAssayCustomizer implements TableCustomizer
             UserSchema us = _lc.getUserSchema(ti, "laboratory");
             if (us != null)
             {
-                sampleId.setFk(new QueryForeignKey(us, "samples", "rowid", "rowid"));
+                sampleId.setFk(new QueryForeignKey(us, null, "samples", "rowid", "rowid"));
             }
         }
 
@@ -129,7 +129,7 @@ public class DefaultAssayCustomizer implements TableCustomizer
             UserSchema us = _lc.getUserSchema(ti, "laboratory");
             if (us != null)
             {
-                sampleType.setFk(new QueryForeignKey(us, "sample_type", "type", "type"));
+                sampleType.setFk(new QueryForeignKey(us, null, "sample_type", "type", "type"));
             }
         }
 
@@ -191,7 +191,7 @@ public class DefaultAssayCustomizer implements TableCustomizer
             UserSchema us = _lc.getUserSchema(ti, "laboratory");
             if (us != null)
             {
-                statusFlags.setFk(new QueryForeignKey(us, "result_status", "status", "status"));
+                statusFlags.setFk(new QueryForeignKey(us, null, "result_status", "status", "status"));
             }
         }
 

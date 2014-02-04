@@ -46,7 +46,7 @@ public class ONPRC_ReportsCustomizer implements TableCustomizer
         col.setReadOnly(true);
         col.setIsUnselectable(true);
         col.setUserEditable(false);
-        col.setFk(new QueryForeignKey(us, queryName, ID_COL, ID_COL));
+        col.setFk(new QueryForeignKey(us, null, queryName, ID_COL, ID_COL));
 
         return col;
     }

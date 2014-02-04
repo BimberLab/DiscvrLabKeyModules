@@ -6,7 +6,6 @@ import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.ehr.EHRService;
 import org.labkey.api.ldk.LDKService;
@@ -17,12 +16,8 @@ import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.permissions.ReadPermission;
-import org.labkey.api.study.DataSetTable;
 import org.labkey.onprc_billing.ONPRC_BillingManager;
 import org.labkey.onprc_billing.ONPRC_BillingSchema;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * User: bimber
@@ -113,7 +108,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             return;
         }
 
-        table.getColumn("userid").setFk(new QueryForeignKey(us, "UsersAndGroups", "UserId", "DisplayName"));
+        table.getColumn("userid").setFk(new QueryForeignKey(us, null, "UsersAndGroups", "UserId", "DisplayName"));
     }
 
     private void customizeMiscCharges(AbstractTableInfo table)
@@ -127,19 +122,19 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         ColumnInfo invoicedItemId = table.getColumn("invoicedItemId");
         if (invoicedItemId != null)
         {
-            invoicedItemId.setFk(new QueryForeignKey(us, "invoicedItems", "objectid", "rowid"));
+            invoicedItemId.setFk(new QueryForeignKey(us, null, "invoicedItems", "objectid", "rowid"));
         }
 
         ColumnInfo sourceInvoicedItem = table.getColumn("sourceInvoicedItem");
         if (sourceInvoicedItem != null)
         {
-            sourceInvoicedItem.setFk(new QueryForeignKey(us, "invoicedItems", "objectid", "rowid"));
+            sourceInvoicedItem.setFk(new QueryForeignKey(us, null, "invoicedItems", "objectid", "rowid"));
         }
 
         ColumnInfo invoiceId = table.getColumn("invoiceId");
         if (invoiceId != null)
         {
-            invoiceId.setFk(new QueryForeignKey(us, "invoiceRuns", "objectid", "rowid"));
+            invoiceId.setFk(new QueryForeignKey(us, null, "invoiceRuns", "objectid", "rowid"));
         }
     }
 
@@ -154,7 +149,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             UserSchema us = getBillingUserSchema(table);
             if (us != null)
             {
-                col.setFk(new QueryForeignKey(us, "invoicedItems", "objectid", "rowid"));
+                col.setFk(new QueryForeignKey(us, null, "invoicedItems", "objectid", "rowid"));
             }
         }
 
@@ -164,7 +159,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             Container c = EHRService.get().getEHRStudyContainer(table.getUserSchema().getContainer());
             if (c != null)
             {
-                idCol.setFk(new QueryForeignKey("study", c, table.getUserSchema().getUser(), "animal", "Id", "Id"));
+                idCol.setFk(new QueryForeignKey("study", c, c, table.getUserSchema().getUser(), "animal", "Id", "Id"));
             }
         }
 
@@ -179,11 +174,11 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
 
             if (us != null)
             {
-                debitedaccount.setFk(new QueryForeignKey(us, "aliases", "alias", "alias", true));
+                debitedaccount.setFk(new QueryForeignKey(us, null, "aliases", "alias", "alias", true));
                 debitedaccount.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${account}"));
 
                 ColumnInfo creditedaccount = table.getColumn("creditedaccount");
-                creditedaccount.setFk(new QueryForeignKey(us, "aliases", "alias", "alias", true));
+                creditedaccount.setFk(new QueryForeignKey(us, null, "aliases", "alias", "alias", true));
                 creditedaccount.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${account}"));
             }
         }
@@ -205,7 +200,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
                 {
                     UserSchema us = getUserSchema(ti, "onprc_billing");
                     if (us != null)
-                        grant.setFk(new QueryForeignKey(us, "grants", "grantNumber", "grantNumber"));
+                        grant.setFk(new QueryForeignKey(us, null, "grants", "grantNumber", "grantNumber"));
                 }
             }
         }
@@ -219,7 +214,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
                 UserSchema us = getUserSchema(ti, "onprc_billing_public");
                 if (us != null)
                 {
-                    account.setFk(new QueryForeignKey(us, "aliases", "alias", "alias", true));
+                    account.setFk(new QueryForeignKey(us, null, "aliases", "alias", "alias", true));
                     account.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${account}"));
                 }
             }
@@ -234,7 +229,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             {
                 UserSchema us = getUserSchema(ti, "onprc_billing", ehrContainer);
                 if (us != null){
-                    chargeId.setFk(new QueryForeignKey(us, "chargeableItems", "rowid", "name"));
+                    chargeId.setFk(new QueryForeignKey(us, ehrContainer, "chargeableItems", "rowid", "name"));
                 }
                 chargeId.setLabel("Charge Name");
             }
@@ -249,7 +244,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             SQLFragment sql = new SQLFragment("(SELECT max(rowid) as expr FROM " + ONPRC_BillingSchema.NAME + "." + ONPRC_BillingSchema.TABLE_CHARGE_RATES + " cr WHERE cr.chargeid = " + ExprColumn.STR_TABLE_ALIAS + ".rowid AND (cr.enddate IS NULL OR cr.enddate > {fn curdate()}) AND cr.startdate <= {fn curdate()})");
             ExprColumn col = new ExprColumn(ti, activeRate, sql, JdbcType.INTEGER, ti.getColumn("rowid"));
             col.setLabel("Active Rate");
-            col.setFk(new QueryForeignKey(ti.getUserSchema(), ONPRC_BillingSchema.TABLE_CHARGE_RATES, "rowid", "rowid"));
+            col.setFk(new QueryForeignKey(ti.getUserSchema(), null, ONPRC_BillingSchema.TABLE_CHARGE_RATES, "rowid", "rowid"));
             col.setIsUnselectable(true);
             ti.addColumn(col);
         }
@@ -270,7 +265,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             SQLFragment sql = new SQLFragment("(SELECT max(rowid) as expr FROM " + ONPRC_BillingSchema.NAME + "." + ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT + " cr WHERE cr.chargeid = " + ExprColumn.STR_TABLE_ALIAS + ".rowid AND (cr.enddate IS NULL OR cr.enddate > {fn curdate()}) AND cr.startdate <= {fn curdate()})");
             ExprColumn col = new ExprColumn(ti, activeCreditAccount, sql, JdbcType.INTEGER, ti.getColumn("rowid"));
             col.setLabel("Active Credit Alias");
-            col.setFk(new QueryForeignKey(ti.getUserSchema(), ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT, "rowid", "rowid"));
+            col.setFk(new QueryForeignKey(ti.getUserSchema(), null, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT, "rowid", "rowid"));
             col.setIsUnselectable(true);
             ti.addColumn(col);
         }

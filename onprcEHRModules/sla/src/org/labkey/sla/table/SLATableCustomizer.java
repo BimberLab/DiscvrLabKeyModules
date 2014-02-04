@@ -40,7 +40,7 @@ public class SLATableCustomizer extends AbstractTableCustomizer
                 project.setFacetingBehaviorType(FacetingBehaviorType.ALWAYS_OFF);
                 UserSchema ehrSchema = getUserSchema(ti, "ehr", ehrContainer);
                 if (ehrSchema != null)
-                    project.setFk(new QueryForeignKey(ehrSchema, "project", "project", "displayName"));
+                    project.setFk(new QueryForeignKey(ehrSchema, null, "project", "project", "displayName"));
             }
 
             ColumnInfo chargeId = ti.getColumn("chargeId");
@@ -48,7 +48,7 @@ public class SLATableCustomizer extends AbstractTableCustomizer
             {
                 UserSchema billingSchema = getUserSchema(ti, "onprc_billing", ehrContainer);
                 if (billingSchema != null)
-                    chargeId.setFk(new QueryForeignKey(billingSchema, "chargeableItems", "rowid", "name"));
+                    chargeId.setFk(new QueryForeignKey(billingSchema, null, "chargeableItems", "rowid", "name"));
             }
         }
     }

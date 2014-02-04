@@ -116,7 +116,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 ColumnInfo wrappedContainer = new WrappedColumn(container, "workbook");
                 wrappedContainer.setLabel("Workbook");
-                wrappedContainer.setFk(new QueryForeignKey(us, "workbooks", LaboratoryWorkbooksTable.WORKBOOK_COL, "workbookId"));
+                wrappedContainer.setFk(new QueryForeignKey(us, null, "workbooks", LaboratoryWorkbooksTable.WORKBOOK_COL, "workbookId"));
                 wrappedContainer.setURL(DetailsURL.fromString("/project/start.view"));
                 wrappedContainer.setShownInDetailsView(true);
                 wrappedContainer.setFacetingBehaviorType(FacetingBehaviorType.ALWAYS_OFF);
@@ -217,7 +217,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                     col.setIsUnselectable(true);
                     col.setUserEditable(false);
 
-                    col.setFk(new QueryForeignKey(qd.getQueryDef(us.getContainer(), us.getUser()).getSchema(), qd.getQueryName(), qd.getTargetColumn(), qd.getTargetColumn()){
+                    col.setFk(new QueryForeignKey(qd.getQueryDef(us.getContainer(), us.getUser()).getSchema(), null, qd.getQueryName(), qd.getTargetColumn(), qd.getTargetColumn()){
                         public TableInfo getLookupTableInfo()
                         {
                             AbstractTableInfo ti = (AbstractTableInfo)super.getLookupTableInfo();

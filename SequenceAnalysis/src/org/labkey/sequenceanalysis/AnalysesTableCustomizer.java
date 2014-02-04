@@ -40,7 +40,7 @@ public class AnalysesTableCustomizer implements TableCustomizer
 
                 ExprColumn newCol = new ExprColumn(ti, alignmentIndex, sql, JdbcType.INTEGER, ti.getColumn("rowId"), ti.getColumn("alignmentFile"));
                 newCol.setLabel("Alignment File Index");
-                newCol.setFk(new QueryForeignKey("exp", getContainer(ti), ti.getUserSchema().getUser(), "data", "rowid", "name"));
+                newCol.setFk(new QueryForeignKey("exp", getContainer(ti), null, ti.getUserSchema().getUser(), "data", "rowid", "name"));
                 ((AbstractTableInfo)ti).addColumn(newCol);
             }
         }
