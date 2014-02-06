@@ -2,4 +2,7 @@
     <sorts>
         <sort column="chargeId/name"/>
     </sorts>
+    <filters>
+        <filter column="enddateCoalesced" operator="dategte" value="+0d"/>
+    </filters>
 </customView>

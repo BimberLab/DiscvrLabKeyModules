@@ -1,0 +1,42 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function (){
+        var webpart = <%=webpartContext%>;
+        var ctx = EHR.Utils.getEHRContext(webpart.wrapperDivId);
+        if(!ctx)
+            return;
+
+        Ext4.create('Ext.panel.Panel', {
+            border: false,
+            defaults: {
+                border: false
+            },
+            items: [{
+                html: 'This is the ONPRC SSU Module.  Below are links to the surgery schedule and related reports.',
+                style: 'padding-bottom: 10px;'
+            },{
+                xtype: 'ldk-navpanel',
+                sections: [{
+                    header: 'Scheduled Surgeries',
+                    items: [{
+                        name: 'View Schedule',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_ssu', 'query.queryName': 'schedule'})
+                    },{
+                        name: 'Enter Surgeries',
+                        url: LABKEY.ActionURL.buildURL('ehr', 'dataEntryForm', ctx['EHRStudyContainer'], {formType: 'Surgeries'})
+                    },{
+                        name: 'Surgeries Entered',
+                        url: LABKEY.ActionURL.buildURL('ehr', 'enterData', ctx['EHRStudyContainer'])
+                    }]
+                },{
+                    header: 'Reports',
+                    items: [{
+                        name: 'Today\'s Surgeries',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'encounters', 'query.viewName': 'Surgeries Today'})
+                    }]
+                }]
+            }]
+        }).render(webpart.wrapperDivId);
+    });
+
+</script>

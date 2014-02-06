@@ -22,6 +22,7 @@ import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.ehr.security.EHRDataEntryPermission;
 import org.labkey.api.ldk.table.ContainerScopedTable;
+import org.labkey.api.ldk.table.CustomPermissionsTable;
 import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.DeletePermission;
@@ -30,7 +31,6 @@ import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.onprc_billing.ONPRC_BillingSchema;
 import org.labkey.onprc_billing.security.ONPRCBillingAdminPermission;
-import org.labkey.onprc_billing.security.ONPRCChargeEntryPermission;
 
 /**
  * User: bimber
@@ -69,8 +69,8 @@ public class ONPRC_EHRBillingUserSchema extends SimpleUserSchema
         else
         {
             CustomPermissionsTable ti = new CustomPermissionsTable(this, schematable).init();
-            //NOTE: more users should be able to insert records than update/delete
-            ti.addPermissionMapping(InsertPermission.class, ONPRCChargeEntryPermission.class);
+
+            ti.addPermissionMapping(InsertPermission.class, ONPRCBillingAdminPermission.class);
             ti.addPermissionMapping(UpdatePermission.class, ONPRCBillingAdminPermission.class);
             ti.addPermissionMapping(DeletePermission.class, ONPRCBillingAdminPermission.class);
             return ti;

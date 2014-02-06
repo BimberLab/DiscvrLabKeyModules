@@ -1,8 +1,13 @@
-<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="Active Items">
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All Items">
+    <columns>
+        <column name="chargeId"/>
+        <column name="chargeId/rowid"/>
+        <column name="account"/>
+        <column name="startDate"/>
+        <column name="endDate"/>
+        <column name="remark"/>
+    </columns>
     <sorts>
         <sort column="chargeId/name"/>
     </sorts>
-    <filters>
-        <filter column="enddateCoalesced" operator="dategte" value="+0d"/>
-    </filters>
 </customView>

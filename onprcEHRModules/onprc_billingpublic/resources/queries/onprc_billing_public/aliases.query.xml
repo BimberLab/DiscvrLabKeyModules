@@ -4,20 +4,6 @@
             <table tableName="aliases" tableDbType="TABLE">
                 <tableTitle>Aliases</tableTitle>
                 <columns>
-                    <column columnName="grantNumber">
-                        <fk>
-                            <fkDbSchema>onprc_billing_public</fkDbSchema>
-                            <fkTable>grants</fkTable>
-                            <fkColumnName>grantNumber</fkColumnName>
-                        </fk>
-                    </column>
-                    <column columnName="projectNumber">
-                        <fk>
-                            <fkDbSchema>onprc_billing_public</fkDbSchema>
-                            <fkTable>grantProjects</fkTable>
-                            <fkColumnName>projectNumber</fkColumnName>
-                        </fk>
-                    </column>
                     <column columnName="investigatorId">
                         <fk>
                             <fkDbSchema>onprc_ehr</fkDbSchema>

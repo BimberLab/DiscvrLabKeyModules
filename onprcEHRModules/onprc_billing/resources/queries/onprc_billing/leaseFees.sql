@@ -81,6 +81,8 @@ FROM study.assignment a
 
 WHERE a.dateOnly >= CAST(STARTDATE as DATE) AND a.dateOnly <= CAST(ENDDATE as DATE)
 AND a.qcstate.publicdata = true
+--only charge setup fee for leases >24H
+AND a.duration > 1
 
 --add released animals that need adjustments
 UNION ALL

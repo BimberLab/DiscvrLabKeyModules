@@ -246,7 +246,7 @@ public class FinanceNotification extends AbstractNotification
     {
         new FieldDescriptor("project", false, "Missing Project", true),
         new FieldDescriptor("isMissingAccount", true, "Missing Alias", true),
-        new FieldDescriptor("isExpiredAccount", true, "Expired Alias", true),
+        new FieldDescriptor("isExpiredAccount", true, "Expired/Invalid Alias", true),
         new FieldDescriptor("isAcceptingCharges", true, "Alias Not Accepting Charges", true),
         new FieldDescriptor("lacksRate", true, "Lacks Rate", true),
         new FieldDescriptor("creditAccount", false, "Missing Credit Alias", true),

@@ -1,5 +1,6 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All Items">
     <columns>
+        <column name="rowid"/>
         <column name="name"/>
         <column name="itemcode"/>
         <column name="activeRate/unitcost"/>

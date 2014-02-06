@@ -108,7 +108,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             return;
         }
 
-        table.getColumn("userid").setFk(new QueryForeignKey(us, null, "UsersAndGroups", "UserId", "DisplayName"));
+        table.getColumn("userid").setFk(new QueryForeignKey(us, publicContainer, "UsersAndGroups", "UserId", "DisplayName"));
     }
 
     private void customizeMiscCharges(AbstractTableInfo table)
@@ -122,19 +122,19 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         ColumnInfo invoicedItemId = table.getColumn("invoicedItemId");
         if (invoicedItemId != null)
         {
-            invoicedItemId.setFk(new QueryForeignKey(us, null, "invoicedItems", "objectid", "rowid"));
+            invoicedItemId.setFk(new QueryForeignKey(us, us.getContainer(), "invoicedItems", "objectid", "rowid"));
         }
 
         ColumnInfo sourceInvoicedItem = table.getColumn("sourceInvoicedItem");
         if (sourceInvoicedItem != null)
         {
-            sourceInvoicedItem.setFk(new QueryForeignKey(us, null, "invoicedItems", "objectid", "rowid"));
+            sourceInvoicedItem.setFk(new QueryForeignKey(us, us.getContainer(), "invoicedItems", "objectid", "rowid"));
         }
 
         ColumnInfo invoiceId = table.getColumn("invoiceId");
         if (invoiceId != null)
         {
-            invoiceId.setFk(new QueryForeignKey(us, null, "invoiceRuns", "objectid", "rowid"));
+            invoiceId.setFk(new QueryForeignKey(us, us.getContainer(), "invoiceRuns", "objectid", "rowid"));
         }
     }
 
@@ -156,10 +156,10 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         ColumnInfo idCol = table.getColumn("Id");
         if (idCol != null)
         {
-            Container c = EHRService.get().getEHRStudyContainer(table.getUserSchema().getContainer());
-            if (c != null)
+            Container ehrContainer = EHRService.get().getEHRStudyContainer(table.getUserSchema().getContainer());
+            if (ehrContainer != null)
             {
-                idCol.setFk(new QueryForeignKey("study", c, c, table.getUserSchema().getUser(), "animal", "Id", "Id"));
+                idCol.setFk(new QueryForeignKey("study", ehrContainer, ehrContainer, table.getUserSchema().getUser(), "animal", "Id", "Id"));
             }
         }
 
@@ -174,11 +174,11 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
 
             if (us != null)
             {
-                debitedaccount.setFk(new QueryForeignKey(us, null, "aliases", "alias", "alias", true));
+                debitedaccount.setFk(new QueryForeignKey(us, us.getContainer(), "aliases", "alias", "alias", true));
                 debitedaccount.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${account}"));
 
                 ColumnInfo creditedaccount = table.getColumn("creditedaccount");
-                creditedaccount.setFk(new QueryForeignKey(us, null, "aliases", "alias", "alias", true));
+                creditedaccount.setFk(new QueryForeignKey(us, us.getContainer(), "aliases", "alias", "alias", true));
                 creditedaccount.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${account}"));
             }
         }
@@ -198,7 +198,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
                 found = true;
                 if (!ti.getName().equalsIgnoreCase("grants") && grant.getFk() == null)
                 {
-                    UserSchema us = getUserSchema(ti, "onprc_billing");
+                    UserSchema us = getUserSchema(ti, "onprc_billing_public");
                     if (us != null)
                         grant.setFk(new QueryForeignKey(us, null, "grants", "grantNumber", "grantNumber"));
                 }
@@ -215,7 +215,21 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
                 if (us != null)
                 {
                     account.setFk(new QueryForeignKey(us, null, "aliases", "alias", "alias", true));
-                    account.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${account}"));
+                    account.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${account}", us.getContainer()));
+                }
+            }
+        }
+
+        ColumnInfo projectNumber = ti.getColumn("projectNumber");
+        if (projectNumber != null && !ti.getName().equalsIgnoreCase("grantProjects"))
+        {
+            if (projectNumber.getFk() == null)
+            {
+                UserSchema us = getUserSchema(ti, "onprc_billing_public");
+                if (us != null)
+                {
+                    projectNumber.setFk(new QueryForeignKey(us, null, "grantProjects", "projectNumber", "projectNumber", true));
+                    projectNumber.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=grantProjects&query.projectNumber~eq=${projectNumber}", us.getContainer()));
                 }
             }
         }

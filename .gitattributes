@@ -835,7 +835,7 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/aliases.query.xml 
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/aliases/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/aliases/Active[!!-~]Aliases.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRateExemptions/.qview.xml -text
-onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRateExemptions/All[!!-~]Items.qview.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRateExemptions/Active[!!-~]Items.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRates/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRates/Active[!!-~]Rates.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeableItems/.qview.xml -text
@@ -845,7 +845,7 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargesIBS.sql -te
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargesMissingRate.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargesMissingRate.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/creditAccount/.qview.xml -text
-onprcEHRModules/onprc_billing/resources/queries/onprc_billing/creditAccount/All[!!-~]Items.qview.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/creditAccount/Active[!!-~]Items.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/dataAccess/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/duplicateChargeableItems.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/duplicateChargeableItems.sql -text
@@ -996,6 +996,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billi
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.352-12.353.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.353-12.354.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.354-12.355.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.355-12.356.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.30-12.301.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.301-12.302.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.302-12.303.sql -text
@@ -1044,6 +1045,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billin
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.352-12.353.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.353-12.354.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.354-12.355.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.355-12.356.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing.xml -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing_public.template.xml -text
 onprcEHRModules/onprc_billing/resources/scripts/onprc_billing/billing_triggers.js -text
@@ -1079,7 +1081,6 @@ onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/pipeline/BillingTask.
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/query/BillingAuditProvider.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/query/BillingAuditViewFactory.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/query/BillingTriggerHelper.java -text
-onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/query/CustomPermissionsTable.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/query/ONPRC_EHRBillingUserSchema.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/security/ONPRCBillingAdminPermission.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/security/ONPRCBillingAdminRole.java -text
@@ -1139,6 +1140,19 @@ onprcEHRModules/onprc_reports/resources/schemas/ViralLoadResults.template.xml -t
 onprcEHRModules/onprc_reports/src/org/labkey/onprc_reports/ONPRC_ReportsCustomizer.java -text
 onprcEHRModules/onprc_reports/src/org/labkey/onprc_reports/ONPRC_ReportsManager.java -text
 onprcEHRModules/onprc_reports/src/org/labkey/onprc_reports/ONPRC_ReportsModule.java -text
+onprcEHRModules/onprc_ssu/ONPRC_SSU.iml -text
+onprcEHRModules/onprc_ssu/module.properties -text
+onprcEHRModules/onprc_ssu/resources/schemas/dbscripts/postgresql/onprc_ssu-13.20-13.21.sql -text
+onprcEHRModules/onprc_ssu/resources/schemas/dbscripts/sqlserver/onprc_ssu-13.20-13.21.sql -text
+onprcEHRModules/onprc_ssu/resources/schemas/onprc_ssu.xml -text
+onprcEHRModules/onprc_ssu/resources/views/begin.html -text
+onprcEHRModules/onprc_ssu/resources/views/begin.view.xml -text
+onprcEHRModules/onprc_ssu/resources/views/begin.webpart.xml -text
+onprcEHRModules/onprc_ssu/src/org/labkey/onprc_ssu/ONPRC_SSUController.java -text
+onprcEHRModules/onprc_ssu/src/org/labkey/onprc_ssu/ONPRC_SSUManager.java -text
+onprcEHRModules/onprc_ssu/src/org/labkey/onprc_ssu/ONPRC_SSUModule.java -text
+onprcEHRModules/onprc_ssu/src/org/labkey/onprc_ssu/ONPRC_SSUSchema.java -text
+onprcEHRModules/onprc_ssu/src/org/labkey/onprc_ssu/notification/SSU_Notification.java -text
 onprcEHRModules/sla/SLA.iml -text
 onprcEHRModules/sla/module.properties -text
 onprcEHRModules/sla/resources/etl/sla/census.sql -text

@@ -66,7 +66,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 12.355;
+        return 12.356;
     }
 
     @Override
@@ -86,6 +86,11 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     protected void init()
     {
         addController(ONPRC_BillingController.NAME, ONPRC_BillingController.class);
+
+        // note: we were getting startup warnings about not finding these roles
+        // when this happened during doStartupAfterSpringConfig(), so these were moved here
+        RoleManager.registerRole(new ONPRCBillingAdminRole());
+        RoleManager.registerRole(new ONPRCChargesEntryRole());
     }
 
     @Override
@@ -93,9 +98,6 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     {
         AuditLogService.registerAuditType(new BillingAuditProvider());
         AuditLogService.get().addAuditViewFactory(BillingAuditViewFactory.getInstance());
-
-        RoleManager.registerRole(new ONPRCBillingAdminRole());
-        RoleManager.registerRole(new ONPRCChargesEntryRole());
 
         PipelineService.get().registerPipelineProvider(new BillingPipelineProvider(this));
 

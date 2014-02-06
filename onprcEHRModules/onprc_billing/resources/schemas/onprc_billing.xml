@@ -76,7 +76,7 @@
         <ns:tableTitle>Chargeable Items</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowid">
-                <ns:columnTitle>Row Id</ns:columnTitle>
+                <ns:columnTitle>Charge Id</ns:columnTitle>
             </ns:column>
             <ns:column columnName="name">
                 <ns:columnTitle>Name</ns:columnTitle>
@@ -86,6 +86,12 @@
             </ns:column>
             <ns:column columnName="category">
                 <ns:columnTitle>Category</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>chargeableItemCategories</ns:fkTable>
+                    <ns:fkColumnName>category</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>category</ns:fkDisplayColumnName>
+                </ns:fk>
             </ns:column>
             <ns:column columnName="comment">
                 <ns:columnTitle>Comment</ns:columnTitle>
@@ -95,7 +101,7 @@
                 <ns:description>A code used to refer to identify this item, which is primarily used when exporting or communicating with external billing systems</ns:description>
             </ns:column>
             <ns:column columnName="departmentCode">
-                <ns:columnTitle>Department Code</ns:columnTitle>
+                <ns:columnTitle>Service Center</ns:columnTitle>
                 <ns:description>A code used to categorize these items by department, primarily used when exporting or communicating with external billing systems.  Similar to itemCode</ns:description>
             </ns:column>
                 <ns:column columnName="allowscustomunitcost">
@@ -118,7 +124,6 @@
             <ns:column columnName="rowId">
                 <ns:columnTitle>Row Id</ns:columnTitle>
                 <ns:isHidden>true</ns:isHidden>
-                <ns:isKeyField>false</ns:isKeyField>
             </ns:column>
             <ns:column columnName="invoiceId">
                 <ns:columnTitle>Invoice</ns:columnTitle>
@@ -151,6 +156,12 @@
             </ns:column>
             <ns:column columnName="category">
                 <ns:columnTitle>Category</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>chargeableItemCategories</ns:fkTable>
+                    <ns:fkColumnName>category</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>category</ns:fkDisplayColumnName>
+                </ns:fk>
             </ns:column>
             <ns:column columnName="servicecenter">
                 <ns:columnTitle>Service Center</ns:columnTitle>
@@ -871,6 +882,12 @@
             </ns:column>
             <ns:column columnName="category">
                 <ns:columnTitle>Category</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>aliasCategories</ns:fkTable>
+                    <ns:fkColumnName>category</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>category</ns:fkDisplayColumnName>
+                </ns:fk>
             </ns:column>
             <ns:column columnName="aliasEnabled">
                 <ns:columnTitle>Alias Enabled</ns:columnTitle>
@@ -1047,6 +1064,22 @@
                 <ns:shownInUpdateView>false</ns:shownInUpdateView>
                 <ns:nullable>true</ns:nullable>
                 <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="chargeableItemCategories" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Chargeable Item Categories</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="category">
+                <ns:columnTitle>Category</ns:columnTitle>
+            </ns:column>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="aliasCategories" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Alias Categories</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="category">
+                <ns:columnTitle>Category</ns:columnTitle>
             </ns:column>
         </ns:columns>
     </ns:table>
