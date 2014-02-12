@@ -72,10 +72,10 @@ SELECT
     ELSE null
   END as isAcceptingCharges,
   CASE
-    --WHEN ifdefined(p.project.account.projectNumber.budgetStartDate) IS NULL THEN null
+    --WHEN ifdefined(p.project.account.budgetStartDate) IS NULL THEN null
     WHEN (ifdefined(p.project.account.budgetStartDate) IS NOT NULL AND ifdefined(p.project.account.budgetStartDate) > p.date) THEN 'Prior To Budget Start'
     WHEN (ifdefined(p.project.account.budgetEndDate) IS NOT NULL AND ifdefined(p.project.account.budgetEndDate) < p.date) THEN 'After Budget End'
-    WHEN (ifdefined(p.project.account.projectNumber.projectStatus) IS NOT NULL AND ifdefined(p.project.account.projectNumber.projectStatus) != 'ACTIVE' AND ifdefined(p.project.account.projectNumber.projectStatus) != 'No Cost Ext' AND ifdefined(p.project.account.projectNumber.projectStatus) != 'Partial Setup') THEN 'Grant Project Not Active'
+    WHEN (ifdefined(p.project.account.projectStatus) IS NOT NULL AND ifdefined(p.project.account.projectStatus) != 'ACTIVE' AND ifdefined(p.project.account.projectStatus) != 'No Cost Ext' AND ifdefined(p.project.account.projectStatus) != 'Partial Setup') THEN 'Grant Project Not Active'
     ELSE null
   END as isExpiredAccount,
   CASE WHEN (TIMESTAMPDIFF('SQL_TSI_DAY', p.date, curdate()) > 45) THEN 'Y' ELSE null END as isOldCharge
@@ -83,13 +83,13 @@ SELECT
 FROM onprc_billing.leaseFees p
 
 --the first charge
-LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.chargeRates cr ON (
+LEFT JOIN onprc_billing_public.chargeRates cr ON (
     p.date >= cr.startDate AND
     (p.date <= cr.enddateTimeCoalesced OR cr.enddate IS NULL) AND
     p.chargeId = cr.chargeId
 )
 
-LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.chargeRateExemptions e ON (
+LEFT JOIN onprc_billing_public.chargeRateExemptions e ON (
     p.date >= e.startDate AND
     (p.date <= e.enddateTimeCoalesced OR e.enddate IS NULL) AND
     p.chargeId = e.chargeId AND
@@ -97,13 +97,13 @@ LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_
 )
 
 --the original charge (for adjustments)
-LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.chargeRates cr2 ON (
+LEFT JOIN onprc_billing_public.chargeRates cr2 ON (
     p.date >= cr2.startDate AND
     (p.date <= cr2.enddateTimeCoalesced OR cr2.enddate IS NULL) AND
     p.leaseCharge1 = cr2.chargeId
 )
 
-LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.chargeRateExemptions e2 ON (
+LEFT JOIN onprc_billing_public.chargeRateExemptions e2 ON (
     p.date >= e2.startDate AND
     (p.date <= e2.enddateTimeCoalesced OR e2.enddate IS NULL) AND
     p.leaseCharge1 = e2.chargeId AND
@@ -112,13 +112,13 @@ LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_
 --EO original charge
 
 --the final charge (for adjustments)
-LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.chargeRates cr3 ON (
+LEFT JOIN onprc_billing_public.chargeRates cr3 ON (
   p.date >= cr3.startDate AND
   (p.date <= cr3.enddateTimeCoalesced OR cr3.enddate IS NULL) AND
   p.leaseCharge2 = cr3.chargeId
 )
 
-LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.chargeRateExemptions e3 ON (
+LEFT JOIN onprc_billing_public.chargeRateExemptions e3 ON (
   p.date >= e3.startDate AND
   (p.date <= e3.enddateTimeCoalesced OR e3.enddate IS NULL) AND
   p.leaseCharge2 = e3.chargeId AND
@@ -126,7 +126,7 @@ LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_
 )
 --EO final charge
 
-LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.creditAccount ce ON (
+LEFT JOIN onprc_billing_public.creditAccount ce ON (
     p.date >= ce.startDate AND
     (p.date <= ce.enddateTimeCoalesced OR ce.enddate IS NULL) AND
     p.chargeId = ce.chargeId
@@ -174,6 +174,6 @@ SELECT
   mc.isExpiredAccount,
   mc.isOldCharge
 
-FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.miscChargesFeeRateData mc
+FROM onprc_billing.miscChargesFeeRateData mc
 WHERE cast(mc.billingDate as date) >= CAST(StartDate as date) AND cast(mc.billingDate as date) <= CAST(EndDate as date)
 AND mc.category IN ('Lease Fees', 'Lease Setup Fee', 'Lease Setup Fees')

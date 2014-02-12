@@ -22,6 +22,7 @@ import org.labkey.api.data.dialect.SqlDialect;
 public class ONPRC_SSUSchema
 {
     public static final String NAME = "onprc_ssu";
+    public static final String TABLE_SCHEDULE = "schedule";
     private static final ONPRC_SSUSchema _instance = new ONPRC_SSUSchema();
 
     public static ONPRC_SSUSchema getInstance()

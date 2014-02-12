@@ -21,6 +21,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.ehr.security.EHRDataEntryPermission;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.table.ContainerScopedTable;
 import org.labkey.api.ldk.table.CustomPermissionsTable;
 import org.labkey.api.query.SimpleUserSchema;
@@ -53,15 +54,16 @@ public class ONPRC_EHRBillingUserSchema extends SimpleUserSchema
             CustomPermissionsTable ti = new CustomPermissionsTable(this, schematable).init();
             ti.addPermissionMapping(InsertPermission.class, EHRDataEntryPermission.class);
             ti.addPermissionMapping(UpdatePermission.class, EHRDataEntryPermission.class);
-            ti.addPermissionMapping(DeletePermission.class, ONPRCBillingAdminPermission.class);
+            //NOTE: we really should do a QCState-based permission scheme, or filter based on whether that item was billed or not
+            ti.addPermissionMapping(DeletePermission.class, EHRDataEntryPermission.class);
             return ti;
         }
-        else if ("grants".equalsIgnoreCase(name))
+        else if (ONPRC_BillingSchema.TABLE_CREDIT_GRANTS.equalsIgnoreCase(name))
         {
             ContainerScopedTable ti = new ContainerScopedTable(this, schematable, "grantNumber");
             return ti.init();
         }
-        else if ("aliases".equalsIgnoreCase(name))
+        else if (ONPRC_BillingSchema.TABLE_ALIASES.equalsIgnoreCase(name))
         {
             ContainerScopedTable ti = new ContainerScopedTable(this, schematable, "alias");
             return ti.init();

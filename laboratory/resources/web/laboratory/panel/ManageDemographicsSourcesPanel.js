@@ -9,13 +9,13 @@ Ext4.define('Laboratory.panel.ManageDemographicsSourcesPanel', {
             buttonAlign: 'left',
             buttons: [{
                 text: 'Add New',
-                hidden: !LABKEY.Security.currentUser.isAdmin,
+                hidden: !Laboratory.Utils.isLaboratoryAdmin(),
                 scope: this,
                 handler: this.doAdd
             },{
                 text: 'Add Default Sources',
                 itemId: 'defaultSources',
-                hidden: !LABKEY.Security.currentUser.isAdmin || LDK.Utils.isSharedProject(),
+                hidden: !Laboratory.Utils.isLaboratoryAdmin() || LDK.Utils.isSharedProject(),
                 scope: this,
                 menu: []
             }],
@@ -88,7 +88,7 @@ Ext4.define('Laboratory.panel.ManageDemographicsSourcesPanel', {
                     },{
                         xtype: 'button',
                         text: 'Remove',
-                        hidden: !LABKEY.Security.currentUser.isAdmin,
+                        hidden: !Laboratory.Utils.isLaboratoryAdmin(),
                         style: 'padding: 0px;',
                         border: true,
                         sourceIdx: idx,

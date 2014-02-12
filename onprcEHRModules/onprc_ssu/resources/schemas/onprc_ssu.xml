@@ -1,21 +1,43 @@
 <ns:tables xmlns:ns="http://labkey.org/data/xml">
     <ns:table tableName="schedule" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>SSU Schedule</ns:tableTitle>
-        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:javaCustomizer>org.labkey.ehr.table.WrappingTableCustomizer</ns:javaCustomizer>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
-            <ns:column columnName="Id"/>
+            <ns:column columnName="Id">
+                <ns:conceptURI>http://cpas.labkey.com/Study#ParticipantId</ns:conceptURI>
+            </ns:column>
             <ns:column columnName="date">
                 <ns:columnTitle>Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="project">
+                <ns:columnTitle>Project Id</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
             </ns:column>
             <ns:column columnName="location">
                 <ns:columnTitle>Location</ns:columnTitle>
             </ns:column>
             <ns:column columnName="procedureid">
                 <ns:columnTitle>Procedure Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="formcreated">
+                <ns:columnTitle>Surgery Created?</ns:columnTitle>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+            </ns:column>
+            <ns:column columnName="encounterid">
+                <ns:columnTitle>Surgery Id</ns:columnTitle>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:isUserEditable>false</ns:isUserEditable>
+            </ns:column>
+            <ns:column columnName="taskid">
+                <ns:columnTitle>Task Id</ns:columnTitle>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:isUserEditable>false</ns:isUserEditable>
             </ns:column>
             <ns:column columnName="objectid">
                 <ns:columnTitle>Key</ns:columnTitle>

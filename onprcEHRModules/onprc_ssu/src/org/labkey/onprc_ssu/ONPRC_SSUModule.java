@@ -46,7 +46,7 @@ public class ONPRC_SSUModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 13.21;
+        return 13.23;
     }
 
     @Override

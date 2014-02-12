@@ -53,6 +53,13 @@ public class MergeSyncManager
     public static final String TABLE_TESTNAMEMAPPING = "testnamemapping";
     public static final String TABLE_ORDERSSYNCED = "orderssynced";
 
+    public static final String TABLE_MERGE_ORDERS = "orders";
+    public static final String TABLE_MERGE_RESULTS = "results";
+    public static final String TABLE_MERGE_CONTAINERS = "containers";
+    public static final String TABLE_MERGE_VISITS = "visits";
+    public static final String TABLE_MERGE_PERSONNEL = "prsnl";
+    public static final String TABLE_MERGE_PATIENTS = "patients";
+
     private MergeSyncManager()
     {
 
@@ -99,7 +106,7 @@ public class MergeSyncManager
             {
                 _job = JobBuilder.newJob(MergeSyncRunner.class)
                         .withIdentity(MergeSyncRunner.class.getCanonicalName(), MergeSyncRunner.class.getCanonicalName())
-                        .usingJobData("ogaSync", MergeSyncRunner.class.getName())
+                        .usingJobData("mergeSync", MergeSyncRunner.class.getName())
                         .build();
             }
 
@@ -211,7 +218,7 @@ public class MergeSyncManager
     {
         if (isEnabled() && _trigger == null)
         {
-            _log.info("scheduling OGA sync");
+            _log.info("scheduling Merge sync");
             JobRunner.getDefault().execute(new Runnable(){
                 public void run()
                 {
@@ -252,7 +259,7 @@ public class MergeSyncManager
         }
         catch (ValidEmail.InvalidEmailException e)
         {
-            _log.error("Invalid email saved for OGA Sync: " + e.getMessage());
+            _log.error("Invalid email saved for Merge Sync: " + e.getMessage());
         }
 
         return null;
@@ -341,5 +348,14 @@ public class MergeSyncManager
             if (PropertyManager.getProperties(CONFIG_PROPERTY_DOMAIN).get(LABKEY_CONTAINER_PROP_NAME) == null)
                 throw new IllegalArgumentException("No LabKey container set");
         }
+    }
+
+    public DbSchema getMergeSchema()
+    {
+        DbScope scope = DbScope.getDbScope(MergeSyncManager.get().getDataSourceName());
+        if (scope == null)
+            return null;
+
+        return scope.getSchema(MergeSyncManager.get().getSchemaName());
     }
 }

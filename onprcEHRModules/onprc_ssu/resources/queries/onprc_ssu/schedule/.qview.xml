@@ -1,0 +1,16 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="Id"/>
+        <column name="date"/>
+        <column name="procedureid"/>
+        <column name="location"/>
+        <column name="project"/>
+        <column name="formcreated"/>
+        <column name="created"/>
+    </columns>
+    <sorts>
+        <sort column="date" descending="true"/>
+        <sort column="Id"/>
+        <sort column="procedureid/name"/>
+    </sorts>
+</customView>

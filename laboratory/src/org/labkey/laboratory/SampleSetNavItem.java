@@ -19,7 +19,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.exp.api.ExpSampleSet;
 import org.labkey.api.exp.api.ExperimentUrls;
 import org.labkey.api.exp.query.SamplesSchema;
-import org.labkey.api.laboratory.AbstractQueryNavItem;
+import org.labkey.api.laboratory.AbstractImportingNavItem;
 import org.labkey.api.laboratory.DataProvider;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.LaboratoryUrls;
@@ -35,37 +35,23 @@ import org.labkey.api.view.ActionURL;
  * Date: 10/1/12
  * Time: 8:51 AM
  */
-public class SampleSetNavItem extends AbstractQueryNavItem
+public class SampleSetNavItem extends AbstractImportingNavItem
 {
     private ExpSampleSet _sampleSet;
-    private DataProvider _dataProvider;
 
     public SampleSetNavItem(DataProvider provider, ExpSampleSet sampleSet)
     {
+        super(provider, sampleSet.getName(), sampleSet.getName(), LaboratoryService.NavItemCategory.samples.name());
         _sampleSet = sampleSet;
-        _dataProvider = provider;
     }
 
-    public String getName()
-    {
-        return _sampleSet.getName();
-    }
-
-    public String getLabel()
-    {
-        return _sampleSet.getName();
-    }
-
-    public String getCategory()
-    {
-        return LaboratoryService.NavItemCategory.samples.name();
-    }
-
+    @Override
     public boolean isImportIntoWorkbooks(Container c, User u)
     {
         return true;
     }
 
+    @Override
     public boolean getDefaultVisibility(Container c, User u)
     {
         //by default, only show if defined in current container
@@ -73,6 +59,7 @@ public class SampleSetNavItem extends AbstractQueryNavItem
         return _sampleSet.getContainer().equals(toCompare);
     }
 
+    @Override
     public ActionURL getImportUrl(Container c, User u)
     {
         if (!c.hasPermission(u, InsertPermission.class))
@@ -84,18 +71,15 @@ public class SampleSetNavItem extends AbstractQueryNavItem
         return url;
     }
 
+    @Override
     public ActionURL getSearchUrl(Container c, User u)
     {
         return PageFlowUtil.urlProvider(LaboratoryUrls.class).getSearchUrl(c, SamplesSchema.SCHEMA_NAME, _sampleSet.getName());
     }
 
+    @Override
     public ActionURL getBrowseUrl(Container c, User u)
     {
         return QueryService.get().urlFor(u, c, QueryAction.executeQuery, SamplesSchema.SCHEMA_NAME, _sampleSet.getName());
-    }
-
-    public DataProvider getDataProvider()
-    {
-        return _dataProvider;
     }
 }

@@ -48,6 +48,7 @@ import org.labkey.api.laboratory.assay.AbstractAssayDataProvider;
 import org.labkey.api.laboratory.assay.AssayDataProvider;
 import org.labkey.api.laboratory.assay.AssayImportMethod;
 import org.labkey.api.laboratory.assay.AssayParser;
+import org.labkey.api.laboratory.security.LaboratoryAdminPermission;
 import org.labkey.api.ldk.AbstractNavItem;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.module.Module;
@@ -1248,7 +1249,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermissionClass(LaboratoryAdminPermission.class)
     public class SetDemographicsSourcesAction extends ApiAction<SetDataSourcesForm>
     {
         public ApiResponse execute(SetDataSourcesForm form, BindException errors)
@@ -1306,7 +1307,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermissionClass(LaboratoryAdminPermission.class)
     public class SetAdditionalDataSourcesAction extends ApiAction<SetDataSourcesForm>
     {
         public ApiResponse execute(SetDataSourcesForm form, BindException errors)
@@ -1383,7 +1384,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermissionClass(LaboratoryAdminPermission.class)
     public class SetUrlDataSourcesAction extends ApiAction<SetUrlDataSourcesForm>
     {
         public ApiResponse execute(SetUrlDataSourcesForm form, BindException errors)
@@ -1479,7 +1480,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermissionClass(LaboratoryAdminPermission.class)
     public class SetItemVisibilityAction extends ApiAction<JsonDataForm>
     {
         public ApiResponse execute(JsonDataForm form, BindException errors)
@@ -1532,7 +1533,7 @@ public class LaboratoryController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermissionClass(LaboratoryAdminPermission.class)
     public class SetItemDefaultViewAction extends ApiAction<JsonDataForm>
     {
         public ApiResponse execute(JsonDataForm form, BindException errors)
@@ -1565,7 +1566,7 @@ public class LaboratoryController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermissionClass(LaboratoryAdminPermission.class)
     public class SetDataBrowserSettingsAction extends ApiAction<JsonDataForm>
     {
         public ApiResponse execute(JsonDataForm form, BindException errors)
@@ -1625,7 +1626,7 @@ public class LaboratoryController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermissionClass(LaboratoryAdminPermission.class)
     public class SaveAssayDefaultsAction extends ApiAction<JsonDataForm>
     {
         public ApiResponse execute(JsonDataForm form, BindException errors)

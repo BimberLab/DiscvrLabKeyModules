@@ -8,11 +8,11 @@ Ext4.onReady(function(){
         return {
             urlConfig: i.importUrl,
             handler: function(btn){
-                if(!LABKEY.Security.currentUser.canInsert){
+                if (!LABKEY.Security.currentUser.canInsert){
                     alert('You do not have permission to import data');
                     return;
                 }
-                if(LABKEY.Security.currentContainer.isWorkbook)
+                if (LABKEY.Security.currentContainer.isWorkbook)
                     window.location = LABKEY.ActionURL.buildURL(btn.urlConfig.controller, btn.urlConfig.action, null, btn.urlConfig.params);
                 else {
                     var el = btn.up('button');
@@ -31,9 +31,9 @@ Ext4.onReady(function(){
         scope: this,
         success: function(result){
             var importItems = [];
-            if(Ext4.isArray(result.data) && result.data.length){
+            if (Ext4.isArray(result.data) && result.data.length){
                 Ext4.each(result.data, function(i){
-                    if(!LABKEY.Utils.isEmptyObj(i.importUrl) && LABKEY.Security.currentUser.canInsert){
+                    if (!LABKEY.Utils.isEmptyObj(i.importUrl) && LABKEY.Security.currentUser.canInsert){
                         var cfg = {
                             text: i.label
                         }
@@ -97,18 +97,18 @@ Ext4.onReady(function(){
             }
 
             var sampleItems = [];
-            if(Ext4.isArray(result.samples) && result.samples.length){
+            if (Ext4.isArray(result.samples) && result.samples.length){
                 Ext4.each(result.samples, function(i){
                     if (!LABKEY.Utils.isEmptyObj(i.importUrl) && LABKEY.Security.currentUser.canInsert){
                         sampleItems.push({
                             text: i.label,
                             urlConfig: i.importUrl,
                             handler: function(btn){
-                                if(!LABKEY.Security.currentUser.canInsert){
+                                if (!LABKEY.Security.currentUser.canInsert){
                                     alert('You do not have permission to import data');
                                     return;
                                 }
-                                if(LABKEY.Security.currentContainer.isWorkbook)
+                                if (LABKEY.Security.currentContainer.isWorkbook)
                                     window.location = LABKEY.ActionURL.buildURL(btn.urlConfig.controller, btn.urlConfig.action, null, btn.urlConfig.params);
                                 else {
                                     var el = btn.up('button');
@@ -161,7 +161,7 @@ Ext4.onReady(function(){
                 }]
             };
 
-            if(LABKEY.Security.currentUser.isAdmin){
+            if (Laboratory.Utils.isLaboratoryAdmin()){
                 config.items.push({
                     text: 'Settings',
                     icon: LABKEY.ActionURL.getContextPath() + '/study/tools/settings.png',

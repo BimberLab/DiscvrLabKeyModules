@@ -16,15 +16,19 @@
 package org.labkey.laboratory;
 
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.laboratory.LaboratoryService;
+import org.labkey.api.laboratory.security.LaboratoryAdminPermission;
 import org.labkey.api.ldk.ExtendedSimpleModule;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.notification.NotificationService;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.User;
+import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.BaseWebPartFactory;
@@ -37,11 +41,14 @@ import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.laboratory.notification.LabSummaryNotification;
 import org.labkey.laboratory.query.WorkbookModel;
+import org.labkey.laboratory.security.LaboratoryAdminRole;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -105,6 +112,8 @@ public class LaboratoryModule extends ExtendedSimpleModule
     @Override
     protected void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
+        RoleManager.registerRole(new LaboratoryAdminRole());
+
         LaboratoryService.get().registerDataProvider(new LaboratoryDataProvider(this));
         LaboratoryService.get().registerDataProvider(new SampleSetDataProvider());
         LaboratoryService.get().registerDataProvider(new ExtraDataSourcesDataProvider(this));
@@ -116,6 +125,10 @@ public class LaboratoryModule extends ExtendedSimpleModule
 
         LaboratoryService.get().registerTableIndex("core", "containers", Arrays.asList("RowId", "Parent", "EntityId", "Type"));
         LaboratoryService.get().registerTableIndex("exp", "data", Arrays.asList("RowId", "RunId", "Container"));
+
+        LDKService.get().registerContainerScopedTable(SCHEMA_NAME, LaboratorySchema.TABLE_SAMPLE_TYPE, "type");
+        LDKService.get().registerContainerScopedTable(SCHEMA_NAME, LaboratorySchema.TABLE_FREEZERS, "name");
+        LDKService.get().registerContainerScopedTable(SCHEMA_NAME, LaboratorySchema.TABLE_SUBJECTS, "subjectname");
     }
 
     @Override
@@ -147,6 +160,17 @@ public class LaboratoryModule extends ExtendedSimpleModule
         ret.addAll(LaboratoryService.get().getRegisteredClientDependencies(c, u));
 
         return ret;
+    }
+
+    @Override
+    public @NotNull JSONObject getPageContextJson(ViewContext context)
+    {
+        Map<String, Object> ret = new HashMap<>();
+        ret.putAll(super.getPageContextJson(context));
+
+        ret.put("isLaboratoryAdmin", context.getContainer().hasPermission(context.getUser(), LaboratoryAdminPermission.class));
+
+        return new JSONObject(ret);
     }
 
     @Override

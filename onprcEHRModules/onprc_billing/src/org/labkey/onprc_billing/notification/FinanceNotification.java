@@ -186,13 +186,14 @@ public class FinanceNotification extends AbstractNotification
         getAliasesDisabled(c, u, msg);
         getProjectsWithoutAliases(c, u, msg);
         getProjectsNotActive(c, u, msg);
-        chargesMissingRates(c, u, msg);
         getExpiredCreditAliases(c, u, msg);
         getCreditAliasesDisabled(c, u, msg);
-        simpleAlert(c, u , msg, "onprc_billing", "invalidChargeRateEntries", " charge rate records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
-        simpleAlert(c, u , msg, "onprc_billing", "invalidChargeRateExemptionEntries", " charge rate exemptions with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
-        simpleAlert(c, u , msg, "onprc_billing", "invalidCreditAccountEntries", " credit account records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
-        simpleAlert(c, u , msg, "onprc_billing", "duplicateChargeableItems", " active chargeable item records with duplicate names or item codes.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
+        chargesMissingRates(financeContainer, u, msg);
+        simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidChargeRateEntries", " charge rate records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
+        simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidChargeRateExemptionEntries", " charge rate exemptions with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
+        simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidCreditAccountEntries", " credit account records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
+        simpleAlert(financeContainer, u , msg, "onprc_billing", "duplicateChargeableItems", " active chargeable item records with duplicate names or item codes.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
+        simpleAlert(c, u , msg, "onprc_billing", "invalidProjectAccountEntries", " project/alias records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
 
         return msg.toString();
     }
@@ -577,7 +578,7 @@ public class FinanceNotification extends AbstractNotification
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("chargeId/active"), true, CompareType.EQUAL);
         filter.addCondition(FieldKey.fromString("account/aliasEnabled"), "Y", CompareType.NEQ_OR_NULL);
         filter.addCondition(FieldKey.fromString("account"), null, CompareType.NONBLANK);
-        filter.addCondition(FieldKey.fromString("account"), -1, CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("account"), "-1", CompareType.NEQ_OR_NULL);
         TableSelector ts = new TableSelector(ti, filter, null);
         long count = ts.getRowCount();
         if (count > 0)
@@ -600,7 +601,7 @@ public class FinanceNotification extends AbstractNotification
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("chargeId/active"), true, CompareType.EQUAL);
         filter.addCondition(FieldKey.fromString("account/budgetEndDateCoalesced"), "-0d", CompareType.DATE_LT);
         filter.addCondition(FieldKey.fromString("account"), null, CompareType.NONBLANK);
-        filter.addCondition(FieldKey.fromString("account"), -1, CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("account"), "-1", CompareType.NEQ_OR_NULL);
         TableSelector ts = new TableSelector(ti, filter, null);
         long count = ts.getRowCount();
         if (count > 0)
@@ -643,9 +644,9 @@ public class FinanceNotification extends AbstractNotification
 
         TableInfo ti = QueryService.get().getUserSchema(u, c, "ehr").getTable("project");
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("enddateCoalesced"), "-0d", CompareType.DATE_GTE);
-        filter.addCondition(FieldKey.fromString("account/projectNumber/projectStatus"), "ACTIVE", CompareType.NEQ_OR_NULL);
-        filter.addCondition(FieldKey.fromString("account/projectNumber/projectStatus"), "No Cost Ext", CompareType.NEQ_OR_NULL);
-        filter.addCondition(FieldKey.fromString("account/projectNumber/projectStatus"), "Partial Setup", CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("account/projectStatus"), "ACTIVE", CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("account/projectStatus"), "No Cost Ext", CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("account/projectStatus"), "Partial Setup", CompareType.NEQ_OR_NULL);
         filter.addCondition(FieldKey.fromString("account"), null, CompareType.NONBLANK);
         TableSelector ts = new TableSelector(ti, filter, null);
         long count = ts.getRowCount();

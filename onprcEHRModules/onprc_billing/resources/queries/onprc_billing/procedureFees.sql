@@ -33,7 +33,7 @@ SELECT
   e.project,
   e.project.account,
   null as procedureId,
-  (select rowid from onprc_billing.chargeableItems ci where ci.name = 'Blood Draw' and ci.active = true) as chargeId,
+  (select rowid from onprc_billing_public.chargeableItems ci where ci.name = 'Blood Draw' and ci.active = true) as chargeId,
   max(e.objectid) as sourceRecord,
   e.taskid
 

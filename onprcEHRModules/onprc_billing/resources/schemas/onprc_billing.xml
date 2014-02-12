@@ -929,6 +929,15 @@
             <ns:column columnName="faSchedule">
                 <ns:columnTitle>F&amp;A Schedule</ns:columnTitle>
             </ns:column>
+            <ns:column columnName="projectTitle">
+                <ns:columnTitle>Project Title</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="projectDescription">
+                <ns:columnTitle>Project Description</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="projectStatus">
+                <ns:columnTitle>Project Status</ns:columnTitle>
+            </ns:column>
             <ns:column columnName="container"/>
             <ns:column columnName="createdBy"/>
             <ns:column columnName="created"/>

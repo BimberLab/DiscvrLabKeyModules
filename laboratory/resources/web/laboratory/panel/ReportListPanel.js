@@ -33,8 +33,13 @@ Ext4.define('Laboratory.panel.ReportListPanel', {
         var cfg = this.getGridConfig();
 
         Ext4.each(results[Laboratory.ITEM_CATEGORY.reports.name], function(item){
-            if (item.visible)
+            if (item.visible){
+                //compatibility with simple NavItems
+                if (item.urlConfig && !item.browseUrl){
+                    item.browseUrl = item.urlConfig;
+                }
                 store.add(store.createModel(item));
+            }
         }, this);
 
         this.removeAll();

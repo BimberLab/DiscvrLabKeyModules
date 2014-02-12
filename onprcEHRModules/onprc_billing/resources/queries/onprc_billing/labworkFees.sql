@@ -23,7 +23,7 @@ FROM study.clinpathRuns e
 JOIN onprc_billing.labworkFeeDefinition p ON (p.servicename = e.servicerequested AND p.active = true)
 
 WHERE e.dateOnly >= CAST(StartDate as date) AND e.dateOnly <= CAST(EndDate as date)
-AND (e.chargetype not in  ('Not Billable', 'Research Staff') or e.chargetype is null)
+AND (e.chargetype not in ('Not Billable', 'Research Staff') or e.chargetype is null)
 AND e.qcstate.publicdata = true
 
 UNION ALL
@@ -35,7 +35,7 @@ SELECT
   e.project,
   e.project.account,
   group_concat(e.servicerequested) as servicerequested,
-  (SELECT c.rowid FROM onprc_billing.chargeableItems c WHERE c.name = 'Lab Processing Fee') as chargeId,
+  (SELECT c.rowid FROM onprc_billing_public.chargeableItems c WHERE c.name = 'Lab Processing Fee') as chargeId,
   null as sourceRecord,
   null as chargeType,
   e.taskid

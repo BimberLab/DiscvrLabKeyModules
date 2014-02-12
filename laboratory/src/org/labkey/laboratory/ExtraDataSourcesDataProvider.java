@@ -7,12 +7,15 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.laboratory.AbstractDataProvider;
+import org.labkey.api.laboratory.AbstractUrlNavItem;
+import org.labkey.api.laboratory.DetailsUrlWithLabelNavItem;
+import org.labkey.api.laboratory.DetailsUrlWithoutLabelNavItem;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.QueryCountNavItem;
+import org.labkey.api.laboratory.QueryImportNavItem;
 import org.labkey.api.laboratory.QueryTabbedReportItem;
 import org.labkey.api.laboratory.ReportItem;
-import org.labkey.api.laboratory.SimpleQueryNavItem;
-import org.labkey.api.laboratory.SimpleUrlNavItem;
+import org.labkey.api.laboratory.StaticURLNavItem;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
 import org.labkey.api.ldk.NavItem;
@@ -68,16 +71,19 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
                 {
                     if (itemType.equals(LaboratoryService.NavItemCategory.misc))
                     {
-                        ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, source.getSchemaName(), source.getQueryName());
-                        items.add(new SimpleUrlNavItem(this, source.getLabel(), source.getLabel(), new DetailsURL(url), source.getCategory()));
+                        DetailsUrlWithoutLabelNavItem item = DetailsUrlWithoutLabelNavItem.createForQuery(this, u, source.getTargetContainer(c), source.getSchemaName(), source.getQueryName(), source.getLabel(), source.getCategory());
+                        if (source.getTargetContainer(null) != null)
+                            item.setTargetContainer(source.getTargetContainer(null));
+
+                        items.add(item);
                     }
                     else if (itemType.equals(LaboratoryService.NavItemCategory.reports))
                     {
-                        items.add(new ReportItem(this, source.getSchemaName(), source.getQueryName(), source.getCategory(), source.getLabel()));
+                        items.add(new ReportItem(this, source.getTargetContainer(null), source.getSchemaName(), source.getQueryName(), source.getCategory(), source.getLabel()));
                     }
                     else
                     {
-                        items.add(new SimpleQueryNavItem(this, source.getSchemaName(), source.getQueryName(), source.getCategory(), source.getLabel()));
+                        items.add(new QueryImportNavItem(this, source.getTargetContainer(null), source.getSchemaName(), source.getQueryName(), source.getCategory(), source.getLabel()));
                     }
                 }
             }
@@ -87,7 +93,7 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
             {
                 if (urlSource.getItemType().equals(itemType))
                 {
-                    items.add(new SimpleUrlNavItem(this, urlSource.getLabel(), urlSource.getLabel(), urlSource.getURLString(c), urlSource.getLabel()));
+                    items.add(new StaticURLNavItem(this, urlSource.getLabel(), null, urlSource.getURLString(c), urlSource.getLabel()));
                 }
             }
         }
@@ -121,10 +127,10 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
         List<NavItem> dataItems = getItems(c, u, LaboratoryService.NavItemCategory.data);
         for (NavItem owner : dataItems)
         {
-            if (owner instanceof SimpleQueryNavItem)
+            if (owner instanceof QueryImportNavItem)
             {
-                SimpleQueryNavItem sq = (SimpleQueryNavItem)owner;
-                ReportItem reportItem = new ReportItem(this, sq.getSchema(), sq.getQuery(), owner.getCategory(), sq.getLabel());
+                QueryImportNavItem sq = (QueryImportNavItem)owner;
+                ReportItem reportItem = new ReportItem(this, sq.getTargetContainer(null), sq.getSchema(), sq.getQuery(), owner.getCategory(), sq.getLabel());
                 reportItem.setOwnerKey(owner.getPropertyManagerKey());
                 items.add(reportItem);
             }
@@ -205,9 +211,9 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
         List<NavItem> reportItems = getItems(c, u, LaboratoryService.NavItemCategory.reports);
         for (NavItem owner : reportItems)
         {
-            if (owner instanceof SimpleQueryNavItem)
+            if (owner instanceof QueryImportNavItem)
             {
-                SimpleQueryNavItem sq = (SimpleQueryNavItem)owner;
+                QueryImportNavItem sq = (QueryImportNavItem)owner;
                 TabbedReportItem reportItem = new QueryTabbedReportItem(this, sq.getSchema(), sq.getQuery(), sq.getLabel(), owner.getCategory());
                 reportItem.setOwnerKey(owner.getPropertyManagerKey());
                 items.add(reportItem);

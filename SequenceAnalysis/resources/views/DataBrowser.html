@@ -45,7 +45,7 @@ Ext4.onReady(function()
                 items: [
                     {name: 'Overview of The Sequence Module', url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'instructions')},
                     //{name: 'Release Notes', url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'releaseNotes')},
-                    {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL("pipeline-status", "showList.view"), renderer: 'defaultRenderer'}
+                    {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL("pipeline-status", "showList.view"), renderer: 'linkWithoutLabel'}
                 ]},
                 {header: 'Summary',
                 renderer: 'summaryCountRenderer',

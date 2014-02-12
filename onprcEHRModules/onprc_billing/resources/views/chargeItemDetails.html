@@ -6,6 +6,7 @@
             return;
         }
 
+        var schemaName = LABKEY.ActionURL.getParameter('isPublic') ? 'onprc_billing_public' : 'onprc_billing';
         var webpart = <%=webpartContext%>;
         var domSpec = [{
             tag: 'div',
@@ -32,7 +33,7 @@
 
         Ext4.create('LDK.panel.DetailsPanel', {
             store: {
-                schemaName: 'onprc_billing',
+                schemaName: schemaName,
                 queryName: 'chargeableItems',
                 filterArray: [LABKEY.Filter.create('rowid', LABKEY.ActionURL.getParameter('chargeId'), LABKEY.Filter.Types.EQUAL)]
             },
@@ -44,7 +45,7 @@
         Ext4.create('LDK.panel.QueryPanel', {
             queryConfig: {
                 title: 'Default Rates For This Item (including historic rates)',
-                schemaName: 'onprc_billing',
+                schemaName: schemaName,
                 queryName: 'chargeRates',
                 filterArray: filterArray,
                 failure: LDK.Utils.getErrorCallback()
@@ -54,7 +55,7 @@
         Ext4.create('LDK.panel.QueryPanel', {
             queryConfig: {
                 title: 'Special Fees Associated With This Charge (including historic special fees)',
-                schemaName: 'onprc_billing',
+                schemaName: schemaName,
                 queryName: 'chargeRateExemptions',
                 filterArray: filterArray,
                 failure: LDK.Utils.getErrorCallback()
@@ -64,7 +65,7 @@
         Ext4.create('LDK.panel.QueryPanel', {
             queryConfig: {
                 title: 'Alias Receiving Credit For These Charges',
-                schemaName: 'onprc_billing',
+                schemaName: schemaName,
                 queryName: 'creditAccount',
                 filterArray: filterArray,
                 failure: LDK.Utils.getErrorCallback()

@@ -46,7 +46,6 @@ Ext4.define('Laboratory.panel.QueryPickerPanel', {
                 schemaName: 'core',
                 queryName: 'containers',
                 columns: 'Name,Path,EntityId',
-                sort: 'Path',
                 containerFilter: 'AllFolders',
                 filterArray: [LABKEY.Filter.create('ContainerType', 'workbook', LABKEY.Filter.Types.NEQ)],
                 autoLoad: true,
@@ -60,6 +59,9 @@ Ext4.define('Laboratory.panel.QueryPickerPanel', {
                         });
 
                         store.insert(0, rec);
+
+                        store.sort('Path', 'ASC');
+                        store.fireEvent('datachanged', store);
                     }
                 }
             },
@@ -164,6 +166,7 @@ Ext4.define('Laboratory.panel.QueryPickerPanel', {
                 LABKEY.Query.getQueries({
                     containerPath: panel.down('#containerId').getValue(),
                     schemaName: schemaName,
+                    timeout: 0,
                     scope: this,
                     success: function(results){
                         var toAdd = [];

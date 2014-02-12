@@ -465,6 +465,13 @@ Laboratory.Utils = new function(){
             var ctx = LABKEY.getModuleContext('laboratory');
             LDK.Assert.assertNotEmpty('laboratory module context not found', ctx);
             return ctx ? ctx['DefaultWorkbookFolderType'] : null;
+        },
+
+        isLaboratoryAdmin: function(){
+            var ctx = LABKEY.getModuleContext('laboratory');
+            LDK.Assert.assertNotEmpty('Laboratory context not loaded', ctx);
+
+            return ctx.isLaboratoryAdmin;
         }
     }
 }

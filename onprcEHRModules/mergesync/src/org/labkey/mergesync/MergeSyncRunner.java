@@ -1,6 +1,7 @@
 package org.labkey.mergesync;
 
 import org.apache.log4j.Logger;
+import org.labkey.api.cache.CacheManager;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -47,12 +48,6 @@ public class MergeSyncRunner implements Job
     private static final Logger _log = Logger.getLogger(MergeSyncRunner.class);
     protected final static SimpleDateFormat _dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd kk:mm");
 
-    private static final String TABLE_MERGE_ORDERS = "orders";
-    private static final String TABLE_MERGE_RESULTS = "results";
-    private static final String TABLE_MERGE_CONTAINERS = "containers";
-    private static final String TABLE_MERGE_VISITS = "visits";
-    private static final String TABLE_MERGE_PERSONNEL = "prsnl";
-
     public MergeSyncRunner()
     {
 
@@ -66,106 +61,111 @@ public class MergeSyncRunner implements Job
         if (!MergeSyncManager.get().isPullEnabled())
             return;
 
-        pullFromMerge();
+        pullResultsFromMerge();
     }
 
-    public void pullFromMerge()
+    /**
+     * When a request is sent to merge, a record is added to mergesync.orderssynced
+     * This inspects any records in this table and checks whether merge has results available for that run
+     */
+    public void pullResultsFromMerge()
     {
         Date lastRun = MergeSyncManager.get().getLastRun();
         _log.info("Pulling results from merge entered since: " + (lastRun == null ? "never run before" : _dateTimeFormat.format(lastRun)));
 
-        TableInfo mergeResults = getMergeSchema().getTable(TABLE_MERGE_RESULTS);
-        TableInfo mergeOrders = getMergeSchema().getTable(TABLE_MERGE_ORDERS);
+        TableInfo mergeOrders = MergeSyncManager.get().getMergeSchema().getTable(MergeSyncManager.TABLE_MERGE_ORDERS);
         if (mergeOrders == null)
         {
             _log.warn("Unable to find merge orders table, aborting");
             return;
         }
 
-        //determine the set of accession numbers we expect to find
-        TableInfo ordersSynced = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_ORDERSSYNCED);
-        TableSelector ts = new TableSelector(ordersSynced, new SimpleFilter(FieldKey.fromString("resultsreceived"), true, CompareType.NEQ), null);
-        Collection<Map<String, Object>> ordersSyncedRows = ts.getMapCollection();
-
-        Map<String, Object> accessionToObjectIdMap = new HashMap<>();
-        for (Map<String, Object> orderRow : ordersSyncedRows)
-        {
-            //attempt to find results in merge
-            String accession = (String)orderRow.get("merge_accession");
-            if (accession == null)
-            {
-                _log.error("No accession for row with objectid: " + orderRow.get("objectid"));
-                continue;
-            }
-
-            if (accessionToObjectIdMap.containsKey(accession))
-            {
-                _log.error("Duplicate accession numbers: " + orderRow.get("objectid"));
-            }
-
-            accessionToObjectIdMap.put(accession, orderRow.get("objectid"));
-
-        }
-
-        //now find merge records
-        TableSelector tsOrders = new TableSelector(mergeOrders, new SimpleFilter(FieldKey.fromString("accession"), accessionToObjectIdMap, CompareType.IN), null);
-
+        pullKnownResults();
 
         MergeSyncManager.get().setLastRun(new Date());
     }
 
-    public void syncRequest(Container c, User u, String objectId, String Id, String date, String requestType)
+    /**
+     * Pulls results from merge for any request that originated from LK
+     */
+    private void pullKnownResults()
     {
-        _log.info("Syncing single to merge");
-        MergeSyncManager.get().validateSettings();
-
-        DbSchema mergeSchema = getMergeSchema();
-        if (mergeSchema == null)
+        //iterate each accession number we expect to find.
+        Map<String, Object> accessionToObjectIdMap = new HashMap<>();
+        TableInfo ordersSynced = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_ORDERSSYNCED);
+        TableSelector ts = new TableSelector(ordersSynced, PageFlowUtil.set("objectid", "order_accession", "test_accession"), new SimpleFilter(FieldKey.fromString("resultsreceived"), false, CompareType.NEQ), null);
+        Collection<Map<String, Object>> ordersSyncedRows = ts.getMapCollection();
+        for (Map<String, Object> orderRow : ordersSyncedRows)
         {
-            _log.error("Unable to find merge schema");
-            return;
+            //attempt to find results in merge
+            Integer orderAccession = (Integer)orderRow.get("order_accession");
+            if (orderAccession == null)
+            {
+                _log.error("No orderAccession for row with objectid: " + orderRow.get("objectid"));
+                continue;
+            }
+
+            if (accessionToObjectIdMap.containsKey(orderAccession))
+            {
+                _log.error("Duplicate orderAccession numbers: " + orderRow.get("objectid"));
+            }
+
+            //try to find results, process if found
+            SQLFragment resultSql = getResultSql(orderAccession);
+            final DbScope scope = DbScope.getLabkeyScope();
+
+            SqlSelector ss = new SqlSelector(MergeSyncManager.get().getMergeSchema().getScope(), resultSql);
+            if (ss.exists())
+            {
+                ss.forEach(new Selector.ForEachBlock<ResultSet>()
+                {
+                    @Override
+                    public void exec(ResultSet object) throws SQLException
+                    {
+                        _log.info("found!");
+                        try (DbScope.Transaction transaction = scope.ensureTransaction())
+                        {
+                            //TODO
+
+                            transaction.commit();
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    /**
+     * Pulls results from merge, even if the request did not originate from LK
+     */
+    private void pullUnknownResults()
+    {
+
+    }
+
+    private String resolveTestName(Container c, String mergeServiceName)
+    {
+        String cacheKey = this.getClass().getName() + "||" + c.getId() + "||testNameMap";
+        if (CacheManager.getSharedCache().get(cacheKey) == null)
+        {
+            TableInfo ti = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_TESTNAMEMAPPING);
+            TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
+            Map<String, String> ret = new HashMap<>();
+            for (Map<String, Object> row : ts.getMapArray())
+            {
+                ret.put((String)row.get("mergetestname"), (String)row.get("servicename"));
+            }
+
+            CacheManager.getSharedCache().put(cacheKey, ret);
         }
 
-//        try
-//        {
-//
-//        }
-//        catch (SQLException e)
-//        {
-//            _log.error(e.getMessage(), e);
-//        }
+        Map<String, String> map = (Map)CacheManager.getSharedCache().get(cacheKey);
 
-        _log.info("Synced request to merge");
+        return map.get(mergeServiceName);
     }
 
-    private DbSchema getMergeSchema()
+    private SQLFragment getResultSql(int orderAccession)
     {
-        DbScope scope = DbScope.getDbScope(MergeSyncManager.get().getDataSourceName());
-        if (scope == null)
-            return null;
-
-        return scope.getSchema(MergeSyncManager.get().getSchemaName());
-    }
-
-    private Map<String, String> _testNameMap = null;
-
-    private String resolveTestName(String testName)
-    {
-        if (_testNameMap == null)
-        {
-
-        }
-
-        return _testNameMap.get(testName);
-    }
-
-    private void ensureAnimalPresent(Container c, User u, String id)
-    {
-
-    }
-
-    private void ensureUserPresent(User u)
-    {
-
+        return new SQLFragment("");
     }
 }

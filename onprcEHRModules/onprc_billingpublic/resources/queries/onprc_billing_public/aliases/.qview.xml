@@ -8,11 +8,11 @@
         <column name="investigatorName"/>
         <column name="fiscalAuthority"/>
         <column name="faSchedule"/>
-        <column name="projectNumber/projectTitle"/>
-        <column name="projectNumber/projectDescription"/>
+        <column name="projectTitle"/>
+        <column name="projectDescription"/>
         <column name="budgetStartDate"/>
         <column name="budgetEndDate"/>
-        <column name="projectNumber/projectStatus"/>
+        <column name="projectStatus"/>
     </columns>
     <sorts>
         <sort column="alias"/>

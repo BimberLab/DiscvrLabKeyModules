@@ -62,9 +62,9 @@ SELECT
     group_concat(DISTINCT h3.room.housingType.value) as housingTypes,
     --TODO: need a check to prevent duplicate chargeIds
     CASE
-      WHEN (max(timestampdiff('SQL_TSI_DAY', d.birth, i2.dateOnly)) < 271) THEN (SELECT ci.rowid FROM onprc_billing.chargeableItems ci WHERE ci.name = 'Per Diem Infants < 271 days')
+      WHEN (max(timestampdiff('SQL_TSI_DAY', d.birth, i2.dateOnly)) < 271) THEN (SELECT ci.rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = 'Per Diem Infants < 271 days')
       --add quarantine flags, which trump housing type
-      WHEN (SELECT count(*) FROM study.flags q WHERE q.Id = i2.Id AND q.value LIKE '%Quarantine%' AND q.dateOnly <= i2.dateOnly AND q.enddateCoalesced >= i2.dateOnly) > 0 THEN (SELECT ci.rowid FROM onprc_billing.chargeableItems ci WHERE ci.name = 'Per Diem Quarantine')
+      WHEN (SELECT count(*) FROM study.flags q WHERE q.Id = i2.Id AND q.value LIKE '%Quarantine%' AND q.dateOnly <= i2.dateOnly AND q.enddateCoalesced >= i2.dateOnly) > 0 THEN (SELECT ci.rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = 'Per Diem Quarantine')
       ELSE max(pdf.chargeId)
     END as chargeId,
     max(i2.startDate) as startDate @hidden,

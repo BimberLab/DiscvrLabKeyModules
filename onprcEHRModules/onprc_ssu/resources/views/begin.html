@@ -22,11 +22,17 @@
                         name: 'View Schedule',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_ssu', 'query.queryName': 'schedule'})
                     },{
+                        name: 'Presurgical Checklist',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_ssu', 'query.queryName': 'schedule', 'query.viewName': 'Checklist'})
+                    },{
                         name: 'Enter Surgeries',
                         url: LABKEY.ActionURL.buildURL('ehr', 'dataEntryForm', ctx['EHRStudyContainer'], {formType: 'Surgeries'})
                     },{
                         name: 'Surgeries Entered',
                         url: LABKEY.ActionURL.buildURL('ehr', 'enterData', ctx['EHRStudyContainer'])
+                    },{
+                        name: 'Surgery Notification',
+                        url: LABKEY.ActionURL.buildURL('ldk', 'runNotification', null, {key: 'org.labkey.onprc_ssu.notification.SSU_Notification'})
                     }]
                 },{
                     header: 'Reports',

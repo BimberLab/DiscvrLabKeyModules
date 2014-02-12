@@ -18,6 +18,10 @@
                             <fkColumnName>rowid</fkColumnName>
                         </fk>                        
                     </column>
+                    <column columnName="chargetype">
+                        <shownInInsertView>false</shownInInsertView>
+                        <isUserEditable>false</isUserEditable>
+                    </column>
                 </columns>
             </table>
         </tables>

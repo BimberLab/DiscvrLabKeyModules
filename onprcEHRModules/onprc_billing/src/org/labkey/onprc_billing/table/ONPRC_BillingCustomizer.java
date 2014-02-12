@@ -223,30 +223,41 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         ColumnInfo projectNumber = ti.getColumn("projectNumber");
         if (projectNumber != null && !ti.getName().equalsIgnoreCase("grantProjects"))
         {
-            if (projectNumber.getFk() == null)
+            UserSchema us = getUserSchema(ti, "onprc_billing_public");
+            if (us != null)
             {
-                UserSchema us = getUserSchema(ti, "onprc_billing_public");
-                if (us != null)
-                {
-                    projectNumber.setFk(new QueryForeignKey(us, null, "grantProjects", "projectNumber", "projectNumber", true));
-                    projectNumber.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=grantProjects&query.projectNumber~eq=${projectNumber}", us.getContainer()));
-                }
+                projectNumber.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=grantProjects&query.projectNumber~eq=${projectNumber}", us.getContainer()));
             }
         }
 
-        //TODO: this should be switched to use onprc_billing_public, which requires moving the raw data
-        Container ehrContainer = EHRService.get().getEHRStudyContainer(ti.getUserSchema().getContainer());
-        if (ehrContainer != null)
+        ColumnInfo chargeId = ti.getColumn("chargeId");
+        if (chargeId != null)
         {
-            ColumnInfo chargeId = ti.getColumn("chargeId");
-            if (chargeId != null)
-            {
-                UserSchema us = getUserSchema(ti, "onprc_billing", ehrContainer);
-                if (us != null){
-                    chargeId.setFk(new QueryForeignKey(us, ehrContainer, "chargeableItems", "rowid", "name"));
-                }
-                chargeId.setLabel("Charge Name");
+            UserSchema us = getUserSchema(ti, "onprc_billing_public");
+            if (us != null){
+                chargeId.setFk(new QueryForeignKey(us, null, "chargeableItems", "rowid", "name"));
             }
+            chargeId.setLabel("Charge Name");
+        }
+
+        ColumnInfo rateId = ti.getColumn("rateId");
+        if (rateId != null)
+        {
+            UserSchema us = getUserSchema(ti, "onprc_billing_public");
+            if (us != null){
+                rateId.setFk(new QueryForeignKey(us, null, "chargeableRates", "rowid", "rowid"));
+            }
+            rateId.setLabel("Rate");
+        }
+
+        ColumnInfo exemptionId = ti.getColumn("exemptionId");
+        if (exemptionId != null)
+        {
+            UserSchema us = getUserSchema(ti, "onprc_billing_public");
+            if (us != null){
+                exemptionId.setFk(new QueryForeignKey(us, null, "chargeableRateExemptions", "rowid", "rowid"));
+            }
+            exemptionId.setLabel("Rate Exemption");
         }
     }
 

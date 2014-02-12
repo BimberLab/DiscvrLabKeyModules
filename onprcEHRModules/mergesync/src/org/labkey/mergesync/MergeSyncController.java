@@ -217,7 +217,7 @@ public class MergeSyncController extends SpringActionController
                 JobRunner.getDefault().execute(new Runnable(){
                     public void run()
                     {
-                        new MergeSyncRunner().pullFromMerge();
+                        new MergeSyncRunner().pullResultsFromMerge();
                     }
                 });
             }

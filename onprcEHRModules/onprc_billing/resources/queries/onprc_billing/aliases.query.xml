@@ -5,11 +5,7 @@
                 <tableTitle>Aliases</tableTitle>
                 <columns>
                     <column columnName="projectNumber">
-                        <fk>
-                            <fkDbSchema>onprc_billing</fkDbSchema>
-                            <fkTable>grantProjects</fkTable>
-                            <fkColumnName>projectNumber</fkColumnName>
-                        </fk>
+
                     </column>
                     <column columnName="aliasEnabled">
                         <columnTitle>Alias Enabled</columnTitle>

@@ -1,7 +1,7 @@
 <query xmlns="http://labkey.org/data/xml/query">
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
-            <table tableName="mhcFlagSummary" tableDbType="TABLE">
+            <table tableName="dnaFlagSummary" tableDbType="TABLE">
                 <tableTitle>DNA Bank Blood Draw Flag Summary</tableTitle>
                 <pkColumnName>Id</pkColumnName>
                 <columns>

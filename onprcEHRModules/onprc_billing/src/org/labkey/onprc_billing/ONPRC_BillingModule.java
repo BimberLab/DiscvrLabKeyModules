@@ -25,6 +25,7 @@ import org.labkey.api.ehr.EHRService;
 import org.labkey.api.ehr.dataentry.DefaultDataEntryFormFactory;
 import org.labkey.api.ehr.dataentry.FormSection;
 import org.labkey.api.ldk.ExtendedSimpleModule;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.notification.NotificationService;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.Module;
@@ -66,7 +67,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 12.356;
+        return 12.358;
     }
 
     @Override
@@ -86,16 +87,14 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     protected void init()
     {
         addController(ONPRC_BillingController.NAME, ONPRC_BillingController.class);
-
-        // note: we were getting startup warnings about not finding these roles
-        // when this happened during doStartupAfterSpringConfig(), so these were moved here
-        RoleManager.registerRole(new ONPRCBillingAdminRole());
-        RoleManager.registerRole(new ONPRCChargesEntryRole());
     }
 
     @Override
     protected void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
+        RoleManager.registerRole(new ONPRCBillingAdminRole());
+        RoleManager.registerRole(new ONPRCChargesEntryRole());
+
         AuditLogService.registerAuditType(new BillingAuditProvider());
         AuditLogService.get().addAuditViewFactory(BillingAuditViewFactory.getInstance());
 
@@ -112,6 +111,8 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
         assert billingTriggers != null;
         EHRService.get().registerTriggerScript(this, billingTriggers);
 
+        LDKService.get().registerContainerScopedTable(ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_GRANTS, "grantNumber");
+        LDKService.get().registerContainerScopedTable(ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_ALIASES, "alias");
     }
 
     @Override

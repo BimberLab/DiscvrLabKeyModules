@@ -63,16 +63,16 @@
                 },{
                     header: 'Rates and Fee Structure',
                     items: [
-                        {name: 'Chargeable Items', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'chargeableItems', 'query.viewName': 'Active Items'})},
-                        {name: 'Standard Rates', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRates', 'query.viewName': 'Active Rates'})},
-                        {name: 'Rate Exemptions', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRateExemptions', 'query.viewName': 'Active Items'})},
-                        {name: 'Aliases Receiving Credit Per Item', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'creditAccount', 'query.viewName': 'Active Items'})},
+                        {name: 'Chargeable Items', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeableItems', 'query.viewName': 'Active Items'})},
+                        {name: 'Standard Rates', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRates', 'query.viewName': 'Active Rates'})},
+                        {name: 'Rate Exemptions', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRateExemptions', 'query.viewName': 'Active Items'})},
+                        {name: 'Aliases Receiving Credit Per Item', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'creditAccount', 'query.viewName': 'Active Items'})},
 
-                        {name: 'Labwork Fee Structure', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'labworkFeeDefinition'})},
-                        {name: 'Lease Fee Structure', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'leaseFeeDefinition'})},
-                        {name: 'NHP Per Diem Fee Structure', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'perDiemFeeDefinition'})},
-                        {name: 'Procedure Fee Structure', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'procedureFeeDefinition'})},
-                        {name: 'SLA Per Diem Fee Structure', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'slaPerDiemFeeDefinition'})}
+                        {name: 'Labwork Fee Structure', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'labworkFeeDefinition'})},
+                        {name: 'Lease Fee Structure', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'leaseFeeDefinition'})},
+                        {name: 'NHP Per Diem Fee Structure', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'perDiemFeeDefinition'})},
+                        {name: 'Procedure Fee Structure', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'procedureFeeDefinition'})},
+                        {name: 'SLA Per Diem Fee Structure', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'slaPerDiemFeeDefinition'})}
                     ]
                 }]
             }]

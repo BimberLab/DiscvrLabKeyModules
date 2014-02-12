@@ -28,8 +28,8 @@ a.assignCondition,
 a.ageAtTime.AgeAtTimeYearsRounded as ageAtTime,
 'Lease Fees' as category,
 CASE
-  WHEN a.duration <= 1 THEN (SELECT rowid FROM onprc_billing.chargeableItems ci WHERE ci.active = true AND ci.name = 'One Day Lease')
-  WHEN a2.id IS NOT NULL THEN (SELECT rowid FROM onprc_billing.chargeableItems ci WHERE ci.active = true AND ci.name = 'Animal Lease Fee - TMB')
+  WHEN a.duration <= 1 THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = 'One Day Lease')
+  WHEN a2.id IS NOT NULL THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = 'Animal Lease Fee - TMB')
   ELSE lf.chargeId
 END as chargeId,
 cast(null as integer) as leaseCharge1,
@@ -71,7 +71,7 @@ SELECT
   a.assignCondition,
   a.ageAtTime.AgeAtTimeYearsRounded as ageAtTime,
   'Lease Setup Fees' as category,
-  (SELECT rowid FROM onprc_billing.chargeableItems ci WHERE ci.active = true AND ci.name = 'Lease Setup Fees') as chargeId,
+  (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = 'Lease Setup Fees') as chargeId,
   cast(null as integer) as leaseCharge1,
   cast(null as integer) as leaseCharge2,
   a.objectid as sourceRecord,
@@ -99,7 +99,7 @@ a.releaseCondition,
 a.assignCondition,
 a.ageAtTime.AgeAtTimeYearsRounded as ageAtTime,
 'Lease Fees' as category,
-(SELECT max(rowid) as rowid FROM onprc_billing.chargeableItems ci WHERE ci.name = 'Lease Fee Adjustment' and ci.active = true) as chargeId,
+(SELECT max(rowid) as rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = 'Lease Fee Adjustment' and ci.active = true) as chargeId,
 lf2.chargeId as leaseCharge1,
 lf.chargeId as leaseCharge2,
 a.objectid as sourceRecord,

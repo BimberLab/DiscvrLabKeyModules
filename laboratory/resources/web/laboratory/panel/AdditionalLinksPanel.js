@@ -9,7 +9,7 @@ Ext4.define('Laboratory.panel.AdditionalLinksPanel', {
             buttonAlign: 'left',
             buttons: [{
                 text: 'Add New',
-                hidden: !LABKEY.Security.currentUser.isAdmin,
+                hidden: !Laboratory.Utils.isLaboratoryAdmin(),
                 scope: this,
                 handler: this.doAdd
             }],
@@ -78,7 +78,7 @@ Ext4.define('Laboratory.panel.AdditionalLinksPanel', {
                     },{
                         xtype: 'button',
                         text: 'Remove',
-                        hidden: !LABKEY.Security.currentUser.isAdmin,
+                        hidden: !Laboratory.Utils.isLaboratoryAdmin(),
                         style: 'padding: 0px;',
                         border: true,
                         sourceIdx: idx,

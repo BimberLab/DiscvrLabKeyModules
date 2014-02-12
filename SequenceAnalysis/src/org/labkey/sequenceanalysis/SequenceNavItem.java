@@ -17,7 +17,7 @@ package org.labkey.sequenceanalysis;
 
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
-import org.labkey.api.laboratory.AbstractQueryNavItem;
+import org.labkey.api.laboratory.AbstractImportingNavItem;
 import org.labkey.api.laboratory.DataProvider;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineUrls;
@@ -33,82 +33,56 @@ import org.labkey.api.view.ActionURL;
  * Date: 10/1/12
  * Time: 9:46 AM
  */
-public class SequenceNavItem extends AbstractQueryNavItem
+public class SequenceNavItem extends AbstractImportingNavItem
 {
     public static final String NAME = "Sequence";
-    private DataProvider _dp;
-    private String _label;
-    private String _category;
 
-    public SequenceNavItem(DataProvider dp)
+    public SequenceNavItem(DataProvider provider)
     {
-        _dp = dp;
-        _label = NAME;
+        this(provider, NAME, null);
     }
 
-    public SequenceNavItem(DataProvider dp, String label)
+    public SequenceNavItem(DataProvider provider, String label, String category)
     {
-        this(dp, label, null);
+        super(provider, NAME, label, (category == null ? "Sequence" : category));
     }
 
-    public SequenceNavItem(DataProvider dp, String label, String category)
-    {
-        _dp = dp;
-        _label = label;
-        _category = (category == null) ? "Sequence" : category;
-    }
-
-    public DataProvider getDataProvider()
-    {
-        return _dp;
-    }
-
-    public String getName()
-    {
-        return NAME;
-    }
-
-    public String getLabel()
-    {
-        return _label;
-    }
-
+    @Override
     public boolean isImportIntoWorkbooks(Container c, User u)
     {
         return true;
     }
 
+    @Override
     public boolean getDefaultVisibility(Container c, User u)
     {
-        return c.getActiveModules().contains(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME));
+        return getTargetContainer(c).getActiveModules().contains(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME));
     }
 
-    public String getCategory()
-    {
-        return _category;
-    }
-
+    @Override
     public ActionURL getImportUrl(Container c, User u)
     {
-        return PageFlowUtil.urlProvider(PipelineUrls.class).urlBrowse(c);
+        return PageFlowUtil.urlProvider(PipelineUrls.class).urlBrowse(getTargetContainer(c));
     }
 
+    @Override
     public ActionURL getSearchUrl(Container c, User u)
     {
-        return new ActionURL(SequenceAnalysisModule.CONTROLLER_NAME, "search", c);
+        return new ActionURL(SequenceAnalysisModule.CONTROLLER_NAME, "search", getTargetContainer(c));
     }
 
+    @Override
     public ActionURL getBrowseUrl(Container c, User u)
     {
-        return new ActionURL(SequenceAnalysisModule.CONTROLLER_NAME, "dataBrowser", c);
+        return new ActionURL(SequenceAnalysisModule.CONTROLLER_NAME, "dataBrowser", getTargetContainer(c));
     }
 
-    public ActionURL getAssayRunTemplateUrl(Container c, User u)
+    private ActionURL getAssayRunTemplateUrl(Container c, User u)
     {
-        return QueryService.get().urlFor(u, c, QueryAction.importData, SequenceAnalysisModule.CONTROLLER_NAME, SequenceAnalysisSchema.TABLE_READSETS);
+        return QueryService.get().urlFor(u, getTargetContainer(c), QueryAction.importData, SequenceAnalysisModule.CONTROLLER_NAME, SequenceAnalysisSchema.TABLE_READSETS);
     }
 
-    public ActionURL getViewAssayRunTemplateUrl(Container c, User u)
+    private ActionURL getViewAssayRunTemplateUrl(Container c, User u)
     {
         ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, SequenceAnalysisModule.CONTROLLER_NAME, SequenceAnalysisSchema.TABLE_READSETS);
         url.addParameter("query.viewName", "Data Not Imported");

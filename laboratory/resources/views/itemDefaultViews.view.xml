@@ -1,7 +1,7 @@
 <view xmlns="http://labkey.org/data/xml/view" title="Item Default Views">
-    <permissions>
-        <permission name="admin"/>
-    </permissions>
+    <permissionClasses>
+        <permissionClass name="org.labkey.api.laboratory.security.LaboratoryAdminPermission"/>
+    </permissionClasses>
     <dependencies>
         <dependency path="laboratory.context"/>
         <dependency path="laboratory/panel/ItemDefaultViewsPanel.js"/>

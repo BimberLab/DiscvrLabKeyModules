@@ -37,7 +37,7 @@ Ext4.onReady(function(){
                 items: [
                     {name: 'Description of this Pipeline', url: '<%=contextPath%>/sequenceanalysis<%=containerPath%>/instructions.view'},
                     {name: 'Release Notes', url: '<%=contextPath%>/sequenceanalysis<%=containerPath%>/releaseNotes.view'},
-                    {name: 'Manage Module', url: LABKEY.ActionURL.buildURL('laboratory', 'labSettings'), renderer: 'defaultRenderer', hasPermission: LABKEY.Security.currentUser.isAdmin}
+                    {name: 'Manage Module', url: LABKEY.ActionURL.buildURL('laboratory', 'labSettings'), renderer: 'linkWithoutLabel', hasPermission: LABKEY.Security.currentUser.isAdmin}
                 ]},
                 {header: 'Sample Information',
                 items: [
@@ -47,9 +47,9 @@ Ext4.onReady(function(){
             },{
                 header: 'Data Analysis',
                 items: [
-                    {name: 'Create Readsets', url: '<%=contextPath%>/query<%=containerPath%>/importData.view?schemaName=sequenceanalysis&queryName=sequence_readsets', renderer: 'defaultRenderer'},
-                    {name: 'Upload Files / Start Analysis', url: '<%=contextPath%>/pipeline<%=containerPath%>/browse.view?', renderer: 'defaultRenderer'},
-                    {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL('pipeline-status', 'showList.view'), renderer: 'defaultRenderer'}
+                    {name: 'Create Readsets', url: '<%=contextPath%>/query<%=containerPath%>/importData.view?schemaName=sequenceanalysis&queryName=sequence_readsets', renderer: 'linkWithoutLabel'},
+                    {name: 'Upload Files / Start Analysis', url: '<%=contextPath%>/pipeline<%=containerPath%>/browse.view?', renderer: 'linkWithoutLabel'},
+                    {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL('pipeline-status', 'showList.view'), renderer: 'linkWithoutLabel'}
                 ]},
                 {header: 'Summary',
                 renderer: 'summaryCountRenderer',

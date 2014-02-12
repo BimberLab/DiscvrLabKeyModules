@@ -56,34 +56,34 @@ SELECT
     ELSE null
   END as isAcceptingCharges,
   CASE
-    --WHEN ifdefined(p.project.account.projectNumber.budgetStartDate) IS NULL THEN null
+    --WHEN ifdefined(p.project.account.budgetStartDate) IS NULL THEN null
     WHEN (ifdefined(p.project.account.budgetStartDate) IS NOT NULL AND ifdefined(p.project.account.budgetStartDate) > p.date) THEN 'Prior To Budget Start'
     WHEN (ifdefined(p.project.account.budgetEndDate) IS NOT NULL AND ifdefined(p.project.account.budgetEndDate) < p.date) THEN 'After Budget End'
-    WHEN (ifdefined(p.project.account.projectNumber.projectStatus) IS NOT NULL AND ifdefined(p.project.account.projectNumber.projectStatus) != 'ACTIVE' AND ifdefined(p.project.account.projectNumber.projectStatus) != 'No Cost Ext' AND ifdefined(p.project.account.projectNumber.projectStatus) != 'Partial Setup') THEN 'Grant Project Not Active'
+    WHEN (ifdefined(p.project.account.projectStatus) IS NOT NULL AND ifdefined(p.project.account.projectStatus) != 'ACTIVE' AND ifdefined(p.project.account.projectStatus) != 'No Cost Ext' AND ifdefined(p.project.account.projectStatus) != 'Partial Setup') THEN 'Grant Project Not Active'
     ELSE null
   END as isExpiredAccount,
   CASE WHEN (TIMESTAMPDIFF('SQL_TSI_DAY', p.date, curdate()) > 45) THEN 'Y' ELSE null END as isOldCharge
 
 FROM onprc_billing.slaPerDiems p
 
-LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.chargeableItems ci ON (
+LEFT JOIN onprc_billing_public.chargeableItems ci ON (
     p.chargeId = ci.rowid
 )
 
-LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.chargeRates cr ON (
+LEFT JOIN onprc_billing_public.chargeRates cr ON (
     p.startdate >= cr.startDate AND
     (p.date <= cr.enddateTimeCoalesced OR cr.enddate IS NULL) AND
     p.chargeId = cr.chargeId
 )
 
-LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.chargeRateExemptions e ON (
+LEFT JOIN onprc_billing_public.chargeRateExemptions e ON (
     p.startdate >= e.startDate AND
     (p.date <= e.enddateTimeCoalesced OR e.enddate IS NULL) AND
     p.chargeId = e.chargeId AND
     p.project = e.project
 )
 
-LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.creditAccount ce ON (
+LEFT JOIN onprc_billing_public.creditAccount ce ON (
     p.startdate >= ce.startDate AND
     (p.date <= ce.enddateTimeCoalesced OR ce.enddate IS NULL) AND
     p.chargeId = ce.chargeId

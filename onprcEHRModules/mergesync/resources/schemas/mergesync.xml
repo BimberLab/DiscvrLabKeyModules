@@ -33,15 +33,22 @@
     </ns:table>
     <ns:table tableName="orderssynced" tableDbType="TABLE">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>Orders Synced To Merge</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowid">
 
             </ns:column>
+            <ns:column columnName="taskid">
+                <ns:columnTitle>Task Id</ns:columnTitle>
+            </ns:column>
             <ns:column columnName="objectid">
                 <ns:columnTitle>Clinpath Runs Record</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="merge_accession">
-                <ns:columnTitle>Merge Accession</ns:columnTitle>
+            <ns:column columnName="order_accession">
+                <ns:columnTitle>Merge Order Accession #</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="test_accession">
+                <ns:columnTitle>Merge Test Accession #</ns:columnTitle>
             </ns:column>
             <ns:column columnName="container">
                 <ns:columnTitle>Folder</ns:columnTitle>
@@ -53,7 +60,7 @@
 
             </ns:column>
             <ns:column columnName="resultsreceived">
-
+                <ns:columnTitle>Results Received?</ns:columnTitle>
             </ns:column>
         </ns:columns>
     </ns:table>

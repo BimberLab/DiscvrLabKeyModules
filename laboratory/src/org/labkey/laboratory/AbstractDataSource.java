@@ -1,5 +1,7 @@
 package org.labkey.laboratory;
 
+import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
@@ -30,6 +32,7 @@ abstract public class AbstractDataSource
     private String _queryName;
     private String _label;
     protected static final String DELIM = "<>";
+    protected static final Logger _log = Logger.getLogger(AbstractDataSource.class);
     
     public AbstractDataSource(String label, @Nullable String containerId, String schemaName, String queryName)
     {
@@ -90,6 +93,22 @@ abstract public class AbstractDataSource
         return _containerId == null ? null : ContainerManager.getForId(_containerId);
     }
 
+    @NotNull
+    public Container getTargetContainer(Container c)
+    {
+        if (_containerId == null)
+            return c;
+
+        Container target = ContainerManager.getForId(_containerId);
+        if (target == null)
+        {
+            _log.error("Invalid saved container for data source: " + getLabel() + ".  containerId was: " + _containerId);
+            return c;
+        }
+
+        return target;
+    }
+
     public String getLabel()
     {
         return _label == null ? _queryName : _label;
@@ -117,7 +136,7 @@ abstract public class AbstractDataSource
 
         if (includeTotals && target.hasPermission(u, ReadPermission.class))
         {
-            TableInfo ti = getTableInfo(c, u);
+            TableInfo ti = getTableInfo(target, u);
             if (ti == null)
             {
                 return null;

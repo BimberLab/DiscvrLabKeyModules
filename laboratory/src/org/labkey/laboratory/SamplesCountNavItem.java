@@ -27,5 +27,4 @@ public class SamplesCountNavItem extends QueryCountNavItem
         filter.addCondition(FieldKey.fromString("dateremoved"), null, CompareType.ISBLANK);
         return filter;
     }
-
 }

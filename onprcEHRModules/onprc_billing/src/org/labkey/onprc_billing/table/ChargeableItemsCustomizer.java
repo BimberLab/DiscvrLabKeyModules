@@ -21,6 +21,7 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.ehr.EHRService;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.onprc_billing.ONPRC_BillingSchema;
 
 /**
  * User: bimber
@@ -40,7 +41,8 @@ public class ChargeableItemsCustomizer implements TableCustomizer
         {
             if (table.getName().equalsIgnoreCase("chargeableItems"))
             {
-                ((AbstractTableInfo) table).setDetailsURL(DetailsURL.fromString("/onprc_billing/chargeItemDetails.view?chargeId=${rowid}"));
+                boolean isPublic = !table.getUserSchema().getName().equalsIgnoreCase(ONPRC_BillingSchema.NAME);
+                ((AbstractTableInfo) table).setDetailsURL(DetailsURL.fromString("/onprc_billing/chargeItemDetails.view?chargeId=${rowid}" + (isPublic ? "&isPublic=true" : "")));
             }
         }
 

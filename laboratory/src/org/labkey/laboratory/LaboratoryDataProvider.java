@@ -17,21 +17,19 @@ package org.labkey.laboratory;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
-import org.labkey.api.attachments.AttachmentDirectory;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.files.FileContentService;
 import org.labkey.api.laboratory.AbstractDataProvider;
-import org.labkey.api.laboratory.DetailsUrlNavItem;
+import org.labkey.api.laboratory.DetailsUrlWithoutLabelNavItem;
 import org.labkey.api.laboratory.JSTabbedReportItem;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.QueryCountNavItem;
+import org.labkey.api.laboratory.QueryImportNavItem;
 import org.labkey.api.laboratory.QueryTabbedReportItem;
 import org.labkey.api.laboratory.ReportItem;
-import org.labkey.api.laboratory.SimpleQueryNavItem;
 import org.labkey.api.laboratory.SimpleSettingsItem;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
@@ -42,7 +40,6 @@ import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.study.Study;
 import org.labkey.api.study.StudyService;
 import org.labkey.api.view.ActionURL;
@@ -90,10 +87,10 @@ public class LaboratoryDataProvider extends AbstractDataProvider
         List<NavItem> items = new ArrayList<>();
         if (c.getActiveModules().contains(getOwningModule()))
         {
-            items.add(new SimpleQueryNavItem(this, LaboratoryModule.SCHEMA_NAME, "Samples", LaboratoryService.NavItemCategory.samples.name()));
-            items.add(new SimpleQueryNavItem(this, LaboratoryModule.SCHEMA_NAME, "DNA_Oligos", LaboratoryService.NavItemCategory.samples.name()));
-            items.add(new SimpleQueryNavItem(this, LaboratoryModule.SCHEMA_NAME, "Peptides", LaboratoryService.NavItemCategory.samples.name()));
-            items.add(new SimpleQueryNavItem(this, LaboratoryModule.SCHEMA_NAME, "Antibodies", LaboratoryService.NavItemCategory.samples.name()));
+            items.add(new QueryImportNavItem(this, LaboratoryModule.SCHEMA_NAME, "Samples", LaboratoryService.NavItemCategory.samples.name()));
+            items.add(new QueryImportNavItem(this, LaboratoryModule.SCHEMA_NAME, "DNA_Oligos", LaboratoryService.NavItemCategory.samples.name()));
+            items.add(new QueryImportNavItem(this, LaboratoryModule.SCHEMA_NAME, "Peptides", LaboratoryService.NavItemCategory.samples.name()));
+            items.add(new QueryImportNavItem(this, LaboratoryModule.SCHEMA_NAME, "Antibodies", LaboratoryService.NavItemCategory.samples.name()));
         }
         return Collections.unmodifiableList(items);
     }
@@ -105,48 +102,48 @@ public class LaboratoryDataProvider extends AbstractDataProvider
         {
             String category = "Samples"; //note, this is how they appear in the reports panel
             ReportItem owner1 = new ReportItem(this, LaboratoryModule.SCHEMA_NAME, "Samples", LaboratoryService.NavItemCategory.samples.name());
-            SimpleQueryNavItem item1 = new SimpleQueryNavItem(this, LaboratoryModule.SCHEMA_NAME, "Samples", category, "View All Samples");
+            QueryImportNavItem item1 = new QueryImportNavItem(this, LaboratoryModule.SCHEMA_NAME, "Samples", category, "View All Samples");
             item1.setOwnerKey(owner1.getPropertyManagerKey());
             items.add(item1);
 
-            DetailsUrlNavItem item2 = new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/freezerSummary.view", c), "Freezer Summary", category);
+            DetailsUrlWithoutLabelNavItem item2 = new DetailsUrlWithoutLabelNavItem(this, "Freezer Summary", DetailsURL.fromString("/laboratory/freezerSummary.view", c), category);
             item2.setOwnerKey(owner1.getPropertyManagerKey());
             items.add(item2);
 
-            items.add(new ReportItem(this, LaboratoryModule.SCHEMA_NAME, "samples_by_subjectid_and_type", category, "Samples By Subject Id And Type"));
-            items.add(new ReportItem(this, LaboratoryModule.SCHEMA_NAME, "samples_by_subjectid_date_and_type", category, "Samples By Subject Id, Sample Date And Type"));
+            items.add(new ReportItem(this, null, LaboratoryModule.SCHEMA_NAME, "samples_by_subjectid_and_type", category, "Samples By Subject Id And Type"));
+            items.add(new ReportItem(this, null, LaboratoryModule.SCHEMA_NAME, "samples_by_subjectid_date_and_type", category, "Samples By Subject Id, Sample Date And Type"));
 
-            SimpleQueryNavItem owner2 = new SimpleQueryNavItem(this, LaboratoryModule.SCHEMA_NAME, "DNA_Oligos", LaboratoryService.NavItemCategory.samples.name());
-            ReportItem item3 = new ReportItem(this, LaboratoryModule.SCHEMA_NAME, "DNA_Oligos", category, "View All DNA Oligos");
+            QueryImportNavItem owner2 = new QueryImportNavItem(this, LaboratoryModule.SCHEMA_NAME, "DNA_Oligos", LaboratoryService.NavItemCategory.samples.name());
+            ReportItem item3 = new ReportItem(this, null, LaboratoryModule.SCHEMA_NAME, "DNA_Oligos", category, "View All DNA Oligos");
             item3.setOwnerKey(owner2.getPropertyManagerKey());
             items.add(item3);
 
-            SimpleQueryNavItem owner3 = new SimpleQueryNavItem(this, LaboratoryModule.SCHEMA_NAME, "Peptides", LaboratoryService.NavItemCategory.samples.name());
-            ReportItem item4 = new ReportItem(this, LaboratoryModule.SCHEMA_NAME, "Peptides", category, "View All Peptides");
+            QueryImportNavItem owner3 = new QueryImportNavItem(this, LaboratoryModule.SCHEMA_NAME, "Peptides", LaboratoryService.NavItemCategory.samples.name());
+            ReportItem item4 = new ReportItem(this, null, LaboratoryModule.SCHEMA_NAME, "Peptides", category, "View All Peptides");
             item4.setOwnerKey(owner3.getPropertyManagerKey());
             items.add(item4);
 
             for (Study study : StudyService.get().getAllStudies(c, u))
             {
-                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/study/begin.view", study.getContainer()), study.getLabel(), "Studies"));
+                items.add(new DetailsUrlWithoutLabelNavItem(this, study.getLabel(), DetailsURL.fromString("/study/begin.view", study.getContainer()), "Studies"));
             }
 
 //            FileContentService service = ServiceRegistry.get().getService(FileContentService.class);
 //            for (AttachmentDirectory dir : service.getRegisteredDirectories(c))
 //            {
-//                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/filecontent/begin.view?fileSetName=" + dir.getName(), c), dir.getLabel(), "Filesets"));
+//                items.add(new DetailsUrlWithoutLabelNavItem(this, DetailsURL.fromString("/filecontent/begin.view?fileSetName=" + dir.getName(), c), dir.getLabel(), "Filesets"));
 //            }
 
-            DetailsUrlNavItem item5 = new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/dataBrowser.view", c), "Data Browser", "General");
+            DetailsUrlWithoutLabelNavItem item5 = new DetailsUrlWithoutLabelNavItem(this, "Data Browser", DetailsURL.fromString("/laboratory/dataBrowser.view", c), "General");
             items.add(item5);
 
-            SimpleQueryNavItem owner4 = new SimpleQueryNavItem(this, LaboratoryModule.SCHEMA_NAME, "Antibodies", LaboratoryService.NavItemCategory.samples.name());
-            ReportItem item6 = new ReportItem(this, LaboratoryModule.SCHEMA_NAME, "Antibodies", category, "View All Antibodies");
+            QueryImportNavItem owner4 = new QueryImportNavItem(this, LaboratoryModule.SCHEMA_NAME, "Antibodies", LaboratoryService.NavItemCategory.samples.name());
+            ReportItem item6 = new ReportItem(this, null, LaboratoryModule.SCHEMA_NAME, "Antibodies", category, "View All Antibodies");
             item6.setOwnerKey(owner4.getPropertyManagerKey());
             items.add(item6);
 
-            DetailsUrlNavItem owner5 = new DetailsUrlNavItem(this, new DetailsURL(QueryService.get().urlFor(u, c, QueryAction.executeQuery, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS)), "Major Events", LaboratoryService.NavItemCategory.misc.name());
-            ReportItem item7 = new ReportItem(this, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS, category, "View All Major Events");
+            DetailsUrlWithoutLabelNavItem owner5 = new DetailsUrlWithoutLabelNavItem(this, "Major Events", new DetailsURL(QueryService.get().urlFor(u, c, QueryAction.executeQuery, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS)), LaboratoryService.NavItemCategory.misc.name());
+            ReportItem item7 = new ReportItem(this, null, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS, category, "View All Major Events");
             item7.setOwnerKey(owner5.getPropertyManagerKey());
             items.add(item7);
         }
@@ -170,14 +167,14 @@ public class LaboratoryDataProvider extends AbstractDataProvider
             items.add(new SimpleSettingsItem(this, LaboratoryModule.SCHEMA_NAME, "Sample_Additive", categoryName, "Allowable Sample Additives"));
             items.add(new SimpleSettingsItem(this, LaboratoryModule.SCHEMA_NAME, "Species", categoryName, "Allowable Species"));
 
-            items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/synchronizeAssayFields.view", ContainerManager.getRoot()), "Synchronize Assay Fields", general));
+            items.add(new DetailsUrlWithoutLabelNavItem(this, "Synchronize Assay Fields", DetailsURL.fromString("/laboratory/synchronizeAssayFields.view", ContainerManager.getRoot()), general));
 
             if (u.isSiteAdmin())
             {
-                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/resetLaboratoryFolders.view", ContainerManager.getRoot()), "Reset Tabs and Webparts", general));
-                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/initWorkbooks.view", ContainerManager.getRoot()), "Initialize Workbooks", general));
-                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/initContainerIncrementingTable.view", ContainerManager.getRoot()), "Initialize Autoincrementing Tables", general));
-                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/ensureIndexes.view", ContainerManager.getRoot()), "Ensure Indexes Exist", general));
+                items.add(new DetailsUrlWithoutLabelNavItem(this, "Reset Tabs and Webparts", DetailsURL.fromString("/laboratory/resetLaboratoryFolders.view", ContainerManager.getRoot()), general));
+                items.add(new DetailsUrlWithoutLabelNavItem(this, "Initialize Workbooks", DetailsURL.fromString("/laboratory/initWorkbooks.view", ContainerManager.getRoot()), general));
+                items.add(new DetailsUrlWithoutLabelNavItem(this, "Initialize Autoincrementing Tables", DetailsURL.fromString("/laboratory/initContainerIncrementingTable.view", ContainerManager.getRoot()), general));
+                items.add(new DetailsUrlWithoutLabelNavItem(this, "Ensure Indexes Exist", DetailsURL.fromString("/laboratory/ensureIndexes.view", ContainerManager.getRoot()), general));
             }
         }
         else
@@ -186,20 +183,20 @@ public class LaboratoryDataProvider extends AbstractDataProvider
             {
                 items.add(new SimpleSettingsItem(this, LaboratoryModule.SCHEMA_NAME, "Freezers", categoryName, "Manage Freezers"));
 
-                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/itemVisibility.view", c), "Control Item Visibility", general));
-                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/itemDefaultViews.view", c), "Control Item Default Views", general));
-                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/customizeDataBrowser.view", c), "Customize Data Browser", general));
-                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/ldk/notificationAdmin.view", c), "Manage Notifications", general));
-                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/assayDefaults.view", c), "Set Assay Defaults", general));
-                items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/populateInitialValues.view", c), "Populate Default Values", general));
+                items.add(new DetailsUrlWithoutLabelNavItem(this, "Control Item Visibility", DetailsURL.fromString("/laboratory/itemVisibility.view", c), general));
+                items.add(new DetailsUrlWithoutLabelNavItem(this, "Control Item Default Views", DetailsURL.fromString("/laboratory/itemDefaultViews.view", c), general));
+                items.add(new DetailsUrlWithoutLabelNavItem(this, "Customize Data Browser", DetailsURL.fromString("/laboratory/customizeDataBrowser.view", c), general));
+                items.add(new DetailsUrlWithoutLabelNavItem(this, "Manage Notifications", DetailsURL.fromString("/ldk/notificationAdmin.view", c), general));
+                items.add(new DetailsUrlWithoutLabelNavItem(this, "Set Assay Defaults", DetailsURL.fromString("/laboratory/assayDefaults.view", c), general));
+                items.add(new DetailsUrlWithoutLabelNavItem(this, "Populate Default Values", DetailsURL.fromString("/laboratory/populateInitialValues.view", c), general));
 
                 items.add(new SimpleSettingsItem(this, LaboratoryModule.SCHEMA_NAME, "Sample_Type", "Samples", "Allowable Sample Types"));
 
                 if (u.isSiteAdmin())
                 {
-                    items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/synchronizeAssayFields.view", c), "Synchronize Assay Fields", general));
-                    items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/resetLaboratoryFolders.view", c), "Reset Tabs and Webparts", general));
-                    items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/initWorkbooks.view", c), "Initialize Workbooks", general));
+                    items.add(new DetailsUrlWithoutLabelNavItem(this, "Synchronize Assay Fields", DetailsURL.fromString("/laboratory/synchronizeAssayFields.view", c), general));
+                    items.add(new DetailsUrlWithoutLabelNavItem(this, "Reset Tabs and Webparts", DetailsURL.fromString("/laboratory/resetLaboratoryFolders.view", c), general));
+                    items.add(new DetailsUrlWithoutLabelNavItem(this, "Initialize Workbooks", DetailsURL.fromString("/laboratory/initWorkbooks.view", c), general));
                 }
             }
         }
@@ -208,7 +205,7 @@ public class LaboratoryDataProvider extends AbstractDataProvider
         if (c.getActiveModules().contains(getOwningModule()))
         {
             String name = "Manage " + (ContainerManager.getSharedContainer().equals(c) ? "Default " : "") + "Data and Demographics Sources";
-            items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/manageDataSources.view", c), name, general));
+            items.add(new DetailsUrlWithoutLabelNavItem(this, name, DetailsURL.fromString("/laboratory/manageDataSources.view", c), general));
         }
 
         return Collections.unmodifiableList(items);
@@ -219,8 +216,8 @@ public class LaboratoryDataProvider extends AbstractDataProvider
         List<NavItem> items = new ArrayList<NavItem>();
         if (c.getActiveModules().contains(getOwningModule()))
         {
-            items.add(new DetailsUrlNavItem(this, DetailsURL.fromString("/laboratory/manageSubjects.view", c), "Manage Subjects and Groups", "Subjects and Projects"));
-            items.add(new DetailsUrlNavItem(this, new DetailsURL(QueryService.get().urlFor(u, c, QueryAction.executeQuery, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS)), "Major Events", LaboratoryService.NavItemCategory.misc.name()));
+            items.add(new DetailsUrlWithoutLabelNavItem(this, "Manage Subjects and Groups", DetailsURL.fromString("/laboratory/manageSubjects.view", c), "Subjects and Projects"));
+            items.add(new DetailsUrlWithoutLabelNavItem(this, "Major Events", new DetailsURL(QueryService.get().urlFor(u, c, QueryAction.executeQuery, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS)), LaboratoryService.NavItemCategory.misc.name()));
         }
 
         return Collections.unmodifiableList(items);
@@ -252,12 +249,12 @@ public class LaboratoryDataProvider extends AbstractDataProvider
             {
                 if (nav.getName().equalsIgnoreCase("Samples"))
                 {
-                    SimpleQueryNavItem item = ((SimpleQueryNavItem)nav);
+                    QueryImportNavItem item = ((QueryImportNavItem)nav);
                     items.add(new SamplesCountNavItem(this, item.getSchema(), item.getQuery(), item.getCategory(), item.getLabel()));
                 }
                 else
                 {
-                    SimpleQueryNavItem item = ((SimpleQueryNavItem)nav);
+                    QueryImportNavItem item = ((QueryImportNavItem)nav);
                     items.add(new QueryCountNavItem(this, item.getSchema(), item.getQuery(), item.getCategory(), item.getLabel()));
                 }
             }
@@ -272,9 +269,9 @@ public class LaboratoryDataProvider extends AbstractDataProvider
 
         for (NavItem nav : getSampleNavItems(c, u))
         {
-            if (nav.isVisible(c, u) && nav instanceof SimpleQueryNavItem)
+            if (nav.isVisible(c, u) && nav instanceof QueryImportNavItem)
             {
-                SimpleQueryNavItem item = ((SimpleQueryNavItem)nav);
+                QueryImportNavItem item = ((QueryImportNavItem)nav);
                 UserSchema us = QueryService.get().getUserSchema(u, c, item.getSchema());
                 if (us != null)
                 {
@@ -301,7 +298,7 @@ public class LaboratoryDataProvider extends AbstractDataProvider
     {
         List<TabbedReportItem> items = new ArrayList<TabbedReportItem>();
 
-        NavItem nav = new SimpleQueryNavItem(this, LaboratoryModule.SCHEMA_NAME, "Samples", LaboratoryService.NavItemCategory.samples.name());
+        NavItem nav = new QueryImportNavItem(this, LaboratoryModule.SCHEMA_NAME, "Samples", LaboratoryService.NavItemCategory.samples.name());
         TabbedReportItem item = new QueryTabbedReportItem(this, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_SAMPLES, "Samples", "Samples");
         item.setVisible(nav.isVisible(c, u));
         item.setOwnerKey(nav.getPropertyManagerKey());
@@ -311,7 +308,7 @@ public class LaboratoryDataProvider extends AbstractDataProvider
         TabbedReportItem subSummary = new JSTabbedReportItem(this, "subjectSummary", "Subject Summary", "General", "subjectSummary");
         items.add(subSummary);
 
-        DetailsUrlNavItem owner = new DetailsUrlNavItem(this, new DetailsURL(QueryService.get().urlFor(u, c, QueryAction.executeQuery, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS)), "Major Events", LaboratoryService.NavItemCategory.misc.name());
+        DetailsUrlWithoutLabelNavItem owner = new DetailsUrlWithoutLabelNavItem(this, "Major Events", new DetailsURL(QueryService.get().urlFor(u, c, QueryAction.executeQuery, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS)), LaboratoryService.NavItemCategory.misc.name());
         TabbedReportItem item2 = new QueryTabbedReportItem(this, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_MAJOR_EVENTS, "Major Events", "General");
         item2.setVisible(owner.isVisible(c, u));
         item2.setOwnerKey(owner.getPropertyManagerKey());
