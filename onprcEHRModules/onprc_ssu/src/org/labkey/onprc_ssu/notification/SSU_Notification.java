@@ -99,11 +99,34 @@ public class SSU_Notification extends AbstractNotification
             surgeriesTomorrow(c, u, msg);
             surgeryScheduleCheck(c, ehrContainer, u, msg);
 
+            nonFinalizedSurgeries(ehrContainer, u, msg);
             surgeriesWithoutCases(ehrContainer, u, msg);
             surgeriesWithoutOrders(ehrContainer, u, msg);
         }
 
         return msg.toString();
+    }
+
+    private void nonFinalizedSurgeries(Container ehrContainer, User u, StringBuilder msg)
+    {
+        //note: we want a date/time comparison
+        Date date = new Date();
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("date"), date, CompareType.LTE);
+        filter.addCondition(FieldKey.fromString("type"), "Surgery", CompareType.EQUAL);
+        filter.addCondition(FieldKey.fromString("qcstate/publicdata"), true, CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("qcstate"), EHRService.QCSTATES.ReviewRequired.getQCState(ehrContainer).getRowId(), CompareType.NEQ_OR_NULL);
+
+        TableInfo ti = QueryService.get().getUserSchema(u, ehrContainer, "study").getTable("encounters");
+        final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, PageFlowUtil.set(FieldKey.fromString("Id"), FieldKey.fromString("procedureid"), FieldKey.fromString("procedureid/name")));
+
+        TableSelector ts = new TableSelector(ti, cols.values(), filter, null);
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            msg.append("<b>WARNING: There are " + count + " procedures with a date prior to: " + _dateTimeFormat.format(date) + " that have not been finalized, excluding those under review.  This may indicate inproper dates in those surgeries, or cancelled surgeries that should be removed.</b><br>");
+            msg.append("<p><a href='" + getExecuteQueryUrl(ehrContainer, "study", "encounters", "Surgeries", filter) + "'>Click here to view them</a><br>\n");
+            msg.append("<hr>\n");
+        }
     }
 
     private void surgeriesWithoutCases(Container ehrContainer, User u, StringBuilder msg)
@@ -116,6 +139,7 @@ public class SSU_Notification extends AbstractNotification
         filter.addCondition(FieldKey.fromString("type"), "Surgery", CompareType.EQUAL);
         filter.addCondition(FieldKey.fromString("Id/activeCases/categories"), "Surgery", CompareType.DOES_NOT_CONTAIN);
         filter.addCondition(FieldKey.fromString("procedureid/followupdays"), 0, CompareType.GT);
+        filter.addCondition(FieldKey.fromString("qcstate/publicdata"), true, CompareType.EQUAL);
 
         TableInfo ti = QueryService.get().getUserSchema(u, ehrContainer, "study").getTable("encounters");
         final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, PageFlowUtil.set(FieldKey.fromString("Id"), FieldKey.fromString("procedureid"), FieldKey.fromString("procedureid/name")));
@@ -124,7 +148,7 @@ public class SSU_Notification extends AbstractNotification
         long count = ts.getRowCount();
         if (count > 0)
         {
-            msg.append("<b>WARNING: There are " + count + " animals that have had a surgery in the past 48H, but do not have an open surgery case, excluding procedures with no followup days.</b><br>");
+            msg.append("<b>WARNING: There are " + count + " surgeries in the past 48H, but lacking an open surgery case, excluding procedures with no followup days.</b><br>");
             msg.append("<p><a href='" + getExecuteQueryUrl(ehrContainer, "study", "encounters", "Surgeries", filter) + "'>Click here to view them</a><br>\n");
             msg.append("<hr>\n");
         }
@@ -137,20 +161,21 @@ public class SSU_Notification extends AbstractNotification
         cal.add(Calendar.DATE, -2);
 
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("date"), cal.getTime(), CompareType.DATE_GTE);
+        filter.addCondition(FieldKey.fromString("date"), new Date(), CompareType.DATE_LTE);
         filter.addCondition(FieldKey.fromString("type"), "Surgery", CompareType.EQUAL);
         filter.addCondition(FieldKey.fromString("Id/activeTreatments/totalSurgicalTreatments"), null, CompareType.ISBLANK);
         filter.addCondition(new SimpleFilter.OrClause(new CompareType.CompareClause(FieldKey.fromString("procedureid/analgesiaRx"), CompareType.NONBLANK, null), new CompareType.CompareClause(FieldKey.fromString("procedureid/antibioticRx"), CompareType.NONBLANK, null)));
 
         TableInfo ti = QueryService.get().getUserSchema(u, ehrContainer, "study").getTable("encounters");
-        final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, PageFlowUtil.set(FieldKey.fromString("Id"), FieldKey.fromString("procedureid"), FieldKey.fromString("date"), FieldKey.fromString("chargetype"), FieldKey.fromString("procedureid/name")));
+        final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, PageFlowUtil.set(FieldKey.fromString("Id"), FieldKey.fromString("procedureid"), FieldKey.fromString("date"), FieldKey.fromString("chargetype"), FieldKey.fromString("procedureid/name"), FieldKey.fromString("Id/activeTreatments/surgicalTreatments")));
 
         TableSelector ts = new TableSelector(ti, cols.values(), filter, null);
         long count = ts.getRowCount();
         if (count > 0)
         {
-            msg.append("<b>WARNING: There are " + count + " animals that have had a surgery in the past 48H, but do not have any surgical medications, excluding procedures without default post-op analgesia/antibiotics.  NOTE: this currently only looks for the presence of ANY surgical medication, and does not check whether the right medications have been ordered</b><br>");
+            msg.append("<b>WARNING: There are " + count + " procedures performed in that past 48H, but do not have any surgical medications ordered, excluding procedures without default post-op analgesia/antibiotics.  NOTE: this currently only looks for the presence of any surgical medication, and does not check whether the right medications have been ordered</b><br>");
             msg.append("<table border=1 style='border-collapse: collapse;'>");
-            msg.append("<tr style='font-weight: bold;'><td>Id</td><td>Date</td><td>Procedure</td><td>Charge Type</td></tr>");
+            msg.append("<tr style='font-weight: bold;'><td>Id</td><td>Date</td><td>Procedure</td><td>Charge Type</td><td>Surgical Treatments</td></tr>");
 
             ts.forEach(new Selector.ForEachBlock<ResultSet>()
             {
@@ -169,6 +194,7 @@ public class SSU_Notification extends AbstractNotification
                     msg.append("<td>").append(formattedDate).append("</td>");
                     msg.append("<td>").append(safeAppend(rs, "procedureid/name", "No Procedure")).append("</td>");
                     msg.append("<td>").append(safeAppend(rs, "chargetype", "None")).append("</td>");
+                    msg.append("<td>").append(safeAppend(rs, "Id/activeTreatments/surgicalTreatments", "None")).append("</td>");
                     msg.append("</tr>");
                 }
             });
