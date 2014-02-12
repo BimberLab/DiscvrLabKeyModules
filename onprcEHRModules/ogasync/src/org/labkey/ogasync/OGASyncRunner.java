@@ -165,29 +165,8 @@ public class OGASyncRunner implements Job
         fieldMap.put("activityType", "ACTIVITY_TYPE");
         fieldMap.put("ogaProjectId", "PROJECT_ID");
 
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT\n");
-
-        String delim = "";
-        for (String fieldName : fieldMap.values())
-        {
-            sql.append(delim);
-            delim = ",\n";
-            if (fieldName.equalsIgnoreCase("OGA_PROJECT_NUMBER"))
-            {
-                sql.append(fieldName);
-            }
-            else
-            {
-                sql.append("max(").append(fieldName).append(") AS ").append(fieldName);
-            }
-        }
-
-        sql.append("\nFROM  " + sourceTable.getSelectName()).append("\n");
-        sql.append("GROUP BY OGA_PROJECT_NUMBER");
-
-        SqlSelector ss = new SqlSelector(sourceTable.getSchema(), new SQLFragment(sql.toString()));
-        doMerge(u, c, targetTable, ss, "projectNumber", fieldMap, null, null);
+        TableSelector ts = new TableSelector(sourceTable, new HashSet<>(fieldMap.values()));
+        doMerge(u, c, targetTable, ts, "projectNumber", fieldMap, null, null);
     }
 
     public void doMergeOtherAccounts(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException

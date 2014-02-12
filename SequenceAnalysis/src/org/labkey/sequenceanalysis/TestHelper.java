@@ -54,6 +54,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -452,7 +453,7 @@ public class TestHelper
                 int i = 0;
                 while (i < filenames.length)
                 {
-                    config.put("sample_" + i, "{\"platform\":\"ILLUMINA\",\"sampleid\":\"1\",\"readset\":\"\",\"instrument_run_id\":\"\",\"readsetname\":\"TestReadset" + i + "\",\"fileName\":\"" + filenames[i] + "\",\"fileName2\":\"" + filenames[i + 1] + "\",\"subjectid\":\"Subject\"}");
+                    config.put("sample_" + i, "{\"platform\":\"ILLUMINA\",\"sampleid\":\"1\",\"readset\":\"\",\"instrument_run_id\":\"\",\"readsetname\":\"TestReadset" + i + "\",\"fileName\":\"" + filenames[i] + "\",\"fileName2\":\"" + filenames[i + 1] + "\",\"subjectid\":\"Subject\",\"sampledate\":\"2010-01-01T12:00:00Z\"}");
                     i++;
                     i++;
                 }
@@ -785,8 +786,8 @@ public class TestHelper
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
             expectedOutputs.add(new File(basedir, "sequenceImport.xml"));
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
             verifyFileOutputs(basedir, expectedOutputs);
             verifyFileInputs(basedir, fileNames, config);
 
@@ -816,8 +817,8 @@ public class TestHelper
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
             expectedOutputs.add(new File(basedir, "sequenceImport.xml"));
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
 
             expectedOutputs.add(new File(basedir, UNZIPPED_PAIRED_FILENAME1 + ".gz"));
             expectedOutputs.add(new File(basedir, UNZIPPED_PAIRED_FILENAME2 + ".gz"));
@@ -853,8 +854,8 @@ public class TestHelper
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
             expectedOutputs.add(new File(basedir, "sequenceImport.xml"));
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
 
             expectedOutputs.add(new File(basedir, UNZIPPED_PAIRED_FILENAME1 + ".gz"));
             expectedOutputs.add(new File(basedir, UNZIPPED_PAIRED_FILENAME2 + ".gz"));
@@ -915,8 +916,8 @@ public class TestHelper
                 Assert.assertEquals("Incorrect platform", o.getString("platform"), m.getPlatform());
                 Assert.assertEquals("Incorrect sampleid", o.getInt("sampleid"), m.getSampleId().intValue());
                 Assert.assertEquals("Incorrect subjectId", o.getString("subjectid"), m.getSubjectId());
-                //TODO
-                //Assert.assertEquals("Incorrect sampleDate", new Date(Date.parse(o.getString("sampledate"))), m.getSampleDate());
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                Assert.assertEquals("Incorrect sampleDate", o.getString("sampledate"), m.getSampleDate() == null ?  null : format.format(m.getSampleDate()));
                 Assert.assertNotNull(m.getFileId());
             }
         }
