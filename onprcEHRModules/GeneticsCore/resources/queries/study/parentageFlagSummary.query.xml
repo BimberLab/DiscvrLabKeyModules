@@ -10,6 +10,7 @@
                     </column>
                     <column columnName="isParentageRequired">
                         <columnTitle>Is Parentage Required?</columnTitle>
+                        <description>This column displays whether this monkey would typically require genetic parentage testing</description>
                     </column>
                     <column columnName="hasParentageDrawnFlag">
                         <columnTitle>Has Been Flagged As Blood Drawn?</columnTitle>
@@ -19,12 +20,15 @@
                     </column>
                     <column columnName="hasParentageCalls">
                         <columnTitle>Has Genentic Parentage Calls?</columnTitle>
+                        <description>This column displays whether this animal has any information in the parentage table of the EHR</description>
                     </column>
                     <column columnName="hasParentageData">
                         <columnTitle>Has Parentage STR Data?</columnTitle>
+                        <description>This column displays whether this animals has any data in the genotype assay in the parentage folder</description>
                     </column>
                     <column columnName="hasFreezerSample">
                         <columnTitle>Has Freezer Sample?</columnTitle>
+                        <description>This column displays whether this animal has any sample of either gDNA or Whole Blood in the parentage freezer</description>
                     </column>
                     <column columnName="hasFreezerSampleOrData">
                         <columnTitle>Has Freezer Sample Or Data?</columnTitle>

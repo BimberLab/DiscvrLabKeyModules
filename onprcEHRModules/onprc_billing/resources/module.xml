@@ -14,5 +14,12 @@
                 <permission>ADMIN</permission>
             </editPermissions>
         </propertyDescriptor>
+        <propertyDescriptor name="DefaultBillingPhoneNumber">
+            <canSetPerContainer>true</canSetPerContainer>
+            <description>The is the default phone number to use when generating IBS sheets.</description>
+            <editPermissions>
+                <permission>ADMIN</permission>
+            </editPermissions>
+        </propertyDescriptor>
     </properties>
 </module>

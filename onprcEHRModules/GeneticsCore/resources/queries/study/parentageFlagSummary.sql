@@ -25,8 +25,9 @@ SELECT
   END as hasParentageCalls,
 
   CASE
-    WHEN pd.subjectId is null THEN false
-    ELSE true
+    WHEN pd.subjectId is not null THEN true
+    WHEN gp.Id is not null THEN true
+    ELSE false
   END as hasParentageData,
 
   CASE
@@ -42,8 +43,7 @@ FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.Demog
 
 LEFT JOIN (
   SELECT
-    pd.subjectId,
-    count(*) as total
+    pd.subjectId
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.Parentage_Data.Data pd
   WHERE pd.run.method = 'UC Davis'
   GROUP BY pd.subjectId
@@ -52,8 +52,7 @@ LEFT JOIN (
 --determine if we have actual genetic parentage calls
 LEFT JOIN (
   SELECT
-    pd.Id,
-    count(distinct pd.relationship) as total
+    pd.Id
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.Study.Parentage pd
   WHERE pd.method = 'Genetic'
   GROUP BY pd.Id
@@ -72,8 +71,7 @@ LEFT JOIN (
 LEFT JOIN (
 SELECT
   f.Id,
-  max(f.date) as lastDate,
-  count(*) as total
+  max(f.date) as lastDate
 FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
 where f.isActive = true and f.category = 'Genetics' and f.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.PARENTAGE_DRAW_NEEDED')
 GROUP BY f.Id
@@ -82,8 +80,7 @@ GROUP BY f.Id
 --join to freezer samples
 LEFT JOIN (
   SELECT
-    m.subjectId,
-    count(*) as total
+    m.subjectId
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.DNA_Bank.parentageSamples m
   WHERE m.sampletype IN ('gDNA', 'Whole Blood')
   GROUP BY m.subjectId
@@ -92,8 +89,7 @@ LEFT JOIN (
 --U42
 LEFT JOIN (
   SELECT
-    a.Id,
-    count(*) as total
+    a.Id
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.assignment a
   WHERE a.isActive = true and a.project.name = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.U42_PROJECT')
   GROUP BY a.Id

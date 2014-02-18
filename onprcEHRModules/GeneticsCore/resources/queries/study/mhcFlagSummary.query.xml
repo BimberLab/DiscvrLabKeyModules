@@ -10,21 +10,27 @@
                     </column>
                     <column columnName="isMHCRequired">
                         <columnTitle>Is MHC Typing Required?</columnTitle>
+                        <description>This column displays whether this monkey would typically require MHC typing, based on species, gender and geographic origin</description>
                     </column>
                     <column columnName="hasMhcDrawnFlag">
                         <columnTitle>Has Been Flagged As Blood Drawn?</columnTitle>
+                        <description>This column displays whether this monkey has a flag in their record indicating blood has been drawn for MHC typing</description>
                     </column>
                     <column columnName="hasMhcRedrawFlag">
                         <columnTitle>Has Been Flagged As Redraw Needed?</columnTitle>
+                        <description>This column displays whether this monkey has a flag in their record indicating a redraw is required</description>
                     </column>
                     <column columnName="hasMHCData">
                         <columnTitle>Has MHC Data?</columnTitle>
+                        <description>This column displays whether this monkey has MHC data (including SSP), or any raw sequence data in the MHC folder (including non-public, or non-analyzed).  The objective is to cast a wide net so that we do not miss data working through the analysis process</description>
                     </column>
                     <column columnName="hasFreezerSample">
                         <columnTitle>Has Freezer Sample?</columnTitle>
+                        <description>This column displays whether this animal has a sample of either RNA or Whole Blood in the MHC freezer</description>
                     </column>
                     <column columnName="hasFreezerSampleOrData">
                         <columnTitle>Has Freezer Sample Or Data?</columnTitle>
+                        <description>This column was added to allow filtering on both values using a single column.  See other columns of the same name for their definitions</description>
                     </column>
                     <column columnName="drawnFlagDateAdded">
                         <columnTitle>Date MHC Blood Collected Flag Added</columnTitle>

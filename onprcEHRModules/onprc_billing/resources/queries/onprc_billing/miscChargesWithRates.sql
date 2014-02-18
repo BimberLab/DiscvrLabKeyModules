@@ -14,9 +14,17 @@ SELECT
   coalesce(p.debitedaccount, p.project.account) as account,
   p.chargeId,
   coalesce(p.chargeId.name, p.item) as item,
-  coalesce(p.unitCost, e.unitCost, cr.unitCost) as unitCost,
+  CASE
+    WHEN p.unitCost IS NOT NULL THEN p.unitCost
+    WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
+    ELSE coalesce(e.unitCost, cr.unitCost)
+  END as unitCost,
   coalesce(p.quantity, 1) as quantity,
-  coalesce(p.quantity, 1) * coalesce(p.unitCost, e.unitCost, cr.unitCost) as totalcost,
+  CASE
+    WHEN p.unitCost IS NOT NULL THEN (coalesce(p.quantity, 1) * p.unitCost)
+    WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
+    ELSE (coalesce(p.quantity, 1) * coalesce(e.unitCost, cr.unitCost))
+  END as totalcost,
   coalesce(p.category, p.chargeId.category) as category,
   p.chargeType,
   p.invoicedItemId,

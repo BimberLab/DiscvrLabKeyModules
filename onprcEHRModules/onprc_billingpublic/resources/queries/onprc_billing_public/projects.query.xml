@@ -13,6 +13,22 @@
                             query.project/displayName~eq=${project/displayName}
                         </url>
                     </column>
+                    <column columnName="summaryByInvoice">
+                        <columnTitle></columnTitle>
+                        <url>/query/executeQuery.view?schemaName=onprc_billing_public&amp;
+                            queryName=invoicedItemsByProject&amp;
+                            query.project/displayName~eq=${project/displayName}
+                        </url>
+                        <displayWidth>150</displayWidth>
+                    </column>
+                    <column columnName="allItems">
+                        <columnTitle></columnTitle>
+                        <url>/query/executeQuery.view?schemaName=onprc_billing_public&amp;
+                            queryName=publicInvoicedItems&amp;
+                            query.project/displayName~eq=${project/displayName}
+                        </url>
+                        <displayWidth>150</displayWidth>
+                    </column>
                 </columns>
             </table>
         </tables>

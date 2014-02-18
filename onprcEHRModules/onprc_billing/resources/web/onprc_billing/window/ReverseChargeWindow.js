@@ -154,7 +154,9 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
         }
         else if (val == 'changeProject'){
             items.push({
-                html: 'This will switch the project charged to the project selected below.  This will automatically create a charge to reverse the original charge, and create a second charge against the new project.  Note: the reversal will use the aliases from the original transaction, and does not check whether they are is still valid.  The new charge will use the currently actively alias from the chosen project, which should be shown in the dropdown list.  It will credit the same alias as the original transaction.  All transactions will use the current date.',
+                html: 'This will switch the project charged to the project selected below.  This will automatically create a charge to reverse the original charge, and create a second charge against the new project.  ' +
+                    'The reversal will use the aliases used on the original transaction.  This does not check whether the aliases are still valid.<p></p>' +
+                    'The new charge will debit against the alias chosen below.  The field shows all aliases that have historically been associated with this project.  If left blank, it will use the currently active alias from the chosen project.  It will credit the same alias as the original transaction.  All transactions will use the current date, as opposed to the original transaction date.',
                 style: 'padding-bottom: 10px;'
             },{
                 xtype: 'ehr-projectfield',
@@ -162,35 +164,53 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                 showAccount: true,
                 width: 400,
                 fieldLabel: 'Choose Project',
-                matchFieldWidth: false
-//                listeners: {
-//                    change: function(field){
-//                        var panel = field.up('panel');
-//                        var aliasField = panel.down('#aliasField');
-//                        var recIdx = field.store.find('project', field.getValue());
-//                        var rec;
-//                        if (recIdx != -1){
-//                            rec = field.store.getAt(recIdx);
-//                        }
-//
-//                        if (rec){
-//                            aliasField.setValue(rec.get('account'));
-//                        }
-//                    }
-//                }
-//            },{
-//                xtype: 'labkey-combo',
-//                width: 400,
-//                fieldLabel: 'Choose Alias',
-//                itemId: 'aliasField',
-//                displayField: 'alias',
-//                valueField: 'alias',
-//                store: {
-//                    type: 'labkey-store',
-//                    schemaName: 'onprc_billing',
-//                    queryName: 'aliases',
-//                    autoLoad: true
-//                }
+                matchFieldWidth: false,
+                listeners: {
+                    change: function(field){
+                        var panel = field.up('panel');
+                        var aliasField = panel.down('#aliasField');
+                        var recIdx = field.store.find('project', field.getValue());
+                        var rec;
+                        if (recIdx != -1){
+                            rec = field.store.getAt(recIdx);
+                        }
+
+                        if (field.getValue()){
+                            aliasField.setDisabled(false);
+                            aliasField.store.filterArray = [LABKEY.Filter.create('project', field.getValue())];
+                            aliasField.store.load();
+                        }
+                        else {
+                            aliasField.setDisabled(true);
+                            aliasField.setValue(null);
+                            aliasField.store.filterArray = [];
+                        }
+
+                        aliasField.setValue(null);
+                    }
+                }
+            },{
+                xtype: 'labkey-combo',
+                width: 400,
+                fieldLabel: 'Alias To Use',
+                disabled: true,
+                itemId: 'aliasField',
+                displayField: 'account',
+                valueField: 'account',
+                listConfig: {
+                    innerTpl: '{[values["account"] + " (" + (values["startdate"] ? values["startdate"].format("Y-m-d") : "No Start") + " - " + (values["enddate"] ? values["enddate"].format("Y-m-d") : "No End") + ")"]}',
+                    getInnerTpl: function(){
+                        return this.innerTpl;
+                    }
+                },
+                store: {
+                    type: 'labkey-store',
+                    schemaName: 'onprc_billing',
+                    queryName: 'projectAccountHistory',
+                    sort: '-startdate',
+                    autoLoad: false,
+                    columns: 'project,account,startdate,enddate'
+                }
             },{
                 xtype: 'numberfield',
                 hideTrigger: true,
@@ -377,6 +397,7 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             }
             else if (val == 'changeProject'){
                 //first create a charge to reverse the original
+                //we expect to use the same credit/debit alias as the original
                 var reversalCharge = LABKEY.ExtAdapter.apply({}, baseValues);
                 LABKEY.ExtAdapter.apply(reversalCharge, {
                     chargeType: 'Reversal',
@@ -386,13 +407,15 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                 miscChargesInserts.push(reversalCharge);
 
                 //then create one to charge against the new project/account
+                //use the chosen alias.  leaving blank will result in the default alias for this project being used
                 var combo = this.down('#projectField');
+                var aliasField = this.down('#aliasField');
 
                 var newCharge = LABKEY.ExtAdapter.apply({}, baseValues);
                 LABKEY.ExtAdapter.apply(newCharge, {
                     chargeType: 'Adjustment (Project Change)',
                     project: combo.getValue(),
-                    debitedaccount: null //this will result in this project's active alias being used
+                    debitedaccount: aliasField.getValue() //NOTE: blank will result in this project's active alias being used
                 });
 
                 miscChargesInserts.push(newCharge);

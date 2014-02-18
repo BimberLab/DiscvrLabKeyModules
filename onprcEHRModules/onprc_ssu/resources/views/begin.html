@@ -39,6 +39,9 @@
                     items: [{
                         name: 'Today\'s Surgeries',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'encounters', 'query.viewName': 'Surgeries Today'})
+                    },{
+                        name: 'Housing On Surgery Case Open (Cases Closed Today)',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'cases', 'query.viewName': 'With Initial Housing', 'query.category~eq': 'Surgery', 'query.enddate~dateeq': (new Date).format('Y-m-d')})
                     }]
                 }]
             }]

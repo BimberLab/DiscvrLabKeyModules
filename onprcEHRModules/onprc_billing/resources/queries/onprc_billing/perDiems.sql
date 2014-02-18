@@ -8,7 +8,7 @@
 
 SELECT
     pd.Id,
-    min(pd.date) as date,
+    max(pd.date) as date,
     pd.project,
     pd.project.account,
     pd.chargeId,

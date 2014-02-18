@@ -148,9 +148,13 @@ public class SSU_Notification extends AbstractNotification
         long count = ts.getRowCount();
         if (count > 0)
         {
-            msg.append("<b>WARNING: There are " + count + " surgeries in the past 48H, but lacking an open surgery case, excluding procedures with no followup days.</b><br>");
+            msg.append("<b>WARNING: There are " + count + " surgeries in the past 48H that lack an open surgery case, excluding procedures with no followup days.</b><br>");
             msg.append("<p><a href='" + getExecuteQueryUrl(ehrContainer, "study", "encounters", "Surgeries", filter) + "'>Click here to view them</a><br>\n");
             msg.append("<hr>\n");
+        }
+        else
+        {
+            msg.append("All surgeries in the past 48H have an open case, excluding those with 0 followup days<hr>");
         }
     }
 
@@ -164,7 +168,7 @@ public class SSU_Notification extends AbstractNotification
         filter.addCondition(FieldKey.fromString("date"), new Date(), CompareType.DATE_LTE);
         filter.addCondition(FieldKey.fromString("type"), "Surgery", CompareType.EQUAL);
         filter.addCondition(FieldKey.fromString("Id/activeTreatments/totalSurgicalTreatments"), null, CompareType.ISBLANK);
-        filter.addCondition(new SimpleFilter.OrClause(new CompareType.CompareClause(FieldKey.fromString("procedureid/analgesiaRx"), CompareType.NONBLANK, null), new CompareType.CompareClause(FieldKey.fromString("procedureid/antibioticRx"), CompareType.NONBLANK, null)));
+        filter.addCondition(new SimpleFilter.OrClause(new CompareType.CompareClause(FieldKey.fromString("procedureid/analgesiaRx"), CompareType.NONBLANK, null), new CompareType.CompareClause(FieldKey.fromString("procedureid/antibioticRx"), CompareType.NONBLANK, null), new CompareType.CompareClause(FieldKey.fromString("procedureid/analgesiaRx"), CompareType.NEQ, "None"), new CompareType.CompareClause(FieldKey.fromString("procedureid/antibioticRx"), CompareType.NEQ, "None")));
 
         TableInfo ti = QueryService.get().getUserSchema(u, ehrContainer, "study").getTable("encounters");
         final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, PageFlowUtil.set(FieldKey.fromString("Id"), FieldKey.fromString("procedureid"), FieldKey.fromString("date"), FieldKey.fromString("chargetype"), FieldKey.fromString("procedureid/name"), FieldKey.fromString("Id/activeTreatments/surgicalTreatments")));
@@ -225,6 +229,10 @@ public class SSU_Notification extends AbstractNotification
             msg.append("<p><a href='" + getExecuteQueryUrl(ehrContainer, "study", "encounters", "Surgeries", filter) + "'>Click here to view them</a><br>\n");
             msg.append("<hr>\n");
         }
+        else
+        {
+            msg.append("No surgeries were performed today.<hr>");
+        }
     }
 
     private void surgeriesTomorrow(Container c, User u, StringBuilder msg)
@@ -245,6 +253,10 @@ public class SSU_Notification extends AbstractNotification
             msg.append("<b>" + count + " surgeries have been performed today.</b><br>");
             msg.append("<p><a href='" + getExecuteQueryUrl(c, ONPRC_SSUSchema.NAME, ONPRC_SSUSchema.TABLE_SCHEDULE, null, filter) + "'>Click here to view them</a><br>\n");
             msg.append("<hr>\n");
+        }
+        else
+        {
+            msg.append("There are no surgeries scheduled tomorrow.<hr>");
         }
     }
 
@@ -300,6 +312,10 @@ public class SSU_Notification extends AbstractNotification
             });
             msg.append("</table>");
             msg.append("<hr>\n");
+        }
+        else
+        {
+            msg.append("No problems were identified for animals with scheduled surgeries.<hr>");
         }
     }
 }

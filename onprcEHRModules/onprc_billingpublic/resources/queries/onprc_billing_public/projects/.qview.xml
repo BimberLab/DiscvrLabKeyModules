@@ -1,8 +1,7 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView">
     <columns>
         <column name="project"/>
-        <column name="project/title"/>
-        <column name="project/investigatorId"/>
+        <column name="title"/>
         <column name="project/protocol">
             <properties>
                 <property name="columnTitle" value="IACUC Protocol"/>
@@ -18,6 +17,8 @@
                 <property name="columnTitle" value="Financial Analyst"/>
             </properties>
         </column>
+        <column name="summaryByInvoice"/>
+        <column name="allItems"/>
     </columns>
     <sorts>
         <sort column="project/displayName"/>

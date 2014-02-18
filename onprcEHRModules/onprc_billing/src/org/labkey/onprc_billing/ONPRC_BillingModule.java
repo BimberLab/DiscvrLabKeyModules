@@ -26,6 +26,7 @@ import org.labkey.api.ehr.dataentry.DefaultDataEntryFormFactory;
 import org.labkey.api.ehr.dataentry.FormSection;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
+import org.labkey.api.ldk.buttons.ShowEditUIButton;
 import org.labkey.api.ldk.notification.NotificationService;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.Module;
@@ -45,6 +46,7 @@ import org.labkey.onprc_billing.pipeline.BillingPipelineProvider;
 import org.labkey.onprc_billing.query.BillingAuditProvider;
 import org.labkey.onprc_billing.query.BillingAuditViewFactory;
 import org.labkey.onprc_billing.query.ONPRC_EHRBillingUserSchema;
+import org.labkey.onprc_billing.security.ONPRCBillingAdminPermission;
 import org.labkey.onprc_billing.security.ONPRCBillingAdminRole;
 import org.labkey.onprc_billing.security.ONPRCChargesEntryRole;
 import org.labkey.onprc_billing.table.ChargeableItemsCustomizer;
@@ -113,6 +115,8 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
 
         LDKService.get().registerContainerScopedTable(ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_GRANTS, "grantNumber");
         LDKService.get().registerContainerScopedTable(ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_ALIASES, "alias");
+
+        EHRService.get().registerMoreActionsButton(new ShowEditUIButton(this, "onprc_ehr", "projectAccountHistory", ONPRCBillingAdminPermission.class), "onprc_ehr", "projectAccountHistory");
     }
 
     @Override

@@ -46,6 +46,7 @@
                 items: [
                     {name: 'DNA Bank Sample Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'dnaFlagSummary'})},
                     {name: 'MHC Data Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'mhcFlagSummary'})},
+                    {name: 'MHC Data: Animals With MHC Samples, but No MHC Data', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'mhcFlagSummary', 'query.hasMHCData~eq': false, 'query.hasFreezerSample~eq':true,'query.calculated_status/code~startswith':'Alive','query.isMHCRequired~eq':true})},
                     {name: 'Parentage Data Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery',  ehrCtx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'parentageFlagSummary'})},
 
                     {name: 'Genetics Blood Draw Discrepancy Report', url: LABKEY.ActionURL.buildURL('ldk', 'runNotification',  ehrCtx['EHRStudyContainer'], {key: 'org.labkey.GeneticsCore.notification.GeneticsCoreNotification'})}

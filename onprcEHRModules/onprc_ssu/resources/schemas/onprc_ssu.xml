@@ -15,7 +15,6 @@
             </ns:column>
             <ns:column columnName="project">
                 <ns:columnTitle>Project Id</ns:columnTitle>
-                <ns:isHidden>true</ns:isHidden>
             </ns:column>
             <ns:column columnName="location">
                 <ns:columnTitle>Location</ns:columnTitle>

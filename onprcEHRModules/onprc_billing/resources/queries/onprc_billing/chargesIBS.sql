@@ -10,6 +10,7 @@
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -30,7 +31,7 @@ SELECT
   --i.faid.lastName as fiscalAuthorityName,
   i.department,
   'L584' as mailcode,
-  i.contactPhone,
+  COALESCE(i.contactPhone, moduleProperty('onprc_billing','DefaultBillingPhoneNumber')) as contactPhone,
   i.itemCode,
   i.quantity,
   i.unitCost as price,
@@ -38,7 +39,8 @@ SELECT
   --i.creditedaccount,
   i.totalcost,
   i.invoiceId,
-  i.category
+  i.category,
+  i.project
 
 FROM onprc_billing.invoicedItems i
 WHERE i.totalcost != 0 AND (i.transactionType != 'ERROR' OR i.transactionType IS NULL)
@@ -62,7 +64,7 @@ SELECT
   --i.faid.lastName as fiscalAuthorityName,
   i.department,
   'L584' as mailcode,
-  i.contactPhone,
+  COALESCE(i.contactPhone, moduleProperty('onprc_billing','DefaultBillingPhoneNumber')) as contactPhone,
   (i.itemCode || 'C') as itemCode,
   i.quantity,
   (i.unitCost * -1) as price,
@@ -70,7 +72,8 @@ SELECT
   i.creditedaccount as OSUAlias,
   (i.totalcost * -1) as totalcost,
   i.invoiceId,
-  i.category
+  i.category,
+  i.project
 
 FROM onprc_billing.invoicedItems i
 WHERE i.totalcost != 0 AND i.creditedaccount IS NOT NULL and i.creditedaccount != '-1' AND (i.transactionType != 'ERROR' OR i.transactionType IS NULL)

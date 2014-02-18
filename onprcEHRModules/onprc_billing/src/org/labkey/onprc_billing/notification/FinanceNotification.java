@@ -579,6 +579,7 @@ public class FinanceNotification extends AbstractNotification
         filter.addCondition(FieldKey.fromString("account/aliasEnabled"), "Y", CompareType.NEQ_OR_NULL);
         filter.addCondition(FieldKey.fromString("account"), null, CompareType.NONBLANK);
         filter.addCondition(FieldKey.fromString("account"), "-1", CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("enddateCoalesced"), new Date(), CompareType.DATE_GTE);
         TableSelector ts = new TableSelector(ti, filter, null);
         long count = ts.getRowCount();
         if (count > 0)
@@ -602,6 +603,7 @@ public class FinanceNotification extends AbstractNotification
         filter.addCondition(FieldKey.fromString("account/budgetEndDateCoalesced"), "-0d", CompareType.DATE_LT);
         filter.addCondition(FieldKey.fromString("account"), null, CompareType.NONBLANK);
         filter.addCondition(FieldKey.fromString("account"), "-1", CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("enddateCoalesced"), new Date(), CompareType.DATE_GTE);
         TableSelector ts = new TableSelector(ti, filter, null);
         long count = ts.getRowCount();
         if (count > 0)

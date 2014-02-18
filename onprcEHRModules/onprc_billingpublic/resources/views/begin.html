@@ -11,6 +11,7 @@ Ext4.onReady(function(){
 
     Ext4.widget({
         xtype: 'panel',
+        itemId: 'outerPanel',
         border: false,
         items: [{
             html: 'Below are the projects are you authorized to view.  Click the project name to view more detail for each billing period.  If you believe there is an error in this list of projects, please use the help menu above to enter an issue.',
@@ -29,7 +30,12 @@ Ext4.onReady(function(){
                     //position: 'none'
                 },
                 schemaName: 'onprc_billing_public',
-                queryName: 'projects'
+                queryName: 'projects',
+                success: function(){
+                    //manually resize the outer panel
+                    LDK.Assert.assertNotEmpty('Error in scope of DataRegion success()', (this.up && this.up('#outerPanel')));
+                    this.up('#outerPanel').setWidth(this.getWidth() + 10);
+                }
             }
         }]
     }).render(webpart.wrapperDivId);

@@ -126,37 +126,6 @@ Ext4.onReady(function(){
                                                 success: this.onDataRegionLoad
                                             }
                                         },{
-                                            title: 'Total Charges By Grant Project',
-                                            xtype: 'ldk-querypanel',
-                                            queryConfig: {
-                                                schemaName: 'onprc_billing',
-                                                queryName: 'invoicedItemsByInvoiceGrantProject',
-                                                filters: [LABKEY.Filter.create('invoiceId', this.invoiceRunId, LABKEY.Filter.Types.EQUAL)],
-                                                failure: LDK.Utils.getErrorCallback(),
-                                                scope: this,
-                                                success: this.onDataRegionLoad
-                                            }
-                                        },{
-                                            title: 'Total Charges By Division',
-                                            xtype: 'ldk-querypanel',
-                                            queryConfig: {
-                                                schemaName: 'onprc_billing',
-                                                queryName: 'invoicedItemsByInvoiceDivision',
-                                                filters: [LABKEY.Filter.create('invoiceId', this.invoiceRunId, LABKEY.Filter.Types.EQUAL)],
-                                                failure: LDK.Utils.getErrorCallback()
-                                            }
-                                        },{
-                                            title: 'Total Revenue By Alias',
-                                            xtype: 'ldk-querypanel',
-                                            queryConfig: {
-                                                schemaName: 'onprc_billing',
-                                                queryName: 'invoicedItemsByInvoiceCreditAccount',
-                                                filters: [LABKEY.Filter.create('invoiceId', this.invoiceRunId, LABKEY.Filter.Types.EQUAL)],
-                                                failure: LDK.Utils.getErrorCallback(),
-                                                scope: this,
-                                                success: this.onDataRegionLoad
-                                            }
-                                        },{
                                             title: 'Total Charges By Item',
                                             xtype: 'ldk-querypanel',
                                             queryConfig: {

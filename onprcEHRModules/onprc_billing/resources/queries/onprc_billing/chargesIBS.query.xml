@@ -3,9 +3,13 @@
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="chargesIBS" tableDbType="TABLE">
                 <tableTitle>IBS Spreadsheet</tableTitle>
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
                 <columns>
                     <column columnName="transactionDate">
                         <formatString>MM-dd-yyyy</formatString>
+                    </column>
+                    <column columnName="quantity">
+                        <formatString>0.00</formatString>
                     </column>
                     <column columnName="price">
                         <formatString>0.00</formatString>

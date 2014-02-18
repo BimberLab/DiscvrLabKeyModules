@@ -32,11 +32,13 @@ SELECT
   p.sourceRecord,
   p.chargeType,
   CASE
+    WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
     WHEN (p.category = 'Lease Fees' or p.category = 'Lease Setup Fee' or p.category = 'Lease Setup Fees') THEN coalesce(e.unitCost, cr.unitCost)
     ELSE (coalesce(e3.unitCost, cr3.unitCost) - coalesce(e2.unitCost, cr2.unitCost))
   END as unitCost,
   1 as quantity,
   CASE
+    WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
     WHEN (p.category = 'Lease Fees' or p.category = 'Lease Setup Fee' or p.category = 'Lease Setup Fees') THEN coalesce(e.unitCost, cr.unitCost)
     ELSE (coalesce(e3.unitCost, cr3.unitCost) - coalesce(e2.unitCost, cr2.unitCost))
   END as totalcost,
