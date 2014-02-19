@@ -15,6 +15,7 @@
  */
 package org.labkey.laboratory.assay;
 
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
@@ -215,5 +216,10 @@ public class RunUploadContext<ProviderType extends AssayProvider> implements Ass
     public void uploadComplete(ExpRun run) throws ExperimentException
     {
 
+    }
+
+	public Logger getLogger()
+	{
+		return null;
     }
 }
