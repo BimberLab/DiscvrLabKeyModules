@@ -250,7 +250,7 @@ public class SSU_Notification extends AbstractNotification
         long count = ts.getRowCount();
         if (count > 0)
         {
-            msg.append("<b>" + count + " surgeries have been performed today.</b><br>");
+            msg.append("<b>" + count + " surgeries are scheduled for tomorrow.</b><br>");
             msg.append("<p><a href='" + getExecuteQueryUrl(c, ONPRC_SSUSchema.NAME, ONPRC_SSUSchema.TABLE_SCHEDULE, null, filter) + "'>Click here to view them</a><br>\n");
             msg.append("<hr>\n");
         }

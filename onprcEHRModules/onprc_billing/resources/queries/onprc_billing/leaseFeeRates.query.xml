@@ -39,14 +39,14 @@
                     </column>
                     <column columnName="leaseCharge1">
                         <fk>
-                            <fkDbSchema>onprc_billing</fkDbSchema>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
                             <fkTable>chargeableItems</fkTable>
                             <fkColumnName>rowid</fkColumnName>
                         </fk>
                     </column>
                     <column columnName="leaseCharge2">
                         <fk>
-                            <fkDbSchema>onprc_billing</fkDbSchema>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
                             <fkTable>chargeableItems</fkTable>
                             <fkColumnName>rowid</fkColumnName>
                         </fk>

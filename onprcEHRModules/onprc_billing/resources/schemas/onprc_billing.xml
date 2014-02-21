@@ -780,6 +780,34 @@
             <ns:column columnName="modified"/>
         </ns:columns>
     </ns:table>
+    <ns:table tableName="bloodDrawFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Blood Draw Fee Structure</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="chargetype">
+                <ns:columnTitle>Charge Type</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
+                    <ns:fkTable>bloodChargeType</ns:fkTable>
+                    <ns:fkColumnName>value</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="chargeId">
+                <ns:columnTitle>Charge Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="active">
+                <ns:columnTitle>Is Active?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="objectid"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
     <ns:table tableName="projectAccountHistory" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>Project Alias History</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>

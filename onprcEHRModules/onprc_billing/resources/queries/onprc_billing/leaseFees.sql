@@ -32,10 +32,18 @@ CASE
   WHEN a2.id IS NOT NULL THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = 'Animal Lease Fee - TMB')
   ELSE lf.chargeId
 END as chargeId,
+--special case one-day lease rates.
+--TODO: figure out proper duration and use this value
+CASE
+  WHEN (a.duration = 0 AND a.enddate IS NULL) THEN 1
+  WHEN (a.duration <= 1 AND a.enddate IS NULL) THEN a.duration
+  ELSE 1
+END as quantity,
 cast(null as integer) as leaseCharge1,
 cast(null as integer) as leaseCharge2,
 a.objectid as sourceRecord,
-null as chargeType
+null as chargeType,
+null as isAdjustment
 FROM study.assignment a
 
 --find overlapping TMB at date of assignment
@@ -43,7 +51,7 @@ LEFT JOIN study.assignment a2 ON (
   a.id = a2.id AND a.project != a2.project
   AND a2.dateOnly <= a.dateOnly
   AND a2.endDateCoalesced >= a.dateOnly
-  AND a2.project.name = '0300'
+  AND a2.project.name = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.TMB_PROJECT')
 )
 
 LEFT JOIN onprc_billing.leaseFeeDefinition lf ON (
@@ -72,10 +80,12 @@ SELECT
   a.ageAtTime.AgeAtTimeYearsRounded as ageAtTime,
   'Lease Setup Fees' as category,
   (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = 'Lease Setup Fees') as chargeId,
+  1 as quantity,
   cast(null as integer) as leaseCharge1,
   cast(null as integer) as leaseCharge2,
   a.objectid as sourceRecord,
-  null as chargeType
+  null as chargeType,
+  null as isAdjustment
 
 FROM study.assignment a
 
@@ -100,10 +110,12 @@ a.assignCondition,
 a.ageAtTime.AgeAtTimeYearsRounded as ageAtTime,
 'Lease Fees' as category,
 (SELECT max(rowid) as rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = 'Lease Fee Adjustment' and ci.active = true) as chargeId,
+1 as quantity,
 lf2.chargeId as leaseCharge1,
 lf.chargeId as leaseCharge2,
 a.objectid as sourceRecord,
-'Adjustment - Automatic' as chargeType
+'Adjustment - Automatic' as chargeType,
+'Y' as isAdjustment
 
 FROM study.assignment a
 LEFT JOIN onprc_billing.leaseFeeDefinition lf

@@ -13,6 +13,8 @@ console.log("** evaluating: " + this['javax.script.filename']);
 
 function beforeInsert(row, errors){
     beforeUpsert(row, errors);
+
+    row.objectid = row.objectid || LABKEY.Utils.generateUUID();
 }
 
 function beforeUpdate(row, oldRow, errors){
@@ -27,7 +29,6 @@ function beforeUpdate(row, oldRow, errors){
 }
 
 function beforeUpsert(row, errors){
-    console.log('called');
     var lookupFields = ['projectName'];
     for (var i=0;i<lookupFields.length;i++){
         var f = lookupFields[i];
@@ -41,6 +42,4 @@ function beforeUpsert(row, errors){
                 row[f] = normalizedVal;  //cache value for purpose of normalizing case
         }
     }
-
-    row.objectid = row.objectid || LABKEY.Utils.generateUUID();
 }

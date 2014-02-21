@@ -69,7 +69,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 12.358;
+        return 12.359;
     }
 
     @Override

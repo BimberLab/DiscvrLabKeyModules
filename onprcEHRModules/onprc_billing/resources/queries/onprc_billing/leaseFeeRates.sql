@@ -33,14 +33,15 @@ SELECT
   p.chargeType,
   CASE
     WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
-    WHEN (p.category = 'Lease Fees' or p.category = 'Lease Setup Fee' or p.category = 'Lease Setup Fees') THEN coalesce(e.unitCost, cr.unitCost)
-    ELSE (coalesce(e3.unitCost, cr3.unitCost) - coalesce(e2.unitCost, cr2.unitCost))
+    --handle adjustments and non-adjustments separately
+    WHEN (p.isAdjustment IS NULL) THEN coalesce(e.unitCost, cr.unitCost)
+    ELSE (CAST(coalesce(e3.unitCost, cr3.unitCost) as double) - cast(coalesce(e2.unitCost, cr2.unitCost) as double))
   END as unitCost,
-  1 as quantity,
+  p.quantity,
   CASE
     WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
-    WHEN (p.category = 'Lease Fees' or p.category = 'Lease Setup Fee' or p.category = 'Lease Setup Fees') THEN coalesce(e.unitCost, cr.unitCost)
-    ELSE (coalesce(e3.unitCost, cr3.unitCost) - coalesce(e2.unitCost, cr2.unitCost))
+    WHEN (p.isAdjustment IS NULL) THEN (p.quantity * coalesce(e.unitCost, cr.unitCost))
+    ELSE (CAST(coalesce(e3.unitCost, cr3.unitCost) as double) - cast(coalesce(e2.unitCost, cr2.unitCost) as double))
   END as totalcost,
 
   cast(ce.account as varchar(200)) as creditAccount,
@@ -52,8 +53,9 @@ SELECT
     ELSE null
   END as isExemption,
   CASE
-    WHEN (p.category = 'Lease Fees' or p.category = 'Lease Setup Fee' or p.category = 'Lease Setup Fees') AND coalesce(e.unitCost, cr.unitCost) is null THEN 'Y'
-    WHEN (p.category != 'Lease Fees' AND p.category != 'Lease Setup Fee' AND p.category != 'Lease Setup Fees') AND (coalesce(e3.unitCost, cr3.unitCost) IS NULL OR coalesce(e2.unitCost, cr2.unitCost) IS NULL) THEN 'Y'
+    --handle adjustments and non-adjustments separately
+    WHEN (p.isAdjustment IS NULL AND coalesce(e.unitCost, cr.unitCost) is null) THEN 'Y'
+    WHEN (p.isAdjustment IS NOT NULL AND (coalesce(e3.unitCost, cr3.unitCost) IS NULL OR coalesce(e2.unitCost, cr2.unitCost) IS NULL)) THEN 'Y'
     ELSE null
   END as lacksRate,
   CASE
@@ -65,7 +67,7 @@ SELECT
     ELSE null
   END as exemptionId,
   null as isMiscCharge,
-  CASE WHEN p.chargeType LIKE 'Adjustment%' THEN 'Y' ELSE null END as isAdjustment,
+  p.isAdjustment,
   CASE WHEN p.project.account IS NULL THEN 'Y' ELSE null END as isMissingAccount,
   CASE WHEN ifdefined(p.project.account.fiscalAuthority.faid) IS NULL THEN 'Y' ELSE null END as isMissingFaid,
   CASE

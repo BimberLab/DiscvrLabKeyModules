@@ -33,7 +33,7 @@
                     <column columnName="leaseCharge1">
                         <columnTitle>Original Lease Type</columnTitle>
                         <fk>
-                            <fkDbSchema>onprc_billing</fkDbSchema>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
                             <fkTable>chargeableItems</fkTable>
                             <fkColumnName>rowid</fkColumnName>
                         </fk>
@@ -41,7 +41,7 @@
                     <column columnName="leaseCharge2">
                         <columnTitle>Final Lease Type</columnTitle>
                         <fk>
-                            <fkDbSchema>onprc_billing</fkDbSchema>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
                             <fkTable>chargeableItems</fkTable>
                             <fkColumnName>rowid</fkColumnName>
                         </fk>

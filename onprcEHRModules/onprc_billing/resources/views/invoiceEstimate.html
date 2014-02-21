@@ -147,7 +147,9 @@
                         },
                         aggregates: [
                             {column: 'totalCost', type: LABKEY.AggregateTypes.SUM, label: 'Total'}
-                        ]
+                        ],
+                        scope: this,
+                        success: this.onDataRegionLoad
                     }
                 },{
                     xtype: 'ldk-querypanel',
@@ -166,7 +168,9 @@
                         },
                         aggregates: [
                             {column: 'totalCost', type: LABKEY.AggregateTypes.SUM, label: 'Total'}
-                        ]
+                        ],
+                        scope: this,
+                        success: this.onDataRegionLoad
                     }
                 },{
                     xtype: 'ldk-querypanel',
@@ -185,7 +189,9 @@
                         },
                         aggregates: [
                             {column: 'totalCost', type: LABKEY.AggregateTypes.SUM, label: 'Total'}
-                        ]
+                        ],
+                        scope: this,
+                        success: this.onDataRegionLoad
                     }
                 },{
                     xtype: 'ldk-querypanel',
@@ -204,7 +210,9 @@
                         },
                         aggregates: [
                             {column: 'totalCost', type: LABKEY.AggregateTypes.SUM, label: 'Total'}
-                        ]
+                        ],
+                        scope: this,
+                        success: this.onDataRegionLoad
                     }
                 },{
                     xtype: 'ldk-querypanel',
@@ -224,7 +232,9 @@
                         },
                         aggregates: [
                             {column: 'totalCost', type: LABKEY.AggregateTypes.SUM, label: 'Total'}
-                        ]
+                        ],
+                        scope: this,
+                        success: this.onDataRegionLoad
                     }
                 },{
                     xtype: 'ldk-querypanel',
@@ -243,12 +253,23 @@
                         },
                         aggregates: [
                             {column: 'totalCost', type: LABKEY.AggregateTypes.SUM, label: 'Total'}
-                        ]
+                        ],
+                        scope: this,
+                        success: this.onDataRegionLoad
                     }
                 }];
 
 
                 target.add(toAdd);
+            },
+
+            onDataRegionLoad: function(dr){
+                var itemWidth = Ext4.get('dataregion_'+dr.id).getSize().width + 150;
+                var target = this.down('#qwpSection');
+                if (itemWidth > target.getWidth()){
+                    target.setWidth(itemWidth);
+                    this.setWidth(itemWidth + 20);
+                }
             }
         });
 
