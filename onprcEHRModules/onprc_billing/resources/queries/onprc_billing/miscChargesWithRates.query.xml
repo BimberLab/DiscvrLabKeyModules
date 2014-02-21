@@ -11,6 +11,9 @@
                             <fkColumnName>project</fkColumnName>
                         </fk>
                     </column>
+                    <column columnName="account">
+                        <columnTitle>Alias</columnTitle>
+                    </column>
                     <column columnName="investigatorId">
                         <columnTitle>Investigator</columnTitle>
                         <isHidden>true</isHidden>

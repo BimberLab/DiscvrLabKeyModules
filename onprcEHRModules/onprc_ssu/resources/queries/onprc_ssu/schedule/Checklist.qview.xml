@@ -12,7 +12,7 @@
         <column name="Id/surgeryChecklist/status"/>
     </columns>
     <sorts>
-        <sort column="date" descending="true"/>
+        <sort column="date"/>
         <sort column="Id"/>
         <sort column="procedureid/name"/>
     </sorts>

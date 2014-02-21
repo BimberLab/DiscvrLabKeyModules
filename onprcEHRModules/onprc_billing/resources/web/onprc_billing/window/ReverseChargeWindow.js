@@ -226,8 +226,6 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             });
         }
         else if (val == 'changeCreditAlias'){
-            this.getAliasStore();
-
             items.push({
                 html: 'This will switch the alias credited for the selected charges to the alias selected below.  This will reverse the original item and create a new record with this alias.  Note: the reversal will use the aliases from the original transaction, and does not check whether these are still valid.  The new transaction will charge alias listed in the original transaction, and switch the credit to use the chosen alias.  All transactions will use the current date.',
                 style: 'padding-bottom: 10px;'
@@ -295,21 +293,6 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
         var target = this.down('#itemArea');
         target.removeAll();
         target.add(items);
-    },
-
-    getAliasStore: function(){
-        if (this.aliasStore){
-            return this.aliasStore;
-        }
-
-        this.aliasStore = Ext4.create('LABKEY.ext4.data.Store', {
-            type: 'labkey-store',
-            schemaName: 'onprc_billing',
-            queryName: 'aliases',
-            autoLoad: true
-        });
-
-        return this.aliasStore;
     },
 
     onSubmit: function(){

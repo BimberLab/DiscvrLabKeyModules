@@ -488,6 +488,7 @@
             </ns:column>
             <ns:column columnName="specificity">
                 <ns:columnTitle>Specificity</ns:columnTitle>
+                <ns:scale>80</ns:scale>
             </ns:column>
             <ns:column columnName="clonality">
                 <ns:columnTitle>Clonality</ns:columnTitle>
@@ -511,10 +512,12 @@
             </ns:column>
             <ns:column columnName="source">
                 <ns:nullable>true</ns:nullable>
+                <ns:scale>80</ns:scale>
             </ns:column>
             <ns:column columnName="catalog">
                 <ns:columnTitle>Catalog #</ns:columnTitle>
                 <ns:nullable>true</ns:nullable>
+                <ns:scale>80</ns:scale>
             </ns:column>
             <ns:column columnName="applications">
                 <ns:columnTitle>Applications</ns:columnTitle>
@@ -523,6 +526,7 @@
             </ns:column>
             <ns:column columnName="location">
                 <ns:nullable>true</ns:nullable>
+                <ns:scale>80</ns:scale>
             </ns:column>
             <ns:column columnName="comment">
                 <ns:nullable>true</ns:nullable>

@@ -168,7 +168,10 @@ public class SSU_Notification extends AbstractNotification
         filter.addCondition(FieldKey.fromString("date"), new Date(), CompareType.DATE_LTE);
         filter.addCondition(FieldKey.fromString("type"), "Surgery", CompareType.EQUAL);
         filter.addCondition(FieldKey.fromString("Id/activeTreatments/totalSurgicalTreatments"), null, CompareType.ISBLANK);
-        filter.addCondition(new SimpleFilter.OrClause(new CompareType.CompareClause(FieldKey.fromString("procedureid/analgesiaRx"), CompareType.NONBLANK, null), new CompareType.CompareClause(FieldKey.fromString("procedureid/antibioticRx"), CompareType.NONBLANK, null), new CompareType.CompareClause(FieldKey.fromString("procedureid/analgesiaRx"), CompareType.NEQ, "None"), new CompareType.CompareClause(FieldKey.fromString("procedureid/antibioticRx"), CompareType.NEQ, "None")));
+        filter.addCondition(new SimpleFilter.OrClause(
+            new SimpleFilter.AndClause(new CompareType.CompareClause(FieldKey.fromString("procedureid/analgesiaRx"), CompareType.NONBLANK, null), new CompareType.CompareClause(FieldKey.fromString("procedureid/analgesiaRx"), CompareType.NEQ, "None")),
+            new SimpleFilter.AndClause(new CompareType.CompareClause(FieldKey.fromString("procedureid/antibioticRx"), CompareType.NONBLANK, null), new CompareType.CompareClause(FieldKey.fromString("procedureid/antibioticRx"), CompareType.NEQ, "None"))
+        ));
 
         TableInfo ti = QueryService.get().getUserSchema(u, ehrContainer, "study").getTable("encounters");
         final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, PageFlowUtil.set(FieldKey.fromString("Id"), FieldKey.fromString("procedureid"), FieldKey.fromString("date"), FieldKey.fromString("chargetype"), FieldKey.fromString("procedureid/name"), FieldKey.fromString("Id/activeTreatments/surgicalTreatments")));
@@ -225,13 +228,13 @@ public class SSU_Notification extends AbstractNotification
         long count = ts.getRowCount();
         if (count > 0)
         {
-            msg.append("<b>" + count + " surgeries have been performed today.</b><br>");
+            msg.append("<b>" + count + " surgeries have been performed today, as of " + _timeFormat.format(new Date()) + ".</b><br>");
             msg.append("<p><a href='" + getExecuteQueryUrl(ehrContainer, "study", "encounters", "Surgeries", filter) + "'>Click here to view them</a><br>\n");
             msg.append("<hr>\n");
         }
         else
         {
-            msg.append("No surgeries were performed today.<hr>");
+            msg.append("No surgeries were performed today, prior to this email.<hr>");
         }
     }
 

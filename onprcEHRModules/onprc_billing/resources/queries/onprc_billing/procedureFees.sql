@@ -19,10 +19,15 @@ SELECT
   e.taskid
 
 FROM study.encounters e
-JOIN onprc_billing.procedureFeeDefinition p ON (p.procedureId = e.procedureId and e.chargetype = p.chargetype AND p.active = true)
+JOIN onprc_billing.procedureFeeDefinition p ON (
+  p.procedureId = e.procedureId and
+  --we want to either have the chargeType match between tables, or allow NULL to act like a wildcard
+  (e.chargetype = p.chargetype OR (p.chargetype IS NULL AND e.chargetype != 'Not Billable') AND
+  p.active = true
+)
 
 WHERE e.dateOnly >= CAST(StartDate as date) AND e.dateOnly <= CAST(EndDate as date)
-AND e.qcstate.publicdata = true
+--AND e.qcstate.publicdata = true
 
 UNION ALL
 
