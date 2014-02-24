@@ -6,10 +6,12 @@
         <column name="location"/>
         <column name="project"/>
         <column name="isAssignedAtTime"/>
+        <column name="Id/MostRecentWeight/MostRecentWeight"/>
         <column name="Id/surgeryChecklist/labworkDate"/>
         <column name="Id/surgeryChecklist/PLT"/>
         <column name="Id/surgeryChecklist/HCT"/>
         <column name="Id/surgeryChecklist/status"/>
+        <column name="Id/activeFlagList/flags"/>
     </columns>
     <sorts>
         <sort column="date"/>

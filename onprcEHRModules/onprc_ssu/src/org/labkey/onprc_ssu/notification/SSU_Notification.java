@@ -98,6 +98,7 @@ public class SSU_Notification extends AbstractNotification
             surgeriesToday(ehrContainer, u, msg);
             surgeriesTomorrow(c, u, msg);
             surgeryScheduleCheck(c, ehrContainer, u, msg);
+            animalsWithoutRoundsToday(ehrContainer, u, msg);
 
             nonFinalizedSurgeries(ehrContainer, u, msg);
             surgeriesWithoutCases(ehrContainer, u, msg);
@@ -319,6 +320,56 @@ public class SSU_Notification extends AbstractNotification
         else
         {
             msg.append("No problems were identified for animals with scheduled surgeries.<hr>");
+        }
+    }
+
+    protected void animalsWithoutRoundsToday(final Container ehrContainer, User u, final StringBuilder msg)
+    {
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("daysSinceLastRounds"), 0, CompareType.GT);
+        filter.addCondition(FieldKey.fromString("isActive"), true, CompareType.EQUAL);
+        filter.addCondition(FieldKey.fromString("category"), "Surgery", CompareType.EQUAL);
+        filter.addCondition(FieldKey.fromString("Id/demographics/calculated_status"), "Alive", CompareType.EQUAL);
+
+        TableInfo ti = QueryService.get().getUserSchema(u, ehrContainer, "study").getTable("cases");
+        Set<FieldKey> keys = new HashSet<>();
+        keys.add(FieldKey.fromString("Id"));
+        keys.add(FieldKey.fromString("Id/curLocation/room"));
+        keys.add(FieldKey.fromString("Id/curLocation/cage"));
+        keys.add(FieldKey.fromString("daysSinceLastRounds"));
+        keys.add(FieldKey.fromString("remark"));
+
+        final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, keys);
+
+        TableSelector ts = new TableSelector(ti, cols.values(), filter, new Sort("Id/curLocation/room_sortValue,Id/curLocation/cage_sortValue"));
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            msg.append("<b>WARNING: There are " + count + " active surgical cases that do not have obs entered today.</b><br>");
+            msg.append("<table border=1 style='border-collapse: collapse;'>");
+            msg.append("<tr style='font-weight: bold;'><td>Room</td><td>Cage</td><td>Id</td><td>Description</td><td>Days Since Last Rounds</td></tr>");
+
+            ts.forEach(new Selector.ForEachBlock<ResultSet>()
+            {
+                @Override
+                public void exec(ResultSet object) throws SQLException
+                {
+                    Results rs = new ResultsImpl(object, cols);
+                    msg.append("<tr>");
+                    msg.append("<td>" + safeAppend(rs, "Id/curLocation/room", "None") + "</td>");
+                    msg.append("<td>" + safeAppend(rs, "Id/curLocation/cage", "") + "</td>");
+                    msg.append("<td>" + rs.getString(FieldKey.fromString("Id")) + "</td>");
+                    msg.append("<td>" + safeAppend(rs, "remark", "") + "</td>");
+                    msg.append("<td>" + safeAppend(rs, "daysSinceLastRounds", "") + "</td>");
+                    msg.append("</tr>");
+                }
+            });
+
+            msg.append("</table>");
+            msg.append("<hr>\n");
+        }
+        else
+        {
+            msg.append("All animals with open surgery cases have rounds entered today<hr>");
         }
     }
 }
