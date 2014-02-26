@@ -660,10 +660,6 @@ then
     wget -U firefox http://www.ub.es/softevol/variscan/variscan-2.0.3.tar.gz
     gunzip variscan-2.0.3.tar.gz
     tar -xf variscan-2.0.3.tar
-    cd variscan-2.0.3
-    ./configure
-    make
-
     ln -s $LKSRC_DIR/variscan-2.0.3/bin/Linux-i386/variscan $LKTOOLS_DIR
 else
     echo "Already installed"
@@ -729,7 +725,7 @@ cpan -i Crypt::SSLeay
 #
 #bioperl
 #
-cpan -i CJFIELDS/BioPerl-1.6.901.tar.gz
+cpan -i -f BioPerl
 cpan -i Bio::DB::Sam
 cpan -i -f CJFIELDS/BioPerl-Run-1.006900.tar.gz
 
