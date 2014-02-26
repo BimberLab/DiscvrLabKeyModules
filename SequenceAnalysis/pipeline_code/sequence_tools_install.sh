@@ -97,7 +97,7 @@ echo ""
 if [ $(which yum) ]; then
     echo "Using Yum"
     yum update
-    yum install glibc-devel ncurses-devel libgtextutils-devel python-developenssl-devel
+    yum install glibc-devel ncurses-devel libgtextutils-devel python-devel openssl-devel
     yum install glibc-devel.i686 glibc-static.i686 glibc-static.x86_64
     yum install expat expat-devel
 elif [ $(which apt-get) ]; then
