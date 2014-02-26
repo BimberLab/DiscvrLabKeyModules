@@ -682,6 +682,7 @@ rm -Rf trunk
 mkdir trunk
 cd trunk
 svn co --no-auth-cache --username cpas --password cpas https://hedgehog.fhcrc.org/tor/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code
+chmod +x $LK_HOME/svn/trunk/pipeline_code/sequence_tools_install.sh
 
 
 #
@@ -725,9 +726,30 @@ cpan -i Crypt::SSLeay
 #
 #bioperl
 #
-cpan -i -f BioPerl
-cpan -i Bio::DB::Sam
-cpan -i -f CJFIELDS/BioPerl-Run-1.006900.tar.gz
+
+perl -e 'use Bio::SeqIO' &> /dev/null;
+if [[ $? -eq 0 || ! -z $FORCE_REINSTALL ]];
+then
+    echo "BioPerl already installed"
+else
+    cpan -i -f BioPerl
+fi
+
+perl -e 'use Bio::DB::Sam' &> /dev/null;
+if [[ $? -eq 0 || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Bio::DB::Sam already installed"
+else
+    cpan -i Bio::DB::Sam
+fi
+
+perl -e 'use Bio::Tools::Run::BWA' &> /dev/null;
+if [[ $? -eq 0 || ! -z $FORCE_REINSTALL ]];
+then
+    echo "BioPerl-Run already installed"
+else
+    cpan -i -f CJFIELDS/BioPerl-Run-1.006900.tar.gz
+fi
 
 
 echo ""
