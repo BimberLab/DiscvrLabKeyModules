@@ -96,19 +96,10 @@ echo ""
 
 if [ $(which yum) ]; then
     echo "Using Yum"
-    yum update
-    yum install glibc-devel ncurses-devel libgtextutils-devel python-devel openssl-devel
-    yum install glibc-devel.i686 glibc-static.i686 glibc-static.x86_64
-    yum install expat expat-devel
+    yum install glibc-devel ncurses-devel libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
-    apt-get update
-    apt-get -q -y install libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev libssl-dev
-    apt-get -q -y install libgcc1 libstdc++6 libtcmalloc-minimal0 zlib1g zlib1g-dev
-    apt-get -q -y install libboost-thread-dev libboost-dev libboost-system-dev libboost-regex-dev libboost-filesystem-dev libboost-iostreams-dev
-    #apt-get -q -y install libc6-dev-i386 libc6-i386
-    apt-get -q -y install python-numpy python-scipy
-    apt-get -q -y install libexpat1-dev
+    apt-get -q -y install libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev libssl-dev libgcc1 libstdc++6 libtcmalloc-minimal0 zlib1g zlib1g-dev libboost-thread-dev libboost-dev libboost-system-dev libboost-regex-dev libboost-filesystem-dev libboost-iostreams-dev python-numpy python-scipy libexpat1-dev
 else
     echo "No known package manager present, aborting"
     exit 1
@@ -693,34 +684,7 @@ echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Install All required Perl modules"
 echo ""
-cpan -i Cwd
-cpan -i JSON
-cpan -i YAML
-cpan -i File::HomeDir
-cpan -i String::Approx
-cpan -i Statistics::Descriptive
-cpan -i Math::Round
-cpan -i List::Util
-cpan -i IPC::Run
-cpan -i LabKey::Query
-cpan -i File::Util
-cpan -i Algorithm::Diff
-cpan -i File::Sort
-cpan -i Array::Compare
-cpan -i Proc::ProcessTable
-cpan -i XML::Writer
-cpan -i URI
-cpan -i Test::Warn
-cpan -i XML::DOM::XPath
-cpan -i XML::Parser::PerlSAX
-cpan -i XML::SAX
-cpan -i XML::SAX::Writer
-cpan -i XML::Simple
-cpan -i XML::Twig
-cpan -i Set::Scalar
-cpan -i Sort::Naturally
-cpan -i Data::Stag
-cpan -i Crypt::SSLeay
+cpan -i Cwd JSON YAML File::HomeDir String::Approx Statistics::Descriptive Math::Round List::Util IPC::Run LabKey::Query File::Util Algorithm::Diff File::Sort Array::Compare Proc::ProcessTable XML::Writer URI Test::Warn XML::DOM::XPath XML::Parser::PerlSAX XML::SAX XML::SAX::Writer XML::Simple XML::Twig Set::Scalar Sort::Naturally Data::Stag Crypt::SSLeay
 
 
 #
