@@ -500,8 +500,8 @@ echo "Install Mira Assembler"
 echo ""
 cd $LKSRC_DIR
 
-#if [[ ! -e ${LKTOOLS_DIR}/mira || ! -z $FORCE_REINSTALL ]];
-#then
+if [[ ! -e ${LKTOOLS_DIR}/mira || ! -z $FORCE_REINSTALL ]];
+then
     echo "Cleaning up previous installs"
     rm -Rf mira_4.0rc4_linux-gnu_x86_64_static.tar.bz2
     rm -Rf mira_4.0rc4_linux-gnu_x86_64_static.tar
@@ -523,9 +523,9 @@ cd $LKSRC_DIR
 
     ln -s $LKSRC_DIR/mira_4.0_linux-gnu_x86_64_static/bin/mira $LKTOOLS_DIR
     ln -s $LKSRC_DIR/mira_4.0_linux-gnu_x86_64_static/bin/miraconvert $LKTOOLS_DIR
-#else
-#    echo "Already installed"
-#fi
+else
+    echo "Already installed"
+fi
 
 #
 #velvet
