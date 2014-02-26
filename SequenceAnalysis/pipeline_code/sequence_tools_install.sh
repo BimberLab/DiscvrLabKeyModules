@@ -502,32 +502,27 @@ cd $LKSRC_DIR
 
 #if [[ ! -e ${LKTOOLS_DIR}/mira || ! -z $FORCE_REINSTALL ]];
 #then
-    #echo "Cleaning up previous installs"
-    #rm -Rf mira_4.0rc4_linux-gnu_x86_64_static.tar.bz2
-    #rm -Rf mira_4.0rc4_linux-gnu_x86_64_static.tar
-    #rm -Rf mira_4.0rc4_linux-gnu_x86_64_static
+    echo "Cleaning up previous installs"
+    rm -Rf mira_4.0rc4_linux-gnu_x86_64_static.tar.bz2
+    rm -Rf mira_4.0rc4_linux-gnu_x86_64_static.tar
+    rm -Rf mira_4.0rc4_linux-gnu_x86_64_static
 
-    #rm -Rf mira-4.0.tar.bz2
-    #rm -Rf mira-4.0.tar
-    #rm -Rf mira-4.0
+    rm -Rf mira-4.0.tar.bz2
+    rm -Rf mira-4.0.tar
+    rm -Rf mira-4.0
 
-    #rm -Rf $LKTOOLS_DIR/mira
-    #rm -Rf $LKTOOLS_DIR/miraconvert
+    rm -Rf $LKTOOLS_DIR/mira
+    rm -Rf $LKTOOLS_DIR/miraconvert
 
-    #wget http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira-4.0.tar.bz2
-    #bunzip2 mira-4.0.tar.bz2
-    #tar -xf mira-4.0.tar
-    #echo "Compressing TAR"
-    #bzip2 mira-4.0.tar
-    #cd mira-4.0
+    wget http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira_4.0_linux-gnu_x86_64_static.tar.bz2
+    bunzip2 mira_4.0_linux-gnu_x86_64_static.tar.bz2
+    tar -xf mira_4.0_linux-gnu_x86_64_static.tar
+    echo "Compressing TAR"
+    bzip2 mira_4.0_linux-gnu_x86_64_static.tar
+    cd mira_4.0_linux-gnu_x86_64_static
 
-    #CPPFLAGS=-I/usr/local/include
-    #LDFLAGS=-s
-    #./configure
-    #make
-
-    #ln -s $LKSRC_DIR/mira-4.0/bin/mira $LKTOOLS_DIR
-    #ln -s $LKSRC_DIR/mira-4.0/bin/miraconvert $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/mira_4.0_linux-gnu_x86_64_static/bin/mira $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/mira_4.0_linux-gnu_x86_64_static/bin/miraconvert $LKTOOLS_DIR
 #else
 #    echo "Already installed"
 #fi
