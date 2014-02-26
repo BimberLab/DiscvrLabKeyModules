@@ -69,7 +69,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.299;
+        return 12.300;
     }
 
     @NotNull

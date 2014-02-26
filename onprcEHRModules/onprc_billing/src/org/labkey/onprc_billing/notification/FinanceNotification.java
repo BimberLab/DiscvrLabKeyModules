@@ -189,6 +189,7 @@ public class FinanceNotification extends AbstractNotification
         getExpiredCreditAliases(c, u, msg);
         getCreditAliasesDisabled(c, u, msg);
         chargesMissingRates(financeContainer, u, msg);
+        surgeriesNotBilled(c, u, start, endDate, msg);
         simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidChargeRateEntries", " charge rate records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
         simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidChargeRateExemptionEntries", " charge rate exemptions with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
         simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidCreditAccountEntries", " credit account records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
@@ -456,6 +457,36 @@ public class FinanceNotification extends AbstractNotification
         }
 
         msg.append("<hr><p>");
+    }
+
+    private void surgeriesNotBilled(Container c, User u, final Calendar start, Calendar endDate, StringBuilder msg)
+    {
+        Map<String, Object> params = new HashMap<>();
+        params.put("StartDate", start.getTime());
+        params.put("EndDate", endDate.getTime());
+
+        TableInfo ti = QueryService.get().getUserSchema(u, c, "onprc_billing").getTable("proceduresNotBilled");
+        if (params != null)
+        {
+            SQLFragment sql = ti.getFromSQL("t");
+            QueryService.get().bindNamedParameters(sql, params);
+            sql = new SQLFragment("SELECT * FROM " + sql);
+            QueryService.get().bindNamedParameters(sql, params);
+
+            SqlSelector ss = new SqlSelector(ti.getSchema(), sql);
+            long count = ss.getRowCount();
+
+            if (count > 0)
+            {
+                msg.append("Note: there are " + count + " surgeries that have been performed, but will not be billed.  This is not necessarily a problem; however, if there is a procedure listed that one would expect to be charge then the procedure fee structure should be inspected.<p>");
+                String url = getExecuteQueryUrl(c, "onprc_billing", "proceduresNotBilled", null);
+                url += "&query.param.StartDate=" + _dateFormat.format(start.getTime());
+                url += "&query.param.EndDate=" + _dateFormat.format(endDate.getTime());
+
+                msg.append("<a href='" + url + "'>Click here to view them</a>");
+                msg.append("<hr>");
+            }
+        }
     }
 
     private void chargesMissingRates(Container c, User u, StringBuilder msg)

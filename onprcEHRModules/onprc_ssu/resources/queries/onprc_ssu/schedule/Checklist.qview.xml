@@ -12,6 +12,7 @@
         <column name="Id/surgeryChecklist/HCT"/>
         <column name="Id/surgeryChecklist/status"/>
         <column name="Id/activeFlagList/flags"/>
+        <column name="Id/activeTreatments/allTreatments"/>
     </columns>
     <sorts>
         <sort column="date"/>

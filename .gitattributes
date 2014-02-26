@@ -594,6 +594,7 @@ labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.295-1
 labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.296-12.297.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.297-12.298.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.298-12.299.sql -text
+labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.299-12.300.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/obsolete/laboratory-0.00-11.00.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/obsolete/laboratory-11.00-11.01.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/obsolete/laboratory-11.01-11.12.sql -text
@@ -648,6 +649,7 @@ labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.295-12
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.296-12.297.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.297-12.298.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.298-12.299.sql -text
+labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.299-12.300.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/obsolete/laboratory-0.00-11.12.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/obsolete/laboratory-11.12-11.14.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/obsolete/laboratory-11.14-11.15.sql -text
@@ -947,6 +949,8 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeRates.
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeRates.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFees.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFees.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/proceduresNotBilled.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/proceduresNotBilled.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/projectAccountHistory/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/publicInvoiceRuns.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/publicInvoiceRuns.sql -text
@@ -1084,6 +1088,8 @@ onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/ONPRC_BillingControll
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/ONPRC_BillingManager.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/ONPRC_BillingModule.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/ONPRC_BillingSchema.java -text
+onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/button/ChargeEditButton.java -text
+onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/button/ProjectEditButton.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesAdvancedFormType.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesFormSection.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesInstructionFormSection.java -text

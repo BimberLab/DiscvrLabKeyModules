@@ -22,6 +22,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.ehr.EHRService;
+import org.labkey.api.ehr.buttons.MarkCompletedButton;
 import org.labkey.api.ehr.dataentry.DefaultDataEntryFormFactory;
 import org.labkey.api.ehr.dataentry.FormSection;
 import org.labkey.api.ldk.ExtendedSimpleModule;
@@ -39,6 +40,8 @@ import org.labkey.api.resource.Resource;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.onprc_billing.button.ChargeEditButton;
+import org.labkey.onprc_billing.button.ProjectEditButton;
 import org.labkey.onprc_billing.dataentry.ChargesAdvancedFormType;
 import org.labkey.onprc_billing.dataentry.ChargesFormSection;
 import org.labkey.onprc_billing.notification.FinanceNotification;
@@ -116,7 +119,15 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
         LDKService.get().registerContainerScopedTable(ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_GRANTS, "grantNumber");
         LDKService.get().registerContainerScopedTable(ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_ALIASES, "alias");
 
-        EHRService.get().registerMoreActionsButton(new ShowEditUIButton(this, "onprc_ehr", "projectAccountHistory", ONPRCBillingAdminPermission.class), "onprc_ehr", "projectAccountHistory");
+        EHRService.get().registerMoreActionsButton(new ProjectEditButton(this, "onprc_ehr", "projectAccountHistory"), "onprc_ehr", "projectAccountHistory");
+
+        EHRService.get().registerMoreActionsButton(new MarkCompletedButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATE_EXEMPTIONS, "Set End Date"), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATE_EXEMPTIONS);
+        EHRService.get().registerMoreActionsButton(new MarkCompletedButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATES, "Set End Date"), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATES);
+        EHRService.get().registerMoreActionsButton(new MarkCompletedButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT, "Set End Date"), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT);
+
+        EHRService.get().registerMoreActionsButton(new ChargeEditButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATE_EXEMPTIONS), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATE_EXEMPTIONS);
+        EHRService.get().registerMoreActionsButton(new ChargeEditButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATES), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATES);
+        EHRService.get().registerMoreActionsButton(new ChargeEditButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT);
     }
 
     @Override
