@@ -28,15 +28,14 @@ a.assignCondition,
 a.ageAtTime.AgeAtTimeYearsRounded as ageAtTime,
 'Lease Fees' as category,
 CASE
-  WHEN a.duration <= 1 THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = 'One Day Lease')
+  WHEN (a.duration <= 1 AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = 'One Day Lease')
   WHEN a2.id IS NOT NULL THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = 'Animal Lease Fee - TMB')
   ELSE lf.chargeId
 END as chargeId,
---special case one-day lease rates.
---TODO: figure out proper duration and use this value
+--special case one-day lease rates.  note: if enddate is null, these cannot be a one-day lease
 CASE
-  WHEN (a.duration = 0 AND a.enddate IS NULL) THEN 1
-  WHEN (a.duration <= 1 AND a.enddate IS NULL) THEN a.duration
+  WHEN (a.duration = 0 AND a.enddate IS NOT NULL) THEN 1
+  WHEN (a.duration <= 1 AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN a.duration
   ELSE 1
 END as quantity,
 cast(null as integer) as leaseCharge1,
@@ -91,8 +90,8 @@ FROM study.assignment a
 
 WHERE a.dateOnly >= CAST(STARTDATE as DATE) AND a.dateOnly <= CAST(ENDDATE as DATE)
 AND a.qcstate.publicdata = true
---only charge setup fee for leases >24H
-AND a.duration > 1
+--only charge setup fee for leases >24H.  note: duration assumes today as end, so exclude null enddates
+AND (a.duration > 1 OR a.enddate IS NULL)
 
 --add released animals that need adjustments
 UNION ALL

@@ -121,9 +121,9 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
 
         EHRService.get().registerMoreActionsButton(new ProjectEditButton(this, "onprc_ehr", "projectAccountHistory"), "onprc_ehr", "projectAccountHistory");
 
-        EHRService.get().registerMoreActionsButton(new MarkCompletedButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATE_EXEMPTIONS, "Set End Date"), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATE_EXEMPTIONS);
-        EHRService.get().registerMoreActionsButton(new MarkCompletedButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATES, "Set End Date"), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATES);
-        EHRService.get().registerMoreActionsButton(new MarkCompletedButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT, "Set End Date"), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT);
+        EHRService.get().registerMoreActionsButton(new MarkCompletedButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATE_EXEMPTIONS, "Set End Date", ONPRCBillingAdminPermission.class), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATE_EXEMPTIONS);
+        EHRService.get().registerMoreActionsButton(new MarkCompletedButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATES, "Set End Date", ONPRCBillingAdminPermission.class), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATES);
+        EHRService.get().registerMoreActionsButton(new MarkCompletedButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT, "Set End Date", ONPRCBillingAdminPermission.class), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT);
 
         EHRService.get().registerMoreActionsButton(new ChargeEditButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATE_EXEMPTIONS), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATE_EXEMPTIONS);
         EHRService.get().registerMoreActionsButton(new ChargeEditButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATES), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATES);

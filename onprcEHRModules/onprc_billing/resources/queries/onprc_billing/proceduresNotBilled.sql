@@ -28,7 +28,7 @@ LEFT JOIN onprc_billing.procedureFeeDefinition p ON (
 WHERE e.dateOnly >= CAST(StartDate as date) AND e.dateOnly <= CAST(EndDate as date)
 
 --we want to capture surgeries that would not normally get billed, based on procedure/chargetype
-AND (e.type = 'Surgery' OR e.type IS NULL)
 and p.procedureid IS NULL
 and e.procedureid IS NOT NULL
+AND e.procedureid.category = 'Surgery'
 and (e.chargetype is null or e.chargetype != 'No Charge')
