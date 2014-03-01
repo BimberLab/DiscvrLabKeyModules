@@ -129,15 +129,15 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 RecordedAction action = new RecordedAction(ACTION_NAME);
                 action.addInput(input, "Illumina Sample CSV");
 
-                Map<Integer, Object> sampleMap = parseCsv(input, schema);
+                Map<Integer, Integer> sampleMap = parseCsv(input, schema);
 
                 //this step will be slow
-                IlluminaFastqParser parser = new IlluminaFastqParser("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
+                IlluminaFastqParser<Integer> parser = new IlluminaFastqParser<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
                 parser.setDestinationDir(_helper.getSupport().getAnalysisDirectory());
 
                 // the first element of the pair is the sample ID.  the second is either 1 or 2,
                 // depending on whether the file represents the forward or reverse reads
-                Map<Pair<Object, Integer>, File> fileMap = parser.parseFastqFiles();
+                Map<Pair<Integer, Integer>, File> fileMap = parser.parseFastqFiles();
 
                 for(File f : parser.getFiles())
                 {
@@ -147,7 +147,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 getJob().getLogger().info("Created " + fileMap.keySet().size() + " FASTQ files");
 
                 getJob().getLogger().info("Compressing FASTQ files");
-                for(Pair<Object, Integer> sampleKey : fileMap.keySet())
+                for(Pair<Integer, Integer> sampleKey : fileMap.keySet())
                 {
                     File inputFile = fileMap.get(sampleKey);
                     File output = Compress.compressGzip(inputFile);
@@ -266,10 +266,10 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         getJob().getLogger().info("Created run: " + _instrumentRunId);
     }
 
-    private void addQualityMetrics(DbSchema schema, int readsetId, Pair<Integer, Integer> key, IlluminaFastqParser parser, ExpData d)
+    private void addQualityMetrics(DbSchema schema, int readsetId, Pair<Integer, Integer> key, IlluminaFastqParser<Integer> parser, ExpData d)
     {
         getJob().getLogger().info("Adding quality metrics for file: " + d.getFile().getName());
-        Map<Pair<Object, Integer>, Integer> readCounts = parser.getReadCounts();
+        Map<Pair<Integer, Integer>, Integer> readCounts = parser.getReadCounts();
 
         try
         {
@@ -303,7 +303,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         return _helper.createExpData(f);
     }
 
-    private Map<Integer, Object> parseCsv(File sampleFile, DbSchema schema) throws PipelineJobException, SQLException
+    private Map<Integer, Integer> parseCsv(File sampleFile, DbSchema schema) throws PipelineJobException, SQLException
     {
         CSVReader reader = null;
         try
@@ -314,7 +314,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
             //parse the samples file
             String [] nextLine;
-            Map<Integer, Object> sampleMap = new HashMap<>();
+            Map<Integer, Integer> sampleMap = new HashMap<>();
             sampleMap.put(0, 0); //placeholder for control and unmapped reads
 
             Boolean inSamples = false;
