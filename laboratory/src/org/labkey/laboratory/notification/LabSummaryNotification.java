@@ -191,6 +191,9 @@ public class LabSummaryNotification implements Notification
         }
 
         msg.append("</table><p></p><hr>");
+
+        if (newValueMap.size() > 0)
+            toSave.put(rowCount, new JSONObject(newValueMap).toString());
     }
 
     public void getFileSummary(Container c, User u, final StringBuilder msg, Map<String, String> saved, Map<String, String> toSave)
