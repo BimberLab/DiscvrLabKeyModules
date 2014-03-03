@@ -32,3 +32,4 @@ and p.procedureid IS NULL
 and e.procedureid IS NOT NULL
 AND e.procedureid.category = 'Surgery'
 and (e.chargetype is null or e.chargetype != 'No Charge')
+and (e.project IS NULL OR e.project.displayName != javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT'))

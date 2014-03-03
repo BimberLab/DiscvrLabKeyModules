@@ -325,7 +325,7 @@
                 <ns:facetingBehavior>ALWAYS_OFF</ns:facetingBehavior>
             </ns:column>
             <ns:column columnName="date">
-                <ns:columnTitle>Date</ns:columnTitle>
+                <ns:columnTitle>Date of Charge</ns:columnTitle>
                 <ns:formatString>yyyy-MM-dd</ns:formatString>
             </ns:column>
             <ns:column columnName="project"/>

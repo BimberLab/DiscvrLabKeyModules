@@ -28,14 +28,14 @@ a.assignCondition,
 a.ageAtTime.AgeAtTimeYearsRounded as ageAtTime,
 'Lease Fees' as category,
 CASE
-  WHEN (a.duration <= 1 AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = 'One Day Lease')
-  WHEN a2.id IS NOT NULL THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = 'Animal Lease Fee - TMB')
+  WHEN (a.duration <= CAST(javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.DAY_LEASE_MAX_DURATION') as INTEGER) AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.DAY_LEASE_NAME'))
+  WHEN a2.id IS NOT NULL THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.TMB_LEASE_NAME'))
   ELSE lf.chargeId
 END as chargeId,
 --special case one-day lease rates.  note: if enddate is null, these cannot be a one-day lease
 CASE
-  WHEN (a.duration = 0 AND a.enddate IS NOT NULL) THEN 1
-  WHEN (a.duration <= 1 AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN a.duration
+  WHEN (a.duration = 0 AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN 1
+  WHEN (a.duration <= CAST(javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.DAY_LEASE_MAX_DURATION') as INTEGER) AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN a.duration
   ELSE 1
 END as quantity,
 cast(null as integer) as leaseCharge1,
@@ -64,7 +64,7 @@ LEFT JOIN onprc_billing.leaseFeeDefinition lf ON (
 WHERE a.dateOnly >= CAST(STARTDATE as DATE) AND a.dateOnly <= CAST(ENDDATE as DATE)
 AND a.qcstate.publicdata = true
 
---add setup fees for all starts
+--add setup fees for all starts, except day leases
 UNION ALL
 SELECT
   a.id,
@@ -78,7 +78,7 @@ SELECT
   a.assignCondition,
   a.ageAtTime.AgeAtTimeYearsRounded as ageAtTime,
   'Lease Setup Fees' as category,
-  (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = 'Lease Setup Fees') as chargeId,
+  (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.LEASE_SETUP_FEES')) as chargeId,
   1 as quantity,
   cast(null as integer) as leaseCharge1,
   cast(null as integer) as leaseCharge2,
@@ -91,7 +91,7 @@ FROM study.assignment a
 WHERE a.dateOnly >= CAST(STARTDATE as DATE) AND a.dateOnly <= CAST(ENDDATE as DATE)
 AND a.qcstate.publicdata = true
 --only charge setup fee for leases >24H.  note: duration assumes today as end, so exclude null enddates
-AND (a.duration > 1 OR a.enddate IS NULL)
+AND (a.duration > CAST(javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.DAY_LEASE_MAX_DURATION') as INTEGER) OR a.assignCondition != a.releaseCondition OR a.enddate IS NULL)
 
 --add released animals that need adjustments
 UNION ALL
@@ -108,7 +108,7 @@ a.releaseCondition,
 a.assignCondition,
 a.ageAtTime.AgeAtTimeYearsRounded as ageAtTime,
 'Lease Fees' as category,
-(SELECT max(rowid) as rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = 'Lease Fee Adjustment' and ci.active = true) as chargeId,
+(SELECT max(rowid) as rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.LEASE_FEE_ADJUSTMENT') and ci.active = true) as chargeId,
 1 as quantity,
 lf2.chargeId as leaseCharge1,
 lf.chargeId as leaseCharge2,

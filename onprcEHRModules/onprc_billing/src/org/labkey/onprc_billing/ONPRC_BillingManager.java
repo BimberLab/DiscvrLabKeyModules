@@ -29,6 +29,7 @@ import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.Queryable;
 import org.labkey.api.security.User;
 
 import java.sql.SQLException;
@@ -49,6 +50,17 @@ public class ONPRC_BillingManager
     public static final String BillingContainerPropName = "BillingContainer";
     public static final String IssuesContainerPropName = "IssuesContainer";
     public static final String SLAContainerPropName = "SLAContainer";
+
+    @Queryable
+        public static final String DAY_LEASE_MAX_DURATION = "14";
+    @Queryable
+    public static final String DAY_LEASE_NAME = "One Day Lease";
+    @Queryable
+    public static final String TMB_LEASE_NAME = "Animal Lease Fee - TMB";
+    @Queryable
+    public static final String LEASE_FEE_ADJUSTMENT = "Lease Fee Adjustment";
+    @Queryable
+    public static final String LEASE_SETUP_FEES = "Lease Setup Fees";
 
     private ONPRC_BillingManager()
     {

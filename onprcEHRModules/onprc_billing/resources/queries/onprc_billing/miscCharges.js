@@ -19,5 +19,10 @@ EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Even
     if (!helper.isETL() && row){
         //force this date to match the current date
         row.billingDate = new Date();
+
+        if (!row.project && !row.debitedaccount){
+            EHR.Server.Utils.addError(scriptErrors, 'project', 'Must provide either project or alias', 'ERROR');
+            EHR.Server.Utils.addError(scriptErrors, 'debitedaccount', 'Must provide either project or alias', 'ERROR');
+        }
     }
 });
