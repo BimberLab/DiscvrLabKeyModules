@@ -652,6 +652,68 @@ else
 fi
 
 #
+#clustalw
+#
+
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing ClustalW"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/clustalw2 || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf clustalw-2.1.tar.gz
+    rm -Rf clustalw-2.1.tar
+    rm -Rf clustalw-2.1
+    rm -Rf $LKTOOLS_DIR/clustalw2
+
+    wget http://www.clustal.org/download/current/clustalw-2.1.tar.gz
+    gunzip clustalw-2.1.tar.gz
+    tar -xf clustalw-2.1.tar
+    gzip clustalw-2.1.tar
+    cd clustalw-2.1
+    ./configure
+    make
+
+    ln -s $LKSRC_DIR/clustalw-2.1/src/clustalw2 $LKTOOLS_DIR
+
+else
+    echo "Already installed"
+fi
+
+
+#
+#clustalw
+#
+
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing MUSCLE"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/muscle || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf muscle3.8.31_i86linux64.tar.gz
+    rm -Rf muscle3.8.31_i86linux64.tar
+    rm -Rf muscle3.8.31_i86linux64
+    rm -Rf $LKTOOLS_DIR/muscle
+
+    wget http://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz
+    gunzip muscle3.8.31_i86linux64.tar.gz
+    tar -xf muscle3.8.31_i86linux64.tar
+    gzip muscle3.8.31_i86linux64.tar
+
+    ln -s $LKSRC_DIR/muscle3.8.31_i86linux64 $LKTOOLS_DIR/muscle
+
+else
+    echo "Already installed"
+fi
+
+#
 #sequence perl code
 #
 echo ""
@@ -715,36 +777,3 @@ echo ""
 echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Installation is complete"
-echo ""
-echo "The following should be added to your pipelineConfig.xml file, in the 'softwarePackages' tag.  See the checked in example for more information."
-echo '<entry key="SEQUENCEANALYSIS_CODELOCATION" value="/usr/local/labkey/svn/current/pipeline_code/SequenceTools/"/>'
-echo '<entry key="SEQUENCEANALYSIS_EXTERNALDIR" value="/usr/local/labkey/svn/current/pipeline_code/external/"/>'
-echo '<entry key="PICARDPATH" value="/usr/local/labkey/bin/picard-tools/"/>'
-echo '<entry key="MOSAIK_NETWORKFILEPATH" value="/usr/local/labkey/bin/networkFile/"/>'
-echo '<entry key="Perl" value="/usr/bin/"/>'
-echo ""
-echo ""
-echo 'Assuming the location install locations ($LKTOOLS_DIR) is in your PATH, then no other config is needed.'
-echo 'If not, you will need to supply the install location for each tool, by also adding these to the XML file:'
-echo '<entry key="BLATPATH" value="/usr/local/labkey/bin/"/>'
-echo '<entry key="BOWTIEPATH" value="/usr/local/labkey/bin/"/>'
-echo '<entry key="BWAPATH" value="/usr/local/labkey/bin/"/>'
-echo '<entry key="BFASTPATH" value="/usr/local/labkey/bin/"/>'
-echo '<entry key="CAP3PATH" value="/usr/local/labkey/bin/"/>'
-echo '<entry key="FASTXPATH" value="/usr/local/labkey/bin/"/>'
-echo '<entry key="LASTZPATH" value="/usr/local/labkey/bin/"/>'
-echo '<entry key="MOSAIKPATH" value="/usr/local/labkey/bin/"/>'
-echo '<entry key="SAMTOOLSPATH" value="/usr/local/labkey/bin/"/>'
-
-#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-#echo "Testing installed tools"
-#PATH=$PATH:LKSRC_DIR
-#bwa | grep version
-#MosaikAligner -h | grep 2.1
-#samtools -h
-#blat -h
-#lastz -h
-#bfast -h
-#bowtie -h
-#fastx -h
-#convert_format --version
