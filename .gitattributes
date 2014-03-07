@@ -1,4 +1,5 @@
 * text=auto !eol
+/externalModules.iml -text
 iths/VBD/module.properties -text
 iths/VBD/resources/views/VBD[!!-~]Sample[!!-~]Search.webpart.xml -text
 iths/VBD/resources/views/samplesearch.html -text
