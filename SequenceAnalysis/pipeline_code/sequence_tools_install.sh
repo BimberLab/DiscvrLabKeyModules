@@ -685,7 +685,7 @@ fi
 
 
 #
-#clustalw
+#muscle
 #
 
 echo ""
@@ -712,6 +712,40 @@ then
 else
     echo "Already installed"
 fi
+
+
+#
+#emboss
+#
+
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Installing EMBOSS"
+#echo ""
+#cd $LKSRC_DIR
+#
+#if [[ ! -e ${LKTOOLS_DIR}/seqret || ! -z $FORCE_REINSTALL ]];
+#then
+#    rm -Rf EMBOSS-6.6.0.tar.gz
+#    rm -Rf EMBOSS-6.6.0.tar
+#    rm -Rf EMBOSS-6.6.0
+#    rm -Rf $LKTOOLS_DIR/seqret
+#
+#    wget ftp://ftp.ebi.ac.uk/pub/software/unix/EMBOSS/EMBOSS-6.6.0.tar.gz
+#    gunzip EMBOSS-6.6.0.tar.gz
+#    tar -xf EMBOSS-6.6.0.tar
+#    gzip EMBOSS-6.6.0.tar
+#
+#    cd EMBOSS-6.6.0.tar
+#    ./configure
+#    make
+#
+#    ln -s $LKSRC_DIR/seqret $LKTOOLS_DIR/EMBOSS-6.6.0/emboss/seqret
+#
+#else
+#    echo "Already installed"
+#fi
 
 #
 #sequence perl code
