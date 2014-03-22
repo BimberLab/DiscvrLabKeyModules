@@ -125,8 +125,8 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         ExpRun run = ExperimentService.get().getExpRun(runId);
-        ExpData[] datas = run.getInputDatas(SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, ExpProtocol.ApplicationType.ExperimentRunOutput);
-        getJob().getLogger().debug("Total normalized sequence files created: " + datas.length);
+        List<? extends ExpData> datas = run.getInputDatas(SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, ExpProtocol.ApplicationType.ExperimentRunOutput);
+        getJob().getLogger().debug("Total normalized sequence files created: " + datas.size());
 
         ReadsetModel row;
         try
@@ -159,8 +159,8 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 String expectedName = StringUtils.isEmpty(fn) ? null : r.getExpectedFileNameForPrefix(fn, true);
                 String expectedName2 = StringUtils.isEmpty(fn2) ? null : r.getExpectedFileNameForPrefix(fn2, true);
 
-                getJob().getLogger().debug("Total exp data files: " + datas.length);
-                if (datas.length > 0)
+                getJob().getLogger().debug("Total exp data files: " + datas.size());
+                if (datas.size() > 0)
                 {
                     boolean found = false;
                     for (ExpData d : datas)

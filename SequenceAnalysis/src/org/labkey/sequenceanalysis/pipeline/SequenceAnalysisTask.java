@@ -139,8 +139,8 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             model.setReadset(rs.getReadsetId());
 
             //find BAM
-            ExpData[] datas = run.getInputDatas(SequenceAlignmentTask.BAM_ROLE, ExpProtocol.ApplicationType.ExperimentRunOutput);
-            if (datas.length > 0)
+            List<? extends ExpData> datas = run.getInputDatas(SequenceAlignmentTask.BAM_ROLE, ExpProtocol.ApplicationType.ExperimentRunOutput);
+            if (datas.size() > 0)
             {
                 boolean found = false;
                 for (ExpData d : datas)
@@ -165,7 +165,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             if (model.getAlignmentFile() == null)
             {
                 getJob().getLogger().warn("Unable to find BAM for run: " + run.getRowId() + ". Expected file beginning with: " + basename);
-                getJob().getLogger().info("Total BAMs found : " + datas.length);
+                getJob().getLogger().info("Total BAMs found : " + datas.size());
                 for (ExpData d : datas)
                 {
                     getJob().getLogger().info("\t" + d.getFile().getPath());
@@ -175,7 +175,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
             //reference library
             datas = run.getInputDatas(ReferenceLibraryTask.REFERENCE_DB_FASTA, null);
-            if (datas.length > 0)
+            if (datas.size() > 0)
             {
                 for (ExpData d : datas)
                 {
@@ -203,7 +203,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
             //input FASTQs
             datas = run.getInputDatas(SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, ExpProtocol.ApplicationType.ProtocolApplication);
-            if (datas.length > 0)
+            if (datas.size() > 0)
             {
                 for (ExpData d : datas)
                 {
