@@ -118,7 +118,7 @@ public class LaboratoryContainerListener extends SimpleModuleContainerListener
     }
 
     @Override
-    protected void purgeTable(UserSchema userSchema, TableInfo table, Container c, User u) throws SQLException
+    protected void purgeTable(UserSchema userSchema, TableInfo table, Container c, User u)
     {
         if (table.getName().equalsIgnoreCase(LaboratorySchema.TABLE_WORKBOOKS))
         {

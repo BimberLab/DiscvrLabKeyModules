@@ -13,7 +13,6 @@ import org.labkey.api.view.ActionURL;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -69,7 +68,7 @@ public class EnterResultsDisplayColumn extends DataColumn
     }
 
     @Override
-    public void renderGridHeaderCell(RenderContext ctx, Writer out, String headerClass) throws IOException, SQLException
+    public void renderGridHeaderCell(RenderContext ctx, Writer out, String headerClass) throws IOException
     {
         out.write("<td class=\"labkey-column-header\"></td>");
     }
