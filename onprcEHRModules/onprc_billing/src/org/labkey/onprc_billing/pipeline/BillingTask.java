@@ -25,6 +25,7 @@ import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.ResultsImpl;
+import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
@@ -45,7 +46,6 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.GUID;
-import org.labkey.onprc_billing.ONPRC_BillingManager;
 import org.labkey.onprc_billing.ONPRC_BillingSchema;
 
 import java.io.File;
@@ -281,7 +281,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
             _invoiceId = (String)toCreate.get("objectid");
             return _invoiceId;
         }
-        catch (SQLException e)
+        catch (RuntimeSQLException e)
         {
             throw new PipelineJobException(e);
         }
@@ -349,7 +349,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
             //update records in miscCharges to show proper invoiceId
             processMiscChargesRecords(rows, queryName);
         }
-        catch (SQLException e)
+        catch (RuntimeSQLException e)
         {
             throw new PipelineJobException(e);
         }
@@ -519,7 +519,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
 
     private void slaPerDiemProcessing() throws PipelineJobException
     {
-        Container slaContainer = ONPRC_BillingManager.get().getSLADataFolder(getJob().getContainer());
+        Container slaContainer = org.labkey.onprc_billing.ONPRC_BillingManager.get().getSLADataFolder(getJob().getContainer());
         if (slaContainer == null)
         {
             getJob().getLogger().error("Unable to find SLA container, skipping");
@@ -749,7 +749,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
 
             getJob().getLogger().info("updated " + updates + " records in misc charges table.  skipped " + skipped);
         }
-        catch (SQLException e)
+        catch (RuntimeSQLException e)
         {
             throw new PipelineJobException(e);
         }
