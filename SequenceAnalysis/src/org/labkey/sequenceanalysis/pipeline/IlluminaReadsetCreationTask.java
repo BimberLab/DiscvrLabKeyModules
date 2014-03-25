@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -17,7 +18,6 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -109,7 +109,7 @@ public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReads
 
             schema.getScope().commitTransaction();
         }
-        catch (SQLException e)
+        catch (RuntimeSQLException e)
         {
             throw new PipelineJobException(e);
         }

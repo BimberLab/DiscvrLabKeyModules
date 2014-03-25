@@ -9,7 +9,6 @@ import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.Table;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
@@ -19,7 +18,6 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.model.AnalysisModel;
 
 import java.io.File;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -77,36 +75,29 @@ public class MetricsAggregator implements AlignmentAggregator
         ExpData d = ExperimentService.get().getExpData(model.getAlignmentFile());
         _log.info("\tSaving BAM summary metrics");
 
-        try
+        List<AlignmentSummaryMetrics> metrics = getMetrics();
+        for (AlignmentSummaryMetrics m : metrics)
         {
-            List<AlignmentSummaryMetrics> metrics = getMetrics();
-            for (AlignmentSummaryMetrics m : metrics)
+            Map<String, Object> row = new HashMap<>();
+            row.put("Avg Sequence Length", m.MEAN_READ_LENGTH);
+            row.put("%Reads Aligned In Pairs", m.PCT_READS_ALIGNED_IN_PAIRS);
+            row.put("Total Sequences", m.TOTAL_READS);
+            row.put("Total Sequences Passed Filter", m.PF_READS);
+            row.put("Reads Aligned", m.PF_READS_ALIGNED);
+            row.put("%Reads Aligned", m.PCT_PF_READS_ALIGNED);
+
+            for (String metricName : row.keySet())
             {
-                Map<String, Object> row = new HashMap<>();
-                row.put("Avg Sequence Length", m.MEAN_READ_LENGTH);
-                row.put("%Reads Aligned In Pairs", m.PCT_READS_ALIGNED_IN_PAIRS);
-                row.put("Total Sequences", m.TOTAL_READS);
-                row.put("Total Sequences Passed Filter", m.PF_READS);
-                row.put("Reads Aligned", m.PF_READS_ALIGNED);
-                row.put("%Reads Aligned", m.PCT_PF_READS_ALIGNED);
+                Map<String, Object> r = new HashMap<>();
+                r.put("metricname", metricName);
+                r.put("metricvalue", row.get(metricName));
+                r.put("dataid", d.getRowId());
+                r.put("analysis_id", model.getAnalysisId());
+                r.put("container", c.getEntityId());
+                r.put("createdby", u.getUserId());
 
-                for (String metricName : row.keySet())
-                {
-                    Map<String, Object> r = new HashMap<>();
-                    r.put("metricname", metricName);
-                    r.put("metricvalue", row.get(metricName));
-                    r.put("dataid", d.getRowId());
-                    r.put("analysis_id", model.getAnalysisId());
-                    r.put("container", c.getEntityId());
-                    r.put("createdby", u.getUserId());
-
-                    Table.insert(u, SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), r);
-                }
+                Table.insert(u, SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), r);
             }
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeSQLException(e);
         }
     }
 

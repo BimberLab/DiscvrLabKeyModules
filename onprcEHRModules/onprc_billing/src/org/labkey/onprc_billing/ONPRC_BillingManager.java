@@ -113,10 +113,6 @@ public class ONPRC_BillingManager
 
                 ExperimentService.get().commitTransaction();
             }
-            catch (SQLException e)
-            {
-                throw new RuntimeSQLException(e);
-            }
             finally
             {
                 ExperimentService.get().closeTransaction();

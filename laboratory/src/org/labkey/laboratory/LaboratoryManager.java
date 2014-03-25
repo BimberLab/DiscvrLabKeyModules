@@ -280,14 +280,7 @@ public class LaboratoryManager
     public void updateWorkbook(User u, WorkbookModel model)
     {
         TableInfo ti = LaboratorySchema.getInstance().getTable(LaboratorySchema.TABLE_WORKBOOKS);
-        try
-        {
-            Table.update(u, ti, model, model.getContainer());
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeSQLException(e);
-        }
+        Table.update(u, ti, model, model.getContainer());
     }
 
     public void updateWorkbookTags(User u, Container c, Collection<String> tags)
@@ -300,47 +293,40 @@ public class LaboratoryManager
         assert u != null : "No user provided";
 
         TableInfo ti = LaboratorySchema.getInstance().getTable(LaboratorySchema.TABLE_WORKBOOK_TAGS);
-        try
+        Set<String> newTags = new HashSet<String>();
+        newTags.addAll(tags);
+
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("container"), c.getId());
+        TableSelector ts = new TableSelector(ti, Collections.singleton("tag"), filter, null);
+        List<String> existingTags = Arrays.asList(ts.getArray(String.class));
+
+        if (doMerge)
         {
-            Set<String> newTags = new HashSet<String>();
-            newTags.addAll(tags);
-
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("container"), c.getId());
-            TableSelector ts = new TableSelector(ti, Collections.singleton("tag"), filter, null);
-            List<String> existingTags = Arrays.asList(ts.getArray(String.class));
-
-            if (doMerge)
-            {
-                newTags.addAll(existingTags);
-            }
-
-            List<String> toDelete = new ArrayList<String>(existingTags);
-            toDelete.removeAll(newTags);
-
-            if (toDelete.size() > 0)
-            {
-                SimpleFilter filter1 = new SimpleFilter(FieldKey.fromString("tag"), toDelete, CompareType.IN);
-                filter1.addCondition(FieldKey.fromString("container"), c.getId());
-                Table.delete(ti, filter1);
-            }
-
-            List<String> toAdd = new ArrayList<String>(newTags);
-            toAdd.removeAll(existingTags);
-
-            Date created = new Date();
-            for (String tag : toAdd)
-            {
-                Map<String, Object> row = new HashMap<String, Object>();
-                row.put("tag", tag);
-                row.put("created", created);
-                row.put("createdby", u.getUserId());
-                row.put("container", c.getId());
-                Table.insert(u, ti, row);
-            }
+            newTags.addAll(existingTags);
         }
-        catch (SQLException e)
+
+        List<String> toDelete = new ArrayList<String>(existingTags);
+        toDelete.removeAll(newTags);
+
+        if (toDelete.size() > 0)
         {
-            throw new RuntimeSQLException(e);
+            SimpleFilter filter1 = new SimpleFilter(FieldKey.fromString("tag"), toDelete, CompareType.IN);
+            filter1.addCondition(FieldKey.fromString("container"), c.getId());
+            Table.delete(ti, filter1);
+        }
+
+        List<String> toAdd = new ArrayList<String>(newTags);
+        toAdd.removeAll(existingTags);
+
+        Date created = new Date();
+        for (String tag : toAdd)
+        {
+            Map<String, Object> row = new HashMap<String, Object>();
+            row.put("tag", tag);
+            row.put("created", created);
+            row.put("createdby", u.getUserId());
+            row.put("container", c.getId());
+            Table.insert(u, ti, row);
         }
     }
 
@@ -475,10 +461,6 @@ public class LaboratoryManager
             ExperimentService.get().commitTransaction();
             ct.saveId(c, incValue);
         }
-        catch (SQLException e)
-        {
-            throw new RuntimeSQLException(e);
-        }
         finally
         {
             ExperimentService.get().closeTransaction();
@@ -545,7 +527,6 @@ public class LaboratoryManager
         catch (SQLException e)
         {
             throw new RuntimeSQLException(e);
-
         }
 
         return messages;

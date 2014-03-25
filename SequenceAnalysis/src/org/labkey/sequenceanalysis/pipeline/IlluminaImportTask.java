@@ -271,30 +271,23 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         getJob().getLogger().info("Adding quality metrics for file: " + d.getFile().getName());
         Map<Pair<Integer, Integer>, Integer> readCounts = parser.getReadCounts();
 
-        try
-        {
-            //NOTE: still insert a record if the count is zero, since this might be interesting to know
-            Integer count = readCounts.get(key);
+        //NOTE: still insert a record if the count is zero, since this might be interesting to know
+        Integer count = readCounts.get(key);
 
-            Map<String, Object> r = new HashMap<>();
-            r.put("metricname", "Total Sequences");
-            r.put("metricvalue", count);
-            r.put("dataid", d.getRowId());
-            if(readsetId > 0)
-                r.put("readset", readsetId);
+        Map<String, Object> r = new HashMap<>();
+        r.put("metricname", "Total Sequences");
+        r.put("metricvalue", count);
+        r.put("dataid", d.getRowId());
+        if(readsetId > 0)
+            r.put("readset", readsetId);
 
-            r.put("container", getJob().getContainer());
-            r.put("createdby", getJob().getUser().getUserId());
+        r.put("container", getJob().getContainer());
+        r.put("createdby", getJob().getUser().getUserId());
 
-            if(_instrumentRunId > 0)
-                r.put("runid", _instrumentRunId);
+        if(_instrumentRunId > 0)
+            r.put("runid", _instrumentRunId);
 
-            Table.insert(getJob().getUser(), schema.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), r);
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeSQLException(e);
-        }
+        Table.insert(getJob().getUser(), schema.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), r);
     }
 
     private ExpData createExpData(File f)

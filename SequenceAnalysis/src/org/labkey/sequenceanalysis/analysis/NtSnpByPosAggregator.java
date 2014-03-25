@@ -20,7 +20,6 @@ import net.sf.samtools.SAMRecord;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
-import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -31,7 +30,6 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
 
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -190,10 +188,6 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
             {
                 _log.info("\t" + refId + ": " + summary.get(refId));
             }
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeSQLException(e);
         }
     }
 

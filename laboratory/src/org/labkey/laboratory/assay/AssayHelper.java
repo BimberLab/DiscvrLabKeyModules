@@ -22,6 +22,7 @@ import org.labkey.api.cache.CacheManager;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.TSVMapWriter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -57,7 +58,6 @@ import org.labkey.laboratory.LaboratorySchema;
 import java.beans.Introspector;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -141,7 +141,7 @@ public class AssayHelper
 
             return row;
         }
-        catch (SQLException e)
+        catch (RuntimeSQLException e)
         {
             _log.error(e.getMessage(), e);
             errors.addRowError(new ValidationException(e.getMessage()));

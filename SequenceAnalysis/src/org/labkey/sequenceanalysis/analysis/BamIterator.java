@@ -33,6 +33,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -56,7 +57,6 @@ import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -510,7 +510,7 @@ public class BamIterator
             TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
             Table.update(u, ti, model, model.getRowId());
         }
-        catch (SQLException e)
+        catch (RuntimeSQLException e)
         {
             throw  new PipelineJobException(e);
         }
