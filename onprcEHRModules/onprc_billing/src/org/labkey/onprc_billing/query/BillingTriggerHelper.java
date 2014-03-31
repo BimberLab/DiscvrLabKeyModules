@@ -18,6 +18,8 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
+import org.labkey.api.util.PageFlowUtil;
+import org.labkey.onprc_billing.ONPRC_BillingManager;
 import org.labkey.onprc_billing.ONPRC_BillingSchema;
 
 import java.sql.ResultSet;
@@ -25,6 +27,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -147,5 +150,53 @@ public class BillingTriggerHelper
         toInsert.put("account", newAccount);
         toInsert.put("startdate", curDate);
         Table.insert(getUser(), projAccount, toInsert);
+    }
+
+    public boolean supportsCustomUnitCost(int chargeId)
+    {
+        Map<String, Object> row = getCharge(chargeId);
+        if (row != null && row.containsKey("allowscustomunitcost"))
+        {
+            return (boolean)row.get("allowscustomunitcost");
+        }
+
+        return false; //unknown charge, assume false
+    }
+
+    public boolean supportsBlankAnimal(int chargeId)
+    {
+        Map<String, Object> row = getCharge(chargeId);
+        if (row != null && row.containsKey("supportsblankanimal"))
+        {
+            return (boolean)row.get("supportsblankanimal");
+        }
+
+        return false; //unknown charge, assume false
+    }
+
+    private Map<Integer, Map<String, Object>> _cachedCharges = new HashMap<>();
+
+    private Map<String, Object> getCharge(Integer chargeId)
+    {
+        if (_cachedCharges.containsKey(chargeId))
+        {
+            return _cachedCharges.get(chargeId);
+        }
+
+        Container target = ONPRC_BillingManager.get().getBillingContainer(getContainer());
+        if (target != null)
+        {
+            TableInfo chargeableItems = DbSchema.get(ONPRC_BillingSchema.NAME).getTable(ONPRC_BillingSchema.TABLE_CHARGEABLE_ITEMS);
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), chargeId, CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("container"), target.getId(), CompareType.EQUAL);
+            TableSelector ts = new TableSelector(chargeableItems, PageFlowUtil.set("rowid", "name", "allowscustomunitcost", "supportsblankanimal", "active"), filter, null);
+            Map<String, Object>[] ret = ts.getMapArray();
+            if (ret != null && ret.length == 1)
+            {
+                _cachedCharges.put(chargeId, ret[0]);
+            }
+        }
+
+        return _cachedCharges.get(chargeId);
     }
 }

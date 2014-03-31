@@ -1,8 +1,10 @@
 package org.labkey.onprc_billing.dataentry;
 
+import org.labkey.api.data.Container;
 import org.labkey.api.ehr.dataentry.AbstractFormSection;
 import org.labkey.api.ehr.dataentry.DataEntryFormContext;
 import org.labkey.api.ehr.dataentry.FormElement;
+import org.labkey.api.security.User;
 import org.labkey.api.view.template.ClientDependency;
 
 import java.util.Collections;
@@ -13,13 +15,13 @@ import java.util.List;
  * Date: 6/9/13
  * Time: 4:15 PM
  */
-public class ChargesInstructionFormSection extends AbstractFormSection
+public class ChargesAdvancedInstructionFormSection extends AbstractFormSection
 {
-    public ChargesInstructionFormSection()
+    public ChargesAdvancedInstructionFormSection()
     {
-        super("ChargesInstruction", "Instructions", "onprc-chargesinstructionpanel");
+        super("ChargesInstruction", "Instructions", "onprc-chargesadvancedinstructionpanel");
 
-        addClientDependency(ClientDependency.fromFilePath("onprc_billing/panel/ChargesInstructionPanel.js"));
+        addClientDependency(ClientDependency.fromFilePath("onprc_billing/panel/ChargesAdvancedInstructionPanel.js"));
     }
 
     @Override

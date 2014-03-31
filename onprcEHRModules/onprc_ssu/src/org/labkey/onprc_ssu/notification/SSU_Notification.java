@@ -97,6 +97,7 @@ public class SSU_Notification extends AbstractNotification
         {
             surgeriesToday(ehrContainer, u, msg);
             surgeriesTomorrow(c, u, msg);
+            casesClosedToday(ehrContainer, u, msg);
             surgeryScheduleCheck(c, ehrContainer, u, msg);
             animalsWithoutRoundsToday(ehrContainer, u, msg);
 
@@ -143,15 +144,43 @@ public class SSU_Notification extends AbstractNotification
         filter.addCondition(FieldKey.fromString("qcstate/publicdata"), true, CompareType.EQUAL);
 
         TableInfo ti = QueryService.get().getUserSchema(u, ehrContainer, "study").getTable("encounters");
-        final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, PageFlowUtil.set(FieldKey.fromString("Id"), FieldKey.fromString("procedureid"), FieldKey.fromString("procedureid/name")));
+        final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, PageFlowUtil.set(FieldKey.fromString("Id"), FieldKey.fromString("date"), FieldKey.fromString("procedureid"), FieldKey.fromString("procedureid/name")));
 
         TableSelector ts = new TableSelector(ti, cols.values(), filter, null);
         long count = ts.getRowCount();
         if (count > 0)
         {
-            msg.append("<b>WARNING: There are " + count + " surgeries in the past 48H that lack an open surgery case, excluding procedures with no followup days.</b><br>");
-            msg.append("<p><a href='" + getExecuteQueryUrl(ehrContainer, "study", "encounters", "Surgeries", filter) + "'>Click here to view them</a><br>\n");
-            msg.append("<hr>\n");
+            final TableInfo casesTable = QueryService.get().getUserSchema(u, ehrContainer, "study").getTable("cases");
+            final List<Long> countList = new ArrayList<>();
+            countList.add(count);
+
+            ts.forEach(new Selector.ForEachBlock<ResultSet>()
+            {
+                @Override
+                public void exec(ResultSet rs) throws SQLException
+                {
+                    //determine if there are cases that spanned the surgery, but closed prior to this alert
+                    SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("enddate"), rs.getDate("date"), CompareType.DATE_GT);
+                    filter2.addCondition(FieldKey.fromString("category"), "Surgery", CompareType.EQUAL);
+                    filter2.addCondition(FieldKey.fromString("Id"), rs.getString("Id"), CompareType.EQUAL);
+
+                    TableSelector ts2 = new TableSelector(casesTable, PageFlowUtil.set("Id"), filter2, null);
+                    if (ts2.exists())
+                    {
+                        long c = countList.get(0);
+                        c--;
+                        countList.clear();
+                        countList.add(c);
+                    }
+                }
+            });
+
+            if (countList.get(0) > 0)
+            {
+                msg.append("<b>WARNING: There are " + countList.get(0) + " surgeries in the past 48H that lack an open surgery case, excluding procedures with no followup days.</b><br>");
+                msg.append("<p><a href='" + getExecuteQueryUrl(ehrContainer, "study", "encounters", "Surgeries", filter) + "'>Click here to view them</a><br>\n");
+                msg.append("<hr>\n");
+            }
         }
         else
         {
@@ -179,12 +208,12 @@ public class SSU_Notification extends AbstractNotification
 
         TableSelector ts = new TableSelector(ti, cols.values(), filter, null);
         long count = ts.getRowCount();
+        final List<Long> countList = new ArrayList<>();
+        countList.add(count);
         if (count > 0)
         {
-            msg.append("<b>WARNING: There are " + count + " procedures performed in that past 48H, but do not have any surgical medications ordered, excluding procedures without default post-op analgesia/antibiotics.  NOTE: this currently only looks for the presence of any surgical medication, and does not check whether the right medications have been ordered</b><br>");
-            msg.append("<table border=1 style='border-collapse: collapse;'>");
-            msg.append("<tr style='font-weight: bold;'><td>Id</td><td>Date</td><td>Procedure</td><td>Charge Type</td><td>Surgical Treatments</td></tr>");
-
+            final TableInfo treatmentsTable = QueryService.get().getUserSchema(u, ehrContainer, "study").getTable("treatment_order");
+            final StringBuilder rows = new StringBuilder();
             ts.forEach(new Selector.ForEachBlock<ResultSet>()
             {
                 @Override
@@ -192,22 +221,45 @@ public class SSU_Notification extends AbstractNotification
                 {
                     Results rs = new ResultsImpl(object, cols);
 
+                    //determine if there are cases that spanned the surgery, but were later closed
+                    SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("enddate"), rs.getDate("date"), CompareType.DATE_GT);
+                    filter2.addCondition(FieldKey.fromString("category"), "Surgical", CompareType.EQUAL);
+                    filter2.addCondition(FieldKey.fromString("Id"), rs.getString("Id"), CompareType.EQUAL);
+
+                    TableSelector ts2 = new TableSelector(treatmentsTable, PageFlowUtil.set("Id"), filter2, null);
+                    if (ts2.exists())
+                    {
+                        Long c = countList.get(0);
+                        c--;
+                        countList.clear();
+                        countList.add(c);
+                        return;
+                    }
+
                     DetailsURL url = DetailsURL.fromString("/ehr/participantView.view", ehrContainer);
                     String ret = AppProps.getInstance().getBaseServerUrl() + url.getActionURL().toString();
                     ret += "participantId=" + rs.getString(FieldKey.fromString("Id"));
 
-                    msg.append("<tr>");
-                    msg.append("<td><a href='" + ret + "'>").append(safeAppend(rs, "Id", "No Id")).append("</a></td>");
+                    rows.append("<tr>");
+                    rows.append("<td><a href='" + ret + "'>").append(safeAppend(rs, "Id", "No Id")).append("</a></td>");
                     String formattedDate = rs.getObject(FieldKey.fromString("date")) == null ? "No Date" : _dateFormat.format(rs.getDate(FieldKey.fromString("date")));
-                    msg.append("<td>").append(formattedDate).append("</td>");
-                    msg.append("<td>").append(safeAppend(rs, "procedureid/name", "No Procedure")).append("</td>");
-                    msg.append("<td>").append(safeAppend(rs, "chargetype", "None")).append("</td>");
-                    msg.append("<td>").append(safeAppend(rs, "Id/activeTreatments/surgicalTreatments", "None")).append("</td>");
-                    msg.append("</tr>");
+                    rows.append("<td>").append(formattedDate).append("</td>");
+                    rows.append("<td>").append(safeAppend(rs, "procedureid/name", "No Procedure")).append("</td>");
+                    rows.append("<td>").append(safeAppend(rs, "chargetype", "None")).append("</td>");
+                    rows.append("<td>").append(safeAppend(rs, "Id/activeTreatments/surgicalTreatments", "None")).append("</td>");
+                    rows.append("</tr>");
                 }
             });
-            msg.append("</table>");
-            msg.append("<hr>\n");
+
+            if (countList.get(0) > 0)
+            {
+                msg.append("<b>WARNING: There are " + countList.get(0) + " procedures performed in that past 48H, but do not have any surgical medications ordered, excluding procedures without default post-op analgesia/antibiotics.  NOTE: this currently only looks for the presence of any surgical medication, and does not check whether the right medications have been ordered</b><br>");
+                msg.append("<table border=1 style='border-collapse: collapse;'>");
+                msg.append("<tr style='font-weight: bold;'><td>Id</td><td>Date</td><td>Procedure</td><td>Charge Type</td><td>Surgical Treatments</td></tr>");
+                msg.append(rows);
+                msg.append("</table>");
+                msg.append("<hr>\n");
+            }
         }
     }
 
@@ -239,6 +291,36 @@ public class SSU_Notification extends AbstractNotification
         }
     }
 
+    private void casesClosedToday(Container ehrContainer, User u, final StringBuilder msg)
+    {
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("enddate"), new Date(), CompareType.DATE_EQUAL);
+        filter.addCondition(FieldKey.fromString("category"), "Surgery", CompareType.EQUAL);
+
+        TableInfo ti = QueryService.get().getUserSchema(u, ehrContainer, "study").getTable("cases");
+        final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, PageFlowUtil.set(FieldKey.fromString("Id"), FieldKey.fromString("date"), FieldKey.fromString("enddate"), FieldKey.fromString("remark")));
+
+        TableSelector ts = new TableSelector(ti, cols.values(), filter, null);
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            msg.append("<b>NOTE: " + count + " surgical cases were closed today, as of " + _timeFormat.format(new Date()) + ".</b><br>");
+            msg.append("<table border=1 style='border-collapse: collapse;'>");
+            msg.append("<tr style='font-weight: bold;'><td>Id</td><td>Date Opened</td><td>Date Closed</td><td>Description</td></tr>");
+
+            ts.forEach(new Selector.ForEachBlock<ResultSet>()
+            {
+                @Override
+                public void exec(ResultSet rs) throws SQLException
+                {
+
+                    msg.append("<tr><td>" + rs.getString("Id") + "</td><td>" + (rs.getDate("date") == null ? "" : _dateFormat.format(rs.getDate("date"))) + "</td><td>" + (rs.getDate("enddate") == null ? "" : _dateFormat.format(rs.getDate("enddate"))) + "</td><td>" + (rs.getString("remark") == null ? "" : rs.getString("remark")) + "</td></tr>");
+                }
+            });
+
+            msg.append("</table><hr>\n");
+        }
+    }
+
     private void surgeriesTomorrow(Container c, User u, StringBuilder msg)
     {
         Calendar cal = Calendar.getInstance();
@@ -266,8 +348,11 @@ public class SSU_Notification extends AbstractNotification
 
     private void surgeryScheduleCheck(Container c, final Container ehrContainer, User u, final StringBuilder msg)
     {
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("date"), new Date(), CompareType.DATE_GT);
-        filter.addCondition(new SimpleFilter.OrClause(new CompareType.CompareClause(FieldKey.fromString("Id/surgeryChecklist/status"), CompareType.NONBLANK, null), new CompareType.CompareClause(FieldKey.fromString("isAssignedAtTime"), CompareType.EQUAL, "N"), new CompareType.CompareClause(FieldKey.fromString("project"), CompareType.ISBLANK, null)));
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.add(Calendar.DATE, 1);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("date"), cal.getTime(), CompareType.DATE_EQUAL);
+        filter.addCondition(new SimpleFilter.OrClause(new CompareType.CompareClause(FieldKey.fromString("Id/surgeryChecklist/status"), CompareType.NONBLANK, null), new CompareType.CompareClause(FieldKey.fromString("isAssignedToProtocolAtTime"), CompareType.EQUAL, "N"), new CompareType.CompareClause(FieldKey.fromString("project"), CompareType.ISBLANK, null)));
 
         TableInfo ti = QueryService.get().getUserSchema(u, c, ONPRC_SSUSchema.NAME).getTable(ONPRC_SSUSchema.TABLE_SCHEDULE);
         final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, PageFlowUtil.set(
@@ -280,14 +365,14 @@ public class SSU_Notification extends AbstractNotification
                 FieldKey.fromString("Id/surgeryChecklist/PLT"),
                 FieldKey.fromString("Id/surgeryChecklist/HCT"),
                 FieldKey.fromString("Id/surgeryChecklist/status"),
-                FieldKey.fromString("isAssignedAtTime")));
+                FieldKey.fromString("isAssignedToProtocolAtTime")));
 
         TableSelector ts = new TableSelector(ti, cols.values(), filter, new Sort("date,Id"));
         if (ts.exists())
         {
-            msg.append("<b>The following surgeries are scheduled, but have problems flagged.</b><br><br>");
+            msg.append("<b>The following surgeries are scheduled tomorrow, but have problems flagged.</b><br><br>");
             msg.append("<table border=1 style='border-collapse: collapse;'>");
-            msg.append("<tr style='font-weight: bold;'><td>Id</td><td>Date</td><td>Procedure</td><td>Project</td><td>Assigned To Project?</td><td>PLT</td><td>HCT</td><td>Labwork Flags</td></tr>");
+            msg.append("<tr style='font-weight: bold;'><td>Id</td><td>Date</td><td>Procedure</td><td>Project</td><td>Assigned To Protocol?</td><td>PLT</td><td>HCT</td><td>Labwork Flags</td></tr>");
 
             ts.forEach(new Selector.ForEachBlock<ResultSet>()
             {
@@ -306,7 +391,7 @@ public class SSU_Notification extends AbstractNotification
                     msg.append("<td>").append(formattedDate).append("</td>");
                     msg.append("<td>").append(safeAppend(rs, "procedureid/name", "No Procedure")).append("</td>");
                     msg.append("<td>").append(safeAppend(rs, "project/displayName", "No Project")).append("</td>");
-                    msg.append("<td>").append(safeAppend(rs, "isAssignedAtTime", "")).append("</td>");
+                    msg.append("<td>").append(safeAppend(rs, "isAssignedToProtocolAtTime", "")).append("</td>");
 
                     msg.append("<td>").append(safeAppend(rs, "Id/surgeryChecklist/PLT", "")).append("</td>");
                     msg.append("<td>").append(safeAppend(rs, "Id/surgeryChecklist/HCT", "")).append("</td>");

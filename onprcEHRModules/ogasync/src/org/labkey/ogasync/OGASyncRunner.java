@@ -1,6 +1,7 @@
 package org.labkey.ogasync;
 
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -45,7 +46,8 @@ public class OGASyncRunner implements Job
 {
     private static final Logger _log = Logger.getLogger(OGASyncRunner.class);
     private static final String INVESTIGATOR_EMPLOYYE_ID_NUMBER = "investigatorEmployeeNumber";
-    private static final String FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER = "fiscalAuthorityNumber";
+    private static final String FISCAL_AUTHORITY_EMPLOYEE_ID_NUMBER = "fiscalAuthorityNumber";
+    private static final String ADFM_EMP_NUM = "ADFM_EMP_NUM";
     private static final String AWARD_STATUS = "awardStatus";
     private static final String PROJECT_STATUS = "projectStatus";
 
@@ -149,7 +151,7 @@ public class OGASyncRunner implements Job
         fieldMap.put("grantNumber", "OGA_AWARD_NUMBER");
         fieldMap.put("agencyAwardNumber", "AGENCY_AWARD_NUMBER");
         fieldMap.put(INVESTIGATOR_EMPLOYYE_ID_NUMBER, "PI_EMP_NUM");
-        fieldMap.put(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER, "PDFM_EMP_NUM");
+        fieldMap.put(FISCAL_AUTHORITY_EMPLOYEE_ID_NUMBER, "PDFM_EMP_NUM");
         fieldMap.put("investigatorName", "PI");
 
         fieldMap.put("projectTitle", "PROJECT_TITLE");
@@ -166,7 +168,7 @@ public class OGASyncRunner implements Job
         fieldMap.put("ogaProjectId", "PROJECT_ID");
 
         TableSelector ts = new TableSelector(sourceTable, new HashSet<>(fieldMap.values()));
-        doMerge(u, c, targetTable, ts, "projectNumber", fieldMap, null, null);
+        doMerge(u, c, targetTable, ts, "projectNumber", fieldMap, null, null, null);
     }
 
     public void doMergeOtherAccounts(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException
@@ -179,7 +181,7 @@ public class OGASyncRunner implements Job
         fieldMap.put("alias", "ALIAS_NAME");
         fieldMap.put("aliasEnabled", "ENABLED_FLAG");
 
-        //fieldMap.put(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER, "PDFM_EMP_NUM");
+        //fieldMap.put(FISCAL_AUTHORITY_EMPLOYEE_ID_NUMBER, "PDFM_EMP_NUM");
         fieldMap.put("category", null);
 
         fieldMap.put("budgetStartDate", "START_DATE_ACTIVE");
@@ -191,8 +193,23 @@ public class OGASyncRunner implements Job
         TableSelector existingTs = new TableSelector(targetTable, PageFlowUtil.set("alias"), filter, null);
         Collection<String> existingKeys = existingTs.getCollection(String.class);
 
+        //find existing FAs
+        SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("category"), "Other", CompareType.EQUAL);
+        filter2.addCondition(FieldKey.fromString("container"), c.getId());
+        filter2.addCondition(FieldKey.fromString("fiscalAuthority"), null, CompareType.NONBLANK);
+        TableSelector existingTs2 = new TableSelector(targetTable, PageFlowUtil.set("alias", "fiscalAuthority"), filter2, null);
+        final Map<String, Integer> faMap = new HashMap<>();
+        existingTs2.forEach(new Selector.ForEachBlock<ResultSet>()
+        {
+            @Override
+            public void exec(ResultSet rs) throws SQLException
+            {
+                faMap.put(rs.getString("alias"), rs.getInt("fiscalAuthority"));
+            }
+        });
+
         TableSelector ts = new TableSelector(allAliases, new HashSet<>(fieldMap.values()));
-        doMerge(u, c, targetTable, ts, "alias", fieldMap, "Other", existingKeys);
+        doMerge(u, c, targetTable, ts, "alias", fieldMap, "Other", existingKeys, faMap);
     }
 
     public void doMergeOGAAccounts(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException
@@ -207,7 +224,8 @@ public class OGASyncRunner implements Job
         fieldMap.put("grantNumber", "OGA_AWARD_NUMBER");
         fieldMap.put("agencyAwardNumber", "AGENCY_AWARD_NUMBER");
         fieldMap.put(INVESTIGATOR_EMPLOYYE_ID_NUMBER, "PI_EMP_NUM");
-        fieldMap.put(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER, "PDFM_EMP_NUM");
+        fieldMap.put(FISCAL_AUTHORITY_EMPLOYEE_ID_NUMBER, "PDFM_EMP_NUM");
+        fieldMap.put(ADFM_EMP_NUM, "ADFM_EMP_NUM");
         fieldMap.put("investigatorName", "PI");
         fieldMap.put("category", null);  //special case handling below
 
@@ -224,7 +242,7 @@ public class OGASyncRunner implements Job
 
 
         TableSelector ts = new TableSelector(sourceTable, new HashSet<>(fieldMap.values()));
-        doMerge(u, c, targetTable, ts, "alias", fieldMap, "OGA", null);
+        doMerge(u, c, targetTable, ts, "alias", fieldMap, "OGA", null, null);
     }
 
     public void doMergeGrants(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException
@@ -238,7 +256,7 @@ public class OGASyncRunner implements Job
         //fieldMap.put("", "AWARD_NUMBER");
         fieldMap.put("agencyAwardNumber", "AGENCY_AWARD_NUMBER");
         //fieldMap.put(INVESTIGATOR_EMPLOYYE_ID_NUMBER, "PI_EMP_NUM");
-        fieldMap.put(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER, "ADFM_EMP_NUM");
+        fieldMap.put(FISCAL_AUTHORITY_EMPLOYEE_ID_NUMBER, ADFM_EMP_NUM);
         //fieldMap.put("investigatorName", "PI");
         fieldMap.put("title", "PROJECT_TITLE");
         fieldMap.put(AWARD_STATUS, "AWARD_STATUS");
@@ -274,7 +292,7 @@ public class OGASyncRunner implements Job
         sql.append("GROUP BY OGA_AWARD_NUMBER");
 
         SqlSelector ss = new SqlSelector(sourceTable.getSchema(), new SQLFragment(sql.toString()));
-        doMerge(u, c, targetTable, ss, "grantNumber", fieldMap, null, null);
+        doMerge(u, c, targetTable, ss, "grantNumber", fieldMap, null, null, null);
     }
 
     public void doMergeInvestigators(User u, Container c, TableInfo sourceTable, DbSchema targetSchema)
@@ -287,7 +305,7 @@ public class OGASyncRunner implements Job
      * This is not particularly efficient, but it runs in the background once per day,
      * and total rows should not be that large
      */
-    public void doMerge(final User u, final Container c, final TableInfo targetTable, ExecutingSelector selector, final String selectionKey, final Map<String, String> fieldMap, final String category, final Collection<String> existingAliases) throws SQLException
+    public void doMerge(final User u, final Container c, final TableInfo targetTable, ExecutingSelector selector, final String selectionKey, final Map<String, String> fieldMap, final String category, final Collection<String> existingAliases, @Nullable final Map<String, Integer> faMap) throws SQLException
     {
         _log.info("starting to merge table: " + targetTable.getName());
         ExperimentService.get().ensureTransaction();
@@ -338,9 +356,19 @@ public class OGASyncRunner implements Job
                             {
                                 row.put("category", category);
                             }
-                            else if (key.equals(FISCAL_AUTHORITY_EMPLOYYE_ID_NUMBER))
+                            else if (key.equals(ADFM_EMP_NUM))
                             {
-                                row.put("fiscalAuthority", resolveFinancialAnalystId(c, u, rs.getString(fieldMap.get(key))));
+                                continue;
+                            }
+                            else if (key.equals(FISCAL_AUTHORITY_EMPLOYEE_ID_NUMBER))
+                            {
+                                String id = rs.getString(fieldMap.get(key));
+                                if (id == null && fieldMap.containsKey(ADFM_EMP_NUM))
+                                {
+                                    id = rs.getString(ADFM_EMP_NUM);
+                                }
+
+                                row.put("fiscalAuthority", resolveFinancialAnalystId(c, u, id));
                             }
                             else if (key.equals(AWARD_STATUS) || key.equals(PROJECT_STATUS))
                             {
@@ -394,6 +422,11 @@ public class OGASyncRunner implements Job
                         //TODO: consider update
                     }
                     else {
+                        if (faMap != null && faMap.containsKey(row.get("alias")))
+                        {
+                            row.put("fiscalAuthority", faMap.get(row.get("alias")));
+                        }
+
                         row.put("modifiedby", u.getUserId());
                         row.put("modified", new Date());
     

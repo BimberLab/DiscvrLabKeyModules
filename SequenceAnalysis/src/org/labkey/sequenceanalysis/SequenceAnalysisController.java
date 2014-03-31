@@ -19,6 +19,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.jfree.chart.JFreeChart;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
@@ -41,7 +42,10 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryForm;
 import org.labkey.api.security.IgnoresTermsOfUse;
@@ -49,6 +53,7 @@ import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -56,7 +61,6 @@ import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.URLHelper;
-import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
@@ -75,6 +79,7 @@ import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.FastqcRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
+import org.labkey.sequenceanalysis.visualization.VariationChart;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
@@ -83,8 +88,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -182,20 +186,17 @@ public class SequenceAnalysisController extends SpringActionController
 
     @RequiresPermissionClass(ReadPermission.class)
     @IgnoresTermsOfUse
-    public class DownloadFastqImageAction extends ExportAction<FastqImageForm>
+    public class DownloadTempImageAction extends ExportAction<TempImageAction>
     {
-        public void export(FastqImageForm form, HttpServletResponse response, BindException errors) throws Exception
+        public void export(TempImageAction form, HttpServletResponse response, BindException errors) throws Exception
         {
-            File parentDir = new File(FileUtil.getTempDirectory(), form.getDirectory());
-            parentDir = new File(parentDir, form.getFileName());
-            parentDir = new File(parentDir, "Images");
+            File parentDir = form.getDirectory() == null ? FileUtil.getTempDirectory() : new File(FileUtil.getTempDirectory(), form.getDirectory());
+            File targetFile = new File(parentDir, form.getFileName());
+            targetFile = FileUtil.getAbsoluteCaseSensitiveFile(targetFile);
 
-            File imageFile = new File(parentDir, form.getImage());
-            imageFile = FileUtil.getAbsoluteCaseSensitiveFile(imageFile);
-
-            if (!NetworkDrive.exists(imageFile))
+            if (!NetworkDrive.exists(targetFile))
             {
-                throw new FileNotFoundException("Could not find file: " + imageFile.getPath());
+                throw new FileNotFoundException("Could not find file: " + targetFile.getPath());
             }
 
             if (parentDir.listFiles() == null)
@@ -203,26 +204,26 @@ public class SequenceAnalysisController extends SpringActionController
                 throw new FileNotFoundException("Unable to list the contents of folder: " + parentDir.getPath());
             }
 
-            PageFlowUtil.streamFile(response, imageFile, false);
+            PageFlowUtil.streamFile(response, targetFile, false);
 
             //the file will be recreated, so delete upon running
-            FileUtils.deleteQuietly(imageFile);
+            FileUtils.deleteQuietly(targetFile);
 
             //if the folder if empty, remove it too.  other simultaneous requests might have deleted this folder before we get to it
             if (parentDir != null && parentDir.exists())
             {
                 File[] children = parentDir.listFiles();
-                if (children != null && children.length == 0)
+                if (children != null && children.length == 0 && !parentDir.equals(FileUtil.getTempDirectory()))
                 {
                     FileUtils.deleteQuietly(parentDir); //the Images folder
                     File parent = parentDir.getParentFile();
-                    FileUtils.deleteQuietly(parent); //the FASTQ file's folder
+                    FileUtils.deleteQuietly(parent); //the file's folder
 
                     if (parent != null && parent.getParentFile() != null)
                     {
                         File[] children2 = parent.getParentFile().listFiles();
                         if (children2 != null && children2.length == 0)
-                            FileUtils.deleteQuietly(parent.getParentFile()); //the FASTQ file's folder
+                            FileUtils.deleteQuietly(parent.getParentFile()); //the file's folder
                     }
                 }
             }
@@ -1119,9 +1120,8 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    public static class FastqImageForm
+    public static class TempImageAction
     {
-        String _image;
         String _fileName;
         String _directory;
 
@@ -1143,16 +1143,6 @@ public class SequenceAnalysisController extends SpringActionController
         public void setDirectory(String directory)
         {
             _directory = directory;
-        }
-
-        public String getImage()
-        {
-            return _image;
-        }
-
-        public void setImage(String image)
-        {
-            _image = image;
         }
     }
 
@@ -1285,6 +1275,130 @@ public class SequenceAnalysisController extends SpringActionController
         public void setPath(String path)
         {
             this.path = path;
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    public class GenerateChartAction extends ApiAction<GenerateChartForm>
+    {
+        public ApiResponse execute(GenerateChartForm form, BindException errors) throws Exception
+        {
+            Map<String, Object> resultProperties = new HashMap<>();
+
+            try
+            {
+                VariationChart vc = new VariationChart();
+                List<JFreeChart> charts = vc.createChart(form.getSeries(), form.getGff(), form.getMaxBases());
+
+                resultProperties.putAll(vc.toSVG(charts, form.getWidth(), form.getSectionHeight()));
+                resultProperties.put("success", true);
+            }
+            catch (IOException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+
+            return new ApiSimpleResponse(resultProperties);
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    public class DownloadChartAction extends ExportAction<GenerateChartForm>
+    {
+        @Override
+        public void validate(GenerateChartForm form, BindException errors)
+        {
+            if (form.getSeries() == null || form.getSeries().length == 0)
+            {
+                errors.reject(ERROR_MSG, "Unable to convert create graph: no variscan output provided");
+            }
+        }
+
+        public void export(GenerateChartForm form, HttpServletResponse response, BindException errors) throws Exception
+        {
+
+            response.setContentType("svg");
+            response.setHeader("Content-disposition", "attachment; filename=\"sequence.svg");
+            response.setHeader("Pragma", "private");
+            response.setHeader("Cache-Control", "private");
+
+            VariationChart vc = new VariationChart();
+            List<JFreeChart> charts = vc.createChart(form.getSeries(), form.getGff(), form.getMaxBases());
+
+            Map<String, Object> props = vc.toSVG(charts, form.getWidth(), form.getSectionHeight());
+            if (props.containsKey("filePath"))
+            {
+                File targetFile = new File((String)props.get("filePath"));
+                if (targetFile.exists())
+                {
+                    PageFlowUtil.streamFile(response, targetFile, false);
+                    FileUtils.deleteQuietly(targetFile);
+                }
+                else
+                {
+                    throw new NotFoundException("Unable to generate chart");
+                }
+            }
+        }
+    }
+
+    public static class GenerateChartForm
+    {
+        private String[] _series;
+        private String _gff;
+        private int _width = 1000;
+        private int _sectionHeight = 400;
+        private int _maxBases = 10000;
+
+        public String[] getSeries()
+        {
+            return _series;
+        }
+
+        public void setSeries(String[] series)
+        {
+            _series = series;
+        }
+
+        public String getGff()
+        {
+            return _gff;
+        }
+
+        public void setGff(String gff)
+        {
+            _gff = gff;
+        }
+
+        public int getWidth()
+        {
+            return _width;
+        }
+
+        public void setWidth(int width)
+        {
+            _width = width;
+        }
+
+        public int getSectionHeight()
+        {
+            return _sectionHeight;
+        }
+
+        public void setSectionHeight(int sectionHeight)
+        {
+            _sectionHeight = sectionHeight;
+        }
+
+        public int getMaxBases()
+        {
+            return _maxBases;
+        }
+
+        public void setMaxBases(int maxBases)
+        {
+            _maxBases = maxBases;
         }
     }
 }

@@ -1,0 +1,6 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Generate Graph">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis"/>
+    </dependencies>
+</view>

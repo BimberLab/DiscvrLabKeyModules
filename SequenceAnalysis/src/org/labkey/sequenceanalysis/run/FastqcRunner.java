@@ -196,7 +196,7 @@ public class FastqcRunner
         String output = "";
         String header = "<div class=\"fastqc_overview\"><h2>File Summary:</h2><ul>";
 
-        DetailsURL d = DetailsURL.fromString("/SequenceAnalysis/downloadFastqImage.view?");
+        DetailsURL d = DetailsURL.fromString("/SequenceAnalysis/downloadTempImage.view?");
 
         try
         {
@@ -221,11 +221,10 @@ public class FastqcRunner
                 html = html.replaceAll("Icons/", AppProps.getInstance().getContextPath() + "/SequenceAnalysis/icons/");
 
                 ActionURL a = d.copy(c).getActionURL();
-                a.addParameter("directory", FileUtil.getBaseName(_tmpDir));
-                a.addParameter("fileName", basename + "_fastqc");
+                a.addParameter("directory", new File(FileUtil.getBaseName(_tmpDir), basename + "_fastqc/Images").getPath());
 
                 String url = a.toString();
-                url += "&image=";
+                url += "&fileName=";
 
                 html = html.replaceAll("Images/", url);
 
@@ -257,7 +256,7 @@ public class FastqcRunner
                 iconDir.delete();
                 htmlFile.delete();
 
-                //NOTE: images will be deleted when they are loaded using DownloadFastqImageAction
+                //NOTE: images will be deleted when they are loaded using DownloadTempImageAction
                 //File imageDir = new File(outputDir, "Images");
                 //imageDir.deleteOnExit();
 

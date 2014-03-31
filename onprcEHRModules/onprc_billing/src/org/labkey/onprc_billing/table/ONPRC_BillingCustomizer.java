@@ -160,11 +160,18 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             if (ehrContainer != null)
             {
                 idCol.setFk(new QueryForeignKey("study", ehrContainer, ehrContainer, table.getUserSchema().getUser(), "animal", "Id", "Id"));
+                EHRService.get().appendCalculatedIdCols(table, "date");
             }
         }
 
-        ColumnInfo debitedaccount = table.getColumn("debitedaccount");
-        if (debitedaccount != null && debitedaccount.getFk() == null)
+        addAliasLookup(table, "debitedaccount");
+        addAliasLookup(table, "creditedaccount");
+    }
+
+    private void addAliasLookup(AbstractTableInfo table, String sourceColName)
+    {
+        ColumnInfo sourceCol = table.getColumn(sourceColName);
+        if (sourceCol != null && sourceCol.getFk() == null)
         {
             UserSchema us = getUserSchema(table, "onprc_billing_public");
             if (us == null)
@@ -174,12 +181,8 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
 
             if (us != null)
             {
-                debitedaccount.setFk(new QueryForeignKey(us, us.getContainer(), "aliases", "alias", "alias", true));
-                debitedaccount.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${account}"));
-
-                ColumnInfo creditedaccount = table.getColumn("creditedaccount");
-                creditedaccount.setFk(new QueryForeignKey(us, us.getContainer(), "aliases", "alias", "alias", true));
-                creditedaccount.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${account}"));
+                sourceCol.setFk(new QueryForeignKey(us, us.getContainer(), "aliases", "alias", "alias", true));
+                sourceCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${" + sourceColName + "}"));
             }
         }
     }

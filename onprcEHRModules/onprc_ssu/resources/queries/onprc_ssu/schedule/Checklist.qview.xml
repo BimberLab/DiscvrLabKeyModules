@@ -5,7 +5,7 @@
         <column name="procedureid"/>
         <column name="location"/>
         <column name="project"/>
-        <column name="isAssignedAtTime"/>
+        <column name="isAssignedToProtocolAtTime"/>
         <column name="Id/MostRecentWeight/MostRecentWeight"/>
         <column name="Id/surgeryChecklist/labworkDate"/>
         <column name="Id/surgeryChecklist/PLT"/>

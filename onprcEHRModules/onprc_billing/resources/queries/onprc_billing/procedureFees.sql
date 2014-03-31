@@ -11,6 +11,7 @@ PARAMETERS(StartDate TIMESTAMP, EndDate TIMESTAMP)
 SELECT
   e.Id,
   e.date,
+  e.datefinalized as billingDate,
   e.project,
   e.project.account,
   e.procedureId,
@@ -26,7 +27,7 @@ JOIN onprc_billing.procedureFeeDefinition p ON (
   p.active = true
 )
 
-WHERE e.dateOnly >= CAST(StartDate as date) AND e.dateOnly <= CAST(EndDate as date)
+WHERE CAST(e.datefinalized as date) >= CAST(StartDate as date) AND CAST(e.datefinalized as date) <= CAST(EndDate as date)
 
 --AND e.qcstate.publicdata = true
 
@@ -36,6 +37,7 @@ UNION ALL
 SELECT
   e.Id,
   e.dateOnly as date,
+  e.datefinalized as billingDate,
   e.project,
   e.project.account,
   null as procedureId,
@@ -44,10 +46,8 @@ SELECT
   e.taskid
 
 FROM study.blood e
-WHERE e.dateOnly >= CAST(StartDate as date) AND e.dateOnly <= CAST(EndDate as date)
+WHERE CAST(e.datefinalized as date) >= CAST(StartDate as date) AND CAST(e.datefinalized as date) <= CAST(EndDate as date)
 and e.chargetype != 'No Charge' and e.chargetype != 'Research Staff'
 and (e.reason IS NULL or e.reason != 'Clinical')
 AND e.qcstate.publicdata = true
-GROUP BY e.Id, e.dateOnly, e.project, e.project.account, e.taskid
-
---TODO: injections
+GROUP BY e.Id, e.dateOnly, e.dateFinalized, e.project, e.project.account, e.taskid

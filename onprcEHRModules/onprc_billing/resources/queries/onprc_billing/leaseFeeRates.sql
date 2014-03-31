@@ -144,7 +144,7 @@ SELECT
   mc.date,
   null as enddate,
   mc.project,
-  mc.project.account,
+  mc.account,
   null as projectedReleaseCondition,
   null as releaseCondition,
   null as assignCondition,

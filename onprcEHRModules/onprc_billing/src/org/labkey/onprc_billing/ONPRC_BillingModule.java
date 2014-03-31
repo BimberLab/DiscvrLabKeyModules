@@ -40,10 +40,12 @@ import org.labkey.api.resource.Resource;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.onprc_billing.button.ChangeBillDateButton;
 import org.labkey.onprc_billing.button.ChargeEditButton;
 import org.labkey.onprc_billing.button.ProjectEditButton;
 import org.labkey.onprc_billing.dataentry.ChargesAdvancedFormType;
 import org.labkey.onprc_billing.dataentry.ChargesFormSection;
+import org.labkey.onprc_billing.dataentry.ChargesFormType;
 import org.labkey.onprc_billing.notification.FinanceNotification;
 import org.labkey.onprc_billing.pipeline.BillingPipelineProvider;
 import org.labkey.onprc_billing.query.BillingAuditProvider;
@@ -72,7 +74,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 12.359;
+        return 12.360;
     }
 
     @Override
@@ -110,7 +112,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
         EHRService.get().registerTableCustomizer(this, ONPRC_BillingCustomizer.class);
         EHRService.get().registerTableCustomizer(this, ChargeableItemsCustomizer.class, "onprc_billing", "chargeableItems");
         EHRService.get().registerFormType(new DefaultDataEntryFormFactory(ChargesAdvancedFormType.class, this));
-        EHRService.get().registerFormType(new DefaultDataEntryFormFactory.TaskFactory(this, "Billing", "miscCharges", "Misc Charges", Collections.<FormSection>singletonList(new ChargesFormSection())));
+        EHRService.get().registerFormType(new DefaultDataEntryFormFactory(ChargesFormType.class, this));
 
         Resource billingTriggers = getModuleResource("/scripts/onprc_billing/billing_triggers.js");
         assert billingTriggers != null;
@@ -121,6 +123,8 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
 
         EHRService.get().registerMoreActionsButton(new ProjectEditButton(this, "onprc_ehr", "projectAccountHistory"), "onprc_ehr", "projectAccountHistory");
 
+        EHRService.get().registerMoreActionsButton(new ChangeBillDateButton(this), ONPRC_BillingSchema.NAME, "miscCharges");
+        EHRService.get().registerMoreActionsButton(new ChangeBillDateButton(this), ONPRC_BillingSchema.NAME, "miscChargesWithRates");
         EHRService.get().registerMoreActionsButton(new MarkCompletedButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATE_EXEMPTIONS, "Set End Date", ONPRCBillingAdminPermission.class), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATE_EXEMPTIONS);
         EHRService.get().registerMoreActionsButton(new MarkCompletedButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATES, "Set End Date", ONPRCBillingAdminPermission.class), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CHARGE_RATES);
         EHRService.get().registerMoreActionsButton(new MarkCompletedButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT, "Set End Date", ONPRCBillingAdminPermission.class), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT);

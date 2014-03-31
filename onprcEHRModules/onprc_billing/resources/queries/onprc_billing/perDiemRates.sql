@@ -34,15 +34,9 @@ SELECT
   p.chargeId.category as category,
   p.housingRecords as sourceRecord,
   null as chargeType,
-  CASE
-    WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
-    ELSE coalesce(e.unitCost, cr.unitCost)
-  END as unitCost,
+  coalesce(e.unitCost, cr.unitCost) as unitCost,
   p.effectiveDays as quantity,
-  CASE
-    WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
-    ELSE (p.effectiveDays * coalesce(e.unitCost, cr.unitCost))
-  END as totalcost,
+  (p.effectiveDays * coalesce(e.unitCost, cr.unitCost)) as totalcost,
 
   cast(ce.account as varchar(200)) as creditAccount,
   ce.rowid as creditAccountId,

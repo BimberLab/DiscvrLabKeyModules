@@ -4,6 +4,20 @@
             <table tableName="leaseFees" tableDbType="TABLE">
                 <tableTitle>Lease Fees Calculation</tableTitle>
                 <columns>
+                    <column columnName="Id">
+                        <fk>
+                            <fkDbSchema>study</fkDbSchema>
+                            <fkTable>animal</fkTable>
+                            <fkColumnName>Id</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="account">
+                        <fk>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
+                            <fkTable>aliases</fkTable>
+                            <fkColumnName>alias</fkColumnName>
+                        </fk>
+                    </column>
                     <column columnName="date">
                         <columnTitle>Billing Date</columnTitle>
                     </column>

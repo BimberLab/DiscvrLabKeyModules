@@ -140,9 +140,10 @@ LEFT JOIN (
     a2.enddateCoalesced
   FROM study.assignment a2
   WHERE
+    --NOTE: this has been reversed.  if one-day assignments are exempted from per diems, this should be restored
     --exclude 1-day assignments
-    a2.duration > 1
-    AND a2.qcstate.publicdata = true
+    --a2.duration > 1 AND
+    a2.qcstate.publicdata = true
 ) a2 ON (
   i2.id = a2.id
   AND a2.dateOnly <= i2.dateOnly

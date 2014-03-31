@@ -26,6 +26,13 @@
                             <fkDisplayColumnName>rowid</fkDisplayColumnName>
                         </fk>
                     </column>
+                    <column columnName="account">
+                        <fk>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
+                            <fkTable>aliases</fkTable>
+                            <fkColumnName>alias</fkColumnName>
+                        </fk>
+                    </column>
                     <column columnName="servicename">
                         <fk>
                             <fkDbSchema>ehr_lookups</fkDbSchema>

@@ -34,6 +34,7 @@ public class ONPRC_BillingSchema
     public static final String TABLE_CREDIT_ACCOUNT = "creditAccount";
     public static final String TABLE_CREDIT_GRANTS = "grants";
     public static final String TABLE_ALIASES = "aliases";
+    public static final String TABLE_CHARGEABLE_ITEMS = "chargeableItems";
 
     public static ONPRC_BillingSchema getInstance()
     {

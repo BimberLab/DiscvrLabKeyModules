@@ -25,15 +25,9 @@ SELECT
 
   p.chargeId.name as item,
   p.chargeId.category as category,
-  CASE
-    WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
-    ELSE coalesce(e.unitCost, cr.unitCost)
-  END as unitCost,
+  coalesce(e.unitCost, cr.unitCost) as unitCost,
   1 as quantity,
-  CASE
-    WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
-    ELSE coalesce(e.unitCost, cr.unitCost)
-  END as totalcost,
+  coalesce(e.unitCost, cr.unitCost) as totalcost,
   cast(ce.account as varchar(100)) as creditAccount,
   ce.rowid as creditAccountId,
   null as comment,
@@ -57,16 +51,16 @@ SELECT
   WHEN (SELECT count(*) as projects FROM study.assignment a WHERE
     p.Id = a.Id AND
     (p.project = a.project OR p.project.protocol = a.project.protocol) AND
-    (cast(p.date AS DATE) < a.enddateCoalesced OR a.enddate IS NULL) AND
-    p.date >= a.dateOnly
+    (cast(p.date AS DATE) <= a.enddateCoalesced OR a.enddate IS NULL) AND
+    cast(p.date as date) >= a.dateOnly
   ) > 0 THEN null
   ELSE 'N' END as matchesProject,
   null as isMiscCharge,
   null as isAdjustment,
   (SELECT group_concat(distinct a.project.displayName, chr(10)) as projects FROM study.assignment a WHERE
     p.Id = a.Id AND
-    (cast(p.date AS DATE) < a.enddateCoalesced OR a.enddate IS NULL) AND
-    p.date >= a.dateOnly
+    (cast(p.date AS DATE) <= a.enddateCoalesced OR a.enddate IS NULL) AND
+    cast(p.date as date) >= a.dateOnly
   ) as assignmentAtTime,
   CASE WHEN p.project.account IS NULL THEN 'Y' ELSE null END as isMissingAccount,
   CASE WHEN ifdefined(p.project.account.fiscalAuthority.faid) IS NULL THEN 'Y' ELSE null END as isMissingFaid,

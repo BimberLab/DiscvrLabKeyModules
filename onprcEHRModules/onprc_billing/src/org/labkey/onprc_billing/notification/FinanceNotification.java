@@ -15,6 +15,7 @@
  */
 package org.labkey.onprc_billing.notification;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.json.JSONObject;
 import org.labkey.api.data.Aggregate;
@@ -133,8 +134,7 @@ public class FinanceNotification extends AbstractNotification
         if (lastInvoiceDate == null)
             lastInvoiceDate = DateUtils.truncate(new Date(0), Calendar.DATE);
 
-        Map<String, Map<String, Map<String, Map<String, Integer>>>> projectMap = new TreeMap<>();
-        Map<String, String> projectToAccountMap = new HashMap<>();
+        Map<String, Map<String, Map<String, Map<String, Integer>>>> dataMap = new TreeMap<>();
         Map<String, Map<String, Double>> totalsByCategory = new TreeMap<>();
 
         Calendar start = Calendar.getInstance();
@@ -157,30 +157,30 @@ public class FinanceNotification extends AbstractNotification
         Container slaContainer = ONPRC_BillingManager.get().getSLADataFolder(c);
         if (slaContainer != null)
         {
-            getProjectSummary(slaContainer, u, start, endDate, "SLA Per Diems", categoryToQuery, projectMap, projectToAccountMap, totalsByCategory);
+            getProjectSummary(slaContainer, u, start, endDate, "SLA Per Diems", categoryToQuery, dataMap, totalsByCategory);
             containerMap.put("SLA Per Diems", slaContainer);
         }
 
         Container ehrContainer = EHRService.get().getEHRStudyContainer(c);
         if (ehrContainer != null)
         {
-            getProjectSummary(ehrContainer, u, start, endDate, "Per Diems", categoryToQuery, projectMap, projectToAccountMap, totalsByCategory);
+            getProjectSummary(ehrContainer, u, start, endDate, "Per Diems", categoryToQuery, dataMap, totalsByCategory);
             containerMap.put("Per Diems", ehrContainer);
 
-            getProjectSummary(ehrContainer, u, start, endDate, "Lease Fees", categoryToQuery, projectMap, projectToAccountMap, totalsByCategory);
+            getProjectSummary(ehrContainer, u, start, endDate, "Lease Fees", categoryToQuery, dataMap, totalsByCategory);
             containerMap.put("Lease Fees", ehrContainer);
 
-            getProjectSummary(ehrContainer, u, start, endDate, "Procedure Charges", categoryToQuery, projectMap, projectToAccountMap, totalsByCategory);
+            getProjectSummary(ehrContainer, u, start, endDate, "Procedure Charges", categoryToQuery, dataMap, totalsByCategory);
             containerMap.put("Procedure Charges", ehrContainer);
 
-            getProjectSummary(ehrContainer, u, start, endDate, "Labwork Charges", categoryToQuery, projectMap, projectToAccountMap, totalsByCategory);
+            getProjectSummary(ehrContainer, u, start, endDate, "Labwork Charges", categoryToQuery, dataMap, totalsByCategory);
             containerMap.put("Labwork Charges", ehrContainer);
 
-            getProjectSummary(ehrContainer, u, start, endDate, "Other Charges", categoryToQuery, projectMap, projectToAccountMap, totalsByCategory);
+            getProjectSummary(ehrContainer, u, start, endDate, "Other Charges", categoryToQuery, dataMap, totalsByCategory);
             containerMap.put("Other Charges", ehrContainer);
         }
 
-        writeResultTable(msg, lastInvoiceDate, start, endDate, projectMap, projectToAccountMap, totalsByCategory, categoryToQuery, containerMap);
+        writeResultTable(msg, lastInvoiceDate, start, endDate, dataMap, totalsByCategory, categoryToQuery, containerMap);
 
         getExpiredAliases(c, u , msg);
         getAliasesDisabled(c, u, msg);
@@ -233,8 +233,10 @@ public class FinanceNotification extends AbstractNotification
             return _label;
         }
 
-        public boolean shouldFlag(Object val)
+        public boolean shouldFlag(Results rs) throws SQLException
         {
+            Object val = rs.getObject(getFieldKey());
+
             return _flagIfNonNull ? val != null : val == null;
         }
 
@@ -244,9 +246,26 @@ public class FinanceNotification extends AbstractNotification
         }
     }
 
+    private class MissingProjectFieldDescriptor extends FieldDescriptor
+    {
+        public MissingProjectFieldDescriptor()
+        {
+            super("project", false, "Missing Project", true);
+        }
+
+        @Override
+        public boolean shouldFlag(Results rs) throws SQLException
+        {
+            Object project = rs.getObject(FieldKey.fromString("project"));
+            Object account = rs.getObject(FieldKey.fromString("account"));
+
+            return account == null && project == null;
+        }
+    }
+
     private FieldDescriptor[] _fields = new FieldDescriptor[]
     {
-        new FieldDescriptor("project", false, "Missing Project", true),
+        new MissingProjectFieldDescriptor(),
         new FieldDescriptor("isMissingAccount", true, "Missing Alias", true),
         new FieldDescriptor("isExpiredAccount", true, "Expired/Invalid Alias", true),
         new FieldDescriptor("isAcceptingCharges", true, "Alias Not Accepting Charges", true),
@@ -262,7 +281,7 @@ public class FinanceNotification extends AbstractNotification
         new FieldDescriptor("isMultipleProjects", true, "Per Diems Split Between Projects", false)
     };
 
-    private void getProjectSummary(Container c, User u, final Calendar start, Calendar endDate, final String categoryName, Map<String, String> categoryToQuery, final Map<String, Map<String, Map<String, Map<String, Integer>>>> projectMap, final Map<String, String> projectToAccountMap, final Map<String, Map<String, Double>> totalsByCategory)
+    private void getProjectSummary(Container c, User u, final Calendar start, Calendar endDate, final String categoryName, Map<String, String> categoryToQuery, final Map<String, Map<String, Map<String, Map<String, Integer>>>> dataMap, final Map<String, Map<String, Double>> totalsByCategory)
     {
         UserSchema us = QueryService.get().getUserSchema(u, c, ONPRC_BillingSchema.NAME);
         QueryDefinition qd = us.getQueryDefForTable(categoryToQuery.get(categoryName));
@@ -287,8 +306,9 @@ public class FinanceNotification extends AbstractNotification
         }
 
         fieldKeys.add(FieldKey.fromString("project/displayName"));
-        fieldKeys.add(FieldKey.fromString("project/account"));
-        fieldKeys.add(FieldKey.fromString("project/account/fiscalAuthority/lastName"));
+        fieldKeys.add(FieldKey.fromString("account"));
+        fieldKeys.add(FieldKey.fromString("account/fiscalAuthority/lastName"));
+        fieldKeys.add(FieldKey.fromString("account/projectNumber"));
 
         final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, fieldKeys);
         TableSelector ts = new TableSelector(ti, cols.values(), null, null);
@@ -328,14 +348,25 @@ public class FinanceNotification extends AbstractNotification
                     projectDisplay = "None";
                 }
 
-                String financialAnalyst = rs.getString(FieldKey.fromString("project/account/fiscalAuthority/lastName"));
+                String financialAnalyst = rs.getString(FieldKey.fromString("account/fiscalAuthority/lastName"));
                 if (financialAnalyst == null)
                 {
                     financialAnalyst = "Not Assigned";
                 }
 
-                String account = rs.getString(FieldKey.fromString("project/account"));
-                projectToAccountMap.put(projectDisplay, account);
+                String account = rs.getString(FieldKey.fromString("account"));
+                if (account == null)
+                {
+                    account = "Unknown";
+                }
+
+                String projectNumber = rs.getString(FieldKey.fromString("account/projectNumber"));
+                if (projectNumber == null)
+                {
+                    projectNumber = "None";
+                }
+
+                String key = StringUtils.join(new String[]{financialAnalyst, projectDisplay, account, projectNumber}, "<>");
 
                 for (FieldDescriptor fd : _fields)
                 {
@@ -344,18 +375,17 @@ public class FinanceNotification extends AbstractNotification
                         continue;
                     }
 
-                    Object val = rs.getObject(fd.getFieldKey());
-                    if (fd.shouldFlag(val))
+                    if (fd.shouldFlag(rs))
                     {
-                        Map<String, Map<String, Map<String, Integer>>> valuesForFA = projectMap.get(financialAnalyst);
+                        Map<String, Map<String, Map<String, Integer>>> valuesForFA = dataMap.get(financialAnalyst);
                         if (valuesForFA == null)
                             valuesForFA = new TreeMap<>();
 
-                        Map<String, Map<String, Integer>> valuesForProject = valuesForFA.get(projectDisplay);
-                        if (valuesForProject == null)
-                            valuesForProject = new TreeMap<>();
+                        Map<String, Map<String, Integer>> valuesForKey = valuesForFA.get(key);
+                        if (valuesForKey == null)
+                            valuesForKey = new TreeMap<>();
 
-                        Map<String, Integer> values = valuesForProject.get(categoryName);
+                        Map<String, Integer> values = valuesForKey.get(categoryName);
                         if (values == null)
                             values = new HashMap<>();
 
@@ -364,16 +394,16 @@ public class FinanceNotification extends AbstractNotification
                         count++;
                         values.put(fd.getFieldName(), count);
 
-                        valuesForProject.put(categoryName, values);
-                        valuesForFA.put(projectDisplay, valuesForProject);
-                        projectMap.put(financialAnalyst, valuesForFA);
+                        valuesForKey.put(categoryName, values);
+                        valuesForFA.put(key, valuesForKey);
+                        dataMap.put(financialAnalyst, valuesForFA);
                     }
                 }
             }
         });
     }
 
-    private void writeResultTable(final StringBuilder msg, Date lastInvoiceEnd, Calendar start, Calendar endDate, final Map<String, Map<String, Map<String, Map<String, Integer>>>> projectMap, final Map<String, String> projectToAccountMap, final Map<String, Map<String, Double>> totalsByCategory, Map<String, String> categoryToQuery, Map<String, Container> containerMap)
+    private void writeResultTable(final StringBuilder msg, Date lastInvoiceEnd, Calendar start, Calendar endDate, final Map<String, Map<String, Map<String, Map<String, Integer>>>> dataMap, final Map<String, Map<String, Double>> totalsByCategory, Map<String, String> categoryToQuery, Map<String, Container> containerMap)
     {
         msg.append("<b>Charge Summary:</b><p>");
         msg.append("The table below summarizes projected charges since the since the last invoice date of " + _dateFormat.format(lastInvoiceEnd));
@@ -391,16 +421,16 @@ public class FinanceNotification extends AbstractNotification
 
         msg.append("The tables below highlight any suspicious or abnormal items, grouped by project.  These will not necessarily be problems, but may warrant investigation.<br><br>");
 
-        for (String financialAnalyst : projectMap.keySet())
+        for (String financialAnalyst : dataMap.keySet())
         {
             //first build header row.  we want to keep fields in the same order as _fields for consistency between tables
             Set<FieldDescriptor> foundCols = new LinkedHashSet<>();
             outerloop:
             for (FieldDescriptor fd : _fields)
             {
-                for (String projectDisplay : projectMap.get(financialAnalyst).keySet())
+                for (String key : dataMap.get(financialAnalyst).keySet())
                 {
-                    Map<String, Map<String, Integer>> projectDataByCategory = projectMap.get(financialAnalyst).get(projectDisplay);
+                    Map<String, Map<String, Integer>> projectDataByCategory = dataMap.get(financialAnalyst).get(key);
                     for (String category : projectDataByCategory.keySet())
                     {
                         if (projectDataByCategory.get(category).containsKey(fd.getFieldName()))
@@ -412,7 +442,7 @@ public class FinanceNotification extends AbstractNotification
                 }
             }
 
-            msg.append("<table border=1 style='border-collapse: collapse;'><tr style='font-weight: bold;'><td>Financial Analyst</td><td>Project</td><td>Alias</td><td>Category</td>");
+            msg.append("<table border=1 style='border-collapse: collapse;'><tr style='font-weight: bold;'><td>Financial Analyst</td><td>Project</td><td>Alias</td><td>OGA Project</td><td>Category</td>");
             for (FieldDescriptor fd : foundCols)
             {
                 msg.append("<td>" + fd.getLabel() + "</td>");
@@ -420,20 +450,21 @@ public class FinanceNotification extends AbstractNotification
             msg.append("</tr>");
 
             //then append the rows
-            for (String projectDisplay : projectMap.get(financialAnalyst).keySet())
+            for (String key : dataMap.get(financialAnalyst).keySet())
             {
-                Map<String, Map<String, Integer>> projectDataByCategory = projectMap.get(financialAnalyst).get(projectDisplay);
-                for (String category : projectDataByCategory.keySet())
+                String[] tokens = key.split("<>");
+                Map<String, Map<String, Integer>> dataByCategory = dataMap.get(financialAnalyst).get(key);
+                for (String category : dataByCategory.keySet())
                 {
-                    Map<String, Integer> totals = projectDataByCategory.get(category);
+                    Map<String, Integer> totals = dataByCategory.get(category);
 
                     String baseUrl = getExecuteQueryUrl(containerMap.get(category), ONPRC_BillingSchema.NAME, categoryToQuery.get(category), null) + "&query.param.StartDate=" + _dateFormat.format(start.getTime()) + "&query.param.EndDate=" + _dateFormat.format(endDate.getTime());
-                    String projUrl = baseUrl + ("None".equals(projectDisplay) ? "&query.project/displayName~isblank" : "&query.project/displayName~eq=" + projectDisplay);
+                    String projUrl = baseUrl + ("None".equals(tokens[1]) ? "&query.project/displayName~isblank" : "&query.project/displayName~eq=" + tokens[1]);
                     msg.append("<tr><td>" + financialAnalyst + "</td>");    //the FA
-                    msg.append("<td><a href='" + projUrl + "'>" + projectDisplay + "</a></td>");
+                    msg.append("<td><a href='" + projUrl + "'>" + tokens[1] + "</a></td>");
 
-                    String account = projectToAccountMap.containsKey(projectDisplay) ? projectToAccountMap.get(projectDisplay) : "Unknown";
-                    msg.append("<td>" + (account == null ? "None" : account) + "</td>");
+                    msg.append("<td>" + (tokens[2]) + "</td>");
+                    msg.append("<td>" + (tokens[3]) + "</td>");
                     msg.append("<td>" + category + "</td>");
 
                     for (FieldDescriptor fd : foundCols)

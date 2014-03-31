@@ -11,6 +11,13 @@
                             <fkColumnName>project</fkColumnName>
                         </fk>
                     </column>
+                    <column columnName="account">
+                        <fk>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
+                            <fkTable>aliases</fkTable>
+                            <fkColumnName>alias</fkColumnName>
+                        </fk>
+                    </column>
                     <column columnName="effectiveDays">
                         <columnTitle>Effective Days</columnTitle>
                         <url>/query/executeQuery.view?

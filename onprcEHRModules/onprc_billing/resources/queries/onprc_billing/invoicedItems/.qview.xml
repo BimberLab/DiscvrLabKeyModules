@@ -8,6 +8,7 @@
         <column name="date"/>
         <column name="project"/>
         <column name="debitedaccount"/>
+        <column name="debitedaccount/projectNumber"/>
         <column name="creditedaccount"/>
         <column name="investigatorid"/>
         <column name="faid"/>

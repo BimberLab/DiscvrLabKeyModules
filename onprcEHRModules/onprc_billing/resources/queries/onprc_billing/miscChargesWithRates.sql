@@ -16,13 +16,11 @@ SELECT
   coalesce(p.chargeId.name, p.item) as item,
   CASE
     WHEN p.unitCost IS NOT NULL THEN p.unitCost
-    WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
     ELSE coalesce(e.unitCost, cr.unitCost)
   END as unitCost,
   coalesce(p.quantity, 1) as quantity,
   CASE
     WHEN p.unitCost IS NOT NULL THEN (coalesce(p.quantity, 1) * p.unitCost)
-    WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
     ELSE (coalesce(p.quantity, 1) * coalesce(e.unitCost, cr.unitCost))
   END as totalcost,
   coalesce(p.category, p.chargeId.category) as category,
@@ -40,12 +38,14 @@ SELECT
     WHEN p.creditedaccount IS NULL THEN ce.rowid
     ELSE NULL
   END as creditAccountId,
-  coalesce(p.project.account.investigatorId, p.project.investigatorId) as investigatorId,
+  coalesce(alias.investigatorId, p.project.investigatorId) as investigatorId,
   CASE
+    --dont flag adjustments/reversals as exceptions
+    WHEN (p.chargeType = 'Reversal' OR p.chargeType LIKE 'Adjustment%') THEN null
     WHEN (p.unitCost IS NOT NULL OR e.unitCost IS NOT NULL) THEN 'Y'
     ELSE null
   END as isExemption,
-  CASE WHEN (p.chargeType = 'Reversal' OR p.chargeType = 'Adjustment') THEN 'Y' ELSE null END as isAdjustment,
+  CASE WHEN (p.chargeType = 'Reversal' OR p.chargeType LIKE 'Adjustment%') THEN 'Y' ELSE null END as isAdjustment,
   CASE
     WHEN (p.unitCost IS NULL AND e.unitCost IS NULL AND cr.unitCost IS NULL) THEN 'Y'
     ELSE null
@@ -55,34 +55,34 @@ SELECT
 
   --find assignment on this date
   CASE
+    WHEN (p.project IS NULL AND p.debitedaccount IS NOT NULL) THEN null  --note: allow charges entered by account only
     WHEN p.project IS NULL THEN 'N'
     WHEN p.project.alwaysavailable = true THEN null
     WHEN (SELECT count(*) as projects FROM study.assignment a WHERE
       p.Id = a.Id AND
       (p.project = a.project OR p.project.protocol = a.project.protocol) AND
-      (cast(p.date AS DATE) < a.enddateCoalesced OR a.enddate IS NULL) AND
-      p.date >= a.dateOnly
+      (cast(p.date AS DATE) <= a.enddateCoalesced OR a.enddate IS NULL) AND
+      cast(p.date as date) >= a.dateOnly
     ) > 0 THEN null
     ELSE 'N'
   END as matchesProject,
   (SELECT group_concat(distinct a.project.displayName, chr(10)) as projects FROM study.assignment a WHERE
     p.Id = a.Id AND
-    (cast(p.date AS DATE) < a.enddateCoalesced OR a.enddate IS NULL) AND
-    p.date >= a.dateOnly
+    (cast(p.date AS DATE) <= a.enddateCoalesced OR a.enddate IS NULL) AND
+    cast(p.date as date) >= a.dateOnly
   ) as assignmentAtTime,
   p.container,
-  CASE WHEN p.project.account IS NULL THEN 'Y' ELSE null END as isMissingAccount,
-  CASE WHEN ifdefined(p.project.account.fiscalAuthority.faid) IS NULL THEN 'Y' ELSE null END as isMissingFaid,
+  CASE WHEN coalesce(p.debitedaccount, p.project.account) IS NULL THEN 'Y' ELSE null END as isMissingAccount,
+  CASE WHEN ifdefined(alias.fiscalAuthority.faid) IS NULL THEN 'Y' ELSE null END as isMissingFaid,
   CASE
-    WHEN ifdefined(p.project.account.aliasEnabled) IS NULL THEN 'N'
-    WHEN ifdefined(p.project.account.aliasEnabled) != 'Y' THEN 'N'
+    WHEN alias.aliasEnabled IS NULL THEN 'N'
+    WHEN alias.aliasEnabled != 'Y' THEN 'N'
     ELSE null
   END as isAcceptingCharges,
   CASE
-    --WHEN ifdefined(p.project.account.budgetStartDate) IS NULL THEN null
-    WHEN (ifdefined(p.project.account.budgetStartDate) IS NOT NULL AND ifdefined(p.project.account.budgetStartDate) > p.date) THEN 'Prior To Budget Start'
-    WHEN (ifdefined(p.project.account.budgetEndDate) IS NOT NULL AND ifdefined(p.project.account.budgetEndDate) < p.date) THEN 'After Budget End'
-    WHEN (ifdefined(p.project.account.projectStatus) IS NOT NULL AND ifdefined(p.project.account.projectStatus) != 'ACTIVE' AND ifdefined(p.project.account.projectStatus) != 'No Cost Ext' AND ifdefined(p.project.account.projectStatus) != 'Partial Setup') THEN 'Grant Project Not Active'
+    WHEN (alias.budgetStartDate IS NOT NULL AND alias.budgetStartDate > p.date) THEN 'Prior To Budget Start'
+    WHEN (alias.budgetEndDate IS NOT NULL AND alias.budgetEndDate < p.date) THEN 'After Budget End'
+    WHEN (alias.projectStatus IS NOT NULL AND alias.projectStatus != 'ACTIVE' AND alias.projectStatus != 'No Cost Ext' AND alias.projectStatus != 'Partial Setup') THEN 'Grant Project Not Active'
     ELSE null
   END as isExpiredAccount,
   CASE WHEN (TIMESTAMPDIFF('SQL_TSI_DAY', p.date, curdate()) > 45) THEN 'Y' ELSE null END as isOldCharge,
@@ -113,4 +113,8 @@ LEFT JOIN onprc_billing_public.creditAccount ce ON (
   p.date >= ce.startDate AND
   (p.date <= ce.enddateTimeCoalesced OR ce.enddate IS NULL) AND
   p.chargeId = ce.chargeId
+)
+
+LEFT JOIN onprc_billing_public.aliases alias ON (
+  alias.alias = COALESCE(p.debitedaccount, p.project.account)
 )

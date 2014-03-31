@@ -16,6 +16,8 @@
             </ns:column>
             <ns:column columnName="endDate">
                 <ns:columnTitle>End Date</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+                <ns:formatString>yyyy-MM-dd</ns:formatString>
             </ns:column>
             <ns:column columnName="container"/>
             <ns:column columnName="createdBy"/>
@@ -37,6 +39,7 @@
             </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
+                <ns:defaultValue>true</ns:defaultValue>
             </ns:column>
             <ns:column columnName="objectid"/>
             <ns:column columnName="createdBy"/>
@@ -50,8 +53,12 @@
         <ns:tableTitle>Exemptions to Default Rates</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowId"/>
-            <ns:column columnName="project"/>
-            <ns:column columnName="chargeId"/>
+            <ns:column columnName="project">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="chargeId">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
             <ns:column columnName="unitCost">
                 <ns:columnTitle>Unit Cost</ns:columnTitle>
             </ns:column>
@@ -60,9 +67,12 @@
             </ns:column>
             <ns:column columnName="startDate">
                 <ns:columnTitle>Start Date</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="endDate">
                 <ns:columnTitle>End Date</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+                <ns:formatString>yyyy-MM-dd</ns:formatString>
             </ns:column>
             <ns:column columnName="container"/>
             <ns:column columnName="createdBy"/>
@@ -80,12 +90,14 @@
             </ns:column>
             <ns:column columnName="name">
                 <ns:columnTitle>Name</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="shortName">
                 <ns:columnTitle>Short Name</ns:columnTitle>
             </ns:column>
             <ns:column columnName="category">
                 <ns:columnTitle>Category</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
                     <ns:fkTable>chargeableItemCategories</ns:fkTable>
@@ -109,6 +121,7 @@
             </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
+                <ns:defaultValue>true</ns:defaultValue>
             </ns:column>
             <ns:column columnName="container"/>
             <ns:column columnName="createdBy"/>
@@ -301,13 +314,19 @@
             <ns:column columnName="rowId">
                 <ns:columnTitle>Row Id</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="chargeId"/>
-            <ns:column columnName="account"/>
+            <ns:column columnName="chargeId">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="account">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
             <ns:column columnName="startDate">
                 <ns:columnTitle>Start Date</ns:columnTitle>
             </ns:column>
             <ns:column columnName="endDate">
                 <ns:columnTitle>End Date</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+                <ns:formatString>yyyy-MM-dd</ns:formatString>
             </ns:column>
             <ns:column columnName="container"/>
             <ns:column columnName="createdBy"/>
@@ -331,6 +350,16 @@
             <ns:column columnName="project"/>
             <ns:column columnName="account">
                 <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="debitedaccount">
+                <ns:columnTitle>Debit Alias</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>aliases</ns:fkTable>
+                    <ns:fkColumnName>alias</ns:fkColumnName>
+                    <ns:fkDisplayColumnName useRawValue="true"/>
+                </ns:fk>
             </ns:column>
             <ns:column columnName="chargeId"/>
             <ns:column columnName="item">
@@ -377,18 +406,8 @@
                 <ns:fk>
                     <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
                     <ns:fkTable>aliases</ns:fkTable>
-                    <ns:fkColumnName>aliases</ns:fkColumnName>
-                    <ns:fkDisplayColumnName>aliases</ns:fkDisplayColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="debitedaccount">
-                <ns:columnTitle>Debit Alias</ns:columnTitle>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:fk>
-                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
-                    <ns:fkTable>aliases</ns:fkTable>
-                    <ns:fkColumnName>aliases</ns:fkColumnName>
-                    <ns:fkDisplayColumnName>aliases</ns:fkDisplayColumnName>
+                    <ns:fkColumnName>alias</ns:fkColumnName>
+                    <ns:fkDisplayColumnName useRawValue="true"/>
                 </ns:fk>
             </ns:column>
             <ns:column columnName="sourceInvoicedItem">
@@ -450,9 +469,12 @@
             <ns:column columnName="rowId">
                 <ns:columnTitle>Row Id</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="chargeId"/>
+            <ns:column columnName="chargeId">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
             <ns:column columnName="housingType">
                 <ns:columnTitle>Housing Type</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
                     <ns:fkTable>housingTypes</ns:fkTable>
@@ -462,6 +484,7 @@
             </ns:column>
             <ns:column columnName="housingDefinition">
                 <ns:columnTitle>Housing Definition</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
                     <ns:fkTable>housingDefinition</ns:fkTable>
@@ -474,6 +497,7 @@
             </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
+                <ns:defaultValue>true</ns:defaultValue>
             </ns:column>
             <ns:column columnName="objectid"/>
             <ns:column columnName="createdBy"/>
@@ -489,9 +513,12 @@
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="chargeid"/>
+            <ns:column columnName="chargeid">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
             <ns:column columnName="cagetype">
                 <ns:columnTitle>Cage Type</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>sla</ns:fkDbSchema>
                     <ns:fkTable>cageTypes</ns:fkTable>
@@ -501,6 +528,7 @@
             </ns:column>
             <ns:column columnName="cagesize">
                 <ns:columnTitle>Cage Size</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>sla</ns:fkDbSchema>
                     <ns:fkTable>cageSize</ns:fkTable>
@@ -510,9 +538,11 @@
             </ns:column>
             <ns:column columnName="species">
                 <ns:columnTitle>Species</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
+                <ns:defaultValue>true</ns:defaultValue>
             </ns:column>
             <ns:column columnName="objectid"/>
             <ns:column columnName="createdBy"/>
@@ -597,19 +627,26 @@
             </ns:column>
             <ns:column columnName="minAge">
                 <ns:columnTitle>Min Age</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="maxAge">
                 <ns:columnTitle>Max Age</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="assignCondition">
                 <ns:columnTitle>Assign Condition</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="releaseCondition">
                 <ns:columnTitle>Release Condition</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
-            <ns:column columnName="chargeId"/>
+            <ns:column columnName="chargeId">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
+                <ns:defaultValue>true</ns:defaultValue>
             </ns:column>
             <ns:column columnName="objectid"/>
             <ns:column columnName="createdBy"/>
@@ -628,6 +665,7 @@
             </ns:column>
             <ns:column columnName="lastName">
                 <ns:columnTitle>Last Name</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="firstName">
                 <ns:columnTitle>First Name</ns:columnTitle>
@@ -708,6 +746,7 @@
             <ns:column columnName="endDate">
                 <ns:columnTitle>End Date</ns:columnTitle>
                 <ns:isHidden>true</ns:isHidden>
+                <ns:formatString>yyyy-MM-dd</ns:formatString>
             </ns:column>
             <ns:column columnName="fiscalAuthority">
                 <ns:columnTitle>Fiscal Authority</ns:columnTitle>
@@ -758,9 +797,11 @@
             </ns:column>
             <ns:column columnName="procedureId">
                 <ns:columnTitle>Procedure Id</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="chargetype">
                 <ns:columnTitle>Charge Type</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
                     <ns:fkTable>procedureChargeType</ns:fkTable>
@@ -769,9 +810,11 @@
             </ns:column>
             <ns:column columnName="chargeId">
                 <ns:columnTitle>Charge Id</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
+                <ns:defaultValue>true</ns:defaultValue>
             </ns:column>
             <ns:column columnName="objectid"/>
             <ns:column columnName="createdBy"/>
@@ -789,6 +832,7 @@
             </ns:column>
             <ns:column columnName="chargetype">
                 <ns:columnTitle>Charge Type</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
                     <ns:fkTable>bloodChargeType</ns:fkTable>
@@ -797,9 +841,15 @@
             </ns:column>
             <ns:column columnName="chargeId">
                 <ns:columnTitle>Charge Id</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="creditalias">
+                <ns:columnTitle>Credit Alias</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
             </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
+                <ns:defaultValue>true</ns:defaultValue>
             </ns:column>
             <ns:column columnName="objectid"/>
             <ns:column columnName="createdBy"/>
@@ -816,13 +866,20 @@
                 <ns:columnTitle>Row Id</ns:columnTitle>
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
-            <ns:column columnName="project"/>
-            <ns:column columnName="account"/>
+            <ns:column columnName="project">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="account">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
             <ns:column columnName="startdate">
                 <ns:columnTitle>Start Date</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="enddate">
                 <ns:columnTitle>End Date</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+                <ns:formatString>yyyy-MM-dd</ns:formatString>
             </ns:column>
             <ns:column columnName="objectid"/>
             <ns:column columnName="createdby"/>
@@ -992,6 +1049,7 @@
             </ns:column>
             <ns:column columnName="endDate">
                 <ns:columnTitle>End Date</ns:columnTitle>
+                <ns:formatString>yyyy-MM-dd</ns:formatString>
             </ns:column>
             <ns:column columnName="container"/>
             <ns:column columnName="createdBy"/>
@@ -1009,6 +1067,7 @@
             </ns:column>
             <ns:column columnName="servicename">
                 <ns:columnTitle>Service/Panel Name</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
                     <ns:fkTable>labwork_services</ns:fkTable>
@@ -1017,17 +1076,20 @@
             </ns:column>
             <ns:column columnName="chargetype">
                 <ns:columnTitle>Charge Type</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
-                    <ns:fkTable>procedureChargeType</ns:fkTable>
+                    <ns:fkTable>labworkChargeType</ns:fkTable>
                     <ns:fkColumnName>value</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
             <ns:column columnName="chargeId">
                 <ns:columnTitle>Charge Id</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
+                <ns:defaultValue>true</ns:defaultValue>
             </ns:column>
             <ns:column columnName="objectid"/>
             <ns:column columnName="createdBy"/>

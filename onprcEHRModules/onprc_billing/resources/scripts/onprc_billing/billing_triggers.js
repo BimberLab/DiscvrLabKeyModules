@@ -79,15 +79,10 @@ exports.init = function(EHR){
                 var billingHelper = new org.labkey.onprc_billing.query.BillingTriggerHelper(LABKEY.Security.currentUser.id, LABKEY.Security.currentContainer.id);
                 billingHelper.addAuditEntry(tableName, objectid, 'For the table: ' + tableName + ' a record was updated and the following fields were changed: ' + changed.join(', '));
             }
-            else {
-                console.log('no logging needed');
-            }
-        }        
+        }
     }
     
     EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Events.AFTER_UPSERT, 'study', 'Assignment', function(helper, scriptErrors, row, oldRow){
-        console.log('inspecting assignment record for billing audit');
-        
         if (row && !oldRow){
             processInsert(helper, 'assignment', row, oldRow);
         }
@@ -97,8 +92,6 @@ exports.init = function(EHR){
     });
 
     EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Events.AFTER_UPSERT, 'study', 'Housing', function(helper, scriptErrors, row, oldRow){
-        console.log('inspecting housing record for billing audit');
-        
         if (row && !oldRow){
             processInsert(helper, 'housing', row, oldRow);
         }
@@ -108,21 +101,13 @@ exports.init = function(EHR){
     });
 
     EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Events.AFTER_UPSERT, 'study', 'Clinical Encounters', function(helper, scriptErrors, row, oldRow){
-        console.log('inspecting encounters record for billing audit');
-
-        if (row && !oldRow){
-            processInsert(helper, 'encounters', row, oldRow);
-        }
-        else if (row && oldRow){
+        if (row && oldRow){
             processUpdate(helper, 'encounters', ['project', 'Id', 'date', 'chargetype', 'procedureid'], row, oldRow);
         }
     });
 
     EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Events.AFTER_UPSERT, 'study', 'Clinpath Runs', function(helper, scriptErrors, row, oldRow){
-        if (row && !oldRow){
-            processInsert(helper, 'clinpathRuns', row, oldRow);
-        }
-        else if (row && oldRow){
+        if (row && oldRow){
             processUpdate(helper, 'clinpathRuns', ['project', 'Id', 'date', 'chargetype', 'servicerequested'], row, oldRow);
         }
     });
@@ -130,22 +115,8 @@ exports.init = function(EHR){
     EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Events.AFTER_UPSERT, 'study', 'Blood Draws', function(helper, scriptErrors, row, oldRow){
         console.log('inspecting blood draws record for billing audit');
 
-        if (row && !oldRow){
-            processInsert(helper, 'blood', row, oldRow);
-        }
-        else if (row && oldRow){
+        if (row && oldRow){
             processUpdate(helper, 'blood', ['project', 'Id', 'date', 'chargetype', 'reason'], row, oldRow);
-        }
-    });
-
-    EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Events.AFTER_UPSERT, 'ehr', 'project', function(helper, scriptErrors, row, oldRow){
-        if (helper.isETL()){
-            return;
-        }
-
-        if (row && oldRow && row.project == oldRow.project && row.account != oldRow.account){
-            var billingHelper = new org.labkey.onprc_billing.query.BillingTriggerHelper(LABKEY.Security.currentUser.id, LABKEY.Security.currentContainer.id);
-            billingHelper.processProjectAccountChange(row.project, row.account, oldRow.account);
         }
     });
 };

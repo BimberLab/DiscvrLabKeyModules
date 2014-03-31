@@ -309,6 +309,12 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         if (ds.getColumn(name) != null)
             return;
 
+        if (dateColName == null)
+        {
+            _log.info("Unable to add overlapping groups column for table " + ds.getPublicSchemaName() + "." + ds.getName() + ", since dateCol is null");
+            return;
+        }
+
         List<ColumnInfo> pks = ds.getPkColumns();
         if (pks.size() != 1){
             _log.warn("Table does not have a single PK column: " + ds.getName());

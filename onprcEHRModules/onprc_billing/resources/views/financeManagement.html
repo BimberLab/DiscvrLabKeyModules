@@ -49,7 +49,7 @@
                     header: 'Reference Tables',
                     items: [
                         {name: 'IACUC Protocols', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx.EHRStudyContainer, {schemaName: 'ehr', 'query.queryName': 'protocol'})},
-                        {name: 'ONPRC Projects', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'ehr', 'query.queryName': 'project'})},
+                        {name: 'ONPRC Projects', url: LABKEY.ActionURL.buildURL('ehr', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'ehr', 'query.queryName': 'project', showImport: true})},
 
                         {name: 'Grants', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'grants', 'query.viewName': 'Active Grants'})},
                         {name: 'Grant Projects', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'grantProjects', 'query.viewName': 'Active Grant Projects'})},
@@ -57,16 +57,17 @@
 
                         //{name: 'Approved IACUC Funding Sources', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'iacucFundingSources'})},
 
-                        {name: 'Investigators', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_ehr', 'query.queryName': 'investigators'})},
-                        {name: 'Financial Analysts', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'fiscalAuthorities'})}
+                        {name: 'Investigators', url: LABKEY.ActionURL.buildURL('ehr', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_ehr', 'query.queryName': 'investigators', showImport: true})},
+                        {name: 'Financial Analysts', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'fiscalAuthorities', showImport: true})},
+                        {name: 'OGA Raw Data', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'OGA', 'query.queryName': 'ZGMS_PRIM_ALL_V'})}
                     ]
                 },{
                     header: 'Rates and Fee Structure',
                     items: [
-                        {name: 'Chargeable Items', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeableItems', 'query.viewName': 'Active Items'})},
-                        {name: 'Standard Rates', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRates', 'query.viewName': 'Active Rates'})},
-                        {name: 'Rate Exemptions', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRateExemptions', 'query.viewName': 'Active Items'})},
-                        {name: 'Aliases Receiving Credit Per Item', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'creditAccount', 'query.viewName': 'Active Items'})},
+                        {name: 'Chargeable Items', url: LABKEY.ActionURL.buildURL('ehr', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeableItems', 'query.viewName': 'Active Items', showImport: true})},
+                        {name: 'Standard Rates', url: LABKEY.ActionURL.buildURL('ehr', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRates', 'query.viewName': 'Active Rates', showImport: true})},
+                        {name: 'Rate Exemptions', url: LABKEY.ActionURL.buildURL('ehr', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRateExemptions', 'query.viewName': 'Active Items', showImport: true})},
+                        {name: 'Aliases Receiving Credit Per Item', url: LABKEY.ActionURL.buildURL('ehr', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'creditAccount', 'query.viewName': 'Active Items', showImport: true})},
 
                         {name: 'Blood Draw Fee Structure', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'bloodDrawFeeDefinition'})},
                         {name: 'Labwork Fee Structure', url: LABKEY.ActionURL.buildURL('ldk', 'updateQuery', null, {schemaName: 'onprc_billing', 'query.queryName': 'labworkFeeDefinition'})},

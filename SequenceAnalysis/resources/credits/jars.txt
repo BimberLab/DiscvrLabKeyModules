@@ -1,5 +1,9 @@
 {table}
 Filename|Component|Version|Source|License|LabKey Dev|Purpose
 jbzip2-0.9.jar|jbzip2|0.9|{link:jbzip2|http://code.google.com/p/jbzip2/}|{link:MIT|http://www.opensource.org/licenses/mit-license.php}|bbimber|BZIP compression/decompression library.  Used by FastQC
-biojava3-core-3.0.4.jar|biojava3-core|3.0.4|{link:biojava|http://biojava.org/wiki/Main_Page}|{link:GNU Lesser GPL V2.1|http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html}|bbimber|Java framework for processing biological data
+biojava3-core-3.0.7.jar|biojava3-alignment|3.0.7|{link:biojava|http://biojava.org/wiki/Main_Page}|{link:GNU Lesser GPL V2.1|http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html}|bbimber|Java framework for processing biological data
+biojava3-core-3.0.7.jar|biojava3-core|3.0.7|{link:biojava|http://biojava.org/wiki/Main_Page}|{link:GNU Lesser GPL V2.1|http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html}|bbimber|Java framework for processing biological data
+biojava3-core-3.0.7.jar|biojava3-genome|3.0.7|{link:biojava|http://biojava.org/wiki/Main_Page}|{link:GNU Lesser GPL V2.1|http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html}|bbimber|Java framework for processing biological data
+biojava3-core-3.0.7.jar|biojava3-phylo|3.0.7|{link:biojava|http://biojava.org/wiki/Main_Page}|{link:GNU Lesser GPL V2.1|http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html}|bbimber|Java framework for processing biological data
+biojava3-core-3.0.7.jar|biojava3-ws|3.0.7|{link:biojava|http://biojava.org/wiki/Main_Page}|{link:GNU Lesser GPL V2.1|http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html}|bbimber|Java framework for processing biological data
 {table}

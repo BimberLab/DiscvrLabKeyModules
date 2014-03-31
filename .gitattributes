@@ -23,7 +23,11 @@ iths/cbr/resources/web/cbr/SampleBrowserPanel.js -text
 iths/cbr/resources/web/cbr/cbr.css -text
 iths/cbr/tools/cbr_data_transfer.sql -text
 labModules/SequenceAnalysis/.project -text
-labModules/SequenceAnalysis/lib/biojava3-core-3.0.4.jar -text
+labModules/SequenceAnalysis/lib/biojava3-alignment-3.0.7.jar -text
+labModules/SequenceAnalysis/lib/biojava3-core-3.0.7.jar -text
+labModules/SequenceAnalysis/lib/biojava3-genome-3.0.7.jar -text
+labModules/SequenceAnalysis/lib/biojava3-phylo-3.0.7.jar -text
+labModules/SequenceAnalysis/lib/biojava3-ws-3.0.7.jar -text
 labModules/SequenceAnalysis/module.properties -text
 labModules/SequenceAnalysis/pipeline_code/SequenceTools/Bio/Tools/Run/BWA2.pm -text
 labModules/SequenceAnalysis/pipeline_code/SequenceTools/Bio/Tools/Run/BWA2/Config.pm -text
@@ -372,6 +376,8 @@ labModules/SequenceAnalysis/resources/views/_initSequenceAnalysis.html -text
 labModules/SequenceAnalysis/resources/views/begin.html -text
 labModules/SequenceAnalysis/resources/views/begin.view.xml -text
 labModules/SequenceAnalysis/resources/views/begin.webpart.xml -text
+labModules/SequenceAnalysis/resources/views/generateSequenceGraph.html -text
+labModules/SequenceAnalysis/resources/views/generateSequenceGraph.view.xml -text
 labModules/SequenceAnalysis/resources/views/illuminaSampleSheetExport.html -text
 labModules/SequenceAnalysis/resources/views/illuminaSampleSheetExport.view.xml -text
 labModules/SequenceAnalysis/resources/views/importReadset.html -text
@@ -512,6 +518,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/FastqUtils.java
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/NucleotideSequenceFileType.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/SequenceUtil.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/TranslatingReferenceSequence.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/visualization/VariationChart.java -text
 labModules/SequenceAnalysis/tools/Ref[!!-~]NTs.xlsx -text
 labModules/SequenceAnalysis/tools/pipeline_config/pipelineConfig_debug.xml -text
 labModules/SequenceAnalysis/tools/pipeline_config/pipelineConfig_remote.xml -text
@@ -847,6 +854,7 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRateExemptio
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRateExemptions/Active[!!-~]Items.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRates/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRates/Active[!!-~]Rates.qview.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeableItems.js -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeableItems/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeableItems/Active[!!-~]Items.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargesIBS.query.xml -text
@@ -1013,6 +1021,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billi
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.356-12.357.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.357-12.358.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.358-12.359.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.359-12.360.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.30-12.301.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.301-12.302.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.302-12.303.sql -text
@@ -1065,6 +1074,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billin
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.356-12.357.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.357-12.358.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.358-12.359.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.359-12.360.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing.xml -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing_public.template.xml -text
 onprcEHRModules/onprc_billing/resources/scripts/onprc_billing/billing_triggers.js -text
@@ -1083,16 +1093,21 @@ onprcEHRModules/onprc_billing/resources/views/invoicedItemDetails.html -text
 onprcEHRModules/onprc_billing/resources/views/invoicedItemDetails.view.xml -text
 onprcEHRModules/onprc_billing/resources/web/onprc_billing/BillingUtils.js -text
 onprcEHRModules/onprc_billing/resources/web/onprc_billing/buttons/financeButtons.js -text
+onprcEHRModules/onprc_billing/resources/web/onprc_billing/panel/ChargesAdvancedInstructionPanel.js -text
 onprcEHRModules/onprc_billing/resources/web/onprc_billing/panel/ChargesInstructionPanel.js -text
+onprcEHRModules/onprc_billing/resources/web/onprc_billing/window/ChangeBillDateWindow.js -text
 onprcEHRModules/onprc_billing/resources/web/onprc_billing/window/ReverseChargeWindow.js -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/ONPRC_BillingController.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/ONPRC_BillingManager.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/ONPRC_BillingModule.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/ONPRC_BillingSchema.java -text
+onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/button/ChangeBillDateButton.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/button/ChargeEditButton.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/button/ProjectEditButton.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesAdvancedFormType.java -text
+onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesAdvancedInstructionFormSection.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesFormSection.java -text
+onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesFormType.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesInstructionFormSection.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/notification/FinanceNotification.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/pipeline/BillingPipelineJob.java -text

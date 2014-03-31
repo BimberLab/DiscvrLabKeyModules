@@ -1,0 +1,154 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.create('Ext.panel.Panel', {
+            border: false,
+            defaults: {
+                border: false
+            },
+            items: [{
+                html: 'This page can be used to generate a plot of sequence variation.',
+                style: 'padding-bottom: 20px;'
+            },{
+                xtype: 'numberfield',
+                width: 500,
+                fieldLabel: 'Graph Width',
+                hideTrigger: true,
+                itemId: 'widthField',
+                value: 1200
+            },{
+                xtype: 'numberfield',
+                width: 500,
+                fieldLabel: 'Graph Height',
+                hideTrigger: true,
+                itemId: 'heightField',
+                value: 200
+            },{
+                xtype: 'numberfield',
+                width: 500,
+                fieldLabel: 'Bases Per Row',
+                hideTrigger: true,
+                itemId: 'rowLengthField',
+                style: 'padding-bottom: 20px;',
+                value: 25000
+            },{
+                xtype: 'textarea',
+                fieldLabel: 'GFF',
+                width: 1000,
+                height: 100,
+                itemId: 'gffField'
+            },{
+                xtype: 'panel',
+                itemId: 'variscanArea',
+                defaults: {
+                    border: false
+                }
+            },{
+                xtype: 'button',
+                text: 'Add Series',
+                style: 'margin-right: 10px;',
+                border: true,
+                handler: function(btn){
+                    var panel = btn.up('panel');
+                    var target = panel.down('#variscanArea');
+                    target.add({
+                        xtype: 'textfield',
+                        width: 500,
+                        fieldLabel: 'Series Name',
+                        fieldName: 'variscanName'
+                    });
+
+                    target.add({
+                        xtype: 'textarea',
+                        fieldLabel: 'Variscan Output',
+                        width: 1000,
+                        height: 100,
+                        fieldName: 'variscanField'
+                    })
+                }
+            },{
+                xtype: 'button',
+                text: 'Display Image',
+                style: 'margin-right: 10px;',
+                border: true,
+                handler: function(btn){
+                    var panel = btn.up('panel');
+                    panel.down('#results').removeAll();
+
+                    LABKEY.Ajax.request({
+                        url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'generateChart'),
+                        method: 'POST',
+                        success: LABKEY.Utils.getCallbackWrapper(panel.onSuccess, panel),
+                        failure: LDK.Utils.getErrorCallback(),
+                        jsonData: panel.getParams()
+                    });
+                }
+            },{
+                xtype: 'button',
+                text: 'Download Image',
+                border: true,
+                handler: function(btn){
+                    var panel = btn.up('panel');
+
+                    LABKEY.Ajax.request({
+                        url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'generateChart'),
+                        method: 'POST',
+                        success: LABKEY.Utils.getCallbackWrapper(function(results){
+                            window.open(LABKEY.ActionURL.buildURL('sequenceanalysis', 'downloadTempImage', null, {fileName: results.fileName, directory: ''}), '_blank')
+                        }, panel),
+                        failure: LDK.Utils.getErrorCallback(),
+                        jsonData: panel.getParams()
+                    });
+                }
+            },{
+                xtype: 'panel',
+                style: 'padding-top: 20px;',
+                itemId: 'results'
+            }],
+            getParams: function(){
+                var target = this.down('#variscanArea');
+                var series = [];
+
+                var names = this.query('field[fieldName=variscanName]');
+                var texts = this.query('field[fieldName=variscanField]');
+                Ext4.Array.forEach(names, function(n, idx){
+                    var obj = {
+                        name: names[idx].getValue(),
+                        data: texts[idx].getValue()
+                    };
+
+                    if (obj.name && obj.data){
+                        series.push(Ext4.encode(obj));
+                    }
+                    else {
+                        console.log('Missing either label or data, skipping');
+                    }
+                }, this);
+
+                return {
+                    gff: this.down('#gffField').getValue(),
+                    series: series,
+                    maxBases: this.down('#rowLengthField').getValue(),
+                    width: this.down('#widthField').getValue(),
+                    sectionHeight: this.down('#heightField').getValue()
+                }
+            },
+            onSuccess: function(results){
+                var target = this.down('#results');
+                target.removeAll();
+                target.add({
+                    xtype: 'image',
+                    src: LABKEY.ActionURL.buildURL('sequenceanalysis', 'downloadTempImage', null, {fileName: results.fileName, directory: ''}),
+                    itemId: 'imagePanel',
+                    width: results.width,
+                    height: (results.height * 1.1)
+                });
+                this.setWidth(results.width);
+                this.doLayout();
+            }
+        }).render(webpart.wrapperDivId);
+    });
+
+</script>

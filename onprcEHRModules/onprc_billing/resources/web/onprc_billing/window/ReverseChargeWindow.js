@@ -106,9 +106,15 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             group.fireEvent('change', group, group.getValue());
         }, this, {single: true});
 
+        this.on('show', function(){
+            if (this.isLoading){
+                Ext4.Msg.wait('Loading...');
+            }
+        }, this, {single: true});
+
         LDK.Assert.assertNotEmpty('No GUIDs found', this.checked.join(''));
 
-        Ext4.Msg.wait('Loading...');
+        this.isLoading = true;
         LABKEY.Query.selectRows({
             method: 'POST',
             schemaName: 'onprc_billing',
@@ -125,9 +131,25 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
     },
 
     onDataLoad: function(results){
+        this.isLoading = false;
         this.selectRowsResults = results;
 
-        Ext4.Msg.hide();
+        var missingCharge = 0;
+        if (results && results.rows && results.rows.length){
+            Ext4.Array.forEach(results.rows, function(r){
+                var sr = new LDK.SelectRowsRow(r);
+                if (!sr.getValue('chargeId')){
+                    missingCharge++;
+                }
+            }, this);
+        }
+
+        if (Ext4.Msg.isVisible())
+            Ext4.Msg.hide();
+
+        if (missingCharge){
+            Ext4.Msg.alert('No Charge Id', 'Note: a total of ' + missingCharge + ' of these items are missing a charge ID, which indicates they are part of a subset of legacy items imported from IRIS.  You can perform the reversal, but they will not process correctly without additional changes.  Please contact your administrator after making this adjument.');
+        }
     },
 
     onChange: function(field){
@@ -193,12 +215,13 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                 xtype: 'labkey-combo',
                 width: 400,
                 fieldLabel: 'Alias To Use',
+                plugins: ['ldk-usereditablecombo'],
                 disabled: true,
                 itemId: 'aliasField',
                 displayField: 'account',
                 valueField: 'account',
                 listConfig: {
-                    innerTpl: '{[values["account"] + " (" + (values["startdate"] ? values["startdate"].format("Y-m-d") : "No Start") + " - " + (values["enddate"] ? values["enddate"].format("Y-m-d") : "No End") + ")"]}',
+                    innerTpl: '{[values["account"] + (values["account"] == "Other" ? "" : " (" + (values["startdate"] ? values["startdate"].format("Y-m-d") : "No Start") + " - " + (values["enddate"] ? values["enddate"].format("Y-m-d") : "No End") + ")")]}',
                     getInnerTpl: function(){
                         return this.innerTpl;
                     }
@@ -316,7 +339,7 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             return;
         }
 
-        if (val == 'changeCreditAlias'){
+        if (val == 'changeCreditAlias' || (val == 'changeProject' && this.down('#aliasField').getValue())){
             this.validateCreditAlias();
             return;
         }
@@ -352,7 +375,7 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                 comment: commentField ? commentField.getValue() : null,
                 issueId: issueField ? issueField.getValue() : null,
                 //only copy unit cost if using a non-standard value
-                unitcost: sr.getValue('rateId') || sr.getValue('exemptionId') ? null : sr.getValue('unitcost'),
+                unitcost: sr.getValue('unitcost'),
                 //item: sr.getValue('item'),
                 //itemCode: sr.getValue('itemCode'),
                 //category: sr.getValue('category'),
@@ -398,7 +421,7 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                 LABKEY.ExtAdapter.apply(newCharge, {
                     chargeType: 'Adjustment (Project Change)',
                     project: combo.getValue(),
-                    debitedaccount: aliasField.getValue() //NOTE: blank will result in this project's active alias being used
+                    debitedaccount: aliasField.getValue() ? Ext4.String.trim(aliasField.getValue()) : null //NOTE: blank will result in this project's active alias being used
                 });
 
                 miscChargesInserts.push(newCharge);
@@ -475,11 +498,12 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                     Ext4.Msg.hide();
                     Ext4.Msg.confirm('Success', 'Charges have been reversed/adjusted.  These changes will apply to the next billing period.  Do you want to view these now?', function(val){
                         if (val == 'yes'){
-                            window.location = LABKEY.ActionURL.buildURL('query', 'executeQuery', this.ehrCtx['EHRStudyContainer'], {
-                                schemaName: 'onprc_billing',
-                                'query.queryName': 'miscChargesWithRates',
-                                'query.sourceInvoicedItem~in': objectIds.join(';')
-                            });
+                            var newForm = LABKEY.ExtAdapter.DomHelper.append(document.getElementsByTagName('body')[0],
+                                    '<form method="POST" action="' + LABKEY.ActionURL.buildURL('query', 'executeQuery', this.ehrCtx['EHRStudyContainer'], {'query.queryName': 'miscChargesWithRates', 'schemaName': 'onprc_billing'}) + '">' +
+                                            '<input type="hidden" name="query.sourceInvoicedItem~in" value="' + LABKEY.ExtAdapter.htmlEncode(objectIds.join(';')) + '" />' +
+                                            '<input type="hidden" name="query.billingDate~dateeq" value="' + LABKEY.ExtAdapter.htmlEncode((new Date()).format('Y-m-d')) + '" />' +
+                                            '</form>');
+                            newForm.submit();
                         }
                     }, this);
                 }
@@ -520,7 +544,7 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
         LABKEY.Query.selectRows({
             schemaName: 'onprc_billing_public',
             queryName: 'aliases',
-            columns: 'alias,aliasEnabled',
+            columns: 'alias',
             filterArray: [LABKEY.Filter.create('alias', alias, LABKEY.Filter.Types.EQUAL)],
             scope: this,
             failure: LDK.Utils.getErrorCallback(),
@@ -529,11 +553,6 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                     Ext4.Msg.alert('Error', 'Unable to find alias: ' + alias);
                 }
                 else {
-                    if (!results.rows[0].aliasEnabled || results.rows[0].aliasEnabled.toLowerCase() != 'y'){
-                        Ext4.Msg.alert('Error', 'This alias is not enabled');
-                        return;
-                    }
-
                     this.doUpdate();
                 }
             }

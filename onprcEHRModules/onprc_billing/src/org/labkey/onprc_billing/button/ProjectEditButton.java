@@ -1,5 +1,6 @@
 package org.labkey.onprc_billing.button;
 
+import org.labkey.api.ehr.buttons.EHRShowEditUIButton;
 import org.labkey.api.ehr.security.EHRProjectEditPermission;
 import org.labkey.api.ldk.buttons.ShowEditUIButton;
 import org.labkey.api.module.Module;
@@ -11,7 +12,7 @@ import java.util.Map;
 /**
 
  */
-public class ProjectEditButton extends ShowEditUIButton
+public class ProjectEditButton extends EHRShowEditUIButton
 {
     public ProjectEditButton(Module owner, String schemaName, String queryName)
     {
