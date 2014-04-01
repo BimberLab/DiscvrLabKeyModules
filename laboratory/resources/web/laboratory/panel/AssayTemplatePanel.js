@@ -102,12 +102,14 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
             var fields = [];
             var categoryCol;
             Ext4.each(grid.columns, function(col){
-                if (col.field && (col.field.allowBlank === false || col.field.nullable === false))
-                    fields.push(col.field.name || col.field.dataIndex);
-                else if (col.editor && (col.editor.allowBlank === false || col.editor.nullable === false))
-                    fields.push(col.editor.dataIndex || col.editor.name);
-                else if (col.field && (col.field.allowBlank === false || col.field.nullable === false))
-                    fields.push(col.field.dataIndex || col.field.name);
+                if (col.field){
+                    if (col.field.allowBlank === false || col.field.nullable === false)
+                        fields.push(col.field.name || col.field.dataIndex);
+                }
+                else if (col.editor){
+                    if (col.editor.allowBlank === false || col.editor.nullable === false)
+                        fields.push(col.editor.dataIndex || col.editor.name);
+                }
 
                 if (col.dataIndex == 'category'){
                     categoryCol = col;
