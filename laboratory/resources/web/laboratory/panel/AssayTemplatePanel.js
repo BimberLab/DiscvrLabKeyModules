@@ -114,8 +114,9 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
                 }
             }, this);
 
-            if (LDK.StoreUtils.isMissingRequiredFields(grid.store, fields)){
-                Ext4.Msg.alert('Error', 'One or more required fields are missing from the sample records');
+            var missingFields = LDK.StoreUtils.getMissingRequiredFields(grid.store, fields);
+            if (missingFields.length){
+                Ext4.Msg.alert('Error', 'One or more required fields are missing from the sample records: ' + missingFields.join(', '));
                 return false;
             }
 
@@ -376,7 +377,7 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
                 fieldLabel: 'Run Name',
                 itemId: 'templateTitle',
                 allowBlank: false,
-                value: this.getMetadata(true).Run.map.Name.value
+                value: this.getMetadata(true).Run.map.Name.value || this.getMetadata(true).Run.map.Name.defaultValue
             },{
                 xtype: 'combo',
                 fieldLabel: 'Import Method',
