@@ -92,7 +92,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
 
         public String getStatusName()
         {
-            return "RUNNING";
+            return PipelineJob.TaskStatus.running.toString();
         }
 
         public List<String> getProtocolActionNames()

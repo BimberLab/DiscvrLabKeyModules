@@ -414,10 +414,10 @@ public class TestHelper
             Map<String, Object> map = ts.getMap();
             PipelineJob job = PipelineJobService.get().getJobStore().getJob(guid);
 
-            if (PipelineJob.ERROR_STATUS.equalsIgnoreCase((String)map.get("status")))
+            if (PipelineJob.TaskStatus.error.matches((String)map.get("status")))
                 throw new Exception("There was an error running job: " + (job == null ? guid : job.getDescription()));
 
-            if (PipelineJob.COMPLETE_STATUS.equalsIgnoreCase((String)map.get("status")))
+            if (PipelineJob.TaskStatus.complete.matches((String)map.get("status")))
                 return true;
 
             return false; //job != null && job.getActiveTaskId() != null;
