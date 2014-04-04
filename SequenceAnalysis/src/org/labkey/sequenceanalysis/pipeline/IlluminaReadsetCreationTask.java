@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
@@ -85,8 +86,8 @@ public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReads
 
         DbSchema schema = SequenceAnalysisSchema.getInstance().getSchema();
 
-        try {
-            schema.getScope().ensureTransaction();
+        try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
+        {
             TableInfo rs = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
 
             ExpRun run = ExperimentService.get().getExpRun(runId);
@@ -107,15 +108,11 @@ public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReads
                 Table.update(getJob().getUser(), rs, row, rowId);
             }
 
-            schema.getScope().commitTransaction();
+            transaction.commit();
         }
         catch (RuntimeSQLException e)
         {
             throw new PipelineJobException(e);
-        }
-        finally
-        {
-            schema.getScope().closeConnection();
         }
 
         return new RecordedActionSet();

@@ -17,6 +17,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
@@ -117,10 +118,8 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
         DbSchema schema = SequenceAnalysisSchema.getInstance().getSchema();
 
-        try
+        try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
         {
-            schema.getScope().ensureTransaction();
-
             handleInstrumentRun(schema);
 
             //iterate over each CSV
@@ -233,14 +232,11 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                     actions.add(action);
                 }
             }
-            schema.getScope().commitTransaction();
+            transaction.commit();
         }
         catch (SQLException e)
         {
             throw new RuntimeSQLException(e);
-        }
-        finally {
-            schema.getScope().closeConnection();
         }
 
         return new RecordedActionSet(actions);

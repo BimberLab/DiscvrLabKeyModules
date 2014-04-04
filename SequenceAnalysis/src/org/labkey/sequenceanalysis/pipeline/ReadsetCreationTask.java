@@ -16,6 +16,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExpData;
@@ -129,9 +130,8 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         getJob().getLogger().debug("Total normalized sequence files created: " + datas.size());
 
         ReadsetModel row;
-        try
+        try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
         {
-            schema.getScope().ensureTransaction();
             TableInfo rs = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
 
             List<ReadsetModel> readsets = settings.getReadsets();
@@ -240,15 +240,11 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 }
             }
 
-            schema.getScope().commitTransaction();
+            transaction.commit();
         }
         catch (SQLException e)
         {
             throw new RuntimeException(e);
-        }
-        finally
-        {
-            schema.getScope().closeConnection();
         }
     }
 

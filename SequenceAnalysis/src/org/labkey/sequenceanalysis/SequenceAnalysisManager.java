@@ -131,8 +131,7 @@ public class SequenceAnalysisManager
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
 
-        s.getSchema().getScope().ensureTransaction();
-        try
+        try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
             for (int rowId : rowIds)
             {
@@ -155,11 +154,7 @@ public class SequenceAnalysisManager
                 //then the readsets themselves
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READSETS + " WHERE rowId = ?", rowId));
             }
-            s.getSchema().getScope().commitTransaction();
-        }
-        finally
-        {
-            s.getSchema().getScope().closeConnection();
+            transaction.commit();
         }
     }
 
@@ -167,8 +162,7 @@ public class SequenceAnalysisManager
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
 
-        s.getSchema().getScope().ensureTransaction();
-        try
+        try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
             for (int rowId : rowIds)
             {
@@ -186,11 +180,7 @@ public class SequenceAnalysisManager
 
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " WHERE rowid = ?", rowId));
             }
-            s.getSchema().getScope().commitTransaction();
-        }
-        finally
-        {
-            s.getSchema().getScope().closeConnection();
+            transaction.commit();
         }
     }
 
@@ -198,8 +188,7 @@ public class SequenceAnalysisManager
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
 
-        s.getSchema().getScope().ensureTransaction();
-        try
+        try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
             for (int rowId : rowIds)
             {
@@ -221,11 +210,7 @@ public class SequenceAnalysisManager
                 //then the sequence itself
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES + " WHERE rowid = ?", rowId));
             }
-            s.getSchema().getScope().commitTransaction();
-        }
-        finally
-        {
-            s.getSchema().getScope().closeConnection();
+            transaction.commit();
         }
     }
 
@@ -233,8 +218,7 @@ public class SequenceAnalysisManager
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
 
-        s.getSchema().getScope().ensureTransaction();
-        try
+        try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
             for (int rowId : rowIds)
             {
@@ -249,11 +233,7 @@ public class SequenceAnalysisManager
                 //then the sequence itself
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES + " WHERE rowid = ?", rowId));
             }
-            s.getSchema().getScope().commitTransaction();
-        }
-        finally
-        {
-            s.getSchema().getScope().closeConnection();
+            transaction.commit();
         }
     }
 
