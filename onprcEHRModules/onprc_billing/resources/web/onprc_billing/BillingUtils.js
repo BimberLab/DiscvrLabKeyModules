@@ -62,6 +62,14 @@ ONPRC.BillingUtils = new function(){
                 '.select': checked,
                 returnURL: window.location.pathname + window.location.search
             });
+        },
+
+        isBillingAdmin: function(){
+            var ctx = LABKEY.getModuleContext('onprc_billing');
+            if (!ctx || !ctx.BillingContainerInfo)
+                return false;
+
+            return ctx.BillingContainerInfo.effectivePermissions.indexOf('org.labkey.onprc_billing.security.ONPRCBillingAdminPermission') > -1;
         }
     }
 };

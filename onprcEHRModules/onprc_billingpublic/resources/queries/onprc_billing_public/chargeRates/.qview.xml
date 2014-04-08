@@ -1,8 +1,9 @@
-<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All Items">
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All Rates">
     <columns>
         <column name="chargeId"/>
         <column name="chargeId/rowid"/>
-        <column name="account"/>
+        <column name="unitCost"/>
+        <column name="subsidy"/>
         <column name="startDate"/>
         <column name="endDate"/>
     </columns>

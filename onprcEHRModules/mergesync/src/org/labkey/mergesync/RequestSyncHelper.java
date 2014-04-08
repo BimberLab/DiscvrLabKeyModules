@@ -1,29 +1,43 @@
 package org.labkey.mergesync;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbScope;
+import org.labkey.api.data.Results;
+import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
+import org.labkey.api.util.GUID;
 import org.labkey.api.util.JobRunner;
+import org.labkey.api.util.PageFlowUtil;
 
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * Syncs requests made in LK (ie. records from study.clinpathRuns) to merge.
@@ -32,13 +46,23 @@ import java.util.Set;
 public class RequestSyncHelper
 {
     private static final Logger _log = Logger.getLogger(RequestSyncHelper.class);
+    protected final static SimpleDateFormat _dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-    public RequestSyncHelper()
+    private Container _container = null;
+    private User _user = null;
+
+    public RequestSyncHelper(int userId, String containerId)
     {
+        _user = UserManager.getUser(userId);
+        if (_user == null)
+            throw new RuntimeException("User does not exist: " + userId);
 
+        _container = ContainerManager.getForId(containerId);
+        if (_container == null)
+            throw new RuntimeException("Container does not exist: " + containerId);
     }
 
-    public void asyncRequest(final String containerId, final int userId, final String taskId, final String[] objectIds, final String animalId, final Date date, final String servicename)
+    public void asyncRequests(final Map[] rows)
     {
         if (!MergeSyncManager.get().isPushEnabled())
         {
@@ -49,12 +73,12 @@ public class RequestSyncHelper
         JobRunner.getDefault().execute(new Runnable(){
             public void run()
             {
-                doSyncRequest(containerId, userId, taskId, Arrays.asList(objectIds), animalId, date, servicename);
+                doSyncRequest(Arrays.asList(rows));
             }
         });
     }
 
-    public void doSyncRequest(String containerId, int userId, String taskId, Collection<String> objectIds, String animalId, Date date, String servicename)
+    public void doSyncRequest(Collection<Map> rows)
     {
         if (!MergeSyncManager.get().isPushEnabled())
         {
@@ -62,14 +86,6 @@ public class RequestSyncHelper
             return;
         }
 
-        if (!shouldSyncService(servicename))
-        {
-            _log.info("No mapping for service: " + servicename + ", skipping");
-            return;
-        }
-
-        _log.info("Syncing single request to merge: " + animalId);
-        
         MergeSyncManager.get().validateSettings();
 
         DbSchema mergeSchema = MergeSyncManager.get().getMergeSchema();
@@ -79,63 +95,40 @@ public class RequestSyncHelper
             return;
         }
 
-        Container c = ContainerManager.getForId(containerId);
-        if (c == null)
-        {
-            _log.error("Unknown container: " + containerId);
-            return;
-        }
-        
-        User u = UserManager.getUser(userId);
-        if (u == null)
-        {
-            _log.error("Unknown user: " + userId);
-            return;
-        }
-        
+        Map<String, List<Map<String, Object>>> recordsToSync = new HashMap<>();
         try
         {
-            Set<String> toSync = new HashSet<>();
-            for (String objectId : objectIds)
+            for (Map row : rows)
             {
-                if (hasBeenOrdered(c, objectId))
+                String animalId = (String)row.get("Id");
+                Date date = (Date)row.get("date");
+                String servicerequested = (String)row.get("servicerequested");
+                String objectId = (String)row.get("objectid");
+                String taskid = (String)row.get("taskid");
+                String requestid = (String)row.get("requestid");
+                String key = (taskid == null ? "" : taskid) + "<>" + (requestid == null ? "" : requestid) + "<>" + animalId + "<>" + _dateFormat.format(date);
+
+                if (servicerequested == null || !shouldSyncService(servicerequested))
+                {
+                    _log.info("No mapping for service: " + servicerequested + ", skipping");
+                    return;
+                }
+
+                _log.info("Syncing single request to merge: " + animalId);
+
+                if (hasBeenOrdered(_container, objectId))
                 {
                     _log.error("Request has already been synced: " + objectId);
                     continue;
                 }
-                else
-                {
-                    toSync.add(objectId);
-                }
-            }
 
-            if (toSync.isEmpty())
-            {
-                _log.error("All requests have already been synced, nothing to do");
-                return;
-            }
+                List<Map<String, Object>> list = recordsToSync.get(key);
+                if (list == null)
+                    list = new ArrayList<>();
 
-            //create 1 record per batch of tests
-            int patientId = createPatientIfNeeded(mergeSchema, c, u, animalId);
-            int personnelId = createUserIdNeeded(mergeSchema, u);
-            int visitId = createVisit(mergeSchema, u, patientId, personnelId);
-            int orderId = createOrder(mergeSchema, u, patientId, personnelId, visitId, date);
+                list.add(new CaseInsensitiveHashMap<Object>(row));
 
-            for (String objectId : objectIds)
-            {
-                //TODO: container?
-                //TODO: test
-
-                //insert record into orderssynced
-                TableInfo ordersSynced = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_ORDERSSYNCED);
-                CaseInsensitiveHashMap toInsert = new CaseInsensitiveHashMap();
-                toInsert.put("objectid", objectId);
-                toInsert.put("merge_accession", orderId);
-                toInsert.put("container", c.getId());
-                toInsert.put("createdby", u.getUserId());
-                toInsert.put("created", new Date());
-                toInsert.put("resultsreceived", false);
-                Table.insert(u, ordersSynced, toInsert);
+                recordsToSync.put(key, list);
             }
         }
         catch (SQLException e)
@@ -143,21 +136,107 @@ public class RequestSyncHelper
             _log.error(e.getMessage(), e);
         }
 
-        _log.info("Synced request to merge");
+        DbScope scope = mergeSchema.getScope();
+        try (DbScope.Transaction transaction = scope.ensureTransaction())
+        {
+            _log.info("Syncing requests to merge: " + recordsToSync.keySet().size());
+            for (String key : recordsToSync.keySet())
+            {
+                List<Map<String, Object>> records = recordsToSync.get(key);
+                String[] tokens = key.split("<>");
+                String taskId = StringUtils.trimToNull(tokens[0]);
+                String requestId = StringUtils.trimToNull(tokens[1]);
+
+                //create 1 record per batch of tests
+                int patientId = createPatientIfNeeded(mergeSchema, _container, _user, (String)records.get(0).get("Id"));
+                int personnelId = createUserIdIfNeeded(mergeSchema, _user);
+                int insuranceId = createInsuranceIfNeeded(mergeSchema, _container, _user, (Integer)records.get(0).get("project"));
+                String visitId = createVisit(mergeSchema, _user, patientId, personnelId, insuranceId, (Date)records.get(0).get("date"));
+                //TODO: copyto??
+                int orderId = createOrder(mergeSchema, _user, patientId, personnelId, visitId, (Date)records.get(0).get("date"));
+
+                //then 1 row per service type (clinpath runs record)
+                for (Map<String, Object> row : records)
+                {
+                    Integer mergeTestId = resolveMergeTestId(mergeSchema, (String)row.get("servicerequested"));
+                    if (mergeTestId == null)
+                    {
+                        _log.error("Unable to find merge test name matching: " + (String)row.get("servicerequested"));
+                        continue;
+                    }
+
+                    //TODO: figure out what scheme to use to batch tests by container
+                    int containerId = createContainer(mergeSchema, _user, orderId, mergeTestId, personnelId, (Date)records.get(0).get("date"));
+
+                    int testId = createTest(mergeSchema, _user, patientId, personnelId, visitId, orderId, containerId, mergeTestId, (Date)row.get("date"));
+
+                    //insert record into orderssynced
+                    TableInfo ordersSynced = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_ORDERSSYNCED);
+                    CaseInsensitiveHashMap toInsert = new CaseInsensitiveHashMap();
+                    toInsert.put("objectid", new GUID().toString());
+                    toInsert.put("runid", row.get("objectid"));
+                    toInsert.put("merge_accession", orderId);
+                    toInsert.put("test_accession", testId);
+                    toInsert.put("container", _container.getId());
+                    toInsert.put("createdby", _user.getUserId());
+                    toInsert.put("created", new Date());
+                    toInsert.put("taskid", taskId);
+                    toInsert.put("requestid", requestId);
+                    toInsert.put("resultsreceived", false);
+                    Table.insert(_user, ordersSynced, toInsert);
+                }
+            }
+
+            transaction.commit();
+            _log.info("Finished syncing requests to merge");
+        }
+        catch (SQLException e)
+        {
+            _log.error(e.getMessage(), e);
+        }
     }
 
     private boolean shouldSyncService(String servicename)
     {
         TableInfo testMapping = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_TESTNAMEMAPPING);
-        TableSelector ts = new TableSelector(testMapping, new SimpleFilter(FieldKey.fromString("servicename"), servicename, CompareType.EQUAL), null);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("servicename"), servicename, CompareType.EQUAL);
+        filter.addCondition(FieldKey.fromString("mergetestname"), null, CompareType.NONBLANK);
+        TableSelector ts = new TableSelector(testMapping, filter, null);
 
         return ts.exists();
+    }
+
+    private Integer resolveMergeTestId(DbSchema mergeSchema, String servicename)
+    {
+        if (servicename == null)
+            return null;
+
+        TableInfo testMapping = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_TESTNAMEMAPPING);
+        TableSelector ts = new TableSelector(testMapping, PageFlowUtil.set("mergetestname"), new SimpleFilter(FieldKey.fromString("servicename"), servicename, CompareType.EQUAL), null);
+        List<String> ret = ts.getArrayList(String.class);
+        if (ret.isEmpty())
+            return null;
+
+        TableInfo mergeTestNames = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_TESTINFO);
+        TableSelector ts2 = new TableSelector(mergeTestNames, PageFlowUtil.set("T_TSTNUM"), new SimpleFilter(FieldKey.fromString("T_ABBR"), ret.get(0), CompareType.EQUAL), null);
+        List<Integer> ret2 = ts2.getArrayList(Integer.class);
+
+        return ret2.isEmpty() ? null : ret2.get(0);
+    }
+
+    private Map<String, Object> getMergeTestInfo(DbSchema mergeSchema, int mergeTestId)
+    {
+        TableInfo mergeTestNames = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_TESTINFO);
+        TableSelector ts = new TableSelector(mergeTestNames, PageFlowUtil.set("T_PARTOF", "T_TYPE", "T_COLLTB"), new SimpleFilter(FieldKey.fromString("T_TSTNUM"), mergeTestId, CompareType.EQUAL), null);
+        Map<String, Object> ret = ts.getMap();
+
+        return ret;
     }
 
     private boolean hasBeenOrdered(Container c, String objectid) throws SQLException
     {
         TableInfo ordersSynced = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_ORDERSSYNCED);
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("objectid"), objectid, CompareType.EQUAL);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("runid"), objectid, CompareType.EQUAL);
         filter.addCondition(FieldKey.fromString("container"), c.getId(), CompareType.EQUAL);
         TableSelector ts = new TableSelector(ordersSynced, filter, null);
 
@@ -175,8 +254,9 @@ public class RequestSyncHelper
             if (existing.size() > 1)
             {
                 _log.error("More than 1 matching patient found: " + animalId);
-                return existing.get(0);
             }
+
+            return existing.get(0);
         }
 
         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
@@ -185,65 +265,263 @@ public class RequestSyncHelper
         toInsert.put("PT_SEX", "o");
         toInsert.put("PT_DOB", new Date());
         toInsert.put("PT_RACE", "ONPRC");
+        toInsert.put("PT_NUM", getAndIncrementIndex("PT_NUM", ti));
 
         Map<String, Object> inserted = Table.insert(u, ti, toInsert);
 
         return (Integer)inserted.get("PT_NUM");
     }
 
-    private int createUserIdNeeded(DbSchema mergeSchema, User u)
+    private Integer createInsuranceIfNeeded(DbSchema mergeSchema, Container c, User u, Integer project) throws SQLException
+    {
+        if (project == null)
+            return null;
+
+        //first translate project Id into the name
+        TableInfo projectTable = QueryService.get().getUserSchema(u, c, "ehr").getTable("project");
+        if (projectTable == null)
+        {
+            _log.error("Unable to find ehr.project in container: " + _container.getPath());
+            return null;
+        }
+
+        Set<FieldKey> fks = PageFlowUtil.set(FieldKey.fromString("displayName"), FieldKey.fromString("investigatorId/lastName"), FieldKey.fromString("investigatorId/firstName"));
+        final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(projectTable, fks);
+
+        TableSelector projectTs = new TableSelector(projectTable, cols.values(), new SimpleFilter(FieldKey.fromString("project"), project), null);
+        if (!projectTs.exists())
+        {
+            _log.error("Unable to find project with Id: " + project + " in container: " + _container.getPath());
+            return null;
+        }
+
+        try (Results rs = projectTs.getResults())
+        {
+            rs.next();
+            String projectName = rs.getString(FieldKey.fromString("displayName"));
+            String lastName = rs.getString(FieldKey.fromString("investigatorId/lastName"));
+            //String firstName = rs.getString(FieldKey.fromString("investigatorId/firstName"));
+
+            TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_INSURANCE);
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("INS_NAME"), projectName);
+            TableSelector ts = new TableSelector(ti, Collections.singleton("INS_INDEX"), filter, null);
+            List<Integer> existing = ts.getArrayList(Integer.class);
+            if (!existing.isEmpty())
+            {
+                if (existing.size() > 1)
+                {
+                    _log.error("More than insurance found matching project: " + project);
+                }
+
+                return existing.get(0);
+            }
+
+            Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
+            toInsert.put("INS_NAME", projectName); //TODO: conditionalize based on expiration
+            toInsert.put("INS_ADDR1", lastName);
+            toInsert.put("INS_INDEX", getAndIncrementIndex("INS_INDEX", ti));
+            toInsert.put("INS_PRINT_IP", "N");
+            toInsert.put("INS_PRINT_OP", "N");
+            toInsert.put("INS_TYPE", ""); //TODO: based on expiration?
+
+            Map<String, Object> inserted = Table.insert(u, ti, toInsert);
+
+            return (Integer)inserted.get("INS_INDEX");
+        }
+    }
+
+    private int getAndIncrementIndex(String colName, TableInfo ti)
+    {
+        SqlSelector ss = new SqlSelector(ti.getSchema(), new SQLFragment("SELECT COALESCE(NX_NUM, NX_MIN) as expr FROM Nextnum WHERE nx_Fldnm = ?", colName));
+        List<Integer> ret = ss.getArrayList(Integer.class);
+        if (ret.isEmpty())
+        {
+            throw new RuntimeException("Unknown index: " + colName);
+        }
+
+        Integer i = ret.get(0);
+
+        //increment this index
+        SqlExecutor se = new SqlExecutor(ti.getSchema());
+        se.execute(new SQLFragment("UPDATE Nextnum SET NX_NUM = (? + 1) WHERE nx_Fldnm = ?", i, colName));
+
+        return i;
+    }
+
+    private int createUserIdIfNeeded(DbSchema mergeSchema, User u)
     {
         //TODO
         return 0;
     }
 
-    private int createVisit(DbSchema mergeSchema, User u, int patientId, int personnelId) throws SQLException
+    private String createVisit(DbSchema mergeSchema, User u, int patientId, int personnelId, Integer insuranceId, Date date) throws SQLException
     {
+        TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_VISITS);
+
         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
         toInsert.put("V_PTNUM", patientId);
         toInsert.put("V_TYPE", "O");
         toInsert.put("V_IO", "o");
-        toInsert.put("V_ADMDT", new Date());
+        toInsert.put("V_ADMDT", convertDate(date));
+        toInsert.put("V_ADTZ", getTZ(date, mergeSchema));
         toInsert.put("V_WARD", "ONPRC");
         toInsert.put("V_EPRSN", personnelId);
         toInsert.put("V_WORKCOMP", "N");
 
-        //TODO: unsure what this means
-        toInsert.put("V_ADTZ", 5);
+        //find next value in the series
+        toInsert.put("V_ID", "V" + getAndIncrementIndex("V_ID", ti));
 
-        TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_VISITS);
+        //v_disdt, v_ht, v_wt, v_icd1, v_icd2, v_icd3, v_icd4, v_billtype, v_client  all null?
+
+
         Map<String, Object> inserted = Table.insert(u, ti, toInsert);
+        String V_ID = (String)inserted.get("V_ID");
 
-        return (Integer)inserted.get("V_ID");
+        //also create V_INS record
+        TableInfo visInsTable = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_VISIT_INS);
+        Map<String, Object> insToInsert = new CaseInsensitiveHashMap<>();
+        insToInsert.put("vins_vid", V_ID);
+        insToInsert.put("vins_ins1", insuranceId);
+        Table.insert(u, visInsTable, insToInsert);
+
+        return V_ID;
     }
 
-    private int createOrder(DbSchema mergeSchema, User u, int patientId, int personnelId, int visitId, Date date) throws SQLException
+    private Integer _timezone = null;
+
+    private int getTZ(Date date, DbSchema mergeSchema)
     {
+        if (_timezone == null)
+        {
+            TimeZone tz = Calendar.getInstance().getTimeZone();
+            String abbr = tz.getDisplayName(tz.inDaylightTime(date), TimeZone.SHORT);
+            TableInfo ti = mergeSchema.getTable("TIMEZONES");
+            TableSelector ts = new TableSelector(ti, Collections.singleton("rowid"), new SimpleFilter(FieldKey.fromString("TZ_ABBR"), abbr), null);
+            List<Integer> ret = ts.getArrayList(Integer.class);
+
+            if (ret.isEmpty())
+            {
+                _log.error("Unable to find timezone matching: " + abbr);
+                throw new RuntimeException("Unable to find timezone matching: " + abbr);
+            }
+
+            _timezone = ret.get(0);
+        }
+
+        return _timezone;
+    }
+
+    private Date convertDate(Date d)
+    {
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        cal.setTimeInMillis(d.getTime() - Calendar.getInstance().getTimeZone().getRawOffset());
+
+        return cal.getTime();
+    }
+
+    private int createContainer(DbSchema mergeSchema, User u, int orderId, int mergeTestId, int personnelId, Date date) throws SQLException
+    {
+        TableInfo containerTable = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_CONTAINERS);
+        Map<String, Object> testInfo = getMergeTestInfo(mergeSchema, mergeTestId);
+
+        Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
+        toInsert.put("CNT_INDEX", getAndIncrementIndex("CNT_INDEX", containerTable));
+        toInsert.put("cnt_accnr", orderId);
+        toInsert.put("CNT_MAP", "A");
+        toInsert.put("CNT_STATUS", "C");
+        toInsert.put("CNT_DATE", convertDate(date));
+        toInsert.put("CNT_DTZ", getTZ(date, mergeSchema));
+        toInsert.put("CNT_TECH", personnelId);
+        toInsert.put("CNT_LOC", null);
+        toInsert.put("CNT_CURRLOC", "ONP");
+        toInsert.put("CNT_DESTLOC", "ONP");
+        toInsert.put("CNT_TUID", testInfo.get("T_COLLTB"));
+        toInsert.put("CNT_LABMIC", "L");
+        toInsert.put("CNT_DRAWLOC", "ONPRC");
+        toInsert.put("CNT_DRAWDATE", convertDate(date));
+        toInsert.put("CNT_DRTZ", getTZ(date, mergeSchema));
+        toInsert.put("CNT_TYPE", "P");
+
+        Map<String, Object> inserted = Table.insert(u, containerTable, toInsert);
+        return (Integer)inserted.get("CNT_INDEX");
+    }
+
+    private int createOrder(DbSchema mergeSchema, User u, int patientId, int personnelId, String visitId, Date date) throws SQLException
+    {
+        TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_ORDERS);
+
         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
         toInsert.put("O_PTNUM", patientId);
         toInsert.put("O_VID", visitId);
-        toInsert.put("O_DATE", date);
-        toInsert.put("O_COLLDATE", date);
-
-        toInsert.put("O_PRIO", "ONPRC");
+        toInsert.put("O_DATE", convertDate(date));
+        toInsert.put("O_DTZ", getTZ(date, mergeSchema));
+        toInsert.put("O_COLLDT", convertDate(date));
+        toInsert.put("O_CLTZ", getTZ(date, mergeSchema));
+        toInsert.put("O_CDT", convertDate(date));
+        toInsert.put("O_CTZ", getTZ(date, mergeSchema));
+        toInsert.put("O_PRIO", 50);
         toInsert.put("O_DOCTOR", personnelId);
         toInsert.put("O_EPRSN", personnelId);
         toInsert.put("O_FASTING", "N");
-
         toInsert.put("O_LOC", "ONP");
         toInsert.put("O_WARD", "ONPRC");
-//        O_DTZ
-//        O_CLTZ
-//        O_CTZ
+        toInsert.put("O_ACCNUM", getAndIncrementIndex("O_ACCNUM", ti));
+
 //        O_STZ
-//        O_VTZ
 //        O_RCVTZ
 //        O_RPTDT
 //        O_RPTTZ
 
-        TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_ORDERS);
         Map<String, Object> inserted = Table.insert(u, ti, toInsert);
 
         return (Integer)inserted.get("O_ACCNUM");
+    }
+
+    private int createTest(DbSchema mergeSchema, User u, int patientId, int personnelId, String visitId, int accession, int containerId, int mergeTestId, Date date) throws SQLException
+    {
+        TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_TEST);
+        Map<String, Object> testInfo = getMergeTestInfo(mergeSchema, mergeTestId);
+
+        Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
+        toInsert.put("TS_TNUM", mergeTestId);
+        toInsert.put("TS_PLTNR", mergeTestId);  //TODO: what does this column mean?
+        toInsert.put("TS_MASTR", testInfo.get("T_PARTOF"));
+        toInsert.put("TS_PTNUM", patientId);
+        toInsert.put("TS_VID", visitId);
+        toInsert.put("TS_ACCNR", accession);
+        toInsert.put("TS_DEPT", "C");
+        toInsert.put("TS_WKIDX", null);  //TODO: unknown
+        toInsert.put("TS_CIDX", containerId);
+        toInsert.put("TS_STAT", "C");
+        toInsert.put("TS_PRIO", 50);
+        toInsert.put("TS_EDT", convertDate(date));
+        toInsert.put("TS_ETZ", getTZ(date, mergeSchema));
+        toInsert.put("TS_COLDT", convertDate(date));
+        toInsert.put("TS_CLTZ", getTZ(date, mergeSchema));
+        //toInsert.put("TS_SDT", new Date());
+        //toInsert.put("TS_VDT", new Date());
+        toInsert.put("TS_FILLR", null);
+        toInsert.put("TS_STECH", null);
+        toInsert.put("TS_VTECH", null);
+        toInsert.put("TS_RMTRPT", null);
+        toInsert.put("TS_REFLEX", null);
+        toInsert.put("TS_DBID", null);
+        toInsert.put("TS_SYSTEM", null);
+        toInsert.put("TS_MAP", null);
+        toInsert.put("TS_DNLOAD", null);
+        toInsert.put("TS_ICD", null);
+        toInsert.put("TS_MODS", null);
+        toInsert.put("TS_BILLTYPE", null);
+        //toInsert.put("TS_STZ", null);
+        //toInsert.put("TS_VTZ", null);
+        //toInsert.put("TS_DNLOADDT", null);
+        //toInsert.put("TS_DNLOADTZ", null);
+        toInsert.put("TS_REFFLABNO", null);
+        toInsert.put("TS_CHGXMT", null);
+        toInsert.put("TS_INDEX", getAndIncrementIndex("TS_INDEX", ti));
+
+        Map<String, Object> inserted = Table.insert(u, ti, toInsert);
+
+        return (Integer)inserted.get("TS_INDEX");
     }
 }

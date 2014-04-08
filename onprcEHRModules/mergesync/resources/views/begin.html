@@ -73,11 +73,13 @@ Ext4.onReady(function (){
                 });
 
                 toAdd.push({
-                    xtype: 'displayfield',
-                    fieldLabel: 'Last Run',
+                    xtype: 'datefield',
+                    fieldLabel: 'Min Date',
                     labelWidth: labelWidth,
                     width: width,
-                    value: json.lastRun
+                    itemId: 'lastRun',
+                    //format: 'Y-m-d h:i',
+                    value: LDK.ConvertUtils.parseDate(json.lastRun)
                 });
 
                 toAdd.push({
@@ -165,7 +167,7 @@ This page allows configuration of the Merge Sync.  Below are explanations for th
         dataSourceName: The name of the data source, which should be defined in the tomcat XML file (either labkey.xml or ROOT.xml)
     </li>
     <li>
-        schemaName: The name of the source schema in the merge DB.  Most likely 'fflexesuite'
+        schemaName: The name of the source schema in the merge DB.  Most likely 'dbo'
     </li>
 </ul>
 <div id="etl_div"/>

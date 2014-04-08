@@ -2,11 +2,14 @@
     <columns>
         <column name="chargeId"/>
         <column name="chargeId/rowid"/>
-        <column name="account"/>
+        <column name="project"/>
+        <column name="unitCost"/>
         <column name="startDate"/>
         <column name="endDate"/>
+        <column name="remark"/>
     </columns>
     <sorts>
         <sort column="chargeId/name"/>
+        <sort column="project"/>
     </sorts>
 </customView>

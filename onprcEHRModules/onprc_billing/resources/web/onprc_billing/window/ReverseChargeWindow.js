@@ -183,6 +183,7 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             },{
                 xtype: 'ehr-projectfield',
                 itemId: 'projectField',
+                showInactive: true,
                 showAccount: true,
                 width: 400,
                 fieldLabel: 'Choose Project',

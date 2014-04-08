@@ -71,7 +71,7 @@ import java.util.TreeMap;
  */
 public class FinanceNotification extends AbstractNotification
 {
-    private static final DecimalFormat _dollarFormat = new DecimalFormat("$###,##0.00");
+    protected static final DecimalFormat _dollarFormat = new DecimalFormat("$###,##0.00");
 
     public FinanceNotification()
     {
@@ -199,7 +199,7 @@ public class FinanceNotification extends AbstractNotification
         return msg.toString();
     }
 
-    private class FieldDescriptor {
+    protected class FieldDescriptor {
         private String _fieldName;
         private boolean _flagIfNonNull;
         private String _label;
@@ -218,7 +218,7 @@ public class FinanceNotification extends AbstractNotification
             return _fieldName;
         }
 
-        private boolean isShouldHighlight()
+        public boolean isShouldHighlight()
         {
             return _shouldHighlight;
         }
@@ -263,7 +263,7 @@ public class FinanceNotification extends AbstractNotification
         }
     }
 
-    private FieldDescriptor[] _fields = new FieldDescriptor[]
+    protected FieldDescriptor[] _fields = new FieldDescriptor[]
     {
         new MissingProjectFieldDescriptor(),
         new FieldDescriptor("isMissingAccount", true, "Missing Alias", true),
@@ -272,12 +272,12 @@ public class FinanceNotification extends AbstractNotification
         new FieldDescriptor("lacksRate", true, "Lacks Rate", true),
         new FieldDescriptor("creditAccount", false, "Missing Credit Alias", true),
         new FieldDescriptor("isMissingFaid", true, "Missing FAID", true),
+        new FieldDescriptor("investigatorId", false, "Missing Investigator", true),
         new FieldDescriptor("matchesProject", true, "Project Does Not Match Assignment", false),
         //new FieldDescriptor("isMiscCharge", true, "Manually Entered", false),
         new FieldDescriptor("isAdjustment", true, "Adjustment/Reversal", false),
         new FieldDescriptor("isExemption", true, "Non-standard Rate", false),
         new FieldDescriptor("isOldCharge", true, "Over 45 Days Old", false),
-        new FieldDescriptor("investigatorId", false, "Missing Investigator", true),
         new FieldDescriptor("isMultipleProjects", true, "Per Diems Split Between Projects", false)
     };
 
@@ -355,6 +355,7 @@ public class FinanceNotification extends AbstractNotification
                 }
 
                 String account = rs.getString(FieldKey.fromString("account"));
+                account = StringUtils.trimToNull(account);
                 if (account == null)
                 {
                     account = "Unknown";
@@ -403,7 +404,7 @@ public class FinanceNotification extends AbstractNotification
         });
     }
 
-    private void writeResultTable(final StringBuilder msg, Date lastInvoiceEnd, Calendar start, Calendar endDate, final Map<String, Map<String, Map<String, Map<String, Integer>>>> dataMap, final Map<String, Map<String, Double>> totalsByCategory, Map<String, String> categoryToQuery, Map<String, Container> containerMap)
+    protected void writeResultTable(final StringBuilder msg, Date lastInvoiceEnd, Calendar start, Calendar endDate, final Map<String, Map<String, Map<String, Map<String, Integer>>>> dataMap, final Map<String, Map<String, Double>> totalsByCategory, Map<String, String> categoryToQuery, Map<String, Container> containerMap)
     {
         msg.append("<b>Charge Summary:</b><p>");
         msg.append("The table below summarizes projected charges since the since the last invoice date of " + _dateFormat.format(lastInvoiceEnd));

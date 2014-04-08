@@ -19,36 +19,46 @@
 <ns:tables xmlns:ns="http://labkey.org/data/xml">
     <ns:table tableName="testnamemapping" tableDbType="TABLE">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>LabKey to Merge Service/Panel Name Mapping</ns:tableTitle>
             <ns:columns>
-                <ns:column columnName="rowid">
+            <ns:column columnName="rowid">
 
-                </ns:column>
-                <ns:column columnName="servicename">
-                    <ns:columnTitle>Service Name</ns:columnTitle>
-                </ns:column>
-                <ns:column columnName="mergetestname">
-                    <ns:columnTitle>Merge Test Name</ns:columnTitle>
-                </ns:column>
-            </ns:columns>
+            </ns:column>
+            <ns:column columnName="servicename">
+                <ns:columnTitle>Service Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="mergetestname">
+                <ns:columnTitle>Merge Test Name</ns:columnTitle>
+            </ns:column>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="orderssynced" tableDbType="TABLE">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-        <ns:tableTitle>Orders Synced To Merge</ns:tableTitle>
+        <ns:tableTitle>Orders Synced To/From Merge</ns:tableTitle>
         <ns:columns>
-            <ns:column columnName="rowid">
-
+            <ns:column columnName="runid">
+                <ns:columnTitle>Clinpath Runs Record</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="requestid">
+                <ns:columnTitle>Request Id</ns:columnTitle>
             </ns:column>
             <ns:column columnName="taskid">
                 <ns:columnTitle>Task Id</ns:columnTitle>
             </ns:column>
             <ns:column columnName="objectid">
-                <ns:columnTitle>Clinpath Runs Record</ns:columnTitle>
+                <ns:columnTitle>Key</ns:columnTitle>
             </ns:column>
             <ns:column columnName="order_accession">
                 <ns:columnTitle>Merge Order Accession #</ns:columnTitle>
             </ns:column>
             <ns:column columnName="test_accession">
                 <ns:columnTitle>Merge Test Accession #</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="merge_datecreated">
+                <ns:columnTitle>Merge Date Created</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="merge_dateposted">
+                <ns:columnTitle>Merge Date Posted</ns:columnTitle>
             </ns:column>
             <ns:column columnName="container">
                 <ns:columnTitle>Folder</ns:columnTitle>

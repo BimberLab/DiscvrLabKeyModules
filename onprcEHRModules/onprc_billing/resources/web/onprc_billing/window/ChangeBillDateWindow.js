@@ -10,6 +10,11 @@ Ext4.define('ONPRC_Billing.window.ChangeBillDateWindow', {
                 return;
             }
 
+            if (checked.length > 1999){
+                Ext4.Msg.alert('Error', 'You cannot edit more than 2000 rows at a time');
+                return;
+            }
+
             Ext4.create('ONPRC_Billing.window.ChangeBillDateWindow', {
                 dataRegionName: dataRegionName,
                 checked: checked

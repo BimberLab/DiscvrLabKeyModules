@@ -1,0 +1,5 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <sorts>
+        <sort column="dateVerified" descending="true"/>
+    </sorts>
+</customView>

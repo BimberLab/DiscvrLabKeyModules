@@ -16,27 +16,25 @@
 
 package org.labkey.mergesync;
 
+import org.apache.commons.beanutils.ConversionException;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.RedirectAction;
-import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.ValidEmail;
 import org.labkey.api.security.permissions.AdminPermission;
-import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.JspView;
-import org.labkey.api.view.NavTree;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
-import org.springframework.web.servlet.ModelAndView;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,6 +59,20 @@ public class MergeSyncController extends SpringActionController
 
             configMap.put(MergeSyncManager.DATA_SOURCE_PROP_NAME, form.getDataSourceName());
             configMap.put(MergeSyncManager.SCHEMA_PROP_NAME, form.getSchemaName());
+            if (form.getLastRun() != null)
+            {
+                try
+                {
+                    Date lastRun = ConvertHelper.convert(form.getLastRun(), Date.class);
+
+                    configMap.put(MergeSyncManager.LAST_RUN_PROP_NAME, ((Long)lastRun.getTime()).toString());
+                }
+                catch (ConversionException e)
+                {
+                    errors.reject(ERROR_MSG, e.getMessage());
+                    return null;
+                }
+            }
             configMap.put(MergeSyncManager.SYNC_INTERVAL_PROP_NAME, form.getSyncInterval() == null ? null : form.getSyncInterval().toString());
 
             if (form.getLabkeyUser() != null)
@@ -113,6 +125,7 @@ public class MergeSyncController extends SpringActionController
         private String _dataSourceName;
         private String _schemaName;
         private String _labkeyUser;
+        private String _lastRun;
         private String _labkeyContainer;
         private Integer _syncInterval;
 
@@ -184,6 +197,16 @@ public class MergeSyncController extends SpringActionController
         public void setSyncInterval(Integer syncInterval)
         {
             _syncInterval = syncInterval;
+        }
+
+        public String getLastRun()
+        {
+            return _lastRun;
+        }
+
+        public void setLastRun(String lastRun)
+        {
+            _lastRun = lastRun;
         }
     }
 

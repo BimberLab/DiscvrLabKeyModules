@@ -13,7 +13,7 @@ Ext4.define('ONPRC_Billing.panel.ChargesAdvancedInstructionPanel', {
                 '<b>Important:</b>' +
                 '<li>The vast majority of the time, you should leave unit cost blank.  It will be calculated based on standard rates (at the time of the charge), and based on known exemptions.</li>' +
                 '<li>This is probably not the appropriate place to make adjustments or corrections for previously invoiced items.</li>' +
-                '<li>You should also only fill out the alias if you are deviating from the project\'s standard alias.  In most cases, PRIMe will infer</li>',
+                '<li>You should also only fill out the alias if you are deviating from the project\'s standard alias.  In most cases, PRIMe will infer the alias to use based on project.</li>',
                 style: 'padding: 5px;'
             }]
         })

@@ -69,7 +69,7 @@ Ext4.onReady(function(){
                                 var interval = 0;
                                 if (startDate && endDate){
                                     interval = endDate.getTime() - startDate.getTime();
-                                    interval = Math.floor(1 + (interval / (1000 * 60 * 60 * 24)));
+                                    interval = 1 + Math.round(interval / (1000 * 60 * 60 * 24));
                                 }
 
                                 Ext4.apply(this, {

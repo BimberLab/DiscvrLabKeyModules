@@ -17,6 +17,7 @@
 package org.labkey.onprc_billing;
 
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -37,8 +38,10 @@ import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.resource.Resource;
+import org.labkey.api.security.User;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.onprc_billing.button.ChangeBillDateButton;
 import org.labkey.onprc_billing.button.ChargeEditButton;
@@ -46,6 +49,7 @@ import org.labkey.onprc_billing.button.ProjectEditButton;
 import org.labkey.onprc_billing.dataentry.ChargesAdvancedFormType;
 import org.labkey.onprc_billing.dataentry.ChargesFormSection;
 import org.labkey.onprc_billing.dataentry.ChargesFormType;
+import org.labkey.onprc_billing.notification.DCMFinanceNotification;
 import org.labkey.onprc_billing.notification.FinanceNotification;
 import org.labkey.onprc_billing.pipeline.BillingPipelineProvider;
 import org.labkey.onprc_billing.query.BillingAuditProvider;
@@ -59,6 +63,8 @@ import org.labkey.onprc_billing.table.ONPRC_BillingCustomizer;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 public class ONPRC_BillingModule extends ExtendedSimpleModule
@@ -108,6 +114,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
         PipelineService.get().registerPipelineProvider(new BillingPipelineProvider(this));
 
         NotificationService.get().registerNotification(new FinanceNotification());
+        NotificationService.get().registerNotification(new DCMFinanceNotification());
 
         EHRService.get().registerTableCustomizer(this, ONPRC_BillingCustomizer.class);
         EHRService.get().registerTableCustomizer(this, ChargeableItemsCustomizer.class, "onprc_billing", "chargeableItems");
@@ -158,5 +165,30 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
                 return new ONPRC_EHRBillingUserSchema(schema.getUser(), schema.getContainer());
             }
         });
+    }
+
+    @Override
+    public JSONObject getPageContextJson(ViewContext ctx)
+    {
+        Map<String, Object> ret = new HashMap<>();
+        Map<String, String> map = getDefaultPageContextJson(ctx.getContainer());
+        if (map != null)
+            ret.putAll(map);
+
+        if (map.containsKey(ONPRC_BillingManager.BillingContainerPropName) && map.get(ONPRC_BillingManager.BillingContainerPropName) != null)
+        {
+            //normalize line endings
+            String newPath = map.get(ONPRC_BillingManager.BillingContainerPropName);
+            newPath = "/" + newPath.replaceAll("^/|/$", "");
+            ret.put(ONPRC_BillingManager.BillingContainerPropName, newPath);
+
+            Container billingContainer = ContainerManager.getForPath(map.get(ONPRC_BillingManager.BillingContainerPropName));
+            if(billingContainer != null)
+            {
+                ret.put("BillingContainerInfo", billingContainer.toJSON(ctx.getUser()));
+            }
+        }
+
+        return new JSONObject(ret);
     }
 }

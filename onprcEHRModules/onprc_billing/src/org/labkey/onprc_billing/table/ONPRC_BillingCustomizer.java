@@ -272,10 +272,11 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             SQLFragment sql = new SQLFragment("(SELECT max(rowid) as expr FROM " + ONPRC_BillingSchema.NAME + "." + ONPRC_BillingSchema.TABLE_CHARGE_RATES + " cr WHERE cr.chargeid = " + ExprColumn.STR_TABLE_ALIAS + ".rowid AND (cr.enddate IS NULL OR cr.enddate > {fn curdate()}) AND cr.startdate <= {fn curdate()})");
             ExprColumn col = new ExprColumn(ti, activeRate, sql, JdbcType.INTEGER, ti.getColumn("rowid"));
             col.setLabel("Active Rate");
-            col.setFk(new QueryForeignKey(ti.getUserSchema(), null, ONPRC_BillingSchema.TABLE_CHARGE_RATES, "rowid", "rowid"));
             col.setIsUnselectable(true);
             ti.addColumn(col);
         }
+        //NOTE: this is separated to allow linked schemas to use the same column
+        ti.getColumn(activeRate).setFk(new QueryForeignKey(ti.getUserSchema(), null, ONPRC_BillingSchema.TABLE_CHARGE_RATES, "rowid", "rowid"));
 
         String totalExemptions = "totalExemptions";
         if (ti.getColumn(totalExemptions) == null)
@@ -293,10 +294,11 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             SQLFragment sql = new SQLFragment("(SELECT max(rowid) as expr FROM " + ONPRC_BillingSchema.NAME + "." + ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT + " cr WHERE cr.chargeid = " + ExprColumn.STR_TABLE_ALIAS + ".rowid AND (cr.enddate IS NULL OR cr.enddate > {fn curdate()}) AND cr.startdate <= {fn curdate()})");
             ExprColumn col = new ExprColumn(ti, activeCreditAccount, sql, JdbcType.INTEGER, ti.getColumn("rowid"));
             col.setLabel("Active Credit Alias");
-            col.setFk(new QueryForeignKey(ti.getUserSchema(), null, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT, "rowid", "rowid"));
             col.setIsUnselectable(true);
             ti.addColumn(col);
         }
+        //NOTE: this is separated to allow linked schemas to use the same column
+        ti.getColumn(activeCreditAccount).setFk(new QueryForeignKey(ti.getUserSchema(), null, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT, "rowid", "rowid"));
     }
 
     private void customizeAliases(AbstractTableInfo ti)

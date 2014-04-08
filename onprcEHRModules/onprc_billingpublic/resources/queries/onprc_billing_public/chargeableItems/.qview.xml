@@ -1,0 +1,19 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All Items">
+    <columns>
+        <column name="rowid"/>
+        <column name="name"/>
+        <column name="itemcode"/>
+        <column name="activeRate/unitcost"/>
+        <column name="activeRate/subsidy"/>
+        <column name="activeCreditAccount/account"/>
+        <column name="totalExemptions"/>
+        <column name="category"/>
+        <column name="departmentCode"/>
+        <column name="allowscustomunitcost"/>
+        <column name="comment"/>
+        <column name="active"/>
+    </columns>
+    <sorts>
+        <sort column="name"/>
+    </sorts>
+</customView>

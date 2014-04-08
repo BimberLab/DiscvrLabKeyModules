@@ -1,0 +1,8 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <sorts>
+        <sort column="projectNumber" descending="false"/>
+    </sorts>
+    <filters>
+        <filter column="projectStatus" operator="eq" value="ACTIVE"/>
+    </filters>
+</customView>

@@ -22,27 +22,18 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.PropertyManager;
-import org.labkey.api.data.TableInfo;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.ValidEmail;
 import org.labkey.api.util.JobRunner;
-import org.quartz.CronScheduleBuilder;
-import org.quartz.DailyTimeIntervalScheduleBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
-import org.quartz.TimeOfDay;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 
-import java.io.IOException;
 import java.util.Date;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 public class MergeSyncManager
 {
@@ -55,8 +46,12 @@ public class MergeSyncManager
 
     public static final String TABLE_MERGE_ORDERS = "orders";
     public static final String TABLE_MERGE_RESULTS = "results";
+    public static final String TABLE_MERGE_TEST = "tests";
+    public static final String TABLE_MERGE_TESTINFO = "testinfo";
     public static final String TABLE_MERGE_CONTAINERS = "containers";
     public static final String TABLE_MERGE_VISITS = "visits";
+    public static final String TABLE_MERGE_VISIT_INS = "vis_ins";
+    public static final String TABLE_MERGE_INSURANCE = "insurance";
     public static final String TABLE_MERGE_PERSONNEL = "prsnl";
     public static final String TABLE_MERGE_PATIENTS = "patients";
 
@@ -224,7 +219,7 @@ public class MergeSyncManager
                 {
                     schedule();
                 }
-            }, 10000);
+            }, 60000);
         }
     }
 

@@ -474,8 +474,10 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
         Map<String, Object> params = new HashMap<>();
         params.put("StartDate", getSupport().getStartDate());
         params.put("EndDate", getSupport().getEndDate());
-        Long numDays = (getSupport().getEndDate().getTime() - getSupport().getStartDate().getTime()) / DateUtils.MILLIS_PER_DAY;
-        params.put("NumDays", numDays.intValue() + 1);
+        Long numDays = Math.round(((Long)(getSupport().getEndDate().getTime() - getSupport().getStartDate().getTime())).doubleValue() / DateUtils.MILLIS_PER_DAY);
+        numDays++;
+        params.put("NumDays", numDays.intValue());
+        getJob().getLogger().info("Using start date: " + _dateFormat.format(getSupport().getStartDate()) + ", end date: " + _dateFormat.format(getSupport().getEndDate()) + ", with number of days: " + numDays.intValue());
 
         String[] colNames = new String[]{
                 "Id",

@@ -19,21 +19,19 @@ package org.labkey.mergesync;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.ehr.EHRService;
-import org.labkey.api.module.DefaultModule;
+import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.settings.AdminConsole;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-public class MergeSyncModule extends DefaultModule
+public class MergeSyncModule extends ExtendedSimpleModule
 {
     public static final String NAME = "MergeSync";
 
@@ -46,7 +44,7 @@ public class MergeSyncModule extends DefaultModule
     @Override
     public double getVersion()
     {
-        return 0.02;
+        return 0.04;
     }
 
     @Override
@@ -68,7 +66,7 @@ public class MergeSyncModule extends DefaultModule
     }
 
     @Override
-    public void doStartup(ModuleContext moduleContext)
+    protected void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
         Resource r = getModuleResource("/scripts/mergesync/mergesync.js");
         assert r != null;
@@ -90,5 +88,11 @@ public class MergeSyncModule extends DefaultModule
     public Set<String> getSchemaNames()
     {
         return Collections.singleton(MergeSyncSchema.NAME);
+    }
+
+    @Override
+    protected void registerSchemas()
+    {
+        MergeSyncUserSchema.register(this);
     }
 }
