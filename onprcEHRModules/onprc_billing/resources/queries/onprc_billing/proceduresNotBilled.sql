@@ -30,6 +30,9 @@ WHERE e.dateOnly >= CAST(StartDate as date) AND e.dateOnly <= CAST(EndDate as da
 --we want to capture surgeries that would not normally get billed, based on procedure/chargetype
 and p.procedureid IS NULL
 and e.procedureid IS NOT NULL
-AND (e.procedureid.category = 'Surgery' OR e.procedureid.category = 'Pathology')
+AND (e.procedureid.category = 'Surgery'
+-- NOTE: this has been removed, since path will manually enter charges for procedures.  this is due to the lag time between performing the procedure and finalizing the associated task
+--OR e.procedureid.category = 'Pathology'
+)
 and (e.chargetype is null or e.chargetype != 'No Charge')
 and (e.project IS NULL OR e.project.displayName != javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT'))

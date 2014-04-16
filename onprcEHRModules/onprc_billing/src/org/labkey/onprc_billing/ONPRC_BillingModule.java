@@ -100,14 +100,14 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     protected void init()
     {
         addController(ONPRC_BillingController.NAME, ONPRC_BillingController.class);
+
+        RoleManager.registerRole(new ONPRCBillingAdminRole());
+        //RoleManager.registerRole(new ONPRCChargesEntryRole());
     }
 
     @Override
     protected void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
-        RoleManager.registerRole(new ONPRCBillingAdminRole());
-        RoleManager.registerRole(new ONPRCChargesEntryRole());
-
         AuditLogService.registerAuditType(new BillingAuditProvider());
         AuditLogService.get().addAuditViewFactory(BillingAuditViewFactory.getInstance());
 

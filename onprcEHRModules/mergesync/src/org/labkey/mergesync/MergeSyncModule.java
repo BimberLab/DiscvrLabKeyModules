@@ -44,7 +44,7 @@ public class MergeSyncModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 0.04;
+        return 0.06;
     }
 
     @Override
@@ -75,6 +75,8 @@ public class MergeSyncModule extends ExtendedSimpleModule
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "merge sync admin", details.getActionURL());
 
         MergeSyncManager.get().init();
+
+        EHRService.get().registerTableCustomizer(this, MergeSyncTableCustomizer.class);
     }
 
     @Override

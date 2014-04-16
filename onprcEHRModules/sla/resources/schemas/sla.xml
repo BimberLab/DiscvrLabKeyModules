@@ -187,4 +187,89 @@
             <column columnName="modified" />
         </columns>
     </table>
+    <table tableName="allowableAnimals" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>SLAs Allowed Per Protocol</tableTitle>
+        <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+        <auditLogging>DETAILED</auditLogging>
+        <importUrl></importUrl>
+        <insertUrl></insertUrl>
+        <updateUrl></updateUrl>
+        <deleteUrl></deleteUrl>
+        <pkColumnName>objectid</pkColumnName>
+        <tableUrl>/query/detailsQueryRow.view?schemaName=ehr&amp;query.queryName=allowableAnimals&amp;objectid=${objectid}</tableUrl>
+        <columns>
+            <column columnName="protocol">
+                <columnTitle>IACUC Protocol</columnTitle>
+            </column>
+            <column columnName="species">
+                <columnTitle>Species</columnTitle>
+                <fk>
+                    <fkDbSchema>ehr_lookups</fkDbSchema>
+                    <fkTable>species</fkTable>
+                    <fkColumnName>common</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="gender">
+                <columnTitle>Gender</columnTitle>
+                <fk>
+                    <fkDbSchema>ehr_lookups</fkDbSchema>
+                    <fkTable>gender_codes</fkTable>
+                    <fkColumnName>code</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="strain">
+                <columnTitle>Strain</columnTitle>
+            </column>
+            <column columnName="age">
+                <columnTitle>Age</columnTitle>
+            </column>
+            <column columnName="allowed">
+                <columnTitle># Allowed</columnTitle>
+            </column>
+            <column columnName="startdate">
+                <columnTitle>Start Date</columnTitle>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
+            <column columnName="enddate">
+                <columnTitle>End Date</columnTitle>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
+            <column columnName="container">
+                <isUserEditable>false</isUserEditable>
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>containers</fkTable>
+                    <fkColumnName>entityid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="objectid">
+                <columnTitle>Key2</columnTitle>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <shownInDetailsView>false</shownInDetailsView>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>    
 </tables>

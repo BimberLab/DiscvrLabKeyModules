@@ -42,6 +42,7 @@ public class MergeSyncManager
     private Trigger _trigger = null;
 
     public static final String TABLE_TESTNAMEMAPPING = "testnamemapping";
+    public static final String TABLE_MERGE_TO_LK_MAPPING = "mergetolkmapping";
     public static final String TABLE_ORDERSSYNCED = "orderssynced";
 
     public static final String TABLE_MERGE_ORDERS = "orders";
@@ -50,6 +51,7 @@ public class MergeSyncManager
     public static final String TABLE_MERGE_TESTINFO = "testinfo";
     public static final String TABLE_MERGE_CONTAINERS = "containers";
     public static final String TABLE_MERGE_VISITS = "visits";
+    public static final String TABLE_MERGE_COPY_TO = "copyto";
     public static final String TABLE_MERGE_VISIT_INS = "vis_ins";
     public static final String TABLE_MERGE_INSURANCE = "insurance";
     public static final String TABLE_MERGE_PERSONNEL = "prsnl";
@@ -78,6 +80,7 @@ public class MergeSyncManager
     public static final String PULL_ENABLED_PROP_NAME = "pullEnabled";
     public static final String PUSH_ENABLED_PROP_NAME = "pushEnabled";
     public static final String LAST_RUN_PROP_NAME = "lastRun";
+    public static final String MERGE_USER_PROP_NAME = "mergeUserName";
 
     public static final String CONFIG_PROPERTY_DOMAIN = "org.labkey.mergesync.etl.config";
 
@@ -314,6 +317,11 @@ public class MergeSyncManager
         return value;
     }
 
+    public String getMergeUserName()
+    {
+        return PropertyManager.getProperties(CONFIG_PROPERTY_DOMAIN).get(MERGE_USER_PROP_NAME);
+    }
+
     private boolean isEnabled()
     {
         return isPullEnabled() || isPullEnabled();
@@ -342,6 +350,12 @@ public class MergeSyncManager
 
             if (PropertyManager.getProperties(CONFIG_PROPERTY_DOMAIN).get(LABKEY_CONTAINER_PROP_NAME) == null)
                 throw new IllegalArgumentException("No LabKey container set");
+        }
+
+        if (isPushEnabled())
+        {
+            if (getMergeUserName() == null)
+                throw new IllegalArgumentException("Must provide the name of the merge user to use for sync");
         }
     }
 

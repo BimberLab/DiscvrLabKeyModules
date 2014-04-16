@@ -20,6 +20,9 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.ehr.EHRService;
+import org.labkey.api.ehr.buttons.EHRShowEditUIButton;
+import org.labkey.api.ehr.security.EHRProtocolEditPermission;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
@@ -47,7 +50,7 @@ public class SLAModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 13.23;
+        return 13.24;
     }
 
     @Override
@@ -71,6 +74,8 @@ public class SLAModule extends ExtendedSimpleModule
 
         DetailsURL details = DetailsURL.fromString("/sla/etlAdmin.view", ContainerManager.getSharedContainer());
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "sla etl admin", details.getActionURL());
+
+        EHRService.get().registerMoreActionsButton(new EHRShowEditUIButton(this, "sla", "allowableAnimals", EHRProtocolEditPermission.class), "sla", "allowableAnimals");
     }
 
     @Override

@@ -819,10 +819,14 @@ onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.00-
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.01-0.02.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.02-0.03.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.03-0.04.sql -text
+onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.04-0.05.sql -text
+onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.05-0.06.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.00-0.01.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.01-0.02.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.02-0.03.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.03-0.04.sql -text
+onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.04-0.05.sql -text
+onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.05-0.06.sql -text
 onprcEHRModules/mergesync/resources/schemas/mergesync.xml -text
 onprcEHRModules/mergesync/resources/scripts/mergesync/mergesync.js -text
 onprcEHRModules/mergesync/resources/views/begin.html -text
@@ -832,6 +836,7 @@ onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncManager.java -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncModule.java -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncRunner.java -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncSchema.java -text
+onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncTableCustomizer.java -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncUserSchema.java -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/RequestSyncHelper.java -text
 onprcEHRModules/ogasync/build.xml -text
@@ -1217,6 +1222,7 @@ onprcEHRModules/onprc_ssu/src/org/labkey/onprc_ssu/ONPRC_SSUSchema.java -text
 onprcEHRModules/onprc_ssu/src/org/labkey/onprc_ssu/notification/SSU_Notification.java -text
 onprcEHRModules/sla/SLA.iml -text
 onprcEHRModules/sla/module.properties -text
+onprcEHRModules/sla/resources/etl/sla/allowableAnimals.sql -text
 onprcEHRModules/sla/resources/etl/sla/census.sql -text
 onprcEHRModules/sla/resources/etl/sla/purchase.sql -text
 onprcEHRModules/sla/resources/etl/sla/purchasedetails.sql -text
@@ -1224,12 +1230,15 @@ onprcEHRModules/sla/resources/etl/sla/requestors.sql -text
 onprcEHRModules/sla/resources/etl/sla/vendors.sql -text
 onprcEHRModules/sla/resources/folderTypes/SLA.folderType.xml -text
 onprcEHRModules/sla/resources/module.xml -text
+onprcEHRModules/sla/resources/queries/sla/allowableAnimals.js -text
 onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-0.00-13.21.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.21-13.22.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.22-13.23.sql -text
+onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.23-13.24.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-0.00-13.21.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-13.21-13.22.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-13.22-13.23.sql -text
+onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-13.23-13.24.sql -text
 onprcEHRModules/sla/resources/schemas/sla.xml -text
 onprcEHRModules/sla/resources/views/begin.html -text
 onprcEHRModules/sla/resources/views/begin.view.xml -text

@@ -49,5 +49,6 @@ FROM study.blood e
 WHERE CAST(e.datefinalized as date) >= CAST(StartDate as date) AND CAST(e.datefinalized as date) <= CAST(EndDate as date)
 and e.chargetype != 'No Charge' and e.chargetype != 'Research Staff'
 and (e.reason IS NULL or e.reason != 'Clinical')
+and (e.sampletype IS NULL or e.sampletype != 'Bone Marrow')
 AND e.qcstate.publicdata = true
 GROUP BY e.Id, e.dateOnly, e.dateFinalized, e.project, e.project.account, e.taskid

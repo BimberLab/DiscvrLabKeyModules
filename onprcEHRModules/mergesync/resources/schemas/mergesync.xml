@@ -20,15 +20,28 @@
     <ns:table tableName="testnamemapping" tableDbType="TABLE">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
         <ns:tableTitle>LabKey to Merge Service/Panel Name Mapping</ns:tableTitle>
-            <ns:columns>
-            <ns:column columnName="rowid">
-
-            </ns:column>
+        <ns:columns>
             <ns:column columnName="servicename">
                 <ns:columnTitle>Service Name</ns:columnTitle>
+                <ns:isKeyField>true</ns:isKeyField>
             </ns:column>
             <ns:column columnName="mergetestname">
                 <ns:columnTitle>Merge Test Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="automaticresults">
+                <ns:columnTitle>Expect Results From Merge?</ns:columnTitle>
+            </ns:column>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="mergetolkmapping" tableDbType="TABLE">
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>Merge to LabKey Service/Panel Name Mapping</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="mergetestname">
+                <ns:columnTitle>Merge Test Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="servicename">
+                <ns:columnTitle>Service Name</ns:columnTitle>
             </ns:column>
         </ns:columns>
     </ns:table>

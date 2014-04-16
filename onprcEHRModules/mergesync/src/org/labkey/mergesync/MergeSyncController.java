@@ -59,6 +59,7 @@ public class MergeSyncController extends SpringActionController
 
             configMap.put(MergeSyncManager.DATA_SOURCE_PROP_NAME, form.getDataSourceName());
             configMap.put(MergeSyncManager.SCHEMA_PROP_NAME, form.getSchemaName());
+            configMap.put(MergeSyncManager.MERGE_USER_PROP_NAME, form.getMergeUserName());
             if (form.getLastRun() != null)
             {
                 try
@@ -128,6 +129,7 @@ public class MergeSyncController extends SpringActionController
         private String _lastRun;
         private String _labkeyContainer;
         private Integer _syncInterval;
+        private String _mergeUserName;
 
         public String getDataSourceName()
         {
@@ -208,6 +210,16 @@ public class MergeSyncController extends SpringActionController
         {
             _lastRun = lastRun;
         }
+
+        public String getMergeUserName()
+        {
+            return _mergeUserName;
+        }
+
+        public void setMergeUserName(String mergeUserName)
+        {
+            _mergeUserName = mergeUserName;
+        }
     }
 
     @RequiresPermissionClass(AdminPermission.class)
@@ -221,7 +233,7 @@ public class MergeSyncController extends SpringActionController
             resultProperties.put("lastRun", MergeSyncManager.get().getLastRun());
             resultProperties.put("nextRun", MergeSyncManager.get().getNextRun());
 
-            String[] etlConfigKeys = {MergeSyncManager.DATA_SOURCE_PROP_NAME, MergeSyncManager.SCHEMA_PROP_NAME, MergeSyncManager.LABKEY_CONTAINER_PROP_NAME, MergeSyncManager.LABKEY_USER_PROP_NAME, MergeSyncManager.SYNC_INTERVAL_PROP_NAME};
+            String[] etlConfigKeys = {MergeSyncManager.DATA_SOURCE_PROP_NAME, MergeSyncManager.SCHEMA_PROP_NAME, MergeSyncManager.LABKEY_CONTAINER_PROP_NAME, MergeSyncManager.LABKEY_USER_PROP_NAME, MergeSyncManager.SYNC_INTERVAL_PROP_NAME, MergeSyncManager.MERGE_USER_PROP_NAME};
 
             resultProperties.put("configKeys", etlConfigKeys);
             resultProperties.put("config", PropertyManager.getProperties(MergeSyncManager.CONFIG_PROPERTY_DOMAIN));

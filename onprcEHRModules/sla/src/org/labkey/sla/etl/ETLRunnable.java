@@ -1109,6 +1109,7 @@ public class ETLRunnable implements Runnable
     private final Map<String, String[]> LK_TO_IRIS = new HashMap<String, String[]>()
     {
         {
+            put("allowableAnimals", new String[]{"IACUC_SLAYearly", "IACUC_SLAAnimals", "Ref_ProjectsIACUC"});
             put("census", new String[]{"Af_SmallLabAnimals"});
             put("purchase", new String[]{"SLA_Purchase"});
             put("purchasedetails", new String[]{"SLA_Purchasedetails"});

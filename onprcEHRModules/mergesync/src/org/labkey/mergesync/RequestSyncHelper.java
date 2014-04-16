@@ -149,10 +149,15 @@ public class RequestSyncHelper
 
                 //create 1 record per batch of tests
                 int patientId = createPatientIfNeeded(mergeSchema, _container, _user, (String)records.get(0).get("Id"));
-                int personnelId = createUserIdIfNeeded(mergeSchema, _user);
+                Integer personnelId = getUserId(mergeSchema, _user);
+                if (personnelId == null)
+                {
+                    return;
+                }
+
                 int insuranceId = createInsuranceIfNeeded(mergeSchema, _container, _user, (Integer)records.get(0).get("project"));
                 String visitId = createVisit(mergeSchema, _user, patientId, personnelId, insuranceId, (Date)records.get(0).get("date"));
-                //TODO: copyto??
+                createCopyTo(mergeSchema, _user, patientId, personnelId, visitId);
                 int orderId = createOrder(mergeSchema, _user, patientId, personnelId, visitId, (Date)records.get(0).get("date"));
 
                 //then 1 row per service type (clinpath runs record)
@@ -300,7 +305,6 @@ public class RequestSyncHelper
             rs.next();
             String projectName = rs.getString(FieldKey.fromString("displayName"));
             String lastName = rs.getString(FieldKey.fromString("investigatorId/lastName"));
-            //String firstName = rs.getString(FieldKey.fromString("investigatorId/firstName"));
 
             TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_INSURANCE);
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("INS_NAME"), projectName);
@@ -348,10 +352,40 @@ public class RequestSyncHelper
         return i;
     }
 
-    private int createUserIdIfNeeded(DbSchema mergeSchema, User u)
+    private Integer getUserId(DbSchema mergeSchema, User u)
     {
-        //TODO
-        return 0;
+        String mergeUserName = MergeSyncManager.get().getMergeUserName();
+        if (mergeUserName == null)
+        {
+            _log.error("Merge user not configured, cannot push requests to merge");
+            return null;
+        }
+
+        TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_PERSONNEL);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("PR_LOGIN"), mergeUserName, CompareType.EQUAL);
+        TableSelector ts = new TableSelector(ti, PageFlowUtil.set("PR_NUM"), filter, null);
+        List<Integer> ret = ts.getArrayList(Integer.class);
+        
+        Integer i = ret == null || ret.isEmpty() ? null : ret.get(0);
+        if (i == null)
+        {
+            _log.error("Unable to find merge userId matching the login: " + mergeUserName);
+        }
+
+        return i;
+    }
+
+    private void createCopyTo(DbSchema mergeSchema, User u, int patientId, int personnelId, String visitId) throws SQLException
+    {
+        TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_COPY_TO);
+
+        Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
+        toInsert.put("CO_PTNUM", patientId);
+        toInsert.put("CO_VID", visitId);
+        toInsert.put("CO_TYPE", "D");
+        toInsert.put("CO_DOC", personnelId);
+
+        Table.insert(u, ti, toInsert);
     }
 
     private String createVisit(DbSchema mergeSchema, User u, int patientId, int personnelId, Integer insuranceId, Date date) throws SQLException
@@ -426,8 +460,8 @@ public class RequestSyncHelper
 
         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
         toInsert.put("CNT_INDEX", getAndIncrementIndex("CNT_INDEX", containerTable));
-        toInsert.put("cnt_accnr", orderId);
-        toInsert.put("CNT_MAP", "A");
+        toInsert.put("CNT_ACCNR", orderId);
+        toInsert.put("CNT_MAP", "A");  //TODO: reconcile this with tests
         toInsert.put("CNT_STATUS", "C");
         toInsert.put("CNT_DATE", convertDate(date));
         toInsert.put("CNT_DTZ", getTZ(date, mergeSchema));
@@ -453,12 +487,15 @@ public class RequestSyncHelper
         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
         toInsert.put("O_PTNUM", patientId);
         toInsert.put("O_VID", visitId);
+        toInsert.put("O_STATUS", "C");
         toInsert.put("O_DATE", convertDate(date));
         toInsert.put("O_DTZ", getTZ(date, mergeSchema));
         toInsert.put("O_COLLDT", convertDate(date));
         toInsert.put("O_CLTZ", getTZ(date, mergeSchema));
         toInsert.put("O_CDT", convertDate(date));
         toInsert.put("O_CTZ", getTZ(date, mergeSchema));
+        toInsert.put("O_RCVDT", convertDate(date));
+        toInsert.put("O_RCVTZ", getTZ(date, mergeSchema));
         toInsert.put("O_PRIO", 50);
         toInsert.put("O_DOCTOR", personnelId);
         toInsert.put("O_EPRSN", personnelId);
@@ -466,11 +503,6 @@ public class RequestSyncHelper
         toInsert.put("O_LOC", "ONP");
         toInsert.put("O_WARD", "ONPRC");
         toInsert.put("O_ACCNUM", getAndIncrementIndex("O_ACCNUM", ti));
-
-//        O_STZ
-//        O_RCVTZ
-//        O_RPTDT
-//        O_RPTTZ
 
         Map<String, Object> inserted = Table.insert(u, ti, toInsert);
 
@@ -484,22 +516,20 @@ public class RequestSyncHelper
 
         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
         toInsert.put("TS_TNUM", mergeTestId);
-        toInsert.put("TS_PLTNR", mergeTestId);  //TODO: what does this column mean?
+        toInsert.put("TS_PLTNR", mergeTestId);
         toInsert.put("TS_MASTR", testInfo.get("T_PARTOF"));
         toInsert.put("TS_PTNUM", patientId);
         toInsert.put("TS_VID", visitId);
         toInsert.put("TS_ACCNR", accession);
         toInsert.put("TS_DEPT", "C");
-        toInsert.put("TS_WKIDX", null);  //TODO: unknown
-        toInsert.put("TS_CIDX", containerId);
+        toInsert.put("TS_WKIDX", null);  //TODO: unknown, need to fill out
+        toInsert.put("TS_MAP", "A");    //TODO: unknown, need to fill out
         toInsert.put("TS_STAT", "C");
         toInsert.put("TS_PRIO", 50);
         toInsert.put("TS_EDT", convertDate(date));
         toInsert.put("TS_ETZ", getTZ(date, mergeSchema));
         toInsert.put("TS_COLDT", convertDate(date));
         toInsert.put("TS_CLTZ", getTZ(date, mergeSchema));
-        //toInsert.put("TS_SDT", new Date());
-        //toInsert.put("TS_VDT", new Date());
         toInsert.put("TS_FILLR", null);
         toInsert.put("TS_STECH", null);
         toInsert.put("TS_VTECH", null);
@@ -512,10 +542,6 @@ public class RequestSyncHelper
         toInsert.put("TS_ICD", null);
         toInsert.put("TS_MODS", null);
         toInsert.put("TS_BILLTYPE", null);
-        //toInsert.put("TS_STZ", null);
-        //toInsert.put("TS_VTZ", null);
-        //toInsert.put("TS_DNLOADDT", null);
-        //toInsert.put("TS_DNLOADTZ", null);
         toInsert.put("TS_REFFLABNO", null);
         toInsert.put("TS_CHGXMT", null);
         toInsert.put("TS_INDEX", getAndIncrementIndex("TS_INDEX", ti));

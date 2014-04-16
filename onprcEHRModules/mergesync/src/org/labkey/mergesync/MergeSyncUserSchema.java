@@ -143,13 +143,13 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 ret.append("cm.RSC_ACCNR = r.RE_ACCNR\n");
                 ret.append("and cm.RSC_RIDX = r.RE_RIDX\n");
                 ret.append("and cm.RSC_COMMENT != '>^'\n"); //this might mean something
+                ret.append("and cm.RSC_COMMENT != '<^'\n"); //this might mean something
                 ret.append(")\n");
 
                 //there should only be 1 patient per order
                 ret.append("LEFT JOIN patients p ON (\n");
                 ret.append("o.O_PTNUM = p.PT_NUM\n");
-                //TODO: i dont like having this as a filter
-                //and Isnumeric(p.pt_lname) = 1   ---- Only process numeric last names
+
                 ret.append(")\n");
 
                 ret.append("LEFT JOIN PRSNL pr ON (o.O_DOCTOR = pr.pr_num)\n");

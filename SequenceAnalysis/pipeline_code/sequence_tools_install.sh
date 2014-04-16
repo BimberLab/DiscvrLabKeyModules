@@ -775,7 +775,7 @@ echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Install All required Perl modules"
 echo ""
-cpan -i Cwd JSON YAML File::HomeDir String::Approx Statistics::Descriptive Math::Round List::Util IPC::Run LabKey::Query File::Util Algorithm::Diff File::Sort Array::Compare Proc::ProcessTable XML::Writer URI Test::Warn XML::DOM::XPath XML::Parser::PerlSAX XML::SAX XML::SAX::Writer XML::Simple XML::Twig Set::Scalar Sort::Naturally Data::Stag Crypt::SSLeay
+cpan -i Cwd JSON YAML File::HomeDir String::Approx Statistics::Descriptive Math::Round List::Util IPC::Run LabKey::Query File::Util Algorithm::Diff File::Sort Array::Compare Proc::ProcessTable XML::Writer URI Test::Warn XML::DOM::XPath XML::Parser::PerlSAX XML::SAX XML::SAX::Writer XML::Simple XML::Twig Set::Scalar Sort::Naturally Data::Stag Crypt::SSLeay Test::CPAN::Meta::JSON HTML::TreeBuilder
 
 
 #
