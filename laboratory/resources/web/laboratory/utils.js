@@ -49,7 +49,7 @@ Laboratory.Utils = new function(){
                 }
             }
 
-            return LABKEY.Ajax.request(requestConfig);
+            return Ext4.Ajax.request(requestConfig);
         },
 
         /**
@@ -134,7 +134,7 @@ Laboratory.Utils = new function(){
                 failure: LDK.Utils.getErrorCallback()
             }
 
-            return LABKEY.Ajax.request(requestConfig);
+            return Ext4.Ajax.request(requestConfig);
         },
 
         /**
@@ -160,7 +160,7 @@ Laboratory.Utils = new function(){
                 })
             }
 
-            return LABKEY.Ajax.request(requestConfig);
+            return Ext4.Ajax.request(requestConfig);
         },
 
         /**
@@ -194,7 +194,7 @@ Laboratory.Utils = new function(){
                 })
             }
 
-            return LABKEY.Ajax.request(requestConfig);
+            return Ext4.Ajax.request(requestConfig);
         },
 
         /**
@@ -207,7 +207,7 @@ Laboratory.Utils = new function(){
                 alert('Must provide a reply email and message');
             }
 
-            LABKEY.Ajax.request({
+            Ext4.Ajax.request({
                 url : LABKEY.ActionURL.buildURL('laboratory', 'supportMessage'),
                 method : 'POST',
                 success: LABKEY.Utils.getCallbackWrapper(LABKEY.Utils.getOnSuccess(config), config.scope),
@@ -236,7 +236,7 @@ Laboratory.Utils = new function(){
                 return;
             }
 
-            return LABKEY.Ajax.request({
+            return Ext4.Ajax.request({
                 url : LABKEY.ActionURL.buildURL('laboratory', 'getAssayImportHeaders', config.containerPath),
                 params: {
                     protocol: config.assayId,
@@ -387,7 +387,7 @@ Laboratory.Utils = new function(){
                 return;
             }
 
-            return LABKEY.Ajax.request({
+            return Ext4.Ajax.request({
                 url : LABKEY.ActionURL.buildURL('laboratory', 'setItemVisibility', config.containerPath),
                 params: {
                     jsonData: Ext4.encode(config.items)
@@ -418,7 +418,7 @@ Laboratory.Utils = new function(){
             if (config.includeSiteSummary)
                 params.includeSiteSummary = config.includeSiteSummary;
 
-            return LABKEY.Ajax.request({
+            return Ext4.Ajax.request({
                 url : LABKEY.ActionURL.buildURL('laboratory', 'getDemographicsSources', config.containerPath),
                 method : 'POST',
                 params: params,
@@ -448,7 +448,7 @@ Laboratory.Utils = new function(){
             if (config.includeSiteSummary)
                 params.includeSiteSummary = config.includeSiteSummary;
 
-            return LABKEY.Ajax.request({
+            return Ext4.Ajax.request({
                 url : LABKEY.ActionURL.buildURL('laboratory', 'getAdditionalDataSources', config.containerPath),
                 method : 'POST',
                 params: params,

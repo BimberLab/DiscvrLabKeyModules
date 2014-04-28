@@ -292,7 +292,7 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
 
     saveSources: function(sources, win){
         Ext4.Msg.wait('Saving...');
-        LABKEY.Ajax.request({
+        Ext4.Ajax.request({
             url : LABKEY.ActionURL.buildURL('laboratory', 'setAdditionalDataSources'),
             params: {
                 tables: Ext4.encode(sources)

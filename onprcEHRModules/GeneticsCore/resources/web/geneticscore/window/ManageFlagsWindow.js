@@ -117,7 +117,7 @@ Ext4.define('GeneticsCore.window.ManageFlagsWindow', {
 
         Ext4.Msg.wait('Saving...');
 
-        LABKEY.Ajax.request({
+        Ext4.Ajax.request({
             url: LABKEY.ActionURL.buildURL('geneticscore', 'manageFlags', this.ehrCtx.EHRStudyContainer),
             method: 'POST',
             params: params,

@@ -21,7 +21,7 @@ Ext4.onReady(function (){
                         itemId: 'runEtlBtn',
                         disabled: true,
                         handler: function(btn){
-                            LABKEY.Ajax.request({
+                            Ext4.Ajax.request({
                                 url: LABKEY.ActionURL.buildURL('mergeSync', 'pullFromMerge', null),
                                 method : 'POST',
                                 scope: this,
@@ -39,7 +39,7 @@ Ext4.onReady(function (){
             },
 
             loadData: function(){
-                LABKEY.Ajax.request({
+                Ext4.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('mergeSync', 'getEtlDetails', null),
                     method : 'GET',
                     scope: this,
@@ -127,7 +127,7 @@ Ext4.onReady(function (){
                 }, this);
 
                 Ext4.Msg.wait('Saving...');
-                LABKEY.Ajax.request({
+                Ext4.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('mergeSync', 'setEtlDetails', null),
                     method : 'POST',
                     params: json,

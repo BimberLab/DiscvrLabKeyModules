@@ -131,7 +131,7 @@ Ext4.define('Laboratory.panel.CustomizeDataBrowserPanel', {
 
         Ext4.Msg.wait('Saving...');
 
-        LABKEY.Ajax.request({
+        Ext4.Ajax.request({
             url : LABKEY.ActionURL.buildURL('laboratory', 'setDataBrowserSettings'),
             params: {
                 jsonData: Ext4.encode(toSave)

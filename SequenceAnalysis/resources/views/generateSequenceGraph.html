@@ -77,7 +77,7 @@
                     var panel = btn.up('panel');
                     panel.down('#results').removeAll();
 
-                    LABKEY.Ajax.request({
+                    Ext4.Ajax.request({
                         url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'generateChart'),
                         method: 'POST',
                         success: LABKEY.Utils.getCallbackWrapper(panel.onSuccess, panel),
@@ -92,7 +92,7 @@
                 handler: function(btn){
                     var panel = btn.up('panel');
 
-                    LABKEY.Ajax.request({
+                    Ext4.Ajax.request({
                         url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'generateChart'),
                         method: 'POST',
                         success: LABKEY.Utils.getCallbackWrapper(function(results){

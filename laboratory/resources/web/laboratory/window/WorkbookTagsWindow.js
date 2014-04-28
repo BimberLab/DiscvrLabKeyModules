@@ -95,7 +95,7 @@ Ext4.define('Laboratory.window.WorkbookTagsWindow', {
 
         var multi = new LABKEY.MultiRequest();
         Ext4.Array.forEach(this.containerIds, function(containerId){
-            multi.add(LABKEY.Ajax.request, {
+            multi.add(Ext4.Ajax.request, {
                 url: LABKEY.ActionURL.buildURL('laboratory', 'updateWorkbookTags', containerId),
                 params: {
                     merge: true,

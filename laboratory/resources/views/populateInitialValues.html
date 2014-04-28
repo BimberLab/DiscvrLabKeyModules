@@ -10,7 +10,7 @@
                 handler: function(){
                     Ext4.Msg.wait('Saving...');
 
-                    LABKEY.Ajax.request({
+                    Ext4.Ajax.request({
                         url : LABKEY.ActionURL.buildURL('laboratory', 'populateDefaults'),
                         params: {
                             tableNames: ['sample_type']

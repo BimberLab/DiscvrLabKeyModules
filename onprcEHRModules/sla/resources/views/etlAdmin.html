@@ -21,7 +21,7 @@ Ext4.onReady(function (){
                         itemId: 'runEtlBtn',
                         disabled: true,
                         handler: function(btn){
-                            LABKEY.Ajax.request({
+                            Ext4.Ajax.request({
                                 url: LABKEY.ActionURL.buildURL('sla', 'runEtl', null),
                                 method : 'POST',
                                 scope: this,
@@ -43,7 +43,7 @@ Ext4.onReady(function (){
             },
 
             loadData: function(){
-                LABKEY.Ajax.request({
+                Ext4.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('sla', 'getEtlDetails', null),
                     method : 'GET',
                     scope: this,
@@ -223,7 +223,7 @@ Ext4.onReady(function (){
 
                 json.timestamps = Ext4.encode(resets);
 
-                LABKEY.Ajax.request({
+                Ext4.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('sla', 'setEtlDetails', null),
                     method : 'POST',
                     params: json,
