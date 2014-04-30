@@ -166,6 +166,30 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
 
         addAliasLookup(table, "debitedaccount");
         addAliasLookup(table, "creditedaccount");
+
+        Container ehrContainer = EHRService.get().getEHRStudyContainer(table.getUserSchema().getContainer());
+        if (ehrContainer != null)
+        {
+            String pendingAdjustments = "pendingAdjustments";
+            if (table.getColumn(pendingAdjustments) == null)
+            {
+                SQLFragment sql = new SQLFragment("(SELECT count(*) FROM " + ONPRC_BillingSchema.NAME + "." + ONPRC_BillingSchema.TABLE_MISC_CHARGES + " mc WHERE mc.invoiceId IS NULL AND mc.container = ? AND mc.sourceInvoicedItem = " + ExprColumn.STR_TABLE_ALIAS + ".objectid)", ehrContainer.getId());
+                ExprColumn newCol = new ExprColumn(table, pendingAdjustments, sql, JdbcType.INTEGER, table.getColumn("objectid"));
+                newCol.setLabel("Pending Adjustments");
+                newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing&query.queryName=miscChargesWithRates&query.viewName=Adjustment Detail&query.invoiceId~isblank&query.sourceInvoicedItem/transactionNumber~eq=${transactionNumber}"));
+                table.addColumn(newCol);
+            }
+
+            String totalAdjustments = "totalAdjustments";
+            if (table.getColumn(totalAdjustments) == null)
+            {
+                SQLFragment sql = new SQLFragment("(SELECT count(*) FROM " + ONPRC_BillingSchema.NAME + "." + ONPRC_BillingSchema.TABLE_MISC_CHARGES + " mc WHERE mc.container = ? AND mc.sourceInvoicedItem = " + ExprColumn.STR_TABLE_ALIAS + ".objectid)", ehrContainer.getId());
+                ExprColumn newCol = new ExprColumn(table, totalAdjustments, sql, JdbcType.INTEGER, table.getColumn("objectid"));
+                newCol.setLabel("All Adjustments");
+                newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing&query.queryName=miscChargesWithRates&query.viewName=Adjustment Detail&query.sourceInvoicedItem/transactionNumber~eq=${transactionNumber}"));
+                table.addColumn(newCol);
+            }
+        }
     }
 
     private void addAliasLookup(AbstractTableInfo table, String sourceColName)

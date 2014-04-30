@@ -80,7 +80,7 @@ public class SLAController extends SpringActionController
 
         public ActionURL getSuccessURL(Object form)
         {
-            return DetailsURL.fromString("/onprc_ehr/etlAdmin.view", getContainer()).getActionURL();
+            return DetailsURL.fromString("/sla/etlAdmin.view", getContainer()).getActionURL();
         }
     }
 
@@ -107,7 +107,7 @@ public class SLAController extends SpringActionController
             }
 
             StringBuilder sb = new StringBuilder();
-            sb.append("The following text describes the results of comparing the EHR study with the MSSQL records from the production instance on the same server as this DB instance.  Clicking OK will cause the system to attempt to repair any differences.  Please do this very carefully.<br>");
+            sb.append("The following text describes the results of comparing the LabKey data with the MSSQL records from the production instance on the same server as this DB instance.  Clicking OK will cause the system to attempt to repair any differences.  Please do this very carefully.<br>");
             sb.append("<br><br>");
 
             ETLRunnable runnable = new ETLRunnable();
@@ -330,20 +330,11 @@ public class SLAController extends SpringActionController
     }
 
     @AdminConsoleAction
-    public class ShowEtlErrorsAction extends ExportAction
-    {
-        public void export(Object o, HttpServletResponse response, BindException errors) throws Exception
-        {
-            showLogFile(response, 0, getLogFile("ehr-etl-errors.log"));
-        }
-    }
-
-    @AdminConsoleAction
     public class ShowEtlLogAction extends ExportAction
     {
         public void export(Object o, HttpServletResponse response, BindException errors) throws Exception
         {
-            showLogFile(response, 0, getLogFile("ehr-etl.log"));
+            showLogFile(response, 0, getLogFile("sla-etl.log"));
         }
     }
 

@@ -2,6 +2,7 @@
     <ns:table tableName="chargeRates" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>Charge Rates</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:columns>
             <ns:column columnName="rowId"/>
             <ns:column columnName="chargeId"/>
@@ -28,6 +29,7 @@
     </ns:table>
     <ns:table tableName="clinicalFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Clinical Fee Structure</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowId"/>
@@ -50,6 +52,7 @@
     </ns:table>
     <ns:table tableName="chargeRateExemptions" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Exemptions to Default Rates</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowId"/>
@@ -83,6 +86,7 @@
     </ns:table>
     <ns:table tableName="chargeableItems" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Chargeable Items</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowid">
@@ -133,6 +137,7 @@
     <ns:table tableName="invoicedItems" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
         <ns:tableTitle>Invoiced Items</ns:tableTitle>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:columns>
             <ns:column columnName="rowId">
                 <ns:columnTitle>Row Id</ns:columnTitle>
@@ -309,6 +314,7 @@
     </ns:table>
     <ns:table tableName="creditAccount" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Aliases Receiving Credits For Each Charge</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowId">
@@ -337,6 +343,7 @@
     </ns:table>
     <ns:table tableName="miscCharges" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Other Charges</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="Id">
@@ -345,6 +352,7 @@
             </ns:column>
             <ns:column columnName="date">
                 <ns:columnTitle>Date of Charge</ns:columnTitle>
+                <ns:description>This column typically refers to the date the charge took place (ie. date blood was drawn).  This differs from the column labeled Date Charge Created, which refers to the date the charge was actually entered into the system.  This column is used in the IBS sheet; however, it is not used to determine which billing period the item falls into.</ns:description>
                 <ns:formatString>yyyy-MM-dd</ns:formatString>
             </ns:column>
             <ns:column columnName="project"/>
@@ -384,6 +392,7 @@
             </ns:column>
             <ns:column columnName="billingDate">
                 <ns:columnTitle>Date Charge Entered</ns:columnTitle>
+                <ns:description>This column refers to the date the record was created in the system.  It is used to determine which billing period the item falls into.  Because items can be created with dates in the past, quite often this date will be after the value listed as the transaction date</ns:description>
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
             <ns:column columnName="category">
@@ -465,6 +474,7 @@
     <ns:table tableName="perDiemFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>Per Diem Fee Structure</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:columns>
             <ns:column columnName="rowId">
                 <ns:columnTitle>Row Id</ns:columnTitle>
@@ -509,6 +519,7 @@
     <ns:table tableName="slaPerDiemFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>SLA Per Diem Fee Structure</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
@@ -553,6 +564,7 @@
     </ns:table>
     <ns:table tableName="invoiceRuns" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Billing Periods</ns:tableTitle>
         <ns:tableUrl>/onprc_billing/invoiceRunDetails.view?invoiceRunId=${objectid}</ns:tableUrl>
         <ns:columns>
@@ -620,6 +632,7 @@
     </ns:table>
     <ns:table tableName="leaseFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Lease Fee Definition</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowId">
@@ -658,6 +671,7 @@
     <ns:table tableName="fiscalAuthorities" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>Financial Analysts</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
@@ -717,6 +731,7 @@
     <ns:table tableName="grants" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>Grants</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableUrl>/query/recordDetails.view?schemaName=onprc_billing&amp;query.queryName=grants&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
         <ns:columns>
             <ns:column columnName="rowid">
@@ -791,6 +806,7 @@
     <ns:table tableName="procedureFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>Procedure Fee Structure</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
@@ -826,6 +842,7 @@
     <ns:table tableName="bloodDrawFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>Blood Draw Fee Structure</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
@@ -861,6 +878,7 @@
     <ns:table tableName="projectAccountHistory" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>Project Alias History</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
@@ -878,7 +896,7 @@
             </ns:column>
             <ns:column columnName="enddate">
                 <ns:columnTitle>End Date</ns:columnTitle>
-                <ns:nullable>false</ns:nullable>
+                <ns:nullable>true</ns:nullable>
                 <ns:formatString>yyyy-MM-dd</ns:formatString>
             </ns:column>
             <ns:column columnName="objectid"/>
@@ -891,6 +909,7 @@
     <ns:table tableName="grantProjects" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>Grant Projects</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableUrl>/query/recordDetails.view?schemaName=onprc_billing&amp;query.queryName=grantProjects&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
         <ns:columns>
             <ns:column columnName="rowid"/>
@@ -959,6 +978,7 @@
     <ns:table tableName="aliases" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>Aliases</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableUrl>/query/recordDetails.view?schemaName=onprc_billing&amp;query.queryName=aliases&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
         <ns:columns>
             <ns:column columnName="rowid"/>
@@ -1032,6 +1052,7 @@
     </ns:table>
     <ns:table tableName="iacucFundingSources" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>Approved IACUC Funding Sources</ns:tableTitle>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
         <ns:columns>
             <ns:column columnName="rowid"/>
@@ -1061,6 +1082,7 @@
     <ns:table tableName="labworkFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
         <ns:tableTitle>Labwork Fee Structure</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
@@ -1167,6 +1189,7 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="chargeableItemCategories" tableDbType="TABLE" useColumnOrder="true">
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Chargeable Item Categories</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="category">
@@ -1175,6 +1198,7 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="aliasCategories" tableDbType="TABLE" useColumnOrder="true">
+        <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Alias Categories</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="category">

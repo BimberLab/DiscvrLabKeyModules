@@ -25,8 +25,11 @@
             onDataLoad: function(results){
                 this.reports = [];
                 Ext4.each(results.tabbedReports, function(report){
-                    report.id = report.key.replace(/:/g, '_');
-                    this.reports.push(report);
+                    LDK.Assert.assertNotEmpty('Tabbed Report is null', report);
+                    if (report && report.key){
+                        report.id = report.key.replace(/:/g, '_');
+                        this.reports.push(report);
+                    }
                 }, this);
 
                 this.reports = LDK.Utils.sortByProperty(this.reports, 'name', false);

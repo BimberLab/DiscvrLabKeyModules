@@ -128,7 +128,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
         LDKService.get().registerContainerScopedTable(ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_GRANTS, "grantNumber");
         LDKService.get().registerContainerScopedTable(ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_ALIASES, "alias");
 
-        EHRService.get().registerMoreActionsButton(new ProjectEditButton(this, "onprc_ehr", "projectAccountHistory"), "onprc_ehr", "projectAccountHistory");
+        EHRService.get().registerMoreActionsButton(new ProjectEditButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_PROJECT_ACCOUNT_HISTORY), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_PROJECT_ACCOUNT_HISTORY);
 
         EHRService.get().registerMoreActionsButton(new ChangeBillDateButton(this), ONPRC_BillingSchema.NAME, "miscCharges");
         EHRService.get().registerMoreActionsButton(new ChangeBillDateButton(this), ONPRC_BillingSchema.NAME, "miscChargesWithRates");

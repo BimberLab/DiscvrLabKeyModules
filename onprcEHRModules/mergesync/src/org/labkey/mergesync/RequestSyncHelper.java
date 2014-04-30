@@ -11,12 +11,15 @@ import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.ehr.EHRDemographicsService;
+import org.labkey.api.ehr.demographics.AnimalRecord;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
@@ -24,7 +27,9 @@ import org.labkey.api.security.UserManager;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.Pair;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -114,7 +119,7 @@ public class RequestSyncHelper
                     return;
                 }
 
-                _log.info("Syncing single request to merge: " + animalId);
+                _log.info("Syncing single request to merge for animal: " + animalId);
 
                 if (hasBeenOrdered(_container, objectId))
                 {
@@ -180,16 +185,19 @@ public class RequestSyncHelper
                     CaseInsensitiveHashMap toInsert = new CaseInsensitiveHashMap();
                     toInsert.put("objectid", new GUID().toString());
                     toInsert.put("runid", row.get("objectid"));
-                    toInsert.put("merge_accession", orderId);
+                    toInsert.put("order_accession", orderId);
                     toInsert.put("test_accession", testId);
                     toInsert.put("container", _container.getId());
                     toInsert.put("createdby", _user.getUserId());
+                    toInsert.put("merge_datecreated", new Date());
                     toInsert.put("created", new Date());
                     toInsert.put("taskid", taskId);
                     toInsert.put("requestid", requestId);
                     toInsert.put("resultsreceived", false);
                     Table.insert(_user, ordersSynced, toInsert);
                 }
+
+                _log.info("created merge order: " + orderId + ", with " + records.size() + " tests");
             }
 
             transaction.commit();
@@ -266,15 +274,50 @@ public class RequestSyncHelper
 
         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
         toInsert.put("PT_LNAME", animalId);
-        toInsert.put("PT_FNAME", "");  //TODO: create expression
-        toInsert.put("PT_SEX", "o");
-        toInsert.put("PT_DOB", new Date());
-        toInsert.put("PT_RACE", "ONPRC");
         toInsert.put("PT_NUM", getAndIncrementIndex("PT_NUM", ti));
+
+        AnimalRecord ar = EHRDemographicsService.get().getAnimal(c, animalId);
+        if (ar != null)
+        {
+            toInsert.put("PT_SEX", ar.getGender() == null ? null : ar.getGender().toUpperCase());
+            toInsert.put("PT_DOB", ar.getBirth());
+            String species = ar.getSpecies();
+            String speciesCode = null;
+            if (species != null)
+            {
+                speciesCode = getSpeciesCode(species);
+                toInsert.put("PT_RACE", speciesCode);
+            }
+
+            String firstName = speciesCode == null ? "" : "(" + speciesCode + ")";
+            if (!"Alive".equals(ar.getCalculatedStatus()))
+            {
+                firstName += " *" + (ar.getCalculatedStatus() == null ? "Unknown" : ar.getCalculatedStatus()) + "*";
+            }
+            else
+            {
+                firstName += " -";
+            }
+
+            toInsert.put("PT_FNAME", firstName);
+        }
 
         Map<String, Object> inserted = Table.insert(u, ti, toInsert);
 
         return (Integer)inserted.get("PT_NUM");
+    }
+
+    private String getSpeciesCode(String species)
+    {
+        if (species == null)
+            return null;
+
+        //first translate project Id into the name
+        TableInfo speciesTable = DbSchema.get("ehr_lookups").getTable("species");
+        TableSelector ts = new TableSelector(speciesTable, PageFlowUtil.set("cites_code"), new SimpleFilter(FieldKey.fromString("common"), species), null);
+        List<String> ret = ts.getArrayList(String.class);
+
+        return ret != null && !ret.isEmpty() ? ret.get(0) : null;
     }
 
     private Integer createInsuranceIfNeeded(DbSchema mergeSchema, Container c, User u, Integer project) throws SQLException
@@ -497,6 +540,7 @@ public class RequestSyncHelper
         toInsert.put("O_RCVDT", convertDate(date));
         toInsert.put("O_RCVTZ", getTZ(date, mergeSchema));
         toInsert.put("O_PRIO", 50);
+        toInsert.put("O_RPTD", "N");
         toInsert.put("O_DOCTOR", personnelId);
         toInsert.put("O_EPRSN", personnelId);
         toInsert.put("O_FASTING", "N");
@@ -509,10 +553,33 @@ public class RequestSyncHelper
         return (Integer)inserted.get("O_ACCNUM");
     }
 
+    private Pair<Integer, String> getWorklistInfo(DbSchema mergeSchema, Integer mergeTestId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT w.WK_WIDX, ws.W_DEPT FROM TESTINFO t " +
+            "left join dbo.WKSTTSTS w on (w.WK_TESTN = t.T_TSTNUM) " +
+            "left join WORKSTAT ws ON (w.WK_WIDX = ws.W_INDEX)" +
+            "where t.T_TSTNUM = ?", mergeTestId);
+
+        SqlSelector ss = new SqlSelector(mergeSchema, sql);
+        final Pair<Integer, String> pair = Pair.of(null, null);
+        ss.forEach(new Selector.ForEachBlock<ResultSet>()
+        {
+            @Override
+            public void exec(ResultSet rs) throws SQLException
+            {
+                pair.first = rs.getInt("WK_WIDX");
+                pair.second = rs.getString("W_DEPT");
+            }
+        });
+
+        return pair;
+    }
+
     private int createTest(DbSchema mergeSchema, User u, int patientId, int personnelId, String visitId, int accession, int containerId, int mergeTestId, Date date) throws SQLException
     {
         TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_TEST);
         Map<String, Object> testInfo = getMergeTestInfo(mergeSchema, mergeTestId);
+        Pair<Integer, String> worklistInfo = getWorklistInfo(mergeSchema, mergeTestId);
 
         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
         toInsert.put("TS_TNUM", mergeTestId);
@@ -521,8 +588,8 @@ public class RequestSyncHelper
         toInsert.put("TS_PTNUM", patientId);
         toInsert.put("TS_VID", visitId);
         toInsert.put("TS_ACCNR", accession);
-        toInsert.put("TS_DEPT", "C");
-        toInsert.put("TS_WKIDX", null);  //TODO: unknown, need to fill out
+        toInsert.put("TS_DEPT", worklistInfo.second);
+        toInsert.put("TS_WKIDX", worklistInfo.first);
         toInsert.put("TS_MAP", "A");    //TODO: unknown, need to fill out
         toInsert.put("TS_STAT", "C");
         toInsert.put("TS_PRIO", 50);
@@ -537,7 +604,6 @@ public class RequestSyncHelper
         toInsert.put("TS_REFLEX", null);
         toInsert.put("TS_DBID", null);
         toInsert.put("TS_SYSTEM", null);
-        toInsert.put("TS_MAP", null);
         toInsert.put("TS_DNLOAD", null);
         toInsert.put("TS_ICD", null);
         toInsert.put("TS_MODS", null);

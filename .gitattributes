@@ -821,16 +821,20 @@ onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.02-
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.03-0.04.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.04-0.05.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.05-0.06.sql -text
+onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.06-0.07.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.00-0.01.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.01-0.02.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.02-0.03.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.03-0.04.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.04-0.05.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.05-0.06.sql -text
+onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.06-0.07.sql -text
 onprcEHRModules/mergesync/resources/schemas/mergesync.xml -text
 onprcEHRModules/mergesync/resources/scripts/mergesync/mergesync.js -text
 onprcEHRModules/mergesync/resources/views/begin.html -text
 onprcEHRModules/mergesync/resources/views/begin.view.xml -text
+onprcEHRModules/mergesync/resources/views/instructions.html -text
+onprcEHRModules/mergesync/resources/views/instructions.view.xml -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncController.java -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncManager.java -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncModule.java -text
@@ -957,6 +961,7 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesFees.sq
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesWithRates.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesWithRates.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesWithRates/.qview.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesWithRates/Adjustment[!!-~]Detail.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesWithRates/Detailed.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemFeeDefinition/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemRates.query.xml -text
@@ -971,6 +976,7 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFees.quer
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFees.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/proceduresNotBilled.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/proceduresNotBilled.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/projectAccountHistory.js -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/projectAccountHistory/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/publicInvoiceRuns.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/publicInvoiceRuns.sql -text
@@ -1222,7 +1228,6 @@ onprcEHRModules/onprc_ssu/src/org/labkey/onprc_ssu/ONPRC_SSUSchema.java -text
 onprcEHRModules/onprc_ssu/src/org/labkey/onprc_ssu/notification/SSU_Notification.java -text
 onprcEHRModules/sla/SLA.iml -text
 onprcEHRModules/sla/module.properties -text
-onprcEHRModules/sla/resources/etl/sla/allowableAnimals.sql -text
 onprcEHRModules/sla/resources/etl/sla/census.sql -text
 onprcEHRModules/sla/resources/etl/sla/purchase.sql -text
 onprcEHRModules/sla/resources/etl/sla/purchasedetails.sql -text
@@ -1249,6 +1254,7 @@ onprcEHRModules/sla/src/org/labkey/sla/SLAController.java -text
 onprcEHRModules/sla/src/org/labkey/sla/SLAManager.java -text
 onprcEHRModules/sla/src/org/labkey/sla/SLAModule.java -text
 onprcEHRModules/sla/src/org/labkey/sla/SLASchema.java -text
+onprcEHRModules/sla/src/org/labkey/sla/SLAUserSchema.java -text
 onprcEHRModules/sla/src/org/labkey/sla/etl/ETL.java -text
 onprcEHRModules/sla/src/org/labkey/sla/etl/ETLAuditProvider.java -text
 onprcEHRModules/sla/src/org/labkey/sla/etl/ETLAuditViewFactory.java -text

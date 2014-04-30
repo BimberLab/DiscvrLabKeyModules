@@ -99,7 +99,7 @@ if [ $(which yum) ]; then
     yum install glibc-devel ncurses-devel libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
-    apt-get -q -y install libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev libssl-dev libgcc1 libstdc++6 libtcmalloc-minimal0 zlib1g zlib1g-dev libboost-thread-dev libboost-dev libboost-system-dev libboost-regex-dev libboost-filesystem-dev libboost-iostreams-dev python-numpy python-scipy libexpat1-dev
+    apt-get -q -y install libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev libssl-dev libgcc1 libstdc++6 libtcmalloc-minimal4 zlib1g zlib1g-dev libboost-thread-dev libboost-dev libboost-system-dev libboost-regex-dev libboost-filesystem-dev libboost-iostreams-dev python-numpy python-scipy libexpat1-dev
 else
     echo "No known package manager present, aborting"
     exit 1

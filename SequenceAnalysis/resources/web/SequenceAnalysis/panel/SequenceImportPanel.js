@@ -89,14 +89,14 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     pairedCheckbox.setDisabled(c.checked);
 
                     var grid = form.down('#sampleGrid');
-                    if(c.checked){
+                    if (c.checked){
                         Ext4.each(grid.store.getRange(), function(rec, idx){
-                            if(idx > 0)
+                            if (idx > 0)
                                 grid.store.remove(rec);
                         }, this);
                     }
 
-                    if(!c.checked){
+                    if (!c.checked){
                         c.up('form').down('#mergeName').reset();
                         pairedCheckbox.setValue(false);
                     }
@@ -125,7 +125,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         change: function(field, val){
                             var grid = field.up('form').down('#sampleGrid');
                             grid.store.each(function(rec){
-                                if(rec){
+                                if (rec){
                                     rec.set('fileName', val);
                                     rec.set('fileId', null);
                                     rec.set('fileId2', null);
@@ -150,7 +150,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     var mergeCheckbox = btn.up('#inputFileFieldset').down('#mergeCheckbox');
                     if (mergeCheckbox.originalState){
                         mergeCheckbox.setDisabled(val);
-                        if(!val)
+                        if (!val)
                             mergeCheckbox.setValue(false);
                     }
                 }
@@ -261,7 +261,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
         //find file names
         var filenames = [];
-        if(merge){
+        if (merge){
             filenames.push(this.down('#mergeName').getValue())
         }
         else {
@@ -275,7 +275,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
             var obj = {fileName: fn};
             var error = false;
-            if(info){
+            if (info){
                 obj.fileId = info.dataId;
                 if (info.error)
                     error = true;
@@ -291,7 +291,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     getJsonParams: function(btn){
         var fields = this.callParent(arguments);
 
-        if(!fields)
+        if (!fields)
             return;
 
         var error;
@@ -310,14 +310,14 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         sampleInfo.each(function(r, sampleIdx){
             var key = [r.data['fileName']];
             inputFiles.push({name: r.data['fileName'], id: r.data['fileId']});
-            if(usePairedEnd){
-                if(!r.data['fileName2']){
+            if (usePairedEnd){
+                if (!r.data['fileName2']){
                     Ext4.Msg.alert('Error', 'Missing paired file for: ' + r.get('fileName') + '. Either choose a file or unchecked paired-end.');
                     error = 1;
                     return false;
                 }
 
-                if(r.data['fileName'] == r.data['fileName2']){
+                if (r.data['fileName'] == r.data['fileName2']){
                     Ext4.Msg.alert('Error', 'Forward and reverse files cannot have the same name: ' + r.get('fileName'));
                     error = 1;
                     return false;
@@ -330,7 +330,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 delete r.data['fileId2'];
             }
 
-            if(!useBarcode){
+            if (!useBarcode){
                 delete r.data['mid5'];
                 delete r.data['mid3'];
             }
@@ -341,7 +341,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
             key = key.join(";");
 
-            if(sampleMap[key]){
+            if (sampleMap[key]){
                 Ext4.Msg.alert('Error', 'Duplicate Sample: '+key+'. Please remove or edit rows in the \'Readsets\' section');
                 error = 1;
                 return false;
@@ -354,15 +354,15 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 3: (!Ext4.isEmpty(r.data['mid3']))
             };
 
-            if(barcodeUsage){
-                if(barcodeUsageTmp[3]!=barcodeUsage[3] || barcodeUsageTmp[5]!=barcodeUsage[5]){
+            if (barcodeUsage){
+                if (barcodeUsageTmp[3]!=barcodeUsage[3] || barcodeUsageTmp[5]!=barcodeUsage[5]){
                     Ext4.Msg.alert('Error', 'All samples must either use no barcodes, 5\' only, 3\' only or both ends');
                     error = 1;
                 }
             }
             barcodeUsage = barcodeUsageTmp;
 
-            if(!r.get('fileName') || (!r.get('readset') && (!r.get('platform') && !r.get('readsetname')))){
+            if (!r.get('fileName') || (!r.get('readset') && (!r.get('platform') && !r.get('readsetname')))){
                 Ext4.Msg.alert('Error', 'For each file, you must provide either the Id of an existing, unused readset or a name/platform to create a new one');
                 error = 1;
             }
@@ -372,31 +372,25 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
             //handle barcodes
             var rec;
-            if(r.data['mid5']){
+            if (r.data['mid5']){
                 rec = this.barcodeStore.getAt(this.barcodeStore.find('tag_name', r.data['mid5']));
-                if(!barcodes[r.data['mid5']]){
+                if (!barcodes[r.data['mid5']]){
                     barcodes[r.data['mid5']] = [r.data['mid5'], rec.get('sequence')];
                 }
-                else {
-                    barcodes[r.data['mid5']][2] = 1;
-                }
             }
-            if(r.data['mid3']){
+            if (r.data['mid3']){
                 rec = this.barcodeStore.getAt(this.barcodeStore.find('tag_name', r.data['mid3']));
-                if(rec && !barcodes[r.data['mid3']]){
+                if (rec && !barcodes[r.data['mid3']]){
                     barcodes[r.data['mid3']] = [r.data['mid3'], rec.get('sequence')];
                 }
-                else {
-                    barcodes[r.data['mid5']][3] = 1;
-                }
             }
 
-            if(r.get('readset')){
+            if (r.get('readset')){
                 var msg = 'A readset has already been created for the file: ' + r.get('fileName');
-                if(r.get('fileName2'))
+                if (r.get('fileName2'))
                     msg += ' and paired file: ' + r.get('fileName2');
 
-                if(r.get('mid5') || r.get('mid3'))
+                if (r.get('mid5') || r.get('mid3'))
                     msg += ' using barcodes: ' + (r.get('mid5') ? r.get('mid5') : '') + (r.get('mid3') ? ', ' + r.get('mid3') : '');
                 msg += ' and you cannot import a file twice.';
 
@@ -404,7 +398,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 error = 1;
             }
 
-            if(error){
+            if (error){
                 return false;
             }
 
@@ -415,7 +409,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             fields['barcode_'+i] = barcodes[i];
         }
 
-        if(error){
+        if (error){
             return false;
         }
 
@@ -431,7 +425,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             return;
         }
 
-        if(doMerge){
+        if (doMerge){
             inputFiles = [];
             this.fileNameStore.each(function(rec){
                 //skip files flagged w/ errors
@@ -448,7 +442,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         var distinctIds = [];
         var distinctNames = [];
         Ext4.each(inputFiles, function(file){
-            if(!file.id)
+            if (!file.id)
                 distinctNames.push(file.name);
             else
                 distinctIds.push(file.id)

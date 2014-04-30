@@ -18,7 +18,7 @@ Ext4.define('Laboratory.panel.AssayDefaultsPanel', {
                 border: false
             },
             items: [{
-                html: 'This page allows admins to control the defaults for assays enabled in this folder.',
+                html: 'This page allows admins to control the default import method for assays enabled in this folder.',
                 padding: '0 0 20 0'
             }],
             buttonAlign: 'left',
@@ -50,21 +50,6 @@ Ext4.define('Laboratory.panel.AssayDefaultsPanel', {
             this.renderProvider(provider);
         }, this);
 
-        var items = [{
-            style: 'padding-bottom: 10px;',
-            html: 'The links below open a page that will compare each the fields in each assay instance against those specified in the assay definition and add any missing fields.'
-        }];
-
-        var panel = {
-            border: false,
-            defaults: {
-                border: false
-            },
-            style: 'margin-bottom: 20px;',
-            items: items
-        };
-
-        this.add(panel);
         this.down('#submitBtn').setDisabled(false);
     },
 

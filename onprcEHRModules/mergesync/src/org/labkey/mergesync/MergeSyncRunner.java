@@ -432,10 +432,6 @@ public class MergeSyncRunner implements Job
         String servicename_abbr = rs.getString("servicename_abbr");
         String testid_abbr = rs.getString("testid_abbr");
 
-        //TODO: this should really be placed into some sort of translation table
-        if (testid_abbr != null)
-            testid_abbr = testid_abbr.replaceAll("%", "");
-
         String text_result = rs.getString("text_result");
         Double numeric_result = rs.getDouble("numeric_result");
         String remark = rs.getString("remark");

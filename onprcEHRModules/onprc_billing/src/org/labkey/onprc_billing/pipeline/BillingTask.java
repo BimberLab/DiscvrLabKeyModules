@@ -299,7 +299,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
             "quantity", "unitCost", "totalcost",
             "rateId", "exemptionId", "creditaccountid", "comment", "transactionType", "sourceRecord", "chargeType"};
 
-    private void writeToInvoicedItems(List<Map<String, Object>> rows, String category, String[] colNames, String queryName) throws PipelineJobException
+    private void writeToInvoicedItems(List<Map<String, Object>> rows, String category, String[] colNames, String queryName, boolean allowNullProject) throws PipelineJobException
     {
         assert colNames.length >= invoicedItemsCols.length;
 
@@ -334,7 +334,12 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
                     }
                 }
 
-                List<String> required = Arrays.asList("date", "chargeId", "item", "servicecenter", "project", "debitedaccount", "faid", "unitCost", "totalcost");
+                List<String> required = new ArrayList<>(Arrays.asList("date", "chargeId", "item", "servicecenter", "debitedaccount", "faid", "unitCost", "totalcost", "investigatorid"));
+                if (!allowNullProject)
+                {
+                    required.add("project");
+                }
+
                 for (String field : required)
                 {
                     if (toInsert.get(field) == null)
@@ -416,7 +421,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
 
         getJob().getLogger().info(rows.size() + " rows found");
 
-        writeToInvoicedItems(rows, "Lease Fees", colNames, queryName);
+        writeToInvoicedItems(rows, "Lease Fees", colNames, queryName, false);
         getJob().getLogger().info("Finished Caching Lease Fees");
     }
 
@@ -513,7 +518,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
         List<Map<String, Object>> rows = getRowList(ehrContainer, "onprc_billing", queryName, colNames, params);
         getJob().getLogger().info(rows.size() + " rows found");
 
-        writeToInvoicedItems(rows, "Per Diems", colNames, queryName);
+        writeToInvoicedItems(rows, "Per Diems", colNames, queryName, false);
         getJob().getLogger().info("Finished Caching Per Diem Fees");
     }
 
@@ -565,7 +570,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
         List<Map<String, Object>> rows = getRowList(slaContainer, "onprc_billing", queryName, colNames, params);
         getJob().getLogger().info(rows.size() + " rows found");
 
-        writeToInvoicedItems(rows, "Small Lab Animal Per Diems", colNames, queryName);
+        writeToInvoicedItems(rows, "Small Lab Animal Per Diems", colNames, queryName, false);
         getJob().getLogger().info("Finished Caching Per Diem Fees");
     }
 
@@ -611,7 +616,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
         List<Map<String, Object>> rows = getRowList(ehrContainer, "onprc_billing", queryName, colNames, params);
         getJob().getLogger().info(rows.size() + " rows found");
 
-        writeToInvoicedItems(rows, "Procedure Fees", colNames, queryName);
+        writeToInvoicedItems(rows, "Procedure Fees", colNames, queryName, false);
         getJob().getLogger().info("Finished Caching Procedure Fees");
     }
 
@@ -657,7 +662,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
         List<Map<String, Object>> rows = getRowList(ehrContainer, "onprc_billing", queryName, colNames, params);
         getJob().getLogger().info(rows.size() + " rows found");
 
-        writeToInvoicedItems(rows, "Labwork Fees", colNames, queryName);
+        writeToInvoicedItems(rows, "Labwork Fees", colNames, queryName, false);
         getJob().getLogger().info("Finished Caching Labwork Fees");
     }
 
@@ -700,7 +705,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
         List<Map<String, Object>> rows = getRowList(ehrContainer, "onprc_billing", MISC_CHARGES_QUERY, colNames, params);
         getJob().getLogger().info(rows.size() + " rows found");
 
-        writeToInvoicedItems(rows, "Other Charges", colNames, MISC_CHARGES_QUERY);
+        writeToInvoicedItems(rows, "Other Charges", colNames, MISC_CHARGES_QUERY, true);
 
         getJob().getLogger().info("Finished Caching Other Charges");
     }

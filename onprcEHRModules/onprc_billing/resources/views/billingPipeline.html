@@ -124,6 +124,14 @@
                     return;
                 }
 
+                var now = new Date();
+                now = Ext4.Date.clearTime(now);
+                if (jsonParameters.startDate > now || jsonParameters.endDate >= now){
+                    Ext4.Msg.alert('Error', 'Dates cannot be in the future or ending today');
+                    btn.setDisabled(false);
+                    return;
+                }
+
                 Ext4.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('onprc_billing', 'RunBillingPipeline'),
                     params: jsonParameters,

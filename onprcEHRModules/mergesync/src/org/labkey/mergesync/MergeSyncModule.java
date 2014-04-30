@@ -44,7 +44,7 @@ public class MergeSyncModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 0.06;
+        return 0.07;
     }
 
     @Override

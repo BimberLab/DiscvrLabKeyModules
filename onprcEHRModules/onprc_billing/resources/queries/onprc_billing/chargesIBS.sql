@@ -20,7 +20,7 @@ SELECT
   i.transactionNumber,
   i.date as transactionDate,
   CASE
-    WHEN i.servicecenter = 'SLAU' THEN i.comment
+    WHEN i.servicecenter = 'SLAU' THEN i.item
     ELSE i.Id
   END as transactionDescription,  --show animal Id, rather than description, except for SLAU
   i.lastName,
@@ -53,7 +53,7 @@ SELECT
   i.transactionNumber,
   i.date as transactionDate,
   CASE
-    WHEN i.servicecenter = 'SLAU' THEN i.comment
+    WHEN i.servicecenter = 'SLAU' THEN i.item
     ELSE i.Id
   END as transactionDescription,  --show animal Id, rather than description, except for SLAU
   i.lastName,

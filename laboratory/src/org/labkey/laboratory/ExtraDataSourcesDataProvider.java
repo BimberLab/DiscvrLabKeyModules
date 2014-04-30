@@ -79,7 +79,11 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
                     }
                     else if (itemType.equals(LaboratoryService.NavItemCategory.reports))
                     {
-                        items.add(new ReportItem(this, source.getTargetContainer(null), source.getSchemaName(), source.getQueryName(), source.getCategory(), source.getLabel()));
+                        ReportItem item = new ReportItem(this, source.getTargetContainer(null), source.getSchemaName(), source.getQueryName(), source.getCategory(), source.getLabel());
+                        if (source.getTargetContainer(null) != null)
+                            item.setTargetContainer(source.getTargetContainer(null));
+
+                        items.add(item);
                     }
                     else
                     {
@@ -215,6 +219,8 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
             {
                 QueryImportNavItem sq = (QueryImportNavItem)owner;
                 TabbedReportItem reportItem = new QueryTabbedReportItem(this, sq.getSchema(), sq.getQuery(), sq.getLabel(), owner.getCategory());
+                if (sq.getTargetContainer(c) != null)
+                    reportItem.setTargetContainer(sq.getTargetContainer(c));
                 reportItem.setOwnerKey(owner.getPropertyManagerKey());
                 items.add(reportItem);
             }

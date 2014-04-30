@@ -158,8 +158,14 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
         var items = [];
         if (val == 'reversal'){
             items.push({
-                html: 'This will create a new transaction to reverse the original charge.  Note: the aliases used will match those from the original transaction, and does not check whether they are still valid.  The new transactions will use the current date, not the original date.',
+                html: 'This will create a new transaction to reverse the original charge.  Note: the aliases used will match those from the original transaction, and does not check whether they are still valid.  The new transactions will use the date selected below, not the original date.',
                 style: 'padding-bottom: 10px;'
+            },{
+                xtype: 'datefield',
+                width: 400,
+                itemId: 'dateField',
+                value: new Date(),
+                fieldLabel: 'Transaction Date'
             },{
                 xtype: 'numberfield',
                 hideTrigger: true,
@@ -178,8 +184,14 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             items.push({
                 html: 'This will switch the project charged to the project selected below.  This will automatically create a charge to reverse the original charge, and create a second charge against the new project.  ' +
                     'The reversal will use the aliases used on the original transaction.  This does not check whether the aliases are still valid.<p></p>' +
-                    'The new charge will debit against the alias chosen below.  The field shows all aliases that have historically been associated with this project.  If left blank, it will use the currently active alias from the chosen project.  It will credit the same alias as the original transaction.  All transactions will use the current date, as opposed to the original transaction date.',
+                    'The new charge will debit against the alias chosen below.  The field shows all aliases that have historically been associated with this project.  If left blank, it will use the currently active alias from the chosen project.  It will credit the same alias as the original transaction.  All transactions will use the date selected below, as opposed to the original transaction date.',
                 style: 'padding-bottom: 10px;'
+            },{
+                xtype: 'datefield',
+                width: 400,
+                itemId: 'dateField',
+                value: new Date(),
+                fieldLabel: 'Transaction Date'
             },{
                 xtype: 'ehr-projectfield',
                 itemId: 'projectField',
@@ -251,8 +263,14 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
         }
         else if (val == 'changeCreditAlias'){
             items.push({
-                html: 'This will switch the alias credited for the selected charges to the alias selected below.  This will reverse the original item and create a new record with this alias.  Note: the reversal will use the aliases from the original transaction, and does not check whether these are still valid.  The new transaction will charge alias listed in the original transaction, and switch the credit to use the chosen alias.  All transactions will use the current date.',
+                html: 'This will switch the alias credited for the selected charges to the alias selected below.  This will reverse the original item and create a new record with this alias.  Note: the reversal will use the aliases from the original transaction, and does not check whether these are still valid.  The new transaction will charge alias listed in the original transaction, and switch the credit to use the chosen alias.  All transactions will use the date selected below.',
                 style: 'padding-bottom: 10px;'
+            },{
+                xtype: 'datefield',
+                width: 400,
+                itemId: 'dateField',
+                value: new Date(),
+                fieldLabel: 'Transaction Date'
             },{
                 xtype: 'textfield',
                 itemId: 'aliasField',
@@ -283,8 +301,14 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             unitCosts = Ext4.unique(unitCosts);
 
             items.push({
-                html: 'This will switch the unit cost for the selected charges to the amount selected below.  This will reverse the original item and create a new record using the updated unit cost.  Note: the reversal will use the aliases from the original transaction, and does not check whether these are still valid.  The new charge will also use the credit/debit aliases from the original transaction, which may not match the currently active alias for the project, or the current credit alias for this type of charge.  All transactions will use the current date.',
+                html: 'This will switch the unit cost for the selected charges to the amount selected below.  This will reverse the original item and create a new record using the updated unit cost.  Note: the reversal will use the aliases from the original transaction, and does not check whether these are still valid.  The new charge will also use the credit/debit aliases from the original transaction, which may not match the currently active alias for the project, or the current credit alias for this type of charge.  All transactions will use the date selected below.',
                 style: 'padding-bottom: 10px;'
+            },{
+                xtype: 'datefield',
+                width: 400,
+                itemId: 'dateField',
+                value: new Date(),
+                fieldLabel: 'Transaction Date'
             },{
                 xtype: 'numberfield',
                 itemId: 'unitCostField',
@@ -340,6 +364,12 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             return;
         }
 
+        var dateField = this.down('#dateField');
+        if (dateField && !dateField.getValue()){
+            Ext4.Msg.alert('Error', 'You must select the transaction date.');
+            return;
+        }
+
         if (val == 'changeCreditAlias' || (val == 'changeProject' && this.down('#aliasField').getValue())){
             this.validateCreditAlias();
             return;
@@ -354,6 +384,7 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
         var issueField = this.down('#issueId');
         var commentField = this.down('#comment');
         var unitCostField = this.down('#unitCostField');
+        var dateField = this.down('#dateField');
 
         this.hide();
 
@@ -365,7 +396,7 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             var baseValues = {
                 //transactionNumber: sr.getValue('transactionNumber'),
                 Id: sr.getValue('Id'),
-                date: new Date(), //NOTE: we always use the current date
+                date: dateField ? dateField.getValue() : new Date(),
                 billingDate: new Date(),
                 project: sr.getValue('project'),
                 debitedaccount: sr.getValue('debitedaccount'),
@@ -499,12 +530,25 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                     Ext4.Msg.hide();
                     Ext4.Msg.confirm('Success', 'Charges have been reversed/adjusted.  These changes will apply to the next billing period.  Do you want to view these now?', function(val){
                         if (val == 'yes'){
-                            var newForm = LABKEY.ExtAdapter.DomHelper.append(document.getElementsByTagName('body')[0],
-                                    '<form method="POST" action="' + LABKEY.ActionURL.buildURL('query', 'executeQuery', this.ehrCtx['EHRStudyContainer'], {'query.queryName': 'miscChargesWithRates', 'schemaName': 'onprc_billing'}) + '">' +
+                            // NOTE: if reversing a large # of records, the URL can become too long so we POST.  because this is slightly
+                            // less desirable (no back navigation), only do this with a large # of items
+                            if (objectIds.length <= 20){
+                                window.location = LABKEY.ActionURL.buildURL('query', 'executeQuery', this.ehrCtx['EHRStudyContainer'], {
+                                    schemaName: 'onprc_billing',
+                                    'query.queryName': 'miscChargesWithRates',
+                                    'query.viewName': 'Adjustment Detail',
+                                    'query.sourceInvoicedItem~in': objectIds.join(';'),
+                                    'query.billingDate~dateeq': (new Date()).format('Y-m-d')
+                                });
+                            }
+                            else {
+                                var newForm = LABKEY.ExtAdapter.DomHelper.append(document.getElementsByTagName('body')[0],
+                                    '<form method="POST" action="' + LABKEY.ActionURL.buildURL('query', 'executeQuery', this.ehrCtx['EHRStudyContainer'], {'query.queryName': 'miscChargesWithRates', 'schemaName': 'onprc_billing', 'query.viewName': 'Adjustment Detail'}) + '">' +
                                             '<input type="hidden" name="query.sourceInvoicedItem~in" value="' + LABKEY.ExtAdapter.htmlEncode(objectIds.join(';')) + '" />' +
                                             '<input type="hidden" name="query.billingDate~dateeq" value="' + LABKEY.ExtAdapter.htmlEncode((new Date()).format('Y-m-d')) + '" />' +
                                             '</form>');
-                            newForm.submit();
+                                newForm.submit();
+                            }
                         }
                     }, this);
                 }

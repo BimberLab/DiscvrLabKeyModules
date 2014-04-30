@@ -9,7 +9,7 @@ var LABKEY = require("labkey");
 exports.init = function(EHR){
     EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Events.COMPLETE, 'study', 'Clinpath Runs', function(event, errors, helper){
         var rows = helper.getRows();
-        if (helper.getEvent() == 'insert' && rows.length){
+        if (helper.getEvent() == 'insert' && rows.length && !helper.isValidateOnly()){
             var toSync = [];
             for (var i=0;i<rows.length;i++){
                 var row = rows[i].row;

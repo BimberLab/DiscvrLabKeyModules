@@ -24,8 +24,11 @@ import org.labkey.api.ehr.EHRService;
 import org.labkey.api.ehr.buttons.EHRShowEditUIButton;
 import org.labkey.api.ehr.security.EHRProtocolEditPermission;
 import org.labkey.api.ldk.ExtendedSimpleModule;
+import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.query.QuerySchema;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.sla.etl.ETL;
@@ -90,5 +93,17 @@ public class SLAModule extends ExtendedSimpleModule
     public Set<String> getSchemaNames()
     {
         return Collections.singleton(SLASchema.NAME);
+    }
+
+    @Override
+    protected void registerSchemas()
+    {
+        DefaultSchema.registerProvider(SLASchema.NAME, new DefaultSchema.SchemaProvider(this)
+        {
+            public QuerySchema createSchema(final DefaultSchema schema, Module module)
+            {
+                return new SLAUserSchema(schema.getUser(), schema.getContainer());
+            }
+        });
     }
 }

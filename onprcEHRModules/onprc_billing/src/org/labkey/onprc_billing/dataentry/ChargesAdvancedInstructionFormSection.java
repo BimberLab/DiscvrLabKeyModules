@@ -22,6 +22,7 @@ public class ChargesAdvancedInstructionFormSection extends AbstractFormSection
         super("ChargesInstruction", "Instructions", "onprc-chargesadvancedinstructionpanel");
 
         addClientDependency(ClientDependency.fromFilePath("onprc_billing/panel/ChargesAdvancedInstructionPanel.js"));
+        setSupportFormSort(false);
     }
 
     @Override
