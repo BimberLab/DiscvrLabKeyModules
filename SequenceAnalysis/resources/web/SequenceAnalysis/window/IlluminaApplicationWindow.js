@@ -127,11 +127,11 @@ Ext4.define('SequenceAnalysis.window.IlluminaApplicationWindow', {
                 var row = {
                     name: name,
                     label: params['Display Name'] || name,
-                    compatiblekits: LABKEY.ExtAdapter.isArray(params['Compatible Sample Prep Kits']) ? params['Compatible Sample Prep Kits'].join(',') : params['Compatible Sample Prep Kits'],
+                    compatiblekits: Ext4.isArray(params['Compatible Sample Prep Kits']) ? params['Compatible Sample Prep Kits'].join(',') : params['Compatible Sample Prep Kits'],
                     workflowname: params['Workflow Name'],
                     version: params['Version'],
-                    settings: LABKEY.ExtAdapter.encode(params['Settings']),
-                    workflowparams: LABKEY.ExtAdapter.encode(params['Workflow-Specific Parameters'])
+                    settings: Ext4.encode(params['Settings']),
+                    workflowparams: Ext4.encode(params['Workflow-Specific Parameters'])
                 };
 
                 var config = {

@@ -23,7 +23,7 @@ Ext4.define('ONPRC_Billing.window.ChangeBillDateWindow', {
     },
 
     initComponent: function(){
-        LABKEY.ExtAdapter.apply(this, {
+        Ext4.apply(this, {
             modal: true,
             width: 600,
             bodyStyle: 'padding: 5px;',

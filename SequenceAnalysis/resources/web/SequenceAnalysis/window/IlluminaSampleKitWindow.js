@@ -67,7 +67,7 @@ Ext4.define('SequenceAnalysis.window.IlluminaSampleKitWindow', {
             success: function(response){
                 var row = {
                     name: name,
-                    json: LABKEY.ExtAdapter.encode(json)
+                    json: Ext4.encode(json)
                 };
 
                 var config = {

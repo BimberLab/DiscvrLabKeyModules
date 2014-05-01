@@ -35,7 +35,7 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             return;
         }
 
-        LABKEY.ExtAdapter.apply(this, {
+        Ext4.apply(this, {
             modal: true,
             closeAction: 'destroy',
             title: 'Reverse/Adjust Charges',
@@ -425,8 +425,8 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             objectIds.push(sr.getValue('objectid'));
 
             if (val == 'reversal'){
-                var toInsert = LABKEY.ExtAdapter.apply({}, baseValues);
-                LABKEY.ExtAdapter.apply(toInsert, {
+                var toInsert = Ext4.apply({}, baseValues);
+                Ext4.apply(toInsert, {
                     chargeType: 'Reversal',
                     unitcost: -1 * sr.getValue('unitcost')
                 });
@@ -436,8 +436,8 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             else if (val == 'changeProject'){
                 //first create a charge to reverse the original
                 //we expect to use the same credit/debit alias as the original
-                var reversalCharge = LABKEY.ExtAdapter.apply({}, baseValues);
-                LABKEY.ExtAdapter.apply(reversalCharge, {
+                var reversalCharge = Ext4.apply({}, baseValues);
+                Ext4.apply(reversalCharge, {
                     chargeType: 'Reversal',
                     unitcost: -1 * sr.getValue('unitcost')
                 });
@@ -449,8 +449,8 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                 var combo = this.down('#projectField');
                 var aliasField = this.down('#aliasField');
 
-                var newCharge = LABKEY.ExtAdapter.apply({}, baseValues);
-                LABKEY.ExtAdapter.apply(newCharge, {
+                var newCharge = Ext4.apply({}, baseValues);
+                Ext4.apply(newCharge, {
                     chargeType: 'Adjustment (Project Change)',
                     project: combo.getValue(),
                     debitedaccount: aliasField.getValue() ? Ext4.String.trim(aliasField.getValue()) : null //NOTE: blank will result in this project's active alias being used
@@ -460,8 +460,8 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             }
             else if (val == 'changeCreditAlias'){
                 //first create a charge to reverse the original
-                var reversalCharge = LABKEY.ExtAdapter.apply({}, baseValues);
-                LABKEY.ExtAdapter.apply(reversalCharge, {
+                var reversalCharge = Ext4.apply({}, baseValues);
+                Ext4.apply(reversalCharge, {
                     chargeType: 'Reversal',
                     unitcost: -1 * sr.getValue('unitcost')
                 });
@@ -471,8 +471,8 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                 //then create one to charge against the new project/account
                 var combo = this.down('#aliasField');
 
-                var newCharge = LABKEY.ExtAdapter.apply({}, baseValues);
-                LABKEY.ExtAdapter.apply(newCharge, {
+                var newCharge = Ext4.apply({}, baseValues);
+                Ext4.apply(newCharge, {
                     creditedaccount: combo.getValue(),
                     chargeType: 'Adjustment (Credit Alias Change)'
                 });
@@ -481,8 +481,8 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             }
             else if (val == 'changeUnitCost'){
                 //first create a charge to reverse the original
-                var reversalCharge = LABKEY.ExtAdapter.apply({}, baseValues);
-                LABKEY.ExtAdapter.apply(reversalCharge, {
+                var reversalCharge = Ext4.apply({}, baseValues);
+                Ext4.apply(reversalCharge, {
                     chargeType: 'Reversal',
                     unitcost: -1 * sr.getValue('unitcost')
                 });
@@ -492,8 +492,8 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                 //then create one to charge against the new project/account
                 var field = this.down('#unitCostField');
 
-                var newCharge = LABKEY.ExtAdapter.apply({}, baseValues);
-                LABKEY.ExtAdapter.apply(newCharge, {
+                var newCharge = Ext4.apply({}, baseValues);
+                Ext4.apply(newCharge, {
                     chargeType: 'Adjustment (Unit Cost)',
                     unitcost: field.getValue()
                 });
@@ -542,10 +542,10 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                                 });
                             }
                             else {
-                                var newForm = LABKEY.ExtAdapter.DomHelper.append(document.getElementsByTagName('body')[0],
+                                var newForm = Ext4.DomHelper.append(document.getElementsByTagName('body')[0],
                                     '<form method="POST" action="' + LABKEY.ActionURL.buildURL('query', 'executeQuery', this.ehrCtx['EHRStudyContainer'], {'query.queryName': 'miscChargesWithRates', 'schemaName': 'onprc_billing', 'query.viewName': 'Adjustment Detail'}) + '">' +
-                                            '<input type="hidden" name="query.sourceInvoicedItem~in" value="' + LABKEY.ExtAdapter.htmlEncode(objectIds.join(';')) + '" />' +
-                                            '<input type="hidden" name="query.billingDate~dateeq" value="' + LABKEY.ExtAdapter.htmlEncode((new Date()).format('Y-m-d')) + '" />' +
+                                            '<input type="hidden" name="query.sourceInvoicedItem~in" value="' + Ext4.htmlEncode(objectIds.join(';')) + '" />' +
+                                            '<input type="hidden" name="query.billingDate~dateeq" value="' + Ext4.htmlEncode((new Date()).format('Y-m-d')) + '" />' +
                                             '</form>');
                                 newForm.submit();
                             }

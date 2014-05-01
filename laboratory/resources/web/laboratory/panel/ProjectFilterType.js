@@ -38,7 +38,7 @@ Ext4.define('Laboratory.panel.ProjectFilterType', {
                     sql: 'select distinct project from laboratory.project_usage WHERE project IS NOT NULL GROUP BY project',
                     autoLoad: true
                 },
-                value: LABKEY.ExtAdapter.isArray(ctx.projects) ? ctx.projects.join(';') : ctx.projects
+                value: Ext4.isArray(ctx.projects) ? ctx.projects.join(';') : ctx.projects
             },{
                 xtype: 'radiogroup',
                 columns: 1,

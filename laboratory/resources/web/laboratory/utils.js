@@ -43,7 +43,7 @@ Laboratory.Utils = new function(){
                     callback: config.failure
                 }),
                 success: function(response){
-                    var json = LABKEY.ExtAdapter.decode(response.responseText);
+                    var json = Ext4.decode(response.responseText);
                     if (config.success)
                         config.success.call((config.scope || this), json);
                 }

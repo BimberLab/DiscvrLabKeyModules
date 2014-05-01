@@ -394,7 +394,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                         if(!valuesObj['Settings'])
                             valuesObj['Settings'] = [];
 
-                        var settings = LABKEY.ExtAdapter.decode(rec.get('settings'));
+                        var settings = Ext4.decode(rec.get('settings'));
                         for (var i in settings){
                             valuesObj['Settings'].push([i, settings[i]]);
                         }
@@ -414,7 +414,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                         return;
                     }
 
-                    var json = LABKEY.ExtAdapter.decode(rec.get('json'));
+                    var json = Ext4.decode(rec.get('json'));
                     for (var section in json){
                         var array = json[section];
                         if(!valuesObj[section])
