@@ -6,9 +6,9 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
         Ext4.apply(this, {
             width: '100%',
             title: 'Readsets',
-            editingPluginId: 'editingplugin',
+            editingPluginId: 'cellediting',
             plugins: [Ext4.create('Ext.grid.plugin.CellEditing', {
-                pluginId: 'editingplugin',
+                pluginId: 'cellediting',
                 clicksToEdit: 2,
                 listeners: {
                     beforeedit: function(cell, object){
