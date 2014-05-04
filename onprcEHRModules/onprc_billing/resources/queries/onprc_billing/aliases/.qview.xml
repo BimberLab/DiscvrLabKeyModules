@@ -6,6 +6,7 @@
         <column name="projectNumber"/>
         <column name="grantNumber"/>
         <column name="investigatorName"/>
+        <column name="investigatorId"/>
         <column name="fiscalAuthority"/>
         <column name="faSchedule"/>
         <column name="projectTitle"/>

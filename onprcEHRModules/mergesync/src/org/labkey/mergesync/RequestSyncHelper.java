@@ -166,6 +166,7 @@ public class RequestSyncHelper
                 int orderId = createOrder(mergeSchema, _user, patientId, personnelId, visitId, (Date)records.get(0).get("date"));
 
                 //then 1 row per service type (clinpath runs record)
+                int letterIdx = 0;
                 for (Map<String, Object> row : records)
                 {
                     Integer mergeTestId = resolveMergeTestId(mergeSchema, (String)row.get("servicerequested"));
@@ -176,9 +177,16 @@ public class RequestSyncHelper
                     }
 
                     //TODO: figure out what scheme to use to batch tests by container
-                    int containerId = createContainer(mergeSchema, _user, orderId, mergeTestId, personnelId, (Date)records.get(0).get("date"));
+                    char containerName = ALPHABET[letterIdx];
+                    letterIdx++;
+                    if (letterIdx > 25)
+                    {
+                        _log.error("More than 26 containers were used for a merge import.  Restarting at A");
+                    }
+                    letterIdx = letterIdx % 26;
 
-                    int testId = createTest(mergeSchema, _user, patientId, personnelId, visitId, orderId, containerId, mergeTestId, (Date)row.get("date"));
+                    int containerId = createContainer(mergeSchema, _user, orderId, mergeTestId, personnelId, (Date)records.get(0).get("date"), containerName);
+                    int testId = createTest(mergeSchema, _user, patientId, personnelId, visitId, orderId, containerId, mergeTestId, (Date)row.get("date"), containerName);
 
                     //insert record into orderssynced
                     TableInfo ordersSynced = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_ORDERSSYNCED);
@@ -274,7 +282,9 @@ public class RequestSyncHelper
 
         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
         toInsert.put("PT_LNAME", animalId);
-        toInsert.put("PT_NUM", getAndIncrementIndex("PT_NUM", ti));
+        toInsert.put("PT_NUM", animalId);
+
+        //increment index?
 
         AnimalRecord ar = EHRDemographicsService.get().getAnimal(c, animalId);
         if (ar != null)
@@ -496,7 +506,9 @@ public class RequestSyncHelper
         return cal.getTime();
     }
 
-    private int createContainer(DbSchema mergeSchema, User u, int orderId, int mergeTestId, int personnelId, Date date) throws SQLException
+    private char[] ALPHABET = new char[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
+
+    private int createContainer(DbSchema mergeSchema, User u, int orderId, int mergeTestId, int personnelId, Date date, Character containerName) throws SQLException
     {
         TableInfo containerTable = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_CONTAINERS);
         Map<String, Object> testInfo = getMergeTestInfo(mergeSchema, mergeTestId);
@@ -504,7 +516,8 @@ public class RequestSyncHelper
         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
         toInsert.put("CNT_INDEX", getAndIncrementIndex("CNT_INDEX", containerTable));
         toInsert.put("CNT_ACCNR", orderId);
-        toInsert.put("CNT_MAP", "A");  //TODO: reconcile this with tests
+
+        toInsert.put("CNT_MAP", containerName.toString());
         toInsert.put("CNT_STATUS", "C");
         toInsert.put("CNT_DATE", convertDate(date));
         toInsert.put("CNT_DTZ", getTZ(date, mergeSchema));
@@ -575,7 +588,7 @@ public class RequestSyncHelper
         return pair;
     }
 
-    private int createTest(DbSchema mergeSchema, User u, int patientId, int personnelId, String visitId, int accession, int containerId, int mergeTestId, Date date) throws SQLException
+    private int createTest(DbSchema mergeSchema, User u, int patientId, int personnelId, String visitId, int accession, int containerId, int mergeTestId, Date date, Character containerName) throws SQLException
     {
         TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_TEST);
         Map<String, Object> testInfo = getMergeTestInfo(mergeSchema, mergeTestId);
@@ -590,7 +603,7 @@ public class RequestSyncHelper
         toInsert.put("TS_ACCNR", accession);
         toInsert.put("TS_DEPT", worklistInfo.second);
         toInsert.put("TS_WKIDX", worklistInfo.first);
-        toInsert.put("TS_MAP", "A");    //TODO: unknown, need to fill out
+        toInsert.put("TS_MAP", containerName.toString());
         toInsert.put("TS_STAT", "C");
         toInsert.put("TS_PRIO", 50);
         toInsert.put("TS_EDT", convertDate(date));

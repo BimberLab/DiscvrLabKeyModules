@@ -19,6 +19,7 @@ SELECT
   ci.rowid,
   ci.name,
   ci.category,
+  ci.allowscustomunitcost,
   r.rowid as rateId,
   ca.rowid as creditAccountId
 FROM onprc_billing.chargeableItems ci

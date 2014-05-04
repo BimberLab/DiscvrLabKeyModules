@@ -41,9 +41,9 @@ FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.Demog
 LEFT JOIN (
   SELECT
   f.Id,
-  group_concat(f.value, chr(10)) as flags
+  group_concat(f.flag.value, chr(10)) as flags
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
-  where f.isActive = true and f.category = 'Genetics'
+  where f.isActive = true and f.flag.category = 'Genetics'
   GROUP BY f.Id
 ) f ON (f.Id = d.Id)
 
@@ -53,7 +53,7 @@ LEFT JOIN (
     max(f.date) as lastDate,
     count(*) as total
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
-  where f.isActive = true and f.category = 'Genetics' and f.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.DNA_DRAW_COLLECTED')
+  where f.isActive = true and f.flag.category = 'Genetics' and f.flag.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.DNA_DRAW_COLLECTED')
   GROUP BY f.Id
 ) dc ON (dc.Id = d.Id)
 

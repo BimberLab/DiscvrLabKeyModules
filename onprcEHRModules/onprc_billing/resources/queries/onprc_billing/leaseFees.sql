@@ -61,7 +61,7 @@ LEFT JOIN onprc_billing.leaseFeeDefinition lf ON (
   AND lf.active = true
 )
 
-WHERE a.dateOnly >= CAST(STARTDATE as DATE) AND a.dateOnly <= CAST(ENDDATE as DATE)
+WHERE CAST(a.datefinalized AS DATE) >= CAST(STARTDATE as DATE) AND CAST(a.datefinalized AS DATE) <= CAST(ENDDATE as DATE)
 AND a.qcstate.publicdata = true
 
 --add setup fees for all starts, except day leases
@@ -88,7 +88,7 @@ SELECT
 
 FROM study.assignment a
 
-WHERE a.dateOnly >= CAST(STARTDATE as DATE) AND a.dateOnly <= CAST(ENDDATE as DATE)
+WHERE CAST(a.datefinalized AS DATE) >= CAST(STARTDATE as DATE) AND CAST(a.datefinalized AS DATE) <= CAST(ENDDATE as DATE)
 AND a.qcstate.publicdata = true
 --only charge setup fee for leases >24H.  note: duration assumes today as end, so exclude null enddates
 AND (a.duration > CAST(javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.DAY_LEASE_MAX_DURATION') as INTEGER) OR a.assignCondition != a.releaseCondition OR a.enddate IS NULL)
@@ -140,6 +140,6 @@ LEFT JOIN onprc_billing.leaseFeeDefinition lf2
   )
 
 WHERE a.releaseCondition != a.projectedReleaseCondition
-AND a.enddate is not null AND a.enddateCoalesced >= STARTDATE AND a.enddateCoalesced <= CAST(EndDate as DATE)
+AND a.enddatefinalized is not null AND CAST(a.enddatefinalized AS DATE) >= CAST(STARTDATE AS DATE) AND CAST(a.enddatefinalized AS DATE) <= CAST(EndDate as DATE)
 AND a.qcstate.publicdata = true AND lf.active = true
 AND a2.id IS NULL

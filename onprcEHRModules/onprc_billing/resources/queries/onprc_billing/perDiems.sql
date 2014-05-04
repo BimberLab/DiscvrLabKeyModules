@@ -19,7 +19,6 @@ SELECT
     sum(pd.effectiveDays) as effectiveDays,
     count(pd.Id) as totalDaysAssigned,
     min(pd.startDate) as startDate @hidden,
-    min(pd.numDays) as numDays @hidden,
     group_concat(distinct pd.housingRecords) as housingRecords,
     group_concat(distinct pd.assignmentRecords) as assignmentRecords,
 FROM onprc_billing.perDiemsByDay pd

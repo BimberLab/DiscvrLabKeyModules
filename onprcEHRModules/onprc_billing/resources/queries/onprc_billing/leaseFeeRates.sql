@@ -77,8 +77,8 @@ SELECT
   END as isAcceptingCharges,
   CASE
     --WHEN ifdefined(p.project.account.budgetStartDate) IS NULL THEN null
-    WHEN (ifdefined(p.project.account.budgetStartDate) IS NOT NULL AND ifdefined(p.project.account.budgetStartDate) > p.date) THEN 'Prior To Budget Start'
-    WHEN (ifdefined(p.project.account.budgetEndDate) IS NOT NULL AND ifdefined(p.project.account.budgetEndDate) < p.date) THEN 'After Budget End'
+    WHEN (ifdefined(p.project.account.budgetStartDate) IS NOT NULL AND CAST(ifdefined(p.project.account.budgetStartDate) as date) > CAST(p.date as date)) THEN 'Prior To Budget Start'
+    WHEN (ifdefined(p.project.account.budgetEndDate) IS NOT NULL AND CAST(ifdefined(p.project.account.budgetEndDate) as date) < CAST(p.date as date)) THEN 'After Budget End'
     WHEN (ifdefined(p.project.account.projectStatus) IS NOT NULL AND ifdefined(p.project.account.projectStatus) != 'ACTIVE' AND ifdefined(p.project.account.projectStatus) != 'No Cost Ext' AND ifdefined(p.project.account.projectStatus) != 'Partial Setup') THEN 'Grant Project Not Active'
     ELSE null
   END as isExpiredAccount,

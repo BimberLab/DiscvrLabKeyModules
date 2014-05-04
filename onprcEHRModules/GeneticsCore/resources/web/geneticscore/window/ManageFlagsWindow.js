@@ -9,12 +9,6 @@ Ext4.define('GeneticsCore.window.ManageFlagsWindow', {
     mode: 'add',
 
     initComponent: function(){
-        this.geneticsCtx = LABKEY.getModuleContext('GeneticsCore');
-        if(!this.geneticsCtx){
-            alert('GeneticsCore Module not enabled in this container');
-            return;
-        }
-
         this.ehrCtx = EHR.Utils.getEHRContext();
         if(!this.ehrCtx){
             alert('EHRStudyContainer has not been set in this folder');
@@ -29,35 +23,8 @@ Ext4.define('GeneticsCore.window.ManageFlagsWindow', {
             closeAction: 'destroy',
             title: (this.mode == 'add' ? 'Add' : 'Remove') + ' Genetic Blood Draw Flags',
             items: [{
-                xtype: 'form',
-                fieldDefaults: {
-                    width: 290,
-                    labelAlign: 'top'
-                },
-                border: false,
-                items: [{
-                    html: 'Note: flags will only be added to living animals, and will only be added if a flag of this type does not already exist',
-                    border: false,
-                    style: 'padding-bottom: 10px;'
-                },{
-                    xtype: 'datefield',
-                    itemId: 'dateField',
-                    fieldLabel: this.mode == 'add' ? 'Date' : 'End Date',
-                    value: new Date()
-                },{
-                    xtype: 'textarea',
-                    fieldLabel: 'Remark',
-                    itemId: 'remarkField'
-                },{
-                    xtype: 'radiogroup',
-                    itemId: 'flagTypes',
-                    columns: 1,
-                    defaults: {
-                        xtype: 'radio',
-                        name: 'flagTypes'
-                    },
-                    items: this.getRadioItems()
-                }]
+                html: 'Loading...',
+                border: false
             }],
             buttons: [{
                 xtype: 'button',
@@ -74,17 +41,72 @@ Ext4.define('GeneticsCore.window.ManageFlagsWindow', {
         });
 
         this.callParent();
+
+        LABKEY.Query.selectRows({
+            containerPath: this.ehrCtx.EHRStudyContainer,
+            schemaName: 'ehr_lookups',
+            queryName: 'flag_values',
+            filterArray: [
+                LABKEY.Filter.create('category', 'Genetics'),
+                LABKEY.Filter.create('datedisabled', null, LABKEY.Filter.Types.ISBLANK)
+            ],
+            scope: this,
+            failure: LDK.Utils.getErrorCallback(),
+            success: this.onLoad
+        })
     },
 
-    getRadioItems: function(){
+    onLoad: function(results){
+        if (!results || !results.rows || !results.rows.length){
+            Ext4.Msg.alert('Error', 'No genetics flags found');
+            return;
+        }
+
+        var items = [{
+            xtype: 'form',
+            fieldDefaults: {
+                width: 290,
+                labelAlign: 'top'
+            },
+            border: false,
+            items: [{
+                html: 'Note: flags will only be added to living animals, and will only be added if a flag of this type does not already exist',
+                border: false,
+                style: 'padding-bottom: 10px;'
+            },{
+                xtype: 'datefield',
+                itemId: 'dateField',
+                fieldLabel: this.mode == 'add' ? 'Date' : 'End Date',
+                value: new Date()
+            },{
+                xtype: 'textarea',
+                fieldLabel: 'Remark',
+                itemId: 'remarkField'
+            },{
+                xtype: 'radiogroup',
+                itemId: 'flagTypes',
+                columns: 1,
+                defaults: {
+                    xtype: 'radio',
+                    name: 'flagTypes'
+                },
+                items: this.getRadioItems(results)
+            }]
+        }];
+
+        this.removeAll();
+        this.add(items);
+    },
+
+    getRadioItems: function(results){
         var items = [];
 
-        for (var flag in this.geneticsCtx.GENETICS_FLAGS){
+        Ext4.Array.forEach(results.rows, function(row){
             items.push({
-                boxLabel: this.geneticsCtx.GENETICS_FLAGS[flag],
-                inputValue: this.geneticsCtx.GENETICS_FLAGS[flag]
-            })
-        }
+                boxLabel: row.value,
+                inputValue: row.objectid
+            });
+        }, this);
 
         items = LDK.Utils.sortByProperty(items, 'boxLabel');
         return items;
@@ -118,7 +140,7 @@ Ext4.define('GeneticsCore.window.ManageFlagsWindow', {
         Ext4.Msg.wait('Saving...');
 
         Ext4.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('geneticscore', 'manageFlags', this.ehrCtx.EHRStudyContainer),
+            url: LABKEY.ActionURL.buildURL('ehr', 'manageFlags', this.ehrCtx.EHRStudyContainer),
             method: 'POST',
             params: params,
             scope: this,

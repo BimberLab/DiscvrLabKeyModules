@@ -2,6 +2,7 @@ package org.labkey.onprc_billing.notification;
 
 import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.Container;
+import org.labkey.onprc_billing.ONPRC_BillingManager;
 import org.labkey.onprc_billing.ONPRC_BillingSchema;
 
 import java.util.ArrayList;
@@ -142,7 +143,23 @@ public class DCMFinanceNotification extends FinanceNotification
                 String projUrl = baseUrl + ("None".equals(tokens[0]) ? "&query.project/displayName~isblank" : "&query.project/displayName~eq=" + tokens[0]);
                 msg.append("<tr><td><a href='" + projUrl + "'>" + tokens[0] + "</a></td>");
 
-                msg.append("<td>" + (tokens[1]) + "</td>");
+                //alias
+                String accountUrl = null;
+                Container financeContainer = ONPRC_BillingManager.get().getBillingContainer(containerMap.get(category));
+                if (financeContainer != null && !"Unknown".equals((tokens[1])))
+                {
+                    accountUrl = getExecuteQueryUrl(financeContainer, ONPRC_BillingSchema.NAME, "aliases", null, null) + "&query.alias~eq=" + tokens[1];
+                }
+
+                if (accountUrl != null)
+                {
+                    msg.append("<td><a href='" + accountUrl + "'>" + tokens[1] + "</a></td>");
+                }
+                else
+                {
+                    msg.append("<td>" + (tokens[1]) + "</td>");
+                }
+
                 msg.append("<td>" + (tokens[2]) + "</td>");
                 msg.append("<td>" + category + "</td>");
 

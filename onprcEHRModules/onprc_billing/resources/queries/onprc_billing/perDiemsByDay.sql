@@ -30,10 +30,10 @@ SELECT
   END as category,
   --find overlapping tier flags on that day
   coalesce((
-     SELECT group_concat(DISTINCT f.value) as tier
+     SELECT group_concat(DISTINCT f.flag.value) as tier
      FROM study.flags f
      --NOTE: allow flags that ended on this date
-     WHERE f.Id = t.Id AND f.enddateCoalesced >= t.dateOnly AND f.dateOnly <= t.dateOnly AND f.category = 'Housing Tier'
+     WHERE f.Id = t.Id AND f.enddateCoalesced >= t.dateOnly AND f.dateOnly <= t.dateOnly AND f.flag.category = 'Housing Tier'
    ), 'Tier 2') as tier
 
 FROM (
@@ -64,11 +64,10 @@ SELECT
     CASE
       WHEN (max(timestampdiff('SQL_TSI_DAY', d.birth, i2.dateOnly)) < 271) THEN (SELECT ci.rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = 'Per Diem Infants < 271 days')
       --add quarantine flags, which trump housing type
-      WHEN (SELECT count(*) FROM study.flags q WHERE q.Id = i2.Id AND q.value LIKE '%Quarantine%' AND q.dateOnly <= i2.dateOnly AND q.enddateCoalesced >= i2.dateOnly) > 0 THEN (SELECT ci.rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = 'Per Diem Quarantine')
+      WHEN (SELECT count(*) FROM study.flags q WHERE q.Id = i2.Id AND q.flag.value LIKE '%Quarantine%' AND q.dateOnly <= i2.dateOnly AND q.enddateCoalesced >= i2.dateOnly) > 0 THEN (SELECT ci.rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = 'Per Diem Quarantine')
       ELSE max(pdf.chargeId)
     END as chargeId,
     max(i2.startDate) as startDate @hidden,
-    max(i2.numDays) as numDays,
     count(tmb.Id) as tmbAssignments,
     SUM(CASE WHEN a.projectName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.TMB_PROJECT') THEN 1 ELSE 0 END) as isTMBProject
 
@@ -80,9 +79,8 @@ FROM (
     h.Id,
     i.dateOnly,
     max(h.date) as lastHousingStart,
-    min(i.startDate) as startDate @hidden,
-    min(i.numDays) as numDays @hidden
-  FROM ehr_lookups.dateRange i
+    min(i.startDate) as startDate @hidden
+  FROM ldk.dateRange i
   JOIN study.housing h ON (h.dateOnly <= i.dateOnly AND h.enddateCoalesced >= i.dateOnly AND h.qcstate.publicdata = true)
   --WHERE i.dateOnly <= curdate()
   GROUP BY h.Id, i.dateOnly
@@ -171,10 +169,10 @@ ON (
 
   --find overlapping tier flags on that day
   coalesce((
-     SELECT group_concat(DISTINCT f.value) as tier
+     SELECT group_concat(DISTINCT f.flag.value) as tier
      FROM study.flags f
      --NOTE: allow flags that ended on this date
-     WHERE f.Id = i2.Id AND f.enddateCoalesced >= i2.dateOnly AND f.dateOnly <= i2.dateOnly AND f.category = 'Housing Tier'
+     WHERE f.Id = i2.Id AND f.enddateCoalesced >= i2.dateOnly AND f.dateOnly <= i2.dateOnly AND f.flag.category = 'Housing Tier'
    ), 'Tier 2') = pdf.tier
 )
 

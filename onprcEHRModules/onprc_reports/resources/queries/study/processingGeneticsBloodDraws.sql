@@ -103,10 +103,10 @@ LEFT JOIN (
 LEFT JOIN (
   SELECT
     f.Id,
-    group_concat(distinct f.value, chr(10)) as flags
+    group_concat(distinct f.flag.value, chr(10)) as flags
     --count(*) as total
   FROM study."Animal Record Flags" f
-  WHERE f.category = 'Genetics' And f.isActive = true
+  WHERE f.flag.category = 'Genetics' And f.isActive = true
   GROUP BY f.Id
 ) f ON (f.Id = d.Id)
 

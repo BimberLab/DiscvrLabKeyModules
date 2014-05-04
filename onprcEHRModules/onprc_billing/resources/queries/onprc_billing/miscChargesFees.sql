@@ -13,7 +13,6 @@ SELECT
   mc.item,
   mc.quantity,
   mc.unitCost,
-  mc.totalCost,
   mc.category,
   mc.chargeType,
   mc.invoicedItemId,

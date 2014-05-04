@@ -1,0 +1,12 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="procedureFeeValidation" tableDbType="TABLE">
+                <tableTitle>Procedure Fees Expected, but Not In Invoiced Items</tableTitle>
+                <columns>
+
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

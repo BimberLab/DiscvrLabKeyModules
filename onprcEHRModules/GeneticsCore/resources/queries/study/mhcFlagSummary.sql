@@ -50,7 +50,7 @@ LEFT JOIN (
     max(f.date) as lastDate,
   count(*) as total
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
-  where f.isActive = true and f.category = 'Genetics' and f.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.MHC_DRAW_COLLECTED')
+  where f.isActive = true and f.flag.category = 'Genetics' and f.flag.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.MHC_DRAW_COLLECTED')
   GROUP BY f.Id
 ) f ON (f.Id = d.Id)
 
@@ -60,7 +60,7 @@ SELECT
   max(f.date) as lastDate,
   count(*) as total
 FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
-where f.isActive = true and f.category = 'Genetics' and f.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.MHC_DRAW_NEEDED')
+where f.isActive = true and f.flag.category = 'Genetics' and f.flag.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.MHC_DRAW_NEEDED')
 GROUP BY f.Id
 ) f2 ON (f2.Id = d.Id)
 

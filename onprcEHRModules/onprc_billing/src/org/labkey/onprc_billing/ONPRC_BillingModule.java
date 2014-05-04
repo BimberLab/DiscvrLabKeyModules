@@ -49,6 +49,7 @@ import org.labkey.onprc_billing.button.ProjectEditButton;
 import org.labkey.onprc_billing.dataentry.ChargesAdvancedFormType;
 import org.labkey.onprc_billing.dataentry.ChargesFormSection;
 import org.labkey.onprc_billing.dataentry.ChargesFormType;
+import org.labkey.onprc_billing.notification.BillingValidationNotification;
 import org.labkey.onprc_billing.notification.DCMFinanceNotification;
 import org.labkey.onprc_billing.notification.FinanceNotification;
 import org.labkey.onprc_billing.pipeline.BillingPipelineProvider;
@@ -80,7 +81,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 12.360;
+        return 12.361;
     }
 
     @Override
@@ -115,6 +116,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
 
         NotificationService.get().registerNotification(new FinanceNotification());
         NotificationService.get().registerNotification(new DCMFinanceNotification());
+        NotificationService.get().registerNotification(new BillingValidationNotification());
 
         EHRService.get().registerTableCustomizer(this, ONPRC_BillingCustomizer.class);
         EHRService.get().registerTableCustomizer(this, ChargeableItemsCustomizer.class, "onprc_billing", "chargeableItems");

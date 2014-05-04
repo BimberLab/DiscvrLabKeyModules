@@ -356,9 +356,6 @@
                 <ns:formatString>yyyy-MM-dd</ns:formatString>
             </ns:column>
             <ns:column columnName="project"/>
-            <ns:column columnName="account">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
             <ns:column columnName="debitedaccount">
                 <ns:columnTitle>Debit Alias</ns:columnTitle>
                 <ns:isHidden>true</ns:isHidden>
@@ -379,11 +376,6 @@
             </ns:column>
             <ns:column columnName="unitCost">
                 <ns:columnTitle>Unit Cost</ns:columnTitle>
-                <ns:formatString>$###,##0.00</ns:formatString>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="totalcost">
-                <ns:columnTitle>Total Cost</ns:columnTitle>
                 <ns:formatString>$###,##0.00</ns:formatString>
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>

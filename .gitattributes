@@ -822,6 +822,7 @@ onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.03-
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.04-0.05.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.05-0.06.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.06-0.07.sql -text
+onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.07-0.08.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.00-0.01.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.01-0.02.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.02-0.03.sql -text
@@ -829,6 +830,7 @@ onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.03-0
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.04-0.05.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.05-0.06.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.06-0.07.sql -text
+onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.07-0.08.sql -text
 onprcEHRModules/mergesync/resources/schemas/mergesync.xml -text
 onprcEHRModules/mergesync/resources/scripts/mergesync/mergesync.js -text
 onprcEHRModules/mergesync/resources/views/begin.html -text
@@ -942,11 +944,19 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/invoicedItemsByInv
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/invoicedItemsByInvoiceProjectItem/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFeeRates.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFeeRates.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFeeValidation.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFeeValidation.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFeeValidation2.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFeeValidation2.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFees.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFees.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFeeDefinition/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFeeRates.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFeeRates.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFeeValidation.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFeeValidation.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFeeValidation2.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFeeValidation2.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFees.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFees.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscCharges.js -text
@@ -956,6 +966,10 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesFeeRate
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesFeeRateData.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesFeeRates.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesFeeRates.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesFeeValidation.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesFeeValidation.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesFeeValidation2.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesFeeValidation2.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesFees.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesFees.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesWithRates.query.xml -text
@@ -964,6 +978,10 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesWithRat
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesWithRates/Adjustment[!!-~]Detail.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesWithRates/Detailed.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemFeeDefinition/.qview.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemFeeValidation.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemFeeValidation.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemFeeValidation2.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemFeeValidation2.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemRates.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemRates.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiems.query.xml -text
@@ -972,6 +990,10 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemsByDay.quer
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemsByDay.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeRates.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeRates.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeValidation.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeValidation.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeValidation2.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeValidation2.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFees.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFees.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/proceduresNotBilled.query.xml -text
@@ -982,6 +1004,10 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/publicInvoiceRuns.
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/publicInvoiceRuns.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/publicInvoicedItems.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/publicInvoicedItems.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/slaPerDiemFeeValidation.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/slaPerDiemFeeValidation.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/slaPerDiemFeeValidation2.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/slaPerDiemFeeValidation2.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/slaPerDiemRates.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/slaPerDiemRates.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/slaPerDiems.query.xml -text
@@ -1039,6 +1065,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billi
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.357-12.358.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.358-12.359.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.359-12.360.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.360-12.361.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.30-12.301.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.301-12.302.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.302-12.303.sql -text
@@ -1092,6 +1119,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billin
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.357-12.358.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.358-12.359.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.359-12.360.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.360-12.361.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing.xml -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing_public.template.xml -text
 onprcEHRModules/onprc_billing/resources/scripts/onprc_billing/billing_triggers.js -text
@@ -1126,6 +1154,7 @@ onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesAdva
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesFormSection.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesFormType.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesInstructionFormSection.java -text
+onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/notification/BillingValidationNotification.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/notification/DCMFinanceNotification.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/notification/FinanceNotification.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/pipeline/BillingPipelineJob.java -text
@@ -1240,10 +1269,12 @@ onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-0.00-13.21.sql -t
 onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.21-13.22.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.22-13.23.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.23-13.24.sql -text
+onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.24-13.25.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-0.00-13.21.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-13.21-13.22.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-13.22-13.23.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-13.23-13.24.sql -text
+onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-13.24-13.25.sql -text
 onprcEHRModules/sla/resources/schemas/sla.xml -text
 onprcEHRModules/sla/resources/views/begin.html -text
 onprcEHRModules/sla/resources/views/begin.view.xml -text

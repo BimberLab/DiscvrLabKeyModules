@@ -27,7 +27,7 @@ FROM (
   SELECT
     i.dateOnly,
     max(CAST(c.date as date)) as lastCensusDate,
-    TIMESTAMPDIFF('SQL_TSI_DAY', max(CAST(c.date as date)), i.dateOnly) as daysBetweenCensus,
+    TIMESTAMPDIFF('SQL_TSI_DAY', CAST(max(CAST(c.date as date)) AS TIMESTAMP), i.dateOnly) as daysBetweenCensus,
     min(i.startDate) as startDate @hidden,
     min(i.endDate) as endDate @hidden
   FROM ldk.dateRange i
@@ -38,7 +38,7 @@ FROM (
 ) dates
 
 --now join to that census record
-LEFT JOIN sla.census c2 ON (CAST(c2.date AS DATE) = dates.lastCensusDate)
+LEFT JOIN sla.census c2 ON (CAST(c2.date AS DATE) = CAST(dates.lastCensusDate as DATE))
 
 LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.slaPerDiemFeeDefinition pdf
 ON (

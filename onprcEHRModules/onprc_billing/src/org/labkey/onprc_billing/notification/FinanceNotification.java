@@ -464,7 +464,23 @@ public class FinanceNotification extends AbstractNotification
                     msg.append("<tr><td>" + financialAnalyst + "</td>");    //the FA
                     msg.append("<td><a href='" + projUrl + "'>" + tokens[1] + "</a></td>");
 
-                    msg.append("<td>" + (tokens[2]) + "</td>");
+                    //alias
+                    String accountUrl = null;
+                    Container financeContainer = ONPRC_BillingManager.get().getBillingContainer(containerMap.get(category));
+                    if (financeContainer != null && !"Unknown".equals((tokens[2])))
+                    {
+                        accountUrl = getExecuteQueryUrl(financeContainer, ONPRC_BillingSchema.NAME, "aliases", null, null) + "&query.alias~eq=" + tokens[2];
+                    }
+
+                    if (accountUrl != null)
+                    {
+                        msg.append("<td><a href='" + accountUrl + "'>" + tokens[2] + "</a></td>");
+                    }
+                    else
+                    {
+                        msg.append("<td>" + (tokens[2]) + "</td>");
+                    }
+
                     msg.append("<td>" + (tokens[3]) + "</td>");
                     msg.append("<td>" + category + "</td>");
 
@@ -560,7 +576,7 @@ public class FinanceNotification extends AbstractNotification
         }
     }
 
-    private Date getLastInvoiceDate(Container c, User u)
+    protected Date getLastInvoiceDate(Container c, User u)
     {
         Container financeContainer = ONPRC_BillingManager.get().getBillingContainer(c);
         if (financeContainer == null)

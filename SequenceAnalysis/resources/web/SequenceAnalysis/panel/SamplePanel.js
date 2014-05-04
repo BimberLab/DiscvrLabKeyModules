@@ -72,8 +72,11 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     grid.getStore().insert(0, [r]);
                     if(grid.up('form').down('#mergeCheckbox').checked)
                         r.set('fileName', grid.up('form').down('#mergeName').getValue());
-                    else
-                        grid.getPlugin('cellediting').startEditByPosition({row: 0, column: 0});
+                    else {
+                        var plugin = grid.getPlugin('cellediting');
+                        LDK.Assert.assertNotEmpty('Unable to find cellediting plugin', plugin);
+                        plugin.startEditByPosition({row: 0, column: 0});
+                    }
                 }
             },{
                 text: 'Remove',

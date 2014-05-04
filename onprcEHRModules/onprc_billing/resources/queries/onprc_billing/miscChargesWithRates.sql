@@ -80,8 +80,8 @@ SELECT
     ELSE null
   END as isAcceptingCharges,
   CASE
-    WHEN (alias.budgetStartDate IS NOT NULL AND alias.budgetStartDate > p.date) THEN 'Prior To Budget Start'
-    WHEN (alias.budgetEndDate IS NOT NULL AND alias.budgetEndDate < p.date) THEN 'After Budget End'
+    WHEN (alias.budgetStartDate IS NOT NULL AND CAST(alias.budgetStartDate as date) > CAST(p.date as date)) THEN 'Prior To Budget Start'
+    WHEN (alias.budgetEndDate IS NOT NULL AND CAST(alias.budgetEndDate as date) < CAST(p.date as date)) THEN 'After Budget End'
     WHEN (alias.projectStatus IS NOT NULL AND alias.projectStatus != 'ACTIVE' AND alias.projectStatus != 'No Cost Ext' AND alias.projectStatus != 'Partial Setup') THEN 'Grant Project Not Active'
     ELSE null
   END as isExpiredAccount,

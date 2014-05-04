@@ -22,7 +22,7 @@ exports.init = function(EHR){
                 }
 
                 if (!qc){
-                    console.log('Unable to find QCState: ' + row.QCState);
+                    console.error('Unable to find QCState: ' + row.QCState + '/' + row.QCStateLabel);
                 }
                 else if (qc.isRequest){
                     toSync.push(row)
@@ -31,7 +31,6 @@ exports.init = function(EHR){
 
             if (toSync.length){
                 var mergeHelper = new org.labkey.mergesync.RequestSyncHelper(LABKEY.Security.currentUser.id, LABKEY.Security.currentContainer.id);
-                console.log('syncing ' + toSync.length + ' rows to merge');
                 mergeHelper.asyncRequests(toSync);
             }
         }

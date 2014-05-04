@@ -136,6 +136,9 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         {
             invoiceId.setFk(new QueryForeignKey(us, us.getContainer(), "invoiceRuns", "objectid", "rowid"));
         }
+
+        addAliasLookup(table, "debitedaccount");
+        addAliasLookup(table, "creditedaccount");
     }
 
     private void customizeInvoicedItems(AbstractTableInfo table)

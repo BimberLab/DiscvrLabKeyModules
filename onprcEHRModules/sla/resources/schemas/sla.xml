@@ -204,17 +204,17 @@
             <column columnName="species">
                 <columnTitle>Species</columnTitle>
                 <fk>
-                    <fkDbSchema>ehr_lookups</fkDbSchema>
+                    <fkDbSchema>sla</fkDbSchema>
                     <fkTable>species</fkTable>
-                    <fkColumnName>common</fkColumnName>
+                    <fkColumnName>species</fkColumnName>
                 </fk>
             </column>
             <column columnName="gender">
                 <columnTitle>Gender</columnTitle>
                 <fk>
-                    <fkDbSchema>ehr_lookups</fkDbSchema>
-                    <fkTable>gender_codes</fkTable>
-                    <fkColumnName>code</fkColumnName>
+                    <fkDbSchema>sla</fkDbSchema>
+                    <fkTable>gender</fkTable>
+                    <fkColumnName>gender</fkColumnName>
                 </fk>
             </column>
             <column columnName="strain">
@@ -271,5 +271,77 @@
                 <isHidden>true</isHidden>
             </column>
         </columns>
-    </table>    
+    </table>
+    <table tableName="species" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>Species</tableTitle>
+        <auditLogging>DETAILED</auditLogging>
+        <importUrl></importUrl>
+        <insertUrl></insertUrl>
+        <updateUrl></updateUrl>
+        <deleteUrl></deleteUrl>
+        <columns>
+            <column columnName="species">
+                <columnTitle>Species</columnTitle>
+            </column>
+            <column columnName="datedisabled">
+                <columnTitle>Date Disabled</columnTitle>
+            </column>
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+    <table tableName="gender" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>Species</tableTitle>
+        <auditLogging>DETAILED</auditLogging>
+        <importUrl></importUrl>
+        <insertUrl></insertUrl>
+        <updateUrl></updateUrl>
+        <deleteUrl></deleteUrl>
+        <columns>
+            <column columnName="gender">
+                <columnTitle>Gender</columnTitle>
+            </column>
+            <column columnName="datedisabled">
+                <columnTitle>Date Disabled</columnTitle>
+            </column>
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
 </tables>

@@ -94,22 +94,4 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
     {
         return Collections.emptySet();
     }
-
-    @NotNull
-    @Override
-    public JSONObject getPageContextJson(ViewContext context)
-    {
-        JSONObject json = super.getPageContextJson(context);
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("DNA_DRAW_COLLECTED", GeneticsCoreManager.DNA_DRAW_COLLECTED);
-        map.put("DNA_DRAW_NEEDED", GeneticsCoreManager.DNA_DRAW_NEEDED);
-        map.put("PARENTAGE_DRAW_COLLECTED", GeneticsCoreManager.PARENTAGE_DRAW_COLLECTED);
-        map.put("PARENTAGE_DRAW_NEEDED", GeneticsCoreManager.PARENTAGE_DRAW_NEEDED);
-        map.put("MHC_DRAW_COLLECTED", GeneticsCoreManager.MHC_DRAW_COLLECTED);
-        map.put("MHC_DRAW_NEEDED", GeneticsCoreManager.MHC_DRAW_NEEDED);
-
-        json.put("GENETICS_FLAGS", map);
-        return json;
-    }
 }
