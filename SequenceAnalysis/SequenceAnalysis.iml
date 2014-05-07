@@ -56,7 +56,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module" module-name="Pipeline" />
   </component>
 </module>
 
