@@ -214,6 +214,8 @@ public class MergeSyncRunner implements Job
         TableInfo tableOrdersSynced = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_ORDERSSYNCED);
         Map<String, Object> existingRequest = getExistingRequest(c, u, accession, panelId);
         final String existingRunId = existingRequest == null ? null : (String)existingRequest.get("runid");
+        _log.info("processing order: " + accession);
+        _log.info("existingRunId: " + existingRunId);
 
         TableSelector resultsTs = new TableSelector(mergeResultTable, resultFilter, null);
         resultsTs.forEach(new Selector.ForEachBlock<ResultSet>()
@@ -394,7 +396,7 @@ public class MergeSyncRunner implements Job
 
         TableInfo taskTable = DbSchema.get("ehr").getTable("tasks");
 
-        _log.info("Creating task: " + key);
+        _log.info("Creating task for merge sync: " + key);
         Table.insert(u, taskTable, taskRecord);
 
         _cachedTasks.put(key, taskId);

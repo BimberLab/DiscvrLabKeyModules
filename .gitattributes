@@ -812,6 +812,7 @@ onprcEHRModules/README.txt -text
 onprcEHRModules/mergesync/MergeSync.iml -text
 onprcEHRModules/mergesync/build.xml -text
 onprcEHRModules/mergesync/module.properties -text
+onprcEHRModules/mergesync/resources/module.xml -text
 onprcEHRModules/mergesync/resources/queries/mergesync/merge_results/.qview.xml -text
 onprcEHRModules/mergesync/resources/queries/mergesync/merge_runs/.qview.xml -text
 onprcEHRModules/mergesync/resources/queries/mergesync/orderssynced.query.xml -text
@@ -867,8 +868,10 @@ onprcEHRModules/onprc_billing/resources/module.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/aliases.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/aliases/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/aliases/Active[!!-~]Aliases.qview.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRateExemptions.js -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRateExemptions/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRateExemptions/Active[!!-~]Items.qview.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRates.js -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRates/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeRates/Active[!!-~]Rates.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargeableItems.js -text
@@ -878,6 +881,7 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargesIBS.query.x
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargesIBS.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargesMissingRate.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/chargesMissingRate.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/creditAccount.js -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/creditAccount/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/creditAccount/Active[!!-~]Items.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/dataAccess/.qview.xml -text
@@ -942,6 +946,7 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/invoicedItemsByInv
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/invoicedItemsByInvoiceProjectItem.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/invoicedItemsByInvoiceProjectItem.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/invoicedItemsByInvoiceProjectItem/.qview.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFeeDefinition/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFeeRates.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFeeRates.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFeeValidation.query.xml -text
@@ -951,6 +956,7 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFeeValidati
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFees.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/labworkFees.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFeeDefinition/.qview.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFeeDefinition/Active.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFeeRates.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFeeRates.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/leaseFeeValidation.query.xml -text
@@ -978,6 +984,7 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesWithRat
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesWithRates/Adjustment[!!-~]Detail.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/miscChargesWithRates/Detailed.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemFeeDefinition/.qview.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemFeeDefinition/Active.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemFeeValidation.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemFeeValidation.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemFeeValidation2.query.xml -text
@@ -988,6 +995,7 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiems.query.xml
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiems.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemsByDay.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemsByDay.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeDefinition/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeRates.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeRates.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeValidation.query.xml -text
@@ -1066,6 +1074,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billi
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.358-12.359.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.359-12.360.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.360-12.361.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.361-12.362.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.30-12.301.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.301-12.302.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.302-12.303.sql -text
@@ -1120,6 +1129,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billin
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.358-12.359.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.359-12.360.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.360-12.361.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.361-12.362.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing.xml -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing_public.template.xml -text
 onprcEHRModules/onprc_billing/resources/scripts/onprc_billing/billing_triggers.js -text
@@ -1138,6 +1148,8 @@ onprcEHRModules/onprc_billing/resources/views/invoicedItemDetails.html -text
 onprcEHRModules/onprc_billing/resources/views/invoicedItemDetails.view.xml -text
 onprcEHRModules/onprc_billing/resources/web/onprc_billing/BillingUtils.js -text
 onprcEHRModules/onprc_billing/resources/web/onprc_billing/buttons/financeButtons.js -text
+onprcEHRModules/onprc_billing/resources/web/onprc_billing/model/sources/ChargesAdvanced.js -text
+onprcEHRModules/onprc_billing/resources/web/onprc_billing/model/sources/Reversals.js -text
 onprcEHRModules/onprc_billing/resources/web/onprc_billing/panel/ChargesAdvancedInstructionPanel.js -text
 onprcEHRModules/onprc_billing/resources/web/onprc_billing/panel/ChargesInstructionPanel.js -text
 onprcEHRModules/onprc_billing/resources/web/onprc_billing/window/ChangeBillDateWindow.js -text
@@ -1154,6 +1166,7 @@ onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesAdva
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesFormSection.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesFormType.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ChargesInstructionFormSection.java -text
+onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/dataentry/ReversalFormType.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/notification/BillingValidationNotification.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/notification/DCMFinanceNotification.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/notification/FinanceNotification.java -text

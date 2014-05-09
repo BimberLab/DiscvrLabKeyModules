@@ -8,6 +8,7 @@
 
 SELECT
     pd.Id,
+    --note: we want the per diems to report using the last available day for this charge
     max(pd.date) as date,
     pd.project,
     pd.project.account,

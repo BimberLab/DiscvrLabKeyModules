@@ -152,7 +152,7 @@ public class OGASyncRunner implements Job
         fieldMap.put("agencyAwardNumber", "AGENCY_AWARD_NUMBER");
         fieldMap.put(INVESTIGATOR_EMPLOYYE_ID_NUMBER, "PI_EMP_NUM");
         fieldMap.put(FISCAL_AUTHORITY_EMPLOYEE_ID_NUMBER, "PDFM_EMP_NUM");
-        fieldMap.put("investigatorName", "PI");
+        fieldMap.put("investigatorName", "PI_FULL_NAME");
 
         fieldMap.put("projectTitle", "PROJECT_TITLE");
         fieldMap.put("projectDescription", "PROJECT_DESCRIPTION");
@@ -228,8 +228,10 @@ public class OGASyncRunner implements Job
         fieldMap.put(INVESTIGATOR_EMPLOYYE_ID_NUMBER, "PI_EMP_NUM");
         fieldMap.put(FISCAL_AUTHORITY_EMPLOYEE_ID_NUMBER, "PDFM_EMP_NUM");
         fieldMap.put(ADFM_EMP_NUM, "ADFM_EMP_NUM");
-        fieldMap.put("investigatorName", "PI");
+        fieldMap.put("fiscalAuthorityName", "PDFM_FULL_NAME");
+        fieldMap.put("investigatorName", "PI_FULL_NAME");
         fieldMap.put("category", null);  //special case handling below
+        fieldMap.put("aliasType", "OGA_AWARD_TYPE");
 
         fieldMap.put("budgetStartDate", "CURRENT_BUDGET_START_DATE");
         fieldMap.put("budgetEndDate", "CURRENT_BUDGET_END_DATE");
@@ -259,7 +261,7 @@ public class OGASyncRunner implements Job
         fieldMap.put("agencyAwardNumber", "AGENCY_AWARD_NUMBER");
         //fieldMap.put(INVESTIGATOR_EMPLOYYE_ID_NUMBER, "PI_EMP_NUM");
         fieldMap.put(FISCAL_AUTHORITY_EMPLOYEE_ID_NUMBER, ADFM_EMP_NUM);
-        //fieldMap.put("investigatorName", "PI");
+        //fieldMap.put("investigatorName", "PI_FULL_NAME");
         fieldMap.put("title", "PROJECT_TITLE");
         fieldMap.put(AWARD_STATUS, "AWARD_STATUS");
         fieldMap.put("projectDescription", "PROJECT_DESCRIPTION");

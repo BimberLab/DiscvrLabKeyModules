@@ -1,6 +1,7 @@
 package org.labkey.mergesync;
 
 import org.labkey.api.collections.CaseInsensitiveTreeSet;
+import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.JdbcType;
@@ -163,13 +164,6 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 //join to insurance for project
                 ret.append("left join INSURANCE i ON (i.INS_INDEX = vi.VINS_INS1)\n");
 
-                //example of multiple panels ordered at once.  this is for debuggin only
-                //ret.append("where o.O_ACCNUM = 12023\n");
-
-                //TODO: verify how we should filter out non-final results
-                //filter non final??
-                //ret.append("WHERE r.RE_RIDX is not null AND (r.RE_FINAL != 'Y' OR r.RE_FINAL IS NULL OR t.TS_STAT != 'V' OR t.TS_STAT IS NULL)\n");
-
                 return ret;
             }
 
@@ -179,9 +173,13 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 addColumn(new ExprColumn(this, "panelId", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".panelId"), JdbcType.INTEGER));
                 addColumn(new ExprColumn(this, "animalId", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".animalId"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "dateVerified", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateVerified"), JdbcType.TIMESTAMP));
-                addColumn(new ExprColumn(this, "date", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".date"), JdbcType.TIMESTAMP));
+                ColumnInfo dateCol = addColumn(new ExprColumn(this, "date", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".date"), JdbcType.TIMESTAMP));
+                dateCol.setFormat("yyyy-MM-dd HH:mm");
+
                 addColumn(new ExprColumn(this, "projectName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".project"), JdbcType.VARCHAR));
-                addColumn(new ExprColumn(this, "datecollected", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".datecollected"), JdbcType.TIMESTAMP));
+                ColumnInfo dateCollectedCol = addColumn(new ExprColumn(this, "datecollected", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".datecollected"), JdbcType.TIMESTAMP));
+                dateCollectedCol.setFormat("yyyy-MM-dd HH:mm");
+
                 addColumn(new ExprColumn(this, "rundate", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".rundate"), JdbcType.TIMESTAMP));
                 addColumn(new ExprColumn(this, "servicename_abbr", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".servicename_abbr"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "testid_abbr", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".testid_abbr"), JdbcType.VARCHAR));

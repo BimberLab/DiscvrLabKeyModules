@@ -49,6 +49,7 @@ import org.labkey.onprc_billing.button.ProjectEditButton;
 import org.labkey.onprc_billing.dataentry.ChargesAdvancedFormType;
 import org.labkey.onprc_billing.dataentry.ChargesFormSection;
 import org.labkey.onprc_billing.dataentry.ChargesFormType;
+import org.labkey.onprc_billing.dataentry.ReversalFormType;
 import org.labkey.onprc_billing.notification.BillingValidationNotification;
 import org.labkey.onprc_billing.notification.DCMFinanceNotification;
 import org.labkey.onprc_billing.notification.FinanceNotification;
@@ -81,7 +82,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 12.361;
+        return 12.362;
     }
 
     @Override
@@ -122,6 +123,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
         EHRService.get().registerTableCustomizer(this, ChargeableItemsCustomizer.class, "onprc_billing", "chargeableItems");
         EHRService.get().registerFormType(new DefaultDataEntryFormFactory(ChargesAdvancedFormType.class, this));
         EHRService.get().registerFormType(new DefaultDataEntryFormFactory(ChargesFormType.class, this));
+        EHRService.get().registerFormType(new DefaultDataEntryFormFactory(ReversalFormType.class, this));
 
         Resource billingTriggers = getModuleResource("/scripts/onprc_billing/billing_triggers.js");
         assert billingTriggers != null;

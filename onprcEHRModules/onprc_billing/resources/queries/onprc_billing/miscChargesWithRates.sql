@@ -97,22 +97,22 @@ SELECT
 FROM onprc_billing.miscCharges p
 
 LEFT JOIN onprc_billing_public.chargeRates cr ON (
-  p.date >= cr.startDate AND
-  (p.date <= cr.enddateTimeCoalesced OR cr.enddate IS NULL) AND
-  p.chargeId = cr.chargeId
+    CAST(p.date AS DATE) >= CAST(cr.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= cr.enddateCoalesced OR cr.enddate IS NULL) AND
+    p.chargeId = cr.chargeId
 )
 
 LEFT JOIN onprc_billing_public.chargeRateExemptions e ON (
-  p.date >= e.startDate AND
-  (p.date <= e.enddateTimeCoalesced OR e.enddate IS NULL) AND
-  p.chargeId = e.chargeId AND
-  p.project = e.project
+    CAST(p.date AS DATE) >= CAST(e.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= e.enddateCoalesced OR e.enddate IS NULL) AND
+    p.chargeId = e.chargeId AND
+    p.project = e.project
 )
 
 LEFT JOIN onprc_billing_public.creditAccount ce ON (
-  p.date >= ce.startDate AND
-  (p.date <= ce.enddateTimeCoalesced OR ce.enddate IS NULL) AND
-  p.chargeId = ce.chargeId
+    CAST(p.date AS DATE) >= CAST(ce.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= ce.enddateCoalesced OR ce.enddate IS NULL) AND
+    p.chargeId = ce.chargeId
 )
 
 LEFT JOIN onprc_billing_public.aliases alias ON (

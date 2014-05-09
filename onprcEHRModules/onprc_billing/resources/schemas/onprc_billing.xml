@@ -441,6 +441,62 @@
             </ns:column>
             <ns:column columnName="QCState">
                 <ns:columnTitle>Status</ns:columnTitle>
+                <ns:conditionalFormats>
+                    <ns:conditionalFormat>
+                        <ns:filters>
+                            <ns:filter operator="eq" value="In Progress"/>
+                        </ns:filters>
+                        <ns:backgroundColor>FBEC5D</ns:backgroundColor>
+                    </ns:conditionalFormat>
+                    <ns:conditionalFormat>
+                        <ns:filters>
+                            <ns:filter operator="eq" value="Review Required"/>
+                        </ns:filters>
+                        <ns:backgroundColor>FBEC5D</ns:backgroundColor>
+                    </ns:conditionalFormat>
+                    <ns:conditionalFormat>
+                        <ns:filters>
+                            <ns:filter operator="eq" value="Scheduled"/>
+                        </ns:filters>
+                        <ns:backgroundColor>FBEC5D</ns:backgroundColor>
+                    </ns:conditionalFormat>
+                    <ns:conditionalFormat>
+                        <ns:filters>
+                            <ns:filter operator="eq" value="Delete Requested"/>
+                        </ns:filters>
+                        <ns:backgroundColor>FF0000</ns:backgroundColor>
+                    </ns:conditionalFormat>
+                    <ns:conditionalFormat>
+                        <ns:filters>
+                            <ns:filter operator="eq" value="Request: Approved"/>
+                        </ns:filters>
+                        <ns:backgroundColor>FBEC5D</ns:backgroundColor>
+                    </ns:conditionalFormat>
+                    <ns:conditionalFormat>
+                        <ns:filters>
+                            <ns:filter operator="eq" value="Request: Sample Delivered"/>
+                        </ns:filters>
+                        <ns:backgroundColor>FBEC5D</ns:backgroundColor>
+                    </ns:conditionalFormat>
+                    <ns:conditionalFormat>
+                        <ns:filters>
+                            <ns:filter operator="eq" value="Request: Denied"/>
+                        </ns:filters>
+                        <ns:backgroundColor>FF0000</ns:backgroundColor>
+                    </ns:conditionalFormat>
+                    <ns:conditionalFormat>
+                        <ns:filters>
+                            <ns:filter operator="eq" value="Request: Cancelled"/>
+                        </ns:filters>
+                        <ns:backgroundColor>FBEC5D</ns:backgroundColor>
+                    </ns:conditionalFormat>
+                    <ns:conditionalFormat>
+                        <ns:filters>
+                            <ns:filter operator="eq" value="Request: Pending"/>
+                        </ns:filters>
+                        <ns:backgroundColor>FBEC5D</ns:backgroundColor>
+                    </ns:conditionalFormat>
+                </ns:conditionalFormats>
             </ns:column>
             <ns:column columnName="taskid">
                 <ns:columnTitle>Task Id</ns:columnTitle>
@@ -464,7 +520,7 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="perDiemFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
-        <ns:tableTitle>Per Diem Fee Structure</ns:tableTitle>
+        <ns:tableTitle>NHP Per Diem Fee Structure</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:columns>
@@ -1034,6 +1090,9 @@
             </ns:column>
             <ns:column columnName="projectStatus">
                 <ns:columnTitle>Project Status</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="aliasType">
+                <ns:columnTitle>Alias Type</ns:columnTitle>
             </ns:column>
             <ns:column columnName="container"/>
             <ns:column columnName="createdBy"/>

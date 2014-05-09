@@ -5,6 +5,7 @@ import org.labkey.api.ehr.dataentry.DataEntryFormContext;
 import org.labkey.api.ehr.dataentry.FormSection;
 import org.labkey.api.ehr.dataentry.TaskForm;
 import org.labkey.api.ehr.dataentry.TaskFormSection;
+import org.labkey.api.ehr.security.EHRPathologyEntryPermission;
 import org.labkey.api.module.Module;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.onprc_billing.security.ONPRCBillingAdminPermission;
@@ -19,25 +20,23 @@ import java.util.List;
  * Date: 11/12/13
  * Time: 5:25 PM
  */
-public class ChargesAdvancedFormType extends TaskForm
+public class ReversalFormType extends TaskForm
 {
-    public static final String NAME = "ChargesAdvanced";
+    public static final String NAME = "Reversals";
 
-    public ChargesAdvancedFormType(DataEntryFormContext ctx, Module owner)
+    public ReversalFormType(DataEntryFormContext ctx, Module owner)
     {
-        super(ctx, owner, NAME, "Charges", "Billing", Arrays.<FormSection>asList(
+        super(ctx, owner, NAME, "Reversals/Adjustments", "Billing", Arrays.<FormSection>asList(
                 new TaskFormSection(),
-                new AnimalDetailsFormSection(),
-                new ChargesAdvancedInstructionFormSection(),
                 new ChargesFormSection()
         ));
 
-        addClientDependency(ClientDependency.fromFilePath("onprc_billing/model/sources/ChargesAdvanced.js"));
+        addClientDependency(ClientDependency.fromFilePath("onprc_billing/model/sources/Reversals.js"));
         addClientDependency(ClientDependency.fromFilePath("onprc_billing/buttons/financeButtons.js"));
 
         for (FormSection s : getFormSections())
         {
-            s.addConfigSource("ChargesAdvanced");
+            s.addConfigSource("Reversals");
         }
     }
 
@@ -60,6 +59,18 @@ public class ChargesAdvancedFormType extends TaskForm
     protected List<String> getMoreActionButtonConfigs()
     {
         return Collections.emptyList();
+    }
+
+    /**
+     * The intent is to prevent read access to the majority of users
+     */
+    @Override
+    public boolean canRead()
+    {
+        if (!getCtx().getContainer().hasPermission(getCtx().getUser(), ONPRCBillingAdminPermission.class))
+            return false;
+
+        return super.canRead();
     }
 
     @Override

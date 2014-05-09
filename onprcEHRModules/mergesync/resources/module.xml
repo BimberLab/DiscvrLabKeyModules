@@ -1,0 +1,11 @@
+<module xmlns="http://labkey.org/moduleProperties/xml/">
+    <properties>
+        <propertyDescriptor name="MergeURL">
+            <canSetPerContainer>true</canSetPerContainer>
+            <description>The is the URL of the merge website</description>
+            <editPermissions>
+                <permission>ADMIN</permission>
+            </editPermissions>
+        </propertyDescriptor>
+    </properties>
+</module>

@@ -153,14 +153,14 @@ public class RequestSyncHelper
                 String requestId = StringUtils.trimToNull(tokens[1]);
 
                 //create 1 record per batch of tests
-                int patientId = createPatientIfNeeded(mergeSchema, _container, _user, (String)records.get(0).get("Id"));
+                String patientId = createPatientIfNeeded(mergeSchema, _container, _user, (String)records.get(0).get("Id"));
                 Integer personnelId = getUserId(mergeSchema, _user);
                 if (personnelId == null)
                 {
                     return;
                 }
 
-                int insuranceId = createInsuranceIfNeeded(mergeSchema, _container, _user, (Integer)records.get(0).get("project"));
+                Integer insuranceId = createInsuranceIfNeeded(mergeSchema, _container, _user, (Integer)records.get(0).get("project"));
                 String visitId = createVisit(mergeSchema, _user, patientId, personnelId, insuranceId, (Date)records.get(0).get("date"));
                 createCopyTo(mergeSchema, _user, patientId, personnelId, visitId);
                 int orderId = createOrder(mergeSchema, _user, patientId, personnelId, visitId, (Date)records.get(0).get("date"));
@@ -264,12 +264,12 @@ public class RequestSyncHelper
         return ts.exists();
     }
     
-    private int createPatientIfNeeded(DbSchema mergeSchema, Container c, User u, String animalId) throws SQLException
+    private String createPatientIfNeeded(DbSchema mergeSchema, Container c, User u, String animalId) throws SQLException
     {
         TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_PATIENTS);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("PT_LNAME"), animalId);
         TableSelector ts = new TableSelector(ti, Collections.singleton("PT_NUM"), filter, null);
-        List<Integer> existing = ts.getArrayList(Integer.class);
+        List<String> existing = ts.getArrayList(String.class);
         if (!existing.isEmpty())
         {
             if (existing.size() > 1)
@@ -314,7 +314,7 @@ public class RequestSyncHelper
 
         Map<String, Object> inserted = Table.insert(u, ti, toInsert);
 
-        return (Integer)inserted.get("PT_NUM");
+        return (String)inserted.get("PT_NUM");
     }
 
     private String getSpeciesCode(String species)
@@ -428,7 +428,7 @@ public class RequestSyncHelper
         return i;
     }
 
-    private void createCopyTo(DbSchema mergeSchema, User u, int patientId, int personnelId, String visitId) throws SQLException
+    private void createCopyTo(DbSchema mergeSchema, User u, String patientId, int personnelId, String visitId) throws SQLException
     {
         TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_COPY_TO);
 
@@ -441,7 +441,7 @@ public class RequestSyncHelper
         Table.insert(u, ti, toInsert);
     }
 
-    private String createVisit(DbSchema mergeSchema, User u, int patientId, int personnelId, Integer insuranceId, Date date) throws SQLException
+    private String createVisit(DbSchema mergeSchema, User u, String patientId, int personnelId, Integer insuranceId, Date date) throws SQLException
     {
         TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_VISITS);
 
@@ -501,7 +501,12 @@ public class RequestSyncHelper
     private Date convertDate(Date d)
     {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-        cal.setTimeInMillis(d.getTime() - Calendar.getInstance().getTimeZone().getRawOffset());
+        TimeZone zone = Calendar.getInstance().getTimeZone();
+        cal.setTimeInMillis(d.getTime() - zone.getOffset(d.getTime()));
+
+        //TODO: remove after debugging
+        _log.info("timezone: " + zone.getDisplayName() + ", " + zone.getRawOffset() + " / " + zone.inDaylightTime(d) + " / " + zone.getDSTSavings());
+        _log.info("orig: " + d + ", new: " + cal.getTime());
 
         return cal.getTime();
     }
@@ -536,7 +541,7 @@ public class RequestSyncHelper
         return (Integer)inserted.get("CNT_INDEX");
     }
 
-    private int createOrder(DbSchema mergeSchema, User u, int patientId, int personnelId, String visitId, Date date) throws SQLException
+    private int createOrder(DbSchema mergeSchema, User u, String patientId, int personnelId, String visitId, Date date) throws SQLException
     {
         TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_ORDERS);
 
@@ -588,7 +593,7 @@ public class RequestSyncHelper
         return pair;
     }
 
-    private int createTest(DbSchema mergeSchema, User u, int patientId, int personnelId, String visitId, int accession, int containerId, int mergeTestId, Date date, Character containerName) throws SQLException
+    private int createTest(DbSchema mergeSchema, User u, String patientId, int personnelId, String visitId, int accession, int containerId, int mergeTestId, Date date, Character containerName) throws SQLException
     {
         TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_TEST);
         Map<String, Object> testInfo = getMergeTestInfo(mergeSchema, mergeTestId);

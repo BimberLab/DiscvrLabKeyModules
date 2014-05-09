@@ -22,6 +22,7 @@ SELECT
   p.projectedReleaseCondition,
   p.releaseCondition,
   p.assignCondition,
+  p.releaseType,
   p.ageAtTime,
   p.category,
   p.chargeId,
@@ -88,28 +89,28 @@ FROM onprc_billing.leaseFees p
 
 --the first charge
 LEFT JOIN onprc_billing_public.chargeRates cr ON (
-    p.date >= cr.startDate AND
-    (p.date <= cr.enddateTimeCoalesced OR cr.enddate IS NULL) AND
+    CAST(p.date AS DATE) >= CAST(cr.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= cr.enddateCoalesced OR cr.enddate IS NULL) AND
     p.chargeId = cr.chargeId
 )
 
 LEFT JOIN onprc_billing_public.chargeRateExemptions e ON (
-    p.date >= e.startDate AND
-    (p.date <= e.enddateTimeCoalesced OR e.enddate IS NULL) AND
+    CAST(p.date AS DATE) >= CAST(e.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= e.enddateCoalesced OR e.enddate IS NULL) AND
     p.chargeId = e.chargeId AND
     p.project = e.project
 )
 
 --the original charge (for adjustments)
 LEFT JOIN onprc_billing_public.chargeRates cr2 ON (
-    p.date >= cr2.startDate AND
-    (p.date <= cr2.enddateTimeCoalesced OR cr2.enddate IS NULL) AND
+    CAST(p.date AS DATE) >= CAST(cr2.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= cr2.enddateCoalesced OR cr2.enddate IS NULL) AND
     p.leaseCharge1 = cr2.chargeId
 )
 
 LEFT JOIN onprc_billing_public.chargeRateExemptions e2 ON (
-    p.date >= e2.startDate AND
-    (p.date <= e2.enddateTimeCoalesced OR e2.enddate IS NULL) AND
+    CAST(p.date AS DATE) >= CAST(e2.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= e2.enddateCoalesced OR e2.enddate IS NULL) AND
     p.leaseCharge1 = e2.chargeId AND
     p.project = e2.project
 )
@@ -117,22 +118,22 @@ LEFT JOIN onprc_billing_public.chargeRateExemptions e2 ON (
 
 --the final charge (for adjustments)
 LEFT JOIN onprc_billing_public.chargeRates cr3 ON (
-  p.date >= cr3.startDate AND
-  (p.date <= cr3.enddateTimeCoalesced OR cr3.enddate IS NULL) AND
+  CAST(p.date AS DATE) >= CAST(cr3.startDate AS DATE) AND
+  (CAST(p.date AS DATE) <= cr3.enddateCoalesced OR cr3.enddate IS NULL) AND
   p.leaseCharge2 = cr3.chargeId
 )
 
 LEFT JOIN onprc_billing_public.chargeRateExemptions e3 ON (
-  p.date >= e3.startDate AND
-  (p.date <= e3.enddateTimeCoalesced OR e3.enddate IS NULL) AND
+  CAST(p.date AS DATE) >= CAST(e3.startDate AS DATE) AND
+  (CAST(p.date AS DATE) <= e3.enddateCoalesced OR e3.enddate IS NULL) AND
   p.leaseCharge2 = e3.chargeId AND
   p.project = e3.project
 )
 --EO final charge
 
 LEFT JOIN onprc_billing_public.creditAccount ce ON (
-    p.date >= ce.startDate AND
-    (p.date <= ce.enddateTimeCoalesced OR ce.enddate IS NULL) AND
+    CAST(p.date AS DATE) >= CAST(ce.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= ce.enddateCoalesced OR ce.enddate IS NULL) AND
     p.chargeId = ce.chargeId
 )
 
@@ -148,6 +149,7 @@ SELECT
   null as projectedReleaseCondition,
   null as releaseCondition,
   null as assignCondition,
+  null as releaseType,
   null as ageAtTime,
   mc.category,
   mc.chargeId,

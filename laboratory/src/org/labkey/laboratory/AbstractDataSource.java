@@ -83,7 +83,7 @@ abstract public class AbstractDataSource
         if (qd == null)
             return null;
 
-        List<QueryException> errors = new ArrayList<QueryException>();
+        List<QueryException> errors = new ArrayList<>();
         return qd.getTable(errors,  true);
     }
 
@@ -143,8 +143,17 @@ abstract public class AbstractDataSource
             }
 
             TableSelector ts = new TableSelector(ti);
-            long count = ts.getRowCount();
-            obj.put("total", count);
+            try
+            {
+                long count = ts.getRowCount();
+                obj.put("total", count);
+            }
+            catch (QueryService.NamedParameterNotProvided e)
+            {
+                _log.error("");
+                obj.put("total", 0);
+            }
+
             obj.put("browseUrl", QueryService.get().urlFor(u, target, QueryAction.executeQuery, getSchemaName(), getQueryName()));
         }
 

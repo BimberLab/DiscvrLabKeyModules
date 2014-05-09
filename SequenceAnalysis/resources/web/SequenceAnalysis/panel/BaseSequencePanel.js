@@ -183,8 +183,8 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                 return;
 
             var val = field.getValue();
-            if(field.allowBlank===false && Ext4.isEmpty(val) && !field.isDisabled()){
-                alert('The field: ' + field.fieldLabel + ' cannot be blank');
+            if (field.allowBlank===false && Ext4.isEmpty(val) && !field.isDisabled()){
+                alert('The field: ' + (field.fieldLabel || field.header || field.name) + ' cannot be blank');
                 error = 1;
                 return false;
             }

@@ -348,6 +348,9 @@ public class LaboratoryManager
         }
     }
 
+    /**
+     * NOTE: this makes the assumption that the schema/query match a physical table
+     */
     private void populateDefaultDataForTable(User u, Container c, String schema, String query, final Set<String> columns) throws BatchValidationException
     {
         assert u != null : "No user provided";
@@ -356,17 +359,24 @@ public class LaboratoryManager
         if (us == null)
             throw new IllegalArgumentException("Schema " + schema + " not found");
 
-        UserSchema sharedSchema = QueryService.get().getUserSchema(u, ContainerManager.getSharedContainer(), schema);
-        if (sharedSchema == null)
+
+        DbSchema sourceSchema = DbSchema.get(schema);
+        if (sourceSchema == null)
             throw new IllegalArgumentException("Schema " + schema + " not found in /shared");
 
         TableInfo ti = us.getTable(query);
         final QueryUpdateService qus = ti.getUpdateService();
 
-        TableInfo sharedTable = sharedSchema.getTable(query);
+        TableInfo sourceTable = sourceSchema.getTable(query);
+        if (sourceTable.getColumn(FieldKey.fromString("container")) == null)
+        {
+            throw new IllegalArgumentException("Table " + schema + "." + query + " does not have a container column");
+        }
 
-        final List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
-        TableSelector ts = new TableSelector(sharedTable, columns, null, null);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("container"), ContainerManager.getSharedContainer().getId());
+
+        final List<Map<String, Object>> rows = new ArrayList<>();
+        TableSelector ts = new TableSelector(sourceTable, columns, filter, null);
         ts.forEach(new Selector.ForEachBlock<ResultSet>()
         {
             @Override

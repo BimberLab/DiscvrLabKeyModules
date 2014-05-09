@@ -15,6 +15,7 @@
         <column name="invoiceId"/>
         <column name="createdby"/>
         <column name="taskid"/>
+        <column name="qcstate"/>
     </columns>
     <sorts>
         <sort column="date" descending="true"/>

@@ -1,14 +1,13 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView">
     <columns>
-        <column name="rowId"/>
+        <column name="rowid"/>
+        <column name="servicename"/>
+        <!--<column name="chargetype"/>-->
         <column name="chargeId"/>
         <column name="chargeId/itemcode"/>
-        <column name="housingType"/>
-        <column name="housingDefinition"/>
-        <column name="tier"/>
         <column name="active"/>
     </columns>
     <sorts>
-        <sort column="chargeId/name"/>
+        <sort column="servicename"/>
     </sorts>
 </customView>
