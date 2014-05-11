@@ -52,7 +52,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -415,7 +419,33 @@ public class TestHelper
             PipelineJob job = PipelineJobService.get().getJobStore().getJob(guid);
 
             if (PipelineJob.TaskStatus.error.matches((String)map.get("status")))
+            {
+                //on failure, append contents of pipeline job file to primary error log
+                if (job != null && job.getLogFile() != null)
+                {
+                    File tomcatHome = new File(System.getProperty("catalina.home"));
+                    File logFile = new File(tomcatHome, "logs/labkey-errors.log");
+
+                    try (BufferedReader reader = new BufferedReader(new FileReader(job.getLogFile())); BufferedWriter writer = new BufferedWriter(new FileWriter(logFile, true)))
+                    {
+                        writer.write("*******************\n");
+                        writer.write("Error running sequence junit tests.  Pipeline log:\n");
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            writer.write(line);
+                            writer.newLine();
+                        }
+
+                        writer.write("*******************\n");
+                    }
+                }
+                else
+                {
+                    _log.error("No log file present for sequence pipeline job");
+                }
+
                 throw new Exception("There was an error running job: " + (job == null ? guid : job.getDescription()));
+            }
 
             if (PipelineJob.TaskStatus.complete.matches((String)map.get("status")))
                 return true;
@@ -580,8 +610,8 @@ public class TestHelper
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
-            expectedOutputs.add(new File(basedir, "all.log"));
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, "sequenceImport.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -626,8 +656,8 @@ public class TestHelper
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
-            expectedOutputs.add(new File(basedir, "all.log"));
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, "sequenceImport.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1117,8 +1147,8 @@ public class TestHelper
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1204,8 +1234,8 @@ public class TestHelper
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1249,8 +1279,8 @@ public class TestHelper
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1317,8 +1347,8 @@ public class TestHelper
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1395,8 +1425,8 @@ public class TestHelper
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1448,8 +1478,8 @@ public class TestHelper
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1516,8 +1546,8 @@ public class TestHelper
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1576,8 +1606,8 @@ public class TestHelper
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1641,8 +1671,8 @@ public class TestHelper
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1689,8 +1719,8 @@ public class TestHelper
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
-            expectedOutputs.add(new File(basedir, "all.pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "all.log"));
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 

@@ -522,6 +522,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/visualization/Variat
 labModules/SequenceAnalysis/tools/Ref[!!-~]NTs.xlsx -text
 labModules/SequenceAnalysis/tools/pipeline_config/pipelineConfig_debug.xml -text
 labModules/SequenceAnalysis/tools/pipeline_config/pipelineConfig_remote.xml -text
+labModules/SequenceAnalysis/tools/pipeline_config/sequenceanalysisConfig.xml -text
 labModules/SequenceAnalysis/webapp/WEB-INF/SequenceAnalysis/sequenceanalysisContext.xml -text
 labModules/laboratory/Laboratory.iml -text
 labModules/laboratory/module.properties -text

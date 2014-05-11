@@ -99,7 +99,9 @@ if [ $(which yum) ]; then
     yum install glibc-devel ncurses-devel libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
-    apt-get -q -y install libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev libssl-dev libgcc1 libstdc++6 libtcmalloc-minimal4 zlib1g zlib1g-dev libboost-thread-dev libboost-dev libboost-system-dev libboost-regex-dev libboost-filesystem-dev libboost-iostreams-dev python-numpy python-scipy libexpat1-dev
+    apt-get -q -y install libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-thread-dev libboost-dev libboost-system-dev libboost-regex-dev libboost-filesystem-dev libboost-iostreams-dev python-numpy python-scipy libexpat1-dev
+    #apt-get -q -y install libtcmalloc-minimal0
+    #apt-get -q -y install libtcmalloc-minimal4
 else
     echo "No known package manager present, aborting"
     exit 1
@@ -330,13 +332,20 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/bowtie || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf bowtie-0.12.8-linux-x86_64.zip
-    rm -Rf bowtie-0.12.8
-    rm -Rf $LKTOOLS_DIR/bowtie
 
-    wget http://sourceforge.net/projects/bowtie-bio/files/bowtie/0.12.8/bowtie-0.12.8-linux-x86_64.zip
-    unzip bowtie-0.12.8-linux-x86_64.zip
-    ln -s $LKSRC_DIR/bowtie-0.12.8/bowtie $LKTOOLS_DIR
+    #old version
+    rm -Rf bowtie-0.12.8*
+    rm -Rf bowtie-1.0.1*
+    rm -Rf $LKTOOLS_DIR/bowtie
+    rm -Rf $LKTOOLS_DIR/bowtie-build
+
+    wget http://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.0.1/bowtie-1.0.1-src.zip
+    unzip bowtie-1.0.1-src.zip
+    cd bowtie-1.0.1
+    make
+
+    ln -s $LKSRC_DIR/bowtie-1.0.1/bowtie $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/bowtie-1.0.1/bowtie-build $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -442,20 +451,19 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/sff_extract || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf seq_crumbs-0.1.6-x64-linux.tar.gz
-    rm -Rf seq_crumbs-0.1.6-x64-linux.tar
-    rm -Rf seq_crumbs-0.1.6-x64-linux
+    rm -Rf seq_crumbs-0.1.6*
+    rm -Rf seq_crumbs-0.1.8*
     rm -Rf $LKTOOLS_DIR/sff_extract
     rm -Rf $LKTOOLS_DIR/convert_format
 
-    wget http://bioinf.comav.upv.es/_downloads/seq_crumbs-0.1.6-x64-linux.tar.gz
-    gunzip seq_crumbs-0.1.6-x64-linux.tar.gz
-    tar -xf seq_crumbs-0.1.6-x64-linux.tar
+    wget http://bioinf.comav.upv.es/downloads/seq_crumbs-0.1.8-x64-linux.tar.gz
+    gunzip seq_crumbs-0.1.8-x64-linux.tar.gz
+    tar -xf seq_crumbs-0.1.8-x64-linux.tar
     echo "Compressing TAR"
-    gzip seq_crumbs-0.1.6-x64-linux.tar
-    cd seq_crumbs-0.1.6-x64-linux
-    ln -s $LKSRC_DIR/seq_crumbs-0.1.6-x64-linux/sff_extract $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/seq_crumbs-0.1.6-x64-linux/convert_format $LKTOOLS_DIR
+    gzip seq_crumbs-0.1.8-x64-linux.tar
+    cd seq_crumbs-0.1.8-x64-linux
+    ln -s $LKSRC_DIR/seq_crumbs-0.1.8-x64-linux/sff_extract $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/seq_crumbs-0.1.8-x64-linux/convert_format $LKTOOLS_DIR
 else
     echo "Already installed"
 fi

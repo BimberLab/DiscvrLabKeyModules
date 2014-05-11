@@ -59,7 +59,7 @@
             </bean>
         </property>
         <property name="statusWriter">
-            <bean class="org.labkey.pipeline.cluster.NoOpPipelineStatusWriter"/>
+            <bean class="org.labkey.pipeline.mule.JMSStatusWriter"/>
         </property>
         <property name="jobStore">
             <bean class="org.labkey.pipeline.api.PipelineJobMarshaller"/>
@@ -75,7 +75,7 @@
             </bean>
         </property>
         <property name="pathMapper">
-            <bean class="org.labkey.pipeline.xstream.PathMapperImpl">
+            <bean class="org.labkey.api.pipeline.file.PathMapperImpl">
                 <property name="localIgnoreCase" value="false"/>
                 <property name="remoteIgnoreCase" value="true"/>
                 <property name="pathMap">
