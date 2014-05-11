@@ -7,7 +7,7 @@
         <property name="factoryImpls">
             <list>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask$Factory">
-                    <property name="location" value="sequenceAnalysis" />
+                    <!--<property name="location" value="sequenceAnalysis" />-->
                     <property name="join" value="true" />
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask$Factory">
@@ -20,7 +20,6 @@
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.ReadsetImportTask$Factory">
                     <property name="location" value="webserver" />
-                    <!--<property name="location" value="sequenceAnalysis" />-->
                     <property name="join" value="true" />
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.IlluminaImportTask$Factory">
@@ -32,8 +31,7 @@
                     <!--<property name="join" value="true" />-->
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceNormalizationTask$Factory">
-                    <!--<property name="location" value="webserver" />-->
-                    <property name="location" value="sequenceAnalysis" />
+                    <!--<property name="location" value="sequenceAnalysis" />-->
                     <property name="join" value="true" />
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.ReadsetCreationTask$Factory">
