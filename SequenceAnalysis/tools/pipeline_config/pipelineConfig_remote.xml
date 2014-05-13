@@ -4,15 +4,15 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
     <bean id="activeMqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
-        <constructor-arg value="tcp://192.168.0.16:61616"/>
+        <constructor-arg value="tcp://sequenceAnalysis:61616"/>
         <!--<property name="userName" value="username" />-->
         <!--<property name="password" value="password" />-->
     </bean>
-    
+
     <bean id="pipelineJobService" class="org.labkey.pipeline.api.PipelineJobServiceImpl">
         <property name="appProperties">
             <bean class="org.labkey.pipeline.api.properties.ApplicationPropertiesImpl">
-                <property name="toolsDirectory" value="/" />
+                <property name="toolsDirectory" value="/usr/local/labkey" />
             </bean>
         </property>
         <property name="remoteServerProperties">
@@ -25,12 +25,13 @@
                 <property name="softwarePackages">
                     <map>
                         <!--These are required.  They will be used in commands and will set environment vars-->
-                        <entry key="SEQUENCEANALYSIS_CODELOCATION" value="/usr/local/labkey/svn/trunk/server/customModules/SequenceAnalysis/pipeline_code/SequenceTools/"/>
-                        <entry key="SEQUENCEANALYSIS_EXTERNALDIR" value="/usr/local/labkey/svn/trunk/server/customModules/SequenceAnalysis/pipeline_code/external/"/>
-						<entry key="PICARDPATH" value="/usr/local/src/picard-tools-1.56"/>
-                        <entry key="GATKPATH" value="/usr/local/bin/GATK"/>
-                        <entry key="MOSAIK_NETWORKFILEPATH" value="/usr/local/networkFile"/>
                         <entry key="Perl" value="/usr/bin"/>
+                        <entry key="SEQUENCEANALYSIS_CODELOCATION" value="/usr/local/labkey/svn/trunk/pipeline_code/SequenceTools"/>
+                        <entry key="SEQUENCEANALYSIS_EXTERNALDIR" value="/usr/local/labkey/svn/trunk/pipeline_code/external"/>
+                        <entry key="PICARDPATH" value="/usr/local/labkey/bin/picard-tools"/>
+                        <entry key="GATKPATH" value="/usr/local/labkey/bin/GATK"/>
+                        <entry key="MOSAIK_NETWORKFILEPATH" value="/usr/local/labkey/bin/networkFile"/>
+                        <entry key="SEQUENCEANALYSIS_BASEURL" value="http://sequenceAnalysis:8080/labkey/"/>
 
                         <!--These can be omitted if they are in the PATH.  These set environment vars used in Perl/BioPerl-->
                         <!--<entry key="BLATPATH" value="/usr/local/bin"/>-->
@@ -67,11 +68,12 @@
         <property name="workDirFactory">
             <bean class="org.labkey.pipeline.api.WorkDirectoryRemote$Factory">
                 <property name="tempDirectory" value="/pipeline"/>
+                <property name="outputPermissions" value="0664"/>
             </bean>
         </property>
         <property name="largeWorkDirFactory">
             <bean class="org.labkey.pipeline.api.WorkDirectoryLocal$Factory">
-                <!--<property name="outputPermissions" value="0664"/>-->
+                <property name="outputPermissions" value="0664"/>
             </bean>
         </property>
         <property name="pathMapper">
@@ -82,8 +84,8 @@
                     <map>
                         <entry key="file:/c:/labkey_data/" value="file:/labkey_data/"/>
                     </map>
-                </property>				
+                </property>
             </bean>
-        </property>		
+        </property>
     </bean>
-</beans>    
+</beans> 
