@@ -815,8 +815,10 @@ onprcEHRModules/mergesync/build.xml -text
 onprcEHRModules/mergesync/module.properties -text
 onprcEHRModules/mergesync/resources/module.xml -text
 onprcEHRModules/mergesync/resources/queries/mergesync/merge_results/.qview.xml -text
+onprcEHRModules/mergesync/resources/queries/mergesync/merge_runs.query.xml -text
 onprcEHRModules/mergesync/resources/queries/mergesync/merge_runs/.qview.xml -text
 onprcEHRModules/mergesync/resources/queries/mergesync/orderssynced.query.xml -text
+onprcEHRModules/mergesync/resources/queries/mergesync/orderssynced/.qview.xml -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.00-0.01.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.01-0.02.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.02-0.03.sql -text
@@ -839,6 +841,7 @@ onprcEHRModules/mergesync/resources/views/begin.html -text
 onprcEHRModules/mergesync/resources/views/begin.view.xml -text
 onprcEHRModules/mergesync/resources/views/instructions.html -text
 onprcEHRModules/mergesync/resources/views/instructions.view.xml -text
+onprcEHRModules/mergesync/resources/web/mergesync/mergeButtons.js -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncController.java -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncManager.java -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncModule.java -text
@@ -1179,6 +1182,8 @@ onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/query/BillingAuditPro
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/query/BillingAuditViewFactory.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/query/BillingTriggerHelper.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/query/ONPRC_EHRBillingUserSchema.java -text
+onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/security/ONPRCAliasEditorPermission.java -text
+onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/security/ONPRCAliasEditorRole.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/security/ONPRCBillingAdminPermission.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/security/ONPRCBillingAdminRole.java -text
 onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/security/ONPRCChargeEntryPermission.java -text

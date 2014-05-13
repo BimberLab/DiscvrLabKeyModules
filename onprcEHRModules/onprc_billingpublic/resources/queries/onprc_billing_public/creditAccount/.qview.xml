@@ -8,5 +8,6 @@
     </columns>
     <sorts>
         <sort column="chargeId/name"/>
+        <sort column="startDate" descending="true"/>
     </sorts>
 </customView>

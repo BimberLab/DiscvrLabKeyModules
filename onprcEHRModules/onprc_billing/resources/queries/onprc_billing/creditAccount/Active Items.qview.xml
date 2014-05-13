@@ -1,6 +1,7 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView">
     <sorts>
         <sort column="chargeId/name"/>
+        <sort column="startDate" descending="true"/>
     </sorts>
     <filters>
         <filter column="enddateCoalesced" operator="dategte" value="+0d"/>

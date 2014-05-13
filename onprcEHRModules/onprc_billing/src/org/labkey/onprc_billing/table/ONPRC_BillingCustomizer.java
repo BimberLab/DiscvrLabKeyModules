@@ -62,6 +62,14 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             {
                 customizeAliases((AbstractTableInfo) table);
             }
+            else if (matches(table, "onprc_billing", "projectAccountHistory"))
+            {
+                customizeProjectAccountHistory((AbstractTableInfo) table);
+            }
+            else if(matches(table, "ehr", "project"))
+            {
+                customizeProjects((AbstractTableInfo) table);
+            }
         }
     }
 
@@ -326,6 +334,42 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         }
         //NOTE: this is separated to allow linked schemas to use the same column
         ti.getColumn(activeCreditAccount).setFk(new QueryForeignKey(ti.getUserSchema(), null, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT, "rowid", "rowid"));
+    }
+
+    private void customizeProjectAccountHistory(AbstractTableInfo ti)
+    {
+        String name = "isActive";
+        if (ti.getColumn(name) == null)
+        {
+            SQLFragment sql = getIsActiveSql(ti);
+            ExprColumn col = new ExprColumn(ti, name, sql, JdbcType.BOOLEAN, ti.getColumn("startdate"), ti.getColumn("enddate"));
+            col.setLabel("Is Active?");
+            ti.addColumn(col);
+        }
+    }
+
+    private void customizeProjects(AbstractTableInfo ti)
+    {
+        //TODO: enable once data is cleaned
+//        ColumnInfo accountCol = ti.getColumn("account");
+//        ti.removeColumn(accountCol);
+//        SQLFragment sql4 = new SQLFragment("(SELECT " + ti.getSqlDialect().getGroupConcat(new SQLFragment("pa.account"), true, true) + " as expr FROM onprc_billing.projectAccountHistory pa WHERE pa.project = " + ExprColumn.STR_TABLE_ALIAS + ".project AND (" + getIsActiveSql(ti) + ") = " + ti.getSqlDialect().getBooleanTRUE() + ")");
+//        ExprColumn newAccountCol = new ExprColumn(ti, "account", sql4, JdbcType.VARCHAR, ti.getColumn("project"));
+//        newAccountCol.setLabel(accountCol.getLabel());
+//        ti.addColumn(newAccountCol);
+    }
+
+    private SQLFragment getIsActiveSql(AbstractTableInfo ti)
+    {
+        return new SQLFragment("(CASE " +
+                // when the start is in the future, using whole-day increments, it is not active
+                " WHEN (CAST(" + ExprColumn.STR_TABLE_ALIAS + ".startdate as DATE) > {fn curdate()}) THEN " + ti.getSqlDialect().getBooleanFALSE() +
+                // when enddate is null, it is active
+                " WHEN (" + ExprColumn.STR_TABLE_ALIAS + ".enddate IS NULL) THEN " + ti.getSqlDialect().getBooleanTRUE() +
+                // if enddate is in the future (whole-day increments), then it is active
+                " WHEN (CAST(" + ExprColumn.STR_TABLE_ALIAS + ".enddate AS DATE) > {fn curdate()}) THEN " + ti.getSqlDialect().getBooleanTRUE() +
+                " ELSE " + ti.getSqlDialect().getBooleanFALSE() +
+                " END)");
     }
 
     private void customizeAliases(AbstractTableInfo ti)

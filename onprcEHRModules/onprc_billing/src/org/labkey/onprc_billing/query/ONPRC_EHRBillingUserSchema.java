@@ -31,6 +31,7 @@ import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.onprc_billing.ONPRC_BillingSchema;
+import org.labkey.onprc_billing.security.ONPRCAliasEditorPermission;
 import org.labkey.onprc_billing.security.ONPRCBillingAdminPermission;
 
 /**
@@ -65,8 +66,21 @@ public class ONPRC_EHRBillingUserSchema extends SimpleUserSchema
         }
         else if (ONPRC_BillingSchema.TABLE_ALIASES.equalsIgnoreCase(name))
         {
-            ContainerScopedTable ti = new ContainerScopedTable(this, schematable, "alias");
-            return ti.init();
+            ContainerScopedTable ti = new ContainerScopedTable(this, schematable, "alias").init();
+            ti.addPermissionMapping(InsertPermission.class, ONPRCBillingAdminPermission.class);
+            ti.addPermissionMapping(UpdatePermission.class, ONPRCBillingAdminPermission.class);
+            ti.addPermissionMapping(DeletePermission.class, ONPRCBillingAdminPermission.class);
+
+            return ti;
+        }
+        else if (ONPRC_BillingSchema.TABLE_PROJECT_ACCOUNT_HISTORY.equalsIgnoreCase(name))
+        {
+            CustomPermissionsTable ti = new CustomPermissionsTable(this, schematable).init();
+
+            ti.addPermissionMapping(InsertPermission.class, ONPRCAliasEditorPermission.class);
+            ti.addPermissionMapping(UpdatePermission.class, ONPRCAliasEditorPermission.class);
+            ti.addPermissionMapping(DeletePermission.class, ONPRCAliasEditorPermission.class);
+            return ti;
         }
         else
         {

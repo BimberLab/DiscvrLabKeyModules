@@ -83,7 +83,9 @@ SELECT
     WHEN (ifdefined(p.project.account.projectStatus) IS NOT NULL AND ifdefined(p.project.account.projectStatus) != 'ACTIVE' AND ifdefined(p.project.account.projectStatus) != 'No Cost Ext' AND ifdefined(p.project.account.projectStatus) != 'Partial Setup') THEN 'Grant Project Not Active'
     ELSE null
   END as isExpiredAccount,
-  CASE WHEN (TIMESTAMPDIFF('SQL_TSI_DAY', p.date, curdate()) > 45) THEN 'Y' ELSE null END as isOldCharge
+  CASE WHEN (TIMESTAMPDIFF('SQL_TSI_DAY', p.date, curdate()) > 45) THEN 'Y' ELSE null END as isOldCharge,
+  p.datefinalized,
+  p.enddatefinalized
 
 FROM onprc_billing.leaseFees p
 
@@ -178,7 +180,9 @@ SELECT
   mc.isMissingFaid,
   mc.isAcceptingCharges,
   mc.isExpiredAccount,
-  mc.isOldCharge
+  mc.isOldCharge,
+  null as datefinalized,
+  null as enddatefinalized
 
 FROM onprc_billing.miscChargesFeeRateData mc
 WHERE cast(mc.billingDate as date) >= CAST(StartDate as date) AND cast(mc.billingDate as date) <= CAST(EndDate as date)

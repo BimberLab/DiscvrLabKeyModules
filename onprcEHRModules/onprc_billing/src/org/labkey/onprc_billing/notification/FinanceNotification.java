@@ -276,7 +276,7 @@ public class FinanceNotification extends AbstractNotification
         new FieldDescriptor("matchesProject", true, "Project Does Not Match Assignment", false),
         //new FieldDescriptor("isMiscCharge", true, "Manually Entered", false),
         new FieldDescriptor("isAdjustment", true, "Adjustment/Reversal", false),
-        new FieldDescriptor("isExemption", true, "Non-standard Rate", false),
+        new FieldDescriptor("isExemption", true, "Rate Exemption", false),
         new FieldDescriptor("isOldCharge", true, "Over 45 Days Old", false),
         new FieldDescriptor("isMultipleProjects", true, "Per Diems Split Between Projects", false)
     };

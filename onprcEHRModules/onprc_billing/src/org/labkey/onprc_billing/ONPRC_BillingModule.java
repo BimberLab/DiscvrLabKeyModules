@@ -57,6 +57,8 @@ import org.labkey.onprc_billing.pipeline.BillingPipelineProvider;
 import org.labkey.onprc_billing.query.BillingAuditProvider;
 import org.labkey.onprc_billing.query.BillingAuditViewFactory;
 import org.labkey.onprc_billing.query.ONPRC_EHRBillingUserSchema;
+import org.labkey.onprc_billing.security.ONPRCAliasEditorPermission;
+import org.labkey.onprc_billing.security.ONPRCAliasEditorRole;
 import org.labkey.onprc_billing.security.ONPRCBillingAdminPermission;
 import org.labkey.onprc_billing.security.ONPRCBillingAdminRole;
 import org.labkey.onprc_billing.security.ONPRCChargesEntryRole;
@@ -104,7 +106,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
         addController(ONPRC_BillingController.NAME, ONPRC_BillingController.class);
 
         RoleManager.registerRole(new ONPRCBillingAdminRole());
-        //RoleManager.registerRole(new ONPRCChargesEntryRole());
+        RoleManager.registerRole(new ONPRCAliasEditorRole());
     }
 
     @Override
@@ -132,7 +134,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
         LDKService.get().registerContainerScopedTable(ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_GRANTS, "grantNumber");
         LDKService.get().registerContainerScopedTable(ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_ALIASES, "alias");
 
-        EHRService.get().registerMoreActionsButton(new ProjectEditButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_PROJECT_ACCOUNT_HISTORY), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_PROJECT_ACCOUNT_HISTORY);
+        EHRService.get().registerMoreActionsButton(new ProjectEditButton(this, ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_PROJECT_ACCOUNT_HISTORY, ONPRCAliasEditorPermission.class), ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_PROJECT_ACCOUNT_HISTORY);
 
         EHRService.get().registerMoreActionsButton(new ChangeBillDateButton(this), ONPRC_BillingSchema.NAME, "miscCharges");
         EHRService.get().registerMoreActionsButton(new ChangeBillDateButton(this), ONPRC_BillingSchema.NAME, "miscChargesWithRates");

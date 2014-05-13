@@ -118,40 +118,6 @@ public class BillingTriggerHelper
         BillingAuditViewFactory.addAuditEntry(getContainer(), getUser(), tableName, objectId, msg);
     }
 
-    public void processProjectAccountChange(int project, String newAccount, String oldAccount) throws Exception
-    {
-        final Date curDate = DateUtils.round(new Date(), Calendar.DATE);
-        //final Date prevDate = DateUtils.addDays(curDate, -1);
-
-        //first find any records matching this project/oldAccount
-        final TableInfo projAccount = DbSchema.get(ONPRC_BillingSchema.NAME).getTable(ONPRC_BillingSchema.TABLE_PROJECT_ACCOUNT_HISTORY);
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("project"), project);
-        filter.addCondition(FieldKey.fromString("account"), oldAccount);
-        filter.addCondition(new SimpleFilter.OrClause(new CompareType.CompareClause(FieldKey.fromString("enddate"), CompareType.DATE_GTE, curDate), new CompareType.CompareClause(FieldKey.fromString("enddate"), CompareType.ISBLANK, null)));
-        TableSelector ts1 = new TableSelector(projAccount, filter, null);
-        long found = ts1.getRowCount();
-        if (found > 0)
-        {
-            ts1.forEach(new Selector.ForEachBlock<ResultSet>()
-            {
-                @Override
-                public void exec(ResultSet rs) throws SQLException
-                {
-                    Map<String, Object> toUpdate = new CaseInsensitiveHashMap<>();
-                    toUpdate.put("enddate", curDate);
-                    Table.update(getUser(), projAccount, toUpdate, rs.getString("rowid"));
-                }
-            });
-        }
-
-        //now add the new record
-        Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
-        toInsert.put("project", project);
-        toInsert.put("account", newAccount);
-        toInsert.put("startdate", curDate);
-        Table.insert(getUser(), projAccount, toInsert);
-    }
-
     public boolean supportsCustomUnitCost(int chargeId)
     {
         Map<String, Object> row = getCharge(chargeId);

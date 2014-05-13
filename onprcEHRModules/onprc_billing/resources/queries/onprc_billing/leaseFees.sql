@@ -43,7 +43,10 @@ cast(null as integer) as leaseCharge1,
 cast(null as integer) as leaseCharge2,
 a.objectid as sourceRecord,
 null as chargeType,
-null as isAdjustment
+null as isAdjustment,
+a.datefinalized,
+a.enddatefinalized
+
 FROM study.assignment a
 
 --find overlapping TMB at date of assignment
@@ -86,7 +89,9 @@ SELECT
   cast(null as integer) as leaseCharge2,
   a.objectid as sourceRecord,
   null as chargeType,
-  null as isAdjustment
+  null as isAdjustment,
+  a.datefinalized,
+  a.enddatefinalized
 
 FROM study.assignment a
 
@@ -117,7 +122,9 @@ lf2.chargeId as leaseCharge1,
 lf.chargeId as leaseCharge2,
 a.objectid as sourceRecord,
 'Adjustment - Automatic' as chargeType,
-'Y' as isAdjustment
+'Y' as isAdjustment,
+a.datefinalized,
+a.enddatefinalized
 
 FROM study.assignment a
 LEFT JOIN onprc_billing.leaseFeeDefinition lf

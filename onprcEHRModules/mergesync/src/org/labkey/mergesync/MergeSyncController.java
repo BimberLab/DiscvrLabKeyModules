@@ -34,6 +34,7 @@ import org.labkey.api.view.ActionURL;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -280,6 +281,71 @@ public class MergeSyncController extends SpringActionController
         public ActionURL getSuccessURL(Object form)
         {
             return DetailsURL.fromString("/mergeSync/begin.view", getContainer()).getActionURL();
+        }
+    }
+
+    @RequiresPermissionClass(AdminPermission.class)
+    public class ResyncRunsAction extends ApiAction<ResyncRunsForm>
+    {
+        public ApiResponse execute(ResyncRunsForm form, BindException errors)
+        {
+            if (form.getPks() == null || form.getPks().length == 0)
+            {
+                errors.reject(ERROR_MSG, "Must supply a list of PKs to sync");
+                return null;
+            }
+
+            MergeSyncRunner runner = new MergeSyncRunner();
+            try
+            {
+                for (String pk : form.getPks())
+                {
+                    String[] tokens = pk.split("<>");
+                    if (tokens.length != 2 || tokens[0] == null || tokens[1] == null)
+                    {
+                        errors.reject(ERROR_MSG, "Invalid PK: " + pk);
+                        return null;
+                    }
+                    else
+                    {
+                        Integer accession = Integer.parseInt(tokens[0]);
+                        Integer testId = Integer.parseInt(tokens[1]);
+                        runner.syncSingleRun(getContainer(), getUser(), accession, testId);
+                    }
+                }
+            }
+            catch (NumberFormatException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+            catch (RuntimeException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+            catch (SQLException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+
+            return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    public static class ResyncRunsForm
+    {
+        private String[] _pks;
+
+        public String[] getPks()
+        {
+            return _pks;
+        }
+
+        public void setPks(String[] pks)
+        {
+            _pks = pks;
         }
     }
 }

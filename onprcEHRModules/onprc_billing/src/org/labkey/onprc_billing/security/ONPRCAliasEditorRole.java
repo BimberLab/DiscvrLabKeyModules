@@ -32,17 +32,15 @@ import org.labkey.onprc_billing.ONPRC_BillingModule;
  * Date: 1/7/13
  * Time: 4:53 PM
  */
-public class ONPRCBillingAdminRole extends AbstractRole
+public class ONPRCAliasEditorRole extends AbstractRole
 {
-    public ONPRCBillingAdminRole()
+    public ONPRCAliasEditorRole()
     {
-        super("ONPRC Billing Admin", "Users with this role are able to make changes to the billing and finance tables", ONPRC_BillingModule.class,
+        super("ONPRC Alias Editor", "Users with this role are able to make changes to onprc_billing.projectAccountHistory", ONPRC_BillingModule.class,
             ReadPermission.class,
             InsertPermission.class,
             UpdatePermission.class,
             DeletePermission.class,
-            ONPRCChargeEntryPermission.class,
-            ONPRCBillingAdminPermission.class,
             ONPRCAliasEditorPermission.class,
             EHRProjectEditPermission.class
         );

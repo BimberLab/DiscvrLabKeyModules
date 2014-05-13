@@ -11,6 +11,7 @@ import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Sort;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -18,6 +19,7 @@ import org.labkey.api.ehr.EHRService;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.DuplicateKeyException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.security.User;
@@ -25,6 +27,7 @@ import org.labkey.api.study.DataSet;
 import org.labkey.api.study.StudyService;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.Pair;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HttpView;
 import org.labkey.api.view.ViewContext;
@@ -60,7 +63,7 @@ public class MergeSyncRunner implements Job
     private Map<String, TableInfo> _cachedResultTables = new HashMap<>();
     private Map<String, Integer> _cachedProjectNames = new HashMap<>();
     private Map<String, String> _cachedTasks = new HashMap<>();
-    private Map<String, String> _cachedRuns = new HashMap<>();
+    private Map<String, Pair<String, String>> _cachedRuns = new HashMap<>();
 
     public MergeSyncRunner()
     {
@@ -131,9 +134,10 @@ public class MergeSyncRunner implements Job
 
             QueryService.get().setEnvironment(QueryService.Environment.USER, u);
 
+            Date syncStart = new Date();
             pullResults(u, c, mergeSchema, lastRun);
 
-            MergeSyncManager.get().setLastRun(new Date());
+            MergeSyncManager.get().setLastRun(syncStart);
         }
         finally
         {
@@ -155,7 +159,8 @@ public class MergeSyncRunner implements Job
         TableInfo runsTable = MergeSyncUserSchema.getMergeRunsTable(mergeSchema);
         final TableInfo mergeResultTable = MergeSyncUserSchema.getMergeDataTable(mergeSchema);
 
-        SimpleFilter runFilter = new SimpleFilter(FieldKey.fromString("dateVerified"), minDate, CompareType.DATE_GTE);
+        //sync on date/time in order to avoid additional work
+        SimpleFilter runFilter = new SimpleFilter(FieldKey.fromString("dateVerified"), minDate, CompareType.GTE);
         runFilter.addCondition(FieldKey.fromString("status"), "V");
         runFilter.addCondition(FieldKey.fromString("numericLastName"), true, CompareType.EQUAL);
 
@@ -192,12 +197,104 @@ public class MergeSyncRunner implements Job
             @Override
             public void exec(ResultSet runRs) throws SQLException
             {
-                processSingleRun(c, u, mergeResultTable, runRs);
+                processSingleRun(c, u, mergeResultTable, runRs, false);
             }
         });
     }
 
-    private void processSingleRun(final Container c, final User u, TableInfo mergeResultTable, ResultSet mergeRunRs) throws SQLException
+    public void syncSingleRun(final Container c, final User u, Integer mergeAccession, Integer mergeTestId) throws SQLException
+    {
+        deleteExistingResults(c, u, mergeAccession, mergeTestId);
+        DbSchema mergeSchema = MergeSyncManager.get().getMergeSchema();
+        if (mergeSchema == null)
+            return;
+
+        _log.info("attempting to resync single run: " + mergeAccession + " / " + mergeTestId);
+
+        TableInfo runsTable = MergeSyncUserSchema.getMergeRunsTable(mergeSchema);
+        final TableInfo mergeResultTable = MergeSyncUserSchema.getMergeDataTable(mergeSchema);
+
+        SimpleFilter runFilter = new SimpleFilter(FieldKey.fromString("accession"), mergeAccession, CompareType.EQUAL);
+        runFilter.addCondition(FieldKey.fromString("panelid"), mergeTestId);
+        runFilter.addCondition(FieldKey.fromString("status"), "V");
+        runFilter.addCondition(FieldKey.fromString("numericLastName"), true, CompareType.EQUAL);
+
+        TableSelector runTs = new TableSelector(runsTable, runFilter, null);
+        runTs.forEach(new Selector.ForEachBlock<ResultSet>()
+        {
+            @Override
+            public void exec(ResultSet runRs) throws SQLException
+            {
+                //TODO: sync runRow details, if needed
+//                TableSelector runsTs = new TableSelector(getClinpathRuns(c, u), PageFlowUtil.set("lsid", "Id", "project", "date"), new SimpleFilter(FieldKey.fromString("objectid"), runId), null);
+//                Map<String, Object> runRow = runsTs.getMap();
+//                if (runRow != null)
+//                {
+//                    runRow = new CaseInsensitiveHashMap<>(runRow);
+//                }
+
+                processSingleRun(c, u, mergeResultTable, runRs, true);
+            }
+        });
+    }
+
+    public void deleteExistingResults(final Container c, final User u, Integer mergeAccession, Integer mergeTestId) throws SQLException
+    {
+        Map<String, Object> request = getExistingRequest(c, u, mergeAccession, mergeTestId, false);
+        if (request == null)
+        {
+            return;
+        }
+
+        String runId = (String)request.get("runid");
+        if (runId == null)
+        {
+            return;
+        }
+
+        TableSelector ts = new TableSelector(getClinpathRuns(c, u), Collections.singleton("servicerequested"), new SimpleFilter(FieldKey.fromString("objectid"), runId), null);
+        String servicename = ts.getObject(String.class);
+        if (servicename == null)
+        {
+            return;
+        }
+
+        try
+        {
+            TableInfo resultTable = resolveServiceResultTable(c, u, servicename);
+            if (resultTable == null)
+            {
+                _log.error("Unable to find result table matching: " + servicename);
+                return;
+            }
+
+            List<String> lsids = new TableSelector(resultTable, Collections.singleton("lsid"), new SimpleFilter(FieldKey.fromString("runid"), runId), null).getArrayList(String.class);
+            if (lsids != null && !lsids.isEmpty())
+            {
+                List<Map<String, Object>> toDelete = new ArrayList<>();
+                for (String lsid : lsids)
+                {
+                    Map<String, Object> row = new CaseInsensitiveHashMap<>();
+                    row.put("lsid", lsid);
+
+                    toDelete.add(row);
+                }
+
+                List deleted = resultTable.getUpdateService().deleteRows(u, c, toDelete, getExtraContext());
+                _log.info("pre-deleted " + deleted.size() + " rows from table: " + resultTable.getName());
+            }
+            else
+            {
+                _log.info("no existing results found, nothing to delete");
+            }
+        }
+        catch (InvalidKeyException | BatchValidationException | QueryUpdateServiceException e)
+        {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    private void processSingleRun(final Container c, final User u, TableInfo mergeResultTable, ResultSet mergeRunRs, final boolean forceSyncResults) throws SQLException
     {
         Integer accession = mergeRunRs.getInt("accession");
         Integer panelId = mergeRunRs.getInt("panelid");
@@ -212,7 +309,7 @@ public class MergeSyncRunner implements Job
         final Map<String, TableInfo> resultDatasets = new HashMap<>();
 
         TableInfo tableOrdersSynced = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_ORDERSSYNCED);
-        Map<String, Object> existingRequest = getExistingRequest(c, u, accession, panelId);
+        Map<String, Object> existingRequest = getExistingRequest(c, u, accession, panelId, true);
         final String existingRunId = existingRequest == null ? null : (String)existingRequest.get("runid");
         _log.info("processing order: " + accession);
         _log.info("existingRunId: " + existingRunId);
@@ -229,7 +326,7 @@ public class MergeSyncRunner implements Job
                     return;  //this could occur if the result is simply a placeholder like 'RECEIVED'
                 }
 
-                TableInfo dataset = getResultDataSet(c, u, rs, existingRunId);
+                TableInfo dataset = getResultDataSet(c, u, rs.getString("servicename_abbr"), existingRunId);
                 if (dataset == null)
                 {
                     return; //count on getResultDataSet() for error reporting
@@ -252,15 +349,17 @@ public class MergeSyncRunner implements Job
         {
             String taskId = null;
             String runId = null;
+            String runLsid = null;
             String orderObjectId = null;
             if (existingRequest != null)
             {
                 taskId = (String)existingRequest.get("taskid");
                 runId = (String)existingRequest.get("runid");
+                runLsid = (String)existingRequest.get("runLsid");
                 orderObjectId = (String)existingRequest.get("objectid");
                 Boolean resultsReceived = (Boolean)existingRequest.get("resultsreceived");
 
-                if (resultsReceived)
+                if (resultsReceived && !forceSyncResults)
                 {
                     _log.info("This order already has results imported, skipping: " + accession + "/" + panelId);
                     return;
@@ -279,7 +378,13 @@ public class MergeSyncRunner implements Job
 
             if (runId == null)
             {
-                runId = createRun(c, u, mergeRunRs, taskId, (expectResults && resultsToCreate.isEmpty()));
+                Pair<String, String> pair = createRun(c, u, mergeRunRs, taskId, (expectResults && resultsToCreate.isEmpty()));
+                runId = pair == null ? null : pair.first;
+            }
+
+            if (runLsid == null && runId != null)
+            {
+                runLsid = getRunLsid(c, u, accession, panelId, runId);
             }
 
             String requestId = null;
@@ -313,17 +418,22 @@ public class MergeSyncRunner implements Job
 
                     _log.info("creating " + datasetName + " results: " + resultsToCreate.get(datasetName).size());
 
-                    try
-                    {
-                        BatchValidationException errors = new BatchValidationException();
-                        ds.getUpdateService().insertRows(u, c, resultsToCreate.get(datasetName), errors, new HashMap<String, Object>());
-                    }
-                    catch (BatchValidationException | DuplicateKeyException | QueryUpdateServiceException e)
-                    {
-                        _log.error(e.getMessage(), e);
-                        throw new RuntimeException(e.getMessage(), e);
-                    }
+                    BatchValidationException errors = new BatchValidationException();
+                    ds.getUpdateService().insertRows(u, c, resultsToCreate.get(datasetName), errors, getExtraContext());
                 }
+
+                //if successful, we need to mark the run as completed
+                _log.info("marking clinpath run as complete: " + runId);
+                Map<String, Object> toUpdate = new CaseInsensitiveHashMap<>();
+                toUpdate.put("lsid", runLsid);
+                toUpdate.put("QCStateLabel", EHRService.QCSTATES.Completed.getLabel());
+
+                Map<String, Object> toUpdateKeys = new CaseInsensitiveHashMap<>();
+                toUpdateKeys.put("lsid", runLsid);
+
+                getClinpathRuns(c, u).getUpdateService().updateRows(u, c, Collections.singletonList(toUpdate), Collections.singletonList(toUpdateKeys), getExtraContext());
+
+                //TODO: account for task qcstate too
             }
             else
             {
@@ -334,6 +444,18 @@ public class MergeSyncRunner implements Job
                     {
                         _log.error(tableName + ": " + resultsToCreate.get(tableName).size());
                     }
+                }
+                else
+                {
+                    Map<String, Object> toUpdate = new CaseInsensitiveHashMap<>();
+                    toUpdate.put("lsid", runLsid);
+                    toUpdate.put("QCStateLabel", EHRService.QCSTATES.RequestSampleDelivered.getLabel());
+
+                    Map<String, Object> toUpdateKeys = new CaseInsensitiveHashMap<>();
+                    toUpdateKeys.put("lsid", runLsid);
+
+                    _log.info("marking clinpath run as delivered: " + runId);
+                    getClinpathRuns(c, u).getUpdateService().updateRows(u, c, Collections.singletonList(toUpdate), Collections.singletonList(toUpdateKeys), getExtraContext());
                 }
             }
 
@@ -346,6 +468,11 @@ public class MergeSyncRunner implements Job
             Table.update(u, tableOrdersSynced, toUpdate, orderObjectId);
 
             transaction.commit();
+        }
+        catch (BatchValidationException | DuplicateKeyException | InvalidKeyException | QueryUpdateServiceException e)
+        {
+            _log.error(e.getMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
@@ -393,6 +520,7 @@ public class MergeSyncRunner implements Job
         taskRecord.put("createdby", u.getUserId());
         taskRecord.put("modified", new Date());
         taskRecord.put("modifiedby", u.getUserId());
+        taskRecord.put("QCStateLabel", EHRService.QCSTATES.Completed.getLabel());
 
         TableInfo taskTable = DbSchema.get("ehr").getTable("tasks");
 
@@ -404,7 +532,7 @@ public class MergeSyncRunner implements Job
         return taskId;
     }
 
-    private Map<String, Object> getExistingRequest(Container c, User u, Integer accession, Integer panelId)
+    private Map<String, Object> getExistingRequest(Container c, User u, Integer accession, Integer panelId, boolean validateRunId)
     {
         TableInfo tableOrdersSynced = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_ORDERSSYNCED);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("order_accession"), accession);
@@ -417,12 +545,38 @@ public class MergeSyncRunner implements Job
                 new CompareType.CompareClause(FieldKey.fromString("test_accession"), CompareType.ISBLANK, null)
         ));
 
-        TableSelector ts = new TableSelector(tableOrdersSynced, PageFlowUtil.set("objectid", "resultsreceived", "runid", "taskid"), filter, null);
+        TableSelector ts = new TableSelector(tableOrdersSynced, PageFlowUtil.set("objectid", "resultsreceived", "runid", "taskid"), filter, new Sort("-created"));
         List<Map> ret = ts.getArrayList(Map.class);
         if (ret.isEmpty())
             return null;
 
-        return new CaseInsensitiveHashMap<Object>(ret.get(0));
+        Map<String, Object> map = new CaseInsensitiveHashMap<Object>(ret.get(0));
+
+        //make sure this runId actually exists
+        String runId = (String)map.get("runid");
+        if (runId != null)
+        {
+            TableInfo ti = getClinpathRuns(c, u);
+            TableSelector ts2 = new TableSelector(ti, Collections.singleton("lsid"), new SimpleFilter(FieldKey.fromString("objectid"), runId), null);
+            String lsid = ts2.getObject(String.class);
+            if (lsid != null)
+            {
+                map.put("runLsid", lsid);
+
+                //NOTE: only return the map if this run is really found
+                return map;
+            }
+            else if (!validateRunId)
+            {
+                return map;
+            }
+            else
+            {
+                _log.error("There is a record of a synced merge request (" + accession + "), but the runId was not found: " + runId + ". the request will be recreated.");
+            }
+        }
+
+        return null;
     }
 
     private Map<String, Object> processResultSet(Container c, User u, ResultSet rs, @Nullable String runId) throws SQLException
@@ -470,9 +624,9 @@ public class MergeSyncRunner implements Job
         return resultRow;
     }
 
-    private TableInfo getResultDataSet(Container c, User u, ResultSet rs, @Nullable String runId) throws SQLException
+    private TableInfo getResultDataSet(Container c, User u, String serviceName, @Nullable String runId) throws SQLException
     {
-        String servicename = resolveServiceName(c, u, rs.getString("servicename_abbr"), runId);
+        String servicename = resolveServiceName(c, u, serviceName, runId);
         if (servicename == null)
         {
             return null;
@@ -497,7 +651,24 @@ public class MergeSyncRunner implements Job
         return d;
     }
 
-    private String createRun(Container c, User u, ResultSet mergeRunRs, String taskId, boolean hasResults) throws SQLException
+    private String getRunLsid(Container c, User u, Integer accessionId, Integer panelId, String runId) throws SQLException
+    {
+        String key = accessionId + "||" + panelId;
+        if (_cachedRuns.containsKey(key))
+        {
+            return _cachedRuns.get(key).second;
+        }
+
+        TableInfo ti = getClinpathRuns(c, u);
+        TableSelector ts = new TableSelector(ti, Collections.singleton("lsid"), new SimpleFilter(FieldKey.fromString("objectid"), runId), null);
+        String lsid = ts.getObject(String.class);
+
+        _cachedRuns.put(key, Pair.of(runId, lsid));
+
+        return lsid;
+    }
+
+    private Pair<String, String> createRun(Container c, User u, ResultSet mergeRunRs, String taskId, boolean hasResults) throws SQLException
     {
         Integer accessionId = mergeRunRs.getInt("accession");
         Integer panelId = mergeRunRs.getInt(("panelid"));
@@ -521,23 +692,34 @@ public class MergeSyncRunner implements Job
         runRow.put("objectid", runId);
         runRow.put("taskid", taskId);
         runRow.put("servicerequested", servicename);
-        runRow.put("QCStateLabel", hasResults ? EHRService.QCSTATES.Completed.getLabel() : EHRService.QCSTATES.RequestApproved.getLabel());
+        runRow.put("QCStateLabel", hasResults ? EHRService.QCSTATES.Completed.getLabel() : EHRService.QCSTATES.RequestSampleDelivered.getLabel());
 
         TableInfo clinpathRuns = getClinpathRuns(c, u);
         try
         {
             _log.info("creating clinpath run for merge data: " + key);
-            clinpathRuns.getUpdateService().insertRows(u, c, Arrays.asList(runRow), new BatchValidationException(), new HashMap<String, Object>());
+            List<Map<String, Object>> createdRunRows = clinpathRuns.getUpdateService().insertRows(u, c, Arrays.asList(runRow), new BatchValidationException(), getExtraContext());
+            if (!createdRunRows.isEmpty())
+            {
+                _cachedRuns.put(key, Pair.of(runId, (String)createdRunRows.get(0).get("lsid")));
+            }
 
-            _cachedRuns.put(key, runId);
-
-            return runId;
+            return _cachedRuns.get(key);
         }
         catch (BatchValidationException | DuplicateKeyException | QueryUpdateServiceException | SQLException e)
         {
             _log.error(e.getMessage(), e);
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    public Map<String, Object> getExtraContext()
+    {
+        Map<String, Object> map = new HashMap<>();
+        map.put("quickValidation", true);
+        map.put("generatedByServer", true);
+
+        return map;
     }
 
     private String getRequestForOrder(Container c, User u, String objectId)

@@ -11,5 +11,6 @@
     <sorts>
         <sort column="chargeId/name"/>
         <sort column="project"/>
+        <sort column="startDate" descending="true"/>
     </sorts>
 </customView>

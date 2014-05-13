@@ -1,0 +1,15 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="merge_runs" tableDbType="NOT_IN_DB">
+                <buttonBarOptions includeStandardButtons="true">
+                    <includeScript>ldk.context</includeScript>
+                    <includeScript>mergesync/mergeButtons.js</includeScript>
+                    <item text="Resync Selected" insertPosition="end" requiresSelection="true">
+                        <onClick>MergeSync.buttons.resyncSelected(dataRegionName);</onClick>
+                    </item>
+                </buttonBarOptions>
+            </table>
+        </tables>
+    </metadata>
+</query>

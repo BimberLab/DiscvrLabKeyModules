@@ -141,6 +141,11 @@ public class RequestSyncHelper
             _log.error(e.getMessage(), e);
         }
 
+        if (recordsToSync.isEmpty())
+        {
+            return;
+        }
+
         DbScope scope = mergeSchema.getScope();
         try (DbScope.Transaction transaction = scope.ensureTransaction())
         {

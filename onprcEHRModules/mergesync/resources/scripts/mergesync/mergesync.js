@@ -24,7 +24,8 @@ exports.init = function(EHR){
                 if (!qc){
                     console.error('Unable to find QCState: ' + row.QCState + '/' + row.QCStateLabel);
                 }
-                else if (qc.isRequest){
+                //NOTE: when the merge pull process creates runs, these are entered as 'sample delivered', so we skip these
+                else if (qc.isRequest && qc.Label != 'Request: Sample Delivered'){
                     toSync.push(row)
                 }
             }

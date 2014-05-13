@@ -106,7 +106,7 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 ret.append("p.Pt_Lname as animalId,\n");
                 ret.append("IsNumeric(p.Pt_Lname) as numericLastName,\n");
                 ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_DATE", "o.O_DTZ") + " as date,\n");
-                ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_VDT", "o.O_VTZ") + " as dateVerified,\n");
+                ret.append(MergeSyncUserSchema.getDateConversionSql("t.TS_VDT", "t.TS_VTZ") + " as dateVerified,\n");
                 ret.append("i.INS_NAME as project,\n");
                 ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_COLLDT", "o.O_CLTZ") + " as datecollected,\n");
                 ret.append(MergeSyncUserSchema.getDateConversionSql("r.RE_DATE", "r.RE_TZ") + " as runDate,\n");
@@ -172,7 +172,9 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 addColumn(new ExprColumn(this, "accession", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".accession"), JdbcType.INTEGER));
                 addColumn(new ExprColumn(this, "panelId", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".panelId"), JdbcType.INTEGER));
                 addColumn(new ExprColumn(this, "animalId", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".animalId"), JdbcType.VARCHAR));
-                addColumn(new ExprColumn(this, "dateVerified", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateVerified"), JdbcType.TIMESTAMP));
+                ColumnInfo verifyDateCol = addColumn(new ExprColumn(this, "dateVerified", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateVerified"), JdbcType.TIMESTAMP));
+                verifyDateCol.setFormat("yyyy-MM-dd HH:mm");
+
                 ColumnInfo dateCol = addColumn(new ExprColumn(this, "date", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".date"), JdbcType.TIMESTAMP));
                 dateCol.setFormat("yyyy-MM-dd HH:mm");
 
@@ -210,6 +212,9 @@ public class MergeSyncUserSchema extends SimpleUserSchema
             {
                 SQLFragment ret  = new SQLFragment();
                 ret.append("select\n");
+                ret.append(getSqlDialect().concatenate("CAST(o.O_ACCNUM as varchar)", "'<>'", "cast(t.TS_INDEX as varchar)"));
+                ret.append(" as pk,\n");
+
                 ret.append("t.TS_Stat as status,\n");
 
                 ret.append("o.O_ACCNUM as accession,\n");
@@ -217,7 +222,7 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 ret.append("p.Pt_Lname as animalId,\n");
                 ret.append("IsNumeric(p.Pt_Lname) as numericLastName,\n");
                 ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_DATE", "o.O_DTZ") + " as date,\n");
-                ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_VDT", "o.O_VTZ") + " as dateVerified,\n");
+                ret.append(MergeSyncUserSchema.getDateConversionSql("t.TS_VDT", "t.TS_VTZ") + " as dateVerified,\n");
                 ret.append("i.INS_NAME as project,\n");
                 ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_COLLDT", "o.O_CLTZ") + " as datecollected,\n");
                 ret.append("ti.T_ABBR as servicename_abbr,\n");
@@ -262,7 +267,10 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 addColumn(new ExprColumn(this, "datecollected", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".datecollected"), JdbcType.TIMESTAMP));
                 addColumn(new ExprColumn(this, "servicename_abbr", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".servicename_abbr"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "status", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".status"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "pk", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".pk"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "numericLastName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".numericLastName"), JdbcType.BOOLEAN));
+
+                getColumn("pk").setKeyField(true);
             }
         };
     }
@@ -270,6 +278,6 @@ public class MergeSyncUserSchema extends SimpleUserSchema
     private static String getDateConversionSql(String colName, String tzColName)
     {
         //i dont know why merge doesnt store these offsets with the correct sign...
-        return "DATEADD(mi, (SELECT -1 * t.TZ_OFFSET FROM TIMEZONES t WHERE t.ROWID = " + tzColName + "), " + colName + ")";
+        return "DATEADD(mi, (SELECT -1 * tz.TZ_OFFSET FROM TIMEZONES tz WHERE tz.ROWID = " + tzColName + "), " + colName + ")";
     }
 }
