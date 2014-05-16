@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.security.User;
@@ -338,7 +339,7 @@ public class MergeSyncManager
             if (scope == null)
                 throw new IllegalArgumentException("Unknown data source: " + getDataSourceName());
 
-            DbSchema schema = scope.getSchema(getSchemaName());
+            DbSchema schema = scope.getSchema(getSchemaName(), DbSchemaType.Bare);
             if (schema == null)
                 throw new IllegalArgumentException("Unknown schema: " + getSchemaName());
         }
@@ -365,6 +366,6 @@ public class MergeSyncManager
         if (scope == null)
             return null;
 
-        return scope.getSchema(MergeSyncManager.get().getSchemaName());
+        return scope.getSchema(MergeSyncManager.get().getSchemaName(), DbSchemaType.Bare);
     }
 }

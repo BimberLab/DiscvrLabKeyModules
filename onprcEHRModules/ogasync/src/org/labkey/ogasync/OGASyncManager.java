@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.TableInfo;
@@ -337,7 +338,7 @@ public class OGASyncManager
             if (getAllQueryName() == null)
                 throw new IllegalArgumentException("Must provide a queryName for all aliases");
 
-            DbSchema schema = scope.getSchema(getSchemaName());
+            DbSchema schema = scope.getSchema(getSchemaName(), DbSchemaType.Bare);
             if (schema == null)
                 throw new IllegalArgumentException("Unknown schema: " + getSchemaName());
 

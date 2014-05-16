@@ -6,6 +6,7 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.ExecutingSelector;
 import org.labkey.api.data.SQLFragment;
@@ -19,7 +20,6 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
-import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.util.PageFlowUtil;
 import org.quartz.Job;
@@ -30,7 +30,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -115,7 +114,7 @@ public class OGASyncRunner implements Job
         if (scope == null)
             return null;
 
-        DbSchema schema = scope.getSchema(OGASyncManager.get().getSchemaName());
+        DbSchema schema = scope.getSchema(OGASyncManager.get().getSchemaName(), DbSchemaType.Bare);
         if (schema == null)
             return null;
 
@@ -132,7 +131,7 @@ public class OGASyncRunner implements Job
         if (scope == null)
             return null;
 
-        DbSchema schema = scope.getSchema(OGASyncManager.get().getSchemaName());
+        DbSchema schema = scope.getSchema(OGASyncManager.get().getSchemaName(), DbSchemaType.Bare);
         if (schema == null)
             return null;
 
