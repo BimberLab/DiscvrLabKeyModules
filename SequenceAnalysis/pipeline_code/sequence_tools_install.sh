@@ -96,10 +96,10 @@ echo ""
 
 if [ $(which yum) ]; then
     echo "Using Yum"
-    yum install glibc-devel ncurses-devel libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion
+    yum install glibc-devel ncurses-devel libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion google-perftools-devel
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
-    apt-get -q -y install libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-thread-dev libboost-dev libboost-system-dev libboost-regex-dev libboost-filesystem-dev libboost-iostreams-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion
+    apt-get -q -y install libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev
     #apt-get -q -y install libtcmalloc-minimal0
     #apt-get -q -y install libtcmalloc-minimal4
 else
@@ -512,20 +512,21 @@ if [[ ! -e ${LKTOOLS_DIR}/mira || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf mira_4.0rc4_linux-gnu_x86_64*
+    rm -Rf mira_4.0.2_linux-gnu_x86_64*
     rm -Rf mira-4.0*
 
     rm -Rf $LKTOOLS_DIR/mira
     rm -Rf $LKTOOLS_DIR/miraconvert
 
-    wget http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira-4.0.2.tar.bz2
-    bunzip2 mira-4.0.2.tar.bz2
-    tar -xf mira-4.0.2.tar
+    wget http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira_4.0.2_linux-gnu_x86_64_static.tar.bz2
+    bunzip2 mira_4.0.2_linux-gnu_x86_64_static.tar.bz2
+    tar -xf mira_4.0.2_linux-gnu_x86_64_static.tar
     echo "Compressing TAR"
-    bzip2 mira-4.0.2.tar
-    cd mira-4.0.2
+    bzip2 mira_4.0.2_linux-gnu_x86_64_static.tar
+    cd mira_4.0.2_linux-gnu_x86_64_static
 
-    ln -s $LKSRC_DIR/mira-4.0.2/bin/mira $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/mira-4.0.2/bin/miraconvert $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/mira_4.0.2_linux-gnu_x86_64_static/bin/mira $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/mira_4.0.2_linux-gnu_x86_64_static/bin/miraconvert $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -762,12 +763,18 @@ mkdir -p $LK_HOME/svn
 cd $LK_HOME/svn
 
 echo "Cleaning up previous installs"
-rm -Rf trunk
+if [[ ! -e trunk ]];
+then
+    echo "Checking out pipeline code"
+    mkdir trunk
+    cd trunk
 
-mkdir trunk
-cd trunk
-svn co --no-auth-cache --username cpas --password cpas https://hedgehog.fhcrc.org/tor/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code
-chmod +x $LK_HOME/svn/trunk/pipeline_code/sequence_tools_install.sh
+    svn co --no-auth-cache --username cpas --password cpas https://hedgehog.fhcrc.org/tor/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code
+    chmod +x $LK_HOME/svn/trunk/pipeline_code/sequence_tools_install.sh
+else
+    echo "Updating pipeline code"
+    su labkey -c "svn update $LK_HOME/svn/trunk/pipeline_code/"
+fi
 
 
 #
