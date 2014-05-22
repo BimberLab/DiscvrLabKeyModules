@@ -123,7 +123,7 @@ public class MergeSamFilesRunner extends PicardRunner
 
     protected File getJar()
     {
-        return new File(PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARDPATH"), "MergeSamFiles.jar");
+        return getPicardJar("MergeSamFiles.jar");
     }
 
     public String getOutputFilename(File file)

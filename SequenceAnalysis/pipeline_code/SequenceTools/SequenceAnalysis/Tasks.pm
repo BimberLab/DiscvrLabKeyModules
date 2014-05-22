@@ -58,6 +58,7 @@ use SequenceAnalysis::Version;
 #use Storable;
 use Time::localtime;
 use XML::Writer;
+use JSON;
 
 #$ENV{IPCRUNDEBUG} = 'details';
 

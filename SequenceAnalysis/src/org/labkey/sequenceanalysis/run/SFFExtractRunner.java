@@ -51,12 +51,7 @@ public class SFFExtractRunner extends AbstractRunner
 
     private String getExePath()
     {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("SEQCRUMBSPATH");
-        if (path == null)
-            return new File(path, "sff_extract").getPath();
-        else
-            return "sff_extract";
-
+        return getExeForPackage("SEQCRUMBSPATH", "sff_extract").getPath();
     }
 
     private List<String> getParams(File input, File output) throws PipelineJobException

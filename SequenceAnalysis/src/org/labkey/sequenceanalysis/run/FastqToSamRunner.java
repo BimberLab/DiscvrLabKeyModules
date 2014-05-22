@@ -43,7 +43,7 @@ public class FastqToSamRunner extends PicardRunner
 
     protected File getJar()
     {
-        return new File(PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARDPATH"), "FastqToSam.jar");
+        return getPicardJar("FastqToSam.jar");
     }
 
     private List<String> getParams(File file, File file2) throws PipelineJobException

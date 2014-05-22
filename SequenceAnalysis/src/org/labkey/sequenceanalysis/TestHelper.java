@@ -385,7 +385,7 @@ public class TestHelper
             return _isExternalPipelineEnabled;
         }
 
-        protected void waitForJob(String guid) throws Exception
+        protected void waitForJob(PipelineJob job) throws Exception
         {
             try
             {
@@ -394,7 +394,7 @@ public class TestHelper
 
                 Thread.sleep(1000);
 
-                while (!isJobDone(guid))
+                while (!isJobDone(job))
                 {
                     Thread.sleep(1000);
 
@@ -411,40 +411,38 @@ public class TestHelper
             }
         }
 
-        private boolean isJobDone(String guid) throws Exception
+        private boolean isJobDone(PipelineJob job) throws Exception
         {
             TableInfo ti = PipelineService.get().getJobsTable(_context.getUser(), _project);
-            TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("job"), guid), null);
+            TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("job"), job.getJobGUID()), null);
             Map<String, Object> map = ts.getMap();
-            PipelineJob job = PipelineJobService.get().getJobStore().getJob(guid);
 
             if (PipelineJob.TaskStatus.error.matches((String)map.get("status")))
             {
                 //on failure, append contents of pipeline job file to primary error log
                 if (job != null && job.getLogFile() != null)
                 {
-                    File tomcatHome = new File(System.getProperty("catalina.home"));
-                    File logFile = new File(tomcatHome, "logs/labkey-errors.log");
-
-                    try (BufferedReader reader = new BufferedReader(new FileReader(job.getLogFile())); BufferedWriter writer = new BufferedWriter(new FileWriter(logFile, true)))
+                    StringBuilder sb = new StringBuilder();
+                    try (BufferedReader reader = new BufferedReader(new FileReader(job.getLogFile())))
                     {
-                        writer.write("*******************\n");
-                        writer.write("Error running sequence junit tests.  Pipeline log:\n");
+                        sb.append("*******************\n");
+                        sb.append("Error running sequence junit tests.  Pipeline log:\n");
                         String line;
                         while ((line = reader.readLine()) != null) {
-                            writer.write(line);
-                            writer.newLine();
+                            sb.append(line).append('\n');
                         }
 
-                        writer.write("*******************\n");
+                        sb.append("*******************\n");
                     }
+
+                    _log.error(sb.toString());
                 }
                 else
                 {
                     _log.error("No log file present for sequence pipeline job");
                 }
 
-                throw new Exception("There was an error running job: " + (job == null ? guid : job.getDescription()));
+                throw new Exception("There was an error running job: " + (job == null ? "PipelineJob was null" : job.getDescription()));
             }
 
             if (PipelineJob.TaskStatus.complete.matches((String)map.get("status")))
@@ -566,7 +564,7 @@ public class TestHelper
             appendSamples(config, fileNames);
 
             PipelineJob job = createPipelineJob(protocolName, IMPORT_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
@@ -606,7 +604,7 @@ public class TestHelper
             appendSamples(config, fileNames);
 
             PipelineJob job = createPipelineJob(protocolName, IMPORT_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
@@ -652,7 +650,7 @@ public class TestHelper
             config.put("inputfile.inputTreatment", "delete");
 
             PipelineJob job = createPipelineJob(protocolName, IMPORT_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
@@ -733,7 +731,7 @@ public class TestHelper
 
             JSONObject config = getBarcodeConfig(protocolName, fileNames);
             PipelineJob job = createPipelineJob(protocolName, IMPORT_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
             Set<File> expectedOutputs = getBarcodeOutputs(basedir);
@@ -765,7 +763,7 @@ public class TestHelper
             config.put("inputfile.inputTreatment", "compress");
 
             PipelineJob job = createPipelineJob(protocolName, IMPORT_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
             Set<File> expectedOutputs = getBarcodeOutputs(basedir);
@@ -811,7 +809,7 @@ public class TestHelper
             appendSamples(config, fileNames);
 
             PipelineJob job = createPipelineJob(protocolName, IMPORT_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
@@ -842,7 +840,7 @@ public class TestHelper
             appendSamples(config, fileNames);
 
             PipelineJob job = createPipelineJob(protocolName, IMPORT_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
@@ -879,7 +877,7 @@ public class TestHelper
             appendSamples(config, fileNames);
 
             PipelineJob job = createPipelineJob(protocolName, IMPORT_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceImport/" + protocolName);
@@ -1143,7 +1141,7 @@ public class TestHelper
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
@@ -1230,7 +1228,7 @@ public class TestHelper
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
@@ -1275,7 +1273,7 @@ public class TestHelper
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
@@ -1343,7 +1341,7 @@ public class TestHelper
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
@@ -1421,7 +1419,7 @@ public class TestHelper
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
@@ -1474,7 +1472,7 @@ public class TestHelper
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
@@ -1542,7 +1540,7 @@ public class TestHelper
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
@@ -1602,7 +1600,7 @@ public class TestHelper
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
@@ -1667,7 +1665,7 @@ public class TestHelper
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
@@ -1715,7 +1713,7 @@ public class TestHelper
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
-            waitForJob(job.getJobGUID());
+            waitForJob(job);
 
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);

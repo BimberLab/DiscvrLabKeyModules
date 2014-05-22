@@ -36,8 +36,7 @@ public class BWARunner extends AbstractAlignerWrapper
 
     protected File getExe()
     {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("BWAPATH");
-        return new File(path, "bwa");
+        return getExeForPackage("BWAPATH", "bwa");
     }
 
     @Override

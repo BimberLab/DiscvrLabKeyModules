@@ -99,9 +99,12 @@ if [ $(which yum) ]; then
     yum install glibc-devel ncurses-devel libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion google-perftools-devel
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
-    apt-get -q -y install libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev
-    #apt-get -q -y install libtcmalloc-minimal0
-    #apt-get -q -y install libtcmalloc-minimal4
+
+    #note: on ubuntu i found i needed to upgrade Module::Build to 0.42 manually
+    #wget http://launchpadlibrarian.net/162474560/libmodule-build-perl_0.420400-1_all.deb
+    #dpkg -i libmodule-build-perl_0.420400-1_all.deb
+
+    apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev libmodule-build-perl libmodule-build-cipux-perl libtest-most-perl python-dev unzip zip ncftp gcc make perl libgd-gd2-perl libcgi-session-perl libclass-base-perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev
 else
     echo "No known package manager present, aborting"
     exit 1
@@ -773,7 +776,7 @@ then
     chmod +x $LK_HOME/svn/trunk/pipeline_code/sequence_tools_install.sh
 else
     echo "Updating pipeline code"
-    su labkey -c "svn update $LK_HOME/svn/trunk/pipeline_code/"
+    su labkey -c "svn update --no-auth-cache --username cpas --password cpas $LK_HOME/svn/trunk/pipeline_code/"
 fi
 
 
@@ -785,7 +788,7 @@ echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Install All required Perl modules"
 echo ""
-cpan -i Cwd JSON YAML File::HomeDir String::Approx Statistics::Descriptive Math::Round List::Util IPC::Run LabKey::Query File::Util Algorithm::Diff File::Sort Array::Compare Proc::ProcessTable XML::Writer URI Test::Warn XML::DOM::XPath XML::Parser::PerlSAX XML::SAX XML::SAX::Writer XML::Simple XML::Twig Set::Scalar Sort::Naturally Data::Stag Crypt::SSLeay Test::CPAN::Meta::JSON HTML::TreeBuilder
+cpan -i Cwd JSON YAML File::HomeDir Text::Diff Class::Data::Inheritable Test::Exception Test::Most Text::Shellwords Module::Build String::Approx Statistics::Descriptive Math::Round List::Util IPC::Run LabKey::Query File::Util Algorithm::Diff File::Sort Array::Compare Proc::ProcessTable XML::Writer URI Test::Warn XML::DOM::XPath XML::Parser::PerlSAX XML::SAX XML::SAX::Writer XML::Simple XML::Twig Set::Scalar Sort::Naturally Data::Stag Crypt::SSLeay Test::CPAN::Meta::JSON HTML::TreeBuilder
 
 
 #
@@ -797,15 +800,27 @@ if [[ $? -eq 0 || ! -z $FORCE_REINSTALL ]];
 then
     echo "BioPerl already installed"
 else
-    cpan -i -f BioPerl
+    if [ $(which apt-get) ];
+    then
+        echo "Installing BioPerl using apt-get"
+        apt-get -q -y install libbio-perl-perl
+    else
+        cpan -i -f BioPerl
+    fi
 fi
 
-perl -e 'use Bio::DB::Sam' &> /dev/null;
+perldoc -l Bio::DB::Sam &> /dev/null;
 if [[ $? -eq 0 || ! -z $FORCE_REINSTALL ]];
 then
-    echo "Bio::DB::Sam already installed"
+    if [ $(which apt-get) ];
+    then
+        echo "Installing Bio::DB::Sam using apt-get"
+        apt-get -q -y install libbio-samtools-perl
+    else
+        cpan -i Bio::DB::Sam
+    fi
 else
-    cpan -i Bio::DB::Sam
+    echo "Bio::DB::Sam already installed"
 fi
 
 perl -e 'use Bio::Tools::Run::BWA' &> /dev/null;
@@ -813,7 +828,13 @@ if [[ $? -eq 0 || ! -z $FORCE_REINSTALL ]];
 then
     echo "BioPerl-Run already installed"
 else
-    cpan -i -f CJFIELDS/BioPerl-Run-1.006900.tar.gz
+    if [ $(which apt-get) ];
+    then
+        echo "Installing BioPerl-Run using apt-get"
+        apt-get -q -y install bioperl-run
+    else
+        cpan -i -f CJFIELDS/BioPerl-Run-1.006900.tar.gz
+    fi
 fi
 
 

@@ -20,9 +20,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jfree.chart.JFreeChart;
+import org.json.JSONObject;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
+import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.ReturnUrlForm;
@@ -42,18 +44,29 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.pipeline.ParamParser;
 import org.labkey.api.pipeline.PipeRoot;
-import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.pipeline.PipelineValidationException;
+import org.labkey.api.pipeline.TaskId;
+import org.labkey.api.pipeline.TaskPipeline;
+import org.labkey.api.pipeline.browse.PipelinePathForm;
+import org.labkey.api.pipeline.file.AbstractFileAnalysisJob;
+import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocol;
+import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocolFactory;
+import org.labkey.api.pipeline.file.AbstractFileAnalysisProvider;
+import org.labkey.api.pipeline.file.FileAnalysisTaskPipeline;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryForm;
 import org.labkey.api.security.IgnoresTermsOfUse;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.DeletePermission;
+import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
-import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -75,6 +88,7 @@ import org.labkey.sequenceanalysis.analysis.BamIterator;
 import org.labkey.sequenceanalysis.analysis.NtCoverageAggregator;
 import org.labkey.sequenceanalysis.analysis.NtSnpByPosAggregator;
 import org.labkey.sequenceanalysis.model.AnalysisModel;
+import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.FastqcRunner;
@@ -1400,5 +1414,332 @@ public class SequenceAnalysisController extends SpringActionController
         {
             _maxBases = maxBases;
         }
+    }
+
+    /**
+     * Called from LABKEY.Pipeline.startAnalysis()
+     */
+    @RequiresPermissionClass(InsertPermission.class)
+    public class StartAnalysisAction extends ApiAction<AnalyzeForm>
+    {
+        public ApiResponse execute(AnalyzeForm form, BindException errors) throws Exception
+        {
+            PipeRoot pr = PipelineService.get().findPipelineRoot(getContainer());
+            if (pr == null || !pr.isValid())
+                throw new NotFoundException();
+
+            File dirData = null;
+            if (form.getPath() != null)
+            {
+                dirData = pr.resolvePath(form.getPath());
+                if (dirData == null || !NetworkDrive.exists(dirData))
+                    throw new NotFoundException("Could not resolve path: " + form.getPath());
+            }
+
+            TaskId taskId = new TaskId(form.getTaskId());
+            TaskPipeline taskPipeline = PipelineJobService.get().getTaskPipeline(taskId);
+
+            AbstractFileAnalysisProtocolFactory factory = getProtocolFactory(taskPipeline);
+            return execute(form, pr, dirData, factory);
+        }
+
+        protected ApiResponse execute(AnalyzeForm form, PipeRoot root, File dirData, AbstractFileAnalysisProtocolFactory factory) throws IOException, PipelineValidationException
+        {
+            try
+            {
+                TaskId taskId = new TaskId(form.getTaskId());
+                TaskPipeline taskPipeline = PipelineJobService.get().getTaskPipeline(taskId);
+
+                if (form.getProtocolName() == null)
+                {
+                    throw new IllegalArgumentException("Must specify a protocol name");
+                }
+
+                AbstractFileAnalysisProtocol protocol = getProtocol(root, dirData, factory, form.getProtocolName());
+                if (protocol == null)
+                {
+                    String xml;
+                    if (form.getConfigureXml() != null)
+                    {
+                        if (form.getConfigureJson() != null)
+                        {
+                            throw new IllegalArgumentException("The parameters should be defined as XML or JSON, not both");
+                        }
+                        xml = form.getConfigureXml();
+                    }
+                    else
+                    {
+                        if (form.getConfigureJson() == null)
+                        {
+                            throw new IllegalArgumentException("Parameters must be defined, either as XML or JSON");
+                        }
+                        ParamParser parser = PipelineJobService.get().createParamParser();
+                        JSONObject o = new JSONObject(form.getConfigureJson());
+                        Map<String, String> params = new HashMap<>();
+                        for (Map.Entry<String, Object> entry : o.entrySet())
+                        {
+                            params.put(entry.getKey(), entry.getValue() == null ? null : entry.getValue().toString());
+                        }
+                        xml = parser.getXMLFromMap(params);
+                    }
+
+                    protocol = getProtocolFactory(taskPipeline).createProtocolInstance(
+                            form.getProtocolName(),
+                            form.getProtocolDescription(),
+                            xml);
+
+                    protocol.setEmail(getUser().getEmail());
+                    protocol.validateToSave(root);
+                    if (form.isSaveProtocol())
+                    {
+                        protocol.saveDefinition(root);
+                        PipelineService.get().rememberLastProtocolSetting(protocol.getFactory(),
+                                getContainer(), getUser(), protocol.getName());
+                    }
+                }
+                else
+                {
+                    if (form.getConfigureXml() != null || form.getConfigureJson() != null)
+                    {
+                        throw new IllegalArgumentException("Cannot redefine an existing protocol");
+                    }
+                    PipelineService.get().rememberLastProtocolSetting(protocol.getFactory(),
+                            getContainer(), getUser(), protocol.getName());
+                }
+
+                protocol.getFactory().ensureDefaultParameters(root);
+
+                File fileParameters = protocol.getParametersFile(dirData, root);
+                // Make sure configure.xml file exists for the job when it runs.
+                if (fileParameters != null && !fileParameters.exists())
+                {
+                    protocol.setEmail(getUser().getEmail());
+                    protocol.saveInstance(fileParameters, getContainer());
+                }
+
+                Boolean allowNonExistentFiles = form.isAllowNonExistentFiles() != null ? form.isAllowNonExistentFiles() : false;
+                List<File> filesInputList = form.getValidatedFiles(getContainer(), allowNonExistentFiles);
+
+                if (form.isActiveJobs())
+                {
+                    throw new IllegalArgumentException("Active jobs already exist for this protocol.");
+                }
+
+                AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, filesInputList);
+
+                PipelineService.get().queueJob(job);
+
+                Map<String, Object> resultProperties = new HashMap<>();
+
+                resultProperties.put("status", "success");
+                resultProperties.put("jobGUID", job.getJobGUID());
+
+                return new ApiSimpleResponse(resultProperties);
+            }
+            catch (IOException | ClassNotFoundException | PipelineValidationException e)
+            {
+                throw new ApiUsageException(e);
+            }
+        }
+    }
+
+    public static class AnalyzeForm extends PipelinePathForm
+    {
+        public enum Params { path, taskId, file }
+
+        private String taskId = "";
+        private String protocolName = "";
+        private String protocolDescription = "";
+        private String[] fileInputStatus = null;
+        private String configureXml;
+        private String configureJson;
+        private boolean saveProtocol = false;
+        private boolean runAnalysis = false;
+        private boolean activeJobs = false;
+        private Boolean allowNonExistentFiles;
+
+        private static final String UNKNOWN_STATUS = "UNKNOWN";
+
+        public void initStatus(AbstractFileAnalysisProtocol protocol, File dirData, File dirAnalysis)
+        {
+            if (fileInputStatus != null)
+                return;
+
+            activeJobs = false;
+
+            int len = getFile().length;
+            fileInputStatus = new String[len + 1];
+            for (int i = 0; i < len; i++)
+                fileInputStatus[i] = initStatusFile(protocol, dirData, dirAnalysis, getFile()[i], true);
+            fileInputStatus[len] = initStatusFile(protocol,  dirData, dirAnalysis, null, false);
+        }
+
+        private String initStatusFile(AbstractFileAnalysisProtocol protocol, File dirData, File dirAnalysis,
+                                      String fileInputName, boolean statusSingle)
+        {
+            if (protocol == null)
+            {
+                return UNKNOWN_STATUS;
+            }
+
+            File fileStatus = null;
+
+            if (!statusSingle)
+            {
+                fileStatus = PipelineJob.FT_LOG.newFile(dirAnalysis,
+                        protocol.getJoinedBaseName());
+            }
+            else if (fileInputName != null)
+            {
+                File fileInput = new File(dirData, fileInputName);
+                FileType ft = protocol.findInputType(fileInput);
+                if (ft != null)
+                    fileStatus = PipelineJob.FT_LOG.newFile(dirAnalysis, ft.getBaseName(fileInput));
+            }
+
+            if (fileStatus != null)
+            {
+                PipelineStatusFile sf = PipelineService.get().getStatusFile(fileStatus);
+                if (sf == null)
+                    return null;
+
+                activeJobs = activeJobs || sf.isActive();
+                return sf.getStatus();
+            }
+
+            // Failed to get status.  Assume job is active, and return unknown status.
+            activeJobs = true;
+            return UNKNOWN_STATUS;
+        }
+
+        public String getTaskId()
+        {
+            return taskId;
+        }
+
+        public void setTaskId(String taskId)
+        {
+            this.taskId = taskId;
+        }
+
+        public String getConfigureXml()
+        {
+            return configureXml;
+        }
+
+        public void setConfigureXml(String configureXml)
+        {
+            this.configureXml = (configureXml == null ? "" : configureXml);
+        }
+
+        public String getConfigureJson()
+        {
+            return configureJson;
+        }
+
+        public void setConfigureJson(String configureJson)
+        {
+            this.configureJson = configureJson;
+        }
+
+        public String getProtocolName()
+        {
+            return protocolName;
+        }
+
+        public void setProtocolName(String protocolName)
+        {
+            this.protocolName = (protocolName == null ? "" : protocolName);
+        }
+
+        public String getProtocolDescription()
+        {
+            return protocolDescription;
+        }
+
+        public void setProtocolDescription(String protocolDescription)
+        {
+            this.protocolDescription = (protocolDescription == null ? "" : protocolDescription);
+        }
+
+        public String[] getFileInputStatus()
+        {
+            return fileInputStatus;
+        }
+
+        public boolean isActiveJobs()
+        {
+            return activeJobs;
+        }
+
+        public boolean isSaveProtocol()
+        {
+            return saveProtocol;
+        }
+
+        public void setSaveProtocol(boolean saveProtocol)
+        {
+            this.saveProtocol = saveProtocol;
+        }
+
+        public boolean isRunAnalysis()
+        {
+            return runAnalysis;
+        }
+
+        public void setRunAnalysis(boolean runAnalysis)
+        {
+            this.runAnalysis = runAnalysis;
+        }
+
+        public Boolean isAllowNonExistentFiles()
+        {
+            return allowNonExistentFiles;
+        }
+
+        public void setAllowNonExistentFiles(Boolean allowNonExistentFiles)
+        {
+            this.allowNonExistentFiles = allowNonExistentFiles;
+        }
+    }
+
+    private AbstractFileAnalysisProtocol getProtocol(PipeRoot root, File dirData, AbstractFileAnalysisProtocolFactory factory, String protocolName)
+    {
+        try
+        {
+            File protocolFile = factory.getParametersFile(dirData, protocolName, root);
+            AbstractFileAnalysisProtocol result;
+            if (NetworkDrive.exists(protocolFile))
+            {
+                result = factory.loadInstance(protocolFile);
+
+                // Don't allow the instance file to override the protocol name.
+                result.setName(protocolName);
+            }
+            else
+            {
+                result = factory.load(root, protocolName);
+            }
+            return result;
+        }
+        catch (IOException e)
+        {
+            return null;
+        }
+    }
+
+    private AbstractFileAnalysisProtocolFactory getProtocolFactory(TaskPipeline taskPipeline)
+    {
+        //TODO: FileAnalysisPipelineProvider.name
+        AbstractFileAnalysisProvider provider = (AbstractFileAnalysisProvider) PipelineService.get().getPipelineProvider("File Analysis");
+        if (provider == null)
+            throw new NotFoundException("No pipeline provider found for task pipeline: " + taskPipeline);
+
+        if (!(taskPipeline instanceof FileAnalysisTaskPipeline))
+            throw new NotFoundException("Task pipeline is not a FileAnalysisTaskPipeline: " + taskPipeline);
+
+        FileAnalysisTaskPipeline fatp = (FileAnalysisTaskPipeline)taskPipeline;
+        //noinspection unchecked
+        return provider.getProtocolFactory(fatp);
     }
 }

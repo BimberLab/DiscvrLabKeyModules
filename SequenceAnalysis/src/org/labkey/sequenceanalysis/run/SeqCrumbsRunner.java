@@ -58,12 +58,7 @@ public class SeqCrumbsRunner extends AbstractRunner
 
     private String getExePath()
     {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("SEQCRUMBSPATH");
-        if (path == null)
-            return new File(path, "convert_format").getPath();
-        else
-            return "convert_format";
-
+        return getExeForPackage("SEQCRUMBSPATH", "convert_format").getPath();
     }
 
     public String getVersion()

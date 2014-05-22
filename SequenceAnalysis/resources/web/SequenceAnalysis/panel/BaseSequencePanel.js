@@ -215,7 +215,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
             return;
         }
 
-        LABKEY.Pipeline.startAnalysis({
+        this.doStartAnalysis({
             taskId: this.taskId,
             path: this.path,
             files: fileNames,
@@ -236,6 +236,59 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                 alert('There was an error: ' + error.exception);
                 console.log(error);
             }
+        });
+    },
+
+    /**
+     * this is basically cut/paste from LABKEY.Pipeline.startAnalysis, for the purpose of using a custom action
+     */
+    doStartAnalysis: function(config){
+        if (!config.protocolName){
+            throw "Invalid config, must include protocolName property";
+        }
+
+        var params = {
+            taskId: config.taskId,
+            path: config.path,
+            protocolName: config.protocolName,
+            protocolDescription: config.protocolDescription,
+            file: config.files,
+            fileIds: config.fileIds,
+            allowNonExistentFiles: config.allowNonExistentFiles,
+            saveProtocol: config.saveProtocol == undefined || config.saveProtocol
+        };
+        if (config.xmlParameters)
+        {
+            // Convert from an Element to a string if needed
+            // params.configureXml = Ext4.DomHelper.markup(config.xmlParameters);
+            if (typeof config.xmlParameters == "object")
+                throw new Error('The xml configuration is deprecated, please user the jsonParameters option to specify your protocol description.');
+            else
+                params.configureXml = config.xmlParameters;
+        }
+        else if (config.jsonParameters)
+        {
+            if (LABKEY.Utils.isString(config.jsonParameters))
+            {
+                // We already have a string
+                params.configureJson = config.jsonParameters;
+            }
+            else
+            {
+                // Convert from JavaScript object to a string
+                params.configureJson = LABKEY.Utils.encode(config.jsonParameters);
+            }
+        }
+
+        var containerPath = config.containerPath ? config.containerPath : LABKEY.ActionURL.getContainer();
+        var url = LABKEY.ActionURL.buildURL("sequenceanalysis", "startAnalysis", containerPath);
+        LABKEY.Ajax.request({
+            url: url,
+            method: 'POST',
+            params: params,
+            timeout: 60000000,
+            success: LABKEY.Utils.getCallbackWrapper(LABKEY.Utils.getOnSuccess(config), config.scope),
+            failure: LABKEY.Utils.getCallbackWrapper(LABKEY.Utils.getOnFailure(config), config.scope, true)
         });
     },
 

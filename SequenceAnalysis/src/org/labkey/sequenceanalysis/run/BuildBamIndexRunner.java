@@ -55,6 +55,6 @@ public class BuildBamIndexRunner extends PicardRunner
 
     protected File getJar()
     {
-        return new File(PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARDPATH"), "BuildBamIndex.jar");
+        return getPicardJar("BuildBamIndex.jar");
     }
 }

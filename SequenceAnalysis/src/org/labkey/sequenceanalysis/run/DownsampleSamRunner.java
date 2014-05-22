@@ -60,6 +60,6 @@ public class DownsampleSamRunner extends PicardRunner
 
     protected File getJar()
     {
-        return new File(PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARDPATH"), "DownsampleSam.jar");
+        return getPicardJar("DownsampleSam.jar");
     }
 }

@@ -31,7 +31,6 @@ use File::Basename;
 use File::Copy qw(cp mv);
 use Getopt::Std;
 use IPC::Run qw(run);
-use Labkey::Query;
 use List::Util qw[min max reduce sum];
 use Math::Round;
 use POSIX qw(ceil floor);
@@ -156,6 +155,12 @@ sub addReadGroup2Bam {
 	}
 	
 	my $prog_dir = $ENV{PICARDPATH} || '';
+	if (!$prog_dir){
+        $prog_dir = $ENV{SEQUENCEANALYSIS_TOOLS} || $ENV{PIPELINE_TOOLS_DIR};
+	    if ($prog_dir){
+	        $prog_dir = Bio::Root::IO->catfile($prog_dir, 'picard-tools');
+	    }
+	}
 	my $jar_location = Bio::Root::IO->catfile($prog_dir, 'AddOrReplaceReadGroups.jar');
 	if(!-e $jar_location){
 		die("ERROR: Unable to find Picard-tools JAR: ".$jar_location);

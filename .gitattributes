@@ -64,8 +64,6 @@ labModules/SequenceAnalysis/pipeline_code/SequenceTools/SequenceAnalysis/Tasks.p
 labModules/SequenceAnalysis/pipeline_code/SequenceTools/SequenceAnalysis/Utils.pm -text
 labModules/SequenceAnalysis/pipeline_code/SequenceTools/SequenceAnalysis/Version.pm -text
 labModules/SequenceAnalysis/pipeline_code/SequenceTools/alignment.pl -text
-labModules/SequenceAnalysis/pipeline_code/SequenceTools/labkey_api.pl -text
-labModules/SequenceAnalysis/pipeline_code/SequenceTools/readme.txt -text
 labModules/SequenceAnalysis/pipeline_code/SequenceTools/reference_library.pl -text
 labModules/SequenceAnalysis/pipeline_code/external/picard/BuildBamIndex.jar -text
 labModules/SequenceAnalysis/pipeline_code/external/picard/DownsampleSam.jar -text
@@ -482,6 +480,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ReadsetCrea
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ReadsetImportTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ReferenceLibraryTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceAlignmentTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceAnalysisJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceAnalysisTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceNormalizationTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequencePipelineSettings.java -text

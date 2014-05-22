@@ -112,11 +112,11 @@ public class SequenceTaskHelper
         {
             String fn = rs.getFileName();
             Integer id = rs.getFileId();
-            if(StringUtils.isNotBlank(fn) && id == null)
+            if (StringUtils.isNotBlank(fn) && id == null)
             {
                 File f = new File(getSupport().getDataDirectory(), fn);
                 ExpData d = createExpData(f);
-                if(d != null)
+                if (d != null)
                 {
                     rs.setFileId(d.getRowId());
                 }
@@ -124,11 +124,11 @@ public class SequenceTaskHelper
 
             fn = rs.getFileName2();
             id = rs.getFileId2();
-            if(StringUtils.isNotBlank(fn) && id == null)
+            if (StringUtils.isNotBlank(fn) && id == null)
             {
                 File f = new File(getSupport().getDataDirectory(), fn);
                 ExpData d = createExpData(f);
-                if(d != null)
+                if (d != null)
                 {
                     rs.setFileId2(d.getRowId());
                 }
@@ -185,13 +185,14 @@ public class SequenceTaskHelper
             "SEQUENCEANALYSIS_BASEURL",
             "SEQUENCEANALYSIS_CODELOCATION",
             "SEQUENCEANALYSIS_EXTERNALDIR",
-            "SEQUENCEANALYSIS_MAX_THREADS"
+            "SEQUENCEANALYSIS_MAX_THREADS",
+            "SEQUENCEANALYSIS_TOOLS"
         };
 
         for(String variable : variables)
         {
             String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(variable);
-            if(path != null)
+            if (path != null)
             {
                 environment.put(variable, path);
                 job.getLogger().debug("\tSetting environment variable: " + variable + " to: " + path);
@@ -199,12 +200,23 @@ public class SequenceTaskHelper
         }
 
         String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("SEQUENCEANALYSIS_CODELOCATION");
-        if(path != null)
+        if (path != null)
         {
             environment.put("SEQUENCEANALYSIS_CODELOCATION", path);
-            path = "$PERL5LIB" + File.pathSeparator + path;
+            Map<String, String> env = System.getenv();
+            if (env.containsKey("PERL5LIB"))
+            {
+                path = env.get("PERL5LIB") + File.pathSeparator + path;
+            }
+
             environment.put("PERL5LIB", path);
             job.getLogger().debug("\tSetting environment variable: PERL5LIB to: " + path);
+        }
+
+        String pipelinePath = PipelineJobService.get().getAppProperties().getToolsDirectory();
+        if (pipelinePath != null)
+        {
+            environment.put("PIPELINE_TOOLS_DIR", pipelinePath);
         }
 
         return environment;
@@ -298,9 +310,9 @@ public class SequenceTaskHelper
     {
         String path = FilenameUtils.normalize(file.getPath());
         String relPath = FileUtil.relativePath(_workDir.getPath(), path);
-        if(relPath == null)
+        if (relPath == null)
         {
-            if(file.exists())
+            if (file.exists())
             {
                 relPath = path;
             }
@@ -315,7 +327,7 @@ public class SequenceTaskHelper
 
         getJob().getLogger().debug("Adding " + type + ": " + relPath);
 
-        if(file.isDirectory())
+        if (file.isDirectory())
         {
             for(File f : file.listFiles())
             {
@@ -324,7 +336,7 @@ public class SequenceTaskHelper
         }
         else
         {
-            if(!target.containsKey(relPath))
+            if (!target.containsKey(relPath))
             {
                 target.put(relPath, new ArrayList<Object[]>());
             }
@@ -335,7 +347,7 @@ public class SequenceTaskHelper
             for(Object[] values : target.get(relPath))
             {
                 RecordedAction action2 = (RecordedAction)values[0];
-                if(action2 == action)
+                if (action2 == action)
                 {
                     shouldAdd = false;
                     getJob().getLogger().debug("File already present in another action, will not add: " + file.getName() + " / pending action: " + action.getName() + " / existing action: " + action2.getName() + " / path: " + relPath);
@@ -343,7 +355,7 @@ public class SequenceTaskHelper
                 }
             }
 
-            if(shouldAdd)
+            if (shouldAdd)
             {
                 getJob().getLogger().debug("Adding file: " + relPath + " / " + file.getName() + " / " + role + " / " + action.getName() + " / " + isTransient);
                 Object[] array = {action, role, file, isTransient};
@@ -370,7 +382,7 @@ public class SequenceTaskHelper
     private void processCopiedFile(File file)
     {
         //this should be harmless (although unnecessary) if the working dir is the same as the normal location
-        if(file.isDirectory())
+        if (file.isDirectory())
         {
             getJob().getLogger().debug("Copying directory: " +  file.getPath());
             getJob().getLogger().debug("Directory has " + file.listFiles().length + " children");
@@ -385,7 +397,7 @@ public class SequenceTaskHelper
 
             String relPath = FilenameUtils.normalize(FileUtil.relativePath(getSupport().getAnalysisDirectory().getPath(), file.getPath()));
             getJob().getLogger().debug("\tRelative path: " + relPath);
-            if(_outputFiles.containsKey(relPath))
+            if (_outputFiles.containsKey(relPath))
             {
                 for(Object[] array : _outputFiles.get(relPath))
                 {
@@ -403,7 +415,7 @@ public class SequenceTaskHelper
                 _outputFiles.remove(relPath);
             }
 
-            if(_inputFiles.containsKey(relPath))
+            if (_inputFiles.containsKey(relPath))
             {
                 for(Object[] array : _inputFiles.get(relPath))
                 {
@@ -420,7 +432,7 @@ public class SequenceTaskHelper
                 _inputFiles.remove(relPath);
             }
 
-            if(!_inputFiles.containsKey(relPath) && !_outputFiles.containsKey(relPath))
+            if (!_inputFiles.containsKey(relPath) && !_outputFiles.containsKey(relPath))
             {
                 getJob().getLogger().debug("File not associated as an intput: " + file.getPath());
                 for (String fn : _inputFiles.keySet())
@@ -529,7 +541,7 @@ public class SequenceTaskHelper
                 RecordedAction saved_action = (RecordedAction)array[0];
                 String saved_role = (String)array[1];
                 File saved_file = (File)array[2];
-                if(fileType.isType(saved_file) && (role == null || role.equals(saved_role)) && action == saved_action)
+                if (fileType.isType(saved_file) && (role == null || role.equals(saved_role)) && action == saved_action)
                 {
                     files.add(saved_file);
                 }
@@ -547,7 +559,7 @@ public class SequenceTaskHelper
     public static String getExpectedNameForInput(String fn)
     {
         FileType gz = new FileType(".gz");
-        if(gz.isType(fn))
+        if (gz.isType(fn))
             return fn.replaceAll(".gz$", "");
         else
             return fn;
@@ -555,7 +567,7 @@ public class SequenceTaskHelper
 
     public boolean isNormalizationRequired(File f)
     {
-        if(getSettings().isDoMerge() || getSettings().isDoBarcode())
+        if (getSettings().isDoMerge() || getSettings().isDoBarcode())
             return true;
 
         if (FastqUtils.FqFileType.isType(f))
@@ -583,7 +595,7 @@ public class SequenceTaskHelper
 
     public List<File> getFilesToNormalize(List<File> files, boolean allowMissingFiles) throws FileNotFoundException
     {
-        if(getSettings().isDoMerge() || getSettings().isDoBarcode())
+        if (getSettings().isDoMerge() || getSettings().isDoBarcode())
             return files;
 
         List<File> toNormalize = new ArrayList<>();
@@ -597,7 +609,7 @@ public class SequenceTaskHelper
                 throw new FileNotFoundException("Missing file: " + f.getPath());
             }
 
-            if(isNormalizationRequired(f))
+            if (isNormalizationRequired(f))
                toNormalize.add(f);
         }
 
@@ -650,7 +662,7 @@ public class SequenceTaskHelper
 
         while (i < 20){
             bn = FilenameUtils.getBaseName(filename);
-            if(bn.equals(filename)){
+            if (bn.equals(filename)){
                 break;
             }
             filename = bn;
@@ -678,9 +690,9 @@ public class SequenceTaskHelper
 
             getJob().getLogger().debug("\tNew file: " + newFile.getPath());
             getJob().getLogger().debug("\tRelative path: " + relPath);
-            if(_inputFiles.containsKey(relPath))
+            if (_inputFiles.containsKey(relPath))
             {
-                if(!_inputFiles.containsKey(relPath2))
+                if (!_inputFiles.containsKey(relPath2))
                 {
                     _inputFiles.put(relPath2, new ArrayList<Object[]>());
                 }
@@ -696,9 +708,9 @@ public class SequenceTaskHelper
                 _inputFiles.remove(relPath);
             }
 
-            if(_outputFiles.containsKey(relPath))
+            if (_outputFiles.containsKey(relPath))
             {
-                if(!_outputFiles.containsKey(relPath2))
+                if (!_outputFiles.containsKey(relPath2))
                 {
                     _outputFiles.put(relPath2, new ArrayList<Object[]>());
                 }

@@ -34,14 +34,12 @@ public class MosaikRunner extends AbstractCommandWrapper
 
     protected File getBuildExe()
     {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("MOSAIKPATH");
-        return new File(path, "MosaikBuild");
+        return getExeForPackage("MOSAIKPATH", "MosaikBuild");
     }
 
     protected File getAlignExe()
     {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("MOSAIKPATH");
-        return new File(path, "MosaikAlign");
+        return getExeForPackage("MOSAIKPATH", "MosaikAlign");
     }
 
     protected Map<String, CommandArgument> getBuildCommandMap()

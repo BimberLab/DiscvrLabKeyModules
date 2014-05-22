@@ -23,6 +23,8 @@ abstract public class AbstractRunner
     protected Logger _logger = null;
     protected File _workingDir = null;
 
+    public static final String SEQUENCE_TOOLS_PARAM = "SEQUENCEANALYSIS_TOOLS";
+
     protected void doExecute(File workingDir, List<String> params) throws PipelineJobException
     {
         BufferedReader procReader = null;
@@ -135,6 +137,15 @@ abstract public class AbstractRunner
         if (path != null && StringUtils.trimToNull(path) != null)
             return new File(path, exe);
         else
-            return new File(exe);
+        {
+            path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SEQUENCE_TOOLS_PARAM);
+            if (path != null && StringUtils.trimToNull(path) != null)
+                return new File(path, exe);
+
+            if (path == null)
+                path = PipelineJobService.get().getAppProperties().getToolsDirectory();
+
+            return path == null ? new File(exe) : new File(path, exe);
+        }
     }
 }

@@ -24,14 +24,12 @@ public class BowtieRunner extends AbstractCommandWrapper
 
     protected File getExe()
     {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("BOWTIEPATH");
-        return new File(path, "bowtie");
+        return getExeForPackage("BOWTIEPATH", "bowtie");
     }
 
     protected File getBuildExe()
     {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("BOWTIEPATH");
-        return new File(path, "bowtie-build");
+        return getExeForPackage("BOWTIEPATH", "bowtie-build");
     }
 
     public void buildIndex(File fasta) throws PipelineJobException

@@ -69,6 +69,6 @@ public class FixMateInformationRunner extends PicardRunner
 
     protected File getJar()
     {
-        return new File(PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARDPATH"), "FixMateInformation.jar");
+        return getPicardJar("FixMateInformation.jar");
     }
 }
