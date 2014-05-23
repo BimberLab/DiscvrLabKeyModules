@@ -96,7 +96,7 @@ echo ""
 
 if [ $(which yum) ]; then
     echo "Using Yum"
-    yum install glibc-devel ncurses-devel libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion google-perftools-devel
+    yum install glibc-devel ncurses-devel libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion google-perftools-devel perldoc
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
 
@@ -104,7 +104,7 @@ elif [ $(which apt-get) ]; then
     #wget http://launchpadlibrarian.net/162474560/libmodule-build-perl_0.420400-1_all.deb
     #dpkg -i libmodule-build-perl_0.420400-1_all.deb
 
-    apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev libmodule-build-perl libmodule-build-cipux-perl libtest-most-perl python-dev unzip zip ncftp gcc make perl libgd-gd2-perl libcgi-session-perl libclass-base-perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev
+    apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev libmodule-build-perl libmodule-build-cipux-perl libtest-most-perl python-dev unzip zip ncftp gcc make perl libgd-gd2-perl libcgi-session-perl libclass-base-perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc
 else
     echo "No known package manager present, aborting"
     exit 1
@@ -152,32 +152,43 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/MosaikAligner || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf MOSAIK-2.1.73*
+    rm -Rf MOSAIK-2.1.73-binary*
     rm -Rf $LKTOOLS_DIR/MosaikAligner
     rm -Rf $LKTOOLS_DIR/MosaikBuild
     rm -Rf $LKTOOLS_DIR/MosaikJump
     rm -Rf $LKTOOLS_DIR/MosaikText
-    rm -Rf $LKTOOLS_DIR/networkFile
 
     wget http://mosaik-aligner.googlecode.com/files/MOSAIK-2.1.73-binary.tar
     tar -xf MOSAIK-2.1.73-binary.tar
+    echo "Compressing TAR"
+    gzip MOSAIK-2.1.73-binary.tar
+
     ln -s $LKSRC_DIR/MOSAIK-2.1.73-binary/MosaikAligner $LKTOOLS_DIR/MosaikAligner
     ln -s $LKSRC_DIR/MOSAIK-2.1.73-binary/MosaikBuild $LKTOOLS_DIR/MosaikBuild
     ln -s $LKSRC_DIR/MOSAIK-2.1.73-binary/MosaikJump $LKTOOLS_DIR/MosaikJump
     ln -s $LKSRC_DIR/MOSAIK-2.1.73-binary/MosaikText $LKTOOLS_DIR/MosaikText
-    echo "Compressing TAR"
-    gzip MOSAIK-2.1.73-binary.tar
+fi
 
-    #also download src to get the networkFiles
+#also download src to get the networkFiles
+echo "Download mosaik network files"
+echo ""
+if [[ ! -e ${LKTOOLS_DIR}/mosaikNetworkFile || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf MOSAIK-2.1.73-source*
+    rm -Rf $LKTOOLS_DIR/networkFile
+    rm -Rf $LKTOOLS_DIR/mosaikNetworkFile
+
     cd $LKSRC_DIR
 
     wget http://mosaik-aligner.googlecode.com/files/MOSAIK-2.1.73-source.tar
     tar -xf MOSAIK-2.1.73-source.tar
     echo "Compressing TAR"
     gzip MOSAIK-2.1.73-source.tar
-    ln -s $LKSRC_DIR/MOSAIK-2.1.73-source/networkFile $LKTOOLS_DIR
+
+    ln -s $LKSRC_DIR/MOSAIK-2.1.73-source/mosaikNetworkFile $LKTOOLS_DIR
 else
-    echo "Already installed"
+    echo "Mosaik network files already downloaded"
 fi
 
 
@@ -772,7 +783,7 @@ then
     mkdir trunk
     cd trunk
 
-    svn co --no-auth-cache --username cpas --password cpas https://hedgehog.fhcrc.org/tor/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code
+    su labkey -c "svn co --no-auth-cache --username cpas --password cpas https://hedgehog.fhcrc.org/tor/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code"
     chmod +x $LK_HOME/svn/trunk/pipeline_code/sequence_tools_install.sh
 else
     echo "Updating pipeline code"
@@ -795,8 +806,7 @@ cpan -i Cwd JSON YAML File::HomeDir Text::Diff Class::Data::Inheritable Test::Ex
 #bioperl
 #
 
-perl -e 'use Bio::SeqIO' &> /dev/null;
-if [[ $? -eq 0 || ! -z $FORCE_REINSTALL ]];
+if [[ $(perldoc -l Bio::SeqIO) || ! -z $FORCE_REINSTALL ]];
 then
     echo "BioPerl already installed"
 else
@@ -809,9 +819,10 @@ else
     fi
 fi
 
-perldoc -l Bio::DB::Sam &> /dev/null;
-if [[ $? -eq 0 || ! -z $FORCE_REINSTALL ]];
+if [[ $(perldoc -l Bio::DB::Sam) || ! -z $FORCE_REINSTALL ]];
 then
+    echo "Bio::DB::Sam already installed"
+else
     if [ $(which apt-get) ];
     then
         echo "Installing Bio::DB::Sam using apt-get"
@@ -819,12 +830,9 @@ then
     else
         cpan -i Bio::DB::Sam
     fi
-else
-    echo "Bio::DB::Sam already installed"
 fi
 
-perl -e 'use Bio::Tools::Run::BWA' &> /dev/null;
-if [[ $? -eq 0 || ! -z $FORCE_REINSTALL ]];
+if [[ $(perldoc -l Bio::Tools::Run::BWA) || ! -z $FORCE_REINSTALL ]];
 then
     echo "BioPerl-Run already installed"
 else

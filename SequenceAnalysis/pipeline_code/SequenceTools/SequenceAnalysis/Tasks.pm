@@ -268,7 +268,15 @@ sub run_mosaik {
 	}
 	
 	$mosaik->cleanup();
-		
+
+	my $network_file_dir = $ENV{MOSAIK_NETWORKFILEPATH} || '';
+	if (!$network_file_dir){
+        $network_file_dir = $ENV{SEQUENCEANALYSIS_TOOLS} || $ENV{PIPELINE_TOOLS_DIR};
+	    if ($network_file_dir){
+	        $network_file_dir = Bio::Root::IO->catfile($prog_dir, 'mosaikNetworkFile');
+	    }
+	}
+
 	my %fact_params = (
 		-command           => 'MosaikAligner',
 		-program_dir       => $ENV{MOSAIKPATH} || '',
@@ -280,8 +288,8 @@ sub run_mosaik {
 		-mode              => 'all',
 		-no_throw_on_crash => 1,
 		-quiet		 	   => 1,
-		-pe_neural_network => Bio::Root::IO->catfile($ENV{MOSAIK_NETWORKFILEPATH}, '2.1.26.pe.100.0065.ann'),
-		-se_neural_network => Bio::Root::IO->catfile($ENV{MOSAIK_NETWORKFILEPATH}, '2.1.26.se.100.005.ann'),
+		-pe_neural_network => Bio::Root::IO->catfile($network_file_dir, '2.1.26.pe.100.0065.ann'),
+		-se_neural_network => Bio::Root::IO->catfile($network_file_dir, '2.1.26.se.100.005.ann'),
 		-output_multiple   => 1,
 		-processors        => $ENV{SEQUENCEANALYSIS_MAX_THREADS} || 1,
 	);

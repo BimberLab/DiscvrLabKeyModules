@@ -28,29 +28,7 @@
                         <entry key="Perl" value="/usr/bin"/>
                         <entry key="SEQUENCEANALYSIS_CODELOCATION" value="/usr/local/labkey/svn/trunk/pipeline_code/SequenceTools"/>
                         <entry key="SEQUENCEANALYSIS_EXTERNALDIR" value="/usr/local/labkey/svn/trunk/pipeline_code/external"/>
-                        <entry key="PICARDPATH" value="/usr/local/labkey/bin/picard-tools"/>
-                        <entry key="GATKPATH" value="/usr/local/labkey/bin/GATK"/>
-                        <entry key="MOSAIK_NETWORKFILEPATH" value="/usr/local/labkey/bin/networkFile"/>
-                        <entry key="SEQUENCEANALYSIS_BASEURL" value="http://sequenceAnalysis:8080/labkey/"/>
-
-                        <!--These can be omitted if they are in the PATH.  These set environment vars used in Perl/BioPerl-->
-                        <!--<entry key="BLATPATH" value="/usr/local/bin"/>-->
-                        <!--<entry key="BOWTIEPATH" value="/usr/local/bin"/>-->
-                        <!--<entry key="BWAPATH" value="/usr/local/bin"/>-->
-                        <!--<entry key="BFASTPATH" value="/usr/local/bin"/>-->
-                        <!--<entry key="FASTXPATH" value="/usr/local/bin"/>-->
-                        <!--<entry key="MOSAIKPATH" value="/usr/local/bin"/>-->
-                        <!--<entry key="SAMTOOLSPATH" value="/usr/local/bin"/>-->
-                        <!--<entry key="ROCHETOOLSPATH" value="/usr/local/bin"/>-->
-                        <!--<entry key="FASTQCPATH" value="/usr/local/bin"/>-->
-                        <!--<entry key="LASTZPATH" value="/usr/local/bin"/>-->
-                        <!--<entry key="CAP3PATH" value="/usr/local/bin"/>-->
-                        <!--<entry key="SEQCRUMBSPATH" value="/usr/local/bin"/>-->
-
-                        <!--These are optional-->
-
-                        <!--The location of an alternate NETRC file to be used by Perl API-->
-                        <!--<entry key="SEQUENCEANALYSIS_NETRC" value="/usr/local/netrc/.netrc"/>-->
+                        <entry key="SEQUENCEANALYSIS_TOOLS" value="/usr/local/labkey/bin"/>
 
                         <!--The number of threads to use, where supported by external tools-->
                         <!--<entry key="SEQUENCEANALYSIS_MAX_THREADS" value=2/>-->
