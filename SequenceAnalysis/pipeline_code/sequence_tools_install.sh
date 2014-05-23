@@ -186,7 +186,7 @@ then
     echo "Compressing TAR"
     gzip MOSAIK-2.1.73-source.tar
 
-    ln -s $LKSRC_DIR/MOSAIK-2.1.73-source/mosaikNetworkFile $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/MOSAIK-2.1.73-source/networkFile $LKTOOLS_DIR/mosaikNetworkFile
 else
     echo "Mosaik network files already downloaded"
 fi
@@ -799,7 +799,9 @@ echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Install All required Perl modules"
 echo ""
-cpan -i Cwd JSON YAML File::HomeDir Text::Diff Class::Data::Inheritable Test::Exception Test::Most Text::Shellwords Module::Build String::Approx Statistics::Descriptive Math::Round List::Util IPC::Run LabKey::Query File::Util Algorithm::Diff File::Sort Array::Compare Proc::ProcessTable XML::Writer URI Test::Warn XML::DOM::XPath XML::Parser::PerlSAX XML::SAX XML::SAX::Writer XML::Simple XML::Twig Set::Scalar Sort::Naturally Data::Stag Crypt::SSLeay Test::CPAN::Meta::JSON HTML::TreeBuilder
+cpan -i Cwd JSON YAML File::HomeDir Text::Diff Class::Data::Inheritable Test::Exception Test::Most Text::Shellwords Module::Build String::Approx Statistics::Descriptive Math::Round List::Util IPC::Run LabKey::Query File::Util Algorithm::Diff File::Sort Array::Compare Proc::ProcessTable XML::Writer URI Test::Warn XML::DOM::XPath XML::Parser::PerlSAX XML::SAX XML::SAX::Writer XML::Simple XML::Twig Set::Scalar Sort::Naturally Data::Stag Crypt::SSLeay Test::CPAN::Meta::JSON
+cpan -i HTML::Entities HTML::Parser
+cpan -i HTML::TreeBuilder
 
 
 #
