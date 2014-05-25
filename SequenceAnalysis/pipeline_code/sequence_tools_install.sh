@@ -94,16 +94,24 @@ echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Install Required packages via the package manager"
 echo ""
 
+# can install EPEL to get additional repositories if necessary.  May be needed on RHEL/CentOS
+#OS=`cat /etc/redhat-release | awk {'print $1}'`
+#if [ "$OS" = "CentOS" ]
+#then
+#    if [[ ! -e ${LKSRC_DIR}/epel-release-6-8.noarch.rpm ]];
+#    then
+#        cd $LKSRC_DIR
+#        wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+#        wget http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+#        rpm -Uvh remi-release-6*.rpm epel-release-6*.rpm
+#    fi
+#fi
+
 if [ $(which yum) ]; then
     echo "Using Yum"
-    yum install glibc-devel ncurses-devel libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion google-perftools-devel perldoc
+    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion perl-Pod-Simple cpan
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
-
-    #note: on ubuntu i found i needed to upgrade Module::Build to 0.42 manually
-    #wget http://launchpadlibrarian.net/162474560/libmodule-build-perl_0.420400-1_all.deb
-    #dpkg -i libmodule-build-perl_0.420400-1_all.deb
-
     apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev libmodule-build-perl libmodule-build-cipux-perl libtest-most-perl python-dev unzip zip ncftp gcc make perl libgd-gd2-perl libcgi-session-perl libclass-base-perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc
 else
     echo "No known package manager present, aborting"
@@ -125,15 +133,46 @@ if [[ ! -e ${LKTOOLS_DIR}/bwa || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf bwa-0.6.2*
+    rm -Rf bwa-0.7.9a*
     rm -Rf $LKTOOLS_DIR/bwa
 
-    wget http://downloads.sourceforge.net/project/bio-bwa/bwa-0.6.2.tar.bz2
-    bunzip2 bwa-0.6.2.tar.bz2
-    tar -xf bwa-0.6.2.tar
-    bzip2 bwa-0.6.2.tar
-    cd bwa-0.6.2
+    wget http://downloads.sourceforge.net/project/bio-bwa/bwa-0.7.9a.tar.bz2
+    bunzip2 bwa-0.7.9a.tar.bz2
+    tar -xf bwa-0.7.9a.tar
+    bzip2 bwa-0.7.9a.tar
+    cd bwa-0.7.9a
     make CFLAGS=-msse2
-    ln -s $LKSRC_DIR/bwa-0.6.2/bwa $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/bwa-0.7.9a/bwa $LKTOOLS_DIR
+else
+    echo "Already installed"
+fi
+
+
+#
+# GSNAP
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install GSNAP"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/bwa || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf gmap-gsnap-2014-05-15*
+    rm -Rf gmap-2014-05-15
+    rm -Rf $LKTOOLS_DIR/gsnap
+
+    wget http://research-pub.gene.com/gmap/src/gmap-gsnap-2014-05-15.v2.tar.gz
+    gunzip gmap-gsnap-2014-05-15.v2.tar.gz
+    tar -xf gmap-gsnap-2014-05-15.v2.tar
+    gzip gmap-gsnap-2014-05-15.v2.tar
+    cd gmap-2014-05-15
+    ./configure
+    make
+    ln -s $LKSRC_DIR/gmap-gsnap-2014-05-15.v2/gsnap $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -295,6 +334,14 @@ then
     echo "Cleaning up previous installs"
     rm -Rf fastx_toolkit-0.0.13.2*
 
+    #this should not be required with this script
+    #wget http://cancan.cshl.edu/labmembers/gordon/files/libgtextutils-0.6.tar.bz2
+    #tar -xjf libgtextutils-0.6.tar.bz2
+    #cd libgtextutils-0.6
+    #./configure
+    #make
+    #make install
+
     wget http://hannonlab.cshl.edu/fastx_toolkit/fastx_toolkit-0.0.13.2.tar.bz2
     bunzip2 fastx_toolkit-0.0.13.2.tar.bz2
     tar -xf fastx_toolkit-0.0.13.2.tar
@@ -432,24 +479,32 @@ echo "Install biopython"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e biopython-1.60 || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf biopython-1.60.tar.gz
-    rm -Rf biopython-1.60.tar
-    rm -Rf biopython-1.60
-
-    wget http://biopython.org/DIST/biopython-1.60.tar.gz
-    gunzip biopython-1.60.tar.gz
-    tar -xf biopython-1.60.tar
-    echo "Compressing TAR"
-    gzip biopython-1.60.tar
-    cd biopython-1.60
-    python setup.py build
-    python setup.py test
-    python setup.py install
+if [ $(which apt-get) ]; then
+    echo "Installing biopython using apt-get"
+    apt-get -q -y install python-biopython
+elif [ $(which yum) ]; then
+    echo "Installing biopython using yum"
+    yum -y install python-biopython
 else
-    echo "Already installed"
+    if [[ ! -e biopython-1.60 || ! -z $FORCE_REINSTALL ]];then
+        echo "Installing biopython manually"
+        echo "Cleaning up previous installs"
+        rm -Rf biopython-1.60.tar.gz
+        rm -Rf biopython-1.60.tar
+        rm -Rf biopython-1.60
+
+        wget http://biopython.org/DIST/biopython-1.60.tar.gz
+        gunzip biopython-1.60.tar.gz
+        tar -xf biopython-1.60.tar
+        echo "Compressing TAR"
+        gzip biopython-1.60.tar
+        cd biopython-1.60
+        python setup.py build
+        python setup.py test
+        python setup.py install
+    else
+        echo "Already installed"
+    fi
 fi
 
 #
@@ -799,9 +854,22 @@ echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Install All required Perl modules"
 echo ""
-cpan -i Cwd JSON YAML File::HomeDir Text::Diff Class::Data::Inheritable Test::Exception Test::Most Text::Shellwords Module::Build String::Approx Statistics::Descriptive Math::Round List::Util IPC::Run LabKey::Query File::Util Algorithm::Diff File::Sort Array::Compare Proc::ProcessTable XML::Writer URI Test::Warn XML::DOM::XPath XML::Parser::PerlSAX XML::SAX XML::SAX::Writer XML::Simple XML::Twig Set::Scalar Sort::Naturally Data::Stag Crypt::SSLeay Test::CPAN::Meta::JSON
-cpan -i HTML::Entities HTML::Parser
-cpan -i HTML::TreeBuilder
+
+# preferentially use apt-get when available
+if [ $(which apt-get) ];
+then
+    apt-get -q -y install perl-base libclass-data-inheritable-perl libstatistics-descriptive-perl libgetopt-long-descriptive-perl libxml-sax-perl libxml-writer-perl libxml-xpath-perl libcrypt-ssleay-perl libtest-cpan-meta-perl libtest-warn-perl libproc-processtable-perl libtext-diff-perl liblist-moreutils-perl libtest-exception-perl libjson-perl libyaml-perl libstring-approx-perl libmath-round-perl libalgorithm-diff-perl libfile-homedir-perl libipc-run-perl libipc-run-safehandles-perl libfile-util-perl libarray-compare-perl libset-scalar-perl libsort-naturally-perl libdata-stag-perl libtest-most-perl liburi-perl
+elif [ $(which yum) ];
+then
+    #most packages can be installed using yum
+    yum -y install perl-JSON.noarch perl-YAML.noarch perl-IPC-Run.noarch perl-Class-Data-Inheritable.noarch perl-libxml-perl.noarch perl-XML-SAX.noarch perl-XML-SAX-Writer.noarch perl-XML-Simple.noarch perl-XML-Twig.noarch perl-XML-DOM.noarch perl-XML-DOM-XPath.noarch perl-Crypt-SSLeay.x86_64 perl-Test-Warn.noarch perl-Test-Exception.noarch perl-Test-Simple.x86_64 perl-Text-Diff.noarch perl-List-MoreUtils.x86_64 perl-Algorithm-Diff.noarch perl-File-HomeDir.noarch perl-URI.noarch
+    cpan -i Proc::ProcessTable String::Approx Math::Round File::Util XML::Writer
+else
+    cpan -i JSON YAML IPC::Run Class::Data::Inheritable Statistics::Descriptive XML::Parser::PerlSAX XML::SAX XML::SAX::Writer XML::Simple XML::Twig XML::DOM::XPath Test::CPAN::Meta::JSON Test::Warn Proc::ProcessTable Text::Diff List::Util Test::Exception String::Approx Math::Round Algorithm::Diff File::HomeDir File::Util Array::Compare Set::Scalar Sort::Naturally Data::Stag Test::Most URI XML::Writer
+fi
+
+#this is no longer necessary for the pipeline
+#cpan -i LabKey::Query
 
 
 #
