@@ -273,7 +273,7 @@ sub run_mosaik {
 	if (!$network_file_dir){
         $network_file_dir = $ENV{SEQUENCEANALYSIS_TOOLS} || $ENV{PIPELINE_TOOLS_DIR};
 	    if ($network_file_dir){
-	        $network_file_dir = Bio::Root::IO->catfile($prog_dir, 'mosaikNetworkFile');
+	        $network_file_dir = Bio::Root::IO->catfile($network_file_dir, 'mosaikNetworkFile');
 	    }
 	}
 

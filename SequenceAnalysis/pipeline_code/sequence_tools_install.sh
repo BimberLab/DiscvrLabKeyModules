@@ -149,6 +149,29 @@ fi
 
 
 #
+# GATK
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install GATK"
+echo ""
+cd $LKSRC_DIR
+mkdir -p GATK
+cd GATK
+
+if [[ ! -e ${LKSRC_DIR}/GATK || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Downloading GATK from GIT"
+    #git clone git://github.com/broadgsa/gatk.git
+    #git clone git://github.com/broadgsa/gatk-protected.git
+else
+    echo "Updating GATK from GIT"
+    #git pull
+fi
+
+
+#
 # GSNAP
 #
 echo ""
@@ -158,21 +181,22 @@ echo "Install GSNAP"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/bwa || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/gsnap || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf gmap-gsnap-2014-05-15*
-    rm -Rf gmap-2014-05-15
+    rm -Rf gmap-2014-05-15*
     rm -Rf $LKTOOLS_DIR/gsnap
 
-    wget http://research-pub.gene.com/gmap/src/gmap-gsnap-2014-05-15.v2.tar.gz
-    gunzip gmap-gsnap-2014-05-15.v2.tar.gz
-    tar -xf gmap-gsnap-2014-05-15.v2.tar
-    gzip gmap-gsnap-2014-05-15.v2.tar
+    wget http://research-pub.gene.com/gmap/src/gmap-gsnap-2014-05-15.v3.tar.gz
+    gunzip gmap-gsnap-2014-05-15.v3.tar.gz
+    tar -xf gmap-gsnap-2014-05-15.v3.tar
+    gzip gmap-gsnap-2014-05-15.v3.tar
     cd gmap-2014-05-15
     ./configure
     make
-    ln -s $LKSRC_DIR/gmap-gsnap-2014-05-15.v2/gsnap $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/gmap-2014-05-15/src/gmap $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/gmap-2014-05-15/src/gsnap $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -482,9 +506,10 @@ cd $LKSRC_DIR
 if [ $(which apt-get) ]; then
     echo "Installing biopython using apt-get"
     apt-get -q -y install python-biopython
-elif [ $(which yum) ]; then
-    echo "Installing biopython using yum"
-    yum -y install python-biopython
+#TODO: this is not available from standard yum repositories
+#elif [ $(which yum) ]; then
+#    echo "Installing biopython using yum"
+#    yum -y install python-biopython
 else
     if [[ ! -e biopython-1.60 || ! -z $FORCE_REINSTALL ]];then
         echo "Installing biopython manually"
