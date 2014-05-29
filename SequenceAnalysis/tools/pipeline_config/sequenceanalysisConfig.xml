@@ -12,6 +12,12 @@
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceNormalizationTask$Factory">
                     <property name="location" value="sequenceAnalysis" />
                 </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.PrepareAlignerIndexesTask$Factory">
+                    <property name="location" value="sequenceAnalysis" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.FileCleanupTask$Factory">
+                    <property name="location" value="sequenceAnalysis" />
+                </bean>
             </list>
         </property>
     </bean>

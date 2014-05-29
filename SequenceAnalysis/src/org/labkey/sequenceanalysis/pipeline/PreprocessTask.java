@@ -42,6 +42,11 @@ public class PreprocessTask
         _settings = _helper.getSettings();
     }
 
+    public File getPreprocessDir(File inputFile)
+    {
+        return new File(_wd.getDir(), FileUtil.getBaseName(inputFile) + "/" + SequenceTaskHelper.PREPROCESSING_SUBFOLDER_NAME);
+    }
+
     public List<Pair<File, File>> processFiles(File inputFile, @Nullable File inputFile2) throws PipelineJobException
     {
         _job.getLogger().info("Beginning preprocessing of file: " + inputFile.getPath());
@@ -56,7 +61,7 @@ public class PreprocessTask
         if (inputFile2 != null)
             basename2 = FileUtil.getBaseName(inputFile2);
 
-        File workingDir = new File(_wd.getDir(), SequenceTaskHelper.PREPROCESSING_SUBFOLDER_NAME + "/" + basename);
+        File workingDir = getPreprocessDir(inputFile);
         if (!workingDir.exists())
             workingDir.mkdirs();
 

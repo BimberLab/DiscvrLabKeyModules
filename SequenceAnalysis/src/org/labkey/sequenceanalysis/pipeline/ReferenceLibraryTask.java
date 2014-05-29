@@ -34,7 +34,7 @@ import java.util.Map;
  */
 public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask.Factory>
 {
-    private static final String ACTIONNAME = "Creating Reference Library";
+    private static final String ACTIONNAME = "Creating Reference Library FASTA";
     public static final String REFERENCE_DB_FASTA = "Reference Library FASTA";
     public static final String REFERENCE_DB_FASTA_OUTPUT = "Reference Library Output";
 
@@ -67,7 +67,7 @@ public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask
 
         public String getStatusName()
         {
-            return "CREATING REFERENCE LIBRARY";
+            return "CREATING REFERENCE LIBRARY FASTA";
         }
 
         public List<String> getProtocolActionNames()
@@ -101,7 +101,7 @@ public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask
 
         RecordedAction action = new RecordedAction(ACTIONNAME);
         getHelper().addInput(action, "Job Parameters", getHelper().getSupport().getParametersFile());
-        getJob().getLogger().info("Creating Reference Library");
+        getJob().getLogger().info("Creating Reference Library FASTA");
 
         //find the output FASTA
         File sharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);

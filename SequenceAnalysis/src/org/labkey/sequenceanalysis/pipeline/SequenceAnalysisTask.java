@@ -207,6 +207,12 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             {
                 for (ExpData d : datas)
                 {
+                    if (d.getFile() == null)
+                    {
+                        getJob().getLogger().debug("No file found for data: " + d.getRowId() + " / run: " + run.getRowId());
+                        continue;
+                    }
+
                     if (basename != null && basename.equals(SequenceTaskHelper.getMinimalBaseName(d.getFile())))
                     {
                         //if the file doesnt exist, such as a deleted intermediate, dont override a potentially better input

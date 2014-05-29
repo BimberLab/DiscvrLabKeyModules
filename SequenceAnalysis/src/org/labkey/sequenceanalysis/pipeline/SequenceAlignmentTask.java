@@ -55,10 +55,8 @@ import java.util.Set;
  * This task is designed to act on either a FASTQ or zipped FASTQ file.  Each file should already have been imported as a readset using
  * the SequenceNormalizationTask pathway.  This task depends on external tools, and it will generall be configured to run on a remote server.
  *
- * Created by IntelliJ IDEA.
- * User: bbimber
- * Date: 12/24/11
- * Time: 8:27 AM
+ * Note: this task has been refactored to run as a split task, making the assumption that we run one per FASTQ (single-ended) or pair of files (paired-end)
+ *
  */
 
 public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTask.Factory>
@@ -69,7 +67,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
     public static final String PREPROCESS_FASTQ_ACTIONNAME = "Preprocess FASTQ";
     public static final String ALIGNMENT_ACTIONNAME = "Performing Alignment";
-    private static final String REF_LIBRARY_ACTIONNAME = "Preparing Aligner Indexes";
     public static final String MERGE_ALIGNMENT_ACTIONNAME = "Merging Alignments";
     public static final String DECOMPRESS_ACTIONNAME = "Decompressing Inputs";
     private static final String ALIGNMENT_SUBFOLDER_NAME = "Alignment";  //the subfolder within which alignment data will be placed
@@ -91,7 +88,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         public Factory()
         {
             super(SequenceAlignmentTask.class);
-            setJoin(true);
+            setJoin(false);
         }
 
         public List<FileType> getInputTypes()
@@ -106,13 +103,13 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(DECOMPRESS_ACTIONNAME, PREPROCESS_FASTQ_ACTIONNAME, REF_LIBRARY_ACTIONNAME, ALIGNMENT_ACTIONNAME, MERGE_ALIGNMENT_ACTIONNAME);
+            return Arrays.asList(DECOMPRESS_ACTIONNAME, PREPROCESS_FASTQ_ACTIONNAME, ALIGNMENT_ACTIONNAME, MERGE_ALIGNMENT_ACTIONNAME);
         }
 
         public PipelineJob.Task createTask(PipelineJob job)
         {
             SequenceAlignmentTask task = new SequenceAlignmentTask(this, job);
-            setJoin(true);
+            setJoin(false);
 
             return task;
         }
@@ -160,7 +157,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 //NOTE: because we can initate runs on readsets from different containers, we cannot rely on dataDirectory() to be consistent
                 //b/c inputs are always copied to the root of the analysis folder, we will use relative paths
                 File unzipped = null;
-                if(gz.isType(i))
+                if (gz.isType(i))
                 {
                     //NOTE: we use relative paths in all cases here
                     getJob().getLogger().debug("Decompressing file: " + i.getPath());
@@ -175,7 +172,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 }
             }
 
-            if(_unzippedMap.size() > 0)
+            if (_unzippedMap.size() > 0)
             {
                 //swap unzipped files
                 for (File f : _unzippedMap.keySet())
@@ -187,83 +184,61 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             }
 
             //then we preprocess FASTQ files, if needed
-            List<Pair<File, File>> toPreprocess = getAlignmentFiles(inputFiles);
-            Map<String, List<Pair<File, File>>> toAlign = new HashMap<>();
+            List<Pair<File, File>> groupedFiles = getAlignmentFiles(getJob(), inputFiles, true);
             Set<File> preprocessedOutputs = new HashSet<>();
 
-            if(getHelper().getSettings().isDoPreprocess())
+            if (groupedFiles.size() > 0)
             {
-                if(toPreprocess.size() > 0)
-                {
-                    for (Pair<File, File> pair : toPreprocess){
-                        List<Pair<File, File>> preprocessedFiles = new ArrayList<>();
-
+                for (Pair<File, File> pair : groupedFiles){
+                    if (getHelper().getSettings().isDoPreprocess())
+                    {
                         //NOTE: use relative path
-                        RecordedAction preprocessAction = preprocessFastq(pair.first, pair.second, preprocessedFiles);
-                        actions.add(preprocessAction);
-
-                        toAlign.put(FileUtil.getBaseName(pair.first), preprocessedFiles);
-                        for (Pair<File, File> files : preprocessedFiles)
+                        Pair<File, File> files = preprocessFastq(pair.first, pair.second, actions);
+                        if (files != null)
                         {
                             preprocessedOutputs.add(files.first);
                             if (files.second != null)
                                 preprocessedOutputs.add(files.second);
+
+                            getHelper().addIntermediateFiles(preprocessedOutputs);
+
+                            pair = files;
+                        }
+                    }
+                    else
+                    {
+                        job.getLogger().info("No preprocessing steps selected");
+                    }
+
+                    //do align
+                    if (getHelper().getSettings().isDoAlignment())
+                    {
+                        job.getLogger().info("Preparing to perform alignment");
+
+                        File sharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
+                        File refFasta = new File(sharedDirectory,  getHelper().getSettings().getRefDbFilename());
+                        if (!refFasta.exists())
+                        {
+                            throw new PipelineJobException("Error: reference file does not exist: " + refFasta.getPath());
                         }
 
-                        getHelper().addIntermediateFiles(preprocessedOutputs);
+                        alignSet(FileUtil.getBaseName(pair.first), Arrays.asList(pair), actions, refFasta);
                     }
-                }
-                else
-                {
-                    job.getLogger().info("Skipping preprocessing, no input files");
-                }
-            }
-            else
-            {
-                for (Pair<File, File> pair : toPreprocess)
-                {
-                    List<Pair<File, File>> files = new ArrayList<>();
-                    files.add(pair);
-                    toAlign.put(FileUtil.getBaseName(pair.first), files);
-                }
-            }
-
-            //then we perform the alignment.  if preprocessing is not used, we align any normalized input files
-            if(getHelper().getSettings().isDoAlignment())
-            {
-                job.getLogger().info("Preparing to perform alignment");
-
-                actions.add(prepareReferenceLibrary());
-
-                if(toAlign.size() > 0)
-                {
-                    File sharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
-                    File refFasta = new File(sharedDirectory,  getHelper().getSettings().getRefDbFilename());
-                    if(!refFasta.exists())
+                    else
                     {
-                        throw new PipelineJobException("Error: reference file does not exist: " + refFasta.getPath());
+                        job.getLogger().info("Alignment not selected, skipping");
                     }
-
-                    for(String key : toAlign.keySet())
-                    {
-                        List<Pair<File, File>> list = toAlign.get(key);
-                        alignSet(key, list, actions, refFasta);
-                    }
-                }
-                else
-                {
-                    job.getLogger().info("Skipping alignment, no files to align");
                 }
             }
 
             //compress alignment inputs if created by pre-processing
             //if we are going to delete intermediates anyway, skip this
-            if(!getHelper().getSettings().isDeleteIntermediateFiles() && preprocessedOutputs.size() > 0)
+            if (!getHelper().getSettings().isDeleteIntermediateFiles() && preprocessedOutputs.size() > 0)
             {
                 Set<String> inputPaths = getHelper().getInputPaths();
 
                 getJob().getLogger().info("Compressing input FASTQ files");
-                for(File file : preprocessedOutputs)
+                for (File file : preprocessedOutputs)
                 {
                     if (!inputPaths.contains(file.getPath()))
                     {
@@ -281,7 +256,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             //remove unzipped files
             job.getLogger().info("Removing unzipped inputs");
-            for(File z : _unzippedMap.keySet())
+            for (File z : _unzippedMap.keySet())
             {
                 getJob().getLogger().debug("\tremoving: " + _unzippedMap.get(z).getPath());
                 getJob().getLogger().debug("\toriginal file: " + z.getPath());
@@ -296,7 +271,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             if (getHelper().getSettings().isDebugMode())
             {
-                for(RecordedAction a : actions)
+                for (RecordedAction a : actions)
                 {
                     getJob().getLogger().debug(a.getName() + "/" + a.getInputs().size() + "/" + a.getOutputs().size());
                 }
@@ -311,53 +286,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 //        throw new PipelineJobException("stop!");
     }
 
-    private RecordedAction prepareReferenceLibrary() throws PipelineJobException
+    public static List<Pair<File, File>> getAlignmentFiles(PipelineJob job, List<File> inputFiles, boolean returnOutputName)
     {
-        RecordedAction action = new RecordedAction(REF_LIBRARY_ACTIONNAME);
-        File sharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
-        File refFasta = new File(sharedDirectory,  getHelper().getSettings().getRefDbFilename());
-        if(!refFasta.exists())
-        {
-            throw new PipelineJobException("Reference fasta does not exist: " + refFasta.getPath());
-        }
-        getHelper().addInput(action, ReferenceLibraryTask.REFERENCE_DB_FASTA, refFasta);
-        getHelper().addOutput(action, ReferenceLibraryTask.REFERENCE_DB_FASTA, refFasta);
-
-        FastaIndexer indexer = new FastaIndexer(getJob().getLogger());
-        File refFastaIndex = indexer.execute(refFasta);
-        if(!refFastaIndex.exists())
-        {
-            throw new PipelineJobException("Reference fasta index does not exist: " + refFastaIndex.getPath());
-        }
-        getHelper().addOutput(action, "Reference DB FASTA Index", refFastaIndex);
-
-        createAlignerIndex(refFasta);
-
-        getHelper().addOutput(action, ReferenceLibraryTask.REFERENCE_DB_FASTA_OUTPUT, sharedDirectory);
-        for (File f : sharedDirectory.listFiles())
-        {
-            if (!f.equals(refFasta) && !f.equals(refFastaIndex))
-            {
-                getHelper().addIntermediateFile(f);
-            }
-        }
-
-        return action;
-    }
-
-    private void createAlignerIndex(File refFasta) throws PipelineJobException
-    {
-        String aligner = getHelper().getSettings().getAligner();
-
-        ALIGNER type = ALIGNER.valueOf(aligner);
-        type.createIndex(refFasta, getJob().getLogger());
-    }
-
-    private List<Pair<File, File>> getAlignmentFiles(List<File> files)
-    {
-
         HashMap<String, File> map = new HashMap<>();
-        for(File f : files)
+        for (File f : inputFiles)
         {
             map.put(f.getName(), f);
         }
@@ -365,28 +297,37 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         //this iterates over each incoming readset and groups paired end reads, if applicable.
         List<Pair<File, File>> alignFiles = new ArrayList<>();
 
-        for(ReadsetModel r : getHelper().getSettings().getReadsets())
+        SequenceTaskHelper taskHelper = new SequenceTaskHelper(job);
+        for (ReadsetModel r : taskHelper.getSettings().getReadsets())
         {
             String fn = r.getFileName();
-            fn = getHelper().getExpectedNameForInput(fn);
-            if(StringUtils.isEmpty(fn))
+            if (returnOutputName)
+                fn = SequenceTaskHelper.getExpectedNameForInput(fn);
+
+            if (StringUtils.isEmpty(fn))
                 continue;
 
-            if(map.get(fn) == null)
+            if (map.get(fn) == null)
             {
-                getJob().getLogger().error("Missing file: " + fn);
+                //note: this task can be split into multiple jobs, meaning a given job could lack one of the expected files
                 continue;
             }
             Pair<File, File> pair = new Pair<>(map.get(fn), null);
 
             String fn2 = r.getFileName2();
-            fn2 = getHelper().getExpectedNameForInput(fn2);
-            if(!StringUtils.isEmpty(fn2))
+            if (returnOutputName)
+                fn2 = SequenceTaskHelper.getExpectedNameForInput(fn2);
+
+            if (!StringUtils.isEmpty(fn2))
             {
-                if(map.get(fn2) == null)
-                    getJob().getLogger().error("Unable to find expected file: " + fn2);
+                if (map.get(fn2) == null)
+                {
+                    //job.getLogger().error("Unable to find expected file: " + fn2);
+                }
                 else
+                {
                     pair.second = map.get(fn2);
+                }
             }
 
             alignFiles.add(pair);
@@ -395,7 +336,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         return alignFiles;
     }
 
-    public RecordedAction preprocessFastq(File inputFile, @Nullable File inputFile2, List<Pair<File, File>> outputs) throws PipelineJobException, IOException
+    /**
+     * Attempt to normalize FASTQ files and perform preprocessing such as trimming.
+     */
+    public Pair<File, File> preprocessFastq(File inputFile, @Nullable File inputFile2, List<RecordedAction> actions) throws PipelineJobException, IOException
     {
         PipelineJob job = getJob();
         job.setStatus(PREPROCESS_FASTQ_STATUS);
@@ -411,48 +355,60 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         PreprocessTask preprocessor = new PreprocessTask(job, _wd, getHelper());
         List<Pair<File, File>> outputFiles = preprocessor.processFiles(inputFile, inputFile2);
 
-        //find the output FASTQ
-        for (Pair<File, File> pair : outputFiles)
+        Pair<File, File> pair;
+        if (outputFiles.size() == 0)
         {
-            boolean error = false;
-            if (pair.first.exists())
-            {
-                getHelper().addOutput(action, PROCESSED_FQ_ROLE, pair.first);
-                job.getLogger().info("\tAdding output file: " + _wd.getRelativePath(pair.first));
-            }
-            else
-            {
-                job.getLogger().warn("\tNo output created, expected to find: " + _wd.getRelativePath(pair.first));
-                error = true;
-            }
-
-            if (pair.second != null)
-            {
-                if (pair.second.exists())
-                {
-                    getHelper().addOutput(action, PROCESSED_FQ_ROLE, pair.second);
-                    job.getLogger().info("\tAdding output file: " + _wd.getRelativePath(pair.second));
-                }
-                else
-                {
-                    job.getLogger().warn("\tNo output created, expected to find: " + _wd.getRelativePath(pair.second));
-                    error = true;
-                }
-            }
-
-            if (!error)
-            {
-                outputs.add(pair);
-            }
-            else
-            {
-                getJob().getLogger().warn("there was an error during preprocessing, files will not be added");
-            }
-
-            getHelper().addOutput(action, "FASTQ Preprocessing Output", pair.first.getParentFile());
+            getJob().getLogger().error("No preprocessing was necessary");
+            return null;
+        }
+        else
+        {
+            pair = outputFiles.get(0);
         }
 
-        return action;
+        boolean error = false;
+        if (pair.first.exists())
+        {
+            getHelper().addOutput(action, PROCESSED_FQ_ROLE, pair.first);
+            job.getLogger().info("\tAdding output file: " + _wd.getRelativePath(pair.first));
+        }
+        else
+        {
+            job.getLogger().warn("\tNo output created, expected to find: " + _wd.getRelativePath(pair.first));
+            error = true;
+        }
+
+        if (pair.second != null)
+        {
+            if (pair.second.exists())
+            {
+                getHelper().addOutput(action, PROCESSED_FQ_ROLE, pair.second);
+                job.getLogger().info("\tAdding output file: " + _wd.getRelativePath(pair.second));
+            }
+            else
+            {
+                job.getLogger().warn("\tNo output created, expected to find: " + _wd.getRelativePath(pair.second));
+                error = true;
+            }
+        }
+
+        actions.add(action);
+
+        if (error)
+        {
+            getJob().getLogger().warn("there was an error during preprocessing, files will not be added");
+            return null;
+        }
+        else
+        {
+            File expectedPreprocessDir = preprocessor.getPreprocessDir(inputFile);
+            if (expectedPreprocessDir.exists())
+            {
+                getHelper().addOutput(action, "FASTQ Preprocessing Output", expectedPreprocessDir);
+            }
+
+            return pair;
+        }
     }
 
     private SequenceTaskHelper getHelper()
@@ -486,12 +442,12 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             List<File> alignInputs = new ArrayList<>();
             alignInputs.add(pair.getKey());
-            if(pair.getValue() != null)
+            if (pair.getValue() != null)
                 alignInputs.add(pair.getValue());
 
             File bam = doAlignmentForPair(actions, alignInputs, refDB);
 
-            if(bam != null)
+            if (bam != null)
             {
                 getHelper().addInput(action, SequenceTaskHelper.BAM_INPUT_NAME, bam);
                 bams.add(bam);
@@ -557,7 +513,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         RecordedAction action = new RecordedAction(ALIGNMENT_ACTIONNAME);
         getHelper().addInput(action, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, inputFile);
 
-        if(inputFiles.size() > 1){
+        if (inputFiles.size() > 1){
             getHelper().addInput(action, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, inputFiles.get(1));
         }
 
@@ -565,7 +521,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         String msg = "Beginning alignment for: ";
 
         String sep = "";
-        for(File f : inputFiles)
+        for (File f : inputFiles)
         {
             msg += sep + f.getName();
             sep = " and ";
@@ -582,13 +538,13 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         File baseDirectory = new File(_wd.getDir(), SequenceTaskHelper.getMinimalBaseName(inputFile));
         baseDirectory = new File(baseDirectory, ALIGNMENT_SUBFOLDER_NAME);
         File outputFile = new File(baseDirectory, SequenceTaskHelper.getMinimalBaseName(inputFile) + ".bam");
-        if(NetworkDrive.exists(outputFile) && bamfile.isType(outputFile))
+        if (NetworkDrive.exists(outputFile) && bamfile.isType(outputFile))
         {
             getHelper().addOutput(action, "Temp " + BAM_ROLE, outputFile);
             getJob().getLogger().info("\tAdding initial output BAM file: " + _wd.getRelativePath(outputFile));
 
             File outputFileIndex = new File(baseDirectory, SequenceTaskHelper.getMinimalBaseName(inputFile) + ".bam.bai");
-            if(NetworkDrive.exists(outputFileIndex))
+            if (NetworkDrive.exists(outputFileIndex))
             {
                 getHelper().addOutput(action, BAM_INDEX, outputFileIndex);
             }

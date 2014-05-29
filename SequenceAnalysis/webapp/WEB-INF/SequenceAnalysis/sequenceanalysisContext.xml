@@ -8,6 +8,14 @@
             <list>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask$Factory">
                     <!--<property name="location" value="sequenceAnalysis" />-->
+                    <property name="join" value="false" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.FileCleanupTask$Factory">
+                    <!--<property name="location" value="sequenceAnalysis" />-->
+                    <property name="join" value="true" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.PrepareAlignerIndexesTask$Factory">
+                    <!--<property name="location" value="sequenceAnalysis" />-->
                     <property name="join" value="true" />
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask$Factory">
@@ -53,7 +61,9 @@
                     <property name="taskProgressionSpec">
                         <list>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.PrepareAlignerIndexesTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.FileCleanupTask</value>
                             <ref bean="xarGeneratorJoin"/>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceAnalysisTask</value>
                         </list>

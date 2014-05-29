@@ -360,7 +360,7 @@ public class TestHelper
             json.put("configureJson", config);
             String requestContent = json.toString();
 
-            HttpServletRequest request = ViewServlet.mockRequest(RequestMethod.POST.name(), DetailsURL.fromString("/pipeline-analysis/startAnalysis.view").copy(_project).getActionURL(), _context.getUser(), headers, requestContent);
+            HttpServletRequest request = ViewServlet.mockRequest(RequestMethod.POST.name(), DetailsURL.fromString("/sequenceanalysis/startAnalysis.view").copy(_project).getActionURL(), _context.getUser(), headers, requestContent);
 
             MockHttpServletResponse response = ViewServlet.mockDispatch(request, null);
             JSONObject responseJson = new JSONObject(response.getContentAsString());
@@ -532,22 +532,6 @@ public class TestHelper
 
     public static class SequenceImportPipelineTestCase extends AbstractPipelineTestCase
     {
-//        public void doTestSteps() throws Exception
-//        {
-//            basicTest();
-//            pairedEndTest();
-//            pairedEndTestDeletingInputs();
-//            pairedEndTestMovingInputs();
-//
-//            if (isExternalPipelineEnabled())
-//            {
-//                barcodeTest();
-//                barcodeTestDeletingIntermediates();
-//                mergeTest();
-//                mergeTestDeletingIntermediates();
-//            }
-//        }
-
         /**
          * This is the most basic test of readset import and creation.  A single FASTQ is provided, which can be normalized on the webserver
          * without external tools.
@@ -1015,46 +999,43 @@ public class TestHelper
         private List<ReadsetModel> createReadsets() throws Exception
         {
             List<ReadsetModel> models = new ArrayList<>();
-            TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
 
             File file1 = new File(_pipelineRoot, PAIRED_FILENAME1);
             File file2 = new File(_pipelineRoot, PAIRED_FILENAME2);
+            models.add(createReadset("TestReadset1", file1, file2));
+
+
+            File file3 = new File(_pipelineRoot, UNZIPPED_PAIRED_FILENAME1);
+            models.add(createReadset("TestReadset2", file3, null));
+
+            File file4 = new File(_pipelineRoot, UNZIPPED_PAIRED_FILENAME2);
+            models.add(createReadset("TestReadset3", file4, null));
+
+            return models;
+        }
+
+        private ReadsetModel createReadset(String name, File file1, File file2) throws Exception
+        {
+            TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
+
             ExpData d1 = createExpData(file1);
-            ExpData d2 = createExpData(file2);
+
+            ExpData d2 = file2 == null ? null : createExpData(file2);
             ReadsetModel readset1 = new ReadsetModel();
             readset1.setFileId(d1.getRowId());
             readset1.setFileName(d1.getFile().getName());
-            readset1.setFileId2(d2.getRowId());
-            readset1.setFileName2(d2.getFile().getName());
-            readset1.setName("TestReadset1");
+
+            if (d2 != null)
+            {
+                readset1.setFileId2(d2.getRowId());
+                readset1.setFileName2(d2.getFile().getName());
+            }
+
+            readset1.setName(name);
             readset1.setContainer(_project.getId());
             readset1.setCreated(new Date());
             readset1.setCreatedBy(_context.getUser().getUserId());
-            models.add(Table.insert(_context.getUser(), ti, readset1));
-
-            File file3 = new File(_pipelineRoot, UNZIPPED_PAIRED_FILENAME1);
-            ExpData d3 = createExpData(file3);
-            ReadsetModel readset2 = new ReadsetModel();
-            readset2.setFileId(d3.getRowId());
-            readset2.setFileName(d3.getFile().getName());
-            readset2.setName("TestReadset2");
-            readset2.setContainer(_project.getId());
-            readset2.setCreated(new Date());
-            readset2.setCreatedBy(_context.getUser().getUserId());
-            models.add(Table.insert(_context.getUser(), ti, readset2));
-
-            File file4 = new File(_pipelineRoot, UNZIPPED_PAIRED_FILENAME2);
-            ExpData d4 = createExpData(file4);
-            ReadsetModel readset3 = new ReadsetModel();
-            readset3.setFileId(d4.getRowId());
-            readset3.setFileName(d4.getFile().getName());
-            readset3.setName("TestReadset3");
-            readset3.setContainer(_project.getId());
-            readset3.setCreated(new Date());
-            readset3.setCreatedBy(_context.getUser().getUserId());
-            models.add(Table.insert(_context.getUser(), ti, readset3));
-
-            return models;
+            return Table.insert(_context.getUser(), ti, readset1);
         }
 
         private List<JSONObject> getReadsetJson(List<ReadsetModel> models)
@@ -1147,6 +1128,10 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1234,6 +1219,10 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1279,6 +1268,10 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1347,6 +1340,10 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1372,16 +1369,15 @@ public class TestHelper
             expectedOutputs.add(bam3);
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
 
-            expectedOutputs.add(new File(basedir, "Preprocessing"));
-            expectedOutputs.add(new File(basedir, "Preprocessing/paired1/"));
-            expectedOutputs.add(new File(basedir, "Preprocessing/paired1/" + PAIRED_FILENAME1));
-            expectedOutputs.add(new File(basedir, "Preprocessing/paired1/" + PAIRED_FILENAME2));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/" + PAIRED_FILENAME1));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/" + PAIRED_FILENAME2));
 
-            expectedOutputs.add(new File(basedir, "Preprocessing/paired3"));
-            expectedOutputs.add(new File(basedir, "Preprocessing/paired3/" + UNZIPPED_PAIRED_FILENAME1 + ".gz"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/" + UNZIPPED_PAIRED_FILENAME1 + ".gz"));
 
-            expectedOutputs.add(new File(basedir, "Preprocessing/paired4/"));
-            expectedOutputs.add(new File(basedir, "Preprocessing/paired4/" + UNZIPPED_PAIRED_FILENAME2 + ".gz"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/" + UNZIPPED_PAIRED_FILENAME2 + ".gz"));
 
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
@@ -1425,6 +1421,10 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1449,8 +1449,6 @@ public class TestHelper
             File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
             expectedOutputs.add(bam3);
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
-
-            expectedOutputs.add(new File(basedir, "Preprocessing"));
 
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
@@ -1478,6 +1476,10 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1524,6 +1526,7 @@ public class TestHelper
             if (!isExternalPipelineEnabled())
                 return;
 
+            //TODO
             //	"adapter_0":"[\"Nextera Transposon Adapter A\",\"AGATGTGTATAAGAGACAG\",true,true,false]",
         }
 
@@ -1546,6 +1549,10 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1606,6 +1613,10 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1671,6 +1682,10 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
@@ -1704,7 +1719,8 @@ public class TestHelper
         }
 
         //NOTE: this test is deliberately disabled
-        private void testBfast() throws Exception
+        // @Test
+        public void testBfast() throws Exception
         {
             String protocolName = "TestBfast_" + System.currentTimeMillis();
             String[] fileNames = getFilenamesForReadsets();
@@ -1719,6 +1735,10 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 

@@ -41,6 +41,8 @@ import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.model.ReadsetModel;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -266,6 +268,100 @@ public class SequenceTaskHelper
         throw new FileNotFoundException("SEQUENCEANALYSIS_EXTERNALDIR not set in pipeline XML");
     }
 
+    private File getDeferredDeleteLog(boolean create)
+    {
+        File logFile = new File(getSupport().getAnalysisDirectory(), "toDelete.txt");
+        if (create && !logFile.exists())
+        {
+            try
+            {
+                logFile.createNewFile();
+            }
+            catch (IOException e)
+            {
+                getJob().getLogger().error("Unable to create log file: " + logFile.getPath());
+                return null;
+            }
+        }
+
+        return logFile;
+    }
+
+    /**
+     * Registers a file that will be deleted only at the very end of the protocol
+     */
+    public void addDeferredIntermediateFile(File file)
+    {
+        String path = FilenameUtils.normalize(file.getPath());
+        String relPath = FileUtil.relativePath(_workDir.getPath(), path);
+
+        File log = getDeferredDeleteLog(true);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(log, true)))
+        {
+            getJob().getLogger().debug("Adding deferred intermediate file: " + relPath);
+            writer.write(relPath + '\n');
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteDeferredIntermediateFiles()
+    {
+        File log = getDeferredDeleteLog(false);
+        if (log != null && log.exists())
+        {
+            getJob().getLogger().info("Deleting deferred intermediate files");
+
+            if (getSettings().isDeleteIntermediateFiles())
+            {
+                getJob().getLogger().debug("Intermediate files will be removed");
+
+                Set<String> toDelete = new HashSet<>();
+                try (BufferedReader reader = new BufferedReader(new FileReader(log)))
+                {
+                    String line;
+                    while ((line = reader.readLine()) != null)
+                    {
+                        toDelete.add(line);
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new RuntimeException(e);
+                }
+
+                for (String line : toDelete)
+                {
+                    File f = new File(_workDir, line);
+                    getJob().getLogger().debug("deleting file: " + f.getPath());
+                    if (f.exists())
+                    {
+                        f.delete();
+
+                        File parentDir = f.getParentFile();
+                        if (parentDir.list().length == 0)
+                        {
+                            parentDir.delete();
+                        }
+                    }
+                    else
+                    {
+                        getJob().getLogger().warn("could not find file to delete");
+                    }
+                }
+            }
+            else
+            {
+                getJob().getLogger().debug("Intermediate files will be left alone");
+            }
+
+            //always delete the log
+            log.delete();
+        }
+    }
+
     public void addIntermediateFile(File f)
     {
         _intermediateFiles.add(f);
@@ -350,7 +446,7 @@ public class SequenceTaskHelper
                 if (action2 == action)
                 {
                     shouldAdd = false;
-                    getJob().getLogger().debug("File already present in another action, will not add: " + file.getName() + " / pending action: " + action.getName() + " / existing action: " + action2.getName() + " / path: " + relPath);
+                    getJob().getLogger().debug("File already present in another action, will not add: " + file.getName() + " / pending action: " + action.getName() + " / existing action: " + action2.getName() + " / existing role: " + values[1] + " / new role: " + role + " / path: " + relPath);
                     break;
                 }
             }
@@ -434,7 +530,7 @@ public class SequenceTaskHelper
 
             if (!_inputFiles.containsKey(relPath) && !_outputFiles.containsKey(relPath))
             {
-                getJob().getLogger().debug("File not associated as an intput: " + file.getPath());
+                getJob().getLogger().debug("File not associated as an input: " + file.getPath());
                 for (String fn : _inputFiles.keySet())
                 {
                     if (fn.contains(file.getName()))
@@ -482,6 +578,7 @@ public class SequenceTaskHelper
                 String path = wd.getRelativePath(input);
                 File dest = new File(getSupport().getAnalysisDirectory(), path);
                 dest = wd.outputFile(input, dest);
+
                 processCopiedFile(dest);
             }
 

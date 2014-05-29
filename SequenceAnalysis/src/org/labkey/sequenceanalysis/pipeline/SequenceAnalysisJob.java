@@ -9,6 +9,7 @@ import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocol;
 import org.labkey.api.pipeline.file.FileAnalysisTaskPipeline;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.NetworkDrive;
+import org.labkey.api.util.Pair;
 import org.labkey.api.view.ViewBackgroundInfo;
 
 import java.io.File;
@@ -41,9 +42,9 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob
         _taskPipelineId = taskPipelineId;
     }
 
-    public SequenceAnalysisJob(SequenceAnalysisJob job, File fileInput)
+    public SequenceAnalysisJob(SequenceAnalysisJob job, List<File> filesInput)
     {
-        super(job, fileInput);
+        super(job, filesInput);
 
         _taskPipelineId = job._taskPipelineId;
     }
@@ -67,18 +68,41 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob
     @Override
     public AbstractFileAnalysisJob createSingleFileJob(File file)
     {
-        return new SequenceAnalysisJob(this, file);
+        return new SequenceAnalysisJob(this, Collections.singletonList(file));
     }
 
     @Override
     public List<PipelineJob> createSplitJobs()
     {
-        if (getInputFiles().size() == 1)
-            return super.createSplitJobs();
-
         ArrayList<PipelineJob> jobs = new ArrayList<>();
-        for (File file : getInputFiles())
-            jobs.add(createSingleFileJob(file));
+        if (getActiveTaskFactory().getId().getNamespaceClass().equals(SequenceAlignmentTask.class) && getInputFiles().size() > 1)
+        {
+            List<Pair<File, File>> files = SequenceAlignmentTask.getAlignmentFiles(this, getInputFiles(), false);
+            for (Pair<File, File> pair : files)
+            {
+                List<File> toRun = new ArrayList<>();
+                if (pair.first != null)
+                    toRun.add(pair.first);
+
+                if (pair.second != null)
+                    toRun.add(pair.second);
+
+                if (!toRun.isEmpty())
+                {
+                    SequenceAnalysisJob newJob = new SequenceAnalysisJob(this, toRun);
+                    newJob.setSplittable(false);
+                    jobs.add(newJob);
+                }
+            }
+        }
+        else
+        {
+            for (File file : getInputFiles())
+            {
+                jobs.add(new SequenceAnalysisJob(this, Collections.singletonList(file)));
+            }
+        }
+
         return Collections.unmodifiableList(jobs);
     }
 

@@ -473,8 +473,10 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/ReadsetModel.j
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/SequenceModel.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/SequenceTag.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AbstractSequenceTaskFactory.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/FileCleanupTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaImportTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaReadsetCreationTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/PrepareAlignerIndexesTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/PreprocessTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ReadsetCreationTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ReadsetImportTask.java -text
