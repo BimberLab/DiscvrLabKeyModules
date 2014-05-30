@@ -474,6 +474,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/SequenceModel.
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/SequenceTag.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AbstractSequenceTaskFactory.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/FileCleanupTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaFastqSplitter.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaImportTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaReadsetCreationTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/PrepareAlignerIndexesTask.java -text

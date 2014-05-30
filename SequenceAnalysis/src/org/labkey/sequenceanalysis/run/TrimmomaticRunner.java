@@ -5,9 +5,10 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.gwt.client.util.StringUtils;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequence.IlluminaFastqParser;
+import org.labkey.api.sequence.IlluminaReadHeader;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.sequenceanalysis.pipeline.IlluminaFastqSplitter;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 
@@ -395,7 +396,7 @@ public class TrimmomaticRunner extends AbstractRunner
 
                 //infer metrics for paired end data
                 //aatempt to parse illumina
-                IlluminaFastqParser.IlluminaReadHeader header = IlluminaFastqParser.parseHeader(name);
+                IlluminaReadHeader header = IlluminaFastqSplitter.parseHeader(name);
                 if ((header != null && header.getPairNumber() == 1 ) || name.endsWith("/1"))
                 {
                     if (survivingLength == 0)

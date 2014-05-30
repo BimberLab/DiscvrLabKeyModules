@@ -32,7 +32,6 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.sequence.IlluminaFastqParser;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.Pair;
@@ -131,7 +130,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 Map<Integer, Integer> sampleMap = parseCsv(input, schema);
 
                 //this step will be slow
-                IlluminaFastqParser<Integer> parser = new IlluminaFastqParser<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
+                IlluminaFastqSplitter<Integer> parser = new IlluminaFastqSplitter<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
                 parser.setDestinationDir(_helper.getSupport().getAnalysisDirectory());
 
                 // the first element of the pair is the sample ID.  the second is either 1 or 2,
@@ -262,7 +261,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         getJob().getLogger().info("Created run: " + _instrumentRunId);
     }
 
-    private void addQualityMetrics(DbSchema schema, int readsetId, Pair<Integer, Integer> key, IlluminaFastqParser<Integer> parser, ExpData d)
+    private void addQualityMetrics(DbSchema schema, int readsetId, Pair<Integer, Integer> key, IlluminaFastqSplitter<Integer> parser, ExpData d)
     {
         getJob().getLogger().info("Adding quality metrics for file: " + d.getFile().getName());
         Map<Pair<Integer, Integer>, Integer> readCounts = parser.getReadCounts();
