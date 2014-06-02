@@ -1,6 +1,7 @@
 package org.labkey.laboratory;
 
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SQLFragment;
@@ -17,7 +18,8 @@ import org.labkey.api.view.HttpView;
 import org.labkey.laboratory.query.LaboratoryWorkbooksTable;
 
 import java.beans.PropertyChangeEvent;
-import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * User: bimber
@@ -68,6 +70,13 @@ public class LaboratoryContainerListener extends SimpleModuleContainerListener
                 //ignore, since this may just indicate the table already has these values
             }
         }
+    }
+
+    @NotNull
+    @Override
+    public Collection<String> canMove(Container c, Container newParent, User user)
+    {
+        return Collections.emptyList();
     }
 
     @Override

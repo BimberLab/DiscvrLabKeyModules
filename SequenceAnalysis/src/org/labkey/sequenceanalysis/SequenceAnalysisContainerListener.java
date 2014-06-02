@@ -17,28 +17,13 @@
 package org.labkey.sequenceanalysis;
 
 import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager.ContainerListener;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.security.User;
 
-import java.beans.PropertyChangeEvent;
-
-public class SequenceAnalysisContainerListener implements ContainerListener
+public class SequenceAnalysisContainerListener extends ContainerManager.AbstractContainerListener
 {
-    public void containerCreated(Container c, User user)
-    {
-    }
-
     public void containerDeleted(Container c, User user)
     {
         SequenceAnalysisManager.get().deleteContainer(c);
-    }
-
-    @Override
-    public void containerMoved(Container c, Container oldParent, User user)
-    {        
-    }
-
-    public void propertyChange(PropertyChangeEvent evt)
-    {
     }
 }
