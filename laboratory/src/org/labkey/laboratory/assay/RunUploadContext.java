@@ -155,6 +155,13 @@ public class RunUploadContext<ProviderType extends AssayProvider> implements Ass
         return _uploadedData;
     }
 
+    @NotNull
+    @Override
+    public Map<Object, String> getInputDatas()
+    {
+        return Collections.emptyMap();
+    }
+
     public ProviderType getProvider()
     {
         return _providerType;
