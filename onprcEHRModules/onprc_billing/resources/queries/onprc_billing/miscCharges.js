@@ -40,7 +40,7 @@ EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Even
         }
 
         if (row.chargeId){
-            if (!row.chargetype && row.unitcost){
+            if (!row.chargeCategory && row.unitcost){
                 if (!billingHelper.supportsCustomUnitCost(row.chargeId))
                 {
                     EHR.Server.Utils.addError(scriptErrors, 'unitCost', 'This type of charge does not support a custom unit cost.  You should leave this blank and it will be automatically calculated.', 'WARN');
@@ -48,6 +48,19 @@ EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Even
             }
         }
 
+        if (row.invoiceId){
+            var severity = billingHelper.isBillingAdmin() ? 'INFO' : 'ERROR';
+            EHR.Server.Utils.addError(scriptErrors, 'Id', 'This item has already been invoiced and should not be edited through this form unless you are certain about this change.', severity);
+        }
+
         row.objectid = row.objectid || LABKEY.Utils.generateUUID();
+    }
+});
+
+EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Events.BEFORE_DELETE, 'onprc_billing', 'miscCharges', function(helper, errors, row){
+    if (!helper.isETL() && row && row.invoiceId){
+        //NOTE: once this item has been billed (ie. invoiceId is not null), fewer people can edit/delete it
+        errors.Id = errors.Id || [];
+        errors.Id.push('Error: you cannot delete misc charges once they have been invoiced');
     }
 });

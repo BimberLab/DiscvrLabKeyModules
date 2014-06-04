@@ -1,0 +1,14 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All Items">
+    <columns>
+        <column name="chargetype"/>
+        <column name="shownInBlood"/>
+        <column name="shownInLabwork"/>
+        <column name="shownInMedications"/>
+        <column name="shownInProcedures"/>
+        <column name="activeAccount"/>
+        <column name="active"/>
+    </columns>
+    <sorts>
+        <sort column="chargetype"/>
+    </sorts>
+</customView>

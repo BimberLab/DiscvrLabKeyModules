@@ -21,6 +21,7 @@ import org.labkey.api.security.UserManager;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.onprc_billing.ONPRC_BillingManager;
 import org.labkey.onprc_billing.ONPRC_BillingSchema;
+import org.labkey.onprc_billing.security.ONPRCBillingAdminPermission;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -164,5 +165,15 @@ public class BillingTriggerHelper
         }
 
         return _cachedCharges.get(chargeId);
+    }
+
+    public boolean isSiteAdmin()
+    {
+        return getUser().isSiteAdmin();
+    }
+
+    public boolean isBillingAdmin()
+    {
+        return getContainer().hasPermission(getUser(), ONPRCBillingAdminPermission.class);
     }
 }

@@ -1,0 +1,6 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All Items">
+    <sorts>
+        <sort column="chargetype"/>
+        <sort column="startdate" descending="true"/>
+    </sorts>
+</customView>

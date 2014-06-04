@@ -28,6 +28,10 @@
                     LDK.Assert.assertNotEmpty('Tabbed Report is null', report);
                     if (report && report.key){
                         report.id = report.key.replace(/:/g, '_');
+
+                        if (report.targetContainer){
+                            report.containerPath = report.targetContainer;
+                        }
                         this.reports.push(report);
                     }
                 }, this);

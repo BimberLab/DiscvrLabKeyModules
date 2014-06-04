@@ -105,15 +105,23 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 ret.append("t.TS_INDEX as panelId,\n");
                 ret.append("p.Pt_Lname as animalId,\n");
                 ret.append("IsNumeric(p.Pt_Lname) as numericLastName,\n");
-                ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_DATE", "o.O_DTZ") + " as date,\n");
+                ret.append(MergeSyncUserSchema.getDateConversionSql("r.RE_DATE", "r.RE_TZ") + " as date,\n");
                 ret.append(MergeSyncUserSchema.getDateConversionSql("t.TS_VDT", "t.TS_VTZ") + " as dateVerified,\n");
                 ret.append("i.INS_NAME as project,\n");
-                ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_COLLDT", "o.O_CLTZ") + " as datecollected,\n");
+                ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_COLLDT", "o.O_CLTZ") + " as dateCollected,\n");
+                ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_DATE", "o.O_DTZ") + " as dateOrdered,\n");
                 ret.append(MergeSyncUserSchema.getDateConversionSql("r.RE_DATE", "r.RE_TZ") + " as runDate,\n");
                 ret.append("ti.T_ABBR as servicename_abbr,\n");
                 ret.append("ti.T_NAME as servicename,\n");
-                ret.append("rs.RT_ABBR as testid_abbr,\n");
-                ret.append("rs.RT_RDSCR as testid,\n");
+                ret.append("pr.PR_LOGIN as doctorLogin,\n");
+                ret.append("pr.PR_LNAME as doctorLastName,\n");
+                ret.append("pr.PR_FNAME as doctorFirstName,\n");
+                ret.append("tech.PR_LOGIN as techLogin,\n");
+                ret.append("tech.PR_LNAME as techLastName,\n");
+                ret.append("tech.PR_FNAME as techFirstName,\n");
+
+                ret.append("rs.RT_ABBR as testId_abbr,\n");
+                ret.append("rs.RT_RDSCR as testId,\n");
                 ret.append("r.re_data as text_result,\n");
                 ret.append("r.RE_FLVAL as numeric_result,\n");
                 ret.append("r.re_Text as remark,\n");
@@ -154,6 +162,7 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 ret.append(")\n");
 
                 ret.append("LEFT JOIN PRSNL pr ON (o.O_DOCTOR = pr.pr_num)\n");
+                ret.append("LEFT JOIN PRSNL tech ON (o.O_EPRSN = tech.pr_num)\n");
 
                 //there should only be 1 visit per order
                 ret.append("LEFT JOIN VISITS v ON (o.O_VID = v.V_ID)\n");
@@ -179,13 +188,23 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 dateCol.setFormat("yyyy-MM-dd HH:mm");
 
                 addColumn(new ExprColumn(this, "projectName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".project"), JdbcType.VARCHAR));
-                ColumnInfo dateCollectedCol = addColumn(new ExprColumn(this, "datecollected", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".datecollected"), JdbcType.TIMESTAMP));
+                ColumnInfo dateCollectedCol = addColumn(new ExprColumn(this, "dateCollected", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateCollected"), JdbcType.TIMESTAMP));
                 dateCollectedCol.setFormat("yyyy-MM-dd HH:mm");
 
-                addColumn(new ExprColumn(this, "rundate", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".rundate"), JdbcType.TIMESTAMP));
+                ColumnInfo dateOrderedCol = addColumn(new ExprColumn(this, "dateOrdered", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateCollected"), JdbcType.TIMESTAMP));
+                dateOrderedCol.setFormat("yyyy-MM-dd HH:mm");
+
+                addColumn(new ExprColumn(this, "runDate", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".runDate"), JdbcType.TIMESTAMP));
                 addColumn(new ExprColumn(this, "servicename_abbr", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".servicename_abbr"), JdbcType.VARCHAR));
-                addColumn(new ExprColumn(this, "testid_abbr", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".testid_abbr"), JdbcType.VARCHAR));
-                addColumn(new ExprColumn(this, "testid", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".testid"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "doctorLogin", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".doctorLogin"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "doctorLastName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".doctorLastName"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "doctorFirstName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".doctorFirstName"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "techLogin", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".techLogin"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "techLastName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".techLastName"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "techFirstName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".techFirstName"), JdbcType.VARCHAR));
+
+                addColumn(new ExprColumn(this, "testId_abbr", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".testId_abbr"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "testId", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".testId"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "text_result", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".text_result"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "numeric_result", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".numeric_result"), JdbcType.DOUBLE));
                 addColumn(new ExprColumn(this, "remark", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".remark"), JdbcType.VARCHAR));
@@ -221,12 +240,20 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 ret.append("t.TS_INDEX as panelId,\n");
                 ret.append("p.Pt_Lname as animalId,\n");
                 ret.append("IsNumeric(p.Pt_Lname) as numericLastName,\n");
-                ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_DATE", "o.O_DTZ") + " as date,\n");
+                ret.append(MergeSyncUserSchema.getDateConversionSql("t.TS_VDT", "t.TS_VTZ") + " as date,\n");
                 ret.append(MergeSyncUserSchema.getDateConversionSql("t.TS_VDT", "t.TS_VTZ") + " as dateVerified,\n");
                 ret.append("i.INS_NAME as project,\n");
-                ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_COLLDT", "o.O_CLTZ") + " as datecollected,\n");
+                ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_COLLDT", "o.O_CLTZ") + " as dateCollected,\n");
+                ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_DATE", "o.O_DTZ") + " as dateOrdered,\n");
                 ret.append("ti.T_ABBR as servicename_abbr,\n");
-                ret.append("ti.T_NAME as servicename\n");
+                ret.append("ti.T_NAME as servicename,\n");
+                ret.append("pr.PR_LOGIN as doctorLogin,\n");
+                ret.append("pr.PR_LNAME as doctorLastName,\n");
+                ret.append("pr.PR_FNAME as doctorFirstName,\n");
+
+                ret.append("tech.PR_LOGIN as techLogin,\n");
+                ret.append("tech.PR_LNAME as techLastName,\n");
+                ret.append("tech.PR_FNAME as techFirstName\n");
 
                 //one row per batch of orders
                 ret.append("FROM Orders o\n");
@@ -243,6 +270,7 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 ret.append(")\n");
 
                 ret.append("LEFT JOIN PRSNL pr ON (o.O_DOCTOR = pr.pr_num)\n");
+                ret.append("LEFT JOIN PRSNL tech ON (o.O_EPRSN = tech.pr_num)\n");
 
                 //there should only be 1 visit per order
                 ret.append("LEFT JOIN VISITS v ON (o.O_VID = v.V_ID)\n");
@@ -261,11 +289,26 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 addColumn(new ExprColumn(this, "accession", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".accession"), JdbcType.INTEGER));
                 addColumn(new ExprColumn(this, "panelId", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".panelId"), JdbcType.INTEGER));
                 addColumn(new ExprColumn(this, "animalId", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".animalId"), JdbcType.VARCHAR));
-                addColumn(new ExprColumn(this, "dateVerified", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateVerified"), JdbcType.TIMESTAMP));
-                addColumn(new ExprColumn(this, "date", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".date"), JdbcType.TIMESTAMP));
+                ColumnInfo verifyDateCol = addColumn(new ExprColumn(this, "dateVerified", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateVerified"), JdbcType.TIMESTAMP));
+                verifyDateCol.setFormat("yyyy-MM-dd HH:mm");
+
+                ColumnInfo dateCol = addColumn(new ExprColumn(this, "date", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".date"), JdbcType.TIMESTAMP));
+                dateCol.setFormat("yyyy-MM-dd HH:mm");
+
                 addColumn(new ExprColumn(this, "projectName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".project"), JdbcType.VARCHAR));
-                addColumn(new ExprColumn(this, "datecollected", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".datecollected"), JdbcType.TIMESTAMP));
+                ColumnInfo dateCollectedCol = addColumn(new ExprColumn(this, "dateCollected", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateCollected"), JdbcType.TIMESTAMP));
+                dateCollectedCol.setFormat("yyyy-MM-dd HH:mm");
+
+                ColumnInfo dateOrderedCol = addColumn(new ExprColumn(this, "dateOrdered", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateCollected"), JdbcType.TIMESTAMP));
+                dateOrderedCol.setFormat("yyyy-MM-dd HH:mm");
+
                 addColumn(new ExprColumn(this, "servicename_abbr", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".servicename_abbr"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "doctorLogin", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".doctorLogin"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "doctorLastName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".doctorLastName"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "doctorFirstName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".doctorFirstName"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "techLogin", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".techLogin"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "techLastName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".techLastName"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "techFirstName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".techFirstName"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "status", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".status"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "pk", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".pk"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "numericLastName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".numericLastName"), JdbcType.BOOLEAN));

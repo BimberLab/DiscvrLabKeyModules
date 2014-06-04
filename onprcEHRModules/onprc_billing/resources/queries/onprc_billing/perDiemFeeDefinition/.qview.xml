@@ -6,6 +6,7 @@
         <column name="housingType"/>
         <column name="housingDefinition"/>
         <column name="tier"/>
+        <column name="canChargeInfants"/>
         <column name="active"/>
     </columns>
     <sorts>

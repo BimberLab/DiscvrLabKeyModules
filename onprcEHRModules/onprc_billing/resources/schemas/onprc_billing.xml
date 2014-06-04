@@ -27,29 +27,6 @@
             <ns:column columnName="modified"/>
         </ns:columns>
     </ns:table>
-    <ns:table tableName="clinicalFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-        <ns:auditLogging>DETAILED</ns:auditLogging>
-        <ns:tableTitle>Clinical Fee Structure</ns:tableTitle>
-        <ns:columns>
-            <ns:column columnName="rowId"/>
-            <ns:column columnName="procedureId">
-                <ns:columnTitle>Procedure Id</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="snomed">
-                <ns:columnTitle>SNOMED</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="active">
-                <ns:columnTitle>Is Active?</ns:columnTitle>
-                <ns:defaultValue>true</ns:defaultValue>
-            </ns:column>
-            <ns:column columnName="objectid"/>
-            <ns:column columnName="createdBy"/>
-            <ns:column columnName="created"/>
-            <ns:column columnName="modifiedBy"/>
-            <ns:column columnName="modified"/>
-        </ns:columns>
-    </ns:table>
     <ns:table tableName="chargeRateExemptions" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
@@ -122,6 +99,10 @@
             </ns:column>
                 <ns:column columnName="allowscustomunitcost">
                 <ns:columnTitle>Allow Custom Unit Cost?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="canRaiseFA">
+                <ns:columnTitle>Can Raise F&amp;A?</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
@@ -283,8 +264,8 @@
                 <ns:columnTitle>Issue #</ns:columnTitle>
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
-            <ns:column columnName="chargeType">
-                <ns:columnTitle>Charge Type</ns:columnTitle>
+            <ns:column columnName="chargecategory">
+                <ns:columnTitle>Charge Category</ns:columnTitle>
             </ns:column>
             <ns:column columnName="billingId">
                 <ns:columnTitle>Billing Id</ns:columnTitle>
@@ -366,6 +347,20 @@
                     <ns:fkDisplayColumnName useRawValue="true"/>
                 </ns:fk>
             </ns:column>
+            <ns:column columnName="chargeType">
+                <ns:columnTitle>Charge Type</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="creditedaccount">
+                <ns:columnTitle>Credit Alias</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>aliases</ns:fkTable>
+                    <ns:fkColumnName>alias</ns:fkColumnName>
+                    <ns:fkDisplayColumnName useRawValue="true"/>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="chargeId"/>
             <ns:column columnName="item">
                 <ns:columnTitle>Item</ns:columnTitle>
@@ -377,7 +372,6 @@
             <ns:column columnName="unitCost">
                 <ns:columnTitle>Unit Cost</ns:columnTitle>
                 <ns:formatString>$###,##0.00</ns:formatString>
-                <ns:isHidden>true</ns:isHidden>
             </ns:column>
             <ns:column columnName="comment">
                 <ns:columnTitle>Comment</ns:columnTitle>
@@ -401,18 +395,8 @@
                     <ns:fkDisplayColumnName>rowid</ns:fkDisplayColumnName>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="creditedaccount">
-                <ns:columnTitle>Credit Alias</ns:columnTitle>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:fk>
-                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
-                    <ns:fkTable>aliases</ns:fkTable>
-                    <ns:fkColumnName>alias</ns:fkColumnName>
-                    <ns:fkDisplayColumnName useRawValue="true"/>
-                </ns:fk>
-            </ns:column>
             <ns:column columnName="sourceInvoicedItem">
-                <ns:columnTitle>Source Record</ns:columnTitle>
+                <ns:columnTitle>Source Transaction</ns:columnTitle>
                 <ns:isHidden>true</ns:isHidden>
                 <ns:fk>
                     <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
@@ -421,8 +405,8 @@
                     <ns:fkDisplayColumnName>rowid</ns:fkDisplayColumnName>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="chargeType">
-                <ns:columnTitle>Charge Type</ns:columnTitle>
+            <ns:column columnName="chargeCategory">
+                <ns:columnTitle>Charge Category</ns:columnTitle>
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
             <ns:column columnName="issueId">
@@ -513,6 +497,10 @@
                 <ns:columnTitle>Encounter Id</ns:columnTitle>
                 <ns:facetingBehavior>ALWAYS_OFF</ns:facetingBehavior>
             </ns:column>
+            <ns:column columnName="formSort">
+                <ns:columnTitle>Form Sort Order</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
             <ns:column columnName="createdBy"/>
             <ns:column columnName="created"/>
             <ns:column columnName="modifiedBy"/>
@@ -552,6 +540,9 @@
             </ns:column>
             <ns:column columnName="tier">
                 <ns:columnTitle>Tier</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="canChargeInfants">
+                <ns:columnTitle>Can Charge Infants?</ns:columnTitle>
             </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
@@ -872,6 +863,15 @@
                     <ns:fkColumnName>value</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
+            <ns:column columnName="assistingStaff">
+                <ns:columnTitle>Assisting Staff</ns:columnTitle>
+                <ns:nullable>true</ns:nullable>
+                <ns:fk>
+                    <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
+                    <ns:fkTable>procedureChargeType</ns:fkTable>
+                    <ns:fkColumnName>value</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="chargeId">
                 <ns:columnTitle>Charge Id</ns:columnTitle>
                 <ns:nullable>false</ns:nullable>
@@ -887,30 +887,26 @@
             <ns:column columnName="modified"/>
         </ns:columns>
     </ns:table>
-    <ns:table tableName="bloodDrawFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
-        <ns:tableTitle>Blood Draw Fee Structure</ns:tableTitle>
+    <ns:table tableName="medicationFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Medication Fee Structure</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="chargetype">
-                <ns:columnTitle>Charge Type</ns:columnTitle>
+            <ns:column columnName="route">
+                <ns:columnTitle>Route</ns:columnTitle>
                 <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
-                    <ns:fkTable>bloodChargeType</ns:fkTable>
-                    <ns:fkColumnName>value</ns:fkColumnName>
+                    <ns:fkTable>routes</ns:fkTable>
+                    <ns:fkColumnName>route</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
             <ns:column columnName="chargeId">
                 <ns:columnTitle>Charge Id</ns:columnTitle>
                 <ns:nullable>false</ns:nullable>
-            </ns:column>
-            <ns:column columnName="creditalias">
-                <ns:columnTitle>Credit Alias</ns:columnTitle>
-                <ns:isHidden>true</ns:isHidden>
             </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
@@ -1093,6 +1089,11 @@
             </ns:column>
             <ns:column columnName="aliasType">
                 <ns:columnTitle>Alias Type</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>aliasTypes</ns:fkTable>
+                    <ns:fkColumnName>aliasType</ns:fkColumnName>
+                </ns:fk>
             </ns:column>
             <ns:column columnName="container"/>
             <ns:column columnName="createdBy"/>
@@ -1255,6 +1256,131 @@
             <ns:column columnName="category">
                 <ns:columnTitle>Category</ns:columnTitle>
             </ns:column>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="aliasTypes" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Alias Types &amp; Rate Modifiers</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:columns>
+            <ns:column columnName="aliasType">
+                <ns:columnTitle>Type</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="removeSubsidy">
+                <ns:columnTitle>Remove NIH Subsidy?</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="canRaiseFA">
+                <ns:columnTitle>Can Raise F&amp;A?</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="projectMultipliers" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Project Multipliers</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:columns>
+            <ns:column columnName="rowId"/>
+            <ns:column columnName="project">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="multiplier">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="startDate">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="endDate">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="comment"/>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="miscChargesType" tableDbType="TABLE" useColumnOrder="true">
+        <ns:tableTitle>Misc Charges Type</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:columns>
+            <ns:column columnName="category"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="chargeUnits" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableTitle>Charge Units</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="chargetype">
+                <ns:columnTitle>Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="shownInBlood">
+                <ns:columnTitle>Shown In Blood Form?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="shownInLabwork">
+                <ns:columnTitle>Shown In Labwork Form?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="shownInMedications">
+                <ns:columnTitle>Shown In Medications Form?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="shownInProcedures">
+                <ns:columnTitle>Shown In Procedures Form?</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="active">
+                <ns:columnTitle>Is Active?</ns:columnTitle>
+                <ns:defaultValue>true</ns:defaultValue>
+            </ns:column>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="chargeUnitAccounts" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableTitle>Aliases Per Charge Unit</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="chargetype">
+                <ns:columnTitle>Charge Type</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>chargeUnits</ns:fkTable>
+                    <ns:fkColumnName>chargetype</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>chargetype</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="account">
+                <ns:columnTitle>Alias</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="startdate">
+                <ns:nullable>false</ns:nullable>
+                <ns:columnTitle>Start Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="enddate">
+                <ns:nullable>false</ns:nullable>
+                <ns:columnTitle>End Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdBy"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedBy"/>
+            <ns:column columnName="modified"/>
         </ns:columns>
     </ns:table>
 </ns:tables>

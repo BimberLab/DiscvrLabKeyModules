@@ -28,7 +28,7 @@ public class ReversalFormType extends TaskForm
     {
         super(ctx, owner, NAME, "Reversals/Adjustments", "Billing", Arrays.<FormSection>asList(
                 new TaskFormSection(),
-                new ChargesFormSection()
+                new AdjustmentFormSection()
         ));
 
         addClientDependency(ClientDependency.fromFilePath("onprc_billing/model/sources/Reversals.js"));

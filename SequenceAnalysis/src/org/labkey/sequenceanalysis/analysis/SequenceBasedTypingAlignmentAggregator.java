@@ -58,7 +58,8 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     private int _totalAlignmentsInspected = 0;
     private int _totalAlignmentsIncluded = 0;
     private int _maxSNPs = 0;
-    private int _skippedReferences = 0;
+    private int _skippedReferencesByPct = 0;
+    private int _skippedReferencesByRead = 0;
 
     private int _alignmentsIncludingDiscardedSnps = 0;
     private int _alignmentsHelpedByMate = 0;
@@ -185,17 +186,21 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         {
             for (String refName : _totalByReference.keySet())
             {
+                //NOTE: the user is entering this as a number 0-100
+                double pct = ((double)_totalByReference.get(refName) / _totalAlignmentsIncluded) * 100.0;
+
                 if (_minCountForRef != null && _totalByReference.get(refName) < _minCountForRef)
                 {
-                    _skippedReferences++;
+                    _skippedReferencesByRead++;
+                    _log.debug("Reference discarded due to read count: " + refName + " / " + _totalAlignmentsIncluded + " / " + _totalByReference.get(refName) + " / " + pct + "%");
                     disallowedReferences.add(refName);
                     continue;
                 }
 
-                double pct = _totalByReference.get(refName) / _totalAlignmentsIncluded;
                 if (_minPctForRef != null && pct < _minPctForRef)
                 {
-                    _skippedReferences++;
+                    _skippedReferencesByPct++;
+                    _log.debug("Reference discarded due to percent: " + refName + " / " + _totalAlignmentsIncluded + " / " + _totalByReference.get(refName) + " / " + pct + "%");
                     disallowedReferences.add(refName);
                     continue;
                 }
@@ -350,7 +355,8 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         _log.info("\tAlignments discarded (due to presence of high quality SNPs): " + (_totalAlignmentsInspected - _acceptedAlignments.size()));
         _log.info("\tAlignments retained that contained low qual SNPs (thse may have been discarded for other factors): " + _alignmentsIncludingDiscardedSnps);
         _log.info("\tReferences with at least 1 aligned read (these may get filtered out downstream): " + _totalByReference.size());
-        _log.info("\tReferences disallowed due to either read count or percent filters: " + _skippedReferences);
+        _log.info("\tReferences disallowed due to read count filters: " + _skippedReferencesByRead);
+        _log.info("\tReferences disallowed due to percent filters: " + _skippedReferencesByPct);
 
         _log.info("\tReads with no alignments: " + _unaligned.size());
         _log.info("\tSingleton or First Mate Reads with at least 1 alignment that passed thresholds: " + _alignmentsByReadM1.keySet().size());

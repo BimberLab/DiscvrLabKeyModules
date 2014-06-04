@@ -35,14 +35,15 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             return;
         }
 
-        Ext4.apply(this, {
+        LABKEY.ExtAdapter.apply(this, {
             modal: true,
             closeAction: 'destroy',
             title: 'Reverse/Adjust Charges',
-            width: 750,
+            width: 1000,
             bodyStyle: 'padding: 5px;',
             defaults: {
-                border: false
+                border: false,
+                labelWidth: 150
             },
             items: [{
                 html: 'This helper allows you to make adjustments and reversals.  Once you select the type of adjustment, look below to see an explanation of the items it will create.<br><br>' +
@@ -62,22 +63,18 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                     change: this.onChange
                 },
                 items: [{
-                    boxLabel: 'Reverse Charge Only',
+                    boxLabel: 'Reverse Charges Only',
                     inputValue: 'reversal',
                     checked: true
                 },{
-                    boxLabel: 'Change Project (Debit Side)',
-                    inputValue: 'changeProject'
-                },{
-                    boxLabel: 'Change Credit Alias',
-                    inputValue: 'changeCreditAlias'
-                },{
-                    boxLabel: 'Change Unit Cost',
-                    inputValue: 'changeUnitCost'
+                    boxLabel: 'Adjust Charges',
+                    inputValue: 'adjustment'
                 },{
                     boxLabel: 'Mark As Errored By IBS',
                     inputValue: 'markErrored'
                 }]
+            },{
+                html :'<hr>'
             },{
                 xtype: 'panel',
                 itemId: 'itemArea',
@@ -163,11 +160,13 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             },{
                 xtype: 'datefield',
                 width: 400,
+                labelWidth: 150,
                 itemId: 'dateField',
                 value: new Date(),
                 fieldLabel: 'Transaction Date'
             },{
                 xtype: 'numberfield',
+                labelWidth: 150,
                 hideTrigger: true,
                 minValue: 0,
                 itemId: 'issueId',
@@ -175,124 +174,13 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                 fieldLabel: 'Issue #'
             },{
                 xtype: 'textarea',
+                labelWidth: 150,
                 itemId: 'comment',
                 width: 400,
                 fieldLabel: 'Comment'
             });
         }
-        else if (val == 'changeProject'){
-            items.push({
-                html: 'This will switch the project charged to the project selected below.  This will automatically create a charge to reverse the original charge, and create a second charge against the new project.  ' +
-                    'The reversal will use the aliases used on the original transaction.  This does not check whether the aliases are still valid.<p></p>' +
-                    'The new charge will debit against the alias chosen below.  The field shows all aliases that have historically been associated with this project.  If left blank, it will use the currently active alias from the chosen project.  It will credit the same alias as the original transaction.  All transactions will use the date selected below, as opposed to the original transaction date.',
-                style: 'padding-bottom: 10px;'
-            },{
-                xtype: 'datefield',
-                width: 400,
-                itemId: 'dateField',
-                value: new Date(),
-                fieldLabel: 'Transaction Date'
-            },{
-                xtype: 'ehr-projectfield',
-                itemId: 'projectField',
-                showInactive: true,
-                showAccount: true,
-                width: 400,
-                fieldLabel: 'Choose Project',
-                matchFieldWidth: false,
-                listeners: {
-                    change: function(field){
-                        var panel = field.up('panel');
-                        var aliasField = panel.down('#aliasField');
-                        var recIdx = field.store.find('project', field.getValue());
-                        var rec;
-                        if (recIdx != -1){
-                            rec = field.store.getAt(recIdx);
-                        }
-
-                        if (field.getValue()){
-                            aliasField.setDisabled(false);
-                            aliasField.store.filterArray = [LABKEY.Filter.create('project', field.getValue())];
-                            aliasField.store.load();
-                        }
-                        else {
-                            aliasField.setDisabled(true);
-                            aliasField.setValue(null);
-                            aliasField.store.filterArray = [];
-                        }
-
-                        aliasField.setValue(null);
-                    }
-                }
-            },{
-                xtype: 'labkey-combo',
-                width: 400,
-                fieldLabel: 'Alias To Use',
-                plugins: ['ldk-usereditablecombo'],
-                disabled: true,
-                itemId: 'aliasField',
-                displayField: 'account',
-                valueField: 'account',
-                listConfig: {
-                    innerTpl: '{[values["account"] + (values["account"] == "Other" ? "" : " (" + (values["startdate"] ? values["startdate"].format("Y-m-d") : "No Start") + " - " + (values["enddate"] ? values["enddate"].format("Y-m-d") : "No End") + ")")]}',
-                    getInnerTpl: function(){
-                        return this.innerTpl;
-                    }
-                },
-                store: {
-                    type: 'labkey-store',
-                    schemaName: 'onprc_billing',
-                    queryName: 'projectAccountHistory',
-                    sort: '-startdate',
-                    autoLoad: false,
-                    columns: 'project,account,startdate,enddate'
-                }
-            },{
-                xtype: 'numberfield',
-                hideTrigger: true,
-                minValue: 0,
-                itemId: 'issueId',
-                width: 400,
-                fieldLabel: 'Issue #'
-            },{
-                xtype: 'textarea',
-                itemId: 'comment',
-                width: 400,
-                fieldLabel: 'Comment'
-            });
-        }
-        else if (val == 'changeCreditAlias'){
-            items.push({
-                html: 'This will switch the alias credited for the selected charges to the alias selected below.  This will reverse the original item and create a new record with this alias.  Note: the reversal will use the aliases from the original transaction, and does not check whether these are still valid.  The new transaction will charge alias listed in the original transaction, and switch the credit to use the chosen alias.  All transactions will use the date selected below.',
-                style: 'padding-bottom: 10px;'
-            },{
-                xtype: 'datefield',
-                width: 400,
-                itemId: 'dateField',
-                value: new Date(),
-                fieldLabel: 'Transaction Date'
-            },{
-                xtype: 'textfield',
-                itemId: 'aliasField',
-                width: 400,
-                fieldLabel: 'Choose Alias',
-                displayField: 'alias',
-                valueField: 'alias'
-            },{
-                xtype: 'numberfield',
-                hideTrigger: true,
-                minValue: 0,
-                itemId: 'issueId',
-                width: 400,
-                fieldLabel: 'Issue #'
-            },{
-                xtype: 'textarea',
-                itemId: 'comment',
-                width: 400,
-                fieldLabel: 'Comment'
-            });
-        }
-        else if (val == 'changeUnitCost'){
+        else if (val == 'adjustment'){
             var unitCosts = [];
             Ext4.Array.forEach(this.selectRowsResults.rows, function(row){
                 var sr = new LDK.SelectRowsRow(row);
@@ -301,24 +189,25 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             unitCosts = Ext4.unique(unitCosts);
 
             items.push({
-                html: 'This will switch the unit cost for the selected charges to the amount selected below.  This will reverse the original item and create a new record using the updated unit cost.  Note: the reversal will use the aliases from the original transaction, and does not check whether these are still valid.  The new charge will also use the credit/debit aliases from the original transaction, which may not match the currently active alias for the project, or the current credit alias for this type of charge.  All transactions will use the date selected below.',
+                html: 'This will reverse the original charges and create adjustments based on your selections below.  ' +
+                    '<ul>' +
+                    '<li>All transactions will use the date selected below, as opposed to the original transaction date.</li>' +
+                    '<li>The reversal will use the aliases used on the original transaction.  This does not check whether the aliases are still valid.</li>' +
+                    '<li>If you choose to change the project, the project/alias selected will be used on the adjustment.  If you leave this blank, the original project/alias will be used</li>' +
+                    '<li>If you select an alternate credit alias, this will be used on all adjustments.  Otherwise the original credit alias will be used.' +
+                    '<li>Note: you can leave any or all of these fields blank and create the adjustment.  You will have the opportunity to view the adjustment form, which allows you to independently edit any of these values there as well.</li>' +
+                    '</ul>',
                 style: 'padding-bottom: 10px;'
             },{
                 xtype: 'datefield',
                 width: 400,
+                labelWidth: 150,
                 itemId: 'dateField',
                 value: new Date(),
                 fieldLabel: 'Transaction Date'
             },{
                 xtype: 'numberfield',
-                itemId: 'unitCostField',
-                decimalPrecision: 2,
-                hideTrigger: true,
-                width: 400,
-                fieldLabel: 'Choose Unit Cost',
-                value: unitCosts.length == 1 ? unitCosts[0] : null
-            },{
-                xtype: 'numberfield',
+                labelWidth: 150,
                 hideTrigger: true,
                 minValue: 0,
                 itemId: 'issueId',
@@ -326,9 +215,148 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                 fieldLabel: 'Issue #'
             },{
                 xtype: 'textarea',
+                labelWidth: 150,
                 itemId: 'comment',
                 width: 400,
                 fieldLabel: 'Comment'
+            });
+
+            //project / debit alias
+            items.push({
+                xtype: 'checkbox',
+                boxLabel: 'Change Project/Debit Alias',
+                itemId: 'doChangeProject',
+                labelWidth: 350,
+                listeners: {
+                    change: function(field, val){
+                        field.up('panel').down('#projectPanel').setVisible(val);
+                    }
+                }
+            },{
+                xtype: 'panel',
+                itemId: 'projectPanel',
+                hidden: true,
+                defaults: {
+                    border: false,
+                    style: 'margin-left: 20px;'
+                },
+                items: [{
+                    xtype: 'ehr-projectfield',
+                    labelWidth: 150,
+                    itemId: 'projectField',
+                    showInactive: true,
+                    showAccount: true,
+                    width: 400,
+                    fieldLabel: 'Project',
+                    matchFieldWidth: false,
+                    listeners: {
+                        change: function(field){
+                            var panel = field.up('panel');
+                            var debitAliasField = panel.down('#debitAliasField');
+                            var recIdx = field.store.find('project', field.getValue());
+                            var rec;
+                            if (recIdx != -1){
+                                rec = field.store.getAt(recIdx);
+                            }
+
+                            if (field.getValue()){
+                                debitAliasField.setDisabled(false);
+                                debitAliasField.store.filterArray = [LABKEY.Filter.create('project', field.getValue())];
+                                debitAliasField.store.load();
+                            }
+                            else {
+                                debitAliasField.setDisabled(true);
+                                debitAliasField.setValue(null);
+                                debitAliasField.store.filterArray = [];
+                            }
+
+                            debitAliasField.setValue(null);
+                        }
+                    }
+                },{
+                    xtype: 'labkey-combo',
+                    width: 400,
+                    labelWidth: 150,
+                    fieldLabel: 'Alias To Use',
+                    plugins: ['ldk-usereditablecombo'],
+                    disabled: true,
+                    itemId: 'debitAliasField',
+                    displayField: 'account',
+                    valueField: 'account',
+                    listConfig: {
+                        innerTpl: '{[values["account"] + (values["account"] == "Other" ? "" : " (" + (values["startdate"] ? values["startdate"].format("Y-m-d") : "No Start") + " - " + (values["enddate"] ? values["enddate"].format("Y-m-d") : "No End") + ")")]}',
+                        getInnerTpl: function(){
+                            return this.innerTpl;
+                        }
+                    },
+                    store: {
+                        type: 'labkey-store',
+                        schemaName: 'onprc_billing',
+                        queryName: 'projectAccountHistory',
+                        sort: '-startdate',
+                        autoLoad: false,
+                        columns: 'project,account,startdate,enddate'
+                    }
+                }]
+            });
+
+            //credit alias
+            items.push({
+                xtype: 'checkbox',
+                boxLabel: 'Change Credit Alias',
+                itemId: 'doChangeCreditAlias',
+                listeners: {
+                    change: function(field, val){
+                        field.up('panel').down('#creditPanel').setVisible(val);
+                    }
+                }
+            },{
+                xtype: 'panel',
+                itemId: 'creditPanel',
+                hidden: true,
+                defaults: {
+                    border: false,
+                    style: 'margin-left: 20px;'
+                },
+                items: [{
+                    xtype: 'textfield',
+                    itemId: 'creditAliasField',
+                    width: 400,
+                    labelWidth: 150,
+                    fieldLabel: 'Credit Alias',
+                    displayField: 'alias',
+                    valueField: 'alias'
+                }]
+            });
+
+            //unit cost
+            items.push({
+                xtype: 'checkbox',
+                boxLabel: 'Change Unit Cost',
+                itemId: 'doChangeUnitCost',
+                listeners: {
+                    change: function(field, val){
+                        field.up('panel').down('#unitCostPanel').setVisible(val);
+                    }
+                }
+            },{
+                xtype: 'panel',
+                itemId: 'unitCostPanel',
+                hidden: true,
+                defaults: {
+                    border: false,
+                    style: 'margin-left: 20px;'
+                },
+                items: [{
+                    xtype: 'numberfield',
+                    itemId: 'unitCostField',
+                    labelWidth: 150,
+                    decimalPrecision: 2,
+                    hideTrigger: true,
+                    width: 400,
+                    fieldLabel: 'Unit Cost',
+                    value: unitCosts.length == 1 ? unitCosts[0] : null
+                }]
             });
         }
         else if (val == 'markErrored'){
@@ -344,23 +372,13 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
     },
 
     onSubmit: function(){
-        var combo = this.down('combo');
-        if (combo && !combo.getValue()){
-            Ext4.Msg.alert('Error', 'Must choose a value');
-            return;
-        }
-
         var val = this.down('#reversalType').getValue().reversalType;
         var issueField = this.down('#issueId');
+
+        //these are always required
         var commentField = this.down('#comment');
         if (commentField && !commentField.getValue()){
             Ext4.Msg.alert('Error', 'Must enter a comment.  It is recommended to also enter the issue associated with this adjustment.');
-            return;
-        }
-
-        var unitCostField = this.down('#unitCostField');
-        if (unitCostField && !unitCostField.isDirty()){
-            Ext4.Msg.alert('Error', 'You have not changed the original unit cost.  This would reverse the original charge and create a new one for the same amount.');
             return;
         }
 
@@ -370,21 +388,81 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             return;
         }
 
-        if (val == 'changeCreditAlias' || (val == 'changeProject' && this.down('#aliasField').getValue())){
-            this.validateCreditAlias();
-            return;
+        //specifc to adjustments
+        if (val == 'adjustment'){
+            //we deliberately do not require them to actually enter changes here.  they could choose to do all of this on the next form
+            if (this.down('#doChangeProject').getValue() && !this.down('#projectField').getValue()){
+                Ext4.Msg.alert('Error', 'You have checked that you want to alter project/debit alias, but did not supply the project.  Either enter a project or uncheck the field');
+                return;
+
+            }
+
+            if (this.down('#doChangeCreditAlias').getValue() && !this.down('#creditAliasField').getValue()){
+                Ext4.Msg.alert('Error', 'You have checked that you want to alter the credit alias, but did not supply the new alias.  Either enter an alias or uncheck the field');
+                return;
+            }
+
+            if (this.down('#doChangeUnitCost').getValue() && Ext4.isEmpty(this.down('#unitCostField').getValue())){
+                Ext4.Msg.alert('Error', 'You have checked that you want to alter the unit cost, but did not supply a unit cost.  Either enter a unit cost of uncheck the field');
+                return;
+            }
+
+            //then check aliases, if needed
+            if (val == 'changeCreditAlias' || (val == 'changeProject' && this.down('#creditAliasField').getValue())){
+                var aliases = [];
+                if (this.down('#doChangeProject').getValue() && this.down('#debitAliasField').getValue()){
+                    aliases.push(Ext4.String.trim(this.down('#debitAliasField').getValue()));
+                }
+
+                if (this.down('#doChangeCreditAlias').getValue() && this.down('#creditAliasField').getValue()){
+                    aliases.push(Ext4.String.trim(this.down('#creditAliasField').getValue()));
+                }
+
+                if (aliases.length){
+                    this.validateAliases(aliases);
+                    return;
+                }
+            }
         }
 
         this.doUpdate();
     },
 
     doUpdate: function(){
-        var combo = this.down('combo');
-        var val = this.down('#reversalType').getValue().reversalType;
+        var reversalType = this.down('#reversalType').getValue().reversalType;
         var issueField = this.down('#issueId');
         var commentField = this.down('#comment');
-        var unitCostField = this.down('#unitCostField');
         var dateField = this.down('#dateField');
+
+        var toApply = {
+            chargecategory: 'Adjustment'
+        };
+
+        if (reversalType == 'adjustment'){
+            var projectField = this.down('#projectField');
+            var debitAliasField = this.down('#debitAliasField');
+            var creditAliasField = this.down('#creditAliasField');
+            var unitCostField = this.down('#unitCostField');
+
+            if (this.down('#doChangeProject').getValue()){
+                toApply.project = this.down('#projectField').getValue();
+                toApply.debitedaccount = this.down('#debitAliasField').getValue();
+                if (toApply.debitedaccount){
+                    toApply.debitedaccount = Ext4.String.trim(toApply.debitedaccount);
+                }
+            }
+
+            if (this.down('#doChangeCreditAlias').getValue()){
+                toApply.creditedaccount = this.down('#creditAliasField').getValue();
+                if (toApply.creditedaccount){
+                    toApply.creditedaccount = Ext4.String.trim(toApply.creditedaccount);
+                }
+            }
+
+            if (this.down('#doChangeUnitCost').getValue()){
+                toApply.unitcost = this.down('#unitCostField').getValue();
+            }
+        }
 
         this.hide();
 
@@ -394,20 +472,27 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
         Ext4.Array.forEach(this.selectRowsResults.rows, function(row){
             var sr = new LDK.SelectRowsRow(row);
             var baseValues = {
-                //transactionNumber: sr.getValue('transactionNumber'),
+                //same for all records
+                date: dateField.getValue() || new Date(),
+                comment: commentField ? commentField.getValue() : null,
+                issueId: issueField ? issueField.getValue() : null,
+
+                //copied from that record
                 Id: sr.getValue('Id'),
-                date: dateField ? dateField.getValue() : new Date(),
                 billingDate: new Date(),
-                project: sr.getValue('project'),
-                debitedaccount: sr.getValue('debitedaccount'),
-                creditedaccount: sr.getValue('creditedaccount'),
                 investigatorId: sr.getValue('investigatorId'),
                 chargeId: sr.getValue('chargeId'),
                 quantity: sr.getValue('quantity'),
-                comment: commentField ? commentField.getValue() : null,
-                issueId: issueField ? issueField.getValue() : null,
-                //only copy unit cost if using a non-standard value
-                unitcost: sr.getValue('unitcost'),
+                sourceInvoicedItem: sr.getValue('objectid'),
+
+                //these may be overridden
+                project: sr.getValue('project'),
+                debitedaccount: sr.getValue('debitedaccount'),
+                creditedaccount: sr.getValue('creditedaccount'),
+                unitcost: sr.getValue('unitcost')
+
+                //these are deliberately ignored
+                //transactionNumber: sr.getValue('transactionNumber'),
                 //item: sr.getValue('item'),
                 //itemCode: sr.getValue('itemCode'),
                 //category: sr.getValue('category'),
@@ -419,88 +504,36 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                 //totalcost: sr.getValue('totalcost'),
                 //rateId: sr.getValue('rateId'),
                 //exemptionId: sr.getValue('exemptionId'),
-                //creditaccountid: sr.getValue('creditaccountid'),
-                sourceInvoicedItem: sr.getValue('objectid')
+                //creditaccountid: sr.getValue('creditaccountid')
             };
             objectIds.push(sr.getValue('objectid'));
 
-            if (val == 'reversal'){
-                var toInsert = Ext4.apply({}, baseValues);
-                Ext4.apply(toInsert, {
-                    chargeType: 'Reversal',
+            if (reversalType == 'reversal'){
+                var toInsert = LABKEY.ExtAdapter.apply({}, baseValues);
+                LABKEY.ExtAdapter.apply(toInsert, {
+                    chargecategory: 'Reversal',
                     unitcost: -1 * sr.getValue('unitcost')
                 });
 
                 miscChargesInserts.push(toInsert);
             }
-            else if (val == 'changeProject'){
+            else if (reversalType == 'adjustment'){
                 //first create a charge to reverse the original
                 //we expect to use the same credit/debit alias as the original
-                var reversalCharge = Ext4.apply({}, baseValues);
-                Ext4.apply(reversalCharge, {
-                    chargeType: 'Reversal',
+                var reversalCharge = LABKEY.ExtAdapter.apply({}, baseValues);
+                LABKEY.ExtAdapter.apply(reversalCharge, {
+                    chargecategory: 'Reversal',
                     unitcost: -1 * sr.getValue('unitcost')
                 });
 
                 miscChargesInserts.push(reversalCharge);
 
-                //then create one to charge against the new project/account
-                //use the chosen alias.  leaving blank will result in the default alias for this project being used
-                var combo = this.down('#projectField');
-                var aliasField = this.down('#aliasField');
-
-                var newCharge = Ext4.apply({}, baseValues);
-                Ext4.apply(newCharge, {
-                    chargeType: 'Adjustment (Project Change)',
-                    project: combo.getValue(),
-                    debitedaccount: aliasField.getValue() ? Ext4.String.trim(aliasField.getValue()) : null //NOTE: blank will result in this project's active alias being used
-                });
+                var newCharge = LABKEY.ExtAdapter.apply({}, baseValues);
+                LABKEY.ExtAdapter.apply(newCharge, toApply);
 
                 miscChargesInserts.push(newCharge);
             }
-            else if (val == 'changeCreditAlias'){
-                //first create a charge to reverse the original
-                var reversalCharge = Ext4.apply({}, baseValues);
-                Ext4.apply(reversalCharge, {
-                    chargeType: 'Reversal',
-                    unitcost: -1 * sr.getValue('unitcost')
-                });
-
-                miscChargesInserts.push(reversalCharge);
-
-                //then create one to charge against the new project/account
-                var combo = this.down('#aliasField');
-
-                var newCharge = Ext4.apply({}, baseValues);
-                Ext4.apply(newCharge, {
-                    creditedaccount: combo.getValue(),
-                    chargeType: 'Adjustment (Credit Alias Change)'
-                });
-
-                miscChargesInserts.push(newCharge);
-            }
-            else if (val == 'changeUnitCost'){
-                //first create a charge to reverse the original
-                var reversalCharge = Ext4.apply({}, baseValues);
-                Ext4.apply(reversalCharge, {
-                    chargeType: 'Reversal',
-                    unitcost: -1 * sr.getValue('unitcost')
-                });
-
-                miscChargesInserts.push(reversalCharge);
-
-                //then create one to charge against the new project/account
-                var field = this.down('#unitCostField');
-
-                var newCharge = Ext4.apply({}, baseValues);
-                Ext4.apply(newCharge, {
-                    chargeType: 'Adjustment (Unit Cost)',
-                    unitcost: field.getValue()
-                });
-
-                miscChargesInserts.push(newCharge);
-            }
-            else if (val == 'markErrored'){
+            else if (reversalType == 'markErrored'){
                 invoicedItemsUpdate.push({
                     rowid: sr.getValue('rowid'),
                     objectid: sr.getValue('objectid'),
@@ -513,42 +546,47 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
         this.close();
         if (miscChargesInserts.length){
             Ext4.Msg.wait('Saving...');
-            Ext4.Array.forEach(miscChargesInserts, function(obj){
+            var taskId = LABKEY.Utils.generateUUID();
+            Ext4.Array.forEach(miscChargesInserts, function(obj, idx){
                 obj.objectid = LABKEY.Utils.generateUUID();
+                obj.taskid = taskId;
+                obj.formSort = (idx + 1);
             }, this);
 
-            LABKEY.Query.insertRows({
-                containerPath: this.ehrCtx['EHRStudyContainer'],
+            LABKEY.Query.saveRows({
                 method: 'POST',
-                schemaName: 'onprc_billing',
-                queryName: 'miscCharges',
-                scope: this,
+                containerPath: this.ehrCtx['EHRStudyContainer'],
+                commands: [{
+                    command: 'insert',
+                    containerPath: this.ehrCtx['EHRStudyContainer'],
+                    schemaName: 'ehr',
+                    queryName: 'tasks',
+                    rows: [{
+                        taskid: taskId,
+                        title: 'Reversal/Adjustment',
+                        formtype: 'Reversals',
+                        assignedto: LABKEY.Security.currentUser.id,
+                        category: 'task',
+                        duedate: new Date()
+                    }]
+                },{
+                    command: 'insert',
+                    containerPath: this.ehrCtx['EHRStudyContainer'],
+                    schemaName: 'onprc_billing',
+                    queryName: 'miscCharges',
+                    rows: miscChargesInserts
+                }],
                 timeout: 9999999,
-                rows: miscChargesInserts,
+                scope: this,
                 failure: LDK.Utils.getErrorCallback(),
-                success: function(results){
+                success: function(){
                     Ext4.Msg.hide();
-                    Ext4.Msg.confirm('Success', 'Charges have been reversed/adjusted.  These changes will apply to the next billing period.  Do you want to view these now?', function(val){
+                    Ext4.Msg.confirm('Success', 'Charges have been reversed/adjusted.  These changes will apply to the next billing period.  Do you want to view this form now?  This will give another opportunity to make changes.', function(val){
                         if (val == 'yes'){
-                            // NOTE: if reversing a large # of records, the URL can become too long so we POST.  because this is slightly
-                            // less desirable (no back navigation), only do this with a large # of items
-                            if (objectIds.length <= 20){
-                                window.location = LABKEY.ActionURL.buildURL('query', 'executeQuery', this.ehrCtx['EHRStudyContainer'], {
-                                    schemaName: 'onprc_billing',
-                                    'query.queryName': 'miscChargesWithRates',
-                                    'query.viewName': 'Adjustment Detail',
-                                    'query.sourceInvoicedItem~in': objectIds.join(';'),
-                                    'query.billingDate~dateeq': (new Date()).format('Y-m-d')
-                                });
-                            }
-                            else {
-                                var newForm = Ext4.DomHelper.append(document.getElementsByTagName('body')[0],
-                                    '<form method="POST" action="' + LABKEY.ActionURL.buildURL('query', 'executeQuery', this.ehrCtx['EHRStudyContainer'], {'query.queryName': 'miscChargesWithRates', 'schemaName': 'onprc_billing', 'query.viewName': 'Adjustment Detail'}) + '">' +
-                                            '<input type="hidden" name="query.sourceInvoicedItem~in" value="' + Ext4.htmlEncode(objectIds.join(';')) + '" />' +
-                                            '<input type="hidden" name="query.billingDate~dateeq" value="' + Ext4.htmlEncode((new Date()).format('Y-m-d')) + '" />' +
-                                            '</form>');
-                                newForm.submit();
-                            }
+                            window.open(LABKEY.ActionURL.buildURL('ehr', 'dataEntryForm', this.ehrCtx['EHRStudyContainer'], {
+                                formType: 'Reversals',
+                                taskid: taskId
+                            }));
                         }
                     }, this);
                 }
@@ -579,23 +617,18 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
         }
     },
 
-    validateCreditAlias: function(){
-        var alias = this.down('#aliasField').getValue();
-        if (!alias){
-            Ext4.Msg.alert('Error', 'No alias entered');
-            return;
-        }
-
+    validateAliases: function(aliases){
         LABKEY.Query.selectRows({
             schemaName: 'onprc_billing_public',
             queryName: 'aliases',
             columns: 'alias',
-            filterArray: [LABKEY.Filter.create('alias', alias, LABKEY.Filter.Types.EQUAL)],
+            filterArray: [LABKEY.Filter.create('alias', aliases.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)],
             scope: this,
             failure: LDK.Utils.getErrorCallback(),
             success: function(results){
-                if (!results || !results.rows || !results.rows.length){
-                    Ext4.Msg.alert('Error', 'Unable to find alias: ' + alias);
+                if (!results || !results.rows || results.rows.length != aliases.length){
+                    //TODO: find missing aliases
+                    Ext4.Msg.alert('Error', 'Unable to find alias: ' + aliases);
                 }
                 else {
                     this.doUpdate();

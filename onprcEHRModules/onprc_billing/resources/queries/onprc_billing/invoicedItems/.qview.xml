@@ -16,7 +16,7 @@
         <column name="quantity"/>
         <column name="totalcost"/>
         <column name="comment"/>
-        <column name="chargetype"/>
+        <column name="chargeCategory"/>
         <column name="pendingAdjustments"/>
         <column name="totalAdjustments"/>
     </columns>

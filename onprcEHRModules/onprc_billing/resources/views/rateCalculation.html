@@ -1,0 +1,31 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.get(webpart.wrapperDivId).update(
+            'This page describes how ONPRC unit costs are derived in the system:' +
+                '<ul>' +
+                    '<li>All chargeable items have a standard NIH unit cost, and may or may not have an NIH subsidy built into this rate, as defined in the Chargeable Items table.</li>' +
+                    '<li>Individual ONPRC projects can have a rate exemption for one or more items.  If the project has a rate exemption in place for that item, this trumps everything else and will be used as the final rate.</li>' +
+                    '<li>Individual ONPRC projects can have an overall multiplier that is applied to all items.  In the absence of a more specific item-level rate exemption, the stanrd NIH rate is used and multiplied by this number.  This is the second highest level of priority.</li>' +
+                    '<li>If there is no exemption, we defer to the alias being used.  There are 2 questions we must answer:' +
+                    '<ul>' +
+                        '<li>Can this alias receive the NIH subsidy (if applicable for that item)</li>' +
+                        '<li>Is this a reduced F&A alias, and if so, can we increase the unit cost to compensate.</li>' +
+                    '</ul>' +
+                    '<li>Each alias has a type, which we read from the OGA feed.  This can be seen on the alias list.</li>' +
+                    '<ul>' +
+                        '<li>There is a table that lists each type of alias (see the "Alias Types & Rate Modifiers" link on the finance section).  For each type, this table specifies whether that type needs to have any NIH subsidy removed, and whether the unit cost can be raised to compensate for reduced F&A</li>' +
+                        '<li>If the alias being used is not part of the OGA data feed (such as GL aliases), we assume that alias can receive the NIH subsidy and that it is not reduced F&A</li>' +
+                    '</ul>' +
+                    '<li>To calculate the effective unit cost, we take the standard NIH rate for the item, then modify to remove the NIH subsidy and/or compensate for reduced F&A as follows:</li>' +
+                    '<ul>' +
+                        '<li>Remove subsidy: (Standard Rate / (1 - subsidy)).  Note: the subsidy for this item can be zero, which results in the standard rate</li>' +
+                        '<li>Reduced F&A: (Standard Rate * (1 + (0.47 - Alias F&A Rate))).  Note: this is only applied if that chargeable item is flagged as \'Can Increase F&A\', which is a column in the chargeable items table.  Most items are true; however, SLA fees are false.</li>' +
+                    '</ul>' +
+                '</ul>'
+        )
+    });
+
+</script>

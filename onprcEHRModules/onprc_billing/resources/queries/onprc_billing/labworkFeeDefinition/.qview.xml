@@ -2,7 +2,6 @@
     <columns>
         <column name="rowid"/>
         <column name="servicename"/>
-        <!--<column name="chargetype"/>-->
         <column name="chargeId"/>
         <column name="chargeId/itemcode"/>
         <column name="active"/>

@@ -60,11 +60,15 @@ SELECT
     group_concat(DISTINCT a.objectid) as assignmentRecords,
     group_concat(DISTINCT h3.room.housingCondition.value) as housingConditions,
     group_concat(DISTINCT h3.room.housingType.value) as housingTypes,
-    --TODO: need a check to prevent duplicate chargeIds
     CASE
-      WHEN (max(timestampdiff('SQL_TSI_DAY', d.birth, i2.dateOnly)) < 271) THEN (SELECT ci.rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = 'Per Diem Infants < 271 days')
+      WHEN (count(DISTINCT pdf.chargeId) > 1) THEN null  --this should catch duplicate chargeIds
+      --if this item supports infants, charge that
+      WHEN (count(CASE WHEN pdf.canChargeInfants = true THEN 1 ELSE null END) > 0 AND max(pdf.chargeId) IS NOT NULL) THEN max(pdf.chargeId)
+      --otherwise infants are a special rate
+      WHEN (max(timestampdiff('SQL_TSI_DAY', d.birth, i2.dateOnly)) < CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.INFANT_PER_DIEM_AGE') AS INTEGER)) THEN (SELECT ci.rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.INFANT_PER_DIEM'))
       --add quarantine flags, which trump housing type
-      WHEN (SELECT count(*) FROM study.flags q WHERE q.Id = i2.Id AND q.flag.value LIKE '%Quarantine%' AND q.dateOnly <= i2.dateOnly AND q.enddateCoalesced >= i2.dateOnly) > 0 THEN (SELECT ci.rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = 'Per Diem Quarantine')
+      WHEN (SELECT count(*) FROM study.flags q WHERE q.Id = i2.Id AND q.flag.value LIKE '%Quarantine%' AND q.dateOnly <= i2.dateOnly AND q.enddateCoalesced >= i2.dateOnly) > 0 THEN (SELECT ci.rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.QUARANTINE_PER_DIEM'))
+      --finally defer to housing condition
       ELSE max(pdf.chargeId)
     END as chargeId,
     max(i2.startDate) as startDate @hidden,
@@ -100,7 +104,6 @@ LEFT JOIN (
     a.lsid,
     a.id,
     a.project,
-    a.project.account,
     a.project.name as projectName,
     a.date,
     a.assignCondition,
@@ -133,7 +136,6 @@ LEFT JOIN (
     a2.enddate,
     a2.id,
     a2.project,
-    a2.project.account,
     a2.dateOnly,
     a2.enddateCoalesced
   FROM study.assignment a2

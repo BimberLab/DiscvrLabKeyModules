@@ -109,10 +109,10 @@ echo ""
 
 if [ $(which yum) ]; then
     echo "Using Yum"
-    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion perl-Pod-Simple cpan
+    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion perl-Pod-Simple cpan git cmake
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
-    apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev libmodule-build-perl libmodule-build-cipux-perl libtest-most-perl python-dev unzip zip ncftp gcc make perl libgd-gd2-perl libcgi-session-perl libclass-base-perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc
+    apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev libmodule-build-perl libmodule-build-cipux-perl libtest-most-perl python-dev unzip zip ncftp gcc make perl libgd-gd2-perl libcgi-session-perl libclass-base-perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake
 else
     echo "No known package manager present, aborting"
     exit 1
@@ -810,6 +810,75 @@ then
 else
     echo "Already installed"
 fi
+
+#
+# V-Phaser 2
+#
+
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Installing V-Phaser 2"
+#echo ""
+#cd $LKSRC_DIR
+#
+#if [[ ! -e ${LKTOOLS_DIR}/variant_caller || ! -z $FORCE_REINSTALL ]];
+#then
+#    rm -Rf bamtools*
+#    rm -Rf v_phaser_2*
+#    rm -Rf VPhaser-2*
+#    rm -Rf $LKTOOLS_DIR/variant_caller
+#
+#    echo "First download/install bamtools"
+#    mkdir bamtools
+#    cd bamtools
+#    git clone git://github.com/pezmaster31/bamtools.git
+#    cmake ..
+#    make
+#
+#    cd ../../
+#    wget http://www.broadinstitute.org/software/viral/v_phaser_2/v_phaser_2.zip
+#    unzip v_phaser_2.zip
+#    cd VPhaser-2-02112013/src
+#    make MYPATH=${LKSRC_DIR}/bamtools
+#
+#    ln -s $LKSRC_DIR/VPhaser-2-02112013/bin/variant_caller $LKTOOLS_DIR/variant_caller
+#
+#else
+#    echo "Already installed"
+#fi
+
+
+#
+# LoFreq
+#
+
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Installing LoFreq"
+#echo ""
+#cd $LKSRC_DIR
+#
+#if [[ ! -e ${LKTOOLS_DIR}/lofreq || ! -z $FORCE_REINSTALL ]];
+#then
+#    rm -Rf lofreq-0.6.1*
+#    rm -Rf lofreq_star-2.0.0-rc-1*
+#    rm -Rf $LKTOOLS_DIR/lofreq
+#
+#    wget http://downloads.sourceforge.net/project/lofreq/lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
+#    gunzip lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
+#    tar -xf lofreq_star-2.0.0-rc-1.linux-x86-64.tar
+#    gzip lofreq_star-2.0.0-rc-1.linux-x86-64.tar
+#
+#    cd lofreq_star-2.0.0-rc-1
+#    ./configure
+#    make
+#
+#    ln -s $LKSRC_DIR/lofreq_star-2.0.0-rc-1/lofreq $LKTOOLS_DIR/lofreq
+#else
+#    echo "Already installed"
+#fi
 
 
 #

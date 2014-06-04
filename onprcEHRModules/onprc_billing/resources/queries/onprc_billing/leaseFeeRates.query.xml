@@ -3,6 +3,7 @@
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="leaseFeeRates" tableDbType="TABLE">
                 <tableTitle>Lease Fee Charges</tableTitle>
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
                 <columns>
                     <column columnName="project">
                         <fk>
@@ -59,7 +60,7 @@
                         </fk>
                     </column>
                     <column columnName="isExemption">
-                        <columnTitle>Is Special Fee?</columnTitle>
+                        <columnTitle>Is Rate Exemption?</columnTitle>
                     </column>
                     <column columnName="unitCost">
                         <columnTitle>Unit Cost</columnTitle>
@@ -118,6 +119,30 @@
                     </column>
                     <column columnName="isOldCharge">
                         <columnTitle>>45 Days Old?</columnTitle>
+                    </column>
+                    <column columnName="unitCost1">
+                        <columnTitle>Unit Cost, Based On Projected Release</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="nihRate1">
+                        <columnTitle>NIH Rate, Based On Projected Release</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="unitCost2">
+                        <columnTitle>Adjustment Unit Cost, Based On Projected Release</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="nihRate2">
+                        <columnTitle>Adjustment NIH Rate, Based On Projected Release</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="unitCost3">
+                        <columnTitle>Adjustment Unit Cost, Based On Actual Release</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="nihRate3">
+                        <columnTitle>Adjustment NIH Rate, Based On Actual Release</columnTitle>
+                        <isHidden>true</isHidden>
                     </column>
                 </columns>
             </table>

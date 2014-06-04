@@ -19,8 +19,21 @@
                         </fk>                        
                     </column>
                     <column columnName="chargetype">
-                        <shownInInsertView>false</shownInInsertView>
-                        <isUserEditable>false</isUserEditable>
+                        <columnTitle>Charge Unit</columnTitle>
+                        <!--<fk>-->
+                            <!--<fkDbSchema>onprc_billing_public</fkDbSchema>-->
+                            <!--<fkTable>chargeUnits</fkTable>-->
+                            <!--<fkColumnName>chargetype</fkColumnName>-->
+                            <!--<fkDisplayColumnName useRawValue="true"/>-->
+                        <!--</fk>-->
+                    </column>
+                    <column columnName="chargecategory">
+                        <fk>
+                            <fkDbSchema>onprc_billing</fkDbSchema>
+                            <fkTable>miscChargesType</fkTable>
+                            <fkColumnName>category</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
                     </column>
                 </columns>
             </table>

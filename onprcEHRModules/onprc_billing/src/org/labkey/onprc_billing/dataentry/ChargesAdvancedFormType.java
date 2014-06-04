@@ -70,4 +70,13 @@ public class ChargesAdvancedFormType extends TaskForm
 
         return super.canInsert();
     }
+
+    @Override
+    public boolean canRead()
+    {
+        if (!getCtx().getContainer().hasPermission(getCtx().getUser(), ONPRCBillingAdminPermission.class))
+            return false;
+
+        return super.canRead();
+    }
 }

@@ -1,8 +1,6 @@
 <templateSchema sourceSchemaName="laboratory" xmlns="http://labkey.org/data/xml/externalSchema" xmlns:cv="http://labkey.org/data/xml/queryCustomView">
     <tables>
         <tableName>samples</tableName>
-        <tableName>mhcSamples</tableName>
-        <tableName>parentageSamples</tableName>
     </tables>
     <metadata>
         <ns:tables xmlns:ns="http://labkey.org/data/xml">

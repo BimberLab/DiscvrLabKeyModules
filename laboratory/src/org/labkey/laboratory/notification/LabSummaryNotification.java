@@ -6,7 +6,11 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.PropertyManager;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.laboratory.DataProvider;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.SummaryNavItem;
@@ -15,6 +19,8 @@ import org.labkey.api.ldk.NavItem;
 import org.labkey.api.ldk.notification.Notification;
 import org.labkey.api.ldk.notification.NotificationSection;
 import org.labkey.api.module.Module;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
 
 import java.text.NumberFormat;
@@ -25,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * User: bimber
@@ -132,11 +139,12 @@ public class LabSummaryNotification implements Notification
         _pctFormat.setMaximumFractionDigits(1);
 
         Map<String, String> saved = getSavedValues(c);
-        Map<String, String> newValues = new HashMap<String, String>();
+        Map<String, String> newValues = new HashMap<>();
 
         StringBuilder msg = new StringBuilder();
 
-        getSecurityStats(c, u, msg, saved, newValues);
+        //getSecurityStats(c, u, msg, saved, newValues);
+        getWorkbookSummary(c, u, msg, saved, newValues);
         getDataSummary(c, u, msg, saved, newValues);
         getFileSummary(c, u, msg, saved, newValues);
 
@@ -152,6 +160,63 @@ public class LabSummaryNotification implements Notification
 
     }
 
+    public void getWorkbookSummary(Container c, User u, final StringBuilder msg, Map<String, String> saved, Map<String, String> toSave)
+    {
+        msg.append("<br><b>Workbook Summary:</b><br>");
+
+        msg.append("<table border=1 style='border-collapse: collapse;'>");
+        msg.append("<tr style='font-weight:bold;'><td>").append("Folder").append("</td><td>").append("# of Workbooks").append("</td><td>").append("Previous Value").append("</td><td>").append("% Change").append("</td></tr>");
+
+        String rowCount = "workbookCount";
+        Map<String, String> newValueMap = new HashMap<>();
+        JSONObject oldValueMap = saved.containsKey(rowCount) ? new JSONObject(saved.get(rowCount)) : null;
+
+        Map<String, Long> totals = new TreeMap<>();
+        TableInfo containers = DbSchema.get("core").getTable("containers");
+
+        //first add this container
+        SimpleFilter filter1 = new SimpleFilter(FieldKey.fromString("Type"), "workbook");
+        filter1.addCondition(FieldKey.fromString("Parent"), c.getId());
+        TableSelector ts = new TableSelector(containers, filter1, null);
+        totals.put(c.getPath(), ts.getRowCount());
+
+        //then children
+        for (Container child : c.getChildren())
+        {
+            if (child.isWorkbook())
+                continue;
+
+            SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("Type"), "workbook");
+            filter2.addCondition(FieldKey.fromString("Parent"), child.getId());
+            TableSelector ts2 = new TableSelector(containers, filter2, null);
+            totals.put(child.getPath(), ts2.getRowCount());
+        }
+
+        for (String folderPath : totals.keySet())
+        {
+            String key = folderPath;
+            Long total = totals.get(folderPath);
+
+            newValueMap.put(key, total.toString());
+            Long previousCount = null;
+            if (oldValueMap != null && oldValueMap.containsKey(key))
+            {
+                previousCount = oldValueMap.getLong(key);
+            }
+
+            String formattedTotal = total == null ? "" : NumberFormat.getInstance().format(total);
+            String formattedPreviousCount = previousCount == null ? "" : NumberFormat.getInstance().format(previousCount);
+            String pctChange = getPctChange(previousCount, total, 0.05);
+
+            msg.append("<tr><td>").append(folderPath).append("</td><td>").append(formattedTotal).append("</td><td>").append(formattedPreviousCount).append("</td>").append(pctChange).append("</tr>");
+        }
+
+        msg.append("</table><p></p><hr>");
+
+        if (newValueMap.size() > 0)
+            toSave.put(rowCount, new JSONObject(newValueMap).toString());
+    }
+
     public void getDataSummary(Container c, User u, final StringBuilder msg, Map<String, String> saved, Map<String, String> toSave)
     {
         msg.append("<br><b>Data Summary:</b><br>");
@@ -160,7 +225,7 @@ public class LabSummaryNotification implements Notification
         msg.append("<tr style='font-weight:bold;'><td>").append("Name").append("</td><td>").append("# of Rows").append("</td><td>").append("Previous Value").append("</td><td>").append("% Change").append("</td></tr>");
 
         String rowCount = "rowCount";
-        Map<String, String> newValueMap = new HashMap<String, String>();
+        Map<String, String> newValueMap = new HashMap<>();
         JSONObject oldValueMap = saved.containsKey(rowCount) ? new JSONObject(saved.get(rowCount)) : null;
 
         Set<DataProvider> providers = LaboratoryService.get().getDataProviders();
@@ -184,10 +249,11 @@ public class LabSummaryNotification implements Notification
                 previousCount = oldValueMap.getLong(key);
             }
 
+            String formattedTotal = total == null ? "" : NumberFormat.getInstance().format(total);
             String formattedPreviousCount = previousCount == null ? "" : NumberFormat.getInstance().format(previousCount);
             String pctChange = getPctChange(previousCount, total, 0.05);
 
-            msg.append("<tr><td>").append(item.getLabel()).append("</td><td>").append(total.toString()).append("</td><td>").append(formattedPreviousCount).append("</td>").append(pctChange).append("</tr>");
+            msg.append("<tr><td>").append(item.getLabel()).append("</td><td>").append(formattedTotal).append("</td><td>").append(formattedPreviousCount).append("</td>").append(pctChange).append("</tr>");
         }
 
         msg.append("</table><p></p><hr>");
@@ -203,10 +269,10 @@ public class LabSummaryNotification implements Notification
         String fileRootSizes = "fileRootSizes";
         String fileRootCounts = "fileRootCounts";
 
-        Map<String, String> newValueMap = new HashMap<String, String>();
+        Map<String, String> newValueMap = new HashMap<>();
         JSONObject oldValueMap = saved.containsKey(fileRootSizes) ? new JSONObject(saved.get(fileRootSizes)) : null;
 
-        Map<String, String> newValueMapCounts = new HashMap<String, String>();
+        Map<String, String> newValueMapCounts = new HashMap<>();
         JSONObject oldValueMapCounts = saved.containsKey(fileRootCounts) ? new JSONObject(saved.get(fileRootCounts)) : null;
 
         JSONArray ret = new JSONArray();

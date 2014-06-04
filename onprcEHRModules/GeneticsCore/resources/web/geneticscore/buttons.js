@@ -2,7 +2,7 @@ Ext4.ns('GeneticsCore');
 
 GeneticsCore.buttons = new function(){
     return {
-        addGeneticsFlagsForSamples: function(dataRegionName, el){
+        editGeneticsFlagsForSamples: function(dataRegionName, el, mode){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
             if(!checked || !checked.length){
@@ -45,7 +45,7 @@ GeneticsCore.buttons = new function(){
                         return;
 
                     Ext4.create('GeneticsCore.window.ManageFlagsWindow', {
-                        mode: 'add',
+                        mode: (mode || 'add'),
                         dataRegion: dataRegion,
                         subjectIds: subjects,
                         successHandler: function(response){

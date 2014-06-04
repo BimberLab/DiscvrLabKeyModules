@@ -22,6 +22,26 @@ EHR.model.DataModelManager.registerMetadata('Reversals', {
             creditedaccount: {
                 hidden: false,
                 lookups: false
+            },
+            chargetype: {
+                hidden: true,
+                allowBlank: true
+            },
+            chargecategory: {
+                hidden: false
+            },
+            project: {
+                allowBlank: true
+            },
+            issueId: {
+                hidden: false
+            },
+            sourceInvoicedItem: {
+                hidden: false,
+                userEditable: false,
+                columnConfig: {
+                    width: 180
+                }
             }
         }
     }

@@ -61,9 +61,13 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
     @Override
     protected void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
-        SimpleButtonConfigFactory btn1 = new SimpleButtonConfigFactory(this, "Add Genetics Blood Draw Flags", "GeneticsCore.buttons.addGeneticsFlagsForSamples(dataRegionName, arguments[0] ? arguments[0].ownerCt : null)");
+        SimpleButtonConfigFactory btn1 = new SimpleButtonConfigFactory(this, "Add Genetics Blood Draw Flags", "GeneticsCore.buttons.editGeneticsFlagsForSamples(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'add')");
         btn1.setClientDependencies(ClientDependency.fromModuleName("laboratory"), ClientDependency.fromModuleName("ehr"), ClientDependency.fromFilePath("geneticscore/window/ManageFlagsWindow.js"), ClientDependency.fromFilePath("geneticscore/buttons.js"));
         LaboratoryService.get().registerQueryButton(btn1, "laboratory", "samples");
+
+        SimpleButtonConfigFactory btn2 = new SimpleButtonConfigFactory(this, "Remove Genetics Blood Draw Flags", "GeneticsCore.buttons.editGeneticsFlagsForSamples(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'remove')");
+        btn2.setClientDependencies(ClientDependency.fromModuleName("laboratory"), ClientDependency.fromModuleName("ehr"), ClientDependency.fromFilePath("geneticscore/window/ManageFlagsWindow.js"), ClientDependency.fromFilePath("geneticscore/buttons.js"));
+        LaboratoryService.get().registerQueryButton(btn2, "laboratory", "samples");
 
         NotificationService.get().registerNotification(new GeneticsCoreNotification());
     }

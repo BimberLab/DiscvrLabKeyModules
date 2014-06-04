@@ -12,6 +12,10 @@
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.FileCleanupTask$Factory">
                     <!--<property name="location" value="sequenceAnalysis" />-->
+                    <property name="join" value="false" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.FileCleanupTask$Factory">
+                    <!--<property name="location" value="sequenceAnalysis" />-->
                     <property name="join" value="true" />
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.PrepareAlignerIndexesTask$Factory">

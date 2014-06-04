@@ -42,7 +42,7 @@
                     header: 'Current Billing Period / Adjustments',
                     items: [
                         {name: 'Billing Period Summary / Discrepancy Report', url: LABKEY.ActionURL.buildURL('ldk', 'runNotification', ctx.EHRStudyContainer, {key: 'org.labkey.onprc_billing.notification.FinanceNotification'})},
-                        {name: 'View Invalid/Overlapping Project/Alias Combinations', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'invalidProjectAccountEntries'})},
+                        {name: 'View Overlapping Project/Alias Combinations', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'invalidProjectAccountEntries'})},
                         {name: 'Estimated Charges By Project', url: LABKEY.ActionURL.buildURL('onprc_billing', 'invoiceEstimate', null)},
                         {name: 'View Adjustments Not Yet Billed', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'miscChargesWithRates', 'query.viewName': 'Adjustment Detail', 'query.sourceInvoicedItem/transactionNumber~isnonblank': null, 'query.invoiceId/rowId~isblank': null})},
                         {name: 'View All Manually Entered Charges Not Yet Billed', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx.EHRStudyContainer, {schemaName: 'onprc_billing', 'query.queryName': 'miscChargesWithRates', 'query.invoiceId/rowId~isblank': null})},
@@ -68,15 +68,20 @@
                 },{
                     header: 'Rates and Fee Structure',
                     items: [
+                        {name: 'Explanation of Rates', url: LABKEY.ActionURL.buildURL('onprc_billing', 'rateCalculation')},
                         {name: 'Chargeable Items', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeableItems', 'query.viewName': 'Active Items', showImport: true})},
                         {name: 'Standard Rates', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRates', 'query.viewName': 'Active Rates', showImport: true})},
                         //note: exemptions uses ehr controller so we can apply metadata for the project field.
-                        {name: 'Rate Exemptions', url: LABKEY.ActionURL.buildURL(ehrQueryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRateExemptions', 'query.viewName': 'Active Items', showImport: true})},
+                        {name: 'Project-Level Multipliers', url: LABKEY.ActionURL.buildURL(ehrQueryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'projectMultipliers', 'query.viewName': 'Active Items', showImport: true})},
+                        {name: 'Item-Level Rate Exemptions', url: LABKEY.ActionURL.buildURL(ehrQueryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeRateExemptions', 'query.viewName': 'Active Items', showImport: true})},
                         {name: 'Aliases Receiving Credit Per Item', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'creditAccount', 'query.viewName': 'Active Items', showImport: true})},
+                        {name: 'Charge Units', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeUnits', 'query.viewName': 'Active Items', showImport: true})},
+                        {name: 'Charge Unit Credit Aliases', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'chargeUnitAccounts', showImport: true})},
+                        {name: 'Alias Types & Rate Modifiers', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'aliasTypes'})},
 
-                        {name: 'Blood Draw Fee Structure', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'bloodDrawFeeDefinition'})},
                         {name: 'Labwork Fee Structure', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'labworkFeeDefinition'})},
                         {name: 'Lease Fee Structure', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'leaseFeeDefinition'})},
+                        {name: 'Medication Fee Structure', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'medicationFeeDefinition'})},
                         {name: 'NHP Per Diem Fee Structure', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'perDiemFeeDefinition'})},
                         {name: 'Procedure Fee Structure', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'procedureFeeDefinition'})},
                         {name: 'SLA Per Diem Fee Structure', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'slaPerDiemFeeDefinition'})}

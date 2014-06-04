@@ -6,6 +6,7 @@
         <column name="activeRate/unitcost"/>
         <column name="activeRate/subsidy"/>
         <column name="activeCreditAccount/account"/>
+        <column name="canRaiseFA"/>
         <column name="totalExemptions"/>
         <column name="category"/>
         <column name="departmentCode"/>

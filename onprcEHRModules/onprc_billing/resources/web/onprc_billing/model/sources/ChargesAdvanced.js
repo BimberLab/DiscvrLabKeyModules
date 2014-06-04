@@ -18,6 +18,10 @@ EHR.model.DataModelManager.registerMetadata('ChargesAdvanced', {
             debitedaccount: {
                 hidden: false,
                 lookups: false
+            },
+            chargetype: {
+                allowBlank: true,
+                hidden: true
             }
         }
     }

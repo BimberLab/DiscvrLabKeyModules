@@ -14,7 +14,7 @@ SELECT
   mc.quantity,
   mc.unitCost,
   mc.category,
-  mc.chargeType,
+  mc.chargeCategory,
   mc.invoicedItemId,
   mc.objectid as sourceRecord,
   mc.comment,

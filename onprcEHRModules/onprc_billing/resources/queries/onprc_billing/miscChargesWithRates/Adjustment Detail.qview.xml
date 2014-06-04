@@ -9,7 +9,7 @@
         <column name="chargeId"/>
         <column name="unitcost"/>
         <column name="quantity"/>
-        <column name="chargetype"/>
+        <column name="chargecategory"/>
         <column name="comment"/>
         <column name="invoiceId"/>
         <column name="createdby"/>

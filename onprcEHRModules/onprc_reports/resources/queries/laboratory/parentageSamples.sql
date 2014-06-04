@@ -4,4 +4,4 @@ s.sampletype,
 s.quantity
 
 FROM laboratory.samples s
-WHERE s.container = '4696CCDD-CB09-1030-8D66-5107380A00F7' AND dateremoved is null
+WHERE s.container = '438EA075-CCA5-1031-BD48-5107380A722C' AND dateremoved is null

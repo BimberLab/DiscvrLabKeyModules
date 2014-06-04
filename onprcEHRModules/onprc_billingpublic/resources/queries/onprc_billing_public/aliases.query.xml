@@ -19,6 +19,14 @@
                             <fkDisplayColumnName>lastName</fkDisplayColumnName>
                         </fk>
                     </column>
+                    <column columnName="aliasType">
+                        <fk>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
+                            <fkTable>aliasTypes</fkTable>
+                            <fkColumnName>aliasType</fkColumnName>
+                            <fkDisplayColumnName>aliasType</fkDisplayColumnName>
+                        </fk>
+                    </column>
                 </columns>
             </table>
         </tables>

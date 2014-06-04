@@ -151,12 +151,23 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
 
     private void loadTransactionNumber()
     {
-        SqlSelector se = new SqlSelector(ONPRC_BillingSchema.getInstance().getSchema(), new SQLFragment("select max(cast(transactionNumber as integer)) as expr from " + ONPRC_BillingSchema.NAME+ "." + ONPRC_BillingSchema.TABLE_INVOICED_ITEMS + " WHERE ISNUMERIC(transactionNumber) = " + DbScope.getLabkeyScope().getSqlDialect().getBooleanTRUE()));
+        SqlSelector se;
+        if (DbScope.getLabkeyScope().getSqlDialect().isSqlServer())
+            se = new SqlSelector(ONPRC_BillingSchema.getInstance().getSchema(), new SQLFragment("select max(cast(transactionNumber as integer)) as expr from " + ONPRC_BillingSchema.NAME+ "." + ONPRC_BillingSchema.TABLE_INVOICED_ITEMS + " WHERE ISNUMERIC(transactionNumber) = " + DbScope.getLabkeyScope().getSqlDialect().getBooleanTRUE()));
+        else if (DbScope.getLabkeyScope().getSqlDialect().isPostgreSQL())
+        {
+            se = new SqlSelector(ONPRC_BillingSchema.getInstance().getSchema(), new SQLFragment("select max(cast(transactionNumber as integer)) as expr from " + ONPRC_BillingSchema.NAME+ "." + ONPRC_BillingSchema.TABLE_INVOICED_ITEMS + " WHERE transactionNumber ~ '^[0-9]$'"));
+        }
+        else
+        {
+            throw new UnsupportedOperationException("The billing pipeline is only supported on sqlserver and postgres");
+        }
+
         Integer[] rows = se.getArray(Integer.class);
 
         if (rows.length == 1)
         {
-            _lastTransactionNumber = rows[0];
+            _lastTransactionNumber = rows[0] == null ? 0 : rows[0];
         }
         else if (rows.length == 0)
         {
@@ -297,7 +308,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
             "project", "debitedaccount", "investigatorid", "faid", "firstname", "lastname", "department", "contactphone",
             "creditedaccount",
             "quantity", "unitCost", "totalcost",
-            "rateId", "exemptionId", "creditaccountid", "comment", "transactionType", "sourceRecord", "chargeType"};
+            "rateId", "exemptionId", "creditaccountid", "comment", "transactionType", "sourceRecord", "chargeCategory"};
 
     private void writeToInvoicedItems(List<Map<String, Object>> rows, String category, String[] colNames, String queryName, boolean allowNullProject) throws PipelineJobException
     {
@@ -412,7 +423,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
                 "comment",
                 null, //transaction type
                 "sourceRecord",
-                "chargeType",
+                "chargeCategory",
                 "enddate", "projectedReleaseCondition", "releaseCondition", "assignCondition", "ageAtTime", "category", "leaseCharge1", "leaseCharge2",
             };
 
@@ -510,7 +521,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
                 "comment",
                 null, //transaction type
                 "sourceRecord", //source record
-                "chargeType",
+                "chargeCategory",
 
                 "effectiveDays"};
 
@@ -563,7 +574,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
                 "comment",
                 null, //transaction type
                 "sourceRecord",
-                "chargeType",
+                "chargeCategory",
                 };
 
         String queryName = "slaPerDiemRates";
@@ -607,7 +618,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
                 "comment",
                 null, //transaction type
                 "sourceRecord",
-                "chargeType",
+                "chargeCategory",
 
                 "procedureId"
         };
@@ -653,7 +664,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
                 "comment",
                 null, //transaction type
                 "sourceRecord",
-                "chargeType",
+                "chargeCategory",
 
                 "servicerequested"
         };
@@ -699,7 +710,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
                 "comment",
                 null, //transaction type
                 "sourceRecord",
-                "chargeType"
+                "chargeCategory"
         };
 
         List<Map<String, Object>> rows = getRowList(ehrContainer, "onprc_billing", MISC_CHARGES_QUERY, colNames, params);

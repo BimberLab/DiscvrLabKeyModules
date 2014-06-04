@@ -81,7 +81,7 @@ GROUP BY f.Id
 LEFT JOIN (
   SELECT
     m.subjectId
-  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.DNA_Bank.parentageSamples m
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.ParentageSamples.parentageSamples m
   WHERE m.sampletype IN ('gDNA', 'Whole Blood')
   GROUP BY m.subjectId
 ) freezer ON (freezer.subjectId = d.Id)

@@ -6,6 +6,7 @@
         <tableName>alignment_summary_by_lineage</tableName>
         <tableName>alignment_summary_grouped</tableName>
         <tableName>alignment_summary</tableName>
+        <tableName>mhcSamples</tableName>
     </tables>
     <metadata>
         <ns:tables xmlns:ns="http://labkey.org/data/xml">

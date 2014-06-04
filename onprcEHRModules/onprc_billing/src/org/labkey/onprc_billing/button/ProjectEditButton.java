@@ -22,7 +22,7 @@ public class ProjectEditButton extends EHRShowEditUIButton
 
     public ProjectEditButton(Module owner, String schemaName, String queryName, Class<? extends Permission> clazz)
     {
-        super(owner, schemaName, queryName, ONPRCBillingAdminPermission.class);
+        super(owner, schemaName, queryName, clazz);
 
         Map<String, String> urlParams = new HashMap<>();
         urlParams.put("project", "query.project~eq");

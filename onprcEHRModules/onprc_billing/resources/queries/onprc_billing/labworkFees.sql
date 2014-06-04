@@ -13,18 +13,17 @@ SELECT
   e.date,
   e.datefinalized as billingDate,
   e.project,
-  e.project.account,
   e.servicerequested,
   p.chargeId,
   e.objectid as sourceRecord,
-  null as chargeType,
+  null as chargeCategory,
   e.taskid
 
 FROM study.clinpathRuns e
 JOIN onprc_billing.labworkFeeDefinition p ON (p.servicename = e.servicerequested AND p.active = true)
 
 WHERE CAST(e.datefinalized as date) >= CAST(StartDate as date) AND CAST(e.datefinalized as date) <= CAST(EndDate as date)
-AND (e.chargetype not in ('Not Billable', 'Research Staff') or e.chargetype is null)
+AND (e.chargetype not in ('Not Billable', 'No Charge', 'Research Staff') or e.chargetype is null)
 AND e.qcstate.publicdata = true
 
 UNION ALL
@@ -35,16 +34,15 @@ SELECT
   e.dateOnly,
   e.datefinalized as billingDate,
   e.project,
-  e.project.account,
   group_concat(e.servicerequested) as servicerequested,
   (SELECT c.rowid FROM onprc_billing_public.chargeableItems c WHERE c.name = 'Lab Processing Fee') as chargeId,
   null as sourceRecord,
-  null as chargeType,
+  null as chargeCategory,
   e.taskid
 
 FROM study.clinpathRuns e
 WHERE CAST(e.datefinalized as date) >= CAST(StartDate as date) AND CAST(e.datefinalized as date) <= CAST(EndDate as date)
 AND e.qcstate.publicdata = true
-AND e.chargetype != 'Not Billable'
+AND (e.chargetype not in ('Not Billable', 'No Charge', 'Research Staff') or e.chargetype is null)
 AND e.servicerequested.outsidelab = true
-GROUP BY e.Id, e.dateOnly, e.datefinalized, e.project, e.project.account, e.tissue, e.taskid
+GROUP BY e.Id, e.dateOnly, e.datefinalized, e.project, e.tissue, e.taskid

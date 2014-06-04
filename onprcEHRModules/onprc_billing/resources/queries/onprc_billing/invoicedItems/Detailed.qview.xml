@@ -16,7 +16,7 @@
         <column name="quantity"/>
         <column name="totalcost"/>
         <column name="comment"/>
-        <column name="chargeType"/>
+        <column name="chargeCategory"/>
         <column name="billingdate"/>
 
         <column name="rateId"/>

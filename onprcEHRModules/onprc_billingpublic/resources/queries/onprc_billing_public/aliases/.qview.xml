@@ -8,6 +8,7 @@
         <column name="investigatorName"/>
         <column name="fiscalAuthority"/>
         <column name="faSchedule"/>
+        <column name="aliasType"/>
         <column name="projectTitle"/>
         <column name="projectDescription"/>
         <column name="budgetStartDate"/>

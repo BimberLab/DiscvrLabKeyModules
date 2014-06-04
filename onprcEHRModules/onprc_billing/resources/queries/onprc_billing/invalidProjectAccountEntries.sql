@@ -16,11 +16,11 @@
 --first find overlapping intervals
 SELECT
   r1.project,
-  r1.rowid as rowid1,
+  r1.rowid as rowId1,
   r1.account,
   r1.startDate as startDate1,
   r1.enddate as endDate1,
-  r2.rowid as rowid2,
+  r2.rowid as rowId2,
   r2.account as account2,
   r2.startDate as startDate2,
   r2.enddate as endDate2

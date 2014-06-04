@@ -3,6 +3,7 @@
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="procedureFeeRates" tableDbType="TABLE">
                 <tableTitle>Procedure Charges</tableTitle>
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
                 <columns>
                     <column columnName="project">
                         <fk>
@@ -53,7 +54,7 @@
                         </fk>
                     </column>
                     <column columnName="isExemption">
-                        <columnTitle>Is Special Fee?</columnTitle>
+                        <columnTitle>Is Rate Exemption?</columnTitle>
                     </column>
                     <column columnName="creditAccount">
                         <columnTitle>Credit Alias</columnTitle>

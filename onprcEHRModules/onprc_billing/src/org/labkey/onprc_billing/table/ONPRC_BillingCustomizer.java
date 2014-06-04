@@ -12,6 +12,7 @@ import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.table.AbstractTableCustomizer;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
@@ -58,6 +59,14 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             {
                 customizeChargeableItems((AbstractTableInfo) table);
             }
+            else if (matches(table, "onprc_billing", "chargeUnits"))
+            {
+                customizeChargeUnits((AbstractTableInfo) table);
+            }
+            else if (matches(table, "onprc_billing_public", "chargeUnits"))
+            {
+                customizeChargeUnits((AbstractTableInfo) table);
+            }
             else if (matches(table, "onprc_billing", "aliases"))
             {
                 customizeAliases((AbstractTableInfo) table);
@@ -70,10 +79,91 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             {
                 customizeProjects((AbstractTableInfo) table);
             }
+            else if(matches(table, "onprc_billing", "labworkFeeRates"))
+            {
+                addTotalCost((AbstractTableInfo) table);
+            }
+            else if(matches(table, "onprc_billing", "leaseFeeRates"))
+            {
+                addTotalCost((AbstractTableInfo) table);
+            }
+            else if(matches(table, "onprc_billing", "miscChargesWithRates"))
+            {
+                addTotalCost((AbstractTableInfo) table);
+            }
+            else if(matches(table, "onprc_billing", "perDiemRates"))
+            {
+                addTotalCost((AbstractTableInfo) table);
+            }
+            else if(matches(table, "onprc_billing", "procedureFeeRates"))
+            {
+                addTotalCost((AbstractTableInfo) table);
+            }
+            else if(matches(table, "onprc_billing", "slaPerDiemRates"))
+            {
+                addTotalCost((AbstractTableInfo) table);
+            }
+            else if(matches(table, "study", "Blood Draws") || matches(table, "study", "blood"))
+            {
+                addChargeUnitLookup((AbstractTableInfo) table, "bloodChargeType");
+            }
+            else if(matches(table, "study", "Clinical Encounters") || matches(table, "study", "encounters"))
+            {
+                addChargeUnitLookup((AbstractTableInfo) table, "procedureChargeType");
+            }
+            else if(matches(table, "study", "Drug Administration") || matches(table, "study", "drug"))
+            {
+                addChargeUnitLookup((AbstractTableInfo) table, "medicationChargeType");
+            }
         }
     }
 
     private UserSchema _billingUserSchema = null;
+
+    private void addChargeUnitLookup(AbstractTableInfo table, String queryName)
+    {
+        if (table.getColumn(FieldKey.fromString("chargetype")) != null)
+        {
+            UserSchema us = getUserSchema(table, "ehr_lookups");
+            if (us != null)
+            {
+                table.getColumn(FieldKey.fromString("chargetype")).setFk(new QueryForeignKey(us, us.getContainer(), queryName, "value", null, true));
+            }
+        }
+
+        if (table.getColumn(FieldKey.fromString("assistingstaff")) != null)
+        {
+            UserSchema us = getUserSchema(table, "onprc_billing_public");
+            if (us != null)
+            {
+                table.getColumn(FieldKey.fromString("assistingstaff")).setFk(new QueryForeignKey(us, us.getContainer(), "chargeUnits", "chargetype", null, true));
+            }
+        }
+    }
+
+    private void addTotalCost(AbstractTableInfo ti)
+    {
+        ColumnInfo unitCost = ti.getColumn("unitCost");
+        if (unitCost != null)
+        {
+            unitCost.setFormat("$###,##0.00");
+        }
+
+        if (ti.getColumn("totalCost") == null && unitCost != null && ti.getColumn("quantity") != null)
+        {
+            SQLFragment sql = new SQLFragment("(" + ExprColumn.STR_TABLE_ALIAS + ".unitCost * " + ExprColumn.STR_TABLE_ALIAS + ".quantity)");
+            ExprColumn totalCost = new ExprColumn(ti, "totalCost", sql, JdbcType.DOUBLE, ti.getColumn("unitCost"), ti.getColumn("quantity"));
+            totalCost.setLabel("Total Cost");
+            totalCost.setFormat("$###,##0.00");
+            ti.addColumn(totalCost);
+        }
+
+        if (ti.getColumn("nihRate") != null)
+        {
+            ti.getColumn("nihRate").setLabel("NIH Rate");
+            ti.getColumn("nihRate").setFormat("$###,##0.00");
+        }
+    }
 
     private UserSchema getBillingUserSchema(AbstractTableInfo table)
     {
@@ -136,13 +226,19 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         ColumnInfo sourceInvoicedItem = table.getColumn("sourceInvoicedItem");
         if (sourceInvoicedItem != null)
         {
-            sourceInvoicedItem.setFk(new QueryForeignKey(us, us.getContainer(), "invoicedItems", "objectid", "rowid"));
+            sourceInvoicedItem.setFk(new QueryForeignKey(us, us.getContainer(), "invoicedItems", "objectid", "transactionNumber"));
         }
 
         ColumnInfo invoiceId = table.getColumn("invoiceId");
         if (invoiceId != null)
         {
             invoiceId.setFk(new QueryForeignKey(us, us.getContainer(), "invoiceRuns", "objectid", "rowid"));
+        }
+
+        ColumnInfo chargeType = table.getColumn("chargeType");
+        if (chargeType != null)
+        {
+            chargeType.setFk(new QueryForeignKey(us, us.getContainer(), "chargeUnits", "chargeType", null, true));
         }
 
         addAliasLookup(table, "debitedaccount");
@@ -264,7 +360,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             UserSchema us = getUserSchema(ti, "onprc_billing_public");
             if (us != null)
             {
-                projectNumber.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=grantProjects&query.projectNumber~eq=${projectNumber}", us.getContainer()));
+                projectNumber.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.projectNumber~eq=${projectNumber}", us.getContainer()));
             }
         }
 
@@ -297,6 +393,28 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             }
             exemptionId.setLabel("Rate Exemption");
         }
+
+        ColumnInfo chargeType = ti.getColumn("chargetype");
+        if (chargeType != null)
+        {
+            chargeType.setLabel("Charge Unit");
+
+        }
+    }
+
+    private void customizeChargeUnits(AbstractTableInfo ti)
+    {
+        String activeAccount = "activeAccount";
+        if (ti.getColumn(activeAccount) == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT max(account) as expr FROM " + ONPRC_BillingSchema.NAME + "." + ONPRC_BillingSchema.TABLE_CHARGE_UNIT_ACCOUNT + " cr WHERE cr.chargetype = " + ExprColumn.STR_TABLE_ALIAS + ".chargetype AND (cr.enddate IS NULL OR cr.enddate > {fn curdate()}) AND cr.startdate <= {fn curdate()})");
+            ExprColumn col = new ExprColumn(ti, activeAccount, sql, JdbcType.INTEGER, ti.getColumn("chargetype"));
+            col.setLabel("Active Alias");
+            col.setIsUnselectable(true);
+            ti.addColumn(col);
+        }
+        //NOTE: this is separated to allow linked schemas to use the same column
+        ti.getColumn(activeAccount).setFk(new QueryForeignKey(ti.getUserSchema(), null, ONPRC_BillingSchema.TABLE_CHARGE_UNIT_ACCOUNT, "rowid", "rowid"));
     }
 
     private void customizeChargeableItems(AbstractTableInfo ti)
@@ -350,31 +468,56 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
 
     private void customizeProjects(AbstractTableInfo ti)
     {
-        //TODO: enable once data is cleaned
-//        ColumnInfo accountCol = ti.getColumn("account");
-//        ti.removeColumn(accountCol);
-//        SQLFragment sql4 = new SQLFragment("(SELECT " + ti.getSqlDialect().getGroupConcat(new SQLFragment("pa.account"), true, true) + " as expr FROM onprc_billing.projectAccountHistory pa WHERE pa.project = " + ExprColumn.STR_TABLE_ALIAS + ".project AND (" + getIsActiveSql(ti) + ") = " + ti.getSqlDialect().getBooleanTRUE() + ")");
-//        ExprColumn newAccountCol = new ExprColumn(ti, "account", sql4, JdbcType.VARCHAR, ti.getColumn("project"));
-//        newAccountCol.setLabel(accountCol.getLabel());
-//        ti.addColumn(newAccountCol);
+        ColumnInfo accountCol = ti.getColumn("account");
+        ti.removeColumn(accountCol);
+        SQLFragment sql4 = new SQLFragment("(SELECT " + ti.getSqlDialect().getGroupConcat(new SQLFragment("pa.account"), true, true) + " as expr FROM onprc_billing.projectAccountHistory pa WHERE pa.project = " + ExprColumn.STR_TABLE_ALIAS + ".project AND (").append(getIsActiveSql(ti, "pa")).append(") = " + ti.getSqlDialect().getBooleanTRUE() + ")");
+        ExprColumn newAccountCol = new ExprColumn(ti, "account", sql4, JdbcType.VARCHAR, ti.getColumn("project"));
+        newAccountCol.setLabel(accountCol.getLabel());
+        newAccountCol.setLabel("Alias");
+        if (newAccountCol.getFk() == null)
+        {
+            UserSchema us = getUserSchema(ti, "onprc_billing_public");
+            if (us != null)
+            {
+                newAccountCol.setFk(new QueryForeignKey(us, null, "aliases", "alias", "alias", true));
+                newAccountCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${account}", us.getContainer()));
+            }
+        }
+
+        ti.addColumn(newAccountCol);
     }
 
     private SQLFragment getIsActiveSql(AbstractTableInfo ti)
     {
+        return getIsActiveSql(ti, ExprColumn.STR_TABLE_ALIAS);
+    }
+
+    private SQLFragment getIsActiveSql(AbstractTableInfo ti, String tableAlias)
+    {
         return new SQLFragment("(CASE " +
                 // when the start is in the future, using whole-day increments, it is not active
-                " WHEN (CAST(" + ExprColumn.STR_TABLE_ALIAS + ".startdate as DATE) > {fn curdate()}) THEN " + ti.getSqlDialect().getBooleanFALSE() +
+                " WHEN (CAST(" + tableAlias + ".startdate as DATE) > {fn curdate()}) THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
                 // when enddate is null, it is active
-                " WHEN (" + ExprColumn.STR_TABLE_ALIAS + ".enddate IS NULL) THEN " + ti.getSqlDialect().getBooleanTRUE() +
+                " WHEN (" + tableAlias + ".enddate IS NULL) THEN " + ti.getSqlDialect().getBooleanTRUE() + "\n" +
                 // if enddate is in the future (whole-day increments), then it is active
-                " WHEN (CAST(" + ExprColumn.STR_TABLE_ALIAS + ".enddate AS DATE) > {fn curdate()}) THEN " + ti.getSqlDialect().getBooleanTRUE() +
-                " ELSE " + ti.getSqlDialect().getBooleanFALSE() +
+                " WHEN (CAST(" + tableAlias + ".enddate AS DATE) > {fn curdate()}) THEN " + ti.getSqlDialect().getBooleanTRUE() + "\n" +
+                " ELSE " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
                 " END)");
     }
 
     private void customizeAliases(AbstractTableInfo ti)
     {
         LDKService.get().appendCalculatedDateColumns(ti, null, "budgetEndDate");
+
+        ColumnInfo aliasType = ti.getColumn(FieldKey.fromString("aliasType"));
+        if (aliasType != null && aliasType.getFk() == null)
+        {
+            UserSchema us = getUserSchema(ti, "onprc_billing_public");
+            if (us != null)
+            {
+                aliasType.setFk(new QueryForeignKey(us, null, "aliasTypes", "aliasType", null, true));
+            }
+        }
     }
 
     private void customizeInvoiceRuns(AbstractTableInfo table)

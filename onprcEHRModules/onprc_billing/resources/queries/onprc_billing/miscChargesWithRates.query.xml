@@ -48,7 +48,7 @@
                         </fk>
                     </column>
                     <column columnName="isExemption">
-                        <columnTitle>Is Special Fee?</columnTitle>
+                        <columnTitle>Is Rate Exemption?</columnTitle>
                     </column>
                     <column columnName="unitCost">
                         <columnTitle>Unit Cost</columnTitle>

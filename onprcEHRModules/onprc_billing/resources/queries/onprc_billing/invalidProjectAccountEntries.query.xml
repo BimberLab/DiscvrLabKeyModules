@@ -2,7 +2,7 @@
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="invalidProjectAccountEntries" tableDbType="TABLE">
-                <tableTitle>Invalid Project/Account Entries</tableTitle>
+                <tableTitle>Overlapping Project/Account Entries</tableTitle>
                 <columns>
 
                 </columns>

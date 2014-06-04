@@ -180,8 +180,12 @@ public class FinanceNotification extends AbstractNotification
             containerMap.put("Other Charges", ehrContainer);
         }
 
+        //added first due to importance
+        simpleAlert(c, u , msg, "onprc_billing", "invalidProjectAccountEntries", " project/alias records with invalid or overlapping intervals.  This is a potentially serious problem that could result in improper or duplicate charges.  These should be corrected ASAP.");
+
         writeResultTable(msg, lastInvoiceDate, start, endDate, dataMap, totalsByCategory, categoryToQuery, containerMap);
 
+        getInvalidProjectAliases(c, u , msg);
         getExpiredAliases(c, u , msg);
         getAliasesDisabled(c, u, msg);
         getProjectsWithoutAliases(c, u, msg);
@@ -192,9 +196,10 @@ public class FinanceNotification extends AbstractNotification
         surgeriesNotBilled(c, u, start, endDate, msg);
         simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidChargeRateEntries", " charge rate records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
         simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidChargeRateExemptionEntries", " charge rate exemptions with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
+        simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidProjectMultiplierEntries", " project multipliers with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
         simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidCreditAccountEntries", " credit account records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
+        simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidChargeUnitAccounts", " charge unit account records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
         simpleAlert(financeContainer, u , msg, "onprc_billing", "duplicateChargeableItems", " active chargeable item records with duplicate names or item codes.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
-        simpleAlert(c, u , msg, "onprc_billing", "invalidProjectAccountEntries", " project/alias records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
 
         return msg.toString();
     }
@@ -272,11 +277,13 @@ public class FinanceNotification extends AbstractNotification
         new FieldDescriptor("lacksRate", true, "Lacks Rate", true),
         new FieldDescriptor("creditAccount", false, "Missing Credit Alias", true),
         new FieldDescriptor("isMissingFaid", true, "Missing FAID", true),
-        new FieldDescriptor("investigatorId", false, "Missing Investigator", true),
+        new FieldDescriptor("investigatorId/lastName", false, "Missing Investigator", true),
+        new FieldDescriptor("isUnknownAliasType", true, "Unknown Alias Type", true),
         new FieldDescriptor("matchesProject", true, "Project Does Not Match Assignment", false),
         //new FieldDescriptor("isMiscCharge", true, "Manually Entered", false),
         new FieldDescriptor("isAdjustment", true, "Adjustment/Reversal", false),
         new FieldDescriptor("isExemption", true, "Rate Exemption", false),
+        new FieldDescriptor("isNonStandardRate", true, "Industry/Reduced F&A", false),
         new FieldDescriptor("isOldCharge", true, "Over 45 Days Old", false),
         new FieldDescriptor("isMultipleProjects", true, "Per Diems Split Between Projects", false)
     };
@@ -324,15 +331,15 @@ public class FinanceNotification extends AbstractNotification
                 if (totalsMap == null)
                     totalsMap = new HashMap<>();
 
-                Double totalCost = rs.getDouble(FieldKey.fromString("totalCost"));
-                if (totalCost != null)
+                Double unitCost = rs.getDouble(FieldKey.fromString("unitCost"));
+                Double quantity = rs.getDouble(FieldKey.fromString("quantity"));
+                if (unitCost != null && quantity != null)
                 {
                     Double t = totalsMap.containsKey("totalCost") ? totalsMap.get("totalCost") : 0.0;
-                    t += totalCost;
+                    t += (quantity * unitCost);
                     totalsMap.put("totalCost", t);
                 }
 
-                Double quantity = rs.getDouble(FieldKey.fromString("quantity"));
                 if (quantity != null)
                 {
                     Double t = totalsMap.containsKey("total") ? totalsMap.get("total") : 0.0;
@@ -621,6 +628,21 @@ public class FinanceNotification extends AbstractNotification
             msg.append("<a href='" + getExecuteQueryUrl(c, "ehr", "project", "Alias Info") + "&" + filter.toQueryString("query") + "'>Click here to view them</a>");
             msg.append("<hr>");
         }
+    }
+
+    private void getInvalidProjectAliases(Container c, User u, StringBuilder msg)
+    {
+        TableInfo ti = QueryService.get().getUserSchema(u, c, "ehr").getTable("project");
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("account"), ",", CompareType.CONTAINS);
+        TableSelector ts = new TableSelector(ti, filter, null);
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            msg.append("<b>Warning: there are " + count + " ONPRC projects with duplicate active aliases.</b><p>");
+            msg.append("<a href='" + getExecuteQueryUrl(c, "ehr", "project", "Alias Info") + "&" + filter.toQueryString("query") + "'>Click here to view them</a>");
+            msg.append("<hr>");
+        }
+
     }
 
     private void getExpiredAliases(Container c, User u, StringBuilder msg)

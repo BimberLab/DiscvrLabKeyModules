@@ -159,16 +159,24 @@ public class RequestSyncHelper
 
                 //create 1 record per batch of tests
                 String patientId = createPatientIfNeeded(mergeSchema, _container, _user, (String)records.get(0).get("Id"));
-                Integer personnelId = getUserId(mergeSchema, _user);
-                if (personnelId == null)
+                Integer doctorId = getMergeUserId(mergeSchema, _user, "DOC");
+                Integer techId = getMergeUserId(mergeSchema, _user, "TECH");
+                if (doctorId == null)
                 {
+                    _log.error("Unable to resolve merge user id for: " + _user.getEmail() + " with role: DOC");
+                    return;
+                }
+
+                if (techId == null)
+                {
+                    _log.error("Unable to resolve merge user id for: " + _user.getEmail() + " with role: TECH");
                     return;
                 }
 
                 Integer insuranceId = createInsuranceIfNeeded(mergeSchema, _container, _user, (Integer)records.get(0).get("project"));
-                String visitId = createVisit(mergeSchema, _user, patientId, personnelId, insuranceId, (Date)records.get(0).get("date"));
-                createCopyTo(mergeSchema, _user, patientId, personnelId, visitId);
-                int orderId = createOrder(mergeSchema, _user, patientId, personnelId, visitId, (Date)records.get(0).get("date"));
+                String visitId = createVisit(mergeSchema, _user, patientId, doctorId, techId, insuranceId, (Date)records.get(0).get("date"));
+                createCopyTo(mergeSchema, _user, patientId, doctorId, techId, visitId);
+                int orderId = createOrder(mergeSchema, _user, patientId, doctorId, techId, visitId, (Date)records.get(0).get("date"));
 
                 //then 1 row per service type (clinpath runs record)
                 int letterIdx = 0;
@@ -190,8 +198,8 @@ public class RequestSyncHelper
                     }
                     letterIdx = letterIdx % 26;
 
-                    int containerId = createContainer(mergeSchema, _user, orderId, mergeTestId, personnelId, (Date)records.get(0).get("date"), containerName);
-                    int testId = createTest(mergeSchema, _user, patientId, personnelId, visitId, orderId, containerId, mergeTestId, (Date)row.get("date"), containerName);
+                    int containerId = createContainer(mergeSchema, _user, orderId, mergeTestId, doctorId, techId, (Date)records.get(0).get("date"), containerName);
+                    int testId = createTest(mergeSchema, _user, patientId, visitId, orderId, containerId, mergeTestId, (Date)row.get("date"), containerName);
 
                     //insert record into orderssynced
                     TableInfo ordersSynced = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_ORDERSSYNCED);
@@ -410,8 +418,63 @@ public class RequestSyncHelper
         return i;
     }
 
-    private Integer getUserId(DbSchema mergeSchema, User u)
+    private Integer getMergeUserId(DbSchema mergeSchema, User u, String role)
     {
+        TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_PERSONNEL);
+        Integer mergeUserId = null;
+
+        //make 3 attempts to find the user.  first use login
+        String displayName = u.getEmail();
+        if (displayName != null && displayName.contains("@"))
+        {
+            displayName = displayName.split("@")[0];
+        }
+
+        if (mergeUserId == null && displayName != null)
+        {
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("PR_LOGIN"), displayName, CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("PR_CLASS"), role);
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("PR_NUM"), filter, null);
+            List<Integer> ret = ts.getArrayList(Integer.class);
+            if (ret != null && ret.size() == 1)
+            {
+                mergeUserId = ret.get(0);
+            }
+        }
+
+        //by convention, doctor logins append an 'x' to the end of the login
+        if (mergeUserId == null && displayName != null && "DOC".equals(role))
+        {
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("PR_LOGIN"), displayName + "x", CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("PR_CLASS"), role);
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("PR_NUM"), filter, null);
+            List<Integer> ret = ts.getArrayList(Integer.class);
+            if (ret != null && ret.size() == 1)
+            {
+                mergeUserId = ret.get(0);
+            }
+        }
+
+        //then first/lastname
+        if (mergeUserId == null && u.getLastName() != null && u.getFirstName() != null)
+        {
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("PR_FNAME"), u.getFirstName(), CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("PR_FNAME"), u.getLastName());
+            filter.addCondition(FieldKey.fromString("PR_CLASS"), role);
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("PR_NUM"), filter, null);
+            List<Integer> ret = ts.getArrayList(Integer.class);
+            if (ret != null && ret.size() == 1)
+            {
+                mergeUserId = ret.get(0);
+            }
+        }
+
+        if (mergeUserId != null)
+        {
+            return mergeUserId;
+        }
+
+        //finally default to a static username, defined in module properties
         String mergeUserName = MergeSyncManager.get().getMergeUserName();
         if (mergeUserName == null)
         {
@@ -419,21 +482,22 @@ public class RequestSyncHelper
             return null;
         }
 
-        TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_PERSONNEL);
+        //NOTE: if defaulting back to the default login, always use DOC role
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("PR_LOGIN"), mergeUserName, CompareType.EQUAL);
+        filter.addCondition(FieldKey.fromString("PR_CLASS"), "DOC");
         TableSelector ts = new TableSelector(ti, PageFlowUtil.set("PR_NUM"), filter, null);
         List<Integer> ret = ts.getArrayList(Integer.class);
         
         Integer i = ret == null || ret.isEmpty() ? null : ret.get(0);
         if (i == null)
         {
-            _log.error("Unable to find merge userId matching the login: " + mergeUserName);
+            _log.error("Unable to find merge userId matching the login: " + mergeUserName + " with the role: DOC");
         }
 
         return i;
     }
 
-    private void createCopyTo(DbSchema mergeSchema, User u, String patientId, int personnelId, String visitId) throws SQLException
+    private void createCopyTo(DbSchema mergeSchema, User u, String patientId, int doctorId, int techId, String visitId) throws SQLException
     {
         TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_COPY_TO);
 
@@ -441,12 +505,12 @@ public class RequestSyncHelper
         toInsert.put("CO_PTNUM", patientId);
         toInsert.put("CO_VID", visitId);
         toInsert.put("CO_TYPE", "D");
-        toInsert.put("CO_DOC", personnelId);
+        toInsert.put("CO_DOC", doctorId);
 
         Table.insert(u, ti, toInsert);
     }
 
-    private String createVisit(DbSchema mergeSchema, User u, String patientId, int personnelId, Integer insuranceId, Date date) throws SQLException
+    private String createVisit(DbSchema mergeSchema, User u, String patientId, int doctorId, int techId, Integer insuranceId, Date date) throws SQLException
     {
         TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_VISITS);
 
@@ -457,7 +521,7 @@ public class RequestSyncHelper
         toInsert.put("V_ADMDT", convertDate(date));
         toInsert.put("V_ADTZ", getTZ(date, mergeSchema));
         toInsert.put("V_WARD", "ONPRC");
-        toInsert.put("V_EPRSN", personnelId);
+        toInsert.put("V_EPRSN", techId);
         toInsert.put("V_WORKCOMP", "N");
 
         //find next value in the series
@@ -518,7 +582,7 @@ public class RequestSyncHelper
 
     private char[] ALPHABET = new char[]{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
 
-    private int createContainer(DbSchema mergeSchema, User u, int orderId, int mergeTestId, int personnelId, Date date, Character containerName) throws SQLException
+    private int createContainer(DbSchema mergeSchema, User u, int orderId, int mergeTestId, int doctorId, int techId, Date date, Character containerName) throws SQLException
     {
         TableInfo containerTable = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_CONTAINERS);
         Map<String, Object> testInfo = getMergeTestInfo(mergeSchema, mergeTestId);
@@ -531,7 +595,7 @@ public class RequestSyncHelper
         toInsert.put("CNT_STATUS", "C");
         toInsert.put("CNT_DATE", convertDate(date));
         toInsert.put("CNT_DTZ", getTZ(date, mergeSchema));
-        toInsert.put("CNT_TECH", personnelId);
+        toInsert.put("CNT_TECH", techId);
         toInsert.put("CNT_LOC", null);
         toInsert.put("CNT_CURRLOC", "ONP");
         toInsert.put("CNT_DESTLOC", "ONP");
@@ -546,7 +610,7 @@ public class RequestSyncHelper
         return (Integer)inserted.get("CNT_INDEX");
     }
 
-    private int createOrder(DbSchema mergeSchema, User u, String patientId, int personnelId, String visitId, Date date) throws SQLException
+    private int createOrder(DbSchema mergeSchema, User u, String patientId, int doctorId, int techId, String visitId, Date date) throws SQLException
     {
         TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_ORDERS);
 
@@ -564,8 +628,8 @@ public class RequestSyncHelper
         toInsert.put("O_RCVTZ", getTZ(date, mergeSchema));
         toInsert.put("O_PRIO", 50);
         toInsert.put("O_RPTD", "N");
-        toInsert.put("O_DOCTOR", personnelId);
-        toInsert.put("O_EPRSN", personnelId);
+        toInsert.put("O_DOCTOR", doctorId);
+        toInsert.put("O_EPRSN", techId);
         toInsert.put("O_FASTING", "N");
         toInsert.put("O_LOC", "ONP");
         toInsert.put("O_WARD", "ONPRC");
@@ -598,7 +662,7 @@ public class RequestSyncHelper
         return pair;
     }
 
-    private int createTest(DbSchema mergeSchema, User u, String patientId, int personnelId, String visitId, int accession, int containerId, int mergeTestId, Date date, Character containerName) throws SQLException
+    private int createTest(DbSchema mergeSchema, User u, String patientId, String visitId, int accession, int containerId, int mergeTestId, Date date, Character containerName) throws SQLException
     {
         TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_TEST);
         Map<String, Object> testInfo = getMergeTestInfo(mergeSchema, mergeTestId);

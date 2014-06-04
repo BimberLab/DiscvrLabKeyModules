@@ -31,6 +31,7 @@ public class ONPRC_BillingSchema
     public static final String TABLE_PROJECT_ACCOUNT_HISTORY = "projectAccountHistory";
     public static final String TABLE_CHARGE_RATES = "chargeRates";
     public static final String TABLE_CHARGE_RATE_EXEMPTIONS = "chargeRateExemptions";
+    public static final String TABLE_CHARGE_UNIT_ACCOUNT = "chargeUnitAccounts";
     public static final String TABLE_CREDIT_ACCOUNT = "creditAccount";
     public static final String TABLE_CREDIT_GRANTS = "grants";
     public static final String TABLE_ALIASES = "aliases";

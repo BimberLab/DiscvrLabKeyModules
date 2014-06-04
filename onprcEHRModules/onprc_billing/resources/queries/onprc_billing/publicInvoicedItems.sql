@@ -39,7 +39,7 @@ SELECT
   i.quantity,
   i.unitCost,
   i.totalcost,
-  i.chargetype
+  i.chargeCategory
 
 FROM onprc_billing.invoicedItems i
 WHERE ((SELECT max(rowid) as expr FROM onprc_billing.dataAccess da WHERE isMemberOf(da.userid) AND (

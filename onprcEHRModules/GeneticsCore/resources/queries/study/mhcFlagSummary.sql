@@ -69,7 +69,7 @@ LEFT JOIN (
   SELECT
     m.subjectId,
     count(*) as total
-  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.DNA_Bank.mhcSamples m
+  FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.MHC_Data.mhcSamples m
   WHERE m.sampletype IN ('RNA', 'Whole Blood')
   GROUP BY m.subjectId
 ) mhc ON (mhc.subjectId = d.Id)

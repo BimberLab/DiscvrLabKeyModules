@@ -14,7 +14,7 @@
         <column name="quantity"/>
         <column name="totalcost"/>
         <column name="comment"/>
-        <column name="chargetype"/>
+        <column name="chargecategory"/>
     </columns>
     <sorts>
         <sort column="invoiceId/rowid" descending="true"/>

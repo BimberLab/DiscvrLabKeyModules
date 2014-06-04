@@ -13,12 +13,75 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+SELECT 
+  t.id,
+  t.date,
+  t.enddate,
+  t.project,
+  t.account,
+  t.projectedReleaseCondition,
+  t.releaseCondition,
+  t.assignCondition,
+  t.releaseType,
+  t.ageAtTime,
+  t.category,
+  t.chargeId,
+  t.item,
+
+  t.leaseCharge1,
+  t.leaseCharge2,
+  t.sourceRecord,
+  t.chargeCategory,
+
+  round(CAST(CASE
+    WHEN t.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
+    --handle adjustments and non-adjustments separately
+    WHEN (t.isAdjustment IS NULL) THEN t.unitCost1
+    ELSE (t.unitCost2 - t.unitCost3)
+  END AS DOUBLE), 2) as unitCost,
+  CAST(CASE
+    --handle adjustments and non-adjustments separately
+    WHEN (t.isAdjustment IS NULL) THEN t.nihRate1
+    ELSE (t.nihRate2 - t.nihRate3)
+  END AS DOUBLE) as nihRate,
+
+  t.unitCost1,
+  t.nihRate1,
+  t.unitCost2,
+  t.nihRate2,
+  t.unitCost3,
+  t.nihRate3,
+
+  t.quantity,
+  t.creditAccount,
+  t.creditAccountId,
+  t.comment,
+  t.investigatorId,
+  t.isExemption,
+  t.isNonStandardRate,
+  t.lacksRate,
+  t.rateId,
+  t.exemptionId,
+  t.isMiscCharge,
+  t.isAdjustment,
+  t.isMissingAccount,
+  t.isMissingFaid,
+  t.isAcceptingCharges,
+  t.isExpiredAccount,
+  t.isOldCharge,
+  t.aliasActiveOnDate,
+  t.datefinalized,
+  t.enddatefinalized
+  
+ 
+FROM ( 
 SELECT
   p.id,
   p.date,
   p.enddate,
   p.project,
-  p.project.account,
+  pa.account,
+  p.project.displayName as displayName,
   p.projectedReleaseCondition,
   p.releaseCondition,
   p.assignCondition,
@@ -31,28 +94,100 @@ SELECT
   p.leaseCharge1,
   p.leaseCharge2,
   p.sourceRecord,
-  p.chargeType,
-  CASE
-    WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
-    --handle adjustments and non-adjustments separately
-    WHEN (p.isAdjustment IS NULL) THEN coalesce(e.unitCost, cr.unitCost)
-    ELSE (CAST(coalesce(e3.unitCost, cr3.unitCost) as double) - cast(coalesce(e2.unitCost, cr2.unitCost) as double))
-  END as unitCost,
-  p.quantity,
-  CASE
-    WHEN p.project.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
-    WHEN (p.isAdjustment IS NULL) THEN (p.quantity * coalesce(e.unitCost, cr.unitCost))
-    ELSE (CAST(coalesce(e3.unitCost, cr3.unitCost) as double) - cast(coalesce(e2.unitCost, cr2.unitCost) as double))
-  END as totalcost,
+  p.chargeCategory,
 
+  --this is the cost of the original lease, based on projected release type
+  CAST(CASE
+    --order of priority for unit cost:
+    --project-level exemption: pay this value
+    WHEN (e.unitCost IS NOT NULL) THEN e.unitCost
+    --project-level multiplier: multiply NIH rate by this value
+    WHEN (pm.multiplier IS NOT NULL AND cr.unitCost IS NOT NULL) THEN (cr.unitCost * pm.multiplier)
+    --if there is not a known rate, we dont know what do to
+    WHEN (cr.unitCost IS NULL) THEN null
+    --for non-OGA aliases, we always use the NIH rate
+    WHEN (alias.category IS NOT NULL AND alias.category != 'OGA') THEN cr.unitCost
+    --if we dont know the aliasType, we also dont know what do to
+    WHEN (alias.aliasType.aliasType IS NULL) THEN null
+    --remove both subsidy and raise F&A if needed
+    WHEN (alias.aliasType.removeSubsidy = true AND (alias.aliasType.canRaiseFA = true AND p.chargeId.canRaiseFA = true)) THEN ((cr.unitCost / (1 - COALESCE(cr.subsidy, 0))) * (CASE WHEN (alias.faRate IS NOT NULL AND alias.faRate < CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE)) THEN (1 + (CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE) - alias.faRate)) ELSE 1 END))
+    --remove subsidy only
+    WHEN (alias.aliasType.removeSubsidy = true AND alias.aliasType.canRaiseFA = false) THEN (cr.unitCost / (1 - COALESCE(cr.subsidy, 0)))
+    --raise F&A only
+    WHEN (alias.aliasType.removeSubsidy = false AND (alias.aliasType.canRaiseFA = true AND p.chargeId.canRaiseFA = true)) THEN (cr.unitCost * (CASE WHEN (alias.faRate IS NOT NULL AND alias.faRate < CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE)) THEN (1 + (CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE) - alias.faRate)) ELSE 1 END))
+    --the NIH rate
+    ELSE cr.unitCost
+  END AS DOUBLE) as unitCost1,
+  cr.unitCost as nihRate1,
+
+  --for adjustments, this is the first lease charge
+  CAST(CASE
+    --order of priority for unit cost:
+    --project-level exemption: pay this value
+    WHEN (e2.unitCost IS NOT NULL) THEN e2.unitCost
+    --project-level multiplier: multiply NIH rate by this value
+    WHEN (pm2.multiplier IS NOT NULL AND cr2.unitCost IS NOT NULL) THEN (cr2.unitCost * pm2.multiplier)
+    --if there is not a known rate, we dont know what do to
+    WHEN (cr2.unitCost IS NULL) THEN null
+    --for non-OGA aliases, we always use the NIH rate
+    WHEN (alias.category IS NOT NULL AND alias.category != 'OGA') THEN cr2.unitCost
+    --if we dont know the aliasType, we also dont know what do to
+    WHEN (alias.aliasType.aliasType IS NULL) THEN null
+    --remove both subsidy and raise F&A if needed
+    WHEN (alias.aliasType.removeSubsidy = true AND (alias.aliasType.canRaiseFA = true AND p.chargeId.canRaiseFA = true)) THEN ((cr2.unitCost / (1 - COALESCE(cr2.subsidy, 0))) * (CASE WHEN (alias.faRate IS NOT NULL AND alias.faRate < CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE)) THEN (1 + (CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE) - alias.faRate)) ELSE 1 END))
+    --remove subsidy only
+    WHEN (alias.aliasType.removeSubsidy = true AND alias.aliasType.canRaiseFA = false) THEN (cr2.unitCost / (1 - COALESCE(cr2.subsidy, 0)))
+    --raise F&A only
+    WHEN (alias.aliasType.removeSubsidy = false AND (alias.aliasType.canRaiseFA = true AND p.chargeId.canRaiseFA = true)) THEN (cr2.unitCost * (CASE WHEN (alias.faRate IS NOT NULL AND alias.faRate < CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE)) THEN (1 + (CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE) - alias.faRate)) ELSE 1 END))
+    --the NIH rate
+    ELSE cr2.unitCost
+  END AS DOUBLE) as unitCost2,
+  cr2.unitCost as nihRate2,
+
+  --for adjustments, this is the second lease charge
+  CAST(CASE
+    --order of priority for unit cost:
+    --project-level exemption: pay this value
+    WHEN (e3.unitCost IS NOT NULL) THEN e3.unitCost
+    --project-level multiplier: multiply NIH rate by this value
+    WHEN (pm3.multiplier IS NOT NULL AND cr3.unitCost IS NOT NULL) THEN (cr3.unitCost * pm3.multiplier)
+    --if there is not a known rate, we dont know what do to
+    WHEN (cr3.unitCost IS NULL) THEN null
+    --for non-OGA aliases, we always use the NIH rate
+    WHEN (alias.category IS NOT NULL AND alias.category != 'OGA') THEN cr3.unitCost
+    --if we dont know the aliasType, we also dont know what do to
+    WHEN (alias.aliasType.aliasType IS NULL) THEN null
+    --remove both subsidy and raise F&A if needed
+    WHEN (alias.aliasType.removeSubsidy = true AND (alias.aliasType.canRaiseFA = true AND p.chargeId.canRaiseFA = true)) THEN ((cr3.unitCost / (1 - COALESCE(cr3.subsidy, 0))) * (CASE WHEN (alias.faRate IS NOT NULL AND alias.faRate < CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE)) THEN (1 + (CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE) - alias.faRate)) ELSE 1 END))
+    --remove subsidy only
+    WHEN (alias.aliasType.removeSubsidy = true AND alias.aliasType.canRaiseFA = false) THEN (cr3.unitCost / (1 - COALESCE(cr3.subsidy, 0)))
+    --raise F&A only
+    WHEN (alias.aliasType.removeSubsidy = false AND (alias.aliasType.canRaiseFA = true AND p.chargeId.canRaiseFA = true)) THEN (cr3.unitCost * (CASE WHEN (alias.faRate IS NOT NULL AND alias.faRate < CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE)) THEN (1 + (CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE) - alias.faRate)) ELSE 1 END))
+    --the NIH rate
+    ELSE cr3.unitCost
+  END AS DOUBLE) as unitCost3,
+  cr3.unitCost as nihRate3,
+  
+  p.quantity,
   cast(ce.account as varchar(200)) as creditAccount,
   ce.rowid as creditAccountId,
   null as comment,
-  coalesce(p.project.account.investigatorId, p.project.investigatorId) as investigatorId,
+  coalesce(alias.investigatorId, p.project.investigatorId) as investigatorId,
   CASE
-    WHEN e.rowid IS NOT NULL THEN 'Y'
+    WHEN (e.rowid IS NOT NULL OR e2.rowid IS NOT NULL OR e3.rowid IS NOT NULL) THEN 'Y'
+    WHEN (pm.multiplier IS NOT NULL OR pm2.multiplier IS NOT NULL OR pm3.multiplier IS NOT NULL) THEN 'Multiplier'
     ELSE null
   END as isExemption,
+  CASE
+    WHEN (e.unitCost IS NOT NULL) THEN null  --ignore project-level exemptions
+    WHEN (cr.unitCost IS NULL) THEN null --will be flagged for other reasons
+    WHEN (pm.multiplier IS NOT NULL) THEN null --also ignore project-level multipliers
+    WHEN (alias.aliasType.aliasType IS NULL) THEN null --unknown alias type, will be flagged elsewhere
+    WHEN (alias.aliasType.removeSubsidy = true AND COALESCE(cr.subsidy, 0) > 0) THEN 'Removed NIH Subsidy'
+    WHEN (alias.aliasType.canRaiseFA = true AND p.chargeId.canRaiseFA = true AND (alias.faRate IS NOT NULL AND alias.faRate < CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_SUBSIDY') AS DOUBLE))) THEN ('Reduced F&A: ' || CAST(alias.faRate as varchar(20)))
+    ELSE null
+  END as isNonStandardRate,
+  CASE WHEN (alias.alias IS NOT NULL AND alias.aliasType.aliasType IS NULL) THEN ('Unknown Type: ' || alias.aliasType) ELSE null END as isUnknownAliasType,
   CASE
     --handle adjustments and non-adjustments separately
     WHEN (p.isAdjustment IS NULL AND coalesce(e.unitCost, cr.unitCost) is null) THEN 'Y'
@@ -69,21 +204,22 @@ SELECT
   END as exemptionId,
   null as isMiscCharge,
   p.isAdjustment,
-  CASE WHEN p.project.account IS NULL THEN 'Y' ELSE null END as isMissingAccount,
-  CASE WHEN ifdefined(p.project.account.fiscalAuthority.faid) IS NULL THEN 'Y' ELSE null END as isMissingFaid,
+  CASE WHEN alias.alias IS NULL THEN 'Y' ELSE null END as isMissingAccount,
+  CASE WHEN alias.fiscalAuthority.faid IS NULL THEN 'Y' ELSE null END as isMissingFaid,
   CASE
-    WHEN ifdefined(p.project.account.aliasEnabled) IS NULL THEN 'N'
-    WHEN ifdefined(p.project.account.aliasEnabled) != 'Y' THEN 'N'
+    WHEN alias.aliasEnabled IS NULL THEN 'N'
+    WHEN alias.aliasEnabled != 'Y' THEN 'N'
     ELSE null
   END as isAcceptingCharges,
   CASE
-    --WHEN ifdefined(p.project.account.budgetStartDate) IS NULL THEN null
-    WHEN (ifdefined(p.project.account.budgetStartDate) IS NOT NULL AND CAST(ifdefined(p.project.account.budgetStartDate) as date) > CAST(p.date as date)) THEN 'Prior To Budget Start'
-    WHEN (ifdefined(p.project.account.budgetEndDate) IS NOT NULL AND CAST(ifdefined(p.project.account.budgetEndDate) as date) < CAST(p.date as date)) THEN 'After Budget End'
-    WHEN (ifdefined(p.project.account.projectStatus) IS NOT NULL AND ifdefined(p.project.account.projectStatus) != 'ACTIVE' AND ifdefined(p.project.account.projectStatus) != 'No Cost Ext' AND ifdefined(p.project.account.projectStatus) != 'Partial Setup') THEN 'Grant Project Not Active'
+    WHEN (alias.budgetStartDate IS NOT NULL AND CAST(alias.budgetStartDate as date) > CAST(p.date as date)) THEN 'Prior To Budget Start'
+    WHEN (alias.budgetEndDate IS NOT NULL AND CAST(alias.budgetEndDate as date) < CAST(p.date as date)) THEN 'After Budget End'
+    WHEN (alias.projectStatus IS NOT NULL AND alias.projectStatus != 'ACTIVE' AND alias.projectStatus != 'No Cost Ext' AND alias.projectStatus != 'Partial Setup') THEN 'Grant Project Not Active'
     ELSE null
   END as isExpiredAccount,
+
   CASE WHEN (TIMESTAMPDIFF('SQL_TSI_DAY', p.date, curdate()) > 45) THEN 'Y' ELSE null END as isOldCharge,
+  aliasAtTime.account as aliasActiveOnDate,
   p.datefinalized,
   p.enddatefinalized
 
@@ -103,6 +239,12 @@ LEFT JOIN onprc_billing_public.chargeRateExemptions e ON (
     p.project = e.project
 )
 
+LEFT JOIN onprc_billing_public.projectMultipliers pm ON (
+    CAST(p.date AS DATE) >= CASt(pm.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= pm.enddateCoalesced OR pm.enddate IS NULL) AND
+    p.project = pm.project
+)
+
 --the original charge (for adjustments)
 LEFT JOIN onprc_billing_public.chargeRates cr2 ON (
     CAST(p.date AS DATE) >= CAST(cr2.startDate AS DATE) AND
@@ -115,6 +257,12 @@ LEFT JOIN onprc_billing_public.chargeRateExemptions e2 ON (
     (CAST(p.date AS DATE) <= e2.enddateCoalesced OR e2.enddate IS NULL) AND
     p.leaseCharge1 = e2.chargeId AND
     p.project = e2.project
+)
+
+LEFT JOIN onprc_billing_public.projectMultipliers pm2 ON (
+    CAST(p.date AS DATE) >= CASt(pm2.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= pm2.enddateCoalesced OR pm2.enddate IS NULL) AND
+    p.project = pm2.project
 )
 --EO original charge
 
@@ -131,6 +279,12 @@ LEFT JOIN onprc_billing_public.chargeRateExemptions e3 ON (
   p.leaseCharge2 = e3.chargeId AND
   p.project = e3.project
 )
+
+LEFT JOIN onprc_billing_public.projectMultipliers pm3 ON (
+    CAST(p.date AS DATE) >= CASt(pm3.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= pm3.enddateCoalesced OR pm3.enddate IS NULL) AND
+    p.project = pm3.project
+)
 --EO final charge
 
 LEFT JOIN onprc_billing_public.creditAccount ce ON (
@@ -138,6 +292,28 @@ LEFT JOIN onprc_billing_public.creditAccount ce ON (
     (CAST(p.date AS DATE) <= ce.enddateCoalesced OR ce.enddate IS NULL) AND
     p.chargeId = ce.chargeId
 )
+
+LEFT JOIN (
+  SELECT
+    pa.project,
+    max(pa.account) as account
+  FROM onprc_billing_public.projectAccountHistory pa
+  WHERE pa.isActive = true
+  GROUP BY pa.project
+  HAVING count(*) = 1
+) pa ON (pa.project = p.project)
+
+LEFT JOIN onprc_billing_public.projectAccountHistory aliasAtTime ON (
+  aliasAtTime.project = p.project AND
+  aliasAtTime.startDate <= cast(p.date as date) AND
+  aliasAtTime.endDate >= cast(p.date as date)
+)
+
+LEFT JOIN onprc_billing_public.aliases alias ON (
+  alias.alias = pa.account
+)
+
+) t
 
 UNION ALL
 
@@ -160,17 +336,26 @@ SELECT
   null as leaseCharge1,
   null as leaseCharge2,
   mc.sourceRecord,
-  mc.chargeType,
+  mc.chargeCategory,
 
   mc.unitcost,
+  mc.nihRate,
+
+  null as unitCost1,
+  null as nihRate1,
+  null as unitCost2,
+  null as nihRate2,
+  null as unitCost3,
+  null as nihRate3,
+
   mc.quantity,
-  mc.totalcost,
 
   mc.creditAccount,
   mc.creditAccountId,
   mc.comment,
   mc.investigatorId,
   mc.isExemption,
+  mc.isNonStandardRate,
   mc.lacksRate,
   mc.rateId,
   mc.exemptionId,
@@ -181,6 +366,7 @@ SELECT
   mc.isAcceptingCharges,
   mc.isExpiredAccount,
   mc.isOldCharge,
+  mc.aliasActiveOnDate,
   null as datefinalized,
   null as enddatefinalized
 

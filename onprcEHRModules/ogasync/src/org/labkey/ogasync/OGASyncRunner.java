@@ -195,7 +195,7 @@ public class OGASyncRunner implements Job
         //find existing FAs
         SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("category"), "Other", CompareType.EQUAL);
         filter2.addCondition(FieldKey.fromString("container"), c.getId());
-        filter2.addCondition(FieldKey.fromString("fiscalAuthority"), null, CompareType.NONBLANK);
+        filter2.addCondition(new SimpleFilter.OrClause(new CompareType.CompareClause(FieldKey.fromString("fiscalAuthority"), CompareType.NONBLANK, null), new CompareType.CompareClause(FieldKey.fromString("investigatorid"), CompareType.NONBLANK, null)));
         TableSelector existingTs2 = new TableSelector(targetTable, PageFlowUtil.set("alias", "fiscalAuthority", "investigatorid"), filter2, null);
         final Map<String, Integer> faMap = new HashMap<>();
         final Map<String, Integer> investigatorMap = new HashMap<>();
@@ -204,8 +204,11 @@ public class OGASyncRunner implements Job
             @Override
             public void exec(ResultSet rs) throws SQLException
             {
-                faMap.put(rs.getString("alias"), rs.getInt("fiscalAuthority"));
-                investigatorMap.put(rs.getString("alias"), rs.getInt("investigatorid"));
+                if (rs.getObject("fiscalAuthority") != null && rs.getInt("fiscalAuthority") != 0)
+                    faMap.put(rs.getString("alias"), rs.getInt("fiscalAuthority"));
+
+                if (rs.getObject("investigatorid") != null && rs.getInt("investigatorid") != 0)
+                    investigatorMap.put(rs.getString("alias"), rs.getInt("investigatorid"));
             }
         });
 

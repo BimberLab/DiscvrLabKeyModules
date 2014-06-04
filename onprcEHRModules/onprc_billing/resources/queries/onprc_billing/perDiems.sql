@@ -11,7 +11,6 @@ SELECT
     --note: we want the per diems to report using the last available day for this charge
     max(pd.date) as date,
     pd.project,
-    pd.project.account,
     pd.chargeId,
     group_concat(distinct pd.category) as categories,
     group_concat(distinct pd.overlappingProjects) as overlappingProjects,
@@ -24,4 +23,4 @@ SELECT
     group_concat(distinct pd.assignmentRecords) as assignmentRecords,
 FROM onprc_billing.perDiemsByDay pd
 
-GROUP BY pd.Id, pd.project, pd.project.account, pd.chargeId
+GROUP BY pd.Id, pd.project, pd.chargeId
