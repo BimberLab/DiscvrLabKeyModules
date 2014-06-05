@@ -6,6 +6,7 @@
 
 Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
     extend: 'Ext.form.Panel',
+    controllerName: 'pipeline-analysis',
 
     initComponent: function(){
         //NOTE: if we're in a workbook, default to serch against the parent, since it will include children by default
@@ -268,7 +269,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         }
         else if (config.jsonParameters)
         {
-            if (LABKEY.Utils.isString(config.jsonParameters))
+            if (Ext4.isString(config.jsonParameters))
             {
                 // We already have a string
                 params.configureJson = config.jsonParameters;
@@ -276,12 +277,12 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
             else
             {
                 // Convert from JavaScript object to a string
-                params.configureJson = LABKEY.Utils.encode(config.jsonParameters);
+                params.configureJson = Ext4.encode(config.jsonParameters);
             }
         }
 
         var containerPath = config.containerPath ? config.containerPath : LABKEY.ActionURL.getContainer();
-        var url = LABKEY.ActionURL.buildURL("sequenceanalysis", "startAnalysis", containerPath);
+        var url = LABKEY.ActionURL.buildURL(this.controllerName, "startAnalysis", containerPath);
         LABKEY.Ajax.request({
             url: url,
             method: 'POST',

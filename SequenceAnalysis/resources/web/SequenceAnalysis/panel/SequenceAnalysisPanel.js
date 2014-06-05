@@ -6,6 +6,7 @@
 
 Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
     extend: 'SequenceAnalysis.panel.BaseSequencePanel',
+    controllerName: 'sequenceanalysis',
 
     initComponent: function(){
         this.taskId = 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceAnalysisPipeline';

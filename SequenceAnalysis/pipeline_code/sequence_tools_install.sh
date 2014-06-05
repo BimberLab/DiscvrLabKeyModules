@@ -815,70 +815,75 @@ fi
 # V-Phaser 2
 #
 
-#echo ""
-#echo ""
-#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-#echo "Installing V-Phaser 2"
-#echo ""
-#cd $LKSRC_DIR
-#
-#if [[ ! -e ${LKTOOLS_DIR}/variant_caller || ! -z $FORCE_REINSTALL ]];
-#then
-#    rm -Rf bamtools*
-#    rm -Rf v_phaser_2*
-#    rm -Rf VPhaser-2*
-#    rm -Rf $LKTOOLS_DIR/variant_caller
-#
-#    echo "First download/install bamtools"
-#    mkdir bamtools
-#    cd bamtools
-#    git clone git://github.com/pezmaster31/bamtools.git
-#    cmake ..
-#    make
-#
-#    cd ../../
-#    wget http://www.broadinstitute.org/software/viral/v_phaser_2/v_phaser_2.zip
-#    unzip v_phaser_2.zip
-#    cd VPhaser-2-02112013/src
-#    make MYPATH=${LKSRC_DIR}/bamtools
-#
-#    ln -s $LKSRC_DIR/VPhaser-2-02112013/bin/variant_caller $LKTOOLS_DIR/variant_caller
-#
-#else
-#    echo "Already installed"
-#fi
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing V-Phaser 2"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/variant_caller || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf bamtools*
+    rm -Rf v_phaser_2*
+    rm -Rf VPhaser-2*
+    rm -Rf $LKTOOLS_DIR/variant_caller
+
+    echo "First download/install bamtools"
+    #mkdir bamtools
+    #cd bamtools
+    git clone git://github.com/pezmaster31/bamtools.git
+    cd bamtools/src
+    cmake ..
+    make
+
+    echo "now download VPhaser2"
+    cd ../../
+    wget http://www.broadinstitute.org/software/viral/v_phaser_2/v_phaser_2.zip
+    unzip v_phaser_2.zip
+    cd VPhaser-2-02112013/src
+
+    #NOTE: I am adding this line so the tools will compile.  If a future version fixes this, it should be reverted
+    sed '24i\#include <climits>' bam_manip.h > bam_manip.h.tmp
+    rm bam_manip.h
+    mv bam_manip.h.tmp bam_manip.h
+
+    make MYPATH=${LKSRC_DIR}/bamtools
+
+    ln -s $LKSRC_DIR/VPhaser-2-02112013/bin/variant_caller $LKTOOLS_DIR/variant_caller
+
+else
+    echo "Already installed"
+fi
 
 
 #
 # LoFreq
 #
 
-#echo ""
-#echo ""
-#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-#echo "Installing LoFreq"
-#echo ""
-#cd $LKSRC_DIR
-#
-#if [[ ! -e ${LKTOOLS_DIR}/lofreq || ! -z $FORCE_REINSTALL ]];
-#then
-#    rm -Rf lofreq-0.6.1*
-#    rm -Rf lofreq_star-2.0.0-rc-1*
-#    rm -Rf $LKTOOLS_DIR/lofreq
-#
-#    wget http://downloads.sourceforge.net/project/lofreq/lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
-#    gunzip lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
-#    tar -xf lofreq_star-2.0.0-rc-1.linux-x86-64.tar
-#    gzip lofreq_star-2.0.0-rc-1.linux-x86-64.tar
-#
-#    cd lofreq_star-2.0.0-rc-1
-#    ./configure
-#    make
-#
-#    ln -s $LKSRC_DIR/lofreq_star-2.0.0-rc-1/lofreq $LKTOOLS_DIR/lofreq
-#else
-#    echo "Already installed"
-#fi
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing LoFreq"
+echo ""
+cd $LKSRC_DIR
+
+if [[ $(which apt-get) || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf lofreq-0.6.1*
+    rm -Rf lofreq_star-2.0.0-rc-1*
+    rm -Rf $LKTOOLS_DIR/lofreq
+
+    wget http://downloads.sourceforge.net/project/lofreq/lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
+    gunzip lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
+    tar -xf lofreq_star-2.0.0-rc-1.linux-x86-64.tar
+    gzip lofreq_star-2.0.0-rc-1.linux-x86-64.tar
+
+    cd lofreq_star-2.0.0-rc-1
+    bash binary_installer.sh
+else
+    echo "Already installed"
+fi
 
 
 #
