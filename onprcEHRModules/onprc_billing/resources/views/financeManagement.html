@@ -83,7 +83,7 @@
                         {name: 'Lease Fee Structure', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'leaseFeeDefinition'})},
                         {name: 'Medication Fee Structure', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'medicationFeeDefinition'})},
                         {name: 'NHP Per Diem Fee Structure', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'perDiemFeeDefinition'})},
-                        {name: 'Procedure Fee Structure', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'procedureFeeDefinition'})},
+                        {name: 'Procedure Fee Structure', url: LABKEY.ActionURL.buildURL(ehrQueryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'procedureFeeDefinition', showImport: true})},
                         {name: 'SLA Per Diem Fee Structure', url: LABKEY.ActionURL.buildURL(queryController, queryAction, null, {schemaName: 'onprc_billing', 'query.queryName': 'slaPerDiemFeeDefinition'})}
                     ]
                 }]

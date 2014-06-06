@@ -863,7 +863,7 @@
                     <ns:fkColumnName>value</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="assistingStaff">
+            <ns:column columnName="assistingstaff">
                 <ns:columnTitle>Assisting Staff</ns:columnTitle>
                 <ns:nullable>true</ns:nullable>
                 <ns:fk>

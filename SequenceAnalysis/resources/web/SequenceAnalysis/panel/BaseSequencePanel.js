@@ -6,7 +6,7 @@
 
 Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
     extend: 'Ext.form.Panel',
-    controllerName: 'pipeline-analysis',
+    analysisController: 'pipeline-analysis',
 
     initComponent: function(){
         //NOTE: if we're in a workbook, default to serch against the parent, since it will include children by default
@@ -282,7 +282,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         }
 
         var containerPath = config.containerPath ? config.containerPath : LABKEY.ActionURL.getContainer();
-        var url = LABKEY.ActionURL.buildURL(this.controllerName, "startAnalysis", containerPath);
+        var url = LABKEY.ActionURL.buildURL(this.analysisController, "startAnalysis", containerPath);
         LABKEY.Ajax.request({
             url: url,
             method: 'POST',

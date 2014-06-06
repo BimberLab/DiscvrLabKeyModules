@@ -13,6 +13,10 @@ EHR.model.DataModelManager.registerMetadata('Reversals', {
                 hidden: false,
                 editorConfig: {
                     decimalPrecision: 2
+                },
+                columnConfig: {
+                    //used to allow editing of unit cost
+                    enforceUnitCost: false
                 }
             },
             debitedaccount: {

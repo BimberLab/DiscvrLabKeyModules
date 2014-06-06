@@ -283,7 +283,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
                 SQLFragment sql = new SQLFragment("(SELECT count(*) FROM " + ONPRC_BillingSchema.NAME + "." + ONPRC_BillingSchema.TABLE_MISC_CHARGES + " mc WHERE mc.invoiceId IS NULL AND mc.container = ? AND mc.sourceInvoicedItem = " + ExprColumn.STR_TABLE_ALIAS + ".objectid)", ehrContainer.getId());
                 ExprColumn newCol = new ExprColumn(table, pendingAdjustments, sql, JdbcType.INTEGER, table.getColumn("objectid"));
                 newCol.setLabel("Pending Adjustments");
-                newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing&query.queryName=miscChargesWithRates&query.viewName=Adjustment Detail&query.invoiceId~isblank&query.sourceInvoicedItem/transactionNumber~eq=${transactionNumber}"));
+                newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing&query.queryName=miscChargesWithRates&query.viewName=Adjustment Detail&query.invoiceId~isblank&query.sourceInvoicedItem/transactionNumber~eq=${transactionNumber}", ehrContainer));
                 table.addColumn(newCol);
             }
 
@@ -293,7 +293,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
                 SQLFragment sql = new SQLFragment("(SELECT count(*) FROM " + ONPRC_BillingSchema.NAME + "." + ONPRC_BillingSchema.TABLE_MISC_CHARGES + " mc WHERE mc.container = ? AND mc.sourceInvoicedItem = " + ExprColumn.STR_TABLE_ALIAS + ".objectid)", ehrContainer.getId());
                 ExprColumn newCol = new ExprColumn(table, totalAdjustments, sql, JdbcType.INTEGER, table.getColumn("objectid"));
                 newCol.setLabel("All Adjustments");
-                newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing&query.queryName=miscChargesWithRates&query.viewName=Adjustment Detail&query.sourceInvoicedItem/transactionNumber~eq=${transactionNumber}"));
+                newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing&query.queryName=miscChargesWithRates&query.viewName=Adjustment Detail&query.sourceInvoicedItem/transactionNumber~eq=${transactionNumber}", ehrContainer));
                 table.addColumn(newCol);
             }
         }
@@ -408,7 +408,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         if (ti.getColumn(activeAccount) == null)
         {
             SQLFragment sql = new SQLFragment("(SELECT max(account) as expr FROM " + ONPRC_BillingSchema.NAME + "." + ONPRC_BillingSchema.TABLE_CHARGE_UNIT_ACCOUNT + " cr WHERE cr.chargetype = " + ExprColumn.STR_TABLE_ALIAS + ".chargetype AND (cr.enddate IS NULL OR cr.enddate > {fn curdate()}) AND cr.startdate <= {fn curdate()})");
-            ExprColumn col = new ExprColumn(ti, activeAccount, sql, JdbcType.INTEGER, ti.getColumn("chargetype"));
+            ExprColumn col = new ExprColumn(ti, activeAccount, sql, JdbcType.VARCHAR, ti.getColumn("chargetype"));
             col.setLabel("Active Alias");
             col.setIsUnselectable(true);
             ti.addColumn(col);
@@ -492,6 +492,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         return getIsActiveSql(ti, ExprColumn.STR_TABLE_ALIAS);
     }
 
+    //NOTE: this will consider the record to be active on the enddate itself
     private SQLFragment getIsActiveSql(AbstractTableInfo ti, String tableAlias)
     {
         return new SQLFragment("(CASE " +
@@ -500,7 +501,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
                 // when enddate is null, it is active
                 " WHEN (" + tableAlias + ".enddate IS NULL) THEN " + ti.getSqlDialect().getBooleanTRUE() + "\n" +
                 // if enddate is in the future (whole-day increments), then it is active
-                " WHEN (CAST(" + tableAlias + ".enddate AS DATE) > {fn curdate()}) THEN " + ti.getSqlDialect().getBooleanTRUE() + "\n" +
+                " WHEN (CAST(" + tableAlias + ".enddate AS DATE) >= {fn curdate()}) THEN " + ti.getSqlDialect().getBooleanTRUE() + "\n" +
                 " ELSE " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
                 " END)");
     }

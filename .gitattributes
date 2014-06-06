@@ -1013,6 +1013,7 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiems.query.xml
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiems.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemsByDay.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/perDiemsByDay.sql -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeDefinition.js -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeDefinition/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeRates.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/procedureFeeRates.sql -text
