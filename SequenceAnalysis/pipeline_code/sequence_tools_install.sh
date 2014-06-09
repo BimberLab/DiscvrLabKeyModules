@@ -109,7 +109,7 @@ echo ""
 
 if [ $(which yum) ]; then
     echo "Using Yum"
-    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion perl-Pod-Simple cpan git cmake
+    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion perl-Pod-Simple cpan git cmake
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
     apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev libmodule-build-perl libmodule-build-cipux-perl libtest-most-perl python-dev unzip zip ncftp gcc make perl libgd-gd2-perl libcgi-session-perl libclass-base-perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake

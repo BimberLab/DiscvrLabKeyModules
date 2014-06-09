@@ -28,6 +28,7 @@
                     LDK.Assert.assertNotEmpty('Tabbed Report is null', report);
                     if (report && report.key){
                         report.id = report.key.replace(/:/g, '_');
+                        report.category = report.reportCategory;
 
                         if (report.targetContainer){
                             report.containerPath = report.targetContainer;
@@ -37,7 +38,7 @@
                 }, this);
 
                 this.reports = LDK.Utils.sortByProperty(this.reports, 'name', false);
-                this.reports = LDK.Utils.sortByProperty(this.reports, 'category', false);
+                this.reports = LDK.Utils.sortByProperty(this.reports, 'reportCategory', false);
 
                 this.createTabPanel();
             },

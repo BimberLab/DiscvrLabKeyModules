@@ -79,8 +79,8 @@ Ext4.define('Laboratory.panel.ReportListPanel', {
 
         return this.store = Ext4.create('Ext.data.Store', {
             type: 'store',
-            fields: ['name', 'label', 'category', 'browseUrl', 'importUrl', 'key', 'assayRunTemplateUrl', 'searchUrl', 'renderer', 'visible'],
-            groupField: 'category'
+            fields: ['name', 'label', 'reportCategory', 'browseUrl', 'importUrl', 'key', 'assayRunTemplateUrl', 'searchUrl', 'renderer', 'visible'],
+            groupField: 'reportCategory'
         })
     },
 
@@ -146,8 +146,8 @@ Ext4.define('Laboratory.panel.ReportListPanel', {
                 var s = '';
                 if (rec.data.name)
                     s += rec.data.name;
-                if (rec.data.category)
-                    s += rec.data.category;
+                if (rec.data.reportCategory)
+                    s += rec.data.reportCategory;
                 answer = t.test(s);
             }
 

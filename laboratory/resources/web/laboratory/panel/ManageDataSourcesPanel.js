@@ -12,7 +12,7 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
                 text: 'Add New',
                 hidden: !Laboratory.Utils.isLaboratoryAdmin(),
                 scope: this,
-                handler: this.doAdd
+                handler: this.showAddEditWindow
             },{
                 text: 'Add Default Sources',
                 itemId: 'defaultSources',
@@ -29,13 +29,14 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
 
         this.callParent();
 
+        Ext4.QuickTips.init();
         this.doLoad();
     },
 
     doLoad: function(){
         Laboratory.Utils.getAdditionalDataSources({
             scope: this,
-            includeTotals: true,
+            includeTotals: false,
             success: this.onLoad
         });
 
@@ -52,7 +53,7 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
             itemId: 'itemsPanel',
             layout: {
                 type: 'table',
-                columns: 6
+                columns: 9
             },
             defaults: {
                 border: false,
@@ -66,9 +67,15 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
             },{
                 html: '<b>Table Name</b>'
             },{
-                html: '<b>Category</b>'
+                html: '<b>Report Category</b>'
             },{
-                html: '<b>Total Records</b>'
+                html: '<b>Subject Field</b>'
+            },{
+                html: '<b>Date Field</b>'
+            },{
+                html: '<b>Use Workbooks?</b>'
+            },{
+                html: ''
             },{
                 html: ''
             }]
@@ -86,9 +93,26 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
                     },{
                         html: (source.canRead ? '<a href="' + source.browseUrl + '">' : '') + source.schemaName + '.' + source.queryName + (!source.containerPath ? "" : ' (' + source.containerPath + ')') + (source.canRead ? '</a>' : '')
                     },{
-                        html: source.category
+                        html: source.reportCategory
                     },{
-                        html: source.canRead ? '<a href="' + source.browseUrl + '">' + source.total + '</a>' : 'User does not have permission to read this table'
+                        html: source.subjectFieldKey
+                    },{
+                        html: source.sampleDateFieldKey
+                    },{
+                        html: Ext4.isEmpty(source.importIntoWorkbooks) ? '' : String(source.importIntoWorkbooks)
+                    },{
+                        xtype: 'button',
+                        text: 'Edit',
+                        hidden: !Laboratory.Utils.isLaboratoryAdmin(),
+                        style: 'padding: 0px;',
+                        border: true,
+                        sourceIdx: idx,
+                        handler: function(btn){
+                            var panel = btn.up('laboratory-managedatasourcespanel');
+                            var sources = panel.getSources();
+
+                            panel.showAddEditWindow(btn, sources[btn.sourceIdx]);
+                        }
                     },{
                         xtype: 'button',
                         text: 'Remove',
@@ -169,15 +193,24 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
         }
     },
 
-    doAdd: function(btn){
+    showAddEditWindow: function(btn, existingItem){
         var dataTypes = [];
         for (var i in Laboratory.ITEM_CATEGORY){
             if ([Laboratory.ITEM_CATEGORY.tabbedReports.name].indexOf(i) == -1)
                 dataTypes.push([Laboratory.ITEM_CATEGORY[i].name, Laboratory.ITEM_CATEGORY[i].label]);
         }
 
+        var initialValues;
+        if (existingItem){
+            initialValues = {};
+            initialValues.containerId = existingItem.containerId;
+            initialValues.schemaName = existingItem.schemaName;
+            initialValues.queryName = existingItem.queryName;
+        }
+
         var panel = Ext4.define('Laboratory.panel.AddNewDataSourcePanel', {
             extend: 'Laboratory.panel.QueryPickerPanel',
+            initialValues: initialValues,
             getItemsCfg: function(){
                 var items = [];
 
@@ -186,6 +219,7 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
                     editable: false,
                     fieldLabel: 'Item Type',
                     itemId: 'itemType',
+                    helpPopup: 'This determines the section of the UI where this item will appear',
                     allowBlank: false,
                     queryMode: 'local',
                     valueField: 'name',
@@ -193,9 +227,6 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
                     store: {
                         type: 'array',
                         fields: ['name', 'caption'],
-//                        proxy: {
-//                            type: 'memory'
-//                        },
                         data: dataTypes
                     }
                 });
@@ -209,12 +240,42 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
 
                 items.push({
                     xtype: 'textfield',
-                    fieldLabel: 'Category',
+                    fieldLabel: 'Report Category',
+                    helpPopup: 'This is the category used for reports.  On the reports tab, this is the section name.  On the data browser, this is the top-level tab.',
                     allowBlank: false,
-                    itemId: 'category'
+                    itemId: 'reportCategory'
+                });
+
+                items.push({
+                    xtype: 'textfield',
+                    fieldLabel: 'Subject Field Name',
+                    helpPopup: 'This is the name of the field holding the Subject Id, which will be used by the Data Browser for some filter types.  It can be left blank.',
+                    itemId: 'subjectFieldKey'
+                });
+
+                items.push({
+                    xtype: 'textfield',
+                    fieldLabel: 'Date Field Name',
+                    helpPopup: 'This is the name of the field holding the sample date, which will be used by the Data Browser for some filter types.  It can be left blank.',
+                    itemId: 'sampleDateFieldKey'
+                });
+
+                items.push({
+                    xtype: 'checkbox',
+                    fieldLabel: 'Import Using Workbooks',
+                    helpPopup: 'If selected (and the table supports workbooks), when importing into this table the user will be prompted to choose a workbook.  Otherwise the data will always be saved into the top-level folder and this data source will not be shown in workbooks',
+                    itemId: 'importIntoWorkbooks'
                 });
 
                 items = items.concat(this.callParent());
+
+                if (existingItem){
+                    Ext4.Array.forEach(items, function(i){
+                        if (i.itemId && existingItem[i.itemId]){
+                            i.value = existingItem[i.itemId];
+                        }
+                    }, this);
+                }
 
                 return items;
             },
@@ -225,6 +286,7 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
         });
 
         Ext4.create('Ext.window.Window', {
+            existingIndex: existingItem ? btn.sourceIdx : null,
             width: 400,
             title: 'Add Data Source',
             closeAction: 'destroy',
@@ -233,7 +295,15 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
             buttons: [{
                 text: 'Save',
                 scope: this,
-                handler: this.addSource
+                handler: function(btn){
+                    var win = btn.up('window');
+
+                    //remove original item
+                    if (win.existingIndex)
+                        this.removeSource(win.existingIndex);
+
+                    this.addSource(btn);
+                }
             },{
                 text: 'Cancel',
                 handler: function(btn){
@@ -248,12 +318,15 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
         var containerId = win.down('#containerId').getValue();
         var schemaName = win.down('#schemaName').getValue();
         var queryName = win.down('#queryName').getValue();
-        var category = win.down('#category').getValue();
+        var reportCategory = win.down('#reportCategory').getValue();
         var itemType = win.down('#itemType').getValue();
         var label = win.down('#label').getValue();
+        var subjectFieldKey = win.down('#subjectFieldKey').getValue();
+        var sampleDateFieldKey = win.down('#sampleDateFieldKey').getValue();
+        var importIntoWorkbooks = win.down('#importIntoWorkbooks').getValue();
 
-        if (!schemaName || !queryName || !label || !category || !itemType){
-            Ext4.Msg.alert('Error', 'Must provide a schema, query, label, itemType and category');
+        if (!schemaName || !queryName || !label || !reportCategory || !itemType){
+            Ext4.Msg.alert('Error', 'Must provide a schema, query, label, itemType and reportCategory');
             return;
         }
 
@@ -263,8 +336,11 @@ Ext4.define('Laboratory.panel.ManageDataSourcesPanel', {
             schemaName: schemaName,
             queryName: queryName,
             itemType: itemType,
-            category: category,
-            label: label
+            reportCategory: reportCategory,
+            label: label,
+            subjectFieldKey: subjectFieldKey,
+            sampleDateFieldKey: sampleDateFieldKey,
+            importIntoWorkbooks: importIntoWorkbooks
         });
 
         this.saveSources(sources, win);

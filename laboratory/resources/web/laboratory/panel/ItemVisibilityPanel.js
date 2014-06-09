@@ -59,6 +59,7 @@ Ext4.define('Laboratory.panel.ItemVisibilityPanel', {
 
     renderSection: function(name, label){
         var items = this.results[name];
+        var showReportCategory = name == 'tabbedReports';
 
         this.remove(this.down('#loading'));
 
@@ -76,13 +77,14 @@ Ext4.define('Laboratory.panel.ItemVisibilityPanel', {
             }]
         }
 
+        var sectionItems = [];
         Ext4.each(items, function(item){
-            cfg.items.push({
+            sectionItems.push({
                 xtype: 'checkbox',
-                width: 600,
+                width: 800,
                 style: 'margin-left: 5px;',
                 navItem: item,
-                boxLabel: item.label,
+                boxLabel: (showReportCategory ? '[' + item.reportCategory + '] ' : '') + item.label,
                 checked: item.visible,
                 itemCategory: name,
                 listeners: {
@@ -99,6 +101,8 @@ Ext4.define('Laboratory.panel.ItemVisibilityPanel', {
             });
         }, this);
 
+        sectionItems = LDK.Utils.sortByProperty(sectionItems, 'boxLabel');
+        cfg.items = cfg.items.concat(sectionItems);
         this.add(cfg);
         this.down('#submitBtn').setDisabled(false);
     },

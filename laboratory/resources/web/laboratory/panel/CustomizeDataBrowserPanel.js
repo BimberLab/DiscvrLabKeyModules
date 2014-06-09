@@ -60,7 +60,7 @@ Ext4.define('Laboratory.panel.CustomizeDataBrowserPanel', {
             html: '<b>Name</b>',
             style: 'padding-bottom: 5px;'
         },{
-            html: '<b>Category (top-level tab)</b>',
+            html: '<b>Report Category (top-level tab)</b>',
             style: 'padding-bottom: 5px;margin-left: 5px;'
 
         },{
@@ -83,7 +83,7 @@ Ext4.define('Laboratory.panel.CustomizeDataBrowserPanel', {
                 xtype: 'textfield',
                 style: 'margin-left: 5px;',
                 width: 300,
-                value: item.category
+                value: item.reportCategory
             },{
                 xtype: 'textfield',
                 style: 'margin-left: 5px;',
@@ -125,7 +125,7 @@ Ext4.define('Laboratory.panel.CustomizeDataBrowserPanel', {
             var navItem = items.get(base).navItem;
             toSave[navItem.overridesKey] = {
                 label:  items.get(base + 2).getValue(),
-                category: items.get(base + 1).getValue()
+                reportCategory: items.get(base + 1).getValue()
             }
         }
 

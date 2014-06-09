@@ -1040,10 +1040,9 @@ public class MergeSyncRunner implements Job
             return _cachedProjectNames.get(projectName);
         }
 
-        if ("CLINIC".equals(projectName))
+        if ("CLINIC".equals(projectName) || "PATHOLOGY".equals(projectName) || "SURGERY".equals(projectName))
         {
-            //TODO: get this from EHRService?
-            projectName = "0492";
+            projectName = EHRService.get().getEHRDefaultClinicalProjectName(c);
         }
 
         TableInfo ti = QueryService.get().getUserSchema(u, c, "ehr").getTable("project");

@@ -936,10 +936,13 @@
             </ns:column>
             <ns:column columnName="startdate">
                 <ns:columnTitle>Start Date</ns:columnTitle>
+                <ns:description>This column refers to the date that this alias was first associated with this project.  In other words, this alias is the active alias for the project between the dates listed.</ns:description>
+                <ns:formatString>yyyy-MM-dd</ns:formatString>
                 <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="enddate">
                 <ns:columnTitle>End Date</ns:columnTitle>
+                <ns:description>This column refers to the date that this alias is no longer associated with this project.  In other words, this alias is the active alias for the project between the dates listed.</ns:description>
                 <ns:nullable>true</ns:nullable>
                 <ns:formatString>yyyy-MM-dd</ns:formatString>
             </ns:column>

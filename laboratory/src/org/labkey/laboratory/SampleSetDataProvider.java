@@ -24,6 +24,7 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExpSampleSet;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.laboratory.AbstractDataProvider;
+import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.QueryCountNavItem;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.ldk.NavItem;
@@ -77,7 +78,7 @@ public class SampleSetDataProvider extends AbstractDataProvider
 
         for (ExpSampleSet ss : ExperimentService.get().getSampleSets(c, u, true))
         {
-            navItems.add(new SampleSetNavItem(this, ss));
+            navItems.add(new SampleSetNavItem(this, LaboratoryService.NavItemCategory.samples, ss));
         }
         return navItems;
     }
@@ -108,10 +109,10 @@ public class SampleSetDataProvider extends AbstractDataProvider
         List<SummaryNavItem> items = new ArrayList<>();
         for (ExpSampleSet ss : ExperimentService.get().getSampleSets(c, u, true))
         {
-            SampleSetNavItem nav = new SampleSetNavItem(this, ss);
+            SampleSetNavItem nav = new SampleSetNavItem(this, LaboratoryService.NavItemCategory.samples, ss);
             if (nav.isVisible(c, u))
             {
-                items.add(new QueryCountNavItem(this, "Samples", ss.getName(), "Samples", ss.getName()));
+                items.add(new QueryCountNavItem(this, "Samples", ss.getName(), LaboratoryService.NavItemCategory.samples, "Samples", ss.getName()));
             }
         }
 
@@ -132,7 +133,7 @@ public class SampleSetDataProvider extends AbstractDataProvider
                     ColumnInfo ci = getSubjectColumn(ti);
                     if (ci != null)
                     {
-                        QueryCountNavItem qc = new QueryCountNavItem(this, "Samples", ss.getName(), "Samples", ss.getName());
+                        QueryCountNavItem qc = new QueryCountNavItem(this, "Samples", ss.getName(), LaboratoryService.NavItemCategory.samples, "Samples", ss.getName());
                         qc.setFilter(new SimpleFilter(FieldKey.fromString(ci.getName()), subjectId));
                         items.add(qc);
                     }

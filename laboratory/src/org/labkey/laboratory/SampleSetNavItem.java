@@ -39,9 +39,9 @@ public class SampleSetNavItem extends AbstractImportingNavItem
 {
     private ExpSampleSet _sampleSet;
 
-    public SampleSetNavItem(DataProvider provider, ExpSampleSet sampleSet)
+    public SampleSetNavItem(DataProvider provider, LaboratoryService.NavItemCategory itemType, ExpSampleSet sampleSet)
     {
-        super(provider, sampleSet.getName(), sampleSet.getName(), LaboratoryService.NavItemCategory.samples.name());
+        super(provider, sampleSet.getName(), sampleSet.getName(), itemType, LaboratoryService.NavItemCategory.samples.name());
         _sampleSet = sampleSet;
     }
 

@@ -758,7 +758,9 @@ labModules/laboratory/resources/web/laboratory/window/WorkbookTagsWindow.js -tex
 labModules/laboratory/src/org/labkey/laboratory/AbstractDataSource.java -text
 labModules/laboratory/src/org/labkey/laboratory/AdditionalDataSource.java -text
 labModules/laboratory/src/org/labkey/laboratory/DemographicsSource.java -text
+labModules/laboratory/src/org/labkey/laboratory/ExtraDataSourceImportNavItem.java -text
 labModules/laboratory/src/org/labkey/laboratory/ExtraDataSourcesDataProvider.java -text
+labModules/laboratory/src/org/labkey/laboratory/ExtraDataSourcesUserSchema.java -text
 labModules/laboratory/src/org/labkey/laboratory/LaboratoryContainerListener.java -text
 labModules/laboratory/src/org/labkey/laboratory/LaboratoryController.java -text
 labModules/laboratory/src/org/labkey/laboratory/LaboratoryDataProvider.java -text

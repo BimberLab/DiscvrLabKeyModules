@@ -141,6 +141,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
     protected void registerSchemas()
     {
         LaboratoryUserSchema.register(this);
+        ExtraDataSourcesUserSchema.register(this);
     }
 
     @Override

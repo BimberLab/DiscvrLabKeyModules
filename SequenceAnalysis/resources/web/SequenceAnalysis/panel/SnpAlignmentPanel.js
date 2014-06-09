@@ -73,11 +73,10 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             collapsible: true,
             style: 'padding-bottom:10px;',
             border: true,
-            buttonAlign: 'left',
             items: [{
-                tag: 'div',
+                xtype: 'ldk-contentresizingpanel',
                 border: false,
-                id: 'alignmentDiv'
+                itemId: 'alignmentDiv'
             }]
         });
     },
@@ -397,8 +396,9 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         this.buildRefPositionMap();
         this.buildSequences();
 
-        var target = this.down('#alignmentDiv').body;
-        target.update('');
+        var target = this.down('#alignmentDiv');
+        var targetEl = Ext4.fly(target.renderTarget);
+        targetEl.update('');
 
         var toAdd = [];
         Ext4.Array.forEach(this.ref_aa_ids, function(ref_id){
@@ -406,13 +406,13 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             console.log('Rendered alignment for ' + ref_id + ': '+((new Date()) - loadTime)/1000 + ' seconds');
         }, this);
 
-        target.createChild({
+        targetEl.createChild({
             tag: 'div',
             children: toAdd
         });
 
         this.startTime = null;
-        this.doLayout();
+        target.doLayout();
         console.log('Processing Time: '+((new Date()) - loadTime)/1000 + ' seconds');
 
         Ext4.Msg.hide();

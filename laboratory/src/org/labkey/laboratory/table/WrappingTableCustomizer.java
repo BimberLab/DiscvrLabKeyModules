@@ -20,6 +20,10 @@ public class WrappingTableCustomizer implements TableCustomizer
     public void customize(TableInfo ti)
     {
         LaboratoryService.get().getLaboratoryTableCustomizer().customize(ti);
-        LDKService.get().getDefaultTableCustomizer().customize(ti);
+
+        if (ti.getPkColumnNames().size() > 0)
+            LDKService.get().getDefaultTableCustomizer().customize(ti);
+        else
+            LDKService.get().getBuiltInColumnsCustomizer(true).customize(ti);
     }
 }

@@ -76,7 +76,7 @@ public class SequenceDataProvider extends AbstractDataProvider
         //NOTE: we return the item regardless of whether the module is enabled, but the default visibility will be false without it
         //also, if that item is activated this module will be turned on
         List<NavItem> items = new ArrayList<>();
-        items.add(new SequenceNavItem(this));
+        items.add(new SequenceNavItem(this, LaboratoryService.NavItemCategory.data));
         return items;
     }
 
@@ -126,7 +126,7 @@ public class SequenceDataProvider extends AbstractDataProvider
         if (c.getActiveModules().contains(getOwningModule()))
         {
             NavItem owner = getDataNavItems(c, u).get(0);
-            SequenceNavItem item = new SequenceNavItem(this, "Browse Sequence Data", "Sequence");
+            SequenceNavItem item = new SequenceNavItem(this, "Browse Sequence Data", LaboratoryService.NavItemCategory.reports, "Sequence");
             item.setOwnerKey(owner.getPropertyManagerKey());
             items.add(item);
         }
@@ -154,11 +154,11 @@ public class SequenceDataProvider extends AbstractDataProvider
     {
         List<SummaryNavItem> items = new ArrayList<>();
 
-        NavItem nav = new SequenceNavItem(this);
+        NavItem nav = new SequenceNavItem(this, LaboratoryService.NavItemCategory.reports);
         if (nav.isVisible(c, u))
         {
-            items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data.name(), "Sequence Analyses"));
-            items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, LaboratoryService.NavItemCategory.data.name(), "Sequence Readsets"));
+            items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Analyses"));
+            items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Readsets"));
         }
 
         return items;
@@ -168,14 +168,14 @@ public class SequenceDataProvider extends AbstractDataProvider
     {
         List<NavItem> items = new ArrayList<>();
 
-        NavItem nav = new SequenceNavItem(this);
+        NavItem nav = new SequenceNavItem(this, LaboratoryService.NavItemCategory.tabbedReports);
         if (nav.isVisible(c, u))
         {
-            QueryCountNavItem item1 = new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data.name(), "Sequence Analyses");
+            QueryCountNavItem item1 = new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Analyses");
             item1.setFilter(new SimpleFilter(FieldKey.fromString("readset/subjectId"), subjectId));
             items.add(item1);
 
-            QueryCountNavItem item2 = new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, LaboratoryService.NavItemCategory.data.name(), "Sequence Readsets");
+            QueryCountNavItem item2 = new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Readsets");
             item2.setFilter(new SimpleFilter(FieldKey.fromString("subjectId"), subjectId));
             items.add(item2);
         }

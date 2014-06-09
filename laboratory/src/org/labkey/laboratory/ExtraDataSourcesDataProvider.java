@@ -21,6 +21,7 @@ import org.labkey.api.laboratory.TabbedReportItem;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.module.Module;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
@@ -71,7 +72,7 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
                 {
                     if (itemType.equals(LaboratoryService.NavItemCategory.misc))
                     {
-                        DetailsUrlWithoutLabelNavItem item = DetailsUrlWithoutLabelNavItem.createForQuery(this, u, source.getTargetContainer(c), source.getSchemaName(), source.getQueryName(), source.getLabel(), source.getCategory());
+                        DetailsUrlWithoutLabelNavItem item = DetailsUrlWithoutLabelNavItem.createForQuery(this, u, source.getTargetContainer(c), source.getSchemaName(), source.getQueryName(), source.getLabel(), itemType, source.getReportCategory());
                         if (source.getTargetContainer(null) != null)
                             item.setTargetContainer(source.getTargetContainer(null));
 
@@ -79,15 +80,19 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
                     }
                     else if (itemType.equals(LaboratoryService.NavItemCategory.reports))
                     {
-                        ReportItem item = new ReportItem(this, source.getTargetContainer(null), source.getSchemaName(), source.getQueryName(), source.getCategory(), source.getLabel());
+                        ReportItem item = new ReportItem(this, source.getTargetContainer(null), source.getSchemaName(), source.getQueryName(), source.getReportCategory(), source.getLabel());
                         if (source.getTargetContainer(null) != null)
                             item.setTargetContainer(source.getTargetContainer(null));
+                        if (source.getSubjectFieldKey() != null)
+                            item.setSubjectFieldKey(source.getSubjectFieldKey());
+                        if (source.getSampleDateFieldKey() != null)
+                            item.setSampleDateFieldKey(source.getSampleDateFieldKey());
 
                         items.add(item);
                     }
                     else
                     {
-                        items.add(new QueryImportNavItem(this, source.getTargetContainer(null), source.getSchemaName(), source.getQueryName(), source.getCategory(), source.getLabel()));
+                        items.add(new ExtraDataSourceImportNavItem(this, source));
                     }
                 }
             }
@@ -97,7 +102,7 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
             {
                 if (urlSource.getItemType().equals(itemType))
                 {
-                    items.add(new StaticURLNavItem(this, urlSource.getLabel(), null, urlSource.getURLString(c), urlSource.getLabel()));
+                    items.add(new StaticURLNavItem(this, urlSource.getLabel(), null, urlSource.getURLString(c), itemType, null));
                 }
             }
         }
@@ -131,11 +136,19 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
         List<NavItem> dataItems = getItems(c, u, LaboratoryService.NavItemCategory.data);
         for (NavItem owner : dataItems)
         {
-            if (owner instanceof QueryImportNavItem)
+            if (owner instanceof ExtraDataSourceImportNavItem)
             {
-                QueryImportNavItem sq = (QueryImportNavItem)owner;
-                ReportItem reportItem = new ReportItem(this, sq.getTargetContainer(null), sq.getSchema(), sq.getQuery(), owner.getCategory(), sq.getLabel());
+                ExtraDataSourceImportNavItem sq = (ExtraDataSourceImportNavItem)owner;
+                ReportItem reportItem = new ReportItem(this, sq.getTargetContainer(null), sq.getSchema(), sq.getQuery(), owner.getReportCategory(), sq.getLabel());
                 reportItem.setOwnerKey(owner.getPropertyManagerKey());
+
+                if (sq.getTargetContainer(c) != null)
+                    reportItem.setTargetContainer(sq.getTargetContainer(c));
+                if (sq.getSource().getSubjectFieldKey() != null)
+                    reportItem.setSubjectFieldKey(sq.getSource().getSubjectFieldKey());
+                if (sq.getSource().getSampleDateFieldKey() != null)
+                    reportItem.setSampleDateFieldKey(sq.getSource().getSampleDateFieldKey());
+
                 items.add(reportItem);
             }
         }
@@ -176,7 +189,7 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
             {
                 assert ti.getPublicSchemaName() != null;
                 assert ti.getPublicName() != null;
-                items.add(new QueryCountNavItem(this, ti.getPublicSchemaName(), ti.getPublicName(), source.getCategory(), source.getLabel()));
+                items.add(new QueryCountNavItem(this, ti.getPublicSchemaName(), ti.getPublicName(), source.getItemType(), source.getReportCategory(), source.getLabel()));
             }
         }
 
@@ -197,7 +210,7 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
                 ColumnInfo ci = getSubjectColumn(ti);
                 if (ci != null)
                 {
-                    QueryCountNavItem item = new QueryCountNavItem(this, ti.getSchema().getName(), ti.getName(), source.getCategory(), source.getLabel());
+                    QueryCountNavItem item = new QueryCountNavItem(this, ti.getSchema().getName(), ti.getName(), source.getItemType(), source.getReportCategory(), source.getLabel());
                     item.setFilter(new SimpleFilter(ci.getFieldKey(), subjectId));
                     items.add(item);
                 }
@@ -212,15 +225,20 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
     {
         List<TabbedReportItem> items = new ArrayList<TabbedReportItem>();
 
-        List<NavItem> reportItems = getItems(c, u, LaboratoryService.NavItemCategory.reports);
+        List<NavItem> reportItems = getReportItems(c, u);
         for (NavItem owner : reportItems)
         {
-            if (owner instanceof QueryImportNavItem)
+            if (owner instanceof ReportItem)
             {
-                QueryImportNavItem sq = (QueryImportNavItem)owner;
-                TabbedReportItem reportItem = new QueryTabbedReportItem(this, sq.getSchema(), sq.getQuery(), sq.getLabel(), owner.getCategory());
+                ReportItem sq = (ReportItem)owner;
+                TabbedReportItem reportItem = new QueryTabbedReportItem(this, sq.getSchema(), sq.getQuery(), sq.getLabel(), owner.getReportCategory());
                 if (sq.getTargetContainer(c) != null)
                     reportItem.setTargetContainer(sq.getTargetContainer(c));
+                if (sq.getSubjectFieldKey() != null)
+                    reportItem.setSubjectIdFieldKey(FieldKey.fromString(sq.getSubjectFieldKey()));
+                if (sq.getSampleDateFieldKey() != null)
+                    reportItem.setSampleDateFieldKey(FieldKey.fromString(sq.getSampleDateFieldKey()));
+
                 reportItem.setOwnerKey(owner.getPropertyManagerKey());
                 items.add(reportItem);
             }

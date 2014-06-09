@@ -16,6 +16,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,7 +94,6 @@ abstract public class AbstractDataSource
         return _containerId == null ? null : ContainerManager.getForId(_containerId);
     }
 
-    @NotNull
     public Container getTargetContainer(Container c)
     {
         if (_containerId == null)
@@ -142,15 +142,16 @@ abstract public class AbstractDataSource
                 return null;
             }
 
+            //TODO: figure out how to handle substitutions
             TableSelector ts = new TableSelector(ti);
             try
             {
                 long count = ts.getRowCount();
                 obj.put("total", count);
             }
-            catch (QueryService.NamedParameterNotProvided e)
+            catch (QueryService.NamedParameterNotProvided | DataIntegrityViolationException e)
             {
-                _log.error("");
+                _log.error(e.getMessage());
                 obj.put("total", 0);
             }
 

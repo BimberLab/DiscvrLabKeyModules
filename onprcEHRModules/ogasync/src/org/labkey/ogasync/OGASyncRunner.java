@@ -33,6 +33,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -145,7 +147,7 @@ public class OGASyncRunner implements Job
     public void doMergeGrantProjects(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException
     {
         TableInfo targetTable = targetSchema.getTable("grantProjects");
-        Map<String, String> fieldMap = new HashMap<>();
+        Map<String, String> fieldMap = new LinkedHashMap<>();
         fieldMap.put("projectNumber", "OGA_PROJECT_NUMBER");
         fieldMap.put("grantNumber", "OGA_AWARD_NUMBER");
         fieldMap.put("agencyAwardNumber", "AGENCY_AWARD_NUMBER");
@@ -166,7 +168,7 @@ public class OGASyncRunner implements Job
         fieldMap.put("activityType", "ACTIVITY_TYPE");
         fieldMap.put("ogaProjectId", "PROJECT_ID");
 
-        TableSelector ts = new TableSelector(sourceTable, new HashSet<>(fieldMap.values()));
+        TableSelector ts = new TableSelector(sourceTable, new LinkedHashSet<>(fieldMap.values()));
         doMerge(u, c, targetTable, ts, "projectNumber", fieldMap, null, null, null, null);
     }
 
@@ -175,7 +177,7 @@ public class OGASyncRunner implements Job
         TableInfo allAliases = getAllAliasesTable();
 
         TableInfo targetTable = targetSchema.getTable("aliases");
-        Map<String, String> fieldMap = new HashMap<>();
+        Map<String, String> fieldMap = new LinkedHashMap<>();
 
         fieldMap.put("alias", "ALIAS_NAME");
         fieldMap.put("aliasEnabled", "ENABLED_FLAG");
@@ -212,14 +214,14 @@ public class OGASyncRunner implements Job
             }
         });
 
-        TableSelector ts = new TableSelector(allAliases, new HashSet<>(fieldMap.values()));
+        TableSelector ts = new TableSelector(allAliases, new LinkedHashSet<>(fieldMap.values()));
         doMerge(u, c, targetTable, ts, "alias", fieldMap, "Other", existingKeys, faMap, investigatorMap);
     }
 
     public void doMergeOGAAccounts(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException
     {
         TableInfo targetTable = targetSchema.getTable("aliases");
-        Map<String, String> fieldMap = new HashMap<>();
+        Map<String, String> fieldMap = new LinkedHashMap<>();
 
         fieldMap.put("alias", "ALIAS");
         fieldMap.put("aliasEnabled", "ALIAS_ENABLED_FLAG");
@@ -247,14 +249,14 @@ public class OGASyncRunner implements Job
         fieldMap.put(PROJECT_STATUS, "PROJECT_STATUS");
 
 
-        TableSelector ts = new TableSelector(sourceTable, new HashSet<>(fieldMap.values()));
+        TableSelector ts = new TableSelector(sourceTable, new LinkedHashSet<>(fieldMap.values()));
         doMerge(u, c, targetTable, ts, "alias", fieldMap, "OGA", null, null, null);
     }
 
     public void doMergeGrants(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException
     {
         TableInfo targetTable = targetSchema.getTable("grants");
-        Map<String, String> fieldMap = new HashMap<>();
+        Map<String, String> fieldMap = new LinkedHashMap<>();
 
         fieldMap.put("grantNumber", "OGA_AWARD_NUMBER");
         //fieldMap.put("fundingAgency", "");

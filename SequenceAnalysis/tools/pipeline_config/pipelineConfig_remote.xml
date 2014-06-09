@@ -10,25 +10,34 @@
     </bean>
 
     <bean id="pipelineJobService" class="org.labkey.pipeline.api.PipelineJobServiceImpl">
-        <property name="appProperties">
-            <bean class="org.labkey.pipeline.api.properties.ApplicationPropertiesImpl">
-                <property name="toolsDirectory" value="/usr/local/labkey" />
+        <property name="workDirFactory">
+            <bean class="org.labkey.pipeline.api.WorkDirectoryRemote$Factory">
+                <property name="cleanupOnStartup" value="true" />
+                <property name="outputPermissions" value="0664"/>
             </bean>
         </property>
         <property name="remoteServerProperties">
             <bean class="org.labkey.pipeline.api.properties.RemoteServerPropertiesImpl">
-                <property name="location" value="sequenceAnalysis"/>
+                <property name="location" value="remotePipelineVagrant"/>
             </bean>
         </property>
+
+        <property name="appProperties">
+            <bean class="org.labkey.pipeline.api.properties.ApplicationPropertiesImpl">
+                <property name="toolsDirectory" value="/labkey/bin" />
+            </bean>
+        </property>
+
         <property name="configProperties">
             <bean class="org.labkey.pipeline.api.properties.ConfigPropertiesImpl">
                 <property name="softwarePackages">
                     <map>
                         <!--These are required.  They will be used in commands and will set environment vars-->
-                        <entry key="Perl" value="/usr/bin"/>
-                        <entry key="SEQUENCEANALYSIS_CODELOCATION" value="/usr/local/labkey/svn/trunk/pipeline_code/SequenceTools"/>
-                        <entry key="SEQUENCEANALYSIS_EXTERNALDIR" value="/usr/local/labkey/svn/trunk/pipeline_code/external"/>
-                        <entry key="SEQUENCEANALYSIS_TOOLS" value="/usr/local/labkey/bin"/>
+                        <entry key="SEQUENCEANALYSIS_CODELOCATION" value="/labkey/svn/trunk/pipeline_code/SequenceTools"/>
+                        <entry key="SEQUENCEANALYSIS_EXTERNALDIR" value="/labkey/svn/trunk/pipeline_code/external"/>
+
+                        <!--If the sequence tools are not in the standard pipeline tools dir, this is required-->
+                        <entry key="SEQUENCEANALYSIS_TOOLS" value="/labkey/bin"/>
 
                         <!--The number of threads to use, where supported by external tools-->
                         <!--<entry key="SEQUENCEANALYSIS_MAX_THREADS" value=2/>-->
@@ -43,12 +52,6 @@
         <property name="jobStore">
             <bean class="org.labkey.pipeline.api.PipelineJobMarshaller"/>
         </property>
-        <property name="workDirFactory">
-            <bean class="org.labkey.pipeline.api.WorkDirectoryRemote$Factory">
-                <property name="tempDirectory" value="/pipeline"/>
-                <property name="outputPermissions" value="0664"/>
-            </bean>
-        </property>
         <property name="largeWorkDirFactory">
             <bean class="org.labkey.pipeline.api.WorkDirectoryLocal$Factory">
                 <property name="outputPermissions" value="0664"/>
@@ -60,10 +63,10 @@
                 <property name="remoteIgnoreCase" value="true"/>
                 <property name="pathMap">
                     <map>
-                        <entry key="file:/c:/labkey_data/" value="file:/labkey_data/"/>
+                        <entry key="file:/c:/labkey_data/files/" value="file:/labkey/fileroot/"/>
                     </map>
                 </property>
             </bean>
         </property>
     </bean>
-</beans> 
+</beans>

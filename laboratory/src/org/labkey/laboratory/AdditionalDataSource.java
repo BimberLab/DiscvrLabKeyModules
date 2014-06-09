@@ -28,22 +28,28 @@ import java.util.List;
 public class AdditionalDataSource extends AbstractDataSource
 {
     private LaboratoryService.NavItemCategory _itemType;
-    private String _category;
+    private String _reportCategory;
+    private boolean _importIntoWorkbooks;
+    private String _subjectFieldKey;
+    private String _sampleDateFieldKey;
     private static final Logger _log = Logger.getLogger(AdditionalDataSource.class);
 
-    public AdditionalDataSource(LaboratoryService.NavItemCategory itemType, String label, @Nullable String containerId, String schemaName, String queryName, String category)
+    public AdditionalDataSource(LaboratoryService.NavItemCategory itemType, String label, @Nullable String containerId, String schemaName, String queryName, String reportCategory, boolean importIntoWorkbooks, String subjectFieldKey, String sampleDateFieldKey)
     {
         super(label, containerId, schemaName, queryName);
         _itemType = itemType;
-        _category = category;
+        _reportCategory = reportCategory;
+        _importIntoWorkbooks = importIntoWorkbooks;
+        _subjectFieldKey = subjectFieldKey;
+        _sampleDateFieldKey = sampleDateFieldKey;
     }
 
-    public static AdditionalDataSource getFromParts(Container c, User u, String itemType, String label, @Nullable String containerId, String schemaName, String queryName, String category) throws IllegalArgumentException
+    public static AdditionalDataSource getFromParts(Container c, User u, String itemType, String label, @Nullable String containerId, String schemaName, String queryName, String reportCategory, boolean importIntoWorkbooks, String subjectFieldKey, String sampleDateFieldKey) throws IllegalArgumentException
     {
-        AdditionalDataSource.validateKey(c, u, containerId, schemaName, queryName, label, itemType, category);
+        AdditionalDataSource.validateKey(c, u, containerId, schemaName, queryName, label, itemType, reportCategory, importIntoWorkbooks);
 
         LaboratoryService.NavItemCategory cat = LaboratoryService.NavItemCategory.valueOf(itemType);
-        return new AdditionalDataSource(cat, label, containerId, schemaName, queryName, category);
+        return new AdditionalDataSource(cat, label, containerId, schemaName, queryName, reportCategory, importIntoWorkbooks, subjectFieldKey, sampleDateFieldKey);
     }
 
     public static AdditionalDataSource getFromPropertyManager(Container c, User u, String key, String value) throws IllegalArgumentException
@@ -59,12 +65,22 @@ public class AdditionalDataSource extends AbstractDataSource
             String containerId = json.getString("containerId");
             String label = json.getString("label");
             String itemType = json.getString("itemType");
-            String category = json.getString("category");
+            String subjectFieldKey = json.optString("subjectFieldKey");
+            String sampleDateFieldKey = json.optString("sampleDateFieldKey");
 
-            validateKey(c, u, containerId, schemaName, queryName, label, itemType, category);
+            //for legacy data:
+            if (json.containsKey("category") && !json.containsKey("reportCategory"))
+            {
+                json.put("reportCategory", json.getString("category"));
+            }
+
+            String reportCategory = json.getString("reportCategory");
+            Boolean importIntoWorkbooks = json.containsKey("importIntoWorkbooks") ? json.getBoolean("importIntoWorkbooks") : false;
+
+            validateKey(c, u, containerId, schemaName, queryName, label, itemType, reportCategory, importIntoWorkbooks);
             LaboratoryService.NavItemCategory cat = LaboratoryService.NavItemCategory.valueOf(itemType);
 
-            return new AdditionalDataSource(cat, label, containerId, schemaName, queryName, category);
+            return new AdditionalDataSource(cat, label, containerId, schemaName, queryName, reportCategory, importIntoWorkbooks, subjectFieldKey, sampleDateFieldKey);
         }
         catch (JSONException e)
         {
@@ -75,7 +91,7 @@ public class AdditionalDataSource extends AbstractDataSource
 
     public String getPropertyManagerKey()
     {
-        return getForKey(getSchemaName()) + DELIM + getForKey(getQueryName()) + DELIM + getForKey(getContainerId()) + DELIM + getForKey(getLabel()) + DELIM + getForKey(getItemType().name())  + DELIM + getForKey(getCategory());
+        return getForKey(getSchemaName()) + DELIM + getForKey(getQueryName()) + DELIM + getForKey(getContainerId()) + DELIM + getForKey(getLabel()) + DELIM + getForKey(getItemType().name())  + DELIM + getForKey(getReportCategory());
     }
 
     public String getPropertyManagerValue()
@@ -85,8 +101,11 @@ public class AdditionalDataSource extends AbstractDataSource
         json.put("schemaName", getSchemaName());
         json.put("queryName", getQueryName());
         json.put("itemType", getItemType());
-        json.put("category", getCategory());
+        json.put("reportCategory", getReportCategory());
         json.put("label", getLabel());
+        json.put("subjectFieldKey", getSubjectFieldKey());
+        json.put("sampleDateFieldKey", getSampleDateFieldKey());
+        json.put("importIntoWorkbooks", isImportIntoWorkbooks());
 
         return json.toString();
     }
@@ -96,12 +115,27 @@ public class AdditionalDataSource extends AbstractDataSource
         return _itemType;
     }
 
-    public String getCategory()
+    public String getReportCategory()
     {
-        return _category;
+        return _reportCategory;
     }
 
-    private static boolean validateKey(Container defaultContainer, User u, @Nullable String containerId, String schemaName, String queryName, String label, String navItemCategory, String category) throws IllegalArgumentException
+    public boolean isImportIntoWorkbooks()
+    {
+        return _importIntoWorkbooks;
+    }
+
+    public String getSubjectFieldKey()
+    {
+        return _subjectFieldKey;
+    }
+
+    public String getSampleDateFieldKey()
+    {
+        return _sampleDateFieldKey;
+    }
+
+    private static boolean validateKey(Container defaultContainer, User u, @Nullable String containerId, String schemaName, String queryName, String label, String navItemCategory, String reportCategory, boolean importIntoWorkbooks) throws IllegalArgumentException
     {
         Container target;
         if (containerId == null)
@@ -127,8 +161,8 @@ public class AdditionalDataSource extends AbstractDataSource
         if (StringUtils.trimToNull(label) == null)
             throw new IllegalArgumentException("Label must not be blank");
 
-        if (StringUtils.trimToNull(category) == null)
-            throw new IllegalArgumentException("Category must not be blank");
+        if (StringUtils.trimToNull(reportCategory) == null)
+            throw new IllegalArgumentException("Report category must not be blank");
 
         if (StringUtils.trimToNull(navItemCategory) == null)
             throw new IllegalArgumentException("Item type must not be blank");
@@ -149,7 +183,10 @@ public class AdditionalDataSource extends AbstractDataSource
     public JSONObject toJSON(Container c, User u, boolean includeTotals)
     {
         JSONObject json = super.toJSON(c, u, includeTotals);
-        json.put("category", getCategory());
+        json.put("reportCategory", getReportCategory());
+        json.put("importIntoWorkbooks", isImportIntoWorkbooks());
+        json.put("subjectFieldKey", getSubjectFieldKey());
+        json.put("sampleDateFieldKey", getSampleDateFieldKey());
         if (getItemType() != null)
             json.put("itemType", getItemType().name());
 

@@ -460,7 +460,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
             Set<AdditionalDataSource> set = map.get(c);
             if (set == null)
-                set = new HashSet<AdditionalDataSource>();
+                set = new HashSet<>();
 
             AdditionalDataSource source = AdditionalDataSource.getFromPropertyManager(c, u, entry.getKey(), entry.getValue());
             if (source != null)
@@ -486,7 +486,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
             Set<DemographicsSource> set = map.get(c);
             if (set == null)
-                set = new HashSet<DemographicsSource>();
+                set = new HashSet<>();
 
             DemographicsSource source = DemographicsSource.getFromPropertyManager(c, u, entry.getKey(), entry.getValue());
             if (source != null)
@@ -501,7 +501,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public Set<URLDataSource> getURLDataSources(Container c, User u) throws IllegalArgumentException
     {
-        Set<URLDataSource> qds = new HashSet<URLDataSource>();
+        Set<URLDataSource> qds = new HashSet<>();
 
         Container target = c.isWorkbookOrTab() ? c.getParent() : c;
         Map<String, String> properties = PropertyManager.getProperties(target, URL_DATASOURCE_PROPERTY_CATEGORY);
@@ -524,7 +524,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public Set<AdditionalDataSource> getAdditionalDataSources(Container c, User u) throws IllegalArgumentException
     {
-        Set<AdditionalDataSource> qds = new HashSet<AdditionalDataSource>();
+        Set<AdditionalDataSource> qds = new HashSet<>();
 
         Container target = c.isWorkbookOrTab() ? c.getParent() : c;
         Map<String, String> properties = PropertyManager.getProperties(target, DATASOURCE_PROPERTY_CATEGORY);
@@ -571,9 +571,9 @@ public class LaboratoryServiceImpl extends LaboratoryService
         PropertyManager.saveProperties(props);
     }
 
-    public Set<TabbedReportItem> getTabbedReportItems(Container c, User u)
+    public List<TabbedReportItem> getTabbedReportItems(Container c, User u)
     {
-        Set<TabbedReportItem> items = new HashSet<TabbedReportItem>();
+        List<TabbedReportItem> items = new ArrayList<TabbedReportItem>();
         for (DataProvider dp : getDataProviders())
         {
             for (TabbedReportItem item : dp.getTabbedReportItems(c, u))
@@ -581,6 +581,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
                 items.add(item);
             }
         }
+        sortNavItems(items);
         return items;
     }
 

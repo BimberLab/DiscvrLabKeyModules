@@ -1336,9 +1336,13 @@ public class LaboratoryController extends SpringActionController
                 String containerId = obj.containsKey("containerId") ? StringUtils.trimToNull(obj.getString("containerId")) : null;
                 String schemaName = StringUtils.trimToNull(obj.getString("schemaName"));
                 String queryName = StringUtils.trimToNull(obj.getString("queryName"));
-                String category = StringUtils.trimToNull(obj.getString("category"));
+                String reportCategory = StringUtils.trimToNull(obj.getString("reportCategory"));
                 String itemType = StringUtils.trimToNull(obj.getString("itemType"));
                 String label = StringUtils.trimToNull(obj.getString("label"));
+                String subjectFieldKey = StringUtils.trimToNull(obj.getString("subjectFieldKey"));
+                String sampleDateFieldKey = StringUtils.trimToNull(obj.getString("sampleDateFieldKey"));
+                boolean importIntoWorkbooks = obj.containsKey("importIntoWorkbooks") ? obj.getBoolean("importIntoWorkbooks") : false;
+
                 if (label == null || queryName == null || schemaName == null)
                 {
                     errors.reject(ERROR_MSG, "Must contain a label, schemaName and queryName");
@@ -1359,7 +1363,7 @@ public class LaboratoryController extends SpringActionController
                     return null;
                 }
 
-                sources.add(AdditionalDataSource.getFromParts(getContainer(), getUser(), itemType, label, containerId, schemaName, queryName, category));
+                sources.add(AdditionalDataSource.getFromParts(getContainer(), getUser(), itemType, label, containerId, schemaName, queryName, reportCategory, importIntoWorkbooks, subjectFieldKey, sampleDateFieldKey));
             }
 
             service.setAdditionalDataSources(getContainer(), getUser(), sources);
@@ -1586,7 +1590,7 @@ public class LaboratoryController extends SpringActionController
 
             PropertyManager.PropertyMap propMap = PropertyManager.getWritableProperties(getContainer(), TabbedReportItem.OVERRIDES_PROP_KEY, true);
 
-            Set<TabbedReportItem> tabbedReports = LaboratoryService.get().getTabbedReportItems(getContainer(), getUser());
+            List<TabbedReportItem> tabbedReports = LaboratoryService.get().getTabbedReportItems(getContainer(), getUser());
             Map<String, TabbedReportItem> reportMap = new HashMap<String, TabbedReportItem>();
             for (TabbedReportItem item : tabbedReports)
             {
@@ -1608,9 +1612,9 @@ public class LaboratoryController extends SpringActionController
                 if (label != null && !ti.getLabel().equals(label))
                     toSave.put("label", label);
 
-                String category = StringUtils.trimToNull(props.getString("category"));
-                if (category != null && !ti.getCategory().equals(category))
-                    toSave.put("category", category);
+                String reportCategory = StringUtils.trimToNull(props.getString("reportCategory"));
+                if (reportCategory != null && !ti.getReportCategory().equals(reportCategory))
+                    toSave.put("reportCategory", reportCategory);
 
                 if (toSave.keySet().size() > 0)
                     propMap.put(key, toSave.toString());
@@ -1873,13 +1877,13 @@ public class LaboratoryController extends SpringActionController
             {
                 for (NavItem item : dp.getSummary(getContainer(), getUser()))
                 {
-                    List<NavItem> list = items.get(item.getCategory());
+                    List<NavItem> list = items.get(item.getReportCategory());
                     if (list == null)
                         list = new ArrayList<>();
 
                     list.add(item);
 
-                    items.put(item.getCategory(), list);
+                    items.put(item.getReportCategory(), list);
                 }
             }
 
@@ -1958,13 +1962,13 @@ public class LaboratoryController extends SpringActionController
                 {
                     for (NavItem item : dp.getSubjectIdSummary(getContainer(), getUser(), subjectId))
                     {
-                        List<NavItem> list = items.get(item.getCategory());
+                        List<NavItem> list = items.get(item.getReportCategory());
                         if (list == null)
                             list = new ArrayList<>();
 
                         list.add(item);
 
-                        items.put(item.getCategory(), list);
+                        items.put(item.getReportCategory(), list);
                     }
                 }
 

@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.laboratory.AbstractImportingNavItem;
 import org.labkey.api.laboratory.DataProvider;
+import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineUrls;
 import org.labkey.api.query.QueryAction;
@@ -37,14 +38,14 @@ public class SequenceNavItem extends AbstractImportingNavItem
 {
     public static final String NAME = "Sequence";
 
-    public SequenceNavItem(DataProvider provider)
+    public SequenceNavItem(DataProvider provider, LaboratoryService.NavItemCategory itemType)
     {
-        this(provider, NAME, null);
+        this(provider, NAME, itemType, null);
     }
 
-    public SequenceNavItem(DataProvider provider, String label, String category)
+    public SequenceNavItem(DataProvider provider, String label, LaboratoryService.NavItemCategory itemType, String reportCategory)
     {
-        super(provider, NAME, label, (category == null ? "Sequence" : category));
+        super(provider, NAME, label, itemType, (reportCategory == null ? "Sequence" : reportCategory));
     }
 
     @Override

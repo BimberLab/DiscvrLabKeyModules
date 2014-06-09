@@ -68,8 +68,13 @@ Ext4.define('Laboratory.panel.QueryPickerPanel', {
             listeners: {
                 change: function(field, val){
                     var panel = field.up('panel');
-                    //panel.onContainerChange(records[0].get('EntityId'));
                     panel.onContainerChange(val);
+                },
+                render: function(field){
+                    if (field.getValue()){
+                        var panel = field.up('panel');
+                        panel.onContainerChange(field.getValue());
+                    }
                 }
             }
         }
@@ -96,6 +101,7 @@ Ext4.define('Laboratory.panel.QueryPickerPanel', {
                 fields: ['name']
             },
             loadSchemaField: function(containerId){
+                var initialValue = this.getValue();
                 this.store.removeAll();
                 this.reset();
 
@@ -118,17 +124,20 @@ Ext4.define('Laboratory.panel.QueryPickerPanel', {
                         this.store.add(toAdd);
                         this.setDisabled(false);
                         panel.getEl().unmask();
+                        if (initialValue){
+                            this.setValue(initialValue);
+                            panel.onSchemaChange(initialValue);
+                        }
                     },
                     failure: LDK.Utils.getErrorCallback()
                 });
             },
             listeners: {
                 render: function(field){
-                    field.loadSchemaField();
+                    field.loadSchemaField(null, field.getValue());
                 },
                 change: function(field, val){
                     var panel = field.up('panel');
-                    //panel.onSchemaChange(records[0].get('name'));
                     panel.onSchemaChange(val);
                 }
             }
@@ -153,6 +162,8 @@ Ext4.define('Laboratory.panel.QueryPickerPanel', {
                 }
             },
             loadQueryField: function(schemaName){
+                var initialValue = this.getValue();
+
                 this.store.removeAll();
                 this.reset();
                 this.setDisabled(true);
@@ -179,6 +190,10 @@ Ext4.define('Laboratory.panel.QueryPickerPanel', {
 
                         this.setDisabled(false);
                         panel.getEl().unmask();
+                        if (initialValue){
+                            this.setValue(initialValue);
+                            panel.onQueryChange(initialValue);
+                        }
                     },
                     failure: LDK.Utils.getErrorCallback()
                 });
@@ -187,7 +202,6 @@ Ext4.define('Laboratory.panel.QueryPickerPanel', {
                 change: function(field, val){
                     var panel = field.up('panel');
 
-                    //var qd = records[0].get('queryDef');
                     var recIdx = field.store.findExact(field.valueField, val);
                     var qd = recIdx == -1 ? null : field.store.getAt(recIdx).get('queryDef');
                     panel.onQueryChange(qd);

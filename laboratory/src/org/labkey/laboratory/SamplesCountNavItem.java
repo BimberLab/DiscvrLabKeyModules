@@ -5,6 +5,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.laboratory.DataProvider;
+import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.QueryCountNavItem;
 import org.labkey.api.query.FieldKey;
 
@@ -15,9 +16,9 @@ import org.labkey.api.query.FieldKey;
  */
 public class SamplesCountNavItem extends QueryCountNavItem
 {
-    public SamplesCountNavItem(DataProvider provider, String schema, String query, String category, String label)
+    public SamplesCountNavItem(DataProvider provider, String schema, String query, LaboratoryService.NavItemCategory itemType, String category, String label)
     {
-        super(provider, schema, query, category, label);
+        super(provider, schema, query, itemType, category, label);
     }
 
     @Override
