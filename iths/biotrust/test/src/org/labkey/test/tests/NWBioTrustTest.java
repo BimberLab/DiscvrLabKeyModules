@@ -188,7 +188,7 @@ public class NWBioTrustTest extends SurveyTest
     private final File tissueJson = new File(getDownloadDir(), "tissue-sample.json");
     private final File bloodSampleJson = new File(getDownloadDir(), "blood-sample.json");
     private final File anatomicalSiteList = new File(getDownloadDir(), "anatomical-site-list.zip");
-    private final File contactsFields = new File(getLabKeyRoot() + "/server/customModules/biotrust/webapp/biotrust/metadata/contacts-fields.tsv");
+    private final File contactsFields = new File(getLabKeyRoot() + "/externalModules/iths/biotrust/webapp/biotrust/metadata/contacts-fields.tsv");
 
     private int fileCount = 0;
 
