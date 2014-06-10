@@ -1,0 +1,581 @@
+{"survey": {
+    "layout": "card",
+    "labelCaption": "Study Name",
+    "labelWidth": 110,
+    "sections": [{
+	    "title": "Study Information",
+	    "questions": [
+            {
+                "width": 800,
+                "jsonType": "string",
+                "inputType": "textarea",
+                "name": "studydescription",
+                "caption": "Please briefly describe the purpose and aims of your study:",
+                "shortCaption": "Study Purpose"
+            },
+            {
+                "shortCaption": "IRB Approval Status",
+                "extConfig": {
+                    "width": 800,
+                    "xtype": "combo",
+                    "name": "irbapprovalstatus",
+                    "fieldLabel": "IRB approval status",
+                    "queryMode": "local",
+                    "displayField": "value",
+                    "valueField": "value",
+                    "emptyText": "Select...",
+                    "editable": false,
+                    "store": {
+                         "fields": ["value"],
+                         "data" : [
+                             {"value": "Approved Human Subjects Research"},
+                             {"value": "Approved Non-Human Subjects Research"},
+                             {"value": "Approved Waiver of Consent"},
+                             {"value": "Pending"},
+                             {"value": "Not Yet Submitted"},
+                             {"value": "Not Required"}
+                         ]
+                    }
+                }
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": "IRB File Number",
+                    "defaults": { "labelSeparator": "" },
+                    "name": "filenumberfieldcombo",
+                    "layout": "hbox",
+                    "width": 800,
+                    "items": [
+                        { "xtype": "textfield", "fieldLabel": "", "name": "irbfilenumber", "width": 175 },
+                        { "xtype": "label", "width": 15 },
+                        { "xtype": "textfield", "fieldLabel": "Protocol #", "labelWidth": 70, "name": "protocolnumber", "width": 255, "emptyText": "If not applicable, enter N/A" }
+                    ]
+                },
+                "listeners" : {
+                    "change" : {
+                        "question" : "irbapprovalstatus",
+                        "fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['irbapprovalstatus'] != 'Not Yet Submitted' && values['irbapprovalstatus'] != 'Not Required' && values['irbapprovalstatus'] != null); }} "
+                    }
+                }
+            },
+            {
+            	"width": 550,
+                "jsonType": "date",
+                "inputType": "text",
+                "name": "irbexpirationdate",
+                "caption": "IRB Expiration Date",
+                "shortCaption": "IRB Expiration Date",
+                "hidden": true,
+                "listeners" : {
+                    "change" : {
+                        "question" : "irbapprovalstatus",
+                        "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['irbapprovalstatus'] == 'Approved Human Subjects Research' || values['irbapprovalstatus'] == 'Approved Waiver of Consent');} "
+                    }
+                }
+            },
+            {
+                "hidden": true,
+                "shortCaption": "Reviewing IRB",
+                "extConfig": {
+                    "width": 800,
+                    "xtype": "combo",
+                    "name": "reviewingirb",
+                    "fieldLabel": "Reviewing IRB",
+                    "queryMode": "local",
+                    "displayField": "value",
+                    "valueField": "value",
+                    "emptyText": "Select...",
+                    "editable": false,
+                    "store": {
+                         "fields": ["value"],
+                         "data" : [
+                             {"value": "Cancer Consortium Institutional Review Board (CCIRB)"},
+                             {"value": "Fred Hutchinson Cancer Research Center"},
+                             {"value": "Seattle Children's"},
+                             {"value": "University of Washington"},
+                             {"value": "Western Institutional Review Board (WIRB)"},
+                             {"value": "Other"}
+                         ]
+                    }
+                },
+                "listeners" : {
+                    "change" : {
+                        "question" : "irbapprovalstatus",
+                        "fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['irbapprovalstatus'] != 'Not Required' && values['irbapprovalstatus'] != null); }} "
+                    }
+                }
+            },
+            {
+                "hidden": true,
+                "required": true,
+                "shortCaption": "Reviewing IRB Other (Study Information)",
+            	"extConfig": {
+            		"xtype": "textfield",
+            		"name": "reviewingirbother",
+            		"width": 800,
+	            	"fieldLabel": " ",
+                    "emptyText": "Other - please type here to specify"
+	            },
+                "listeners" : {"change" : {"question" : "reviewingirb","fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['reviewingirb'] == 'Other'); }} "}}
+            },
+            {
+               "hidden": true,
+               "extConfig": {
+                   "width": 800,
+                   "xtype": "biotrust-documentupload",
+                   "name": "proofofirbapproval",
+                   "fieldLabel": "Please upload proof of IRB approval (signed cover page and application or portion of application that supports your request).",
+                   "documentTypeName": "IRB Approval Packet",
+                   "windowTitle": "Add IRB Approval Document"
+               },
+               "listeners" : {"change" : {"question" : "irbapprovalstatus", "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['irbapprovalstatus'] == 'Approved Human Subjects Research' || values['irbapprovalstatus'] == 'Approved Non-Human Subjects Research' || values['irbapprovalstatus'] == 'Approved Waiver of Consent');} "}}
+            },
+            {
+               "hidden": true,
+               "extConfig": {
+                   "width": 800,
+                   "xtype": "biotrust-documentupload",
+                   "name": "biologicalspecimenuse",
+                   "fieldLabel": "Please upload a copy of 'Use of Non-Identifiable Biological Specimens/Data Review Determination' here.",
+                   "documentTypeName": "Use of Non-Identifiable Biological Specimens/Data Review Determination",
+                   "windowTitle": "Add Biological Specimens Use Document"
+               },
+               "listeners" : {"change" : {"question" : "irbapprovalstatus", "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['irbapprovalstatus'] == 'Not Required');} "}}
+            },
+            {
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 538,
+                    "fieldLabel": "Does this study have its own consent form?",
+                    "name": "hasconsentformradio",
+                    "columns": 2,
+                    "items": [
+                        { "boxLabel": "Yes", "name": "hasconsentform", "inputValue": true },
+                        { "boxLabel": "No", "name": "hasconsentform", "inputValue": false }
+                    ]
+                }
+            },
+            {
+               "hidden": true,
+               "extConfig": {
+                   "width": 800,
+                   "xtype": "biotrust-documentupload",
+                   "name": "studyconsentform",
+                   "fieldLabel": "If yes, please upload a copy of the consent form:",
+                   "documentTypeName": "Blank Unique Consent Form (by Study)",
+                   "windowTitle": "Add Blank Unique Consent Form"
+               },
+               "listeners" : {"change" : {"question" : "hasconsentform", "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['hasconsentform'] == true);} "}}
+            },
+            {
+                "shortCaption": "Submission to Public Database",
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 625,
+                    "fieldLabel": "Do you anticipate submitting data from this study to a public database (e.g. dbGAP)?",
+                    "name": "anticipatesubmissionpublicdataradio",
+                    "columns": 3,
+                    "items": [
+                        { "boxLabel": "Yes", "name": "anticipatesubmissionpublicdata", "inputValue": "Yes" },
+                        { "boxLabel": "No", "name": "anticipatesubmissionpublicdata", "inputValue": "No" },
+                        { "boxLabel": "Not Sure", "name": "anticipatesubmissionpublicdata", "inputValue": "Not Sure" }
+                    ]
+                }
+            },
+            {
+                "extConfig": {
+                    "xtype": "displayfield",
+                    "labelWidth": 800,
+                    "fieldLabel": "<b>Please note:</b> If your study will be archiving genotypic or phenotypic data in dbGap or other public databases, we will make sure to provide you with tissue and/or blood from patients who have consented to such use of their samples."
+                }
+            }
+	    ]
+    },{
+	    "title": "Contact Information",
+	    "questions": [
+            {
+                "shortCaption": "Principal Investigator",
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": "Study Principal Investigator:",
+                    "name": "investigatorfieldcontainer",
+                    "layout": "hbox",
+                    "width": 800,
+                    "items": [
+                        {
+                            "xtype": "contactcombo",
+                            "name": "principalinvestigator",
+                            "fieldLabel": "",
+                            "emptyText": "Select...",
+                            "width": 400
+                        },
+                        { "xtype": "label", "width": 10 },
+                        {
+                            "xtype": "addcontactbutton",
+                            "buttonText": "+",
+                            "contactComboName": "principalinvestigator"
+                        }
+                    ]
+                }
+            },
+            {
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 800,
+                    "fieldLabel": "Primary Contact:",
+                    "name": "primarystudycontactchoiceradiogroup",
+                    "columns": 3,
+                    "items": [
+                        { "boxLabel": "Investigator", "name": "primarystudycontactchoice", "inputValue": "Investigator" },
+                        { "boxLabel": "Other", "name": "primarystudycontactchoice", "inputValue": "Other" }
+                    ]
+                }
+            },
+            {
+                "hidden": true,
+                "shortCaption": "Primary Contact",
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": " ",
+                    "name": "studycontactfieldcontainer",
+                    "layout": "hbox",
+                    "width": 800,
+                    "items": [
+                        {
+                            "xtype": "contactcombo",
+                            "name": "primarystudycontact",
+                            "fieldLabel": "",
+                            "emptyText": "Select...",
+                            "width": 400
+                        },
+                        { "xtype": "label", "width": 10 },
+                        {
+                            "xtype": "addcontactbutton",
+                            "buttonText": "+",
+                            "contactComboName": "primarystudycontact"
+                        }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : "primarystudycontactchoice", "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['primarystudycontactchoice'] == 'Other');} "}}
+            }
+        ]
+    },{
+        "title": "Billing",
+        "questions": [
+            {
+                "extConfig": {
+                    "xtype": "displayfield",
+                    "labelWidth": 800,
+                    "fieldLabel": "<span style='font-style: italic;'><span style='text-decoration: underline; font-weight: bold;'>Note:</span> A budget will be provided for your approval prior to initiating sample collections.</span>"
+                }
+            },
+            {
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 800,
+                    "fieldLabel": "Do you have funding, or are you looking for an estimate?",
+                    "name": "havefundingradio",
+                    "columns": 3,
+                    "items": [
+                        { "boxLabel": "Funding Exists", "name": "havefunding", "inputValue": "Funding Exists" },
+                        { "boxLabel": "Need an Estimate", "name": "havefunding", "inputValue": "Need an Estimate" }
+                    ]
+                }
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 800,
+                    "fieldLabel": "P.I. of Funding Source:",
+                    "name": "fundingsourcepiradiogroup",
+                    "columns": 3,
+                    "items": [
+                        { "boxLabel": "Investigator", "name": "fundingsourcepi", "inputValue": "Investigator" },
+                        { "boxLabel": "Other", "name": "fundingsourcepi", "inputValue": "Other" }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : ["havefunding"],"fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists'); }} "}}
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": "Funding Soucre P.I. Contact:",
+                    "name": "fundingsourcepicontactfieldcontainer",
+                    "layout": "hbox",
+                    "width": 800,
+                    "items": [
+                        {
+                            "xtype": "contactcombo",
+                            "name": "fundingsourcepicontact",
+                            "fieldLabel": "",
+                            "emptyText": "Select...",
+                            "width": 400
+                        },
+                        { "xtype": "label", "width": 10 },
+                        {
+                            "xtype": "addcontactbutton",
+                            "buttonText": "+",
+                            "contactComboName": "fundingsourcepicontact"
+                        }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : ["havefunding","fundingsourcepi"],"fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists' && values['fundingsourcepi'] == 'Other'); }} "}}
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": "Budget Contact:",
+                    "name": "budgetcontactfieldcontainer",
+                    "layout": "hbox",
+                    "width": 800,
+                    "items": [
+                        {
+                            "xtype": "contactcombo",
+                            "name": "budgetcontact",
+                            "fieldLabel": "",
+                            "emptyText": "Select...",
+                            "width": 400
+                        },
+                        { "xtype": "label", "width": 10 },
+                        {
+                            "xtype": "addcontactbutton",
+                            "buttonText": "+",
+                            "contactComboName": "budgetcontact"
+                        }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : ["havefunding"],"fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists'); }} "}}
+            },
+            {
+                "hidden": true,
+            	"extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": "Amount budgeted for sample collection services:",
+                    "labelWidth": 340,
+                    "name": "amountbudgetedfieldcontainer",
+                    "layout": "hbox",
+                    "width": 800,
+                    "items": [
+                        { "xtype": "displayfield", "width": 10, "value": "$" },
+                        {
+                            "xtype": "numberfield",
+                            "name": "amountbudgeted",
+                            "width": 150,
+                            "minValue": 0,
+                            "allowDecimals": true,
+                            "decimalPrecision": 2,
+                            "hideTrigger": true
+                        }
+                    ]
+	            },
+                "listeners" : {"change" : {"question" : "havefunding","fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists'); }} "}}
+
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "displayfield",
+                    "name": "budgetsourcedisplayfield",
+                    "labelWidth": 800,
+                    "fieldLabel": "<b>You may enter up to three budget sources below (percentages must equal 100% or alternatives entered in the special comments box):</b>"
+                },
+                "listeners" : {"change" : {"question" : "havefunding","fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists'); }} "}}
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": " ",
+                    "labelWidth": 0,
+                    "defaults": { "labelSeparator": "" },
+                    "name": "budgetsource1fieldcontainer",
+                    "layout": "hbox",
+                    "width": 800,
+                    "items": [
+                        { "xtype": "textfield", "fieldLabel": "<b>1. Project or P.O. Number:</b>", "name": "budgetsource1num", "labelWidth": 200, "width": 420 },
+                        { "xtype": "label", "width": 50 },
+                        { "xtype": "numberfield", "fieldLabel": "% Split:", "name": "budgetsource1perc", "labelWidth": 100, "width": 325 }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : "havefunding","fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists'); }} "}}
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "width": 771,
+                    "labelWidth": 175,
+                    "xtype": "combo",
+                    "name": "budgetsource1institution",
+                    "fieldLabel": "Institution",
+                    "margin": "0px 0px 0px 30px",
+                    "queryMode": "local",
+                    "displayField": "value",
+                    "valueField": "value",
+                    "emptyText": "Select...",
+                    "editable": false,
+                    "store": {
+                         "fields": ["value"],
+                         "data" : [
+                             {"value": "Fred Hutchinson Cancer Research Center"},
+                             {"value": "Seattle Children's"},
+                             {"value": "Seattle Cancer Care Alliance"},
+                             {"value": "University of Washington"},
+                             {"value": "Other"}
+                         ]
+                    }
+                },
+                "listeners" : {"change" : {"question" : "havefunding","fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists'); }} "}}
+            },
+            {
+                "hidden": true,
+                "required": true,
+                "shortCaption": "Institution 1 Other (Billing)",
+            	"extConfig": {
+            		"xtype": "textfield",
+            		"name": "budgetsource1institutionother",
+            		"width": 771,
+                    "margin": "0px 0px 0px 30px",
+                    "labelWidth": 175,
+	            	"fieldLabel": " ",
+                    "emptyText": "Other - please type here to specify"
+	            },
+                "listeners" : {"change" : {"question" : ["havefunding", "budgetsource1institution"],"fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists' && values['budgetsource1institution'] == 'Other'); }} "}}
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": " ",
+                    "labelWidth": 0,
+                    "defaults": { "labelSeparator": "" },
+                    "name": "budgetsource2fieldcontainer",
+                    "layout": "hbox",
+                    "width": 800,
+                    "items": [
+                        { "xtype": "textfield", "fieldLabel": "<b>2. Project or P.O. Number:</b>", "name": "budgetsource2num", "labelWidth": 200, "width": 420 },
+                        { "xtype": "label", "width": 50 },
+                        { "xtype": "numberfield", "fieldLabel": "% Split:", "name": "budgetsource2perc", "labelWidth": 100, "width": 325 }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : "havefunding","fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists'); }} "}}
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "width": 771,
+                    "labelWidth": 175,
+                    "xtype": "combo",
+                    "name": "budgetsource2institution",
+                    "fieldLabel": "Institution",
+                    "margin": "0px 0px 0px 30px",
+                    "queryMode": "local",
+                    "displayField": "value",
+                    "valueField": "value",
+                    "emptyText": "Select...",
+                    "editable": false,
+                    "store": {
+                         "fields": ["value"],
+                         "data" : [
+                             {"value": "Fred Hutchinson Cancer Research Center"},
+                             {"value": "Seattle Children's"},
+                             {"value": "Seattle Cancer Care Alliance"},
+                             {"value": "University of Washington"},
+                             {"value": "Other"}
+                         ]
+                    }
+                },
+                "listeners" : {"change" : {"question" : "havefunding","fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists'); }} "}}
+            },
+            {
+                "hidden": true,
+                "required": true,
+                "shortCaption": "Institution 2 Other (Billing)",
+            	"extConfig": {
+            		"xtype": "textfield",
+            		"name": "budgetsource2institutionother",
+            		"width": 771,
+                    "margin": "0px 0px 0px 30px",
+                    "labelWidth": 175,
+	            	"fieldLabel": " ",
+                    "emptyText": "Other - please type here to specify"
+	            },
+                "listeners" : {"change" : {"question" : ["havefunding", "budgetsource2institution"],"fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists' && values['budgetsource2institution'] == 'Other'); }} "}}
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": " ",
+                    "labelWidth": 0,
+                    "defaults": { "labelSeparator": "" },
+                    "name": "budgetsource3fieldcontainer",
+                    "layout": "hbox",
+                    "width": 800,
+                    "items": [
+                        { "xtype": "textfield", "fieldLabel": "<b>3. Project or P.O. Number:</b>", "name": "budgetsource3num", "labelWidth": 200, "width": 420 },
+                        { "xtype": "label", "width": 50 },
+                        { "xtype": "numberfield", "fieldLabel": "% Split:", "name": "budgetsource3perc", "labelWidth": 100, "width": 325 }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : "havefunding","fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists'); }} "}}
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "width": 771,
+                    "labelWidth": 175,
+                    "xtype": "combo",
+                    "name": "budgetsource3institution",
+                    "fieldLabel": "Institution",
+                    "margin": "0px 0px 0px 30px",
+                    "queryMode": "local",
+                    "displayField": "value",
+                    "valueField": "value",
+                    "emptyText": "Select...",
+                    "editable": false,
+                    "store": {
+                         "fields": ["value"],
+                         "data" : [
+                             {"value": "Fred Hutchinson Cancer Research Center"},
+                             {"value": "Seattle Children's"},
+                             {"value": "Seattle Cancer Care Alliance"},
+                             {"value": "University of Washington"},
+                             {"value": "Other"}
+                         ]
+                    }
+                },
+                "listeners" : {"change" : {"question" : "havefunding","fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists'); }} "}}
+            },
+            {
+                "hidden": true,
+                "required": true,
+                "shortCaption": "Institution 3 Other (Billing)",
+            	"extConfig": {
+            		"xtype": "textfield",
+            		"name": "budgetsource3institutionother",
+            		"width": 771,
+                    "margin": "0px 0px 0px 30px",
+                    "labelWidth": 175,
+	            	"fieldLabel": " ",
+                    "emptyText": "Other - please type here to specify"
+	            },
+                "listeners" : {"change" : {"question" : ["havefunding", "budgetsource3institution"],"fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['havefunding'] == 'Funding Exists' && values['budgetsource3institution'] == 'Other'); }} "}}
+            },
+            {
+            	"extConfig": {
+            		"xtype": "textarea",
+            		"name": "billingcomments",
+            		"width": 800,
+                    "height": 100,
+                    "labelAlign": "top",
+	            	"fieldLabel": "<b>Comments:</b>"
+	            }
+            }
+        ]
+    }]
+}}

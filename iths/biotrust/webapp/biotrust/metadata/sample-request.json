@@ -1,0 +1,523 @@
+{"survey": {
+    "layout": "card",
+    "sections": [{
+        "title": "Sample Information",
+        "questions": [
+            {
+                "required": true,
+                "shortCaption": "Associated Study (Sample Information)",
+                "extConfig": {
+                    "width": 800,
+                    "labelWidth": 245,
+                    "xtype": "associatedstudyquestion",
+                    "name": "studyid",
+                    "fieldLabel": "Associated study for this sample request:"
+                }
+            },
+            {
+              "required": true,
+              "extConfig": {
+                   "xtype": "fieldcontainer",
+                   "width": 800,
+                   "labelWidth": 245,
+                   "margin": "10px 10px 15px",
+                   "fieldLabel": "What kinds of samples are needed for your study?",
+                   "items": [
+                      {
+                        "xtype": "container",
+                        "border": true,
+                        "defaults": { "xtype": "checkbox", "inputValue": "true", "uncheckedValue": "false"},
+                        "items": [
+                            { "boxLabel": "Tissue collected at surgery", "name": "requiresurgicaltissue" },
+                            { "boxLabel": "Non-surgical tissue samples (e.g., core needle biopsies)", "name": "requirenonsurgicaltissue" },
+                            { "boxLabel": "Blood drawn in conjunction with clinical or surgery appointments", "name": "requireappointmentsblood" },
+                            { "boxLabel": "Residual blood products from clinical draws that would otherwise be discarded", "name": "requirediscardedblood" },
+                            { "boxLabel": "De-identified formalin-fixed paraffin-embedded (FFPE) tissues", "name": "requireffpetissue" },
+                            { "boxLabel": "Archived samples in repositories", "name": "requirearchivedsamples" }
+                        ]
+                      }
+                 ]
+              }
+            },
+            {
+               "hidden": true,
+               "extConfig": {
+                   "width": 800,
+                   "labelWidth": 245,
+                   "xtype": "biotrust-documentupload",
+                   "name": "vbdspecimensearchexport",
+                   "fieldLabel": "If you have an Excel export file from the NWBT VBD Specimen Search, you may upload that file here:",
+                   "documentTypeName": "NWBT VBD Specimen Search Export",
+                   "windowTitle": "Add VBD Specimen Search Excel File"
+               },
+               "listeners" : {"change" : {"question" : "requirearchivedsamples", "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['requirearchivedsamples'] == 'true');} "}}
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 470,
+                    "labelWidth": 245,
+                    "name": "surgicalpairwithbloodradio",
+                    "fieldLabel": "If you are requesting <b>surgical samples</b>, would you like a blood sample drawn at surgery?",
+                    "columns": 2,
+                    "items": [
+                        { "boxLabel": "Yes", "name": "surgicalpairwithblood", "inputValue": true },
+                        { "boxLabel": "No", "name": "surgicalpairwithblood", "inputValue": false }
+                    ]
+                },
+                "listeners" : {
+                    "change" : {
+                        "question" : ["requiresurgicaltissue", "requireappointmentsblood"],
+                        "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible((values['requiresurgicaltissue'] && values['requiresurgicaltissue'] == 'true') && (values['requireappointmentsblood'] && values['requireappointmentsblood'] == 'true')); } "
+                    }
+                }
+            },
+            {
+                "hidden": true,
+                "shortCaption": "Tissue if Blood Not Collected",
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 470,
+                    "labelWidth": 245,
+                    "name": "tissuebloodnotcollectedradio",
+                    "fieldLabel": "If you are requesting paired blood, do you want tissue if blood is not drawn?",
+                    "columns": 2,
+                    "items": [
+                        { "boxLabel": "Yes", "name": "tissuebloodnotcollected", "inputValue": true },
+                        { "boxLabel": "No", "name": "tissuebloodnotcollected", "inputValue": false }
+                    ]
+                },
+                "listeners" : {
+                    "change" : {
+                        "question" : ["surgicalpairwithblood", "requiresurgicaltissue", "requireappointmentsblood"],
+                        "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['requiresurgicaltissue'] == 'true' && values['requireappointmentsblood'] == 'true' && values['surgicalpairwithblood'] == true); } "
+                    }
+                }
+            },
+            {
+                "hidden": true,
+            	"extConfig": {
+            		"xtype": "textarea",
+            		"name": "specimentypeinformation",
+            		"width": 800,
+                    "labelWidth": 245,
+	            	"fieldLabel": "Please specify the type of specimens for which you need samples (e.g., cancer, other disease, normal):"
+	            },
+                "listeners" : {
+                    "change" : {
+                        "question" : ["requiresurgicaltissue", "requirenonsurgicaltissue", "requireappointmentsblood", "requirediscardedblood", "requireffpetissue"],
+                        "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible((values['requiresurgicaltissue'] && values['requiresurgicaltissue'] == 'true') || (values['requirenonsurgicaltissue'] && values['requirenonsurgicaltissue'] == 'true') || (values['requireappointmentsblood'] && values['requireappointmentsblood'] == 'true') || (values['requirediscardedblood'] && values['requirediscardedblood'] == 'true') || (values['requireffpetissue'] && values['requireffpetissue'] == 'true')); } "
+                    }
+                }
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": "What is the approximate start date for your collection request?",
+                    "labelWidth": 245,
+                    "width": 800,
+                    "defaults": { "labelSeparator": "" },
+                    "name": "collectionstartdatefieldcontainer",
+                    "layout": "hbox",
+                    "items": [
+                        { "xtype": "datefield", "name": "collectionstartdate" },
+                        { "xtype": "label", "width": 20 },
+                        { "xtype": "checkbox", "fieldLabel": "or ASAP", "name": "collectionstartasap", "labelWidth": 55 }
+                    ]
+                },
+                "listeners" : {
+                    "change" : {
+                        "question" : ["requiresurgicaltissue", "requirenonsurgicaltissue", "requireappointmentsblood", "requirediscardedblood", "requireffpetissue"],
+                        "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible((values['requiresurgicaltissue'] && values['requiresurgicaltissue'] == 'true') || (values['requirenonsurgicaltissue'] && values['requirenonsurgicaltissue'] == 'true') || (values['requireappointmentsblood'] && values['requireappointmentsblood'] == 'true') || (values['requirediscardedblood'] && values['requirediscardedblood'] == 'true') || (values['requireffpetissue'] && values['requireffpetissue'] == 'true')); } "
+                    }
+                }
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": "What is the approximate end date for your collection request?",
+                    "labelWidth": 245,
+                    "width": 800,
+                    "defaults": { "labelSeparator": "" },
+                    "name": "collectionenddatefieldcontainer",
+                    "layout": "hbox",
+                    "items": [
+                        { "xtype": "datefield", "name": "collectionenddate" },
+                        { "xtype": "label", "width": 20 },
+                        { "xtype": "checkbox", "fieldLabel": "or check here if ongoing collection or N/A", "name": "collectionendongoing", "labelWidth": 240 }
+                    ]
+                },
+                "listeners" : {
+                    "change" : {
+                        "question" : ["requiresurgicaltissue", "requirenonsurgicaltissue", "requireappointmentsblood", "requirediscardedblood", "requireffpetissue"],
+                        "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible((values['requiresurgicaltissue'] && values['requiresurgicaltissue'] == 'true') || (values['requirenonsurgicaltissue'] && values['requirenonsurgicaltissue'] == 'true') || (values['requireappointmentsblood'] && values['requireappointmentsblood'] == 'true') || (values['requirediscardedblood'] && values['requirediscardedblood'] == 'true') || (values['requireffpetissue'] && values['requireffpetissue'] == 'true')); } "
+                    }
+                }
+            }
+        ]
+    },{
+        "title": "General Population Requirements",
+        "questions": [
+            {
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": "Please provide the total number of specimen donors from whom samples are needed:",
+                    "width": 800,
+                    "defaults": { "labelSeparator": "" },
+                    "name": "totalspecimendonorsfieldcontainer",
+                    "layout": "hbox",
+                    "items": [
+                        { "xtype": "numberfield", "name": "totalspecimendonors", "allowDecimals": false, "minValue": 0 },
+                        { "xtype": "label", "width": 20 },
+                        { "xtype": "checkbox", "fieldLabel": "or check here if N/A", "name": "totalspecimendonorsna", "labelWidth": 140 },
+                        { "xtype": "label", "width": 20 },
+                        { "xtype": "label", "data": {}, "tpl": ["<span data-qtip='This checkbox is for requests with no upper limit (i.e. repository requests).'><img style='margin-top: 4px;' src='{[LABKEY.contextPath]}/_images/info.png' /></span>"] }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : "totalspecimendonorsna", "fn" : "function(me, cmp, newValue, oldValue, values){ var nf = Ext4.ComponentQuery.query('numberfield[name=totalspecimendonors]')[0]; if (values['totalspecimendonorsna']){ nf.setValue(null); nf.setDisabled(true); }else{ nf.setDisabled(false); }} "}}
+            },
+            {
+                "extConfig": {
+                    "xtype": "displayfield",
+                    "labelWidth": 800,
+                    "fieldLabel": "Please provide additional details about the general population requirements for your study in the text boxes below. Several examples are provided for each variable."
+                }
+            },
+            {
+                "extConfig": {
+                    "xtype": "panel",
+                    "border": false,
+                    "defaults": {
+                        "xtype": "textareafield",
+                        "labelAlign": "top",
+                        "labelSeparator": "",
+                        "width": 800
+                    },
+                    "items": [
+                        { "fieldLabel": "Patient Gender: <span style='font-style: italic;'>e.g., males only; ca.50% M/F; N/A</span>", "name": "genderrequirements" },
+                        { "fieldLabel": "Age at time of collection: <span style='font-style: italic;'>e.g., >=40yr and <= 65yr; >50yr; N/A</span>", "name": "agerequirements" },
+                        { "fieldLabel": "Race/Ethnicity: <span style='font-style: italic;'>e.g., Caucasian only; not unknown; N/A</span>", "name": "racerequirements" },
+                        { "fieldLabel": "Primary Histological Diagnosis: <span style='font-style: italic;'>e.g., HCC; SCC; any invasive ca.</span>", "name": "histologicaldiagnosisrequirements" },
+                        { "fieldLabel": "BioMarker: <span style='font-style: italic;'>e.g., PSA btwn 2 and 4; BRCA1 or 2 positive; N/A</span>", "name": "biomarkerrequirements" },
+                        { "fieldLabel": "Other: <span style='font-style: italic;'>e.g., no infectious diseases, pathology stage, N/A</span>", "name": "otherrequirements" }
+                    ]
+                }
+            },
+            {
+                "shortCaption": "Cancer History Relevant",
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 535,
+                    "fieldLabel": "Is cancer history and previous treatment relevant to your study?",
+                    "name": "cancerhistoryrelevantradio",
+                    "columns": 2,
+                    "items": [
+                        { "boxLabel": "Yes", "name": "cancerhistoryrelevant", "inputValue": true },
+                        { "boxLabel": "No", "name": "cancerhistoryrelevant", "inputValue": false }
+                    ]
+                }
+            },
+            {
+                "hidden": true,
+                "shortCaption": "Prior Cancer Okay",
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 620,
+                    "fieldLabel": "Are patients with a prior cancer okay?",
+                    "name": "exclusionpriorcancerradio",
+                    "columns": 3,
+                    "items": [
+                        { "boxLabel": "Yes", "name": "exclusionpriorcancer", "inputValue": "Yes" },
+                        { "boxLabel": "No", "name": "exclusionpriorcancer", "inputValue": "No" },
+                        { "boxLabel": "Okay, if...", "name": "exclusionpriorcancer", "inputValue": "Okay" }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : "cancerhistoryrelevant", "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['cancerhistoryrelevant'] == true);} "}}
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": " ",
+                    "labelWidth": 80,
+                    "defaults": { "labelSeparator": "" },
+                    "name": "exclusionpriorcancerokayif",
+                    "hidden": false,
+                    "layout": "hbox",
+                    "width": 800,
+                    "items": [
+                        { "xtype": "numberfield", "fieldLabel": "Okay, if", "name": "exclusionyearsposttherapy", "labelWidth": 50, "width": 115 },
+                        { "xtype": "label", "width": 15 },
+                        { "xtype": "textfield", "fieldLabel": "years post therapy or", "name": "exclusionpriorcancerother", "labelWidth": 150, "width": 510 }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : "exclusionpriorcancer", "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['exclusionpriorcancer'] == 'Okay');} "}}
+            },
+            {
+                "hidden": true,
+                "shortCaption": "Neoadjuvant Therapy",
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 620,
+                    "name": "exclusionneoadjuvanttherapyradio",
+                    "fieldLabel": "Are samples collected after neoadjuvant therapy okay?",
+                    "columns": 3,
+                    "items": [
+                        { "boxLabel": "Yes", "name": "exclusionneoadjuvanttherapy", "inputValue": true },
+                        { "boxLabel": "No", "name": "exclusionneoadjuvanttherapy", "inputValue": false },
+                        {
+                            "xtype": "label",
+                            "data": {},
+                            "tpl": ["<a href='#' tabindex='-1' data-qtip='Neoadjuvant: the administration of therapeutic agents, such as chemotherapy, to reduce the size or extent of the cancer before surgery.'><img style='margin-top: 4px;' src='{[LABKEY.contextPath]}/_images/info.png' /></a>"]
+                        }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : "cancerhistoryrelevant", "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['cancerhistoryrelevant'] == true);} "}}
+            },
+            {
+                "hidden": true,
+                "shortCaption": "BCC or SCC Okay",
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 620,
+                    "fieldLabel": "Are patients with a history of BCC or SCC of the skin okay?",
+                    "name": "exclusioncarcinomaokayradio",
+                    "columns": 3,
+                    "items": [
+                        { "boxLabel": "Yes", "name": "exclusioncarcinomaokay", "inputValue": true },
+                        { "boxLabel": "No", "name": "exclusioncarcinomaokay", "inputValue": false },
+                        {
+                            "xtype": "label",
+                            "data": {},
+                            "tpl": ["<a href='#' tabindex='-1' data-qtip='BCC=Basal Cell Carcinoma<br/>SCC=Squamous Cell Carcinoma'> <img style='margin-top: 4px;' src='{[LABKEY.contextPath]}/_images/info.png' /></a>"]
+                        }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : "cancerhistoryrelevant", "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['cancerhistoryrelevant'] == true);} "}}
+            },
+            {
+            	"extConfig": {
+            		"xtype": "textarea",
+            		"name": "exclusionothercriteria",
+            		"width": 800,
+            		"labelAlign": "top",
+	            	"fieldLabel": "Are there any other exclusion criteria (e.g., pregnancy, other disease states)?"
+	            }
+            }
+        ]
+    },{
+        "title": "Tissue Samples",
+        "questions": [
+            {
+                "extConfig": {
+                    "xtype": "displayfield",
+                    "name": "tissuerecorddisplayfield",
+                    "fieldLabel": "Please indicate all sample types needed from each specimen donor. You create an order by selecting one tissue type and one anatomical site.",
+                    "labelWidth": 800
+                }
+            },
+            {
+                "shortCaption": "Tissue Records",
+            	"extConfig": {
+                    "xtype": "biotrust-tissuerecordpanel",
+                    "recordType": "TissueSample",
+                    "name": "tissuerecordpanel"
+                }
+            },
+            {
+               "extConfig": {
+                   "width": 800,
+                   "xtype": "biotrust-documentupload",
+                   "name": "protocoldocumenttissue",
+                   "fieldLabel": "Please see our <a href='https://www.nwbiotrust.org/en/researchers/request.html' target='_blank'>Fixation and Processing Protocols</a> for our standard procedures. Please attach a detailed sample preservation protocol <b>only</b> if another preservation method is needed.",
+                   "documentTypeName": "Specimen Processing Protocol (Tissue)",
+                   "windowTitle": "Add Protocol Document"
+               }
+            },
+            {
+            	"extConfig": {
+            		"xtype": "textarea",
+            		"name": "tissueadditionalinformation",
+            		"width": 800,
+            		"labelAlign": "top",
+	            	"fieldLabel": "If you have a request that cannot be filled by the tissue types, sites, or preservation options listed above, or you would like to provide additional information about your choices, please elaborate:"
+	            }
+            }
+        ]
+    },{
+        "title": "Blood Samples",
+        "questions": [
+            {
+                "extConfig": {
+                    "xtype": "displayfield",
+                    "name": "bloodtissuerecorddisplayfield",
+                    "fieldLabel": "Please indicate all sample types needed from each specimen donor:",
+                    "labelWidth": 800
+                }
+            },
+            {
+                "shortCaption": "Blood Sample Records",
+            	"extConfig": {
+                    "xtype": "biotrust-tissuerecordpanel",
+                    "recordType": "BloodSample",
+                    "name": "bloodsamplerecordpanel"
+                }
+            },
+            {
+               "extConfig": {
+                   "width": 800,
+                   "xtype": "biotrust-documentupload",
+                   "name": "protocoldocumentblood",
+                   "fieldLabel": "Please see our <a href='https://www.nwbiotrust.org/en/researchers/request.html' target='_blank'>Fixation and Processing Protocols</a> for our standard procedures. Please attach a detailed sample preservation protocol <b>only</b> if another preservation method is needed.",
+                   "documentTypeName": "Specimen Processing Protocol (Blood)",
+                   "windowTitle": "Add Protocol Document"
+               }
+            },
+            {
+            	"extConfig": {
+            		"xtype": "textarea",
+            		"name": "bloodadditionalinformation",
+            		"width": 800,
+            		"labelAlign": "top",
+	            	"fieldLabel": "If you have a request that cannot be filled by any of the tube types or hold conditions listed above, or you would like to provide additional information about your choices, please elaborate:"
+	            }
+            }
+        ]
+    },{
+        "title": "Sample Pickup Information",
+        "questions": [
+            {
+                "hidden": true,
+                "shortCaption": "Request Fresh Tissue/Blood",
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 570,
+                    "fieldLabel": "Did you request fresh tissue or a blood draw?",
+                    "name": "samplepickuprequestfreshdrawradio",
+                    "columns": 3,
+                    "items": [
+                        { "boxLabel": "Yes", "name": "samplepickuprequestfreshdraw", "inputValue": true },
+                        { "boxLabel": "No", "name": "samplepickuprequestfreshdraw", "inputValue": false },
+                        {
+                            "xtype": "label",
+                            "data": {},
+                            "tpl": ["<a href='#' tabindex='-1' data-qtip='This question does not apply to residual blood products from clinical draws that otherwise would be discarded.'><img style='margin-top: 4px;' src='{[LABKEY.contextPath]}/_images/info.png' /></a>"]
+                        }
+                    ]
+                },
+                "listeners" : {
+                    "change" : {
+                        "question" : ["requiresurgicaltissue", "requirenonsurgicaltissue", "requireappointmentsblood", "requirediscardedblood"],
+                        "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible((values['requiresurgicaltissue'] && values['requiresurgicaltissue'] == 'true') || (values['requirenonsurgicaltissue'] && values['requirenonsurgicaltissue'] == 'true') || (values['requireappointmentsblood'] && values['requireappointmentsblood'] == 'true') || (values['requirediscardedblood'] && values['requirediscardedblood'] == 'true')); } "
+                    }
+                }
+            },
+            {
+                "hidden": true,
+                "shortCaption": "Arrange for Pick-up",
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 500,
+                    "fieldLabel": "Can you arrange for pick up for fresh samples after 5:00PM?",
+                    "name": "samplepickuparrangeforpickupradio",
+                    "columns": 2,
+                    "items": [
+                        { "boxLabel": "Yes", "name": "samplepickuparrangeforpickup", "inputValue": true },
+                        { "boxLabel": "No", "name": "samplepickuparrangeforpickup", "inputValue": false }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : "samplepickuprequestfreshdraw", "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['samplepickuprequestfreshdraw'] == true);} "}}
+            },
+            {
+                "hidden": true,
+                "shortCaption": "Hold Overnight",
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 500,
+                    "fieldLabel": "Does your study allow fresh samples to be held overnight for morning pick up?",
+                    "name": "samplepickupholdovernightradio",
+                    "columns": 2,
+                    "items": [
+                        { "boxLabel": "Yes", "name": "samplepickupholdovernight", "inputValue": true },
+                        { "boxLabel": "No", "name": "samplepickupholdovernight", "inputValue": false }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : "samplepickuprequestfreshdraw", "fn" : "function(me, cmp, newValue, oldValue, values){ if (me) me.setVisible(values['samplepickuprequestfreshdraw'] == true);} "}}
+            },
+            {
+                "extConfig": {
+                    "xtype": "radiogroup",
+                    "width": 800,
+                    "fieldLabel": "Who is the primary contact for sample pickup?",
+                    "name": "samplepickuppickupcontactchoiceradiogroup",
+                    "columns": 3,
+                    "items": [
+                        { "boxLabel": "Investigator", "name": "samplepickuppickupcontactchoice", "inputValue": "Investigator" },
+                        { "boxLabel": "Other", "name": "samplepickuppickupcontactchoice", "inputValue": "Other" }
+                    ]
+                }
+            },
+            {
+                "hidden": true,
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": " ",
+                    "name": "samplepickuppickupcontactfieldcontainer",
+                    "layout": "hbox",
+                    "width": 800,
+                    "items": [
+                        {
+                            "xtype": "contactcombo",
+                            "name": "samplepickuppickupcontact",
+                            "fieldLabel": "",
+                            "emptyText": "Select...",
+                            "width": 400
+                        },
+                        { "xtype": "label", "width": 10 },
+                        {
+                            "xtype": "addcontactbutton",
+                            "buttonText": "+",
+                            "contactComboName": "samplepickuppickupcontact"
+                        }
+                    ]
+                },
+                "listeners" : {"change" : {"question" : "samplepickuppickupcontactchoice","fn" : "function(me, cmp, newValue, oldValue, values){ if (me){ me.setVisible(values['samplepickuppickupcontactchoice'] == 'Other'); }} "}}
+            },
+            {
+                "extConfig": {
+                    "xtype": "fieldcontainer",
+                    "fieldLabel": "Who is the secondary contact for sample pickup?",
+                    "name": "samplepickupsecondarycontactfieldcontainer",
+                    "layout": "hbox",
+                    "width": 800,
+                    "items": [
+                        {
+                            "xtype": "contactcombo",
+                            "name": "samplepickupsecondarycontact",
+                            "fieldLabel": "",
+                            "emptyText": "Select...",
+                            "width": 400
+                        },
+                        { "xtype": "label", "width": 10 },
+                        {
+                            "xtype": "addcontactbutton",
+                            "buttonText": "+",
+                            "contactComboName": "samplepickupsecondarycontact"
+                        }
+                    ]
+                }
+            },
+            {
+                "extConfig": {
+                    "xtype": "textarea",
+                    "name": "samplepickupnotes",
+                    "width": 800,
+                    "fieldLabel": "Sample pickup notes:"
+                }
+            }
+        ]
+    }]
+}}

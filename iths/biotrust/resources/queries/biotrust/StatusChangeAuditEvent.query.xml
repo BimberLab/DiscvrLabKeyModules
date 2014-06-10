@@ -1,0 +1,19 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="StatusChangeAuditEvent" tableDbType="NOT_IN_DB">
+                <columns>
+                    <column columnName="StudyId">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="TissueRecordId">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="PreviousStatus">
+                        <columnTitle>Previous Status</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

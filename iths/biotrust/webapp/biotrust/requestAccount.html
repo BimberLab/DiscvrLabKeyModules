@@ -1,0 +1,219 @@
+<style type="text/css">
+
+    .header {
+        color: inherit;
+        font-size: 20px;
+        font-family: inherit;
+        font-weight: normal;
+        line-height: 25px;
+        margin: 10px 0;
+        text-rendering: optimizelegibility;
+        padding-bottom: 3px;
+    }
+
+</style>
+
+<script type="text/javascript">
+
+    LABKEY.requiresScript('biotrust/ContactsPanel.js');
+
+    function hasReadAccess(permissions) {
+
+        if (permissions && permissions.length)
+        {
+            for (var i=0; i < permissions.length; i++)
+            {
+                if (permissions[i] == LABKEY.Security.effectivePermissions.read)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    function updateSplashPage() {
+
+        if (LABKEY.user && LABKEY.user.isGuest)
+        {
+            Ext4.get("splash-page-guest").setStyle('display', '');
+
+            // fixup the sign in url redirect so we use the biotrust userHome action
+            var items = Ext4.query('a.labkey-nomenu-text-link');
+            if (items && items.length == 1)
+            {
+                items[0].href = getLoginUrl();
+            }
+        }
+        else
+        {
+            // check whether they already have an investigator account or if they
+            // are still just a site user
+            LABKEY.Security.getContainers({
+
+                 container : '/NWBiotrust/',
+                 includeSubfolders : true,
+                 includeEffectivePermissions : true,
+                 failure : function(){Ext4.get("splash-page-user").setStyle('display', '');},
+                 success : function(info) {
+
+                     // check the project root for read access
+                     if (info)
+                     {
+                         if (hasReadAccess(info.effectivePermissions))
+                         {
+                             Ext4.get("splash-page-investigator").setStyle('display', '');
+                             return;
+                         }
+                         else if (info.children && info.children.length)
+                         {
+                             // check any subfolder perms
+                             for (var i=0; i < info.children.length; i++)
+                             {
+                                 if (hasReadAccess(info.children[i].effectivePermissions))
+                                 {
+                                     Ext4.get("splash-page-investigator").setStyle('display', '');
+                                     return;
+                                 }
+                             }
+                         }
+                     }
+                     Ext4.get("splash-page-user").setStyle('display', '');
+                 }
+             });
+        }
+    }
+
+    function getLoginUrl() {
+
+        return LABKEY.contextPath + '/login/home/login.view?returnUrl=' + encodeURIComponent(LABKEY.contextPath + '/biotrust/home/userHome.view');
+    }
+
+    function onSetupAccount() {
+
+        var panel = Ext4.create('LABKEY.ext4.biotrust.CreateInvestigatorAccountPanel',{
+            values  : LABKEY.user.record,
+            roles   : []
+        });
+
+        panel.on('cancel', function(){win.close();});
+        panel.on('save', function(){
+            win.close();
+            Ext4.Msg.alert('Account creation successful', 'Your account has been successfully created, you will now be redirected to your folder where you ' +
+                    'can start the sample request process.', function(){window.location = LABKEY.ActionURL.buildURL('biotrust', 'userHome.view');});
+        }, this);
+
+        var win = Ext4.create('Ext.window.Window', {
+            title   : 'Enter Account Information',
+            cls     : 'data-window',
+            modal   : true,
+            autoScroll: true,
+            items   : panel
+        });
+
+        win.show();
+    }
+
+    Ext4.onReady(function(){
+
+        updateSplashPage();
+        if (LABKEY.user && !LABKEY.user.isGuest) {
+
+            // get the contact information for the current user
+            LABKEY.Query.selectRows({
+                schemaName  : 'core',
+                queryName   : 'Users',
+                filterArray : [LABKEY.Filter.create('userid', LABKEY.user.id)],
+                success     : function(data) {
+                    if (data.rowCount === 1)
+                    {
+                        LABKEY.user.record = data.rows[0];
+                        LABKEY.user.record.email = LABKEY.user.email;
+                    }
+                },
+                failure : function() {
+                    Ext4.Msg.alert('Failure');
+                },
+                scope : this
+            });
+        }
+    });
+</script>
+
+<table>
+    <tr id="splash-page-guest" style="display:none"><td>
+        <div>
+            <div class="header">Welcome to NWBioTrust: A resource for annotated research specimens</div>
+            The NWBT is a collaborative research resource dedicated to increasing the availability of high-qualify annotated
+            human biospecimens that meet the requirements of research and abide by all applicable human subjects
+            regulations.<br>
+            <br>The NWBT provides investigators with a comprehensive biospecimen acquisition and distribution system that
+            includes:
+            <ul>
+                <li>Prospectively-collected tissue and blood samples from surgeries or in conjunction with clinic procedures
+                </li>
+                <li>Residual blood samples from clinical draws that would otherwise be discarded</li>
+                <li>De-identified formalin-fixed paraffin-embedded (FFPE) tissues</li>
+                <li>The ability to query for research samples stored in participating repositories</li>
+            </ul>
+            <br>
+
+            <div class="header">Instructions</div>
+            <ul>
+                <li>If you <span style="font-weight: bold; font-style: italic">already</span> have a <span
+                        style="font-weight: bold">UW NetID</span>, click <span style="font-weight: bold">Sign In</span>
+                </li>
+                <li>If this is the first time you sign in, you will then be prompted to set up your investigator folder</li>
+                <li>If you <span style="font-weight: bold; font-style: italic">do not</span> have <span
+                        style="font-weight: bold">UW NetID</span>, you must do so first by clicking <a
+                        href="https://uwnetid.washington.edu/newid/">here</a>
+                </li>
+            </ul>
+            <div style="clear: left; padding-left: 35px; padding-top: 12px;">
+                <a class="labkey-button" href="javascript:void(0);" onclick="window.location = getLoginUrl();"><span>Sign&nbsp;In</span></a>
+            </div>
+        </div>
+    </td></tr>
+    <tr id="splash-page-user" style="display:none"><td>
+        <div>
+            <div class="header" style="visibility: inherit">Welcome to NWBioTrust: A resource for annotated research specimens</div>
+            If you’ve reached this page, this is the first time you’ve logged in.  Please follow the
+            instructions below to get started.<br>
+            <br><span style="font-weight: bold">Getting Started</span>
+            <ul>
+                <li>You will need to enter some basic contact information before entering your folder</li>
+                <li>Click Setup Account below to start</li>
+            </ul>
+            <br>
+            <div style="clear: left; padding-left: 35px; padding-top: 12px;">
+                <a class="labkey-button" href="javascript:void(0);" onclick="onSetupAccount();"><span>Setup&nbsp;Account</span></a>
+            </div>
+        </div>
+    </td></tr>
+    <tr id="splash-page-investigator" style="display:none"><td>
+        <div>
+            <div class="header" style="visibility: inherit">Welcome to NWBioTrust: A resource for annotated research specimens</div>
+            If you’ve reached this page, click on the button below to be redirected to your account folder.<br>
+            <br>
+            <div style="clear: left; padding-left: 35px; padding-top: 12px;">
+                <a class="labkey-button" href="javascript:void(0);" onclick="window.location = getLoginUrl();"><span>Go to my Account</span></a>
+            </div>
+        </div>
+    </td></tr>
+</table>
+<br>
+<br>
+<br>
+<br>
+<hr>
+<table width="1000">
+    <tr>
+        <td><a target="_blank" href="http://www.uwmedicine.org/Patient-Care/Locations/UWMC/Pages/default.aspx"><img
+                src="/files/home/%40files/uw.jpg?renderAs=PAGE"></a> <a target="_blank" href="http://fhcrc.org"><img
+                src="/files/home/%40files/fredhuthinson.png?renderAs=PAGE"></a> <a target="_blank"
+                                                                                   href="http://www.seattlecca.org"><img
+                src="/files/home/%40files/seattlecancercarea.png?renderAs=PAGE"></a> <a target="_blank"
+                                                                                        href="http://www.iths.org"><img
+                height="75" src="/files/home/%40files/ITHSLogoHorizontal_color.png?renderAs=PAGE"></a></td>
+    </tr>
+</table>
+</div>
+<p/>

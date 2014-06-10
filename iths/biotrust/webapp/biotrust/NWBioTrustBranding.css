@@ -1,0 +1,54 @@
+.x4-btn, a.labkey-button {
+    background: #0870cf;
+    background-color: #0870cf;
+    background-image: linear-gradient(to bottom, #0870cf, #265f9d) !important;
+    border-radius: 4px !important;
+    border: 1px solid #bbbbbb;
+}
+
+.x4-btn .x4-btn-inner, .labkey-button span {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    color: #FFFFFF;
+    text-transform: none;
+}
+
+.x4-btn-disabled {
+    background-color: #EEEEEE;
+    background-image: linear-gradient(to bottom, #EEEEEE, #C0C0C0) !important;
+    border-radius: 4px !important;
+}
+
+.x4-btn-disabled .x4-btn-inner {
+    color: #226495 !important;
+}
+
+body, div, td, th, table, img, form
+{
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+}
+
+.x4-form-item, .x4-form-display-field, .x4-form-item-label, .x4-component
+{
+    font-size: 12px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
+td.labkey-wp-title-left, th.labkey-wp-title-left, .labkey-wp-title,
+th.labkey-wp-title-right, td.labkey-wp-title-right, .labkey-nav-page-header
+{
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
+.x4-progress-bar {
+    background: #0870cf;
+    background-color: #0870cf;
+    background-image: linear-gradient(to bottom, #0870cf, #265f9d) !important;
+}
+
+.x4-progress-default {
+    background-color: transparent;
+    border: solid black 1px;
+    height: 20px;
+}
+
