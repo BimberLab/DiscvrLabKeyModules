@@ -394,12 +394,13 @@ then
     echo "Cleaning up previous installs"
     rm -Rf picard-tools-1.77*
     rm -Rf picard-tools-1.96*
+    rm -Rf picard-tools-1.114*
     rm -Rf snappy-java-1.0.3-rc3.jar
     rm -Rf $LKTOOLS_DIR/picard-tools
 
-    wget http://downloads.sourceforge.net/project/picard/picard-tools/1.96/picard-tools-1.96.zip
-    unzip picard-tools-1.96.zip
-    ln -s $LKSRC_DIR/picard-tools-1.96 $LKTOOLS_DIR/picard-tools
+    wget http://downloads.sourceforge.net/project/picard/picard-tools/1.114/picard-tools-1.114.zip
+    unzip picard-tools-1.114.zip
+    ln -s $LKSRC_DIR/picard-tools-1.114 $LKTOOLS_DIR/picard-tools
 else
     echo "Already installed"
 fi
