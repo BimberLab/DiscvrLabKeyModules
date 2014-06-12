@@ -19,6 +19,10 @@ EHR.model.DataModelManager.registerMetadata('Reversals', {
                     enforceUnitCost: false
                 }
             },
+            Id: {
+                allowBlank: true,
+                nullable: true
+            },
             debitedaccount: {
                 hidden: false,
                 lookups: false

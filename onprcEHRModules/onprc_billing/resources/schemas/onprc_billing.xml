@@ -100,6 +100,9 @@
                 <ns:column columnName="allowscustomunitcost">
                 <ns:columnTitle>Allow Custom Unit Cost?</ns:columnTitle>
             </ns:column>
+            <ns:column columnName="allowblankid">
+                <ns:columnTitle>Allow Blank Animal Id?</ns:columnTitle>
+            </ns:column>
             <ns:column columnName="canRaiseFA">
                 <ns:columnTitle>Can Raise F&amp;A?</ns:columnTitle>
                 <ns:nullable>false</ns:nullable>

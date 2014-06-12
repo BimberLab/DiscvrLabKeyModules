@@ -37,12 +37,14 @@ SELECT
     WHEN t.displayName = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.BASE_GRANT_PROJECT') THEN 0
     --handle adjustments and non-adjustments separately
     WHEN (t.isAdjustment IS NULL) THEN t.unitCost1
-    ELSE (t.unitCost2 - t.unitCost3)
+    --note: we take the amount that should have been paid and subtract what was predicted to have been paid
+    ELSE (t.unitCost3 - t.unitCost2)
   END AS DOUBLE), 2) as unitCost,
   CAST(CASE
     --handle adjustments and non-adjustments separately
     WHEN (t.isAdjustment IS NULL) THEN t.nihRate1
-    ELSE (t.nihRate2 - t.nihRate3)
+    --note: we take the amount that should have been paid and subtract what was predicted to have been paid
+    ELSE (t.nihRate3 - t.nihRate2)
   END AS DOUBLE) as nihRate,
 
   t.unitCost1,
@@ -246,43 +248,47 @@ LEFT JOIN onprc_billing_public.projectMultipliers pm ON (
 )
 
 --the original charge (for adjustments)
+--NOTE: the adjustment will use the lease end as the transaction date; however, we need to calculate this unit cost
+--based on the original date of assignment
 LEFT JOIN onprc_billing_public.chargeRates cr2 ON (
-    CAST(p.date AS DATE) >= CAST(cr2.startDate AS DATE) AND
-    (CAST(p.date AS DATE) <= cr2.enddateCoalesced OR cr2.enddate IS NULL) AND
+    CAST(p.assignmentStart AS DATE) >= CAST(cr2.startDate AS DATE) AND
+    (CAST(p.assignmentStart AS DATE) <= cr2.enddateCoalesced OR cr2.enddate IS NULL) AND
     p.leaseCharge1 = cr2.chargeId
 )
 
 LEFT JOIN onprc_billing_public.chargeRateExemptions e2 ON (
-    CAST(p.date AS DATE) >= CAST(e2.startDate AS DATE) AND
-    (CAST(p.date AS DATE) <= e2.enddateCoalesced OR e2.enddate IS NULL) AND
+    CAST(p.assignmentStart AS DATE) >= CAST(e2.startDate AS DATE) AND
+    (CAST(p.assignmentStart AS DATE) <= e2.enddateCoalesced OR e2.enddate IS NULL) AND
     p.leaseCharge1 = e2.chargeId AND
     p.project = e2.project
 )
 
 LEFT JOIN onprc_billing_public.projectMultipliers pm2 ON (
-    CAST(p.date AS DATE) >= CASt(pm2.startDate AS DATE) AND
-    (CAST(p.date AS DATE) <= pm2.enddateCoalesced OR pm2.enddate IS NULL) AND
+    CAST(p.assignmentStart AS DATE) >= CASt(pm2.startDate AS DATE) AND
+    (CAST(p.assignmentStart AS DATE) <= pm2.enddateCoalesced OR pm2.enddate IS NULL) AND
     p.project = pm2.project
 )
 --EO original charge
 
 --the final charge (for adjustments)
+--this is the what we should have charges, based on the true release condition.
+--this is also based on the date of assignment, which will differ from transaction date
 LEFT JOIN onprc_billing_public.chargeRates cr3 ON (
-  CAST(p.date AS DATE) >= CAST(cr3.startDate AS DATE) AND
-  (CAST(p.date AS DATE) <= cr3.enddateCoalesced OR cr3.enddate IS NULL) AND
+  CAST(p.assignmentStart AS DATE) >= CAST(cr3.startDate AS DATE) AND
+  (CAST(p.assignmentStart AS DATE) <= cr3.enddateCoalesced OR cr3.enddate IS NULL) AND
   p.leaseCharge2 = cr3.chargeId
 )
 
 LEFT JOIN onprc_billing_public.chargeRateExemptions e3 ON (
-  CAST(p.date AS DATE) >= CAST(e3.startDate AS DATE) AND
-  (CAST(p.date AS DATE) <= e3.enddateCoalesced OR e3.enddate IS NULL) AND
+  CAST(p.assignmentStart AS DATE) >= CAST(e3.startDate AS DATE) AND
+  (CAST(p.assignmentStart AS DATE) <= e3.enddateCoalesced OR e3.enddate IS NULL) AND
   p.leaseCharge2 = e3.chargeId AND
   p.project = e3.project
 )
 
 LEFT JOIN onprc_billing_public.projectMultipliers pm3 ON (
-    CAST(p.date AS DATE) >= CASt(pm3.startDate AS DATE) AND
-    (CAST(p.date AS DATE) <= pm3.enddateCoalesced OR pm3.enddate IS NULL) AND
+    CAST(p.assignmentStart AS DATE) >= CASt(pm3.startDate AS DATE) AND
+    (CAST(p.assignmentStart AS DATE) <= pm3.enddateCoalesced OR pm3.enddate IS NULL) AND
     p.project = pm3.project
 )
 --EO final charge

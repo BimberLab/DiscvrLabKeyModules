@@ -26,6 +26,10 @@ SELECT
     ELSE true
   END as hasMHCData,
   CASE
+    WHEN m.hasSBTData IS NOT NULL THEN true
+    ELSE false
+  END as hasSBTData,
+  CASE
     WHEN mhc.subjectId is null THEN false
     ELSE true
   END as hasFreezerSample,
@@ -39,7 +43,8 @@ FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.Demog
 LEFT JOIN (
   SELECT
   m.Id,
-  count(*) as total
+  count(m.hasSBTData) as hasSBTData
+  --count(*) as total
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.MHC_Data.MHC_Data_Animals m
   GROUP BY m.Id
 ) m ON (m.Id = d.Id)
@@ -48,7 +53,7 @@ LEFT JOIN (
   SELECT
   f.Id,
     max(f.date) as lastDate,
-  count(*) as total
+  --count(*) as total
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
   where f.isActive = true and f.flag.category = 'Genetics' and f.flag.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.MHC_DRAW_COLLECTED')
   GROUP BY f.Id
@@ -58,7 +63,7 @@ LEFT JOIN (
 SELECT
   f.Id,
   max(f.date) as lastDate,
-  count(*) as total
+  --count(*) as total
 FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
 where f.isActive = true and f.flag.category = 'Genetics' and f.flag.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.MHC_DRAW_NEEDED')
 GROUP BY f.Id
@@ -68,7 +73,7 @@ GROUP BY f.Id
 LEFT JOIN (
   SELECT
     m.subjectId,
-    count(*) as total
+    --count(*) as total
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.MHC_Data.mhcSamples m
   WHERE m.sampletype IN ('RNA', 'Whole Blood')
   GROUP BY m.subjectId
@@ -78,7 +83,7 @@ LEFT JOIN (
 LEFT JOIN (
   SELECT
     a.Id,
-    count(*) as total
+    --count(*) as total
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.assignment a
   WHERE a.isActive = true and a.project.name = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.U42_PROJECT')
   GROUP BY a.Id

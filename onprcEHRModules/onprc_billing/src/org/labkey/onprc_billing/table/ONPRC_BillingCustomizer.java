@@ -472,7 +472,6 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         ti.removeColumn(accountCol);
         SQLFragment sql4 = new SQLFragment("(SELECT " + ti.getSqlDialect().getGroupConcat(new SQLFragment("pa.account"), true, true) + " as expr FROM onprc_billing.projectAccountHistory pa WHERE pa.project = " + ExprColumn.STR_TABLE_ALIAS + ".project AND (").append(getIsActiveSql(ti, "pa")).append(") = " + ti.getSqlDialect().getBooleanTRUE() + ")");
         ExprColumn newAccountCol = new ExprColumn(ti, "account", sql4, JdbcType.VARCHAR, ti.getColumn("project"));
-        newAccountCol.setLabel(accountCol.getLabel());
         newAccountCol.setLabel("Alias");
         if (newAccountCol.getFk() == null)
         {
@@ -485,6 +484,19 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         }
 
         ti.addColumn(newAccountCol);
+
+        //add column showing highest alias expiration
+        String maxAliasEnd = "maxAliasEnd";
+        if (ti.getColumn(maxAliasEnd) == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT max(pa.enddate) as expr FROM onprc_billing.projectAccountHistory pa WHERE pa.project = " + ExprColumn.STR_TABLE_ALIAS + ".project AND pa.enddate IS NOT NULL)");
+            ExprColumn maxAliasEndCol = new ExprColumn(ti, maxAliasEnd, sql, JdbcType.TIMESTAMP, ti.getColumn("project"));
+            maxAliasEndCol.setLabel("Max Alias Expiration");
+            maxAliasEndCol.setHidden(true);
+            maxAliasEndCol.setDescription("This columns shows the highest date where an alias is associated with this account, which is a proxy for when the alias association will expire.  This is not perfect, since this does not test if there is an active alias today (that other alias could start in the future)");
+            ti.addColumn(maxAliasEndCol);
+        }
+
     }
 
     private SQLFragment getIsActiveSql(AbstractTableInfo ti)

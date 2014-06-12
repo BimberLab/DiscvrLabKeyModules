@@ -189,6 +189,7 @@ public class FinanceNotification extends AbstractNotification
         getExpiredAliases(c, u , msg);
         getAliasesDisabled(c, u, msg);
         getProjectsWithoutAliases(c, u, msg);
+        projectAliasesExpiringSoon(ehrContainer, u, msg);
         getProjectsNotActive(c, u, msg);
         getExpiredCreditAliases(c, u, msg);
         getCreditAliasesDisabled(c, u, msg);
@@ -567,6 +568,34 @@ public class FinanceNotification extends AbstractNotification
                 msg.append("<a href='" + url + "'>Click here to view them</a>");
                 msg.append("<hr>");
             }
+        }
+    }
+
+    private void projectAliasesExpiringSoon(Container ehrContainer, User u, StringBuilder msg)
+    {
+        TableInfo ti = QueryService.get().getUserSchema(u, ehrContainer, "ehr").getTable("project");
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("enddateCoalesced"), "-0d", CompareType.DATE_GTE);
+        filter.addCondition(FieldKey.fromString("account/budgetEndDate"), "+30d", CompareType.DATE_LTE);
+
+        TableSelector ts = new TableSelector(ti, filter, null);
+        long count = ts.getRowCount();
+        if (count > 0)
+        {
+            msg.append("Note: there are " + count + " active ONPRC projects with aliases where the budget period will expire in the next 30 days.<p>");
+            msg.append("<a href='" + getExecuteQueryUrl(ehrContainer, "ehr", "project", "Alias Info") + "&" + filter.toQueryString("query") + "'>Click here to view them</a>");
+            msg.append("<hr>");
+        }
+
+        SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("enddateCoalesced"), "-0d", CompareType.DATE_GTE);
+        filter2.addCondition(FieldKey.fromString("maxAliasEnd"), "+30d", CompareType.DATE_LTE);
+
+        TableSelector ts2 = new TableSelector(ti, filter2, null);
+        long count2 = ts2.getRowCount();
+        if (count2 > 0)
+        {
+            msg.append("Note: there are " + count2 + " active ONPRC projects where the associated alias will end in the next 30 days.<p>");
+            msg.append("<a href='" + getExecuteQueryUrl(ehrContainer, "ehr", "project", "Alias Info") + "&" + filter2.toQueryString("query") + "'>Click here to view them</a>");
+            msg.append("<hr>");
         }
     }
 

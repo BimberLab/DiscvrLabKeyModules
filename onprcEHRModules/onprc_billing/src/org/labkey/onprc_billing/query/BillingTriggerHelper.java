@@ -122,7 +122,7 @@ public class BillingTriggerHelper
     public boolean supportsCustomUnitCost(int chargeId)
     {
         Map<String, Object> row = getCharge(chargeId);
-        if (row != null && row.containsKey("allowscustomunitcost"))
+        if (row != null && row.containsKey("allowscustomunitcost") && row.get("allowscustomunitcost") != null)
         {
             return (boolean)row.get("allowscustomunitcost");
         }
@@ -133,9 +133,9 @@ public class BillingTriggerHelper
     public boolean supportsBlankAnimal(int chargeId)
     {
         Map<String, Object> row = getCharge(chargeId);
-        if (row != null && row.containsKey("supportsblankanimal"))
+        if (row != null && row.containsKey("allowblankid") && row.get("allowblankid") != null)
         {
-            return (boolean)row.get("supportsblankanimal");
+            return (boolean)row.get("allowblankid");
         }
 
         return false; //unknown charge, assume false
@@ -156,7 +156,7 @@ public class BillingTriggerHelper
             TableInfo chargeableItems = DbSchema.get(ONPRC_BillingSchema.NAME).getTable(ONPRC_BillingSchema.TABLE_CHARGEABLE_ITEMS);
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), chargeId, CompareType.EQUAL);
             filter.addCondition(FieldKey.fromString("container"), target.getId(), CompareType.EQUAL);
-            TableSelector ts = new TableSelector(chargeableItems, PageFlowUtil.set("rowid", "name", "allowscustomunitcost", "supportsblankanimal", "active"), filter, null);
+            TableSelector ts = new TableSelector(chargeableItems, PageFlowUtil.set("rowid", "name", "allowscustomunitcost", "allowblankid", "active"), filter, null);
             Map<String, Object>[] ret = ts.getMapArray();
             if (ret != null && ret.length == 1)
             {

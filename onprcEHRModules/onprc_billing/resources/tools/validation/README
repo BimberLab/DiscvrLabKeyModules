@@ -1,0 +1,4 @@
+These queries were created to compare items in the invoicedItems table (ie. what we billing)
+against the charges we predict to have been billed based on the clinical data.
+They are very expensive and seem to be slowing down Team City's study import to the point of timing out.
+These are not in active use, so they are deprecated here.

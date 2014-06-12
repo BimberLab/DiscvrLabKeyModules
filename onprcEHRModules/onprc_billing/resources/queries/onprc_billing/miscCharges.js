@@ -46,6 +46,13 @@ EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Even
                     EHR.Server.Utils.addError(scriptErrors, 'unitCost', 'This type of charge does not support a custom unit cost.  You should leave this blank and it will be automatically calculated.', 'WARN');
                 }
             }
+
+            if (!row.Id){
+                if (!billingHelper.supportsBlankAnimal(row.chargeId))
+                {
+                    EHR.Server.Utils.addError(scriptErrors, 'Id', 'This type of charge requires an Animal Id.', 'WARN');
+                }
+            }
         }
 
         if (row.invoiceId){

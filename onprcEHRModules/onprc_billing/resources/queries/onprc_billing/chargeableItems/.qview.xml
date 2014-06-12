@@ -11,6 +11,7 @@
         <column name="category"/>
         <column name="departmentCode"/>
         <column name="allowscustomunitcost"/>
+        <column name="allowblankid"/>
         <column name="comment"/>
         <column name="active"/>
     </columns>
