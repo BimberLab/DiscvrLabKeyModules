@@ -30,9 +30,7 @@ import org.labkey.api.study.DataSet;
 import org.labkey.api.study.StudyService;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.Pair;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.HttpView;
 import org.labkey.api.view.ViewContext;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -43,7 +41,6 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -130,14 +127,8 @@ public class MergeSyncRunner implements Job
             return;
         }
 
-        int stackSize = -1;
-
-        try
+        try (ViewContext.StackResetter resetter = ViewContext.pushMockViewContext(u, c, new ActionURL("onprc_ehr", "fake.view", c)))
         {
-            // Push a fake ViewContext onto the HttpView stack
-            stackSize = HttpView.getStackSize();
-            ViewContext.getMockViewContext(u, c, new ActionURL("onprc_ehr", "fake.view", c), true);
-
             QueryService.get().setEnvironment(QueryService.Environment.USER, u);
 
             Date syncStart = new Date();
@@ -148,8 +139,6 @@ public class MergeSyncRunner implements Job
         finally
         {
             QueryService.get().clearEnvironment();
-            if (stackSize > -1)
-                HttpView.resetStackSize(stackSize);
         }
     }
 
