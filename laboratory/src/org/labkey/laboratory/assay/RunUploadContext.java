@@ -134,6 +134,7 @@ public class RunUploadContext<ProviderType extends AssayProvider> implements Ass
         return _ctx.getUser();
     }
 
+    @NotNull
     public Container getContainer()
     {
         return _ctx.getContainer();
@@ -165,36 +166,6 @@ public class RunUploadContext<ProviderType extends AssayProvider> implements Ass
     public ProviderType getProvider()
     {
         return _providerType;
-    }
-
-    public Map<DomainProperty, Object> getDefaultValues(Domain domain, String scope) throws ExperimentException
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public Map<DomainProperty, Object> getDefaultValues(Domain domain) throws ExperimentException
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public void saveDefaultValues(Map<DomainProperty, String> values, String scope) throws ExperimentException
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public void saveDefaultBatchValues() throws ExperimentException
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public void saveDefaultRunValues() throws ExperimentException
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public void clearDefaultValues(Domain domain) throws ExperimentException
-    {
-        throw new UnsupportedOperationException();
     }
 
     public String getTargetStudy()
