@@ -155,14 +155,9 @@ public class ETLRunnable implements Runnable
                 return;
             }
 
-            int stackSize = -1;
-            try
+            try (ViewContext.StackResetter resetter = ViewContext.pushMockViewContext(user, container, new ActionURL("sla", "fake.view", container)))
             {
                 log.info("Begin incremental sync from external datasource.");
-
-                // Push a fake ViewContext onto the HttpView stack
-                stackSize = HttpView.getStackSize();
-                ViewContext.getMockViewContext(user, container, new ActionURL("sla", "fake.view", container), true);
 
                 QueryService.get().setEnvironment(QueryService.Environment.USER, user);
                 ETLAuditViewFactory.addAuditEntry(container, user, "START", "Starting SLA synchronization", 0);
@@ -208,8 +203,6 @@ public class ETLRunnable implements Runnable
             finally
             {
                 QueryService.get().clearEnvironment();
-                if (stackSize > -1)
-                    HttpView.resetStackSize(stackSize);
             }
         }
         finally
