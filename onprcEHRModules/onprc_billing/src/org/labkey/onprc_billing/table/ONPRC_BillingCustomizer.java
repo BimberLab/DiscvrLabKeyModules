@@ -414,7 +414,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             ti.addColumn(col);
         }
         //NOTE: this is separated to allow linked schemas to use the same column
-        ti.getColumn(activeAccount).setFk(new QueryForeignKey(ti.getUserSchema(), null, ONPRC_BillingSchema.TABLE_CHARGE_UNIT_ACCOUNT, "rowid", "rowid"));
+        ti.getColumn(activeAccount).setFk(new QueryForeignKey(getBillingUserSchema(ti), null, ONPRC_BillingSchema.TABLE_ALIASES, "alias", "alias"));
     }
 
     private void customizeChargeableItems(AbstractTableInfo ti)

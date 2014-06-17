@@ -16,3 +16,6 @@
 
 DELETE FROM mergesync.mergetolkmapping WHERE mergetestname = 'SENSI2';
 INSERT INTO mergesync.mergetolkmapping (mergetestname, servicename) VALUES ('SENSI2', 'Antibiotic Sensitivity');
+
+DELETE FROM mergesync.mergetolkmapping WHERE mergetestname = 'SENSI3';
+INSERT INTO mergesync.mergetolkmapping (mergetestname, servicename) VALUES ('SENSI3', 'Antibiotic Sensitivity');

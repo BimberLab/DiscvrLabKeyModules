@@ -56,7 +56,14 @@ EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Even
         }
 
         if (row.invoiceId){
-            var severity = billingHelper.isBillingAdmin() ? 'INFO' : 'ERROR';
+            var severity = 'INFO';
+            var fields = ['Id', 'project', 'debitaccount', 'chargetype', 'creditedaccount', 'chargeId', 'quantity', 'unitcost'];
+            for (var i=0;i<fields.length;i++){
+                if (row[fields[i]] != oldRow[fields[i]]){
+                    severity = 'WARN';
+                }
+            }
+            severity = billingHelper.isBillingAdmin() || billingHelper.isDataAdmin() ? 'INFO' : severity;
             EHR.Server.Utils.addError(scriptErrors, 'Id', 'This item has already been invoiced and should not be edited through this form unless you are certain about this change.', severity);
         }
 
