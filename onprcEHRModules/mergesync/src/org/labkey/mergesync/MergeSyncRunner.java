@@ -127,7 +127,7 @@ public class MergeSyncRunner implements Job
             return;
         }
 
-        try (ViewContext.StackResetter resetter = ViewContext.pushMockViewContext(u, c, new ActionURL("onprc_ehr", "fake.view", c)))
+        try (ViewContext.StackResetter ignored = ViewContext.pushMockViewContext(u, c, new ActionURL("onprc_ehr", "fake.view", c)))
         {
             QueryService.get().setEnvironment(QueryService.Environment.USER, u);
 
