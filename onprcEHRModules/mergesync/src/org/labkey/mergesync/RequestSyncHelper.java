@@ -703,4 +703,15 @@ public class RequestSyncHelper
 
         return (Integer)inserted.get("TS_INDEX");
     }
+
+    public void deleteSyncRecords(String objectid)
+    {
+        if (objectid == null)
+            return;
+
+        SQLFragment sql = new SQLFragment("DELETE FROM " + MergeSyncSchema.NAME + "." + MergeSyncManager.TABLE_ORDERSSYNCED + " WHERE runid = ?", objectid);
+        SqlExecutor se = new SqlExecutor(MergeSyncSchema.getInstance().getSchema());
+        long deleted = se.execute(sql);
+        _log.info("deleted " + deleted + " merge sync records following clinpath record delete");
+    }
 }

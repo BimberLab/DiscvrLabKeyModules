@@ -666,6 +666,8 @@ public class MergeSyncRunner implements Job
 
         String text_result = rs.getString("text_result");
         Double numeric_result = rs.getDouble("numeric_result");
+        numeric_result = rs.wasNull() ? null : numeric_result;
+
         String remark = rs.getString("remark");
         if (rs.getString("runRemark") != null)
         {

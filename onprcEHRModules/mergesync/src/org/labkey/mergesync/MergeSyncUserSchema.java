@@ -125,7 +125,16 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 ret.append("r.re_data as text_result,\n");
                 ret.append("r.RE_FLVAL as numeric_result,\n");
                 ret.append("r.re_Text as remark,\n");
-                ret.append("cm.RSC_COMMENT as runRemark\n");
+                ret.append("cm.RSC_COMMENT as runRemark,\n");
+                ret.append("(SELECT max(r.re_data) as expr\n");
+                ret.append("FROM results r \n");
+                ret.append("LEFT JOIN RSLTTYP rs ON (rs.RT_RIDX = r.RE_RIDX)\n");
+                ret.append("WHERE r.RE_ACCNR = o.O_ACCNUM\n");
+                ret.append("AND r.RE_TIDX = t.TS_INDEX\n");
+                ret.append("AND rs.RT_ABBR = 'COM 1:'\n");
+                ret.append("AND r.re_data IS NOT NULL\n");
+                ret.append("AND r.re_data != ''\n");
+                ret.append(") as runComment\n");
 
                 //one row per batch of orders
                 ret.append("FROM Orders o\n");
@@ -172,7 +181,7 @@ public class MergeSyncUserSchema extends SimpleUserSchema
 
                 //join to insurance for project
                 ret.append("left join INSURANCE i ON (i.INS_INDEX = vi.VINS_INS1)\n");
-
+                ret.append("WHERE rs.RT_ABBR != 'COM 1:'\n");
                 return ret;
             }
 
@@ -209,6 +218,7 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 addColumn(new ExprColumn(this, "numeric_result", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".numeric_result"), JdbcType.DOUBLE));
                 addColumn(new ExprColumn(this, "remark", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".remark"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "runRemark", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".runRemark"), JdbcType.VARCHAR));
+                addColumn(new ExprColumn(this, "runComment", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".runComment"), JdbcType.VARCHAR));
 
                 addColumn(new ExprColumn(this, "isFinal", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".isFinal"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "status", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".status"), JdbcType.VARCHAR));
@@ -253,7 +263,16 @@ public class MergeSyncUserSchema extends SimpleUserSchema
 
                 ret.append("tech.PR_LOGIN as techLogin,\n");
                 ret.append("tech.PR_LNAME as techLastName,\n");
-                ret.append("tech.PR_FNAME as techFirstName\n");
+                ret.append("tech.PR_FNAME as techFirstName,\n");
+                ret.append("(SELECT max(r.re_data) as expr\n");
+                    ret.append("FROM results r \n");
+                    ret.append("LEFT JOIN RSLTTYP rs ON (rs.RT_RIDX = r.RE_RIDX)\n");
+                    ret.append("WHERE r.RE_ACCNR = o.O_ACCNUM\n");
+                    ret.append("AND r.RE_TIDX = t.TS_INDEX\n");
+                    ret.append("AND rs.RT_ABBR = 'COM 1:'\n");
+                    ret.append("AND r.re_data IS NOT NULL\n");
+                    ret.append("AND r.re_data != ''\n");
+                ret.append(") as runRemark\n");
 
                 //one row per batch of orders
                 ret.append("FROM Orders o\n");
@@ -312,6 +331,7 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 addColumn(new ExprColumn(this, "status", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".status"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "pk", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".pk"), JdbcType.VARCHAR));
                 addColumn(new ExprColumn(this, "numericLastName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".numericLastName"), JdbcType.BOOLEAN));
+                addColumn(new ExprColumn(this, "runRemark", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".runRemark"), JdbcType.VARCHAR));
 
                 getColumn("pk").setKeyField(true);
             }

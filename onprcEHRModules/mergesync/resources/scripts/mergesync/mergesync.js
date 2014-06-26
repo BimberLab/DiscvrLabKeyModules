@@ -36,4 +36,11 @@ exports.init = function(EHR){
             }
         }
     });
+
+    EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Events.AFTER_DELETE, 'study', 'Clinpath Runs', function(helper, errors, row) {
+        if (row.objectid){
+            var mergeHelper = new org.labkey.mergesync.RequestSyncHelper(LABKEY.Security.currentUser.id, LABKEY.Security.currentContainer.id);
+            mergeHelper.deleteSyncRecords(row.objectid);
+        }
+    });
 }
