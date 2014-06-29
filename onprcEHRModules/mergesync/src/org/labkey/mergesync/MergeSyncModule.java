@@ -53,6 +53,7 @@ public class MergeSyncModule extends ExtendedSimpleModule
         return true;
     }
 
+    @NotNull
     @Override
     protected Collection<WebPartFactory> createWebPartFactories()
     {
@@ -79,6 +80,7 @@ public class MergeSyncModule extends ExtendedSimpleModule
         EHRService.get().registerTableCustomizer(this, MergeSyncTableCustomizer.class);
     }
 
+    @NotNull
     @Override
     public Collection<String> getSummary(Container c)
     {
