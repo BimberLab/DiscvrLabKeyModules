@@ -8,7 +8,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
-import org.labkey.api.data.ExecutingSelector;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
@@ -313,7 +312,7 @@ public class OGASyncRunner implements Job
      * This is not particularly efficient, but it runs in the background once per day,
      * and total rows should not be that large
      */
-    public void doMerge(final User u, final Container c, final TableInfo targetTable, ExecutingSelector selector, final String selectionKey, final Map<String, String> fieldMap, final String category, final Collection<String> existingAliases, @Nullable final Map<String, Integer> faMap, @Nullable final Map<String, Integer> investigatorMap) throws SQLException
+    public void doMerge(final User u, final Container c, final TableInfo targetTable, Selector selector, final String selectionKey, final Map<String, String> fieldMap, final String category, final Collection<String> existingAliases, @Nullable final Map<String, Integer> faMap, @Nullable final Map<String, Integer> investigatorMap) throws SQLException
     {
         _log.info("starting to merge table: " + targetTable.getName());
         ExperimentService.get().ensureTransaction();
