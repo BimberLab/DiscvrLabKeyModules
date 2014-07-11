@@ -29,6 +29,7 @@ import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.ModulePropertyValue;
+import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.External;
 import org.labkey.test.util.DataRegionTable;
@@ -62,8 +63,8 @@ public class NWBioTrustTest extends SurveyTest
     private static final String[] unsubmittedRequestTypes = {"Normal tissue (any organ)"};
     private static final String[] submittedRequestTypes = {"Tumor from primary site", "Tumor from metastasis", "Normal tissue adjacent to primary site (same organ)"};
     private static final String[] allRequestTypes = ArrayUtils.addAll(submittedRequestTypes, unsubmittedRequestTypes);
-    private static final File TEST_FILE_1 = new File( getLabKeyRoot() + "/sampledata/survey/TestAttachment.txt");
-    private static final File TEST_FILE_2 = new File( getLabKeyRoot() + "/sampledata/survey/TestAttachment2.txt");
+    private static final File TEST_FILE_1 = new File( TestFileUtils.getLabKeyRoot() + "/sampledata/survey/TestAttachment.txt");
+    private static final File TEST_FILE_2 = new File( TestFileUtils.getLabKeyRoot() + "/sampledata/survey/TestAttachment2.txt");
 
     private static final String[] NWBT_REQUEST_CATEGORIES = {"NWBT RC1", "NWBT RC2", "NWBT Repository"};
     private static final NwbtRequestStatuses[] NWBT_REQUEST_STATUSES = NwbtRequestStatuses.values();
@@ -188,7 +189,7 @@ public class NWBioTrustTest extends SurveyTest
     private final File tissueJson = new File(getDownloadDir(), "tissue-sample.json");
     private final File bloodSampleJson = new File(getDownloadDir(), "blood-sample.json");
     private final File anatomicalSiteList = new File(getDownloadDir(), "anatomical-site-list.zip");
-    private final File contactsFields = new File(getLabKeyRoot() + "/externalModules/iths/biotrust/webapp/biotrust/metadata/contacts-fields.tsv");
+    private final File contactsFields = new File(TestFileUtils.getLabKeyRoot() + "/externalModules/iths/biotrust/webapp/biotrust/metadata/contacts-fields.tsv");
 
     private int fileCount = 0;
 
@@ -813,7 +814,7 @@ public class NWBioTrustTest extends SurveyTest
        // clickButton("Add Field");
        // waitAndClickButton("Import Fields", 0);
        // waitForElement(Locator.xpath("//textarea[@id='schemaImportBox']"), WAIT_FOR_JAVASCRIPT);
-        String userFields = getFileContents(contactsFields);
+        String userFields = TestFileUtils.getFileContents(contactsFields);
         ListHelper listHelper = new ListHelper(this);
         listHelper.addFieldsNoImport(userFields);
 
