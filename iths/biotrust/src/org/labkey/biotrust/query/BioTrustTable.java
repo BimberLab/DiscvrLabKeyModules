@@ -85,7 +85,7 @@ public abstract class BioTrustTable extends FilteredTable<BioTrustQuerySchema>
     {
         if (domain != null)
         {
-            return StorageProvisioner.createTableInfo(domain, BioTrustSchema.getInstance().getSchema());
+            return StorageProvisioner.createTableInfo(domain);
         }
         return null;
     }
