@@ -1135,8 +1135,8 @@ public class NWBioTrustTest extends SurveyTest
     }
 
     @Override
-    public String getAssociatedModuleDirectory()
+    public List<String> getAssociatedModules()
     {
-        return "server/modules/biotrust";
+        return Arrays.asList("biotrust");
     }
 }
