@@ -2,6 +2,7 @@ package org.labkey.laboratory.query;
 
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
 
 /**
@@ -98,7 +99,14 @@ public class WorkbookModel
 
     public void setDescription(String description, User u)
     {
-        ContainerManager.updateDescription(_getContainer(), description, u);
+        try
+        {
+            ContainerManager.updateDescription(_getContainer(), description, u);
+        }
+        catch (ValidationException e)
+        {
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
 
     public String getDescription()
