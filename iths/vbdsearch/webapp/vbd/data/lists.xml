@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Exported from LabKey Server at http://localhost:8080/labkey/project/vbd/begin.view by klum on Mon Aug 19 17:26:28 PDT 2013-->
+<tables xmlns="http://labkey.org/data/xml">
+  <table tableName="Repositories" tableDbType="TABLE">
+    <columns>
+      <column columnName="repositoryShortName">
+        <datatype>varchar</datatype>
+        <columnTitle>Repository Short Name</columnTitle>
+        <nullable>false</nullable>
+        <isKeyField>true</isKeyField>
+      </column>
+      <column columnName="repositoryName">
+        <datatype>varchar</datatype>
+        <columnTitle>Repository Name</columnTitle>
+      </column>
+      <column columnName="contact">
+        <datatype>varchar</datatype>
+        <columnTitle>Contact</columnTitle>
+      </column>
+      <column columnName="contactPhone">
+        <datatype>varchar</datatype>
+        <columnTitle>Contact Phone</columnTitle>
+      </column>
+      <column columnName="contactEmail">
+        <datatype>varchar</datatype>
+        <columnTitle>Contact Email</columnTitle>
+      </column>
+      <column columnName="lastUpdated">
+        <datatype>timestamp</datatype>
+        <columnTitle>Last Updated</columnTitle>
+      </column>
+      <column columnName="irbFile">
+        <datatype>varchar</datatype>
+        <columnTitle>IRB File</columnTitle>
+      </column>
+      <column columnName="platform">
+        <datatype>varchar</datatype>
+        <columnTitle>Platform</columnTitle>
+      </column>
+    </columns>
+    <pkColumnName>repositoryShortName</pkColumnName>
+  </table>
+  <table tableName="Samples" tableDbType="TABLE">
+    <columns>
+      <column columnName="Key">
+        <datatype>integer</datatype>
+        <columnTitle>Key</columnTitle>
+        <nullable>false</nullable>
+        <isHidden>true</isHidden>
+        <isKeyField>true</isKeyField>
+        <isAutoInc>true</isAutoInc>
+      </column>
+      <column columnName="specimenCategory">
+        <datatype>varchar</datatype>
+        <columnTitle>Specimen Category</columnTitle>
+      </column>
+      <column columnName="personCategory">
+        <datatype>varchar</datatype>
+        <columnTitle>Person Category</columnTitle>
+      </column>
+      <column columnName="personId">
+        <datatype>varchar</datatype>
+        <columnTitle>Person Id</columnTitle>
+      </column>
+      <column columnName="personAgeAtSpecimenCollection">
+        <datatype>integer</datatype>
+        <columnTitle>Person Age At Specimen Collection</columnTitle>
+        <measure>false</measure>
+      </column>
+      <column columnName="personGender">
+        <datatype>varchar</datatype>
+        <columnTitle>Person Gender</columnTitle>
+      </column>
+      <column columnName="personRace">
+        <datatype>varchar</datatype>
+        <columnTitle>Person Race</columnTitle>
+      </column>
+      <column columnName="personEthnicity">
+        <datatype>varchar</datatype>
+        <columnTitle>Person Ethnicity</columnTitle>
+      </column>
+      <column columnName="personPathStage">
+        <datatype>varchar</datatype>
+        <columnTitle>Person Path Stage</columnTitle>
+      </column>
+      <column columnName="personPathDiagnosis">
+        <datatype>varchar</datatype>
+        <columnTitle>Person Path Diagnosis</columnTitle>
+      </column>
+      <column columnName="personPrimaryHistDiagnosis">
+        <datatype>varchar</datatype>
+        <columnTitle>Person Primary Hist Diagnosis</columnTitle>
+      </column>
+      <column columnName="personPrimarySite">
+        <datatype>varchar</datatype>
+        <columnTitle>Person Primary Site</columnTitle>
+      </column>
+      <column columnName="personPriorCancerHistory">
+        <datatype>varchar</datatype>
+        <columnTitle>Person Prior Cancer History</columnTitle>
+      </column>
+      <column columnName="specimenId">
+        <datatype>varchar</datatype>
+        <columnTitle>Specimen Id</columnTitle>
+      </column>
+      <column columnName="specimenSite">
+        <datatype>varchar</datatype>
+        <columnTitle>Specimen Site</columnTitle>
+      </column>
+      <column columnName="specimenType">
+        <datatype>varchar</datatype>
+        <columnTitle>Specimen Type</columnTitle>
+      </column>
+      <column columnName="specimenPreservationMethod">
+        <datatype>varchar</datatype>
+        <columnTitle>Specimen Preservation Method</columnTitle>
+      </column>
+      <column columnName="specimenPathDiagnosis">
+        <datatype>varchar</datatype>
+        <columnTitle>Specimen Path Diagnosis</columnTitle>
+      </column>
+      <column columnName="specimenHistDiagnosis">
+        <datatype>varchar</datatype>
+        <columnTitle>Specimen Hist Diagnosis</columnTitle>
+      </column>
+      <column columnName="specimenPathGrade">
+        <datatype>varchar</datatype>
+        <columnTitle>Specimen Path Grade</columnTitle>
+      </column>
+      <column columnName="specimenTumorMarkers">
+        <datatype>varchar</datatype>
+        <columnTitle>Specimen Tumor Markers</columnTitle>
+      </column>
+      <column columnName="specimenPriorTx">
+        <datatype>varchar</datatype>
+        <columnTitle>Specimen Prior Tx</columnTitle>
+      </column>
+      <column columnName="specimenNotes">
+        <datatype>varchar</datatype>
+        <columnTitle>Specimen Notes</columnTitle>
+      </column>
+      <column columnName="repositoryShortName">
+        <datatype>varchar</datatype>
+        <columnTitle>Repository Short Name</columnTitle>
+        <dimension>false</dimension>
+        <fk>
+          <fkDbSchema>lists</fkDbSchema>
+          <fkTable>Repositories</fkTable>
+          <fkColumnName>repositoryShortName</fkColumnName>
+        </fk>
+      </column>
+    </columns>
+    <pkColumnName>Key</pkColumnName>
+  </table>
+</tables>
