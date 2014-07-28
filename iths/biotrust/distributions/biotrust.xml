@@ -2,7 +2,7 @@
 
 <project default="usage">
 
-    <target name="distribution">
+    <target name="distribution" if="name">
         <antcall target="prepare_dist_files" />
         <ant antfile="${basedir}/build.xml" target="package_redistributables">
             <property name="dist_sub.dir" value="biotrust" />
