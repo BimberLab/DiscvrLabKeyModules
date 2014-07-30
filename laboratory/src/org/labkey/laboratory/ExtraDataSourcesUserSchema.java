@@ -1,6 +1,6 @@
 package org.labkey.laboratory;
 
-import org.labkey.api.collections.CaseInsensitiveHashSet;
+import org.labkey.api.collections.CaseInsensitiveTreeSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableInfo;
@@ -82,7 +82,7 @@ public class ExtraDataSourcesUserSchema extends SimpleUserSchema
     @Override
     public Set<String> getTableNames()
     {
-        Set<String> tables = new CaseInsensitiveHashSet();
+        Set<String> tables = new CaseInsensitiveTreeSet();
         LaboratoryServiceImpl service = (LaboratoryServiceImpl)LaboratoryServiceImpl.get();
         Set<AdditionalDataSource> sources = service.getAdditionalDataSources(getContainer(), getUser());
         for (AdditionalDataSource source : sources)
