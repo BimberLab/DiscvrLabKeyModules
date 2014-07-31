@@ -1,0 +1,9 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="rowid"/>
+        <column name="database"/>
+        <column name="jsonfile"/>
+        <column name="jsonfile/trackid"/>
+        <column name="jsonfile/sequenceid"/>
+    </columns>
+</customView>

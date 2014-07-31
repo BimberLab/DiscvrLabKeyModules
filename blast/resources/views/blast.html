@@ -1,0 +1,212 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.create('Ext.panel.Panel', {
+            border: false,
+            width: 900,
+            defaults: {
+                border: false
+            },
+            items: [{
+                html: 'This page allows you to run BLAST searches against custom databases.  If you do not see the database you expect, use the link below to view/manage databases.  Note: by default the BLAST results are deleted; however, if you have permission, you can choose to save them using the checkbox below.',
+                style: 'margin-left: 5px;padding-bottom: 5px;'
+            },{
+                xtype: 'ldk-linkbutton',
+                text: 'BLAST Instructions',
+                linkCls: 'labkey-text-link',
+                href: LABKEY.ActionURL.buildURL('blast', 'instructions'),
+                style: 'margin-left: 5px;'
+            },{
+                xtype: 'ldk-linkbutton',
+                text: 'View/Manage Sequence Libraries',
+                linkCls: 'labkey-text-link',
+                href: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', 'query.queryName': 'reference_libraries'}),
+                style: 'margin-left: 5px;'
+            },{
+                xtype: 'ldk-linkbutton',
+                text: 'View Saved BLAST Runs',
+                linkCls: 'labkey-text-link',
+                hidden: !LABKEY.Security.currentUser.canUpdate,
+                href: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'blast', 'query.queryName': 'blast_jobs'}),
+                style: 'margin-left: 5px;'
+            },{
+                style: 'padding-bottom: 20px;'
+            },{
+                xtype: 'form',
+                url: LABKEY.ActionURL.buildURL('blast', 'runBlast', null, null),
+                fileUpload: true,
+                defaults: {
+                    border: false
+                },
+                items: [{
+                    xtype: 'textfield',
+                    fieldLabel: 'Job Title',
+                    name: 'title',
+                    width: 810,
+                    labelWidth: 120,
+                    style: 'margin-left: 5px;margin-bottom: 20px;'
+                },{
+                    xtype: 'checkbox',
+                    fieldLabel: 'Permanently Save Results?',
+                    name: 'saveResults',
+                    hidden: !LABKEY.Security.currentUser.canUpdate,
+                    inputValue: true,
+                    labelWidth: 120,
+                    style: 'margin-left: 5px;margin-bottom: 20px;'
+                },{
+                    xtype: 'fieldset',
+                    title: 'Enter Query Sequence',
+                    border: true,
+                    style: 'margin: 2px;padding: 10px;',
+                    items: [{
+                        xtype: 'textarea',
+                        fieldLabel: 'Enter accession number(s), gi(s) or FASTA sequence(s)',
+                        labelAlign: 'top',
+                        width: 800,
+                        height: 150,
+                        name: 'query'
+                    },{
+                        xtype: 'filefield',
+                        name: 'file',
+                        width: 800,
+                        labelWidth: 120,
+                        fieldLabel: 'Or, upload file'
+                    },{
+                        xtype: 'panel',
+                        style: 'margin-top: 20px;',
+                        layout: {
+                            type: 'hbox'
+                        },
+                        border: false,
+                        defaults: {
+                            border: false,
+                            labelWidth: 40
+                        },
+                        items: [{
+                            xtype: 'displayfield',
+                            isFormField: false,
+                            fieldLabel: 'Query Subrange',
+                            labelWidth: 120
+                        },{
+                            fieldLabel: 'From',
+                            xtype: 'ldk-integerfield',
+                            name: 'queryFrom',
+                            style: 'margin-right: 20px;'
+                        },{
+                            fieldLabel: 'To',
+                            xtype: 'ldk-integerfield',
+                            name: 'queryTo',
+                            style: 'margin-right: 20px;'
+                        }]
+                    }]
+                },{
+                    xtype: 'fieldset',
+                    title: 'Search Parameters',
+                    border: true,
+                    style: 'margin: 2px;margin-top: 5px;padding: 10px;',
+                    items: [{
+                        xtype: 'combo',
+                        fieldLabel: 'BLAST Type',
+                        name: 'task',
+                        queryMode: 'local',
+                        displayField: 'label',
+                        valueField: 'name',
+                        value: 'megablast',
+                        labelWidth: 120,
+                        width: 600,
+                        store: {
+                            type: 'array',
+                            fields: ['name', 'label'],
+                            data: [
+                                ['megablast', 'Highly similar (megablast)'],
+                                ['dc-megablast', 'More dissimilar sequences (discontiguous megablast)'],
+                                ['blastn', 'Somewhat similar sequences (blastn)'],
+                                ['blastn-short', 'Sequences shorter than 50 bases (blastn-short)']
+                            ]
+                        }
+                    },{
+                        xtype: 'ldk-simplelabkeycombo',
+                        fieldLabel: 'Choose Database',
+                        schemaName: 'blast',
+                        queryName: 'databases',
+                        labelWidth: 120,
+                        width: 600,
+                        filterArray: [LABKEY.Filter.create('datedisabled', null, LABKEY.Filter.Types.ISBLANK)],
+                        name: 'database',
+                        valueField: 'objectid',
+                        value: LABKEY.ActionURL.getParameter('database'),
+                        displayField: 'name'
+                    }]
+                },{
+                    xtype: 'fieldset',
+                    title: 'Advanced Parameters',
+                    collapsible: true,
+                    collapsed: true,
+                    border: true,
+                    defaults: {
+                        border: false
+                    },
+                    style: 'margin: 2px;margin-top: 5px;padding: 10px;',
+                    items: [{
+
+                    }]
+                }]
+            }],
+            buttons: [{
+                text: 'BLAST',
+                handler: function(btn){
+                    btn.up('panel').runBlast();
+                }
+            }],
+            runBlast: function(){
+                var form = this.down('form').getForm();
+                var values = form.getValues();
+
+                if (!values.database){
+                    Ext4.Msg.alert('Error', 'Must choose the BLAST database');
+                    return;
+                }
+
+                if (!this.down('filefield').getValue() && !values.query){
+                    Ext4.Msg.alert('Error', 'Must provider a query sequence or sequence file');
+                    return;
+                }
+
+                Ext4.Msg.wait('Loading...');
+                form.submit({
+                    scope: this,
+                    timeout: 999999999,
+                    success: function(form, action){
+                        var jobId;
+                        if (action && action.response && action.response.responseText){
+                            var jsonResponse = LABKEY.Utils.decode(action.response.responseText);
+                            jobId = jsonResponse.jobId;
+                        }
+
+                        Ext4.Msg.hide();
+                        if (jobId) {
+                            Ext4.Msg.confirm('Success', 'BLAST Started!  Do you want to view progress?', function (val) {
+                                if (val == 'yes') {
+                                    window.location = LABKEY.ActionURL.buildURL('blast', 'jobDetails', null, {jobId: jobId})
+                                }
+                            }, this);
+                        }
+                        else {
+                            Ext4.Msg.alert('Error', 'Error, Job Not Started');
+                        }
+                    },
+                    failure: function(form, action){
+                        Ext4.Msg.hide();
+                        if (action && action.result){
+                            Ext4.Msg.alert('Error', action.result.exception);
+                        }
+                    }
+                });
+            }
+        }).render(webpart.wrapperDivId);
+
+    });
+
+</script>

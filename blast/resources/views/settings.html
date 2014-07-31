@@ -1,0 +1,113 @@
+<script type="text/javascript">
+
+Ext4.onReady(function (){
+
+    if (LABKEY.Security.currentUser.isAdmin){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.define('SettingsPanel', {
+            extend: 'Ext.form.Panel',
+            initComponent: function(){
+                Ext4.apply(this, {
+                    border: false,
+                    items: [{
+                        html: 'In order to use this module, you must install BLAST+ on your server.  To do this, download the program from NCBI and follow their instructions.  <a href="http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download">Click here to download BLAST+</a>' +
+                            '<p></p>' +
+                                'Once you have installed BLAST+, you will need to create a folder to hold the custom BLAST databases.  This does not necessarily need to be below the LabKey file root, but the user running tomcat needs r/w access to it.  Once complete, use the fields below to set the values for these properties:' +
+                            '<p></p>' +
+                            '<ul>' +
+                                '<li>' +
+                                    'blastBinDir: the path to the BLAST++ bin directory, where the executables are located.' +
+                                '</li>' +
+                                '<li>' +
+                                    'blastDbDir: the path where BLAST databases will be created.' +
+                                '</li>' +
+                            '</ul>',
+                        border: false,
+                        style: 'padding-bottom: 20px;'
+                    },{
+                        border: false,
+                        itemId: 'settings',
+                        items: [{
+                            html: 'Loading...'
+                        }]
+                    }]
+                });
+
+                this.loadData();
+                this.callParent();
+            },
+
+            loadData: function(){
+                Ext4.Ajax.request({
+                    url: LABKEY.ActionURL.buildURL('blast', 'getSettings', null),
+                    method : 'GET',
+                    scope: this,
+                    failure: LDK.Utils.getErrorCallback(),
+                    success: this.onLoad
+                });
+            },
+
+            onLoad: function(results){
+                var json = LDK.Utils.decodeHttpResponseJson(results);
+                var labelWidth = 160;
+                var width = 550;
+
+                var toAdd = [];
+                Ext4.each(json.configKeys, function(key){
+                    toAdd.push({
+                        xtype: 'textfield',
+                        labelWidth: labelWidth,
+                        width: width,
+                        itemId: key,
+                        fieldLabel: key,
+                        value: json.config[key]
+                    });
+                }, this);
+
+                var target = this.down('#settings');
+                target.removeAll();
+                target.add({
+                    xtype: 'form',
+                    border: false,
+                    bodyStyle: 'padding: 5px;',
+                    items: toAdd,
+                    buttons: [{
+                        text: 'Save Settings',
+                        itemId: 'saveBtn',
+                        handler: this.onSubmit
+                    }]
+                });
+            },
+
+            onSubmit: function(btn){
+                var form = btn.up('form');
+                var fields = form.getForm().getFields();
+
+                var json = {};
+
+                fields.each(function(field){
+                    if (field.itemId)
+                        json[field.itemId] = field.getValue();
+                }, this);
+
+                Ext4.Ajax.request({
+                    url: LABKEY.ActionURL.buildURL('blast', 'setSettings', '/'),
+                    method : 'POST',
+                    params: json,
+                    scope: this,
+                    failure: LDK.Utils.getErrorCallback(),
+                    success: function(response){
+                        Ext4.Msg.alert('Success', 'Save Successful', function(){
+                            window.location.reload();
+                        });
+                    }
+                });
+            }
+        });
+
+        Ext4.create('SettingsPanel', {}).render(webpart.wrapperDivId);
+    }
+});
+
+</script>

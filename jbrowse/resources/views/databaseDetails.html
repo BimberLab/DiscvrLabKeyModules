@@ -1,0 +1,40 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function (){
+        var objectid = LABKEY.ActionURL.getParameter('databaseId');
+
+        if (!objectid){
+            alert('Must Provide The Session Id');
+            return;
+        }
+
+        var webpart = <%=webpartContext%>;
+
+        Ext4.get(webpart.wrapperDivId).update(
+            '<div id="details_'+webpart.wrapperDivId+'"></div>' +
+            '<br>' +
+            '<div id="members_'+webpart.wrapperDivId+'"></div>'
+        );
+
+        Ext4.create('LDK.panel.DetailsPanel', {
+            title: 'Session Details',
+            renderTo: 'details_'+webpart.wrapperDivId,
+            showBackBtn: false,
+            store: {
+                schemaName: 'jbrowse',
+                queryName: 'databases',
+                containerPath: Laboratory.Utils.getQueryContainerPath(),
+                filterArray: [LABKEY.Filter.create('objectid', objectid, LABKEY.Filter.Types.EQUAL)]
+            }
+        });
+
+        LDK.Utils.getReadOnlyQWP({
+            title: 'Resources Displayed In This Session',
+            schemaName: 'jbrowse',
+            queryName: 'database_members',
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            filterArray: [LABKEY.Filter.create('database', objectid, LABKEY.Filter.Types.EQUAL)]
+        }).render('members_'+webpart.wrapperDivId);
+    });
+
+</script>

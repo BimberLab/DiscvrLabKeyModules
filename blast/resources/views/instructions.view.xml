@@ -1,0 +1,5 @@
+<view xmlns="http://labkey.org/data/xml/view" title="BLAST Setup and Instructions">
+    <dependencies>
+        <dependency path="laboratory.context" />
+    </dependencies>
+</view>

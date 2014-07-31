@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+
+ * Copyright (c) 2014 LabKey Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+
+ -->
+<ns:tables xsi:schemaLocation="http://labkey.org/data/xml" xmlns:ns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <ns:table tableName="jsonfiles" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
+        <ns:updateUrl></ns:updateUrl>
+        <ns:insertUrl></ns:insertUrl>
+        <ns:importUrl></ns:importUrl>
+        <ns:tableTitle>JBrowse Files</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="trackid">
+                <ns:columnTitle>Track</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>reference_library_tracks</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="sequenceid">
+                <ns:columnTitle>Ref Sequence</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>ref_nt_sequences</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="dataid">
+                <ns:columnTitle>File Id</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                    <ns:fkTable>data</ns:fkTable>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="relpath">
+                <ns:columnTitle>Relative Path</ns:columnTitle>
+                <ns:description>This is the filepath to this JSON file, relative to the JBrowse root</ns:description>
+            </ns:column>
+            <ns:column columnName="objectid">
+                <ns:columnTitle>Key</ns:columnTitle>
+                <ns:shownInDetailsView>false</ns:shownInDetailsView>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="createdby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="databases" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl>/jbrowse/databaseDetails.view?databaseId=${objectid}</ns:tableUrl>
+        <ns:insertUrl></ns:insertUrl>
+        <ns:importUrl></ns:importUrl>
+        <ns:tableTitle>JBrowse Sessions</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="name">
+                <ns:columnTitle>Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="description">
+
+            </ns:column>
+            <ns:column columnName="objectid">
+                <ns:columnTitle>Key</ns:columnTitle>
+                <ns:shownInDetailsView>false</ns:shownInDetailsView>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="temporary">
+                <ns:columnTitle>Temporary?</ns:columnTitle>
+                <ns:description>If true, this session will be deleted at the end of the day, as part of the routine system maintenance.</ns:description>
+            </ns:column>
+            <ns:column columnName="viewlink" wrappedColumnName="objectid">
+                <ns:columnTitle>JBrowse Link</ns:columnTitle>
+                <ns:displayColumnFactory>
+                    <ns:className>org.labkey.jbrowse.query.DatabaseDisplayColumnFactory</ns:className>
+                </ns:displayColumnFactory>
+            </ns:column>
+            <ns:column columnName="container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="createdby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="database_members" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
+        <ns:updateUrl></ns:updateUrl>
+        <ns:insertUrl></ns:insertUrl>
+        <ns:importUrl></ns:importUrl>
+        <ns:tableTitle>JBrowse Session Members</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="database">
+                <ns:columnTitle>Session Name</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>jbrowse</ns:fkDbSchema>
+                    <ns:fkTable>databases</ns:fkTable>
+                    <ns:fkColumnName>objectid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="jsonfile">
+                <ns:columnTitle>Resource</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>jbrowse</ns:fkDbSchema>
+                    <ns:fkTable>jsonfiles</ns:fkTable>
+                    <ns:fkColumnName>objectid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="createdby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>
+    </ns:table>
+</ns:tables>

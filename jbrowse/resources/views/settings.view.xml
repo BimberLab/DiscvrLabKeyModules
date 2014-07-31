@@ -1,0 +1,8 @@
+<view xmlns="http://labkey.org/data/xml/view" title="JBrowse Settings">
+    <permissions>
+        <permission name="admin"/>
+    </permissions>
+    <dependencies>
+        <dependency path="laboratory.context" />
+    </dependencies>
+</view>

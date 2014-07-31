@@ -1,0 +1,32 @@
+This module provides a wrapper around BLAST, allowing users to run/save BLAST searches against custom reference databases.
+These custom databases allow the user to either create reference sets more tailored to a specific area of research and potentially use non-public sequences.  The BLAST module is tightly connected to <a href="https://code.google.com/p/discvr/">DISCVR</a> and the SequenceAnalysis module.
+The latter is used to create and manage all reference libraries.  See below for additional instructions on initial configuration and use:
+
+<h3>Initial Configuration:</h3>
+To use the BLAST module, a site admin must install BLAST+ and set several site settings.  <a href="<%=contextPath%>/blast/settings.view">Site admins can click here to view additional information</a>.  Admins can also access this page from the Admin Console under the 'Laboratory Module Admin' link.
+
+<br><br>
+<h3>Creating Custom Reference Databases:</h3>
+The SequenceAnalysis module is used to manage all reference sequences and create reference libraries.  Please refer to that module's documentation for more detail on importing references.  Once a reference library has been created, you can view those libraries by clicking the 'Browse All' link under the 'Sequence' section:
+<br><br>
+<img src="<%=contextPath%>/blast/docs/referenceLibrary1.jpg" style="border: 1px solid black"/>
+<br><br>
+Next, look for the link to view all reference libraries:
+<br><br>
+<img src="<%=contextPath%>/blast/docs/referenceLibrary2.jpg" style="border: 1px solid black"/>
+<br><br>
+If you follow that link, you will see a listing of all available libraries.  Check the box next to the library of interest and then use the 'More Actions' button to create a BLAST database from this library.  You only need to do this once per library.
+<br><br>
+<img src="<%=contextPath%>/blast/docs/createDatabase.jpg" style="border: 1px solid black"/>
+
+<br><br>
+<h3>Running BLAST:</h3>
+To run BLAST, go to the front page of your lab's site and look for the 'Run BLAST' link:
+<br><br>
+<img src="<%=contextPath%>/blast/docs/runBlast.jpg" style="border: 1px solid black"/>
+<br><br>
+This should load a form that looks vaguely like NBCI's public form.  From this form, you can enter your query sequence, choose the BLAST algorithm and choose the reference library:
+<br><br>
+<img src="<%=contextPath%>/blast/docs/blast.jpg" style="border: 1px solid black"/>
+<br><br>
+Once you hit the BLAST button, you will be redirected to a page where you can wait the BLAST job's progress and view the results once complete.
