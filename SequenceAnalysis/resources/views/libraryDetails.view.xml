@@ -1,0 +1,7 @@
+<view xmlns="http://labkey.org/data/xml/view" frame="none" title="Library Details">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis"/>
+        <dependency path="extWidgets/DetailsPanel.js"/>
+    </dependencies>
+</view>

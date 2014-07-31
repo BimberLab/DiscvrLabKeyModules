@@ -5,24 +5,14 @@
  */
 
 var console = require("console");
+var LABKEY = require("labkey");
 
 console.log("** evaluating: " + this['javax.script.filename']);
 
+var triggerHelper = new org.labkey.sequenceanalysis.query.SequenceTriggerHelper(LABKEY.Security.currentUser.id, LABKEY.Security.currentContainer.id);
 
 function beforeUpsert(row, errors) {
-    if(row.sequence){
-        //remove whitespace
-        row.sequence = row.sequence.replace(/\s/g, '');
-        row.sequence = row.sequence.toUpperCase();
-
-        //maybe allow IUPAC?
-        if(!row.sequence.match(/^[ATGCN]+$/)){
-            addError(errors, 'sequence', 'Sequence can only contain valid bases: ATGCN');
-            console.log(row.name);
-        }
-    }
-
-    if(row.name){
+    if (row.name){
         row.name = row.name.replace(/\s+/g, '_');
 
         //enforce no pipe character in name
@@ -37,15 +27,27 @@ function beforeUpsert(row, errors) {
     }
 }
 
-
 function beforeInsert(row, errors) {
     beforeUpsert(row, errors);
-
 }
 
 function beforeUpdate(row, oldRow, errors) {
     beforeUpsert(row, errors);
+}
 
+//NOTE: sequence is no longer stored in the DB, but provide a path for API to add it anyway
+function afterInsert(row, errors) {
+    afterUpsert(row, errors);
+}
+
+function afterUpdate(row, oldRow, errors) {
+    afterUpsert(row, errors);
+}
+
+function afterUpsert(row, oldRow, errors) {
+    if (row.sequence) {
+        triggerHelper.processSequence(row.rowid, row.sequence || null);
+    }
 }
 
 function addError(errors, field, msg) {

@@ -23,9 +23,19 @@ public class WorkbookIdDisplayColumn extends DataColumn
     public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
     {
         //if the lookup is broken, dont render a value
-        if (getDisplayValue(ctx) == null)
+        Object dv = getDisplayValue(ctx);
+        if (dv == null || "".equals(dv))
             return;
 
         super.renderGridCellContents(ctx, out);
+    }
+
+    @Override
+    public Object getDisplayValue(RenderContext ctx)
+    {
+        Object ret = super.getDisplayValue(ctx);
+
+        //if the lookup is broken, dont render a value.  note: return empty string so client API draws the distinction between deliberately empty and a genuine NULL value
+        return ret == null ? "" : ret;
     }
 }

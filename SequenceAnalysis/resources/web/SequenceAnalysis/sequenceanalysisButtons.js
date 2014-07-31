@@ -824,4 +824,4 @@ SequenceAnalysis.Buttons = new function(){
             }).show(btn);
         }
     }
-}
+};

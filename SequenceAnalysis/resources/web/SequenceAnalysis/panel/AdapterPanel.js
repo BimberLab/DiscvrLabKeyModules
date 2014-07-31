@@ -1,30 +1,25 @@
 Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
     extend: 'Ext.panel.Panel',
-    alias: 'widget.adapterpanel',
+    alias: 'widget.sequenceanalysis-adapterpanel',
 
     initComponent: function() {
         Ext4.apply(this, {
-            hideLabel: true,
-            hidden: true,
-            width: 'auto',
-            autoHeight: true,
-            bodyStyle: 'padding:5px;',
+            width: '100%',
+            border: false,
             items: [{
                 xtype: 'grid',
                 title: 'Adapters',
                 itemId: 'adapterGrid',
                 border: true,
                 stripeRows: true,
-                renderData: {
-                    helpPopup: 'These sequences will be trimmed from either one or both ends of all reads.  When trimming from the 3\' end, the adapter is automatically reverse complemented.'
-                },
+                helpPopup: 'These sequences will be trimmed from either one or both ends of all reads.  When trimming from the 3\' end, the adapter is automatically reverse complemented.',
                 width: '100%',
                 style: 'padding-bottom:10px;',
                 forceFit: true,
                 selType: 'rowmodel',
                 plugins: [Ext4.create('Ext.grid.plugin.CellEditing', {
                     pluginId: 'cellediting',
-                    clicksToEdit: 2
+                    clicksToEdit: 1
                 })],
                 tbar: [{
                     text: 'Add',
@@ -32,7 +27,7 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                     tooltip: 'Click to add a blank record',
                     name: 'add-record-button',
                     handler: function (btn){
-                        var grid = btn.up('form').down('#adapterPanel').down('#adapterGrid');
+                        var grid = btn.up('sequenceanalysis-adapterpanel').down('#adapterGrid');
                         var store = grid.store;
                         var rec = store.createModel({});
                         store.add(rec);
@@ -45,7 +40,7 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                     tooltip: 'Click to delete selected row(s)',
                     name: 'delete-records-button',
                     handler: function(btn){
-                        var grid = btn.up('form').down('#adapterPanel').down('#adapterGrid');
+                        var grid = btn.up('sequenceanalysis-adapterpanel').down('#adapterGrid');
                         grid.getPlugin('cellediting').completeEdit( );
                         var s = grid.getSelectionModel().getSelection();
                         for (var i = 0, r; r = s[i]; i++){
@@ -59,7 +54,7 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                     tooltip: 'Click to reorder selected records',
                     name: 'move-up-button',
                     handler: function(btn){
-                        var grid = btn.up('form').down('#adapterPanel').down('#adapterGrid').moveSelectedRow(-1);
+                        btn.up('sequenceanalysis-adapterpanel').down('#adapterGrid').moveSelectedRow(-1);
                     }
                 },{
                     text: 'Move Down',
@@ -67,7 +62,7 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                     tooltip: 'Click to reorder selected records',
                     name: 'move-down-button',
                     handler: function(btn){
-                        var grid = btn.up('form').down('#adapterPanel').down('#adapterGrid').moveSelectedRow(1);
+                        btn.up('sequenceanalysis-adapterpanel').down('#adapterGrid').moveSelectedRow(1);
                     }
                 },{
                     text: 'Common Adapters',
@@ -110,15 +105,14 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                                         queryName: 'dna_adapters',
                                         filterArray: [LABKEY.Filter.create('group_name', gn, LABKEY.Filter.Types.EQUAL)],
                                         scope: this,
-                                        successCallback: function(rows){
+                                        success: function(rows){
                                             Ext4.each(rows.rows, function(r){
-                                                var grid = this.up('form').down('#adapterPanel').down('#adapterGrid');
+                                                var grid = this.down('#adapterGrid');
                                                 var rec = grid.store.create({
                                                     adapterSequence: r.sequence,
                                                     adapterName: r.name,
                                                     trim5: true,
-                                                    trim3: true,
-                                                    palindrome: false
+                                                    trim3: true
                                                 });
                                                 grid.store.add(rec);
                                             }, this);
@@ -176,16 +170,16 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                         listeners: {
                             scope: this,
                             change: function(c){
-                                var grid = c.up('form').down('#adapterPanel').down('#adapterGrid');
+                                var grid = c.up('sequenceanalysis-adapterpanel').down('#adapterGrid');
                                 var val = c.getValue();
                                 var match = 0;
                                 grid.store.each(function(r){
-                                    if(r.get('adapterName') == val){
+                                    if (r.get('adapterName') == val){
                                         match++;
                                     }
                                 }, this);
 
-                                if(match > 1){
+                                if (match > 1){
                                     c.markInvalid();
                                     alert('ERROR: Adapter names must be unique');
                                 }
@@ -238,59 +232,65 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                         xtype: 'checkbox',
                         align: 'center'
                     }
-                },{
-                    name: 'mode',
-                    header: 'Palindrome Mode',
-                    tooltip: 'If paired end data is used, this can specify whether this adapter will be used on the foward file, reverse file or both',
-                    width: 80,
-                    id: 'palindrome',
-                    dataIndex: 'palindrome',
-                    align: 'center',
-                    editor: {
-                        xtype: 'checkbox',
-                        checked: true
-                    }
                 }],
                 store: Ext4.create('Ext.data.ArrayStore', {
                     fields: [
                         'adapterName',
                         'adapterSequence',
                         {name: 'trim3', type: 'boolean'},
-                        {name: 'trim5', type: 'boolean', defaultValue: true, checked: true},
-                        {name: 'palindrome', type: 'boolean'}
+                        {name: 'trim5', type: 'boolean', defaultValue: true, checked: true}
                     ],
                     data: []
                 })
-            },{
-                xtype: 'numberfield',
-                fieldLabel: 'Seed Mismatches',
-                name: 'preprocessing.seedMismatches',
-                value: 2,
-                minValue: 0,
-                renderData: {
-                    helpPopup: 'The \'seed mismatch\' parameter is used to make alignments more efficient, specifying the maximum base mismatch count in the 16-base \'seed\'. Typical values here are 1 or 2.'
-                }
-            },{
-                xtype: 'numberfield',
-                fieldLabel: 'Simple Clip Threshold',
-                name: 'preprocessing.simpleClipThreshold',
-                value: 12,
-                minValue: 0,
-                renderData: {
-                    helpPopup: 'A full description of this parameter can be found on the trimmomatic homepage.  The following is adapted from their documentation: The thresholds used are a simplified log-likelihood approach. Each matching base adds just over 0.6, while each mismatch reduces the alignment score by Q/10. Therefore, a perfect match of a 20 base sequence will score just over 12, while 25 bases are needed to score 15. As such we recommend values between 12 - 15 for this parameter.'
-                }
-            },{
-                xtype: 'numberfield',
-                fieldLabel: 'Palindrome Clip Threshold',
-                name: 'preprocessing.palindromeClipThreshold',
-                value: 30,
-                minValue: 0,
-                renderData: {
-                    helpPopup: 'A full description of this parameter can be found on the trimmomatic homepage.  The following is adapted from their documentation: For palindromic matches, the entire read sequence plus (partial) adapter sequences can be used - therefore this threshold can be higher, in the range of 30-40.'
-                }
             }]
         });
 
         this.callParent(arguments);
+    },
+
+    getValue: function(){
+        var ret = [];
+        this.down('gridpanel').store.each(function(r, i) {
+            ret.push([r.data.adapterName, r.data.adapterSequence, r.data.trim5==true, r.data.trim3==true]);
+        }, this);
+
+        return Ext4.isEmpty(ret) ? null : ret;
+    },
+
+    getErrors: function(){
+        var msgs = [];
+        this.down('gridpanel').store.each(function(r, i){
+            if (!r.data.adapterName){
+                msgs.push('Missing name for one or more adapters');
+            }
+            if (!r.data.adapterSequence){
+                msgs.push('Missing sequence for one or more adapters');
+            }
+            if (!r.data.trim5 && !r.data.trim3){
+                msgs.push('Adapter: '+r.name+' must be trimmed from either 5\' or 3\' end');
+            }
+        }, this);
+
+        return msgs;
+    },
+
+    setValue: function(val){
+        //special handling of adapters:
+        var grid = this.down('gridpanel');
+        if (val){
+            var json = Ext4.JSON.decode(val);
+            Ext4.Array.forEach(json, function(row){
+                var rec = grid.store.createModel({
+                    adapterName: row[0],
+                    adapterSequence: row[1],
+                    trim5: row[2],
+                    trim3: row[3]
+                });
+                grid.store.add(rec);
+            }, this);
+        }
+        else {
+            grid.store.removeAll();
+        }
     }
 });

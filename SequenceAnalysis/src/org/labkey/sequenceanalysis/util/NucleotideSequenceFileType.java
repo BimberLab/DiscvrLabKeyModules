@@ -18,7 +18,6 @@ package org.labkey.sequenceanalysis.util;
 import org.labkey.api.util.FileType;
 
 /**
- * Created by IntelliJ IDEA.
  * User: bbimber
  * Date: 12/24/11
  * Time: 8:18 AM

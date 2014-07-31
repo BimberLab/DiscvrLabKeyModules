@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 import java.io.File;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 11/23/12
  * Time: 9:41 PM

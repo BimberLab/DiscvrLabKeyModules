@@ -1,79 +1,121 @@
 <script type="text/javascript">
 
-Ext4.onReady(function(){
-    var summaryQueries;
-    Laboratory.Utils.getQueryCounts({
-        success: function(queries){
-            summaryQueries = queries;
-        },
-        failure: LDK.Utils.getErrorCallback(),
-        scope: this,
-        queries: [{
-            schemaName: 'sequenceanalysis',
-            queryName: 'sequence_readsets',
-            name: 'Total Readsets Imported'
-        },{
-            schemaName: 'sequenceanalysis',
-            queryName: 'sequence_analyses',
-            name: 'Total Analyses Performed'
-        }]
-    });
-
-    createNavMenu();
-
-    function createNavMenu(){
-        if (!LDK.panel.NavPanel || !summaryQueries)
-        {
-            createNavMenu.defer(10);
-            return;
-        }
+    Ext4.onReady(function(){
 
         var webpart = <%=webpartContext%>;
+        Ext4.create('Ext.panel.Panel', {
+            border: false,
+            defaults: {
+                border: false
+            },
+            items: [{
+                html: 'Loading...'
+            }],
+            listeners: {
+                render: function(panel){
+                    Laboratory.Utils.getQueryCounts({
+                        success: function(queries){
+                            var summaryQueries = queries;
+                            var config = {
+                                xtype: 'ldk-navpanel',
+                                width: 550,
+                                sections: [{
+                                    header: 'General Information',
+                                    items: [
+                                        {name: 'Overview of The Sequence Module', url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'instructions')},
+                                        {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL("pipeline-status", "showList.view"), renderer: 'linkWithoutLabel'}
+                                    ]
+                                },{
+                                    header: 'Data Analysis',
+                                    items: [
+                                        {renderer: function(){
+                                            return {
+                                                xtype: 'ldk-linkbutton',
+                                                text: 'Create Readsets',
+                                                linkCls: 'labkey-text-link-noarrow',
+                                                style: LDK.panel.NavPanel.ITEM_STYLE_DEFAULT + ';margin-left: 2px;',
+                                                handler: function(btn){
+                                                    var el = btn.up('button');
+                                                    Ext4.create('Laboratory.window.WorkbookCreationWindow', {
+                                                        urlParams: null,
+                                                        controller: 'sequenceanalysis',
+                                                        action: 'sequence_readsets',
+                                                        title: 'Create Readsets'
+                                                    }).show();
+                                                }
+                                            }
+                                        }},
+                                        {renderer: function() {
+                                            return {
+                                                xtype: 'ldk-linkbutton',
+                                                text: 'Upload Files / Start Analysis',
+                                                linkCls: 'labkey-text-link-noarrow',
+                                                style: LDK.panel.NavPanel.ITEM_STYLE_DEFAULT + ';margin-left: 2px;',
+                                                handler: function (btn) {
+                                                    var el = btn.up('button');
+                                                    Ext4.create('Laboratory.window.WorkbookCreationWindow', {
+                                                        urlParams: null,
+                                                        controller: 'pipeline',
+                                                        action: 'browse',
+                                                        title: 'Upload Files / Start Analysis'
+                                                    }).show();
+                                                }
+                                            }
+                                        }},
+                                        {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL('pipeline-status', 'showList.view'), renderer: 'linkWithoutLabel'},
+                                        {name: 'Instrument Runs', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'instrument_runs'}), renderer: 'linkWithoutLabel'}
+                                    ]
+                                },{
+                                    header: 'Summary',
+                                    renderer: 'summaryCountRenderer',
+                                    items: [
 
-        var config = {
-            width: '100%',
-            sections: [{
-                header: 'General Information',
-                items: [
-                    {name: 'Description of this Pipeline', url: '<%=contextPath%>/sequenceanalysis<%=containerPath%>/instructions.view'},
-                    {name: 'Release Notes', url: '<%=contextPath%>/sequenceanalysis<%=containerPath%>/releaseNotes.view'},
-                    {name: 'Manage Module', url: LABKEY.ActionURL.buildURL('laboratory', 'labSettings'), renderer: 'linkWithoutLabel', hasPermission: LABKEY.Security.currentUser.isAdmin}
-                ]},
-                {header: 'Sample Information',
-                items: [
-                    {name: 'Samples', schemaName: 'laboratory', queryName: 'Samples', renderer: 'queryRenderer', importIntoWorkbooks: false},
-                    {name: 'Subjects', schemaName: 'laboratory', queryName: 'Subjects', renderer: 'queryRenderer', importIntoWorkbooks: false}
-                ]
-            },{
-                header: 'Data Analysis',
-                items: [
-                    {name: 'Create Readsets', url: '<%=contextPath%>/query<%=containerPath%>/importData.view?schemaName=sequenceanalysis&queryName=sequence_readsets', renderer: 'linkWithoutLabel'},
-                    {name: 'Upload Files / Start Analysis', url: '<%=contextPath%>/pipeline<%=containerPath%>/browse.view?', renderer: 'linkWithoutLabel'},
-                    {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL('pipeline-status', 'showList.view'), renderer: 'linkWithoutLabel'}
-                ]},
-                {header: 'Summary',
-                renderer: 'summaryCountRenderer',
-                items: [
+                                    ]
+                                },{
+                                    header: 'Browse Results',
+                                    items: [
+                                        {name: 'View Sequence Alignment Summary', schemaName: 'sequenceanalysis', queryName: 'alignment_summary_grouped', showSearch: false, showImport: false, renderer: 'queryRenderer'},
+                                        {name: 'View NT SNP Summary', schemaName: 'sequenceanalysis', queryName: 'nt_snps_by_pos', viewName: 'Search Panel', showSearch: false, showImport: false, renderer: 'queryRenderer'},
+                                        {name: 'View AA SNP Summary', schemaName: 'sequenceanalysis', queryName: 'aa_snps_by_codon', viewName: 'Search Panel', showSearch: false, showImport: false, renderer: 'queryRenderer'}
+                                    ]
+                                },{
+                                    header: 'References',
+                                    items: [
+                                        {name: 'Reference Sequences', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'ref_nt_sequences'}), renderer: 'linkWithoutLabel'},
+                                        {name: 'Reference Libraries', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'reference_libraries'}), renderer: 'linkWithoutLabel'}
+                                    ]
+                                }]
+                            };
 
-                ]},
-                {header: 'Browse Results',
-                items: [
-                    {name: 'View Sequence Analysis Runs', schemaName: 'sequenceanalysis', queryName: 'sequence_analyses', showImport: false, renderer: 'queryRenderer'},
-                    {name: 'View Sequence Readsets', schemaName: 'sequenceanalysis', queryName: 'Sequence_Readsets', showImport: false, renderer: 'queryRenderer'},
-                    //{name: 'View Sequence Reads', schemaName: 'sequenceanalysis', queryName: 'Sequence_Reads', showImport: false, renderer: 'queryRenderer'},
-                    {name: 'View Sequence Alignments', schemaName: 'sequenceanalysis', queryName: 'sequence_alignments', showImport: false, renderer: 'queryRenderer'},
-                    {name: 'View NT SNPs', schemaName: 'sequenceanalysis', queryName: 'nt_snps', viewName: 'Search Panel', showImport: false, renderer: 'queryRenderer'},
-                    {name: 'View AA SNPs', schemaName: 'sequenceanalysis', queryName: 'aa_snps', viewName: 'Search Panel', showImport: false, renderer: 'queryRenderer'}
-                ]}
-            ]
-        }
+                            Ext4.each(summaryQueries, function(q){
+                                config.sections[2].items.push(q)
+                            }, this);
 
-        Ext4.each(summaryQueries, function(q){
-            config.sections[3].items.push(q)
-        }, this);
+                            Ext4.create('LDK.panel.NavPanel', config);
 
-        Ext4.create('LDK.panel.NavPanel', config).render(webpart.wrapperDivId);
-    }
-});
+                            panel.removeAll();
+                            panel.add([{
+                                style: 'padding: 5px;padding-bottom: 20px;',
+                                html: 'This module is designed to manage sequence data and assist with analysis and presentation of results.  ' +
+                                        '<p></p>There two components to this module.  First, it can be used to management sequence data and to connect these sequences with sample information.  This allows you to identify current or historic data based on sample attributes such as subject Id, sample date, etc.  The second component of this module is data analysis.  This module provides a flexible pipeline that integrates with a wide range of analysis tools.  You can either create a new pipeline by combining tools/steps, or re-use a previously saved analysis.'
+                            }, config]);
+                        },
+                        failure: LDK.Utils.getErrorCallback(),
+                        scope: this,
+                        queries: [{
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'sequence_readsets',
+                            sql: 'SELECT count(*) as total from sequenceanalysis.sequence_readsets s WHERE s.fileid IS NOT NULL',
+                            viewName: 'Data Imported',
+                            name: 'Total Readsets Imported'
+                        },{
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'sequence_analyses',
+                            name: 'Total Analyses Performed'
+                        }]
+                    });
+                }
+            }
+        }).render(webpart.wrapperDivId);
+    });
 </script>
-

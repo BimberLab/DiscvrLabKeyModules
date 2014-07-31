@@ -1,13 +1,20 @@
 package org.labkey.sequenceanalysis.util;
 
+import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMRecordIterator;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 11/20/12
  * Time: 9:49 PM
@@ -49,4 +56,51 @@ public class SequenceUtil
         }
     }
 
+    public static long getLineCount(File f) throws PipelineJobException
+    {
+        try (BufferedReader reader = new BufferedReader(new FileReader(f)))
+        {
+            long i = 0;
+            while (reader.readLine() != null)
+            {
+                i++;
+            }
+
+            return i;
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+    }
+
+    public static long getAlignmentCount(File bam)
+    {
+        try (SAMFileReader reader = new SAMFileReader(bam))
+        {
+            reader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+
+            SAMRecordIterator it = reader.iterator();
+            long count = 0;
+            while (it.next() != null)
+            {
+                count++;
+            }
+
+            return count;
+        }
+    }
+
+    public static void writeFastaRecord(Writer writer, String header, String sequence, int lineLength) throws IOException
+    {
+        writer.write(">" + header + "\n");
+        if (sequence != null)
+        {
+            int len = sequence.length();
+            for (int i=0; i<len; i+=lineLength)
+            {
+                writer.write(sequence.substring(i, Math.min(len, i + lineLength)) + "\n");
+            }
+        }
+    }
 }

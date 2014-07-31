@@ -217,7 +217,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                     col.setIsUnselectable(true);
                     col.setUserEditable(false);
 
-                    col.setFk(new QueryForeignKey(qd.getQueryDef(us.getContainer(), us.getUser()).getSchema(), null, qd.getQueryName(), qd.getTargetColumn(), qd.getTargetColumn()){
+                    col.setFk(new QueryForeignKey(qd.getTableInfo(us.getContainer(), us.getUser()).getUserSchema(), null, qd.getQueryName(), qd.getTargetColumn(), qd.getTargetColumn()){
                         public TableInfo getLookupTableInfo()
                         {
                             AbstractTableInfo ti = (AbstractTableInfo)super.getLookupTableInfo();
@@ -841,12 +841,18 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         configureMoreActionsBtn(ti, buttons, cfg, scripts);
 
         cfg.setScriptIncludes(scripts.toArray(new String[scripts.size()]));
+        cfg.setAlwaysShowRecordSelectors(true);
 
         ti.setButtonBarConfig(cfg);
     }
 
     private static void configureMoreActionsBtn(TableInfo ti, List<ButtonConfigFactory> buttons, ButtonBarConfig cfg, Set<String> scripts)
     {
+        if (buttons == null || buttons.isEmpty())
+        {
+            return;
+        }
+
         List<ButtonConfig> existingBtns = cfg.getItems();
         UserDefinedButtonConfig moreActionsBtn = null;
         if (existingBtns != null)
@@ -914,8 +920,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
             return;
 
         List<ButtonConfigFactory> buttons = LaboratoryService.get().getQueryButtons(ti);
-        if (buttons != null)
-            LaboratoryTableCustomizer.customizeButtonBar(ti, buttons);
+        LaboratoryTableCustomizer.customizeButtonBar(ti, buttons);
     }
 
     private void customzieSamplesTable(AbstractTableInfo ti)

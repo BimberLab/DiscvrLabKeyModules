@@ -15,12 +15,12 @@ import org.labkey.api.view.ViewBackgroundInfo;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 4/27/14
  * Time: 5:41 AM
@@ -28,7 +28,6 @@ import java.util.Map;
 public class SequenceAnalysisJob extends AbstractFileAnalysisJob
 {
     private TaskId _taskPipelineId;
-    private AbstractFileAnalysisProtocol _protocol;
 
     public SequenceAnalysisJob(AbstractFileAnalysisProtocol<AbstractFileAnalysisJob> protocol,
                                ViewBackgroundInfo info,
@@ -75,9 +74,9 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob
     public List<PipelineJob> createSplitJobs()
     {
         ArrayList<PipelineJob> jobs = new ArrayList<>();
-        if (getActiveTaskFactory().getId().getNamespaceClass().equals(SequenceAlignmentTask.class) && getInputFiles().size() > 1)
+        if ((getActiveTaskFactory().getId().getNamespaceClass().equals(SequenceAlignmentTask.class) || getActiveTaskFactory().getId().getNamespaceClass().equals(SequenceAnalysisTask.class)) && getInputFiles().size() > 1)
         {
-            List<Pair<File, File>> files = SequenceAlignmentTask.getAlignmentFiles(this, getInputFiles(), false);
+            Collection<Pair<File, File>> files = SequenceAlignmentTask.getAlignmentFiles(this, getInputFiles(), false).values();
             for (Pair<File, File> pair : files)
             {
                 List<File> toRun = new ArrayList<>();

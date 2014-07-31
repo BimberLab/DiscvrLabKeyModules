@@ -29,7 +29,6 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 10/1/12
  * Time: 9:46 AM
@@ -75,7 +74,7 @@ public class SequenceNavItem extends AbstractImportingNavItem
     @Override
     public ActionURL getBrowseUrl(Container c, User u)
     {
-        return new ActionURL(SequenceAnalysisModule.CONTROLLER_NAME, "dataBrowser", getTargetContainer(c));
+        return new ActionURL(SequenceAnalysisModule.CONTROLLER_NAME, "begin", getTargetContainer(c));
     }
 
     private ActionURL getAssayRunTemplateUrl(Container c, User u)

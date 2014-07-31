@@ -15,49 +15,36 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
-import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.labkey.api.data.CompareType;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.query.FieldKey;
+import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.settings.AppProps;
-import org.labkey.api.util.DateUtil;
-import org.labkey.sequenceanalysis.model.AdapterModel;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
-import org.labkey.sequenceanalysis.model.ReadsetModel;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Created by IntelliJ IDEA.
  * User: bbimber
  * Date: 4/23/12
  * Time: 10:23 AM
  */
 public class SequencePipelineSettings
 {
-    public static String AA_SNP_BY_CODON_AGGREGATOR = "aaSnpByCodon";
-    public static String NT_SNP_AGGREGATOR = "ntSnpByPosition";
-    public static String COVERAGE_AGGREGATOR = "ntCoverage";
-    public static String SBT_AGGREGATOR = "sbtAnalysis";
     private Map<String, String> _params;
-    private List<ReadsetModel> _readsets = new ArrayList<>();
+    private List<ReadsetModel> _readsets = null;
 
     //instrument import
     private String _runName;
-    private String _instrumentName;
     private Integer _instrumentId;
     private Date _runDate;
 
@@ -74,27 +61,28 @@ public class SequencePipelineSettings
         if(appProps != null)
             _params.put("serverBaseUrl", appProps.getBaseServerUrl());
 
-        initSamples();
         initInstrumentRun();
     }
 
     private void initInstrumentRun()
     {
         _runName = _params.get("runName");
-        _instrumentName = _params.get("instrumentName");
         _instrumentId = getInt(_params.get("instrumentId"));
-        _runDate = getDate(_params.get("runDate"));
+        _runDate = ConvertHelper.convert(_params.get("runDate"), Date.class);
     }
 
-    private void initSamples()
+    private List<ReadsetModel> parseReadsets()
     {
+        List<ReadsetModel> readsets = new ArrayList<>();
         for(String key : _params.keySet())
         {
             if(key.startsWith("sample_"))
             {
-                _readsets.add(createReadsetModel(new JSONObject(_params.get(key))));
+                readsets.add(createReadsetModel(new JSONObject(_params.get(key))));
             }
         }
+
+        return readsets;
     }
 
     private ReadsetModel createReadsetModel(JSONObject o)
@@ -137,19 +125,7 @@ public class SequencePipelineSettings
 
     private Integer getInt(String v)
     {
-        return StringUtils.isEmpty(v) ? null : Integer.parseInt(v);
-    }
-
-    private Date getDate(String v)
-    {
-        try
-        {
-            return StringUtils.isEmpty(v) ? null : new Date(DateUtil.parseDateTime(v));
-        }
-        catch (ConversionException e)
-        {
-            return null;
-        }
+        return ConvertHelper.convert(v, Integer.class);
     }
 
     public String getBasename(String filename)
@@ -165,146 +141,14 @@ public class SequencePipelineSettings
         return basename;
     }
 
-    public boolean isDoPreprocess()
-    {
-        return  (!"".equals(_params.get("preprocessing.minLength"))) ||
-            ("true".equals(_params.get("preprocessing.downsample"))) ||
-            ("true".equals(_params.get("preprocessing.crop"))) ||
-            ("true".equals(_params.get("preprocessing.qual2"))) ||
-            ("true".equals(_params.get("preprocessing.trimAdapters")))
-            ;
-    }
-
-    public boolean doDownsample()
-    {
-        return "true".equals(_params.get("preprocessing.downsample"));
-    }
-
-    public boolean hasCustomReference()
-    {
-        return "true".equals(_params.get("dna.isCustomReference"));
-    }
-
-    public String getCustomReferenceSequence()
-    {
-        return _params.get("dna.refSequence");
-    }
-
-    public String getCustomReferenceSequenceName()
-    {
-        return _params.get("dna.customReferenceName");
-    }
-
     public boolean doAutoCreateReadsets()
     {
         return "true".equals(_params.get("autoCreateReadsets"));
     }
 
-    public boolean doQualityTrimByWindow()
+    public String getProtocolDescription()
     {
-        return "true".equals(_params.get("preprocessing.qual2"));
-    }
-
-    public boolean doCrop()
-    {
-        return ("true".equals(_params.get("preprocessing.crop"))) && getIntegerParam("preprocessing.crop_cropLength") > 0;
-    }
-
-    public Integer getCropLength()
-    {
-        return getIntegerParam("preprocessing.crop_cropLength");
-    }
-
-    public boolean isDeleteIntermediateFiles()
-    {
-        return "true".equals(_params.get("deleteIntermediateFiles"));
-    }
-
-    public boolean doHeadCrop()
-    {
-        return ("true".equals(_params.get("preprocessing.crop"))) && getIntegerParam("preprocessing.crop_headcropLength") > 0;
-    }
-
-    public Integer getHeadCropLength()
-    {
-        return getIntegerParam("preprocessing.crop_headcropLength");
-    }
-
-    public Integer getSlidingWindowSize()
-    {
-        return getIntegerParam("preprocessing.qual2_windowSize");
-    }
-
-    public Integer getSlidingWindowQuality()
-    {
-        return getIntegerParam("preprocessing.qual2_avgQual");
-    }
-
-    public String getAnalysisDescription()
-    {
-        return _params.get("analysisDescription");
-    }
-
-    public boolean isDoAdapterTrimming()
-    {
-        return getAdapters().size() > 0;
-    }
-
-    public Integer getSimpleClipThreshold()
-    {
-        return getIntegerParam("preprocessing.simpleClipThreshold");
-    }
-
-    public Integer getPalindromeClipThreshold()
-    {
-        return getIntegerParam("preprocessing.palindromeClipThreshold");
-    }
-
-    public Integer getAdapterSeedMismatches()
-    {
-        return getIntegerParam("preprocessing.seedMismatches");
-    }
-
-    public int getMinReadLength()
-    {
-        return getIntegerParam("preprocessing.minLength");
-    }
-
-    public int getBarcodeMismatches()
-    {
-        return getIntegerParam("inputfile.barcodeEditDistance");
-    }
-
-    public int getBarcodeOffset()
-    {
-        return getIntegerParam("inputfile.barcodeOffset");
-    }
-
-    public int getBarcodeDeletions()
-    {
-        return getIntegerParam("inputfile.barcodeDeletions");
-    }
-
-    public boolean isScanAllBarcodes()
-    {
-        return "true".equals(_params.get("inputfile.scanAllBarcodes"));
-    }
-
-    private int getIntegerParam(String name)
-    {
-        return StringUtils.isEmpty(_params.get(name)) ? 0 : Integer.parseInt(_params.get(name));
-    }
-
-    public List<AdapterModel> getAdapters()
-    {
-        List<AdapterModel> adapters = new ArrayList<>();
-        Map<String, JSONArray> rawData = getAdapterInfo();
-        for (JSONArray adapter : rawData.values())
-        {
-            adapters.add(AdapterModel.fromJSON(adapter));
-        }
-
-        return adapters;
+        return _params.get("protocolDescription");
     }
 
     public List<BarcodeModel> getBarcodes()
@@ -333,101 +177,9 @@ public class SequencePipelineSettings
         return barcodes;
     }
 
-    public SimpleFilter getReferenceFilter()
-    {
-        SimpleFilter filter = new SimpleFilter();
-
-        for (String key : _params.keySet())
-        {
-            if (key.startsWith("dna."))
-            {
-                String val = _params.get(key);
-
-                if ("All".equalsIgnoreCase(val))
-                    continue;
-
-                if (StringUtils.trimToNull(val) == null)
-                    continue;
-
-                String fieldName = key.replaceAll("dna.", "");
-                String[] vals = val.split(",");
-
-                if (vals.length > 1)
-                    filter.addClause(new CompareType.CompareClause(FieldKey.fromString(fieldName), CompareType.IN, Arrays.asList(vals)));
-                else
-                    filter.addClause(new CompareType.CompareClause(FieldKey.fromString(fieldName), CompareType.EQUAL, vals[0]));            }
-        }
-
-        return filter;
-    }
-
-    private Map<String, JSONArray> getAdapterInfo()
-    {
-        Map<String, JSONArray> adapters = new TreeMap<>();
-        for (String key : _params.keySet())
-        {
-            if (key.startsWith("adapter_"))
-            {
-                adapters.put(key, new JSONArray(_params.get(key)));
-            }
-        }
-
-        return adapters;
-    }
-
-    public boolean isDoTrimming()
-    {
-        return isDoAdapterTrimming() || doCrop() || doHeadCrop() || doQualityTrimByWindow() || getMinReadLength() > 0;
-    }
-
-    public boolean isDoAlignment()
-    {
-        return ("true".equals(_params.get("doAlignment")));
-    }
-
-    public String getAligner()
-    {
-        return _params.get("aligner");
-    }
-
-    public Map<String, String> getAlignerOptions()
-    {
-        String aligner = getAligner();
-        Map<String, String> options = new HashMap<>();
-        for (String key : _params.keySet())
-        {
-            if (key.startsWith(aligner))
-            {
-                String param = key.replaceAll("^" + aligner + ".", "");
-                options.put(param, _params.get(key));
-            }
-        }
-        return options;
-    }
-
-    public String getRefDbPrefix()
-    {
-        return _params.get("dbPrefix");
-    }
-
-    public String getRefDbFilename()
-    {
-        return StringUtils.isEmpty(_params.get("dbPrefix")) ? "Ref_DB.fasta" : "Ref_DB." + _params.get("dbPrefix") + ".fasta";
-    }
-
-    public boolean hasAdditionalAnalyses()
-    {
-        return getAggregatorNames().size() > 0;
-    }
-
     public boolean isDoMerge()
     {
         return ("true".equals(_params.get("inputfile.merge")));
-    }
-
-    public String getMergeBasename()
-    {
-        return _params.get("inputfile.merge.basename");
     }
 
     public String getMergeFilename()
@@ -435,19 +187,9 @@ public class SequencePipelineSettings
         return _params.get("inputfile.merge.basename") + ".fastq";
     }
 
-    public String getInputfileTreatment()
-    {
-        return _params.get("inputfile.inputTreatment");
-    }
-
     public boolean isDoBarcode()
     {
         return ("true".equals(_params.get("inputfile.barcode")));
-    }
-
-    public boolean isDoPairedEnd()
-    {
-        return ("true".equals(_params.get("inputfile.pairedend")));
     }
 
     @NotNull
@@ -463,13 +205,16 @@ public class SequencePipelineSettings
         {
             ret.add((String)o);
         }
+
         return ret;
     }
 
     public BarcodeModel[] getAdditionalBarcodes()
     {
-        if (getBarcodeGroupsToScan() != null)
+        if (!getBarcodeGroupsToScan().isEmpty())
+        {
             return BarcodeModel.getByGroups(getBarcodeGroupsToScan());
+        }
 
         return null;
     }
@@ -479,46 +224,6 @@ public class SequencePipelineSettings
         return _params;
     }
 
-    public String getImportType()
-    {
-        return _params.get("importType");
-    }
-
-    public String getAnalysisType()
-    {
-        return _params.get("analysisType");
-    }
-
-    public Integer getDownsampleReadNumber()
-    {
-        return StringUtils.isEmpty(_params.get("preprocessing.downsampleReadNumber")) ? null : Integer.parseInt(_params.get("preprocessing.downsampleReadNumber"));
-    }
-
-    public boolean getSBTonlyImportPairs()
-    {
-        return StringUtils.isEmpty(_params.get("sbt.onlyImportPairs")) ? false : Boolean.parseBoolean(_params.get("sbt.onlyImportPairs"));
-    }
-
-    public Double getSBTminPctToImport()
-    {
-        return StringUtils.isEmpty(_params.get("sbt.minPctToImport")) ? null : Double.parseDouble(_params.get("sbt.minPctToImport"));
-    }
-
-    public Double getSBTminCountForRef()
-    {
-        return StringUtils.isEmpty(_params.get("sbt.minCountForRef")) ? null : Double.parseDouble(_params.get("sbt.minCountForRef"));
-    }
-
-    public Double getSBTminPctForRef()
-    {
-        return StringUtils.isEmpty(_params.get("sbt.minPctForRef")) ? null : Double.parseDouble(_params.get("sbt.minPctForRef"));
-    }
-
-    public boolean isAutomatedImport()
-    {
-        return ("true".equals(_params.get("automatedImport")));
-    }
-
     public boolean isDebugMode()
     {
         return ("true".equals(_params.get("debugMode")));
@@ -526,17 +231,17 @@ public class SequencePipelineSettings
 
     public List<ReadsetModel> getReadsets()
     {
+        if (_readsets == null)
+        {
+            _readsets = parseReadsets();
+        }
+
         return _readsets;
     }
 
     public String getRunName()
     {
         return _runName;
-    }
-
-    public String getInstrumentName()
-    {
-        return _instrumentName;
     }
 
     public Integer getInstrumentId()
@@ -547,19 +252,5 @@ public class SequencePipelineSettings
     public Date getRunDate()
     {
         return _runDate;
-    }
-
-    public List<String> getAggregatorNames()
-    {
-        String[] aggregators = new String[]{NT_SNP_AGGREGATOR, AA_SNP_BY_CODON_AGGREGATOR, COVERAGE_AGGREGATOR, SBT_AGGREGATOR};
-        List<String> aggregatorNames = new ArrayList<>();
-        for (String param : aggregators)
-        {
-            if ("true".equals(_params.get(param)))
-            {
-                aggregatorNames.add(param);
-            }
-        }
-        return aggregatorNames;
     }
 }

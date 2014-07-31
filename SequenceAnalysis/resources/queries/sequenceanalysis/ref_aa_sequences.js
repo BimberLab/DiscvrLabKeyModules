@@ -17,13 +17,14 @@ function beforeUpsert(row, errors) {
         row.sequence = row.sequence.toUpperCase();
 
         //maybe enforce ATGCN?  allow IUPAC?
-        if(!row.sequence.match(/^[*ARNDCQEGHILKMFPSTWYVX]+$/)){
+        if(!row.sequence.match(/^[*ARNDCQEGHILKMFPSTWYVX:]+$/)){
             addError(errors, 'sequence', 'Sequence can only contain valid amino acid characters: ARNDCQEGHILKMFPSTWYV*');
         }
     }
 
     if(row.name){
-        row.name = row.name.replace(/\s+/g, '_');
+        //trim name
+        row.name = row.name.replace(/^\s+|\s+$/g, '')
 
         //enforce no pipe character in name
         if(row.name.match(/\|/)){

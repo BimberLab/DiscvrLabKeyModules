@@ -15,7 +15,7 @@ import org.junit.Test;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.TestHelper;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
-import org.labkey.sequenceanalysis.model.ReadsetModel;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.model.SequenceTag;
 
 import java.io.File;
@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 11/24/12
  * Time: 10:38 AM

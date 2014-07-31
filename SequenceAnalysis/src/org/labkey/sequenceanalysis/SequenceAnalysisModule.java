@@ -19,17 +19,47 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.exp.ExperimentRunTypeSource;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
-import org.labkey.sequenceanalysis.analysis.BamIterator;
+import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
+import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
+import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
+import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
+import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
+import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
+import org.labkey.sequenceanalysis.run.alignment.LastzWrapper;
+import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
+import org.labkey.sequenceanalysis.run.alignment.TophatWrapper;
+import org.labkey.sequenceanalysis.run.analysis.BamIterator;
+import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.ViralAnalysis;
+import org.labkey.sequenceanalysis.run.bampostprocessing.AddOrReplaceReadGroupsStep;
+import org.labkey.sequenceanalysis.run.bampostprocessing.CallMdTagsStep;
+import org.labkey.sequenceanalysis.run.bampostprocessing.CleanSamStep;
+import org.labkey.sequenceanalysis.run.bampostprocessing.FixMateInformationStep;
+import org.labkey.sequenceanalysis.run.bampostprocessing.IndelRealignerStep;
+import org.labkey.sequenceanalysis.run.bampostprocessing.MarkDuplicatesStep;
+import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
+import org.labkey.sequenceanalysis.run.preprocessing.CutadaptWrapper;
+import org.labkey.sequenceanalysis.run.preprocessing.DownsampleFastqWrapper;
+import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
+import org.labkey.sequenceanalysis.run.reference.CustomReferenceLibraryStep;
+import org.labkey.sequenceanalysis.run.reference.DNAReferenceLibraryStep;
+import org.labkey.sequenceanalysis.run.reference.SavedReferenceLibraryStep;
+import org.labkey.sequenceanalysis.run.reference.VirusReferenceLibraryStep;
+import org.labkey.sequenceanalysis.run.variant.SamtoolsVariantCaller;
 import org.labkey.sequenceanalysis.util.Barcoder;
 
 import java.util.Arrays;
@@ -53,7 +83,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.273;
+        return 12.280;
     }
 
     public boolean hasScripts()
@@ -69,7 +99,10 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     protected void init()
     {
-        addController("sequenceanalysis", SequenceAnalysisController.class);
+        //NOTE: because this is not called on the remote server, startup tasks have been moved to the following:
+        new PipelineStartup();
+
+        addController(CONTROLLER_NAME, SequenceAnalysisController.class);
     }
 
     @NotNull
@@ -91,11 +124,56 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         return list;
     }
 
+    public static void registerPipelineSteps()
+    {
+        //preprocessing
+        SequencePipelineService.get().registerPipelineStep(new DownsampleFastqWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.ReadLengthFilterProvider());
+        SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.SlidingWindowTrimmingProvider());
+        SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.CropReadsProvider());
+        SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.HeadCropReadsProvider());
+        SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.MaxInfoTrimmingProvider());
+        SequencePipelineService.get().registerPipelineStep(new CutadaptWrapper.Provider());
+
+        //ref library
+        SequencePipelineService.get().registerPipelineStep(new DNAReferenceLibraryStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VirusReferenceLibraryStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CustomReferenceLibraryStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SavedReferenceLibraryStep.Provider());
+
+        //aligners
+        SequencePipelineService.get().registerPipelineStep(new BowtieWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BWAMemWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BWAWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BWASWWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new LastzWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new MosaikWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new TophatWrapper.Provider());
+
+        //bam postprocessing
+        SequencePipelineService.get().registerPipelineStep(new AddOrReplaceReadGroupsStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CallMdTagsStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CleanSamStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new FixMateInformationStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new IndelRealignerStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new MarkDuplicatesStep.Provider());
+        //SequencePipelineService.get().registerPipelineStep(new RecalibrateBamStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SortSamStep.Provider());
+
+        //variant calling
+        SequencePipelineService.get().registerPipelineStep(new SamtoolsVariantCaller.Provider());
+
+        //analysis
+        SequencePipelineService.get().registerPipelineStep(new SequenceBasedTypingAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new ViralAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new HaplotypeCallerAnalysis.Provider());
+    }
+
     @Override
     @NotNull
     public Set<String> getSchemaNames()
     {
-        return PageFlowUtil.set("sequenceanalysis");
+        return PageFlowUtil.set(SequenceAnalysisSchema.SCHEMA_NAME);
     }
 
     @Override
@@ -103,6 +181,12 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     public Set<DbSchema> getSchemasToTest()
     {
         return PageFlowUtil.set(SequenceAnalysisSchema.getInstance().getSchema());
+    }
+
+    @Override
+    protected void registerSchemas()
+    {
+        SequenceAnalysisUserSchema.register(this);
     }
 
     @Override
@@ -125,6 +209,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         DetailsURL details = DetailsURL.fromString("/sequenceAnalysis/siteAdmin.view");
         details.setContainerContext(ContainerManager.getRoot());
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "sequence analysis module admin", details.getActionURL());
+
+        PipelineService.get().registerPipelineProvider(new ReferenceLibraryPipelineProvider(this));
     }
 
     @Override
@@ -147,5 +233,11 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         ));
 
         return testClasses;
+    }
+
+    @Override
+    public UpgradeCode getUpgradeCode()
+    {
+        return new SequenceAnalysisUpgradeCode();
     }
 }

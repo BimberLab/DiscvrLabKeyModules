@@ -9,19 +9,19 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
             editingPluginId: 'cellediting',
             plugins: [Ext4.create('Ext.grid.plugin.CellEditing', {
                 pluginId: 'cellediting',
-                clicksToEdit: 2,
+                clicksToEdit: 1,
                 listeners: {
                     beforeedit: function(cell, object){
                         var readset = object.record.get('readset');
-                        if(readset && object.field != 'readset' && object.field != 'fileName' && object.field != 'fileName2' && object.field != 'mid5' && object.field != 'mid3'){
+                        if (readset && object.field != 'readset' && object.field != 'fileName' && object.field != 'fileName2' && object.field != 'mid5' && object.field != 'mid3'){
                             //alert('This sample is using a readset that was created previously.  You cannot edit ' + object.column.text + ' for this readset.  If you wish to update that readset, click the View/Edit Readsets link above.');
                             return false;
                         }
 
                         //cant edit the filename if we're merging
-                        if(object.field == 'fileName'){
+                        if (object.field == 'fileName'){
                             var form = object.grid.up('form');
-                            if(form.down('#mergeCheckbox').checked){
+                            if (form.down('#mergeCheckbox').checked){
                                 alert('You have selected to merge the input files.  To set the filename, fill out the field labeled "Name For Merged File".');
                                 return false;
                             }
@@ -45,6 +45,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     {name: 'readset', allowBlank: false},
                     {name: 'readsetname'},
                     {name: 'platform', allowBlank: false},
+                    {name: 'application', allowBlank: false},
                     {name: 'subjectid'},
                     {name: 'sampledate'},
                     {name: 'sampleid'},
@@ -70,7 +71,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     var r = grid.getStore().createModel({});
 
                     grid.getStore().insert(0, [r]);
-                    if(grid.up('form').down('#mergeCheckbox').checked)
+                    if (grid.up('form').down('#mergeCheckbox').checked)
                         r.set('fileName', grid.up('form').down('#mergeName').getValue());
                     else {
                         var plugin = grid.getPlugin('cellediting');
@@ -108,7 +109,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                 handler : function(btn){
                     var grid = btn.up('grid');
                     var s = grid.getSelectionModel().getSelection();
-                    if(!s.length){
+                    if (!s.length){
                         alert('No rows selected');
                         return;
                     }
@@ -121,10 +122,10 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                 text: 'Source File',
                 dataIndex: 'fileName',
                 renderer: function(data, attrs, record){
-                    if(record.get('isValid') === false){
+                    if (record.get('isValid') === false){
                         attrs.style = 'background: red;';
                         attrs.tdAttr = attrs.tdAttr || '';
-                        if(record.get('qtip'))
+                        if (record.get('qtip'))
                             attrs.tdAttr += 'data-qtip="' + record.get('qtip') + '"';
                     }
                     return data;
@@ -242,12 +243,32 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                 editor: {
                     xtype: 'labkey-combo',
                     allowBlank: false,
+                    forceSelection: true,
                     displayField: 'platform',
                     valueField: 'platform',
                     editable: false,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
                         schemaName: 'sequenceanalysis',
                         queryName: 'sequence_platforms',
+                        autoLoad: true
+                    })
+                }
+            },{
+                text: 'Application',
+                name: 'application',
+                width: 80,
+                mode: 'local',
+                dataIndex: 'application',
+                editor: {
+                    xtype: 'labkey-combo',
+                    allowBlank: false,
+                    forceSelection: true,
+                    displayField: 'application',
+                    valueField: 'application',
+                    editable: false,
+                    store: Ext4.create('LABKEY.ext4.data.Store', {
+                        schemaName: 'sequenceanalysis',
+                        queryName: 'sequence_applications',
                         autoLoad: true
                     })
                 }
@@ -355,24 +376,24 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                 border: false,
                 bodyStyle:'padding:5px',
                 items: [{
-                    emptyText:''
-                    ,fieldLabel: 'Select Field'
-                    ,itemId: 'fieldName'
-                    ,xtype: 'labkey-combo'
-                    ,displayField:'name'
-                    ,valueField: 'value'
-                    ,typeAhead: true
-                    ,triggerAction: 'all'
-                    ,queryMode: 'local'
-                    ,width: '100%'
-                    ,editable: false
-                    ,required: true
-                    ,store: Ext4.create('Ext.data.ArrayStore', {
+                    emptyText: '',
+                    fieldLabel: 'Select Field',
+                    itemId: 'fieldName',
+                    xtype: 'labkey-combo',
+                    displayField: 'name',
+                    valueField: 'value',
+                    typeAhead: true,
+                    triggerAction: 'all',
+                    queryMode: 'local',
+                    width: '100%',
+                    editable: false,
+                    required: true,
+                    store: Ext4.create('Ext.data.ArrayStore', {
                         fields: ['value', 'name'],
                         data: (function(cols){
                             var values = [];
                             Ext4.each(cols, function(c){
-                                if(!c.hidden)
+                                if (!c.hidden)
                                     values.push([c.dataIndex, c.text])
                             }, this);
                             return values;
@@ -432,7 +453,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     handler: function(btn){
                         var header = [];
                         Ext4.each(this.columns, function(col){
-                            if(!col.hidden && col.dataIndex != 'readset')
+                            if (!col.hidden && col.dataIndex != 'readset')
                                 header.push(col.text);
                         }, this);
 
@@ -460,7 +481,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     handler: function(btn){
                         var header = [];
                         Ext4.each(this.columns, function(col){
-                            if(!col.hidden && (col.dataIndex == 'fileName' || col.dataIndex == 'fileName2' || col.dataIndex == 'readset'))
+                            if (!col.hidden && (col.dataIndex == 'fileName' || col.dataIndex == 'fileName2' || col.dataIndex == 'readset'))
                                 header.push(col.text);
                         }, this);
 
@@ -508,7 +529,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
         var win = btn.up('window');
         var textarea = win.down('textarea');
         var text = textarea.getValue();
-        if(!text){
+        if (!text){
             alert('You must enter something in the textarea');
             return;
         }
@@ -521,25 +542,25 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
         var columns = [];
         var errors = [];
 
-        //translate columntext into name
+        //translate column text into name
         Ext4.each(data[0], function(field){
             if (!field)
                 return;
 
             Ext4.each(this.columns, function(col, idx){
-                if(col.text == field || col.dataIndex.toLowerCase() == field.toLowerCase()){
+                if (col.text == field || col.dataIndex.toLowerCase() == field.toLowerCase()){
                     columns.push(col);
                     return false;
                 }
 
-                if(!idx == this.columns.length){
+                if (!idx == this.columns.length){
                     errors.push('Unable to find column: ' + field);
                 }
             }, this);
         }, this);
         data.shift();
 
-        if(errors.length){
+        if (errors.length){
             alert(errors.join('\n'));
             return;
         }
@@ -550,21 +571,21 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
             Ext4.each(columns, function(col, idx){
                 var value = row[idx];
 
-                if(col.editor){
+                if (col.editor){
                     var editor = Ext4.ComponentManager.create(col.editor);
 
-                    if(col.editor.store && !Ext4.isEmpty(value) && col.editor.store.find(col.editor.valueField, value) == -1){
-                        console.log(col.text +'/' + col.editor.store.getCount() + '/' + '/' + col.editor.valueField + '/' + value)
+                    if (col.editor.store && !Ext4.isEmpty(value) && col.editor.store.find(col.editor.valueField, value) == -1){
+                        console.log(col.text +'/' + col.editor.store.getCount() + '/' + '/' + col.editor.valueField + '/' + value);
                         errors.push('Invalid value for field '+col.text+': '+value);
                     }
 
-                    if(!col.editor.allowBlank && Ext4.isEmpty(value)){
+                    if (!col.editor.allowBlank && Ext4.isEmpty(value)){
                         errors.push('The field '+col.text+' is required');
                     }
 
-                    if(editor.getErrors){
+                    if (editor.getErrors){
                         var fieldErrors = editor.getErrors(value);
-                        if(fieldErrors.length){
+                        if (fieldErrors.length){
                             errors.push('Error for field ' + col.text + ': ' + fieldErrors[0]);
                         }
                     }
@@ -572,11 +593,11 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                 obj[col.dataIndex] = value;
             }, this);
 
-            if(!LABKEY.Utils.isEmptyObj(obj))
+            if (!LABKEY.Utils.isEmptyObj(obj))
                 toAdd.push(this.store.createModel(obj));
         }, this);
 
-        if(errors.length){
+        if (errors.length){
             alert(errors.join('\n'));
             return;
         }
@@ -599,12 +620,12 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
         var grid = panel.down('#sampleGrid');
         var useMids = panel.down('#useBarcode').getValue();
 
-        if(!readsets.length){
+        if (!readsets.length){
             return;
         }
 
         var sql = 'select  ' +
-                'r.rowid,r.name,r.platform,r.inputMaterial,r.subjectid,r.sampledate,r.sampleid,r.barcode5,r.barcode3,r.fileid,r.fileid2,r.instrument_run_id,r.fileid2.name as fileName,r.fileid.name as fileName2 \n' +
+                'r.rowid,r.name,r.platform,r.application,r.inputMaterial,r.subjectid,r.sampledate,r.sampleid,r.barcode5,r.barcode3,r.fileid,r.fileid2,r.instrument_run_id,r.fileid2.name as fileName,r.fileid.name as fileName2 \n' +
                 'from sequenceanalysis.sequence_readsets r \n';
 
         sql += 'WHERE rowid IN (' + readsets.join(',') + ')';
@@ -633,7 +654,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
 
                     var row = rowMap[readset];
 
-                    if(row.fileid || row.fileid2){
+                    if (row.fileid || row.fileid2){
                         msgs.push('Readset ' + readset + 'has already been associated with files and cannot be re-used.  If you would like to reanalyze this readset, load the table of readsets and look for the \'Analyze Data\' button.');
                         record.data.isValid = false;
                         record.data.readset = null;
@@ -657,6 +678,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     Ext4.apply(record.data, {
                         readsetname: row.name,
                         platform: row.platform,
+                        application: row.application,
                         sampleid: row.sampleid,
                         subjectid: row.subjectid,
                         sampledate: row.sampledate,
@@ -684,7 +706,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
         var f = win.down('#fieldName').getValue();
         var v = win.down('#fieldVal').getValue();
         var s = this.getSelectionModel().getSelection();
-        if(!s.length){
+        if (!s.length){
             alert('No rows selected');
         }
         for (var i = 0, r; r = s[i]; i++){
@@ -702,7 +724,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
         var mid1 = win.down('#mid1').getValue();
         var mid2 = win.down('#mid2').getValue();
 
-        if(!files || !prefix || !mid1 || !mid2  || !files.length){
+        if (!files || !prefix || !mid1 || !mid2  || !files.length){
             alert('Must pick one or more files, a prefix, and starting/ending barcode #s');
             return;
         }
@@ -712,9 +734,8 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
         var barcodeStore = this.barcodeStore;
         console.log(barcodeStore);
         Ext4.each(files, function(f){
-            for(var i=mid1;i<=mid2;i++){
+            for (var i=mid1;i<=mid2;i++){
                 mid = prefix + (padding ? LABKEY.Utils.padString (i, 2, 0) : i);
-
 
                 this.store.add(this.store.createModel({fileName: f, mid5: mid}));
             }
@@ -727,7 +748,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
 
     onMidChange: function(c, v){
         Ext4.each(this.columns, function(col){
-            if(col.dataIndex=='mid5' || col.dataIndex=='mid3'){
+            if (col.dataIndex=='mid5' || col.dataIndex=='mid3'){
                 col.setVisible(v);
             }
         }, this);
@@ -738,10 +759,10 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
 
     onPairedEndChange: function(c, v){
         Ext4.each(this.columns, function(col){
-            if(col.dataIndex=='fileName2'){
+            if (col.dataIndex=='fileName2'){
                 col.setVisible(v);
 
-                if(!v){
+                if (!v){
                     this.store.each(function(rec){
                         rec.set('fileName2', null);
                     }, this);

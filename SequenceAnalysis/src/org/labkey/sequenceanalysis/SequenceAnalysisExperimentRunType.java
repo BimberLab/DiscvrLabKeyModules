@@ -20,11 +20,9 @@ import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.query.ExpSchema;
 
 /**
- * Created by IntelliJ IDEA.
  * User: bbimber
  * Date: 11/16/11
  * Time: 8:37 PM
- * To change this template use File | Settings | File Templates.
  */
 public class SequenceAnalysisExperimentRunType extends ExperimentRunType
 {
@@ -32,11 +30,6 @@ public class SequenceAnalysisExperimentRunType extends ExperimentRunType
     {
         super(SequenceAnalysisModule.PROTOCOL, ExpSchema.SCHEMA_NAME, ExpSchema.TableType.Runs.toString());
     }
-
-//    @Override
-//    public void populateButtonBar(ViewContext context, ButtonBar bar, DataView view, ContainerFilter containerFilter)
-//    {
-//    }
 
     public Priority getPriority(ExpProtocol protocol)
     {

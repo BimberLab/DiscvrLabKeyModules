@@ -17,11 +17,15 @@ package org.labkey.sequenceanalysis;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.ReaderInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jfree.chart.JFreeChart;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.labkey.api.action.AbstractFileUploadAction;
 import org.labkey.api.action.ApiAction;
+import org.labkey.api.action.ApiJsonWriter;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
@@ -30,20 +34,33 @@ import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DataRegionSelection;
+import org.labkey.api.data.Results;
+import org.labkey.api.data.ResultsImpl;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpProtocol;
+import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.laboratory.LaboratoryService;
+import org.labkey.api.laboratory.assay.AssayImportMethod;
+import org.labkey.api.laboratory.assay.AssayParser;
+import org.labkey.api.module.ModuleHtmlView;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.ParamParser;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
@@ -59,39 +76,53 @@ import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocol;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocolFactory;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisProvider;
 import org.labkey.api.pipeline.file.FileAnalysisTaskPipeline;
+import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryForm;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.resource.Resource;
 import org.labkey.api.security.IgnoresTermsOfUse;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
+import org.labkey.api.study.assay.AssayFileWriter;
+import org.labkey.api.study.assay.AssayProvider;
+import org.labkey.api.study.assay.AssayService;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.Pair;
 import org.labkey.api.util.Path;
+import org.labkey.api.util.StringExpression;
+import org.labkey.api.util.StringExpressionFactory;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.UnauthorizedException;
+import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.webdav.WebdavResource;
 import org.labkey.api.webdav.WebdavService;
-import org.labkey.sequenceanalysis.analysis.AASnpByCodonAggregator;
-import org.labkey.sequenceanalysis.analysis.AASnpByReadAggregator;
-import org.labkey.sequenceanalysis.analysis.AlignmentAggregator;
-import org.labkey.sequenceanalysis.analysis.AvgBaseQualityAggregator;
-import org.labkey.sequenceanalysis.analysis.BamIterator;
-import org.labkey.sequenceanalysis.analysis.NtCoverageAggregator;
-import org.labkey.sequenceanalysis.analysis.NtSnpByPosAggregator;
-import org.labkey.sequenceanalysis.model.AnalysisModel;
+import org.labkey.sequenceanalysis.api.pipeline.PipelineStep;
+import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.api.model.AnalysisModel;
 import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
-import org.labkey.sequenceanalysis.run.FastqcRunner;
+import org.labkey.sequenceanalysis.run.analysis.AASnpByCodonAggregator;
+import org.labkey.sequenceanalysis.run.analysis.AASnpByReadAggregator;
+import org.labkey.sequenceanalysis.run.analysis.AlignmentAggregator;
+import org.labkey.sequenceanalysis.run.analysis.AvgBaseQualityAggregator;
+import org.labkey.sequenceanalysis.run.analysis.BamIterator;
+import org.labkey.sequenceanalysis.run.analysis.NtCoverageAggregator;
+import org.labkey.sequenceanalysis.run.analysis.NtSnpByPosAggregator;
+import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.visualization.VariationChart;
 import org.springframework.validation.BindException;
@@ -102,7 +133,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -110,6 +143,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -198,6 +232,43 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
+    @RequiresPermissionClass(AdminPermission.class)
+    public class SequenceAnalysisAction extends SimpleViewAction<Object>
+    {
+        public void validateCommand(Object form, Errors errors)
+        {
+
+        }
+
+        public URLHelper getSuccessURL(Object form)
+        {
+            return getContainer().getStartURL(getUser());
+        }
+
+        public ModelAndView getView(Object form, BindException errors) throws Exception
+        {
+            LinkedHashSet<ClientDependency> cds = new LinkedHashSet<>();
+            for (PipelineStepProvider fact : SequencePipelineService.get().getAllProviders())
+            {
+                cds.addAll(fact.getClientDependencies());
+            }
+
+            Resource r = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class).getModuleResource(Path.parse("views/sequenceAnalysis.html"));
+            assert r != null;
+
+            ModuleHtmlView view = new ModuleHtmlView(r);
+            view.addClientDependencies(cds);
+            //getPageConfig().setTemplate(view.getPageTemplate());
+
+            return view;
+        }
+
+        public NavTree appendNavTrail(NavTree tree)
+        {
+            return tree.addChild("Sequence Analysis");
+        }
+    }
+
     @RequiresPermissionClass(ReadPermission.class)
     @IgnoresTermsOfUse
     public class DownloadTempImageAction extends ExportAction<TempImageAction>
@@ -271,146 +342,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(AdminPermission.class)
-    public class MigrateLegacySnpDataAction extends ConfirmAction<Object>
-    {
-        public void validateCommand(Object form, Errors errors)
-        {
-            if (!ContainerManager.getRoot().hasPermission(getUser(), AdminPermission.class))
-                throw new UnauthorizedException("User must be a site admin");
-        }
-
-        @Override
-        public ModelAndView getConfirmView(Object form, BindException errors) throws Exception
-        {
-            return new HtmlView("This allows a site admin to migrate legacy SNP data into the newer format.  Depending on the size of your DB, it can take a long time to run.  Do you want to continue?");
-        }
-
-        public boolean handlePost(Object form, BindException errors) throws Exception
-        {
-            try
-            {
-                //first condense / delete NT SNPs:
-                TableInfo ntSnps = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_NT_SNPS);
-                SqlExecutor sql = new SqlExecutor(ntSnps.getSchema());
-
-                sql.execute("INSERT INTO sequenceanalysis.nt_snps_by_pos " +
-                    "(analysis_id, ref_nt_id, ref_nt_name, ref_nt_position, ref_nt_insert_index, ref_nt, q_nt, container, createdby, created, readcount, depth, adj_depth, pct)\n" +
-                    "(SELECT\n" +
-                    "n.*,\n" +
-                    "c.depth,\n" +
-                    "c.adj_depth,\n" +
-                    "(cast(n.readcount as float) / c.adj_depth) as pct\n" +
-                    "FROM (\n" +
-                    "  SELECT analysis_id, ref_nt_id, null as ref_nt_name, ref_nt_position, ref_nt_insert_index, ref_nt, q_nt, container, createdby, created, count(*) as readcount\n" +
-                    "  FROM sequenceanalysis.nt_snps\n" +
-                    "  GROUP BY analysis_id, ref_nt_id, ref_nt_position, ref_nt_insert_index, ref_nt, q_nt, container, createdby, created\n" +
-                    ") n\n" +
-                    "LEFT JOIN sequenceanalysis.sequence_coverage c ON (c.analysis_id = n.analysis_id AND c.ref_nt_id = n.ref_nt_id AND c.ref_nt_position = n.ref_nt_position AND c.ref_nt_insert_index = n.ref_nt_insert_index)\n" +
-                    ");\n" +
-                    "\n");
-
-                sql.execute("TRUNCATE sequenceanalysis." + ntSnps.getSelectName());
-
-                //now AA SNPs
-                sql.execute("INSERT INTO sequenceanalysis.aa_snps_by_codon " +
-                "()\n" +
-                "select *,\n" +
-                "case\n" +
-                "        when aa.depth > 0 THEN round((aa.total_reads / aa.depth)*100, 2)\n" +
-                "    ELSE 0\n" +
-                "    END as percent,\n" +
-                "case\n" +
-                "        when aa.q_aa = ':' then null\n" +
-                "    when aa.depth > 0 THEN round((aa.total_reads / (aa.depth-aa.incompletecodons))*100, 2)\n" +
-                "    ELSE 0\n" +
-                "    END as adj_percent,\n" +
-                "        (aa.depth-aa.incompletecodons) as adj_depth\n" +
-                "    FROM (\n" +
-                "            SELECT\n" +
-                "            aa_inner.analysis_id,\n" +
-                "            aa_inner.ref_nt_id,\n" +
-                "            aa_inner.ref_aa_id,\n" +
-                "            aa_inner.ref_aa,\n" +
-                "            aa_inner.ref_aa_position,\n" +
-                "            aa_inner.ref_aa_insert_index,\n" +
-                "            aa_inner.ref_nt_positions,\n" +
-                "            aa_inner.q_aa,\n" +
-                "            aa_inner.q_codon,\n" +
-                "            aa_inner.total_reads,\n" +
-                "            cast(case when aa_inner.q_aa = ':' then 0 else aa_inner.total_reads end as integer) as adj_total_reads,\n" +
-                "aa_inner.depth,\n" +
-                "        (select\n" +
-                "count(distinct alignment_id)\n" +
-                "from sequenceanalysis.aa_snps\n" +
-                "        WHERE\n" +
-                "aa_snps.analysis_id = aa_inner.analysis_id AND\n" +
-                "aa_snps.ref_nt_id = aa_inner.ref_nt_id AND\n" +
-                "aa_snps.ref_aa_id = aa_inner.ref_aa_id AND\n" +
-                "aa_snps.ref_aa_position = aa_inner.ref_aa_position AND\n" +
-                "aa_snps.ref_aa_insert_index = aa_inner.ref_aa_insert_index AND\n" +
-                "aa_snps.q_aa = ':'\n" +
-                ") as incompletecodons\n" +
-                "\n" +
-                "FROM (\n" +
-                "        SELECT\n" +
-                "        aa.analysis_id,\n" +
-                "        aa.ref_aa_id,\n" +
-                "        aa.ref_nt_id,\n" +
-                "        group_concat(DISTINCT nt.ref_nt_position) AS ref_nt_positions,\n" +
-                "        aa.ref_aa,\n" +
-                "        aa.ref_aa_position,\n" +
-                "        aa.ref_aa_insert_index,\n" +
-                "        aa.q_aa,\n" +
-                "        aa.q_codon,\n" +
-
-                "avg(sc.depth) as depth,\n" +
-                "cast(count(distinct aa.alignment_id) as float) as total_reads\n" +
-                "\n" +
-                "FROM sequenceanalysis.aa_snps aa\n" +
-                "JOIN sequenceanalysis.nt_snps nt\n" +
-                "on (aa.nt_snp_id = nt.rowid)\n" +
-                "\n" +
-                "JOIN sequenceanalysis.sequence_coverage sc\n" +
-                "on (\n" +
-                "        sc.analysis_id=aa.analysis_id AND\n" +
-                "        sc.ref_nt_id=aa.ref_nt_id AND\n" +
-                "        sc.ref_nt_position = nt.ref_nt_position AND\n" +
-                "        --sc.ref_nt_insert_index = aa.nt_snp_id.ref_nt_insert_index\n" +
-                "        sc.ref_nt_insert_index = 0\n" +
-                ")\n" +
-                "\n" +
-                "        --WHERE aa.status=true\n" +
-                "\n" +
-                "GROUP BY\n" +
-                "aa.analysis_id,\n" +
-                "        aa.ref_nt_id,\n" +
-                "        aa.ref_aa_id,\n" +
-                "        aa.ref_aa_position,\n" +
-                "        aa.ref_aa_insert_index,\n" +
-                "        aa.ref_aa,\n" +
-                "        aa.q_aa,\n" +
-                "        aa.q_codon\n" +
-                ") aa_inner\n" +
-                ") aa\n");
-
-                sql.execute("TRUNCATE sequenceanalysis." + ntSnps.getSelectName());
-
-                return true;
-            }
-            catch (Exception e)
-            {
-                errors.reject(ERROR_MSG, e.getMessage());
-                return false;
-            }
-        }
-
-        public URLHelper getSuccessURL(Object form)
-        {
-            return getContainer().getStartURL(getUser());
-        }
-    }
-
     @RequiresPermissionClass(DeletePermission.class)
     public class DeleteRecordsAction extends ConfirmAction<QueryForm>
     {
@@ -465,25 +396,19 @@ public class SequenceAnalysisController extends SpringActionController
             if (SequenceAnalysisSchema.TABLE_ANALYSES.equals(_table.getName()))
             {
                 msg.append("analyses " + StringUtils.join(keys, ", ") + "?  This will delete the analyses, plus all associated data.  This includes:<br>");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENTS, "Alignments", keys, "analysis_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "analysis_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "analysis_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNPS, "NT SNPs", keys, "analysis_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNPS, "AA SNPs", keys, "analysis_id");
             }
             else if (SequenceAnalysisSchema.TABLE_READSETS.equals(_table.getName()))
             {
                 msg.append("readsets " + StringUtils.join(keys, ", ") + "?  This will delete the readsets, plus all associated data.  This includes:<br>");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_ANALYSES, "Analyses", keys, "readset");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENTS, "Alignments", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "analysis_id/readset");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNPS, "NT SNPs", keys, "analysis_id/readset");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNPS, "AA SNPs", keys, "analysis_id/readset");
             }
             else if (SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES.equals(_table.getName()))
             {
@@ -491,12 +416,9 @@ public class SequenceAnalysisController extends SpringActionController
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES, "Reference AA Sequences", keys, "ref_nt_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_FEATURES, "NT Features", keys, "ref_nt_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENTS, "Alignments", keys, "ref_nt_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION, "Alignment Records", keys, "ref_nt_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "ref_nt_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNPS, "NT SNPs", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNPS, "AA SNPs", keys, "ref_nt_id");
             }
             else if (SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES.equals(_table.getName()))
             {
@@ -504,7 +426,6 @@ public class SequenceAnalysisController extends SpringActionController
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_FEATURES, "AA features", keys, "ref_aa_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_DRUG_RESISTANCE, "drug resistance mutations", keys, "ref_aa_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "ref_aa_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNPS, "AA SNPs", keys, "ref_aa_id");
             }
 
             return new HtmlView(msg.toString());
@@ -559,6 +480,110 @@ public class SequenceAnalysisController extends SpringActionController
             return url != null ? url :
                 _table.getGridURL(getContainer()) != null ? _table.getGridURL(getContainer()) :
                 getContainer().getStartURL(getUser());
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    public class GetAnalysisToolDetailsAction extends ApiAction<Object>
+    {
+        public ApiResponse execute(Object form, BindException errors) throws Exception
+        {
+            Map<String, Object> ret = new HashMap<>();
+
+            for (PipelineStep.StepType stepType : PipelineStep.StepType.values())
+            {
+                JSONArray list = new JSONArray();
+                for (PipelineStepProvider fact : SequencePipelineService.get().getProviders(stepType.getStepClass()))
+                {
+                    list.put(fact.toJSON());
+                }
+
+                ret.put(stepType.name(), list);
+            }
+
+            return new ApiSimpleResponse(ret);
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    public class SaveAnalysisAsTemplateAction extends ApiAction<SaveAnalysisAsTemplateForm>
+    {
+        public ApiResponse execute(SaveAnalysisAsTemplateForm form, BindException errors) throws Exception
+        {
+            Map<String, Object> ret = new HashMap<>();
+
+            if (form.getAnalysisId() == null)
+            {
+                errors.reject(ERROR_MSG, "No analysis Id provided");
+                return null;
+            }
+
+            AnalysisModel model = AnalysisModel.getFromDb(form.getAnalysisId(), getUser());
+            if (model == null)
+            {
+                errors.reject(ERROR_MSG, "Unable to find run for analysis: " + form.getAnalysisId());
+                return null;
+            }
+
+            ExpRun run = ExperimentService.get().getExpRun(model.getRunId());
+            List<? extends ExpData> datas = run.getInputDatas("AnalysisParameters", ExpProtocol.ApplicationType.ExperimentRun);
+            if (datas.size() != 1 || !datas.get(0).getFile().exists())
+            {
+                errors.reject(ERROR_MSG, "Unable to find paramters file for selected job");
+                return null;
+            }
+
+            File xml = datas.get(0).getFile();
+            ParamParser parser = PipelineJobService.get().createParamParser();
+            parser.parse(new ReaderInputStream(new FileReader(xml)));
+
+            Map<String, Object> toSave = new CaseInsensitiveHashMap<>();
+            toSave.put("name", form.getName());
+            toSave.put("description", form.getDescription());
+            toSave.put("originalAnalysisId", form.getAnalysisId());
+            toSave.put("json", new JSONObject(parser.getInputParameters()).toString());
+
+            TableInfo ti = QueryService.get().getUserSchema(getUser(), getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_SAVED_ANALYSES);
+            ti.getUpdateService().insertRows(getUser(), getContainer(), Arrays.asList(toSave), new BatchValidationException(), new HashMap<String, Object>());
+
+            return new ApiSimpleResponse("Success", true);
+        }
+    }
+
+    public static class SaveAnalysisAsTemplateForm
+    {
+        private Integer _analysisId;
+        private String _name;
+        private String _description;
+
+        public Integer getAnalysisId()
+        {
+            return _analysisId;
+        }
+
+        public void setAnalysisId(Integer analysisId)
+        {
+            _analysisId = analysisId;
+        }
+
+        public String getName()
+        {
+            return _name;
+        }
+
+        public void setName(String name)
+        {
+            _name = name;
+        }
+
+        public String getDescription()
+        {
+            return _description;
+        }
+
+        public void setDescription(String description)
+        {
+            _description = description;
         }
     }
 
@@ -756,7 +781,7 @@ public class SequenceAnalysisController extends SpringActionController
                 Container c = ContainerManager.getForId(m.getContainer());
 
                 log.info("Calculating avg quality scores");
-                AvgBaseQualityAggregator avg = new AvgBaseQualityAggregator(inputFile, refFile, log);
+                AvgBaseQualityAggregator avg = new AvgBaseQualityAggregator(log, inputFile, refFile);
 
                 if (form.getRefName() != null && form.getStart() > 0 && form.getStop() > 0)
                 {
@@ -779,27 +804,25 @@ public class SequenceAnalysisController extends SpringActionController
 
                 Map<String, String> params = new HashMap<>();
                 if (form.getMinAvgSnpQual() > 0)
-                    params.put("snp.minAvgSnpQual", String.valueOf(form.getMinAvgSnpQual()));
+                    params.put("minAvgSnpQual", String.valueOf(form.getMinAvgSnpQual()));
                 if (form.getMinAvgDipQual() > 0)
-                    params.put("snp.minAvgDipQual", String.valueOf(form.getMinAvgDipQual()));
+                    params.put("minAvgDipQual", String.valueOf(form.getMinAvgDipQual()));
                 if (form.getMinSnpQual() > 0)
-                    params.put("snp.minSnpQual", String.valueOf(form.getMinSnpQual()));
+                    params.put("minSnpQual", String.valueOf(form.getMinSnpQual()));
                 if (form.getMinDipQual() > 0)
-                    params.put("snp.minDipQual", String.valueOf(form.getMinDipQual()));
-
-                SequencePipelineSettings settings = new SequencePipelineSettings(params);
+                    params.put("minDipQual", String.valueOf(form.getMinDipQual()));
 
                 if (aggregatorTypes.contains("coverage"))
                 {
-                    coverage = new NtCoverageAggregator(settings, log, avg);
+                    coverage = new NtCoverageAggregator(log, refFile, avg, params);
                     aggregators.add(coverage);
                 }
 
                 if (aggregatorTypes.contains("ntbypos"))
                 {
-                    NtSnpByPosAggregator ntSnp = new NtSnpByPosAggregator(settings, log, avg);
+                    NtSnpByPosAggregator ntSnp = new NtSnpByPosAggregator(log, refFile, avg, params);
                     if (coverage == null)
-                        coverage = new NtCoverageAggregator(settings, log, avg);
+                        coverage = new NtCoverageAggregator(log, refFile, avg, params);
 
                     ntSnp.setCoverageAggregator(coverage);
                     aggregators.add(ntSnp);
@@ -807,9 +830,9 @@ public class SequenceAnalysisController extends SpringActionController
 
                 if (aggregatorTypes.contains("aabycodon"))
                 {
-                    AASnpByCodonAggregator aaCodon = new AASnpByCodonAggregator(settings, log, avg);
+                    AASnpByCodonAggregator aaCodon = new AASnpByCodonAggregator(log, refFile, avg, params);
                     if (coverage == null)
-                        coverage = new NtCoverageAggregator(settings, log, avg);
+                        coverage = new NtCoverageAggregator(log, refFile, avg, params);
 
                     aaCodon.setCoverageAggregator(coverage);
                     aggregators.add(aaCodon);
@@ -997,9 +1020,8 @@ public class SequenceAnalysisController extends SpringActionController
             BamIterator bi = new BamIterator(bam.getFile(), ref.getFile(), log);
 
             Map<String, String> params = new HashMap<>();
-            SequencePipelineSettings settings = new SequencePipelineSettings(params);
-            AvgBaseQualityAggregator avg = new AvgBaseQualityAggregator(bam.getFile(), ref.getFile(), log);
-            AASnpByReadAggregator aaAggregator = new AASnpByReadAggregator(settings, log, avg);
+            AvgBaseQualityAggregator avg = new AvgBaseQualityAggregator(log, bam.getFile(), ref.getFile());
+            AASnpByReadAggregator aaAggregator = new AASnpByReadAggregator(log, ref.getFile(), avg, params);
             bi.addAggregators(Collections.singletonList((AlignmentAggregator)aaAggregator));
 
             String refName = SequenceAnalysisManager.get().getNTRefForAARef(form.getRefAaId());
@@ -1741,5 +1763,433 @@ public class SequenceAnalysisController extends SpringActionController
         FileAnalysisTaskPipeline fatp = (FileAnalysisTaskPipeline)taskPipeline;
         //noinspection unchecked
         return provider.getProtocolFactory(fatp);
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class CreateReferenceLibraryAction extends ApiAction<CreateReferenceLibraryForm>
+    {
+        public ApiResponse execute(CreateReferenceLibraryForm form, BindException errors) throws Exception
+        {
+            if (form.getName() == null)
+            {
+                errors.reject(ERROR_MSG, "Must provide a name for the library");
+                return null;
+            }
+
+            if (form.getSequenceIds() == null || form.getSequenceIds().length == 0)
+            {
+                errors.reject(ERROR_MSG, "Must provide at least one sequence to include in the library");
+                return null;
+            }
+
+            SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getName(), form.getDescription(), Arrays.asList(form.getSequenceIds()));
+
+            return new ApiSimpleResponse("Success", true);
+        }
+    }
+
+    public static class CreateReferenceLibraryForm
+    {
+        private String _name;
+        private String _description;
+        private Integer[] _sequenceIds;
+
+        public String getName()
+        {
+            return _name;
+        }
+
+        public void setName(String name)
+        {
+            _name = name;
+        }
+
+        public String getDescription()
+        {
+            return _description;
+        }
+
+        public void setDescription(String description)
+        {
+            _description = description;
+        }
+
+        public Integer[] getSequenceIds()
+        {
+            return _sequenceIds;
+        }
+
+        public void setSequenceIds(Integer[] sequenceIds)
+        {
+            _sequenceIds = sequenceIds;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class ImportFastaSequencesAction extends AbstractFileUploadAction<ImportFastaSequencesForm>
+    {
+        @Override
+        public void export(ImportFastaSequencesForm form, HttpServletResponse response, BindException errors) throws Exception
+        {
+            response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
+
+            super.export(form, response, errors);
+        }
+
+        protected File getTargetFile(String filename) throws IOException
+        {
+            if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
+                throw new UploadException("Pipeline root must be configured before uploading FASTA files", HttpServletResponse.SC_NOT_FOUND);
+
+            AssayFileWriter writer = new AssayFileWriter();
+            try
+            {
+                File targetDirectory = writer.ensureUploadDirectory(getContainer());
+                return writer.findUniqueFileName(filename, targetDirectory);
+            }
+            catch (ExperimentException e)
+            {
+                throw new UploadException(e.getMessage(), HttpServletResponse.SC_NOT_FOUND);
+            }
+        }
+
+        protected String getResponse(Map<String, Pair<File, String>> files, ImportFastaSequencesForm form) throws UploadException
+        {
+            JSONObject resp = new JSONObject();
+            try
+            {
+                for (Map.Entry<String, Pair<File, String>> entry : files.entrySet())
+                {
+                    File file = entry.getValue().getKey();
+
+                    Map<String, String> params = new HashMap<>();
+                    if (form.getSpecies() != null)
+                    {
+                        params.put("species", form.getSpecies());
+                    }
+
+                    if (form.getMolType() != null)
+                    {
+                        params.put("mol_type", form.getMolType());
+                    }
+
+                    List<Integer> sequenceIds = SequenceAnalysisManager.get().importRefSequencesFromFasta(getContainer(), getUser(), file, params);
+                    file.delete();
+
+                    if (form.isCreateLibrary())
+                    {
+                        SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getLibraryName(), form.getLibraryDescription(), sequenceIds);
+                    }
+
+                    resp.put("success", true);
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.logExceptionToMothership(getViewContext().getRequest(), e);
+                getViewContext().getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                logger.error(e.getMessage(), e);
+                resp.put("success", false);
+                resp.put("exception", e.getMessage());
+            }
+
+            return resp.toString();
+        }
+    }
+
+    public static class ImportFastaSequencesForm extends AbstractFileUploadAction.FileUploadForm
+    {
+        private String _jsonData;
+        private String _species;
+        private String _molType;
+        private boolean _createLibrary = false;
+        private String _libraryName;
+        private String _libraryDescription;
+
+        public String getJsonData()
+        {
+            return _jsonData;
+        }
+
+        public void setJsonData(String jsonData)
+        {
+            _jsonData = jsonData;
+        }
+
+        public String getSpecies()
+        {
+            return _species;
+        }
+
+        public void setSpecies(String species)
+        {
+            _species = species;
+        }
+
+        public String getMolType()
+        {
+            return _molType;
+        }
+
+        public void setMolType(String molType)
+        {
+            _molType = molType;
+        }
+
+        public boolean isCreateLibrary()
+        {
+            return _createLibrary;
+        }
+
+        public void setCreateLibrary(boolean createLibrary)
+        {
+            _createLibrary = createLibrary;
+        }
+
+        public String getLibraryName()
+        {
+            return _libraryName;
+        }
+
+        public void setLibraryName(String libraryName)
+        {
+            _libraryName = libraryName;
+        }
+
+        public String getLibraryDescription()
+        {
+            return _libraryDescription;
+        }
+
+        public void setLibraryDescription(String libraryDescription)
+        {
+            _libraryDescription = libraryDescription;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class ImportTrackAction extends AbstractFileUploadAction<ImportTrackForm>
+    {
+        @Override
+        public void export(ImportTrackForm form, HttpServletResponse response, BindException errors) throws Exception
+        {
+            response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
+
+            super.export(form, response, errors);
+        }
+
+        protected File getTargetFile(String filename) throws IOException
+        {
+            if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
+                throw new UploadException("Pipeline root must be configured before uploading files", HttpServletResponse.SC_NOT_FOUND);
+
+            AssayFileWriter writer = new AssayFileWriter();
+            try
+            {
+                File targetDirectory = writer.ensureUploadDirectory(getContainer());
+                return writer.findUniqueFileName(filename, targetDirectory);
+            }
+            catch (ExperimentException e)
+            {
+                throw new UploadException(e.getMessage(), HttpServletResponse.SC_NOT_FOUND);
+            }
+        }
+
+        protected String getResponse(Map<String, Pair<File, String>> files, ImportTrackForm form) throws UploadException
+        {
+            JSONObject resp = new JSONObject();
+            try
+            {
+                for (Map.Entry<String, Pair<File, String>> entry : files.entrySet())
+                {
+                    File file = entry.getValue().getKey();
+
+                    if (form.getTrackName() == null || form.getLibraryId() == null)
+                    {
+                        throw new UploadException("Must provide the track name and library Id", HttpServletResponse.SC_BAD_REQUEST);
+                    }
+
+                    SequenceAnalysisManager.get().addTrackForLibrary(getContainer(), getUser(), file, form.getLibraryId(), form.getTrackName(), form.getTrackDescription(), null);
+
+                    resp.put("success", true);
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.logExceptionToMothership(getViewContext().getRequest(), e);
+                getViewContext().getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                logger.error(e.getMessage(), e);
+                resp.put("success", false);
+                resp.put("exception", e.getMessage());
+            }
+
+            return resp.toString();
+        }
+    }
+
+    public static class ImportTrackForm extends AbstractFileUploadAction.FileUploadForm
+    {
+        private Integer _libraryId;
+        private String _trackName;
+        private String _trackDescription;
+
+        public Integer getLibraryId()
+        {
+            return _libraryId;
+        }
+
+        public void setLibraryId(Integer libraryId)
+        {
+            _libraryId = libraryId;
+        }
+
+        public String getTrackName()
+        {
+            return _trackName;
+        }
+
+        public void setTrackName(String trackName)
+        {
+            _trackName = trackName;
+        }
+
+        public String getTrackDescription()
+        {
+            return _trackDescription;
+        }
+
+        public void setTrackDescription(String trackDescription)
+        {
+            _trackDescription = trackDescription;
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    @IgnoresTermsOfUse
+    public class DownloadReferencesAction extends ExportAction<DownloadReferencesForm>
+    {
+        public void export(DownloadReferencesForm form, final HttpServletResponse response, BindException errors) throws Exception
+        {
+            if (form.getRowIds() == null || form.getRowIds().length == 0)
+            {
+                throw new NotFoundException("No sequence IDs provided");
+            }
+
+            if (form.getLineLength() == 0)
+            {
+                throw new IllegalArgumentException("Line length must be provided and greater than 0");
+            }
+            final int lineLength = form.getLineLength();
+
+            if (StringUtils.isEmpty(form.getHeaderFormat()))
+            {
+                throw new IllegalArgumentException("No header format provided");
+            }
+
+            if (StringUtils.isEmpty(form.getFileName()))
+            {
+                throw new NotFoundException("Must provide an output filename");
+            }
+            String filename = form.getFileName();
+            final StringExpressionFactory.FieldKeyStringExpression se = StringExpressionFactory.URLStringExpression.create(form.getHeaderFormat(), false, StringExpressionFactory.AbstractStringExpression.NullValueBehavior.ReplaceNullWithBlank);
+            Set<FieldKey> keys = new HashSet<>(se.getFieldKeys());
+            keys.add(FieldKey.fromString("sequenceFile"));
+            keys.add(FieldKey.fromString("container"));
+            TableInfo ti = QueryService.get().getUserSchema(getUser(), getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
+            if (ti == null)
+            {
+                throw new NotFoundException("Ref NT table not found");
+            }
+
+            final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, keys);
+
+            PageFlowUtil.prepareResponseForFile(response, Collections.<String, String>emptyMap(), filename, true);
+            TableSelector ts = new TableSelector(ti, cols.values(), new SimpleFilter(FieldKey.fromString("rowid"), Arrays.asList(form.getRowIds()), CompareType.IN), null);
+            ts.forEach(new Selector.ForEachBlock<ResultSet>()
+            {
+                @Override
+                public void exec(ResultSet object) throws SQLException
+                {
+                    Results rs = new ResultsImpl(object, cols);
+                    String header = se.eval(rs.getFieldKeyRowMap());
+                    RefNtSequenceModel model = new RefNtSequenceModel();
+                    if (rs.getObject(FieldKey.fromString("sequenceFile")) != null)
+                        model.setSequenceFile(rs.getInt(FieldKey.fromString("sequenceFile")));
+
+                    model.setContainer(rs.getString(FieldKey.fromString("container")));
+
+                    try
+                    {
+
+                        response.getWriter().write(">" + header + "\n");
+                        String seq = model.getSequence();
+                        if (seq != null)
+                        {
+                            int len = seq.length();
+                            for (int i=0; i<len; i+=lineLength)
+                            {
+                                response.getWriter().write(seq.substring(i, Math.min(len, i + lineLength)) + "\n");
+                            }
+                        }
+                        else
+                        {
+                            response.getWriter().write("\n");
+                        }
+                    }
+                    catch (IOException e)
+                    {
+                        throw new SQLException(e);
+                    }
+                }
+            });
+        }
+    }
+
+    public static class DownloadReferencesForm
+    {
+        private String _headerFormat;
+        private Integer[] _rowIds;
+        private String _fileName;
+        private int _lineLength = 60;
+
+        public String getHeaderFormat()
+        {
+            return _headerFormat;
+        }
+
+        public void setHeaderFormat(String headerFormat)
+        {
+            _headerFormat = headerFormat;
+        }
+
+        public Integer[] getRowIds()
+        {
+            return _rowIds;
+        }
+
+        public void setRowIds(Integer[] rowIds)
+        {
+            _rowIds = rowIds;
+        }
+
+        public String getFileName()
+        {
+            return _fileName;
+        }
+
+        public void setFileName(String fileName)
+        {
+            _fileName = fileName;
+        }
+
+        public int getLineLength()
+        {
+            return _lineLength;
+        }
+
+        public void setLineLength(int lineLength)
+        {
+            _lineLength = lineLength;
+        }
     }
 }

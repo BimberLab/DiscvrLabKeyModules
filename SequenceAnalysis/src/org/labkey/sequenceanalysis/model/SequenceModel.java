@@ -25,7 +25,6 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Created by IntelliJ IDEA.
  * User: bbimber
  * Date: 8/18/12
  * Time: 2:02 PM

@@ -32,27 +32,28 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
             constrainPosition: true,
             dismissDelay: 0
         });
-        //Ext4.FocusManager.enable();
+
+        delete Ext4.tip.Tip.prototype.minWidth;
 
         Ext4.apply(this, {
-            itemId: 'sequenceAnalysisPanel'
-            ,protocols: {}
-            ,width: '100%'
-            ,bodyBorder: false
-            ,border: false
-            ,bodyStyle:'padding:5px 5px 5px 5px'
-            ,defaultType: 'textfield'
-            ,monitorValid: false
-            ,defaults: Ext4.Object.merge({
+            itemId: 'sequenceAnalysisPanel',
+            protocols: {},
+            width: '100%',
+            bodyBorder: false,
+            border: false,
+            bodyStyle:'padding:5px 5px 5px 5px',
+            defaultType: 'textfield',
+            monitorValid: false,
+            defaults: Ext4.Object.merge({
                 style: 'margin-bottom: 20px;'
-            }, this.fieldDefaults)
-            ,listeners: {
+            }, this.fieldDefaults),
+            listeners: {
                 add: function(item){
-                    if(this.rendered)
+                    if (this.rendered)
                         this.getForm().isValid();
                     var fields = [];
                     this.cascade(function(item){
-                        if(item.isFormField && item.validate){
+                        if (item.isFormField && item.validate){
                             item.validate();
                         }
                     }, this);
@@ -78,23 +79,18 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         this.warningMessage = this.warningMessage || "Your changes have not yet been saved. Choose Cancel to stay on the page and save your changes.";
 
         LABKEY.Pipeline.getProtocols({
-            taskId: this.taskId
-            ,successCallback: function (protocols, defaultProtocolName){
+            taskId: this.taskId,
+            successCallback: function (protocols, defaultProtocolName){
                 //create the store and save protocol info
                 for (var i = 0; i < protocols.length; i++){
                     this.protocolStore.add(this.protocolStore.createModel({protocol: protocols[i].name}));
                     this.protocols[protocols[i].name] = protocols[i];
                 }
-            }
-            ,scope: this
+            },
+            scope: this
         });
 
         this.on('afterrender', this.checkProtocol, this);
-
-//        window.onbeforeunload = LABKEY.beforeunload(function () {
-//            if (this.getForm().isDirty())
-//                return this.warningMessage;
-//        }, this);
     },
 
     checkProtocol: function(){
@@ -116,62 +112,29 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
 
         for (var j = 0; j < status.length; j++){
             if (status[j].status != 'UNKNOWN'){
-                field.markInvalid('Job Name Already In Use');
+                field.markInvalid('Job&nbsp;Name&nbsp;Already&nbsp;In&nbsp;Use.');
                 this.validProtocolName = false;
                 field.isValidProtocol = false;
                 return;
             }
         }
         this.validProtocolName = true;
-        field.isValidProtocol = true;
 
+        field.isValidProtocol = true;
         field.validate();
     },
 
     getBasename: function(str){
         var base = new String(str).substring(str.lastIndexOf('/') + 1);
-        if(base.lastIndexOf(".") != -1)
+        if (base.lastIndexOf(".") != -1)
             base = base.substring(0, base.lastIndexOf("."));
         return base;
-    },
-
-    ///TODO: support this
-    setFieldValues: function(values){
-        values['preprocessing.saveProtocol'] = false;
-        delete values['protocolName'];
-
-        for (var i in values){
-            var field = this.form.findField(i);
-            if (field){
-                field.setValue(values[i]);
-                if(field.name != 'protocol'){
-                    field.fireEvent('change', field);
-                    field.fireEvent('select', field);
-                }
-            }
-        }
-
-        //special handling of adapters:
-        if(values['preprocessing.trimAdapters']){
-            for(var i in values){
-                if(i.match(/adapter_/)){
-                    var row = Ext4.JSON.decode(values[i]);
-                    var rec = this.down('#adapterPanel').down('gridpanel').store.createModel({
-                        adapterName: row[0],
-                        adapterSequence: row[1],
-                        trim5: row[2],
-                        trim3: row[3]
-                    });
-                    this.down('#adapterPanel').down('gridpanel').store.add(rec);
-                }
-            }
-        }
     },
 
     getJsonParams: function(btn){
         //this will allow requests to be sent if we have not yet determined whether the name is valid.
         //they still should get rejected server-side
-        if(this.validProtocolName===false){
+        if (this.validProtocolName === false){
             alert('This protocol name is already in use.  Please select a different name.');
             return;
         }
@@ -180,11 +143,11 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         var fields = {};
         var error;
         fieldInputs.each(function(field){
-            if(field.isFormField === false)
+            if (field.isFormField === false)
                 return;
 
             var val = field.getValue();
-            if (field.allowBlank===false && Ext4.isEmpty(val) && !field.isDisabled()){
+            if (field.allowBlank === false && Ext4.isEmpty(val) && !field.isDisabled()){
                 alert('The field: ' + (field.fieldLabel || field.header || field.name) + ' cannot be blank');
                 error = 1;
                 return false;
@@ -201,17 +164,17 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         fields.debugMode = !Ext4.isEmpty(LABKEY.ActionURL.getParameter('debugMode'));
 
         Ext4.iterate(fields, function(key){
-            if(key.match(/^dna\./) && Ext4.isArray(fields[key])){
+            if (key.match(/^dna\./) && Ext4.isArray(fields[key])){
                 fields[key] = fields[key].join(';');
             }
         }, this);
 
-        if(!error)
+        if (!error)
             return fields;
     },
 
     startAnalysis: function(jsonParameters, fileIds, fileNames){
-        if((!fileIds || !fileIds.length) && (!fileNames || !fileNames.length)){
+        if ((!fileIds || !fileIds.length) && (!fileNames || !fileNames.length)){
             alert('No files selected');
             return;
         }
@@ -258,8 +221,8 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
             allowNonExistentFiles: config.allowNonExistentFiles,
             saveProtocol: config.saveProtocol == undefined || config.saveProtocol
         };
-        if (config.xmlParameters)
-        {
+
+        if (config.xmlParameters){
             // Convert from an Element to a string if needed
             // params.configureXml = Ext4.DomHelper.markup(config.xmlParameters);
             if (typeof config.xmlParameters == "object")
@@ -267,15 +230,12 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
             else
                 params.configureXml = config.xmlParameters;
         }
-        else if (config.jsonParameters)
-        {
-            if (Ext4.isString(config.jsonParameters))
-            {
+        else if (config.jsonParameters){
+            if (Ext4.isString(config.jsonParameters)){
                 // We already have a string
                 params.configureJson = config.jsonParameters;
             }
-            else
-            {
+            else {
                 // Convert from JavaScript object to a string
                 params.configureJson = Ext4.encode(config.jsonParameters);
             }
@@ -299,7 +259,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         btn.setDisabled.defer(500, btn, [false]);
 
         var json = this.getJsonParams();
-        if(!json)
+        if (!json)
             return false;
 
         this.startAnalysis(json, this.fileIds);

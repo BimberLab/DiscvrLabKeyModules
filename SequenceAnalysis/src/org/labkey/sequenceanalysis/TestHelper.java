@@ -44,8 +44,9 @@ import org.labkey.api.util.Path;
 import org.labkey.api.util.TestContext;
 import org.labkey.api.view.ViewServlet;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
-import org.labkey.sequenceanalysis.model.ReadsetModel;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
+import org.labkey.sequenceanalysis.run.util.IndelRealignerWrapper;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -53,10 +54,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -69,7 +68,6 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 11/25/12
  * Time: 1:58 PM
@@ -78,6 +76,7 @@ public class TestHelper
 {
     private static TestHelper _instance = new TestHelper();
     public static final String PIPELINE_PROP_NAME = "sequencePipelineEnabled";
+    public static final String GATK_PROP_NAME = "gatkInstalled";
 
     private TestHelper()
     {
@@ -189,6 +188,7 @@ public class TestHelper
         protected File _sampleData;
 
         protected Boolean _isExternalPipelineEnabled = null;
+        protected Boolean _isGATKInstalled = null;
 
         protected static final Logger _log = Logger.getLogger(AbstractPipelineTestCase.class);
 
@@ -383,6 +383,18 @@ public class TestHelper
                 _log.info("Sequence pipeline is not enabled on this server, so some tests will be skipped");
 
             return _isExternalPipelineEnabled;
+        }
+
+        protected boolean isGATKPresent()
+        {
+            if (_isGATKInstalled != null)
+                return _isGATKInstalled;
+
+            _isGATKInstalled = Boolean.parseBoolean(System.getProperty(GATK_PROP_NAME));
+            if (!_isGATKInstalled)
+                _log.info("GATK JAR is not installed on this server, so some tests will be skipped");
+
+            return _isGATKInstalled;
         }
 
         protected void waitForJob(PipelineJob job) throws Exception
@@ -595,7 +607,6 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, "sequenceImport.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
             expectedOutputs.add(new File(basedir, "Normalization"));
             expectedOutputs.add(new File(basedir, "Normalization/" + mergeName));
@@ -641,7 +652,6 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, "sequenceImport.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
             expectedOutputs.add(new File(basedir, "Normalization"));
             expectedOutputs.add(new File(basedir, "Normalization/" + mergeName + ".fastq.gz"));
@@ -680,7 +690,7 @@ public class TestHelper
             Set<File> expectedOutputs = new HashSet<>();
 
             expectedOutputs.add(new File(basedir, "sequenceImport.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
+
             expectedOutputs.add(new File(basedir, FileUtil.getBaseName(DUAL_BARCODE_FILENAME) + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, FileUtil.getBaseName(DUAL_BARCODE_FILENAME) + ".log"));
 
@@ -1118,7 +1128,8 @@ public class TestHelper
             String protocolName = "TestMosaik_" + System.currentTimeMillis();
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
-            config.put("aligner", "mosaik");
+            config.put("alignment", "Mosaik");
+            config.put("analyses", "SBT;ViralAnalysis");
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
@@ -1133,39 +1144,235 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
             expectedOutputs.add(new File(basedir, "Shared"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta.fai"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.mosaik"));
-
-            expectedOutputs.add(new File(basedir, PAIRED_FILENAME1));
-            expectedOutputs.add(new File(basedir, PAIRED_FILENAME2));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.mosaik"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.bam"));
+            File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
+            expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaikreads"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.stat"));
+
+            expectedOutputs.add(new File(basedir, "paired3"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.bam"));
+            File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
+            expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaikreads"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.stat"));
+
+            expectedOutputs.add(new File(basedir, "paired4"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.bam"));
+            File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
+            expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaikreads"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.stat"));
+
+            validateInputs();
+            verifyFileOutputs(basedir, expectedOutputs);
+            validateAlignment(bam1, 338, 70);
+            validateAlignment(bam2, 169, 35);
+            validateAlignment(bam3, 169, 35);
+        }
+
+        @Test
+        public void testMosaikWithBamPostProcessing() throws Exception
+        {
+            if (!isExternalPipelineEnabled())
+                return;
+
+            String protocolName = "TestMosaikWithPostProcess_" + System.currentTimeMillis();
+            String[] fileNames = getFilenamesForReadsets();
+            JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
+            config.put("alignment", "Mosaik");
+            config.put("bamPostProcessing", "AddOrReplaceReadGroups;CallMdTags;CleanSam;FixMateInformation;" + (isGATKPresent() ? "IndelRealigner;" : "") + "MarkDuplicates;SortSam");
+
+            appendSamples(config, _readsetModels);
+
+            PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
+            waitForJob(job);
+
+            Set<File> expectedOutputs = new HashSet<>();
+            File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
+            expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
+
+            expectedOutputs.add(new File(basedir, "Shared"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.mosaik"));
+
+            expectedOutputs.add(new File(basedir, "paired1"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaikreads"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.stat"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.bam"));
+
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.bam"));
+
+            if (isGATKPresent())
+            {
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.intervals"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.bam"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.bai"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.metrics"));
+            }
+            else
+            {
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.bam"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.markduplicates.bam"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.metrics"));
+            }
+            
             File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
             expectedOutputs.add(bam1);
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaikreads"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.stat"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.bam"));
+
+            if (isGATKPresent())
+            {
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.intervals"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.bam"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.bai"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.metrics"));
+            }
+            else
+            {
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.bam"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.markduplicates.bam"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.metrics"));
+            }
+            
             File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
             expectedOutputs.add(bam2);
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
-
+            
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaikreads"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.stat"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.bam"));
+
+            if (isGATKPresent())
+            {
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.intervals"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.bam"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.bai"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.metrics"));
+            }
+            else
+            {
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.metrics"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.bam"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.markduplicates.bam"));
+            }
+
             File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
             expectedOutputs.add(bam3);
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
 
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
-            validateAlignment(bam1, 40, 0);
-            validateAlignment(bam2, 20, 0);
-            validateAlignment(bam3, 20, 0);
+            validateAlignment(bam1, 338, 70);
+            validateAlignment(bam2, 169, 35);
+            validateAlignment(bam3, 169, 35);
+        }
+
+        @Test
+        public void testMosaikWithBamPostProcessingAndDelete() throws Exception
+        {
+            if (!isExternalPipelineEnabled())
+                return;
+
+            String protocolName = "TestMosaikWithPostProcessAndDelete_" + System.currentTimeMillis();
+            String[] fileNames = getFilenamesForReadsets();
+            JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
+            config.put("alignment", "Mosaik");
+            config.put("deleteIntermediateFiles", true);
+            config.put("bamPostProcessing", "AddOrReplaceReadGroups;CallMdTags;CleanSam;FixMateInformation;" + (isGATKPresent() ? "IndelRealigner;" : "") + "MarkDuplicates;SortSam");
+
+            appendSamples(config, _readsetModels);
+
+            PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
+            waitForJob(job);
+
+            Set<File> expectedOutputs = new HashSet<>();
+            File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
+            expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
+
+
+            expectedOutputs.add(new File(basedir, "Shared"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+
+            expectedOutputs.add(new File(basedir, "paired1"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+
+            File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
+            expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
+
+            expectedOutputs.add(new File(basedir, "paired3"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+
+            File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
+            expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
+
+            expectedOutputs.add(new File(basedir, "paired4"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+
+            File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
+            expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
+
+            validateInputs();
+            verifyFileOutputs(basedir, expectedOutputs);
+            validateAlignment(bam1, 338, 70);
+            validateAlignment(bam2, 169, 35);
+            validateAlignment(bam3, 169, 35);
         }
 
         private void validateAlignment(File bam, int expectedAligned, int expectedUnaligned)
@@ -1174,6 +1381,7 @@ public class TestHelper
             try
             {
                 reader = new SAMFileReader(bam);
+                reader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
 
                 SAMRecordIterator it = reader.iterator();
                 int aligned = 0;
@@ -1196,7 +1404,6 @@ public class TestHelper
                 if (reader != null)
                     reader.close();
             }
-
         }
 
         @Test
@@ -1208,7 +1415,7 @@ public class TestHelper
             String protocolName = "MosaikDeletingIntermediates_" + System.currentTimeMillis();
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
-            config.put("aligner", "mosaik");
+            config.put("alignment", "Mosaik");
             config.put("deleteIntermediateFiles", true);
             appendSamples(config, _readsetModels);
 
@@ -1224,11 +1431,10 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
             expectedOutputs.add(new File(basedir, "Shared"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -1258,7 +1464,7 @@ public class TestHelper
             String protocolName = "TestLastz_" + System.currentTimeMillis();
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
-            config.put("aligner", "lastz");
+            config.put("alignment", "Lastz");
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
@@ -1273,38 +1479,40 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
             expectedOutputs.add(new File(basedir, "Shared"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta.fai"));
-
-            expectedOutputs.add(new File(basedir, PAIRED_FILENAME1));
-            expectedOutputs.add(new File(basedir, PAIRED_FILENAME2));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.lastz.bam"));
             File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
             expectedOutputs.add(bam1);
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.fasta"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.lastz.bam"));
             File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
             expectedOutputs.add(bam2);
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.fasta"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.lastz.bam"));
             File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
             expectedOutputs.add(bam3);
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.fasta"));
 
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
-            validateAlignment(bam1, 354, 0);
-            validateAlignment(bam2, 177, 0);
-            validateAlignment(bam3, 177, 0);
+            validateAlignment(bam1, 424, 0);
+            validateAlignment(bam2, 212, 0);
+            validateAlignment(bam3, 212, 0);
         }
 
         @Test
@@ -1316,20 +1524,16 @@ public class TestHelper
             String protocolName = "LastzWithPreprocess_" + System.currentTimeMillis();
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
-            config.put("aligner", "lastz");
-            config.put("preprocessing.crop", true);
-            config.put("preprocessing.crop_cropLength", 250);
-            config.put("preprocessing.crop_headcropLength", 1);
-            config.put("preprocessing.downsample", true);
-            config.put("preprocessing.downsampleReadNumber", 200);
-            config.put("preprocessing.minLength", 100);
-            config.put("preprocessing.palindromeClipThreshold", 30);
-            config.put("preprocessing.qual2", true);
-            config.put("preprocessing.qual2_avgQual", 15);
-            config.put("preprocessing.qual2_windowSize", 4);
-            config.put("preprocessing.seedMismatches", 2);
-            config.put("preprocessing.simpleClipThreshold", 12);
-            config.put("preprocessing.trimAdapters", true);
+            config.put("alignment", "Lastz");
+            config.put("fastqProcessing", "DownsampleReads;AdapterTrimming;HeadCropReads;CropReads;SlidingWindowTrim;ReadLengthFilter");
+            config.put("fastqProcessing.CropReads.cropLength", 250);
+            config.put("fastqProcessing.HeadCropReads.headcropLength", 1);
+            config.put("fastqProcessing.DownsampleReads.downsampleReadNumber", 200);
+            config.put("fastqProcessing.ReadLengthFilter.minLength", 100);
+            config.put("fastqProcessing.AdapterTrimming.adapters", "[[\"Nextera Transposon Adapter A\",\"AGATGTGTATAAGAGACAG\",true,true]]");
+
+            config.put("fastqProcessing.SlidingWindowTrim.avgQual", 15);
+            config.put("fastqProcessing.SlidingWindowTrim.windowSize", 4);
 
             appendSamples(config, _readsetModels);
 
@@ -1345,45 +1549,70 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
             expectedOutputs.add(new File(basedir, "Shared"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.lastz.bam"));
             File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
             expectedOutputs.add(bam1);
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fasta"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.lastz.bam"));
             File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
             expectedOutputs.add(bam2);
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fasta"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.lastz.bam"));
             File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
             expectedOutputs.add(bam3);
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fasta"));
 
             expectedOutputs.add(new File(basedir, "paired1/Preprocessing/"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/" + PAIRED_FILENAME1));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/" + PAIRED_FILENAME2));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.CropReads.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fastq"));
 
             expectedOutputs.add(new File(basedir, "paired3/Preprocessing"));
-            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/" + UNZIPPED_PAIRED_FILENAME1 + ".gz"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.downsampled.fastq"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.downsampled.adaptertrimmed.fastq"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.downsampled.adaptertrimmed.HeadCropReads.fastq"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.downsampled.adaptertrimmed.HeadCropReads.CropReads.fastq"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.fastq"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fastq"));
 
             expectedOutputs.add(new File(basedir, "paired4/Preprocessing/"));
-            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/" + UNZIPPED_PAIRED_FILENAME2 + ".gz"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.downsampled.fastq"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.downsampled.adaptertrimmed.fastq"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.downsampled.adaptertrimmed.HeadCropReads.fastq"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.downsampled.adaptertrimmed.HeadCropReads.CropReads.fastq"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.fastq"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fastq"));
 
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
-            validateAlignment(bam1, 278, 0);
-            validateAlignment(bam2, 139, 0);
-            validateAlignment(bam3, 139, 0);
+            validateAlignment(bam1, 292, 0);
+            validateAlignment(bam2, 146, 0);
+            validateAlignment(bam3, 146, 0);
         }
 
         @Test
@@ -1395,22 +1624,17 @@ public class TestHelper
             String protocolName = "LastzPreprocessAndDelete_" + System.currentTimeMillis();
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
-            config.put("aligner", "lastz");
+            config.put("alignment", "Lastz");
             config.put("deleteIntermediateFiles", true);
 
-            config.put("preprocessing.crop", true);
-            config.put("preprocessing.crop_cropLength", 250);
-            config.put("preprocessing.crop_headcropLength", 1);
-            config.put("preprocessing.downsample", true);
-            config.put("preprocessing.downsampleReadNumber", 200);
-            config.put("preprocessing.minLength", 100);
-            config.put("preprocessing.palindromeClipThreshold", 30);
-            config.put("preprocessing.qual2", true);
-            config.put("preprocessing.qual2_avgQual", 15);
-            config.put("preprocessing.qual2_windowSize", 4);
-            config.put("preprocessing.seedMismatches", 2);
-            config.put("preprocessing.simpleClipThreshold", 12);
-            config.put("preprocessing.trimAdapters", true);
+            config.put("fastqProcessing", "DownsampleReads;AdapterTrimming;CropReads;SlidingWindowTrim;ReadLengthFilter");
+            config.put("fastqProcessing.CropReads.cropLength", 250);
+            config.put("fastqProcessing.HeadCropReads.headcropLength", 1);
+            config.put("fastqProcessing.DownsampleReads.downsampleReadNumber", 200);
+            config.put("fastqProcessing.ReadLengthFilter.minLength", 100);
+            config.put("fastqProcessing.AdapterTrimming.adapters", "[[\"Nextera Transposon Adapter A\",\"AGATGTGTATAAGAGACAG\",true,true]]");
+            config.put("fastqProcessing.SlidingWindowTrim.avgQual", 15);
+            config.put("fastqProcessing.SlidingWindowTrim.windowSize", 4);
 
             appendSamples(config, _readsetModels);
 
@@ -1426,11 +1650,10 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
             expectedOutputs.add(new File(basedir, "Shared"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -1452,9 +1675,9 @@ public class TestHelper
 
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
-            validateAlignment(bam1, 278, 0);
-            validateAlignment(bam2, 139, 0);
-            validateAlignment(bam3, 139, 0);
+            validateAlignment(bam1, 294, 0);
+            validateAlignment(bam2, 147, 0);
+            validateAlignment(bam3, 147, 0);
         }
 
         @Test
@@ -1466,7 +1689,7 @@ public class TestHelper
             String protocolName = "TestBWASW_" + System.currentTimeMillis();
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
-            config.put("aligner", "bwasw");
+            config.put("alignment", "BWA-SW");
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
@@ -1481,34 +1704,33 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
             expectedOutputs.add(new File(basedir, "Shared"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta.fai"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bwa.index.amb"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bwa.index.ann"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bwa.index.bwt"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bwa.index.pac"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bwa.index.sa"));
-
-            expectedOutputs.add(new File(basedir, PAIRED_FILENAME1));
-            expectedOutputs.add(new File(basedir, PAIRED_FILENAME2));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.amb"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.ann"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.bwt"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.pac"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.sa"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bwa-sw.bam"));
             File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
             expectedOutputs.add(bam1);
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bwa-sw.bam"));
             File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
             expectedOutputs.add(bam2);
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bwa-sw.bam"));
             File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
             expectedOutputs.add(bam3);
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
@@ -1521,25 +1743,15 @@ public class TestHelper
         }
 
         @Test
-        public void testBWAWithAdapters() throws Exception
+        public void testBWAMem() throws Exception
         {
             if (!isExternalPipelineEnabled())
                 return;
 
-            //TODO
-            //	"adapter_0":"[\"Nextera Transposon Adapter A\",\"AGATGTGTATAAGAGACAG\",true,true,false]",
-        }
-
-        @Test
-        public void testBWA() throws Exception
-        {
-            if (!isExternalPipelineEnabled())
-                return;
-
-            String protocolName = "TestBWA_" + System.currentTimeMillis();
+            String protocolName = "TestBWAMem_" + System.currentTimeMillis();
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
-            config.put("aligner", "bwa");
+            config.put("alignment", "BWA-Mem");
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
@@ -1554,41 +1766,190 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
             expectedOutputs.add(new File(basedir, "Shared"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta.fai"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bwa.index.amb"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bwa.index.ann"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bwa.index.bwt"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bwa.index.pac"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bwa.index.sa"));
-
-            expectedOutputs.add(new File(basedir, PAIRED_FILENAME1));
-            expectedOutputs.add(new File(basedir, PAIRED_FILENAME2));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.amb"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.ann"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.bwt"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.pac"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.sa"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bwa-mem.bam"));
             File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
             expectedOutputs.add(bam1);
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bwa-mem.bam"));
             File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
             expectedOutputs.add(bam2);
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bwa-mem.bam"));
             File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
             expectedOutputs.add(bam3);
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
 
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
-            //TODO: this is fishy
+            validateAlignment(bam1, 402, 10);
+            validateAlignment(bam2, 201, 5);
+            validateAlignment(bam3, 201, 5);
+        }
+
+        @Test
+        public void testBWAWithAdapters() throws Exception
+        {
+            if (!isExternalPipelineEnabled())
+                return;
+
+            String protocolName = "TestBWAWithAdapters_" + System.currentTimeMillis();
+            String[] fileNames = getFilenamesForReadsets();
+            JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
+            config.put("alignment", "BWA");
+
+            config.put("fastqProcessing", "AdapterTrimming");
+            config.put("fastqProcessing.AdapterTrimming.adapters", "[[\"Nextera Transposon Adapter A\",\"AGATGTGTATAAGAGACAG\",true,true]]");
+
+            appendSamples(config, _readsetModels);
+
+            PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
+            waitForJob(job);
+
+            Set<File> expectedOutputs = new HashSet<>();
+            File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
+            expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
+
+            expectedOutputs.add(new File(basedir, "Shared"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.amb"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.ann"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.bwt"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.pac"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.sa"));
+
+            expectedOutputs.add(new File(basedir, "paired1"));
+
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.adaptertrimmed.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.adaptertrimmed.fastq"));
+
+            expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bwa.bam"));
+            File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
+            expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.adaptertrimmed.fastq.sai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired2.adaptertrimmed.fastq.sai"));
+
+            expectedOutputs.add(new File(basedir, "paired3"));
+
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.adaptertrimmed.fastq"));
+
+            expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bwa.bam"));
+            File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
+            expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.adaptertrimmed.fastq.sai"));
+
+            expectedOutputs.add(new File(basedir, "paired4"));
+
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.adaptertrimmed.fastq"));
+
+            expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bwa.bam"));
+            File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
+            expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.adaptertrimmed.fastq.sai"));
+
+            validateInputs();
+            verifyFileOutputs(basedir, expectedOutputs);
+
+            validateAlignment(bam1, 142, 266);
+            validateAlignment(bam2, 71, 133);
+            validateAlignment(bam3, 71, 133);
+        }
+
+        @Test
+        public void testBWA() throws Exception
+        {
+            if (!isExternalPipelineEnabled())
+                return;
+
+            String protocolName = "TestBWA_" + System.currentTimeMillis();
+            String[] fileNames = getFilenamesForReadsets();
+            JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
+            config.put("alignment", "BWA");
+            appendSamples(config, _readsetModels);
+
+            PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
+            waitForJob(job);
+
+            Set<File> expectedOutputs = new HashSet<>();
+            File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
+            expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
+
+            expectedOutputs.add(new File(basedir, "Shared"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.amb"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.ann"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.bwt"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.pac"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.sa"));
+
+            expectedOutputs.add(new File(basedir, "paired1"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bwa.bam"));
+            File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
+            expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.fastq.sai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired2.fastq.sai"));
+
+            expectedOutputs.add(new File(basedir, "paired3"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bwa.bam"));
+            File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
+            expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.fastq.sai"));
+
+            expectedOutputs.add(new File(basedir, "paired4"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bwa.bam"));
+            File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
+            expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.fastq.sai"));
+
+            validateInputs();
+            verifyFileOutputs(basedir, expectedOutputs);
+            //this is probably due to adapters
             validateAlignment(bam1, 0, 408);
             validateAlignment(bam2, 0, 204);
             validateAlignment(bam3, 0, 204);
@@ -1603,7 +1964,7 @@ public class TestHelper
             String protocolName = "TestBowtie_" + System.currentTimeMillis();
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
-            config.put("aligner", "bowtie");
+            config.put("alignment", "Bowtie");
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
@@ -1618,46 +1979,47 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
             expectedOutputs.add(new File(basedir, "Shared"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta.fai"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bowtie.index.1.ebwt"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bowtie.index.2.ebwt"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bowtie.index.3.ebwt"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bowtie.index.4.ebwt"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bowtie.index.rev.1.ebwt"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.bowtie.index.rev.2.ebwt"));
-
-            expectedOutputs.add(new File(basedir, PAIRED_FILENAME1));
-            expectedOutputs.add(new File(basedir, PAIRED_FILENAME2));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.1.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.2.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.3.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.4.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.rev.1.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.rev.2.ebwt"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.bam"));
             File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
             expectedOutputs.add(bam1);
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned_1.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned_2.fastq"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
-            File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam"));
+            File bam2 = new File(basedir, "paired3/Alignment/paired3.bowtie.bam");
             expectedOutputs.add(bam2);
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bowtie.unaligned.fastq"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
-            File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam"));
+            File bam3 = new File(basedir, "paired4/Alignment/paired4.bowtie.bam");
             expectedOutputs.add(bam3);
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bowtie.unaligned.fastq"));
 
             validateInputs();
-            //TODO: this is fishy
+
+            //this is probably due to adapters
             verifyFileOutputs(basedir, expectedOutputs);
-            validateAlignment(bam1, 0, 204);
+            validateAlignment(bam1, 0, 408);
             validateAlignment(bam2, 0, 204);
             validateAlignment(bam3, 0, 204);
         }
@@ -1671,7 +2033,7 @@ public class TestHelper
             String protocolName = "TestBowtieDeleting_" + System.currentTimeMillis();
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
-            config.put("aligner", "bowtie");
+            config.put("alignment", "Bowtie");
             config.put("deleteIntermediateFiles", true);
             appendSamples(config, _readsetModels);
 
@@ -1687,18 +2049,18 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
             expectedOutputs.add(new File(basedir, "Shared"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
             expectedOutputs.add(bam1);
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned_1.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned_2.fastq"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
@@ -1725,7 +2087,7 @@ public class TestHelper
             String protocolName = "TestBfast_" + System.currentTimeMillis();
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
-            config.put("aligner", "bfast");
+            config.put("alignment", "BFast");
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
@@ -1740,7 +2102,6 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
-            expectedOutputs.add(new File(basedir, "sequencePipeline.xml"));
 
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta"));

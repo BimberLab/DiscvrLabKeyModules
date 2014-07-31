@@ -7,12 +7,16 @@
 Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
     extend: 'SequenceAnalysis.panel.BaseSequencePanel',
     analysisController: 'sequenceanalysis',
+    statics: {
+        TASKID: 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceAnalysisPipeline'
+    },
 
     initComponent: function(){
-        this.taskId = 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceAnalysisPipeline';
+        this.taskId = SequenceAnalysis.panel.SequenceAnalysisPanel.TASKID;
         this.readsets = this.readsets ? this.readsets.split(';') : [];
 
         Ext4.apply(this, {
+            itemId: 'sequenceAnalysisPanel',
             buttons: [{
                 text: 'Start Analysis',
                 itemId: 'startAnalysis',
@@ -23,14 +27,22 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
         this.callParent(arguments);
 
-        this.add([
-            this.getFilePanelCfg()
-        ,{
-            xtype:'form',
+        LABKEY.Ajax.request({
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getAnalysisToolDetails'),
+            scope: this,
+            success: LABKEY.Utils.getCallbackWrapper(this.onDataLoad, this),
+            failure: LDK.Utils.getErrorCallback()
+        });
+
+        this.addEvents('sectiontoggle');
+
+        this.add([this.getFilePanelCfg(),
+            {
+            xtype: 'form',
             border: true,
             bodyBorder: false,
             title: 'Step 1: Run Information',
-            name: 'protocols',
+            itemId: 'runInformation',
             width: 'auto',
             defaults: Ext4.Object.merge({}, this.fieldDefaults, {bodyStyle: 'padding:5px;'}),
             defaultType: 'textfield',
@@ -54,397 +66,214 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                         scope: this
                     }
                 }
-
-//                },{
-//                    xtype: 'combo',
-//                    name: 'protocol',
-//                    itemId: 'protocol',
-//                    store: this.protocolStore,
-//                    listeners: {
-//                        scope: this,
-//                        select: function(field){
-//                            this.setFieldValues(this.protocols[field.getValue()].jsonParameters);
-//                        }
-//                    },
-//                    forceSelection:false,
-//                    typeAhead: true,
-//                    lazyInit: false,
-//                    queryMode: 'local',
-//                    triggerAction: 'all',
-//                    displayField: 'protocol',
-//                    fieldLabel: 'Select Defaults',
-//                    helpPopup: 'Select from a set of saved parameters'
-                },{
-                    fieldLabel: 'Description',
-                    xtype: 'textarea',
-                    width: 600,
-                    height: 100,
-                    helpPopup: 'Description for this analysis (optional)',
-                    itemId: 'analysisDescription',
-                    name: 'analysisDescription',
-                    allowBlank:true
-                },{
-                    fieldLabel: 'Save Settings',
-                    hidden: true,
-                    helpPopup: 'Check to save these settings for future use.  They will appear under the \'defaults\' menu',
-                    name: 'saveProtocol',
-                    itemId: 'saveProtocol',
-                    xtype: 'checkbox'
-                },{
-                    xtype: 'combo',
-                    fieldLabel: 'Specialized Analysis',
-                    helpPopup: 'Selecting one of these pre-defined analyses will set the form with recommended defaults for that application.  This is not required.',
-                    displayField: 'name',
-                    valueField: 'value',
-                    name: 'analysisType',
-                    value: 'Virus',
-                    itemId: 'analysisType',
-                    width: 600,
-                    //TODO: data driven?
-                    store: Ext4.create('Ext.data.ArrayStore', {
-                        fields: ['name', 'value'],
-                        data: [
-                            ['[none]',''],
-                            ['Sequence Based Genotyping','SBT'],
-                            ['Viral Analysis','Virus']
-                        ]
-                    }),
-                    listeners: {
-                        scope: this,
-                        change: function(field, val){
-                            //val = val[0].get('value');
-
-                            var alignPanel = this.down('#alignment');
-                            var alignField = alignPanel.down('#alignerField');
-
-                            var reportPanel = this.down('#reportPanel');
-                            var databasePanel = this.down('#databasePanel');
-
-                            if(val == 'SBT'){
-                                alignPanel.down('#doAlignment').setValue(true);
-                                alignPanel.down('#refLibraryCombo').setValue('DNA');
-                                alignField.setValue('mosaik');
-                                alignPanel.down('#alignerpanel').setAligner(alignField);
-
-                                reportPanel.down('#sbtAnalysis').setValue(true);
-                                reportPanel.down('#ntCoverage').setValue(false);
-                                reportPanel.down('#aaSnpByCodon').setValue(false);
-                                reportPanel.down('#ntSnpByPosition').setValue(false);
-                            }
-                            else if (val == 'Virus'){
-                                alignPanel.down('#doAlignment').setValue(true);
-                                alignPanel.down('#refLibraryCombo').setValue('Virus');
-                                alignPanel.down('#alignerField').setValue('bwasw');
-                                alignPanel.down('#alignerpanel').setAligner(alignField);
-
-                                reportPanel.down('#sbtAnalysis').setValue(false);
-                                reportPanel.down('#ntCoverage').setValue(true);
-                                reportPanel.down('#aaSnpByCodon').setValue(true);
-                                reportPanel.down('#ntSnpByPosition').setValue(true);
-                            }
-                            else {
-                                reportPanel.down('#sbtAnalysis').setValue(false);
-                                reportPanel.down('#ntCoverage').setValue(false);
-                                reportPanel.down('#aaSnpByCodon').setValue(false);
-                                reportPanel.down('#ntSnpByPosition').setValue(false);
-                            }
-                        }
-                    },
-                    forceSelection:false,
-                    typeAhead: true,
-                    mode: 'local',
-                    triggerAction: 'all'
-                }]
-        },{
-            xtype:'panel',
-            border: true,
-            title: 'Step 2: Pre-Processing of Reads (optional)',
-            name: 'preprocessing',
-            itemId: 'preprocessing',
-            width: 'auto',
-            defaults: {
-                msgTarget:'qtip'
-            },
-            items :[{
-                fieldLabel: 'Downsample Reads',
-                helpPopup: 'If selected, up to the specified number of reads will be randomly selected from each input file.  It can be useful for debugging or trying new settings, as fewer reads will run faster.  Note: this will occur prior to barcode separation, but after merging.',
-                name: 'preprocessing.downsample',
-                xtype:'checkbox',
-                itemId: 'doDownsample',
-                scope: this,
-                handler: function(btn, val){
-                    btn.up('form').down('#downsampleOptions').setVisible(btn.checked);
-                }
             },{
-                xtype: 'fieldset',
-                style: 'padding:5px;',
-                hidden: true,
-                hideMode: 'offsets',
-                width: 'auto',
-                itemId: 'downsampleOptions',
-                items: [{
-                    xtype: 'numberfield',
-                    fieldLabel: 'Total Reads',
-                    name: 'preprocessing.downsampleReadNumber',
-                    value: 200,
-                    minValue: 0,
-                    helpPopup: 'For each input file, up to the this number of reads will be randomly retained.'
-                }]
-            },{
-                fieldLabel: 'Minimum Read Length',
-                helpPopup: 'If selected, any reads shorter than this value will be discarded from analysis',
-                xtype: 'numberfield',
-                minValue: 0,
-                name: 'preprocessing.minLength',
-                itemId: 'minLength'
-            },{
-                xtype: 'checkbox',
-                fieldLabel: 'Adapter Trimming',
-                scope: this,
-                handler: function(c, v){
-                    c.up('form').down('#adapterPanel').setVisible(v);
-                },
-                itemId: 'trimAdapters',
-                name: 'preprocessing.trimAdapters'
-            },{
-                xtype: 'adapterpanel',
-                itemId: 'adapterPanel'
-            },{
-                fieldLabel: 'Quality Trimming (by sliding window)',
-                helpPopup: 'This uses a sliding window to trim from the 3\' ends.  Starting at the 3\' end, the algorithm takes a window of the last X bases.  If their average quality score does not pass the specified value, the algorithm moves one base forward and repeats.  This continues until the average of the window passes the minimal quality provided.',
-                name: 'preprocessing.qual2',
-                itemId: 'qual2',
-                xtype: 'checkbox',
-                scope: this,
-                handler: function(c){
-                    c.up('form').down('#qual2Container').setVisible(c.checked);
-                }
-            },{
-                xtype: 'fieldset',
-                style: 'padding:5px;',
-                width: '100%',
-                hidden: true,
-                hideMode: 'offsets',
-                hideLabel: true,
-                name: 'preprocessing.qual2Container',
-                itemId: 'qual2Container',
-                items: [{
-                    fieldLabel: 'Window Size',
-                    helpPopup: 'The length of the sliding window used in quality trimming',
-                    xtype: 'numberfield',
-                    name: 'preprocessing.qual2_windowSize',
-                    itemId: 'qual2_windowSize',
-                    minValue: 0,
-                    value: 4
-                },{
-                    fieldLabel: 'Avg Qual',
-                    helpPopup: 'The average quality score for the window that must be obtained',
-                    xtype: 'numberfield',
-                    name: 'preprocessing.qual2_avgQual',
-                    itemId: 'qual2_avgQual',
-                    minValue: 0,
-                    value: 15
-                }]
-            },{
-                fieldLabel: 'Crop Reads',
-                helpPopup: 'If selected, any reads above the selected length will be cropped.  This is sometimes useful for Illumina data when read quality drops beyond a given read cycle.',
-                name: 'preprocessing.crop',
-                itemId: 'crop',
-                xtype: 'checkbox',
-                scope: this,
-                handler: function(c){
-                    c.up('form').down('#cropContainer').setVisible(c.checked);
-                }
-            },{
-                xtype: 'fieldset',
-                style: 'padding:5px;',
-                width: '100%',
-                hidden: true,
-                hideMode: 'offsets',
-                hideLabel: true,
-                name: 'preprocessing.cropContainer',
-                itemId: 'cropContainer',
-                items: [{
-                    fieldLabel: 'Crop Length',
-                    helpPopup: 'Reads will be cropped to this length',
-                    xtype: 'numberfield',
-                    name: 'preprocessing.crop_cropLength',
-                    itemId: 'crop_cropLength',
-                    minValue: 0,
-                    value: 250
-            },{
-                fieldLabel: '5\' Cropping',
-                helpPopup: 'Cuts the specified number of bases from the 5\' end of each read',
-                xtype: 'numberfield',
-                name: 'preprocessing.crop_headcropLength',
-                itemId: 'crop_headcropLength',
-                minValue: 0,
-                value: null
-            }]
-        },{
-            xtype: 'fieldset',
-            style: 'padding:5px;',
-            width: '100%',
-            hidden: true,
-            hideMode: 'offsets',
-            hideLabel: true,
-            name: 'preprocessing.maskContainer',
-            itemId: 'maskContainer',
-            items: [{
-                fieldLabel: 'Min Qual',
-                helpPopup: 'If specified, any bases with quality scores below this value will be replaced with N',
-                xtype: 'numberfield',
-                minValue: 0,
-                name: 'preprocessing.mask_minQual',
-                itemId: 'mask_minQual'
-            }]
+                fieldLabel: 'Description',
+                xtype: 'textarea',
+                width: 600,
+                height: 100,
+                helpPopup: 'Description for this analysis (optional)',
+                name: 'protocolDescription',
+                allowBlank:true
             },{
                 fieldLabel: 'Delete Intermediate Files',
-                helpPopup: 'Check to delete the intermediate files created by this pipeline.  In general these are not needed and it will save disk space.  These files might be useful for debugging though',
+                helpPopup: 'Check to delete the intermediate files created by this pipeline.  In general these are not needed and it will save disk space.  These files might be useful for debugging though.',
                 name: 'deleteIntermediateFiles',
-                itemId: 'deleteIntermediateFiles',
+                inputValue: true,
                 checked: true,
-                hidden: false,
                 xtype: 'checkbox'
+            },{
+                xtype: 'ldk-linkbutton',
+                style: 'margin-left: ' + (this.fieldDefaults.labelWidth + 4) + 'px;',
+                text: 'Copy Settings From Previous Run',
+                linkCls: 'labkey-text-link',
+                handler: function(btn){
+                    Ext4.create('Ext.window.Window', {
+                        modal: true,
+                        sequencePanel: this.up('#sequenceAnalysisPanel'),
+                        title: 'Copy Settings From Previous Run',
+                        width: 700,
+                        bodyStyle: 'padding: 5px;',
+                        defaults: {
+                            border: false
+                        },
+                        items: [{
+                            html: 'This will allow you to apply saved settings from a previous run.  Use the toggle below to select from runs bookmarked as templates, or you can choose any previous run to apply to this form.',
+                            style: 'padding-bottom: 10px;'
+                        },{
+                            xtype: 'radiogroup',
+                            name: 'selector',
+                            columns: 1,
+                            defaults: {
+                                name: 'selector'
+                            },
+                            items: [{
+                                boxLabel: 'Choose From Bookmarked Runs',
+                                inputValue: 'bookmarkedRuns',
+                                checked: true
+                            },{
+                                boxLabel: 'Choose From All Runs',
+                                inputValue: 'allRuns'
+                            }],
+                            listeners: {
+                                change: function (field, val) {
+                                    var win = field.up('window');
+                                    var target = win.down('#selectionArea');
+                                    var toAdd = [];
+                                    if (val.selector == 'bookmarkedRuns'){
+                                        toAdd.push({
+                                            xtype: 'labkey-combo',
+                                            width: 450,
+                                            fieldLabel: 'Select Run',
+                                            store: {
+                                                type: 'labkey-store',
+                                                containerPath: Laboratory.Utils.getQueryContainerPath(),
+                                                schemaName: 'sequenceanalysis',
+                                                queryName: 'saved_analyses',
+                                                autoLoad: true,
+                                                columns: 'rowid,name,json'
+                                            },
+                                            displayField: 'name',
+                                            valueField: 'rowid',
+                                            queryMode: 'local'
+                                        });
+                                    }
+                                    else if (val.selector == 'allRuns'){
+                                        toAdd.push({
+                                            xtype: 'combo',
+                                            width: 450,
+                                            fieldLabel: 'Select Run',
+                                            store: {
+                                                type: 'json',
+                                                fields: ['rowid', 'name', 'json']
+                                            },
+                                            displayField: 'name',
+                                            valueField: 'rowid',
+                                            queryMode: 'local',
+                                            listeners: {
+                                                render: function(field){
+                                                    Ext4.Msg.wait('Loading...');
+                                                    LABKEY.Pipeline.getProtocols({
+                                                        containerPath: Laboratory.Utils.getQueryContainerPath(),
+                                                        taskId: SequenceAnalysis.panel.SequenceAnalysisPanel.TASKID,
+                                                        path: './',
+                                                        includeWorkbooks: true,
+                                                        scope: this,
+                                                        success: function(results){
+                                                            Ext4.Msg.hide();
 
-            }]
-        },{
-            xtype:'panel',
-            border: true,
-            title: 'Step 3: Alignment (optional)',
-            itemId: 'alignment',
-            collapsible: false,
-            width: '100%',
-            defaults: {
-                width: 350
-            },
-            items: [{
-                xtype: 'checkbox',
-                fieldLabel: 'Perform Alignment',
-                name: 'doAlignment',
-                itemId: 'doAlignment',
-                checked: true,
-                listeners: {
-                    change: this.onPerformAlignmentCheck,
-                    afterrender: {
-                        fn: this.onPerformAlignmentCheck,
-                        scope: this,
-                        delay: 100
-                    },
-                    scope: this
+                                                            if (results && results.length){
+                                                                var records = [];
+                                                                Ext4.Array.forEach(results, function(r, idx){
+                                                                    records.push(field.store.createModel({
+                                                                        name: r.name,
+                                                                        rowid: idx + 1,
+                                                                        json: r.jsonParameters
+                                                                    }));
+                                                                }, this);
+                                                            }
+
+                                                            field.store.removeAll();
+                                                            if (records.length) {
+                                                                field.store.add(records);
+                                                            }
+                                                        },
+                                                        failure: LDK.Utils.getErrorCallback()
+                                                    })
+                                                }
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        console.error('Unknown type: ' + val.selector);
+                                    }
+
+                                    target.removeAll();
+                                    target.add(toAdd);
+                                },
+                                render: function(field){
+                                    field.fireEvent('change', field, field.getValue());
+                                }
+                            }
+                        },{
+                            xtype: 'panel',
+                            itemId: 'selectionArea',
+                            bodyStyle: 'padding-top: 10px;padding-left: 5px;'
+                        }],
+                        buttons: [{
+                            text: 'Submit',
+                            handler: function(btn){
+                                var win = btn.up('window');
+                                var combo = win.down('combo');
+                                if (!combo.getValue()){
+                                    Ext4.Msg.alert('Error', 'Must choose a protocol');
+                                    return;
+                                }
+
+                                var recIdx = combo.store.find('rowid', combo.getValue());
+                                var rec = combo.store.getAt(recIdx);
+                                var json = rec.get('json');
+                                if (Ext4.isString(rec.get('json'))){
+                                    json = Ext4.decode(json);
+                                }
+
+                                win.sequencePanel.applySavedValues(json);
+                                win.close();
+                            }
+                        },{
+                            text: 'Cancel',
+                            handler: function(btn){
+                                btn.up('window').close();
+                            }
+                        }]
+                    }).show(btn);
                 }
             }]
         },{
-            xtype:'panel',
-            border: true,
-            title: 'Step 4: SNP Inspection Settings (will only be used if additional analyses are chosen below)',
-            itemId: 'snpPanel',
-            collapsible: false,
-            width: '100%',
-            defaults: {
-                border: false
-            },
+            xtype: 'panel',
+            title: 'Analysis Options',
+            width: 'auto',
+            itemId: 'analysisOptions',
             items: [{
-                html: 'Many applications require calling SNPs.  This pipeline will perform phased SNP calling on the data, including AA translation in certain cases.  The options below allow you to set thresholds for SNP calling, which determine whether a SNP will be included in the analysis or not.',
-                width: 800,
-                style: 'margin-bottom: 10px;padding-left:5px;'
-            },{
-                xtype: 'snpcallpanel'
-            }]
-        },{
-            xtype:'panel',
-            border: true,
-            title: 'Step 5: Additional Analyses (optional)',
-            itemId: 'reportPanel',
-            collapsible: false,
-            width: '100%',
-            defaults: {
-                width: 350,
-                labelWidth: 250
-            },
-            items: [{
-                xtype: 'checkbox',
-                fieldLabel: 'Calculate and Save NT SNPs',
-                helpPopup: 'If selected, a summary of the NT SNPs at each position, will be saved, grouped by base.',
-                name: 'ntSnpByPosition',
-                itemId: 'ntSnpByPosition',
-                checked: true
-            },{
-                xtype: 'checkbox',
-                fieldLabel: 'Calculate and Save Coverage Depth',
-                helpPopup: 'If selected, a summary of the NT depth at each position will be saved.',
-                name: 'ntCoverage',
-                itemId: 'ntCoverage',
-                checked: true
-            },{
-                fieldLabel: 'Calculate and Save AA SNPs',
-                xtype: 'checkbox',
-                checked: true,
-                helpPopup: 'If selected, for each NT SNP the flanking bases of the read will be identified and translated.  This is currently only possible for reference sequences where their coding regions have been annotated.',
-                name: 'aaSnpByCodon',
-                itemId: 'aaSnpByCodon'
-            },{
-                xtype: 'checkbox',
-                fieldLabel: 'Sequence Based Genotyping',
-                helpPopup: 'If selected, each alignment will be inspected, and those alignments lacking any high quality SNPs will be retained.  A report will be generated summarizing these matches, per read.',
-                name: 'sbtAnalysis',
-                itemId: 'sbtAnalysis',
-                listeners: {
-                    change: function(cb, val){
-                        var panel = cb.up('panel').down('#sbtOptions');
-                        panel.setVisible(val);
-
-                        if(!val)
-                            panel.down('#maxAlignMismatch').setValue(null);
-                    }
-                }
-            },{
-                hidden: true,
-                xtype: 'fieldset',
-                itemId: 'sbtOptions',
-                width: '100%',
-                bodyStyle: 'padding: 5px;',
-                style: 'padding: 5px;',
-                defaults: {
-                    width: 350
-                },
-                items: [{
-//                    xtype: 'numberfield',
-//                    minValue: 0,
-//                    hidden: false,
-//                    fieldLabel: 'Max Alignment Mismatches',
-//                    name: 'sbt.maxAlignMismatch',
-//                    itemId: 'maxAlignMismatch',
-//                    helpPopup: 'If a number is entered, alignments with greater than the selected number of high-confidence SNPs will not be imported.  Leave blank to import all (normal for most applications).  For sequence-based genotyping, this value will usually be set to zero, assuming you are interested in perfect hits only.',
-//                    value: 0
-//                },{
-                    xtype: 'checkbox',
-                    fieldLabel: 'Only Import Valid Pairs',
-                    name: 'sbt.onlyImportPairs',
-                    helpPopup: 'If selected, only alignments consisting of valid forward/reverse pairs will be imported.  Do not check this unless you are using paired-end sequence.'
-                },{
-                    xtype: 'numberfield',
-                    minValue: 0,
-                    fieldLabel: 'Min Read # Per Reference',
-                    name: 'sbt.minCountForRef',
-                    helpPopup: 'If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this many reads across each sample.  This can be a way to reduce ambiguity among allele calls.'
-                },{
-                    xtype: 'numberfield',
-                    minValue: 0,
-                    maxValue: 100,
-                    fieldLabel: 'Min Read Pct Per Reference',
-                    name: 'sbt.minPctForRef',
-                    helpPopup: 'If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this percent of total from each sample.  This can be a way to reduce ambiguity among allele calls.'
-                },{
-                    xtype: 'numberfield',
-                    minValue: 0,
-                    fieldLabel: 'Min Pct Retained To Import',
-                    disabled: true,
-                    name: 'sbt.minPctToImport',
-                    helpPopup: 'If a value is provided, at least this percent of input sequences (post pre-processing) must pass filters, or no data will be imported for that sample.'
-                }]
+                border: false,
+                html: 'Loading...'
             }]
         }]);
+    },
+
+    onDataLoad: function(results){
+        var panel = this.down('#analysisOptions');
+
+        var items = [];
+        items.push({
+            xtype: 'sequenceanalysis-analysissectionpanel',
+            title: 'Step 2: FASTQ Preprocessing',
+            stepType: 'fastqProcessing',
+            sectionDescription: 'This steps in this section will act on the input FASTQ file(s), allowing you to trim adapters, filter reads, etc.  The steps will be executed in the order listed.  Use the button below to add steps.',
+            toolConfig: results
+        });
+
+        items.push({
+            xtype: 'sequenceanalysis-alignmentpanel',
+            toolConfig: results
+        });
+
+//        items.push({
+//            xtype: 'sequenceanalysis-analysissectionpanel',
+//            toolConfig: results,
+//            title: 'Step 3.5: Variant Calling (optional)',
+//            stepType: 'variantCalling'
+//        });
+
+        items.push({
+            xtype: 'sequenceanalysis-analysissectionpanel',
+            title: 'Step 4: Downstream Analysis (optional)',
+            sectionDescription: 'This steps in this section will act on the final BAM file.  These steps may be highly application-specific, so please read the description of each step for more information.',
+            stepType: 'analysis',
+            toolConfig: results
+        });
+
+        this.remove(panel);
+        this.add(items);
     },
 
     //loads the exp.RowId for each file
@@ -474,7 +303,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                     var errors = [];
                     var errorNames = [];
                     store.each(function(rec){
-                        if(rec.get('fileid')){
+                        if (rec.get('fileid')){
                             if (!rec.get('fileid/fileexists')){
                                 errors.push(rec);
                                 errorNames.push(rec.get('name'));
@@ -488,7 +317,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                             errors.push(rec);
                             errorNames.push(rec.get('name'))
                         }
-                        if(rec.get('fileid2')){
+                        if (rec.get('fileid2')){
                             if (!rec.get('fileid2/fileexists')){
                                 errors.push(rec);
                                 errorNames.push(rec.get('name'))
@@ -500,7 +329,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                         }
                     }, this);
 
-                    if(errors.length){
+                    if (errors.length){
                         alert('The follow readsets lack an input file and will be skipped: ' + errorNames.join(', '));
                     }
 
@@ -508,39 +337,40 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 }
             }
         });
+    },
 
+    getErrors: function(){
+        var errors = [];
 
-//        var sql = 'select RowId, Name, Folder, folder as container, Folder.displayName as displayName from exp.data d where ';
-//        var pathString;
-//        if(this.fileNames.length){
-//            sql += ' (container = \''+LABKEY.container.id+'\' and run is null AND (';
-//            var sep = '';
-//            Ext.each(this.fileNames, function(f){
-//                pathString = this.path.replace(/^\./, '') + f;
-//                sql += sep + '(name = \''+f+'\' AND (DataFileUrl LIKE \'%@files' + pathString + '\' OR DataFileUrl LIKE \'%@pipeline' + pathString + '\'))';
-//                sep = ' OR ';
-//            }, this);
-//            sql += '))';
-//        }
-//
-//        if(this.fileIds.length){
-//            if(this.fileNames.length)
-//                sql += ' OR ';
-//            sql += 'rowid IN (\''+(this.fileIds.join('\',\''))+'\')';
-//        }
-//        //console.log(sql);
-//
-//        this.callParent([sql]);
+        var sections = this.query('sequenceanalysis-analysissectionpanel');
+        Ext4.Array.forEach(sections, function(s){
+            var errs = s.getErrors();
+            if (errs.length){
+                errors = errors.concat(errs);
+            }
+        }, this);
+
+        errors = Ext4.unique(errors);
+        return errors;
     },
 
     getJsonParams: function(){
-        var fields = this.callParent();
-
-        if(!fields)
+        var errors = this.getErrors();
+        if (errors.length){
+            Ext4.Msg.alert('Error', errors.join('<br>'));
             return;
+        }
 
+        var json = {
+            version: 2
+        };
+
+        //first add the general params
+        Ext4.apply(json, this.down('#runInformation').getForm().getValues());
+
+        //and readset information
         this.readsetStore.each(function(rec, idx){
-            fields['sample_'+idx] = {
+            json['sample_' + idx] = {
                 readsetname: rec.get('name'),
                 readset: rec.get('rowid'),
                 platform: rec.get('platform'),
@@ -555,79 +385,21 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 instrument_run_id: rec.get('instrument_run_id')
             };
         }, this);
-        var error;
 
-//        if(this.down('#usePairedEnd').getValue()){
-//            var aligner = this.down('#alignerField');
-//            if(aligner){
-//                var recIdx = aligner.store.find('name', aligner.getValue(), null, null, null, true);
-//                var rec = aligner.store.getAt(recIdx);
-//                var items = rec.get('jsonconfig') ? Ext4.JSON.decode(rec.get('jsonconfig')) : new Array();
-//                if(!items || !items[0] || items[0].name != 'pairedEnd'){
-//                    alert('The aligner ' + aligner.getValue() + ' does not support paired end reads');
-//                    return;
-//                }
-//            }
-//        }
-
-        //a dirty fix to allow user-supplied reference sequences
-        if(this.down('#virusRefType') && this.down('#virusRefType').checked){
-            fields['virus.virus_strain'] = fields['virus.custom_strain_name'];
-        }
-
-        this.down('#adapterPanel').down('gridpanel').store.each(function(r, i){
-            if(!r.data.adapterName){
-                alert('Missing name for one or more adapters');
-                error = 1;
-            }
-            if(!r.data.adapterSequence){
-                alert('Missing sequence for one or more adapters');
-                error = 1;
-            }
-            if(!r.data.trim5 && !r.data.trim3){
-                alert('Adapter: '+r.name+' must be trimmed from either 5\' or 3\' end');
-                error = 1;
-            }
-
-            fields['adapter_'+i] = [r.data.adapterName, r.data.adapterSequence, r.data.trim5==true, r.data.trim3==true, r.data.palindrome];
-        });
-
-        return fields;
-    },
-
-    onPerformAlignmentCheck: function(btn, val, oldVal){
-        val = btn.getValue();
-        var panel = btn.up('#alignment');
-        panel.items.each(function(item){
-            if(item.name != 'doAlignment')
-                panel.remove(item);
+        //then append each section
+        var sections = this.query('sequenceanalysis-analysissectionpanel');
+        Ext4.Array.forEach(sections, function(s){
+            Ext4.apply(json, s.toJSON());
         }, this);
 
-        if(val){
-            panel.add({
-                xtype: 'refsequencepanel'
-            },{
-                xtype: 'displayfield',
-                fieldLabel: 'Alignment Settings'
-            },{
-                xtype: 'alignerpanel',
-                value: 'bwasw'
-            });
-
-            this.down('#reportPanel').setDisabled(false);
-            this.down('#snpPanel').setDisabled(false);
-        }
-        else {
-            this.down('#reportPanel').setDisabled(true);
-            this.down('#snpPanel').setDisabled(true);
-        }
+        return json;
     },
 
     populateSamples: Ext4.emptyFn,
 
     getFilePanelCfg: function(){
         return {
-            xtype:'panel',
+            xtype: 'panel',
             border: true,
             title: 'Selected Readsets',
             itemId: 'files',
@@ -637,11 +409,14 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 style: 'padding: 5px;'
             },
             items: [{
+                html: 'Below are the readsets that will be analyzed.  It is recommended that you view the FASTQC report (link on the right) for these samples prior to analysis.  This report provides a variety of useful information that informs how to preprocess the reads, including per-cycle quality scores (informs trimming), and overrepresented sequences (which may identify adapters not yet clipped).',
+                style: 'padding-bottom: 10px;'
+            },{
                 xtype: 'dataview',
                 store: this.readsetStore,
-                itemSelector:'tr.file_list',
+                itemSelector: 'tr.file_list',
                 tpl: [
-                    '<table class="fileNames"><tr class="fileNames"><td>Id</td><td>Readset Name</td><td>Sample Id</td><td>Platform</td><td>File 1</td><td>File 2</td><td>Folder</td></tr>',
+                    '<table class="fileNames"><tr class="fileNames"><td>Readset Id</td><td>Readset Name</td><td>Sample Id</td><td>Platform</td><td>File 1</td><td>File 2</td><td>Folder</td><td></td></tr>',
                     '<tpl for=".">',
                         '<tr class="file_list">',
                         '<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "sequenceanalysis", "query.queryName":"sequence_readsets", "query.rowId~eq": values.rowid})]}" target="_blank">{rowid:htmlEncode}</a></td>',
@@ -651,7 +426,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                                 '<a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "laboratory", "query.queryName":"samples", "query.rowid~eq": values.sampleid})]}" target="_blank">{sampleid:htmlEncode}</a>',
                             '</tpl>',
                         '</td>',
-                        //'<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "laboratory", "query.queryName":"subjects", "query.rowid~eq": values.subjectid})]}" target="_blank">{subjectid:htmlEncode}</a></td>',
                         '<td>{platform:htmlEncode}</td>',
                         '<td',
                             '<tpl if="values.fileid && !values[\'fileid/fileexists\']"> style="background: red;" data-qtip="File does not exist"</tpl>',
@@ -661,12 +435,21 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                         '><a href="{[LABKEY.ActionURL.buildURL("experiment", "showData", values.queryContainerPath, {rowId: values.fileid2})]}" target="_blank">{[Ext4.htmlEncode(values["fileid2/name"])]}</a></td>',
 
                         '<td><a href="{[LABKEY.ActionURL.buildURL("project", "start", values["container/path"], {})]}" target="_blank">{[Ext4.htmlEncode(values["container/displayName"])]}</a></td>',
-                        //'<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", null, {schemaName: "sequenceanalysis", queryName: "sequence_analyses", "query.inputfile~eq":values.RowId, "query.containerFilterName":"AllFolders"})]}" target="_blank">Click to View Other Analyses</a></td>',
+                        '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "fastqcReport", values["container/path"], {readsets: values.rowid})]}" target="_blank">View FASTQC Report</a></td>',
                         '</tr>',
                     '</tpl>',
                     '</table>'
                 ]
             }]
         }
+    },
+
+    applySavedValues: function(values){
+        this.down('sequenceanalysis-alignmentpanel').down('#doAlignment').setValue(!!values.alignment);
+
+        var sections = this.query('sequenceanalysis-analysissectionpanel');
+        Ext4.Array.forEach(sections, function(s){
+            s.applySavedValues(values);
+        }, this);
     }
 });

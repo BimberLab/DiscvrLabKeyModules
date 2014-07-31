@@ -1,0 +1,29 @@
+package org.labkey.sequenceanalysis.api.pipeline;
+
+import org.apache.log4j.Logger;
+import org.labkey.api.pipeline.PipelineJob;
+
+import java.io.File;
+import java.util.Map;
+
+/**
+ * User: bimber
+ * Date: 6/13/2014
+ * Time: 1:21 PM
+ */
+public interface PipelineContext
+{
+    public Logger getLogger();
+
+    public PipelineJob getJob();
+
+    /**
+     * This is the directory where most of the work should take place, usually the remote pipeline working folder.
+     */
+    public File getWorkingDirectory();
+
+    /**
+     * This is the directory where the source files were located and where we expect to deposit the files on completion.
+     */
+    public File getSourceDirectory();
+}

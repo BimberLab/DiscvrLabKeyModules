@@ -13,7 +13,6 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 11/25/12
  * Time: 12:01 AM

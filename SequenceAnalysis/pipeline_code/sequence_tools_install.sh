@@ -24,7 +24,7 @@
 # Prior to using this script, you should run and configure CPAN and the package manager for your OS (ie. yum or apt-get).
 # This script is designed to be run as root, using a command similar to:
 #
-# bash sequence_tools_install.sh | tee sequence_tools_install.log
+# bash sequence_tools_install.sh -d /usr/local/labkey/ | tee sequence_tools_install.log
 #
 # NOTE: this script will delete any previously downloaded versions of these tools, assuming they were downloaded to the location
 # expected by this script.  This is deliberate so that the script can be re-run to perform incremental upgrades of these tools.
@@ -43,6 +43,7 @@ do
   case $arg in
     d)
        LK_HOME=$OPTARG
+       LK_HOME=${LK_HOME%/}
        echo "LK_HOME = ${LK_HOME}"
        ;;
     f)
@@ -109,10 +110,10 @@ echo ""
 
 if [ $(which yum) ]; then
     echo "Using Yum"
-    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion perl-Pod-Simple cpan git cmake
+    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion cpan git cmake liblzf-devel
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
-    apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev libmodule-build-perl libmodule-build-cipux-perl libtest-most-perl python-dev unzip zip ncftp gcc make perl libgd-gd2-perl libcgi-session-perl libclass-base-perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake
+    apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake
 else
     echo "No known package manager present, aborting"
     exit 1
@@ -285,6 +286,36 @@ else
 fi
 
 #
+#tabix
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install tabix"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/tabix || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf tabix-0.2.6*
+    rm -Rf $LKTOOLS_DIR/tabix
+    rm -Rf $LKTOOLS_DIR/bgzip
+
+    wget wget http://downloads.sourceforge.net/project/samtools/tabix/tabix-0.2.6.tar.bz2
+    bunzip2 tabix-0.2.6.tar.bz2
+    tar -xf tabix-0.2.6.tar
+    echo "Compressing TAR"
+    bzip2 tabix-0.2.6.tar
+    cd tabix-0.2.6
+    make
+    ln -s $LKSRC_DIR/tabix-0.2.6/tabix $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/tabix-0.2.6/bgzip $LKTOOLS_DIR
+else
+    echo "Already installed"
+fi
+
+#
 #blat
 #
 echo ""
@@ -425,13 +456,37 @@ then
     rm -Rf $LKTOOLS_DIR/bowtie
     rm -Rf $LKTOOLS_DIR/bowtie-build
 
-    wget http://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.0.1/bowtie-1.0.1-src.zip
-    unzip bowtie-1.0.1-src.zip
+    wget http://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.0.1/bowtie-1.0.1-linux-x86_64.zip
+    unzip bowtie-1.0.1-linux-x86_64.zip
     cd bowtie-1.0.1
-    make
 
     ln -s $LKSRC_DIR/bowtie-1.0.1/bowtie $LKTOOLS_DIR
     ln -s $LKSRC_DIR/bowtie-1.0.1/bowtie-build $LKTOOLS_DIR
+else
+    echo "Already installed"
+fi
+
+#
+#cutadapt
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install cutadapt"
+echo ""
+cd $LKSRC_DIR
+
+if [[ $(which cutadapt) || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+
+    if [ $(which apt-get) ]; then
+        apt-get -q -y install python-pip
+    elif [ $(which yum) ]; then
+        yum -y install python-pip
+    fi
+
+    pip install cutadapt
 else
     echo "Already installed"
 fi
@@ -724,6 +779,31 @@ else
 fi
 
 #
+#varscan2
+#
+
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing Varscan2"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/VarScan2.jar || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf VarScan.v2.3.6.jar
+    rm -Rf $LKTOOLS_DIR/VarScan2.jar
+
+    wget http://downloads.sourceforge.net/project/varscan/VarScan.v2.3.6.jar
+    ln -s $LKSRC_DIR/VarScan.v2.3.6.jar $LKTOOLS_DIR/VarScan2.jar
+else
+    echo "Already installed"
+fi
+
+
+#
+
+#
 #variscan
 #
 
@@ -812,79 +892,108 @@ else
     echo "Already installed"
 fi
 
+
 #
-# V-Phaser 2
+#muscle
 #
 
 echo ""
 echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Installing V-Phaser 2"
+echo "Installing Trimmomatic"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/variant_caller || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/trimmomatic.jar || ! -z $FORCE_REINSTALL ]];
 then
-    rm -Rf bamtools*
-    rm -Rf v_phaser_2*
-    rm -Rf VPhaser-2*
-    rm -Rf $LKTOOLS_DIR/variant_caller
+    rm -Rf Trimmomatic-0.32*
+    rm -Rf $LKTOOLS_DIR/trimmomatic.jar
 
-    echo "First download/install bamtools"
-    #mkdir bamtools
-    #cd bamtools
-    git clone git://github.com/pezmaster31/bamtools.git
-    cd bamtools/src
-    cmake ..
-    make
+    wget http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.32.zip
+    unzip Trimmomatic-0.32.zip
+    cd Trimmomatic-0.32
 
-    echo "now download VPhaser2"
-    cd ../../
-    wget http://www.broadinstitute.org/software/viral/v_phaser_2/v_phaser_2.zip
-    unzip v_phaser_2.zip
-    cd VPhaser-2-02112013/src
-
-    #NOTE: I am adding this line so the tools will compile.  If a future version fixes this, it should be reverted
-    sed '24i\#include <climits>' bam_manip.h > bam_manip.h.tmp
-    rm bam_manip.h
-    mv bam_manip.h.tmp bam_manip.h
-
-    make MYPATH=${LKSRC_DIR}/bamtools
-
-    ln -s $LKSRC_DIR/VPhaser-2-02112013/bin/variant_caller $LKTOOLS_DIR/variant_caller
+    ln -s $LKSRC_DIR/Trimmomatic-0.32/trimmomatic-0.32.jar $LKTOOLS_DIR/trimmomatic.jar
 
 else
     echo "Already installed"
 fi
+
+
+#
+# V-Phaser 2
+#
+
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Installing V-Phaser 2"
+#echo ""
+#cd $LKSRC_DIR
+#
+#if [[ ! -e ${LKTOOLS_DIR}/variant_caller || ! -z $FORCE_REINSTALL ]];
+#then
+#    rm -Rf bamtools*
+#    rm -Rf v_phaser_2*
+#    rm -Rf VPhaser-2*
+#    rm -Rf $LKTOOLS_DIR/variant_caller
+#
+#    echo "First download/install bamtools"
+#    #mkdir bamtools
+#    #cd bamtools
+#    git clone git://github.com/pezmaster31/bamtools.git
+#    cd bamtools/src
+#    cmake ..
+#    make all -lz
+#    ln -s ${LKSRC_DIR}/bamtools/lib/libbamtools.so.2.3.0 /usr/lib/
+#
+#    echo "now download VPhaser2"
+#    cd ../../
+#    wget http://www.broadinstitute.org/software/viral/v_phaser_2/v_phaser_2.zip
+#    unzip v_phaser_2.zip
+#    cd VPhaser-2-02112013/src
+#
+#    #NOTE: I am adding this line so the tools will compile.  If a future version fixes this, it should be reverted
+#    sed '24i\#include <climits>' bam_manip.h > bam_manip.h.tmp
+#    rm bam_manip.h
+#    mv bam_manip.h.tmp bam_manip.h
+#
+#    make MYPATH=${LKSRC_DIR}/bamtools
+#
+#    ln -s $LKSRC_DIR/VPhaser-2-02112013/bin/variant_caller $LKTOOLS_DIR/variant_caller
+#
+#else
+#    echo "Already installed"
+#fi
 
 
 #
 # LoFreq
 #
-
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Installing LoFreq"
-echo ""
-cd $LKSRC_DIR
-
-if [[ $(which apt-get) || ! -z $FORCE_REINSTALL ]];
-then
-    rm -Rf lofreq-0.6.1*
-    rm -Rf lofreq_star-2.0.0-rc-1*
-    rm -Rf $LKTOOLS_DIR/lofreq
-
-    wget http://downloads.sourceforge.net/project/lofreq/lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
-    gunzip lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
-    tar -xf lofreq_star-2.0.0-rc-1.linux-x86-64.tar
-    gzip lofreq_star-2.0.0-rc-1.linux-x86-64.tar
-
-    cd lofreq_star-2.0.0-rc-1
-    bash binary_installer.sh
-else
-    echo "Already installed"
-fi
+#
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Installing LoFreq"
+#echo ""
+#cd $LKSRC_DIR
+#
+#if [[ $(which apt-get) || ! -z $FORCE_REINSTALL ]];
+#then
+#    rm -Rf lofreq-0.6.1*
+#    rm -Rf lofreq_star-2.0.0-rc-1*
+#    rm -Rf $LKTOOLS_DIR/lofreq
+#
+#    wget http://downloads.sourceforge.net/project/lofreq/lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
+#    gunzip lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
+#    tar -xf lofreq_star-2.0.0-rc-1.linux-x86-64.tar
+#    gzip lofreq_star-2.0.0-rc-1.linux-x86-64.tar
+#
+#    cd lofreq_star-2.0.0-rc-1
+#    bash binary_installer.sh
+#else
+#    echo "Already installed"
+#fi
 
 
 #
@@ -920,100 +1029,74 @@ fi
 #    echo "Already installed"
 #fi
 
+##
+##misc perl modules
+##
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Install All required Perl modules"
+#echo ""
 #
-#sequence perl code
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install SequenceAnalysis pipeline_code perl code from the SequenceAnalysis module"
-echo ""
-mkdir -p $LK_HOME/svn
-cd $LK_HOME/svn
-
-echo "Cleaning up previous installs"
-if [[ ! -e trunk ]];
-then
-    echo "Checking out pipeline code"
-    mkdir trunk
-    cd trunk
-
-    su labkey -c "svn co --no-auth-cache --username cpas --password cpas https://hedgehog.fhcrc.org/tor/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code"
-    chmod +x $LK_HOME/svn/trunk/pipeline_code/sequence_tools_install.sh
-else
-    echo "Updating pipeline code"
-    su labkey -c "svn update --no-auth-cache --username cpas --password cpas $LK_HOME/svn/trunk/pipeline_code/"
-fi
-
-
-#
-#misc perl modules
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install All required Perl modules"
-echo ""
-
-# preferentially use apt-get when available
-if [ $(which apt-get) ];
-then
-    apt-get -q -y install perl-base libclass-data-inheritable-perl libstatistics-descriptive-perl libgetopt-long-descriptive-perl libxml-sax-perl libxml-writer-perl libxml-xpath-perl libcrypt-ssleay-perl libtest-cpan-meta-perl libtest-warn-perl libproc-processtable-perl libtext-diff-perl liblist-moreutils-perl libtest-exception-perl libjson-perl libyaml-perl libstring-approx-perl libmath-round-perl libalgorithm-diff-perl libfile-homedir-perl libipc-run-perl libipc-run-safehandles-perl libfile-util-perl libarray-compare-perl libset-scalar-perl libsort-naturally-perl libdata-stag-perl libtest-most-perl liburi-perl
-elif [ $(which yum) ];
-then
-    #most packages can be installed using yum
-    yum -y install perl-JSON.noarch perl-YAML.noarch perl-IPC-Run.noarch perl-Class-Data-Inheritable.noarch perl-libxml-perl.noarch perl-XML-SAX.noarch perl-XML-SAX-Writer.noarch perl-XML-Simple.noarch perl-XML-Twig.noarch perl-XML-DOM.noarch perl-XML-DOM-XPath.noarch perl-Crypt-SSLeay.x86_64 perl-Test-Warn.noarch perl-Test-Exception.noarch perl-Test-Simple.x86_64 perl-Text-Diff.noarch perl-List-MoreUtils.x86_64 perl-Algorithm-Diff.noarch perl-File-HomeDir.noarch perl-URI.noarch
-    cpan -i Proc::ProcessTable String::Approx Math::Round File::Util XML::Writer
-else
-    cpan -i JSON YAML IPC::Run Class::Data::Inheritable Statistics::Descriptive XML::Parser::PerlSAX XML::SAX XML::SAX::Writer XML::Simple XML::Twig XML::DOM::XPath Test::CPAN::Meta::JSON Test::Warn Proc::ProcessTable Text::Diff List::Util Test::Exception String::Approx Math::Round Algorithm::Diff File::HomeDir File::Util Array::Compare Set::Scalar Sort::Naturally Data::Stag Test::Most URI XML::Writer
-fi
+## preferentially use apt-get when available
+#if [ $(which apt-get) ];
+#then
+#    apt-get -q -y install perl-base libclass-data-inheritable-perl libstatistics-descriptive-perl libgetopt-long-descriptive-perl libxml-sax-perl libxml-writer-perl libxml-xpath-perl libcrypt-ssleay-perl libtest-cpan-meta-perl libtest-warn-perl libproc-processtable-perl libtext-diff-perl liblist-moreutils-perl libtest-exception-perl libjson-perl libyaml-perl libstring-approx-perl libmath-round-perl libalgorithm-diff-perl libfile-homedir-perl libipc-run-perl libipc-run-safehandles-perl libfile-util-perl libarray-compare-perl libset-scalar-perl libsort-naturally-perl libdata-stag-perl libtest-most-perl liburi-perl
+#elif [ $(which yum) ];
+#then
+#    #most packages can be installed using yum
+#    yum -y install perl-JSON.noarch perl-YAML.noarch perl-IPC-Run.noarch perl-Class-Data-Inheritable.noarch perl-libxml-perl.noarch perl-XML-SAX.noarch perl-XML-SAX-Writer.noarch perl-XML-Simple.noarch perl-XML-Twig.noarch perl-XML-DOM.noarch perl-XML-DOM-XPath.noarch perl-Crypt-SSLeay.x86_64 perl-Test-Warn.noarch perl-Test-Exception.noarch perl-Test-Simple.x86_64 perl-Text-Diff.noarch perl-List-MoreUtils.x86_64 perl-Algorithm-Diff.noarch perl-File-HomeDir.noarch perl-URI.noarch
+#    cpan -i Proc::ProcessTable String::Approx Math::Round File::Util XML::Writer
+#else
+#    cpan -i JSON YAML IPC::Run Class::Data::Inheritable Statistics::Descriptive XML::Parser::PerlSAX XML::SAX XML::SAX::Writer XML::Simple XML::Twig XML::DOM::XPath Test::CPAN::Meta::JSON Test::Warn Proc::ProcessTable Text::Diff List::Util Test::Exception String::Approx Math::Round Algorithm::Diff File::HomeDir File::Util Array::Compare Set::Scalar Sort::Naturally Data::Stag Test::Most URI XML::Writer
+#fi
 
 #this is no longer necessary for the pipeline
 #cpan -i LabKey::Query
 
 
+##
+##bioperl
+##
 #
-#bioperl
+#if [[ $(perldoc -l Bio::SeqIO) || ! -z $FORCE_REINSTALL ]];
+#then
+#    echo "BioPerl already installed"
+#else
+#    if [ $(which apt-get) ];
+#    then
+#        echo "Installing BioPerl using apt-get"
+#        apt-get -q -y install libbio-perl-perl
+#    else
+#        cpan -i -f BioPerl
+#    fi
+#fi
 #
-
-if [[ $(perldoc -l Bio::SeqIO) || ! -z $FORCE_REINSTALL ]];
-then
-    echo "BioPerl already installed"
-else
-    if [ $(which apt-get) ];
-    then
-        echo "Installing BioPerl using apt-get"
-        apt-get -q -y install libbio-perl-perl
-    else
-        cpan -i -f BioPerl
-    fi
-fi
-
-if [[ $(perldoc -l Bio::DB::Sam) || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Bio::DB::Sam already installed"
-else
-    if [ $(which apt-get) ];
-    then
-        echo "Installing Bio::DB::Sam using apt-get"
-        apt-get -q -y install libbio-samtools-perl
-    else
-        cpan -i Bio::DB::Sam
-    fi
-fi
-
-if [[ $(perldoc -l Bio::Tools::Run::BWA) || ! -z $FORCE_REINSTALL ]];
-then
-    echo "BioPerl-Run already installed"
-else
-    if [ $(which apt-get) ];
-    then
-        echo "Installing BioPerl-Run using apt-get"
-        apt-get -q -y install bioperl-run
-    else
-        cpan -i -f CJFIELDS/BioPerl-Run-1.006900.tar.gz
-    fi
-fi
+#if [[ $(perldoc -l Bio::DB::Sam) || ! -z $FORCE_REINSTALL ]];
+#then
+#    echo "Bio::DB::Sam already installed"
+#else
+#    if [ $(which apt-get) ];
+#    then
+#        echo "Installing Bio::DB::Sam using apt-get"
+#        apt-get -q -y install libbio-samtools-perl
+#    else
+#        cpan -i Bio::DB::Sam
+#    fi
+#fi
+#
+#if [[ $(perldoc -l Bio::Tools::Run::BWA) || ! -z $FORCE_REINSTALL ]];
+#then
+#    echo "BioPerl-Run already installed"
+#else
+#    if [ $(which apt-get) ];
+#    then
+#        echo "Installing BioPerl-Run using apt-get"
+#        apt-get -q -y install bioperl-run
+#    else
+#        cpan -i -f CJFIELDS/BioPerl-Run-1.006900.tar.gz
+#    fi
+#fi
 
 
 echo ""

@@ -12,10 +12,6 @@
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.FileCleanupTask$Factory">
                     <!--<property name="location" value="sequenceAnalysis" />-->
-                    <property name="join" value="false" />
-                </bean>
-                <bean class="org.labkey.sequenceanalysis.pipeline.FileCleanupTask$Factory">
-                    <!--<property name="location" value="sequenceAnalysis" />-->
                     <property name="join" value="true" />
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.PrepareAlignerIndexesTask$Factory">
@@ -28,7 +24,7 @@
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceAnalysisTask$Factory">
                     <property name="location" value="webserver" />
-                    <property name="join" value="true" />
+                    <property name="join" value="false" />
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.ReadsetImportTask$Factory">
                     <property name="location" value="webserver" />
@@ -49,6 +45,10 @@
                 <bean class="org.labkey.sequenceanalysis.pipeline.ReadsetCreationTask$Factory">
                     <property name="location" value="webserver" />
                     <property name="join" value="true" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.CreateReferenceLibraryTask$Factory">
+                    <property name="location" value="webserver" />
+                    <!--<property name="join" value="true" />-->
                 </bean>
             </list>
         </property>
@@ -104,10 +104,22 @@
                         </list>
                     </property>
                 </bean>
+                <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
+                    <constructor-arg type="java.lang.Class" value="org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob"/>
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.CreateReferenceLibraryTask</value>
+                        </list>
+                    </property>
+                </bean>
             </list>
         </property>
     </bean>
 
+    <!-- This is intended to force registration of the SequencePipelineServer and also PipelineSteps -->
+    <bean id="sequencePipelineStartup" class="org.labkey.sequenceanalysis.PipelineStartup">
+
+    </bean>
 
     <!-- Tasks registered in experiment module -->
     <bean id="xarGeneratorId" class="org.labkey.api.pipeline.TaskId">

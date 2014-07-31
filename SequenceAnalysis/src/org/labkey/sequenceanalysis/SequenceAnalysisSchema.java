@@ -25,11 +25,7 @@ public class SequenceAnalysisSchema
     public static final String SCHEMA_NAME = "sequenceanalysis";
     public static final String TABLE_ANALYSES = "sequence_analyses";
     public static final String TABLE_COVERAGE = "sequence_coverage";
-    public static final String TABLE_READS = "sequence_reads";
     public static final String TABLE_READSETS = "sequence_readsets";
-    public static final String TABLE_ALIGNMENTS = "sequence_alignments";
-    public static final String TABLE_NT_SNPS = "nt_snps";
-    public static final String TABLE_AA_SNPS = "aa_snps";
     public static final String TABLE_REF_NT_SEQUENCES = "ref_nt_sequences";
     public static final String TABLE_REF_AA_SEQUENCES = "ref_aa_sequences";
     public static final String TABLE_SEQUENCE_PLATFORMS = "sequence_platforms";
@@ -43,8 +39,10 @@ public class SequenceAnalysisSchema
     public static final String TABLE_NT_SNP_BY_POS = "nt_snps_by_pos";
     public static final String TABLE_AA_SNP_BY_CODON = "aa_snps_by_codon";
     public static final String TABLE_BARCODES = "barcodes";
-
-    private static final String SCHMEA_DESCR = "This schema holds the data associated with the SequenceAnalysis module, which includes records of analysis runs, alignments and SNPs";
+    public static final String TABLE_REF_LIBRARIES = "reference_libraries";
+    public static final String TABLE_REF_LIBRARY_MEMBERS = "reference_library_members";
+    public static final String TABLE_SAVED_ANALYSES = "saved_analyses";
+    public static final String TABLE_LIBRARY_TRACKS = "reference_library_tracks";
 
     public static SequenceAnalysisSchema getInstance()
     {

@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 11/16/12
  * Time: 6:35 PM
@@ -79,7 +78,7 @@ public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReads
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();
-        _helper = new SequenceTaskHelper(job);
+        _helper = new SequenceTaskHelper(job, _wd);
 
         job.getLogger().info("Updating readsets");
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());

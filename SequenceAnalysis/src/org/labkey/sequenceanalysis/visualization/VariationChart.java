@@ -45,7 +45,6 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 2/23/14
  * Time: 8:34 AM

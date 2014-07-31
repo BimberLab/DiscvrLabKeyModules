@@ -20,11 +20,12 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.analysis.AASnp;
-import org.labkey.sequenceanalysis.analysis.NTSnp;
 import org.labkey.sequenceanalysis.model.SequenceModel;
+import org.labkey.sequenceanalysis.run.util.AASnp;
+import org.labkey.sequenceanalysis.run.util.NTSnp;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +34,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Created by IntelliJ IDEA.
  * User: bbimber
  * Date: 7/30/12
  * Time: 8:09 PM
@@ -41,7 +41,7 @@ import java.util.TreeMap;
 public class TranslatingReferenceSequence
 {
     int _id;
-    SequenceModel _nt;
+    RefNtSequenceModel _nt;
     SequenceModel[] _peptides;
 
     private final static Logger _log = Logger.getLogger(TranslatingReferenceSequence.class);
@@ -57,11 +57,9 @@ public class TranslatingReferenceSequence
         TableInfo tableNt = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
         SimpleFilter ntFilter = new SimpleFilter(FieldKey.fromString("rowid"), _id);
         TableSelector tsNt = new TableSelector(tableNt, ntFilter, null);
-        SequenceModel[] nts = tsNt.getArray(SequenceModel.class);
-        if (nts.length == 0)
+        _nt = tsNt.getObject(RefNtSequenceModel.class);
+        if (_nt == null)
             throw new RuntimeException("Unable to find NT Reference sequence with RowId: " + _id);
-
-        _nt = nts[0];
 
         //then cache AA records
         TableInfo tableAa = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES);

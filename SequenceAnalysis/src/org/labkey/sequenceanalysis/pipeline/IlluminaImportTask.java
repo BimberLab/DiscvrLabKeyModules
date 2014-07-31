@@ -51,7 +51,6 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
  * User: bbimber
  * Date: 4/22/12
  * Time: 4:09 PM
@@ -104,7 +103,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();
-        _helper = new SequenceTaskHelper(job);
+        _helper = new SequenceTaskHelper(job, _wd);
 
         List<RecordedAction> actions = new ArrayList<>();
 

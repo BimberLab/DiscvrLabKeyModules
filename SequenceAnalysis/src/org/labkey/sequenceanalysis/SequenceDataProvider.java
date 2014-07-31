@@ -20,17 +20,12 @@ import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.laboratory.AbstractDataProvider;
 import org.labkey.api.laboratory.LaboratoryService;
-import org.labkey.api.laboratory.QueryTabbedReportItem;
-import org.labkey.api.laboratory.SummaryNavItem;
-import org.labkey.api.laboratory.TabbedReportItem;
-import org.labkey.api.laboratory.assay.AssayNavItem;
-import org.labkey.api.ldk.AbstractNavItem;
-import org.labkey.api.ldk.NavItem;
 import org.labkey.api.laboratory.QueryCountNavItem;
+import org.labkey.api.laboratory.QueryTabbedReportItem;
 import org.labkey.api.laboratory.SimpleSettingsItem;
+import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.module.Module;
@@ -46,7 +41,6 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 10/6/12
  * Time: 1:08 PM

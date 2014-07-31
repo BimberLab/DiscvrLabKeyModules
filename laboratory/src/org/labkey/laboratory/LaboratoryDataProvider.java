@@ -66,22 +66,25 @@ public class LaboratoryDataProvider extends AbstractDataProvider
         _module = m;
     }
 
+    @Override
     public String getName()
     {
         return NAME;
     }
 
-    //TODO
+    @Override
     public ActionURL getInstructionsUrl(Container c, User u)
     {
         return null;
     }
 
+    @Override
     public List<NavItem> getDataNavItems(Container c, User u)
     {
         return Collections.emptyList();
     }
 
+    @Override
     public List<NavItem> getSampleNavItems(Container c, User u)
     {
         List<NavItem> items = new ArrayList<>();
@@ -95,6 +98,7 @@ public class LaboratoryDataProvider extends AbstractDataProvider
         return Collections.unmodifiableList(items);
     }
 
+    @Override
     public List<NavItem> getReportItems(Container c, User u)
     {
         List<NavItem> items = new ArrayList<>();
@@ -211,6 +215,7 @@ public class LaboratoryDataProvider extends AbstractDataProvider
         return Collections.unmodifiableList(items);
     }
 
+    @Override
     public List<NavItem> getMiscItems(Container c, User u)
     {
         List<NavItem> items = new ArrayList<NavItem>();
@@ -223,22 +228,25 @@ public class LaboratoryDataProvider extends AbstractDataProvider
         return Collections.unmodifiableList(items);
     }
 
+    @Override
     public JSONObject getTemplateMetadata(ViewContext ctx)
     {
         return new JSONObject();
     }
 
-    @NotNull
+    @Override @NotNull
     public Set<ClientDependency> getClientDependencies()
     {
         return Collections.emptySet();
     }
 
+    @Override
     public Module getOwningModule()
     {
         return _module;
     }
 
+    @Override
     public List<SummaryNavItem> getSummary(Container c, User u)
     {
         List<SummaryNavItem> items = new ArrayList<>();

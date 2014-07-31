@@ -33,7 +33,7 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.model.ReadsetModel;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 
 import java.sql.SQLException;
@@ -45,14 +45,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
  * User: bbimber
  * Date: 5/2/12
  * Time: 7:11 PM
  */
 public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Factory>
 {
-    private SequenceTaskHelper _taskHelper;
+    private SequencePipelineSettings _settings;
     private static final String ACTIONNAME = "Creating Readset";
 
     protected ReadsetCreationTask(Factory factory, PipelineJob job)
@@ -98,7 +97,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
     @Override
     public RecordedActionSet run() throws PipelineJobException
     {
-        _taskHelper = new SequenceTaskHelper(getJob());
+        _settings = new SequencePipelineSettings(getJob().getParameters());
 
         try
         {
@@ -120,8 +119,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
     private void importReadsets() throws PipelineJobException
     {
-        RecordedActionSet actions = getJob().getActionSet();
-        SequencePipelineSettings settings = getHelper().getSettings();
+        SequencePipelineSettings settings = getSettings();
         DbSchema schema = SequenceAnalysisSchema.getInstance().getSchema();
 
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
@@ -203,7 +201,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 {
                     // the rationale here is that an output file should always exist for each readset, unless the input was barcoded,
                     // in which case its possible to lack reads without the user knowing upfront
-                    if (!getHelper().getSettings().isDoBarcode())
+                    if (!getSettings().isDoBarcode())
                     {
                         throw new PipelineJobException("Unable to identify FASTQ for readset, expected: " + expectedName);
                     }
@@ -266,8 +264,8 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         }
     }
 
-    private SequenceTaskHelper getHelper()
+    private SequencePipelineSettings getSettings()
     {
-        return _taskHelper;
+        return _settings;
     }
 }

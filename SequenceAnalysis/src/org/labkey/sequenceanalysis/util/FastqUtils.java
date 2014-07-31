@@ -17,13 +17,17 @@ package org.labkey.sequenceanalysis.util;
 
 import net.sf.picard.fastq.FastqReader;
 import net.sf.picard.fastq.FastqRecord;
+import org.apache.commons.io.IOUtils;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
+import org.labkey.api.view.NotFoundException;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -33,7 +37,6 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 /**
- * Created by IntelliJ IDEA.
  * User: bbimber
  * Date: 12/24/11
  * Time: 8:18 AM
@@ -175,6 +178,46 @@ public class FastqUtils
         {
             if (reader != null)
                 reader.close();
+        }
+    }
+
+    public static void mergeFastqFiles(File output, File... inputs) throws IOException
+    {
+        if (!output.exists())
+        {
+            output.createNewFile();
+        }
+
+        FileInputStream in = null;
+        GZIPInputStream gis = null;
+        FileType gz = new FileType(".gz");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(output)))
+        {
+            for (File f : inputs)
+            {
+                if (!f.exists())
+                {
+                    throw new NotFoundException("File " + f.getPath() + " does not exist");
+                }
+                in = new FileInputStream(f);
+
+                if (gz.isType(f))
+                {
+                    gis = new GZIPInputStream(in);
+                    IOUtils.copy(gis, writer);
+                }
+                else
+                {
+                    IOUtils.copy(in, writer);
+                }
+            }
+        }
+        finally
+        {
+            if (in != null)
+                in.close();
+            if (gis != null)
+                gis.close();
         }
     }
 }

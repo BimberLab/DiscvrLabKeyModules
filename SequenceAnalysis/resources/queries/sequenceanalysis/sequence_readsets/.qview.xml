@@ -4,14 +4,17 @@
        <column name="name" />
        <column name="subjectid" />
        <column name="sampledate"/>
-       <column name="sampleid" />
+       <column name="platform" />
+       <column name="application" />
+       <column name="inputMaterial" />
        <column name="fileid" />
        <!--<column name="qc_file" />-->
        <column name="fileid2" />
        <!--<column name="qc_file2" />-->
        <column name="barcode5" />
        <column name="barcode3" />
-       <column name="platform" />
+       <column name="sampleid" />
+
        <column name="instrument_run_id" />
        <column name="runid"/>
        <column name="runid/JobId">

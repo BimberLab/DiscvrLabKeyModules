@@ -19,7 +19,6 @@ import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 
 /**
- * Created by IntelliJ IDEA.
  * User: bbimber
  * Date: 12/24/11
  * Time: 9:27 AM

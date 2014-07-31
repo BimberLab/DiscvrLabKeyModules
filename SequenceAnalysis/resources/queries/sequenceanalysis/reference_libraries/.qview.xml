@@ -1,0 +1,12 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <columns>
+       <column name="rowid" />
+       <column name="name" />
+       <column name="description" />
+       <column name="fasta_file" />
+       <column name="container" />
+   </columns>
+   <sorts>
+       <sort column="name"/>
+   </sorts>
+</customView>

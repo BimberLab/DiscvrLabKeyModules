@@ -6,7 +6,9 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.util.FileType;
-import org.labkey.sequenceanalysis.run.FastaIndexer;
+import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
+import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
 import java.util.Arrays;
@@ -14,7 +16,6 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 12/15/12
  * Time: 8:34 PM
@@ -44,8 +45,7 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
         @Override
         public boolean isParticipant(PipelineJob job)
         {
-            SequenceTaskHelper taskHelper = new SequenceTaskHelper(job);
-            return taskHelper.getSettings().isDoAlignment();
+            return SequenceTaskHelper.isAlignmentUsed(job);
         }
 
         public List<FileType> getInputTypes()
@@ -55,7 +55,7 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
 
         public String getStatusName()
         {
-            return "CREATING REFERENCE LIBRARY";
+            return ALIGNER_INDEXES_ACTIONNAME.toUpperCase();
         }
 
         public List<String> getProtocolActionNames()
@@ -84,55 +84,44 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();
-        _taskHelper = new SequenceTaskHelper(job);
-        getHelper().setWorkDir(_taskHelper.getSupport().getAnalysisDirectory());
+        _taskHelper = new SequenceTaskHelper(job, _wd);
 
-        getJob().getLogger().info("Creating Reference Library");
-        RecordedAction action = prepareReferenceLibrary();
+        RecordedAction action = ensureIndexExists();
 
         return new RecordedActionSet(action);
     }
 
-    private RecordedAction prepareReferenceLibrary() throws PipelineJobException
+    private RecordedAction ensureIndexExists() throws PipelineJobException
     {
+        getJob().getLogger().info(ALIGNER_INDEXES_ACTIONNAME);
+
         RecordedAction action = new RecordedAction(ALIGNER_INDEXES_ACTIONNAME);
 
+        ReferenceLibraryStep libraryStep = getHelper().getSingleStep(ReferenceLibraryStep.class).create(getHelper());
+        getJob().getLogger().debug("using reference library type: " + libraryStep.getProvider().getLabel());
+
+        AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
+
         File sharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
-        File refFasta = new File(sharedDirectory,  getHelper().getSettings().getRefDbFilename());
+        File refFasta = libraryStep.getExpectedFastaFile(sharedDirectory);
         if (!refFasta.exists())
         {
             throw new PipelineJobException("Reference fasta does not exist: " + refFasta.getPath());
         }
-        getHelper().addInput(action, ReferenceLibraryTask.REFERENCE_DB_FASTA, refFasta);
-        getHelper().addOutput(action, ReferenceLibraryTask.REFERENCE_DB_FASTA, refFasta);
+        getHelper().getFileManager().addInput(action, ReferenceLibraryTask.REFERENCE_DB_FASTA, refFasta);
+        getHelper().getFileManager().addOutput(action, ReferenceLibraryTask.REFERENCE_DB_FASTA, refFasta);
 
         FastaIndexer indexer = new FastaIndexer(getJob().getLogger());
-        File refFastaIndex = indexer.execute(refFasta);
+        File refFastaIndex = indexer.getExpectedIndexName(refFasta);
         if (!refFastaIndex.exists())
         {
-            throw new PipelineJobException("Reference fasta index does not exist: " + refFastaIndex.getPath());
+            indexer.execute(refFasta);
         }
-        getHelper().addOutput(action, "Reference DB FASTA Index", refFastaIndex);
+        getHelper().getFileManager().addOutput(action, "Reference DB FASTA Index", refFastaIndex);
 
-        createAlignerIndex(refFasta);
-
-        getHelper().addOutput(action, ReferenceLibraryTask.REFERENCE_DB_FASTA_OUTPUT, sharedDirectory);
-        for (File f : sharedDirectory.listFiles())
-        {
-            if (!f.equals(refFasta) && !f.equals(refFastaIndex))
-            {
-                getHelper().addDeferredIntermediateFile(f);
-            }
-        }
+        AlignmentStep.IndexOutput output = alignmentStep.createIndex(refFasta, refFasta.getParentFile());
+        getHelper().getFileManager().addStepOutputs(action, output);
 
         return action;
-    }
-
-    private void createAlignerIndex(File refFasta) throws PipelineJobException
-    {
-        String aligner = getHelper().getSettings().getAligner();
-
-        SequenceAlignmentTask.ALIGNER type = SequenceAlignmentTask.ALIGNER.valueOf(aligner);
-        type.createIndex(refFasta, getJob().getLogger());
     }
 }

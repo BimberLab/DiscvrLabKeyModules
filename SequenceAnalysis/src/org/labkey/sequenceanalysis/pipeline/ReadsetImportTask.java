@@ -47,7 +47,6 @@ import java.util.Set;
  *
  * If configured, it will also collect and store sequence metrics on the FASTQ files.
  *
- * Created by IntelliJ IDEA.
  * User: bbimber
  * Date: 4/23/12
  * Time: 8:48 AM
@@ -117,7 +116,7 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
     {
         PipelineJob job = getJob();
         _support = (FileAnalysisJobSupport) job;
-        _taskHelper = new SequenceTaskHelper(job, _wd.getDir());
+        _taskHelper = new SequenceTaskHelper(job, _wd);
         _taskHelper.createExpDatasForInputs();
         getJob().getLogger().info("Importing sequence data");
 
@@ -133,7 +132,7 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
 
         try
         {
-            List<File> needsNormalization = _taskHelper.getFilesToNormalize(_support.getInputFiles());
+            List<File> needsNormalization = SequenceNormalizationTask.getFilesToNormalize(getJob(), _support.getInputFiles());
             if (needsNormalization.size() == 0)
             {
                 getJob().getLogger().info("No files required external normalization, processing inputs locally");
@@ -146,13 +145,14 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
                         continue;
                     }
 
-                    getHelper().addInput(action, getHelper().FASTQ_DATA_INPUT_NAME, f);
+                    getHelper().getFileManager().addInput(action, getHelper().FASTQ_DATA_INPUT_NAME, f);
 
                     File output;
                     if (!gz.isType(f))
                     {
                         getJob().getLogger().info("\tcompressing input file: " + f.getName());
                         output = new File(getHelper().getSupport().getAnalysisDirectory(), f.getName() + ".gz");
+                        //note: the non-compressed file will potentially be deleted during cleanup, depending on the selection for input handling
                         Compress.compressGzip(f, output);
                     }
                     else
@@ -160,12 +160,12 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
                         output = f;
                     }
 
-                    getHelper().addOutput(action, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, output);
-                    getHelper().addUnalteredOutput(output); //even if compressed, it was not really changed
-                    getHelper().addFinalOutputFile(output);
+                    getHelper().getFileManager().addOutput(action, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, output);
+                    getHelper().getFileManager().addUnalteredOutput(output); //even if compressed, it was not really changed
+                    getHelper().getFileManager().addFinalOutputFile(output);
                 }
 
-                getHelper().handleInputs(_wd);
+                getHelper().getFileManager().handleInputs();
             }
             else
             {
@@ -182,7 +182,7 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
             throw new PipelineJobException(e);
         }
 
-        getHelper().cleanup(_wd);
+        getHelper().getFileManager().cleanup();
 
         return new RecordedActionSet(actions);
     }

@@ -3,7 +3,6 @@ package org.labkey.sequenceanalysis.model;
 import org.biojava3.core.sequence.DNASequence;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 11/28/12
  * Time: 4:15 PM

@@ -4,7 +4,6 @@ import org.biojava3.core.sequence.DNASequence;
 import org.json.JSONArray;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 11/25/12
  * Time: 12:03 AM
@@ -15,7 +14,6 @@ public class AdapterModel extends SequenceTag
     private String _sequence;
     private boolean _trim5;
     private boolean _trim3;
-    private boolean _palindrome = false;
 
     public AdapterModel()
     {
@@ -29,10 +27,6 @@ public class AdapterModel extends SequenceTag
         ad._sequence = adapterJson.getString(1);
         ad._trim5 = adapterJson.getBoolean(2);
         ad._trim3 = adapterJson.getBoolean(3);
-
-        String mode = adapterJson.getString(4);
-        if(mode.equalsIgnoreCase("palindrome"))
-            ad._palindrome = true;
 
         return ad;
     }
@@ -57,26 +51,10 @@ public class AdapterModel extends SequenceTag
         return _trim3;
     }
 
-    public boolean isPalindrome()
-    {
-        return _palindrome;
-    }
-
     public String getFastaLines()
     {
         StringBuilder sb = new StringBuilder();
-        if (isPalindrome())
-        {
-            String name = "Prefix" + getName() + "/1";
-            writeSequence(sb, name);
-
-            name = "Prefix" + getName() + "/2";
-            writeSequence(sb, name);
-        }
-        else
-        {
-            writeSequence(sb, getName());
-        }
+        writeSequence(sb, getName());
 
         return sb.toString();
     }
@@ -115,11 +93,6 @@ public class AdapterModel extends SequenceTag
     public void setTrim3(boolean trim3)
     {
         _trim3 = trim3;
-    }
-
-    public void setPalindrome(boolean palindrome)
-    {
-        _palindrome = palindrome;
     }
 }
 

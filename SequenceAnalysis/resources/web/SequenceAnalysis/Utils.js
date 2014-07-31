@@ -8,8 +8,6 @@ Ext4.namespace('SequenceAnalysis.Utils');
 
 SequenceAnalysis.Utils = new function(){
     return {
-        HEADER_TEXT: 'These tools and reports were originally designed and developed by Ben Bimber, Ph.D.  Feel free to <a href="' + LABKEY.ActionURL.buildURL('laboratory', 'contact') + '" target="_blank">contact</a> with questions.',
-
         isEmptyObj: function(ob){
             for(var i in ob){
                 return false;

@@ -40,51 +40,6 @@
             </ns:column>
         </ns:columns>
     </ns:table>
-    <ns:table tableName="aligners" tableDbType="TABLE" useColumnOrder="true">
-        <ns:auditLogging>DETAILED</ns:auditLogging>
-        <ns:tableTitle>Aligners</ns:tableTitle>
-        <ns:pkColumnName>rowid</ns:pkColumnName>
-        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
-        <ns:columns>
-            <ns:column columnName="rowid">
-                <ns:isAutoInc>true</ns:isAutoInc>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:columnTitle>Read Id</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="name">
-                <ns:nullable>false</ns:nullable>
-            </ns:column>
-            <ns:column columnName="displayname">
-                <ns:nullable>true</ns:nullable>
-            </ns:column>
-            <ns:column columnName="description">
-                <ns:nullable>true</ns:nullable>
-                <ns:inputType>textarea</ns:inputType>
-            </ns:column>
-            <ns:column columnName="jsonconfig">
-                <ns:nullable>true</ns:nullable>
-                <ns:inputType>textarea</ns:inputType>
-            </ns:column>
-            <ns:column columnName="created">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="modified">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <!--<ns:isHidden>true</ns:isHidden>-->
-            </ns:column>
-        </ns:columns>
-    </ns:table>
     <ns:table tableName="sequence_platforms" tableDbType="TABLE" useColumnOrder="true">
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Sequence Platforms</ns:tableTitle>
@@ -94,6 +49,16 @@
             <ns:column columnName="platform">
             </ns:column>
             <ns:column columnName="aliases">
+            </ns:column>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="sequence_applications" tableDbType="TABLE" useColumnOrder="true">
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableTitle>Sequence Applications</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
+        <ns:pkColumnName>platform</ns:pkColumnName>
+        <ns:columns>
+            <ns:column columnName="application">
             </ns:column>
         </ns:columns>
     </ns:table>
@@ -266,318 +231,6 @@
                 <ns:nullable>true</ns:nullable>
                 <ns:scale>29</ns:scale>
                 <!--<ns:isHidden>true</ns:isHidden>-->
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="sequence_reads" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
-        <ns:tableTitle>Sequence Reads</ns:tableTitle>
-        <ns:pkColumnName>rowid</ns:pkColumnName>
-        <ns:tableUrl>/query/recordDetails.view?schemaName=sequenceanalysis&amp;query.queryName=Sequence_Reads&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
-        <ns:insertUrl></ns:insertUrl>
-        <ns:importUrl></ns:importUrl>
-        <ns:deleteUrl></ns:deleteUrl>
-        <ns:updateUrl></ns:updateUrl>
-        <ns:titleColumn>rowid</ns:titleColumn>
-        <ns:columns>
-            <ns:column columnName="rowid">
-                <ns:isAutoInc>true</ns:isAutoInc>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:columnTitle>Read Id</ns:columnTitle>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="analysis_id">
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>sequence_analyses</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="readset">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Readset</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>sequence_readsets</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-                <!--<ns:url>/query/executeQuery.view?-->
-                    <!--schemaName=sequenceanalysis&amp;-->
-                    <!--query.queryName=sequence_readsets&amp;-->
-                    <!--query.rowid~eq=${readset}&amp;-->
-                <!--</ns:url>-->
-            </ns:column>
-            <ns:column columnName="name">
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>220</ns:scale>
-            </ns:column>
-            <ns:column columnName="sequence">
-                <ns:inputType>textarea</ns:inputType>
-            </ns:column>
-            <ns:column columnName="quality">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Quality Score</ns:columnTitle>
-                <ns:inputType>textarea</ns:inputType>
-            </ns:column>
-            <ns:column columnName="translation">
-                <ns:nullable>true</ns:nullable>
-                <ns:inputType>textarea</ns:inputType>
-            </ns:column>
-            <ns:column columnName="num_reads">
-                <ns:columnTitle>Number of Reads</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="chemistry">
-                <ns:nullable>true</ns:nullable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>sequence_platforms</ns:fkTable>
-                    <ns:fkColumnName>platform</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="comments">
-                <ns:nullable>true</ns:nullable>
-                <ns:inputType>textarea</ns:inputType>
-            </ns:column>
-            <ns:column columnName="container">
-                <!--<ns:isHidden>true</ns:isHidden>-->
-            </ns:column>
-            <ns:column columnName="createdby">
-                <!--<ns:isHidden>true</ns:isHidden>-->
-            </ns:column>
-            <ns:column columnName="created">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <!--<ns:isHidden>true</ns:isHidden>-->
-            </ns:column>
-            <ns:column columnName="modifiedby">
-                <!--<ns:isHidden>true</ns:isHidden>-->
-            </ns:column>
-            <ns:column columnName="modified">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <!--<ns:isHidden>true</ns:isHidden>-->
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="sequence_alignments" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
-        <ns:tableTitle>Sequence Alignments</ns:tableTitle>
-        <ns:pkColumnName>rowid</ns:pkColumnName>
-        <ns:tableUrl>/query/recordDetails.view?schemaName=sequenceanalysis&amp;query.queryName=Sequence_Alignments&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
-        <ns:insertUrl></ns:insertUrl>
-        <ns:importUrl></ns:importUrl>
-        <ns:deleteUrl></ns:deleteUrl>
-        <ns:updateUrl></ns:updateUrl>
-        <ns:columns>
-            <ns:column columnName="rowid">
-                <ns:columnTitle>Alignment Id</ns:columnTitle>
-                <ns:isAutoInc>true</ns:isAutoInc>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:isUserEditable>false</ns:isUserEditable>
-            </ns:column>
-            <ns:column columnName="analysis_id">
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>sequence_analyses</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="read_id">
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>sequence_reads</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="ref_nt_id">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Ref NT Id</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>ref_nt_sequences</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="ref_nt_origname">
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>200</ns:scale>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="readname">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Read Name</ns:columnTitle>
-                <ns:scale>220</ns:scale>
-            </ns:column>
-            <ns:column columnName="orientation">
-                <ns:nullable>true</ns:nullable>
-            </ns:column>
-            <ns:column columnName="q_start">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Query Start</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="q_stop">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Query Stop</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="ref_start">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Reference Start</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="ref_stop">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Reference Stop</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="cigar">
-                <ns:nullable>true</ns:nullable>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:columnTitle>Cigar String</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="md_tag">
-                <ns:nullable>true</ns:nullable>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="num_mismatches">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Number of Mismatches</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="matchqual">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Match Quality</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="status">
-                <ns:nullable>true</ns:nullable>
-                <ns:isHidden>false</ns:isHidden>
-                <ns:columnTitle>Include?</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="container">
-            </ns:column>
-            <ns:column columnName="createdby">
-                <ns:nullable>true</ns:nullable>
-            </ns:column>
-            <ns:column columnName="created">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="modifiedby">
-                <ns:nullable>true</ns:nullable>
-            </ns:column>
-            <ns:column columnName="modified">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="nt_snps" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
-        <ns:tableTitle>NT SNPs</ns:tableTitle>
-        <ns:pkColumnName>rowid</ns:pkColumnName>
-        <ns:tableUrl>/query/recordDetails.view?schemaName=sequenceanalysis&amp;query.queryName=NT_SNPs&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
-        <ns:insertUrl></ns:insertUrl>
-        <ns:importUrl></ns:importUrl>
-        <ns:deleteUrl></ns:deleteUrl>
-        <ns:updateUrl></ns:updateUrl>
-        <ns:titleColumn>rowid</ns:titleColumn>
-        <ns:columns>
-            <ns:column columnName="rowid">
-                <ns:isAutoInc>true</ns:isAutoInc>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:columnTitle>SNP Id</ns:columnTitle>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="analysis_id">
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>sequence_analyses</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="alignment_id">
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>sequence_alignments</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="ref_nt_id">
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>ref_nt_sequences</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="ref_nt">
-                <ns:columnTitle>Ref NT</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="ref_nt_position">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Ref NT Position</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="ref_nt_insert_index">
-                <ns:columnTitle>Ref NT Index</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="q_nt">
-                <ns:columnTitle>Read NT</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="q_nt_position">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Read NT Position</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="q_nt_insert_index">
-                <ns:columnTitle>Read NT Index</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="quality_score">
-            </ns:column>
-            <ns:column columnName="avg_qual">
-                <ns:columnTitle>Avg Quality Score</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="pvalue">
-                <ns:columnTitle>P-value</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="status">
-                <ns:nullable>true</ns:nullable>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="container">
-                <!--<ns:isHidden>true</ns:isHidden>-->
-            </ns:column>
-            <ns:column columnName="createdby">
-                <!--<ns:isHidden>true</ns:isHidden>-->
-            </ns:column>
-            <ns:column columnName="created">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <ns:isHidden>true</ns:isHidden>
             </ns:column>
         </ns:columns>
     </ns:table>
@@ -842,6 +495,7 @@
         <ns:buttonBarOptions includeStandardButtons="false">
             <ns:includeScript>laboratory.context</ns:includeScript>
             <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
+            <ns:includeScript>SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js</ns:includeScript>
             <ns:item text="Views">
                 <ns:originalText>Views</ns:originalText>
             </ns:item>
@@ -863,6 +517,9 @@
                 </ns:item>
                 <ns:item text="View FASTQC Report">
                     <ns:onClick>SequenceAnalysis.Buttons.generateFastQcForAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
+                </ns:item>
+                <ns:item text="Save Analysis As Template">
+                    <ns:onClick>SequenceAnalysis.window.SaveAnalysisAsTemplateWindow.buttonHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
                 </ns:item>
                 <ns:item text="Download Sequence Files">
                     <ns:onClick>SequenceAnalysis.Buttons.downloadFilesForAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
@@ -905,180 +562,6 @@
                 </ns:item>
             </ns:item>
         </ns:buttonBarOptions>        
-    </ns:table>
-    <ns:table tableName="aa_snps" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
-        <ns:tableTitle>AA SNPs</ns:tableTitle>
-        <ns:pkColumnName>rowid</ns:pkColumnName>
-        <ns:tableUrl>/query/recordDetails.view?schemaName=sequenceanalysis&amp;query.queryName=AA_SNPs&amp;keyField=rowid&amp;key=${rowid}</ns:tableUrl>
-        <ns:insertUrl></ns:insertUrl>
-        <ns:importUrl></ns:importUrl>
-        <ns:deleteUrl></ns:deleteUrl>
-        <ns:updateUrl></ns:updateUrl>
-        <ns:columns>
-            <ns:column columnName="rowid">
-                <ns:isAutoInc>true</ns:isAutoInc>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:columnTitle>AA SNP Id</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="analysis_id">
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>sequence_analyses</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="alignment_id">
-                <ns:columnTitle>Alignment Id</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>sequence_alignments</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="ref_nt_id">
-                <ns:columnTitle>Ref NT Id</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>ref_nt_sequences</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="ref_aa_id">
-                <ns:columnTitle>Ref AA Id</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>ref_aa_sequences</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="nt_snp_id">
-                <ns:columnTitle>NT SNP Id</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>nt_snps</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="q_aa">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Query AA</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="q_aa_position">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Query AA Position</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="q_aa_insert_index">
-                <ns:columnTitle>Query AA Index</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="q_codon">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Query Codon</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="ref_aa">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Ref AA</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="ref_aa_position">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Ref AA Position</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="ref_aa_insert_index">
-                <ns:columnTitle>Ref AA Index</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="translation_string">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:scale>250</ns:scale>
-            </ns:column>
-            <ns:column columnName="status">
-                <ns:nullable>true</ns:nullable>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="raw_reads">
-                <ns:nullable>true</ns:nullable>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-            </ns:column>
-            <ns:column columnName="adj_reads">
-                <ns:nullable>true</ns:nullable>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:columnTitle>Adjusted Reads</ns:columnTitle>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-            </ns:column>
-            <ns:column columnName="raw_depth">
-                <ns:nullable>true</ns:nullable>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-            </ns:column>
-            <ns:column columnName="adj_depth">
-                <ns:nullable>true</ns:nullable>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:columnTitle>Adjusted Depth</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="raw_percent">
-                <ns:nullable>true</ns:nullable>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-            </ns:column>
-            <ns:column columnName="adj_percent">
-                <ns:formatString>0.##</ns:formatString>
-                <ns:nullable>true</ns:nullable>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-            </ns:column>
-            <ns:column columnName="nt_positions">
-                <ns:nullable>true</ns:nullable>
-                <!--<ns:isHidden>true</ns:isHidden>-->
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-            </ns:column>
-            <ns:column columnName="avg_qual">
-                <ns:columnTitle>Min. Avg Quality Score</ns:columnTitle>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-            </ns:column>
-            <ns:column columnName="min_pvalue">
-                <ns:columnTitle>Minimum P-value</ns:columnTitle>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="container">
-                <!--<ns:isHidden>true</ns:isHidden>-->
-            </ns:column>
-            <ns:column columnName="createdby">
-                <!--<ns:isHidden>true</ns:isHidden>-->
-            </ns:column>
-            <ns:column columnName="created">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-        </ns:columns>
     </ns:table>
     <ns:table tableName="ref_aa_features" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</ns:javaCustomizer>
@@ -1229,7 +712,7 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="ref_nt_sequences" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</ns:javaCustomizer>
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Reference NT Sequences</ns:tableTitle>
         <ns:pkColumnName>rowid</ns:pkColumnName>
@@ -1251,10 +734,6 @@
                 <ns:nullable>false</ns:nullable>
                 <ns:scale>220</ns:scale>
                 <ns:displayWidth>100</ns:displayWidth>
-            </ns:column>
-            <ns:column columnName="sequence">
-                <ns:displayWidth>400</ns:displayWidth>
-                <ns:inputType>textarea</ns:inputType>
             </ns:column>
             <ns:column columnName="category">
                 <ns:nullable>true</ns:nullable>
@@ -1292,15 +771,12 @@
                     <ns:fkDbSchema>laboratory</ns:fkDbSchema>
                     <ns:fkTable>species</ns:fkTable>
                     <ns:fkColumnName>common_name</ns:fkColumnName>
+                    <ns:fkDisplayColumnName useRawValue="true"/>
                 </ns:fk>
             </ns:column>
             <ns:column columnName="geographic_origin">
                 <ns:nullable>true</ns:nullable>
                 <ns:scale>200</ns:scale>
-            </ns:column>
-            <ns:column columnName="status">
-                <ns:nullable>true</ns:nullable>
-                <ns:isHidden>true</ns:isHidden>
             </ns:column>
             <ns:column columnName="aliases">
                 <ns:nullable>true</ns:nullable>
@@ -1309,6 +785,28 @@
             <ns:column columnName="comments">
                 <ns:nullable>true</ns:nullable>
                 <ns:inputType>textarea</ns:inputType>
+            </ns:column>
+            <ns:column columnName="sequenceFile">
+                <ns:nullable>true</ns:nullable>
+                <ns:columnTitle>Sequence File</ns:columnTitle>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:fk>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                    <ns:fkTable>data</ns:fkTable>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="downloadSequence" wrappedColumnName="rowid">
+                <ns:columnTitle>Download Sequence</ns:columnTitle>
+                <ns:shownInDetailsView>true</ns:shownInDetailsView>
+                <ns:displayColumnFactory>
+                    <ns:className>org.labkey.sequenceanalysis.query.DownloadSequenceDisplayColumnFactory</ns:className>
+                </ns:displayColumnFactory>
+            </ns:column>
+            <ns:column columnName="container">
+
             </ns:column>
             <ns:column columnName="createdby">
                 <ns:isUserEditable>false</ns:isUserEditable>
@@ -1341,26 +839,34 @@
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
         </ns:columns>
-        <ns:buttonBarOptions includeStandardButtons="false">
+        <ns:buttonBarOptions includeStandardButtons="true">
             <ns:includeScript>laboratory.context</ns:includeScript>
             <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
+            <ns:includeScript>SequenceAnalysis/window/CreateReferenceLibraryWindow.js</ns:includeScript>
+            <ns:includeScript>SequenceAnalysis/window/ImportSequencesFromFastaWindow.js</ns:includeScript>
+            <ns:includeScript>SequenceAnalysis/window/DownloadSequencesWindow.js</ns:includeScript>
             <ns:item text="Views">
                 <ns:originalText>Views</ns:originalText>
             </ns:item>
-            <!--<item text="Insert New" permission="ADMIN">-->
-            <!--<target>/sequenceanalysis/insertRefSequence.view</ns:target>-->
-            <!--</ns:item>-->
+            <ns:item hidden="true">
+                <ns:originalText>Delete</ns:originalText>
+            </ns:item>
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
+            </ns:item>
             <ns:item text="Delete" permission="ADMIN" requiresSelection="true">
                 <ns:onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</ns:onClick>
             </ns:item>
-            <ns:item text="Export">
-                <ns:originalText>Export</ns:originalText>
-            </ns:item>
-            <ns:item text="Print">
-                <ns:originalText>Print</ns:originalText>
-            </ns:item>
-            <ns:item text="Page Size">
-                <ns:originalText>Page Size</ns:originalText>
+            <ns:item insertPosition="end" text="More Actions">
+                <ns:item text="Create Reference Library">
+                    <ns:onClick>SequenceAnalysis.window.CreateReferenceLibraryWindow.buttonHandler(dataRegionName)</ns:onClick>
+                </ns:item>
+                <ns:item text="Import From FASTA">
+                    <ns:onClick>SequenceAnalysis.window.ImportSequencesFromFastaWindow.buttonHandler(dataRegionName)</ns:onClick>
+                </ns:item>
+                <ns:item text="Download As FASTA">
+                    <ns:onClick>SequenceAnalysis.window.DownloadSequencesWindow.buttonHandler(dataRegionName)</ns:onClick>
+                </ns:item>
             </ns:item>
         </ns:buttonBarOptions>        
     </ns:table>
@@ -1537,6 +1043,14 @@
                     <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
                     <ns:fkTable>sequence_platforms</ns:fkTable>
                     <ns:fkColumnName>platform</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="application">
+                <ns:nullable>true</ns:nullable>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>sequence_applications</ns:fkTable>
+                    <ns:fkColumnName>application</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
             <ns:column columnName="runid">
@@ -1903,6 +1417,7 @@
     </ns:table>
     <ns:table tableName="quality_metrics_types" tableDbType="TABLE">
         <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
         <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
         <ns:tableTitle>Quality Metric Types</ns:tableTitle>
         <ns:columns>
@@ -1978,6 +1493,7 @@
     <ns:table tableName="alignment_summary" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
         <ns:importUrl></ns:importUrl>
         <ns:updateUrl></ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
@@ -2040,6 +1556,7 @@
         <!--NOTE: changed to summary b/c a large amount of events are accumulated otherwise-->
         <ns:auditLogging>SUMMARY</ns:auditLogging>
         <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:tableUrl></ns:tableUrl>
         <ns:importUrl></ns:importUrl>
         <ns:updateUrl></ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
@@ -2079,9 +1596,11 @@
     <ns:table tableName="nt_snps_by_pos" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
         <ns:updateUrl></ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
+        <ns:deleteUrl></ns:deleteUrl>
         <ns:tableTitle>NT SNPs, Grouped By Position</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowid"/>
@@ -2162,9 +1681,11 @@
     <ns:table tableName="aa_snps_by_codon" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
         <ns:updateUrl></ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
+        <ns:deleteUrl></ns:deleteUrl>
         <ns:tableTitle>AA SNPs, Grouped By Codon</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowid"/>
@@ -2253,9 +1774,11 @@
     <ns:table tableName="illumina_applications" tableDbType="TABLE">
         <ns:javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
         <ns:updateUrl></ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
+        <ns:deleteUrl></ns:deleteUrl>
         <ns:tableTitle>Illumina Applications</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="name"/>
@@ -2290,9 +1813,11 @@
     <ns:table tableName="illumina_genome_folders" tableDbType="TABLE">
         <ns:javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
         <ns:updateUrl></ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
+        <ns:deleteUrl></ns:deleteUrl>
         <ns:tableTitle>Illumina Genome Folders</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="label"/>
@@ -2302,9 +1827,11 @@
     <ns:table tableName="illumina_param_types" tableDbType="TABLE">
         <ns:javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
         <ns:updateUrl></ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
+        <ns:deleteUrl></ns:deleteUrl>
         <ns:tableTitle>Illumina Param Types</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="param"/>
@@ -2313,9 +1840,11 @@
     <ns:table tableName="illumina_sample_kits" tableDbType="TABLE">
         <ns:javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
         <ns:updateUrl></ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
+        <ns:deleteUrl></ns:deleteUrl>
         <ns:tableTitle>Illumina Sample Kits</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="name"/>
@@ -2329,6 +1858,268 @@
             <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
             <ns:item insertPosition="beginning" text="Import New Sample Kit">
                 <ns:onClick>SequenceAnalysis.Buttons.importSampleKitHandler(dataRegionName, arguments[0].srcElement)</ns:onClick>
+            </ns:item>
+        </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="reference_libraries" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl>/sequenceanalysis/libraryDetails.view?libraryId=${rowid}</ns:tableUrl>
+        <ns:updateUrl></ns:updateUrl>
+        <ns:insertUrl></ns:insertUrl>
+        <ns:importUrl></ns:importUrl>
+        <!--<ns:deleteUrl></ns:deleteUrl>-->
+        <ns:tableTitle>Reference Libraries</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Library Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="name">
+                <ns:columnTitle>Library Name</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="description">
+            </ns:column>
+            <ns:column columnName="fasta_file">
+                <ns:columnTitle>FASTA File</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                    <ns:fkTable>data</ns:fkTable>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="snps_file">
+                <ns:columnTitle>SNPs File</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                    <ns:fkTable>data</ns:fkTable>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="createdby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="reference_library_members" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
+        <ns:updateUrl></ns:updateUrl>
+        <ns:insertUrl></ns:insertUrl>
+        <ns:importUrl></ns:importUrl>
+        <ns:deleteUrl></ns:deleteUrl>
+        <ns:tableTitle>Reference Library Members</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="library_id">
+                <ns:columnTitle>Library</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>reference_libraries</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="ref_nt_id">
+                <ns:columnTitle>NT Sequence</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>ref_nt_sequences</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="createdby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="reference_library_tracks" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
+        <ns:updateUrl></ns:updateUrl>
+        <ns:insertUrl></ns:insertUrl>
+        <ns:importUrl></ns:importUrl>
+        <ns:deleteUrl></ns:deleteUrl>
+        <ns:tableTitle>Reference Library Tracks</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="name"/>
+            <ns:column columnName="description"/>
+            <ns:column columnName="library_id">
+                <ns:columnTitle>Library</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>reference_libraries</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="fileid">
+                <ns:columnTitle>File</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                    <ns:fkTable>data</ns:fkTable>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="category"/>
+            <ns:column columnName="datedisabled">
+                <ns:columnTitle>Date Disabled</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="createdby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:includeScript>laboratory.context</ns:includeScript>
+            <ns:includeScript>/sequenceanalysis/window/ImportTrackWindow.js</ns:includeScript>
+            <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
+            <ns:item permission="INSERT" text="Add Annotation" insertPosition="beginning">
+                <ns:onClick>SequenceAnalysis.window.ImportTrackWindow.buttonHandler(dataRegionName)</ns:onClick>
+            </ns:item>
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="saved_analyses" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
+        <ns:updateUrl></ns:updateUrl>
+        <ns:insertUrl></ns:insertUrl>
+        <ns:importUrl></ns:importUrl>
+        <ns:deleteUrl></ns:deleteUrl>
+        <ns:tableTitle>Saved Analyses</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="name"/>
+            <ns:column columnName="description"/>
+            <ns:column columnName="originalAnalysisId">
+                <ns:columnTitle>Original Analysis</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>sequence_analyses</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="json">
+                <ns:columnTitle>Config</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="createdby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
             </ns:item>
         </ns:buttonBarOptions>
     </ns:table>

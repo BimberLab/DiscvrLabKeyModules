@@ -1,0 +1,1 @@
+alter table laboratory.dna_oligos alter column sequence varchar(max);

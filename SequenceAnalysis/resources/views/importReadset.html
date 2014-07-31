@@ -2,8 +2,7 @@
     Ext4.onReady(function(){
         var webpart = <%=webpartContext%>;
 
-        Ext4.get(webpart.wrapperDivId).update('<h3>' + SequenceAnalysis.Utils.HEADER_TEXT + '</h3>' +
-            '<h3>Click <a href="<%=contextPath%>/sequenceAnalysis<%=containerPath%>/instructions.view?" target="_blank">here</a> for instructions</h3>' +
+        Ext4.get(webpart.wrapperDivId).update('<h3>Click <a href="<%=contextPath%>/sequenceAnalysis<%=containerPath%>/instructions.view?" target="_blank">here</a> for instructions</h3>' +
             '<p/>' +
             '<div id="readsetDiv_'+webpart.wrapperDivId+'"/>'
         );

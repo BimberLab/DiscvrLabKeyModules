@@ -1,0 +1,50 @@
+<script type="text/javascript">
+
+Ext4.onReady(function (){
+    var rowid = LABKEY.ActionURL.getParameter('libraryId');
+
+    if (!rowid){
+        alert('Must Provide The Library Id');
+        return;
+    }
+
+    var webpart = <%=webpartContext%>;
+
+    Ext4.get(webpart.wrapperDivId).update(
+        '<div id="details_'+webpart.wrapperDivId+'"></div>' +
+        '<br>' +
+        '<div id="tracks_'+webpart.wrapperDivId+'"></div>' +
+        '<br>' +
+        '<div id="sequences_'+webpart.wrapperDivId+'"></div>'
+    );
+
+    Ext4.create('LDK.panel.DetailsPanel', {
+        title: 'Library Details',
+        renderTo: 'details_'+webpart.wrapperDivId,
+        showBackBtn: false,
+        store: {
+            schemaName: 'sequenceanalysis',
+            queryName: 'reference_libraries',
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            filterArray: [LABKEY.Filter.create('rowid', rowid, LABKEY.Filter.Types.EQUAL)]
+        }
+    });
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'Annotations/Tracks',
+        schemaName: 'sequenceanalysis',
+        queryName: 'reference_library_tracks',
+        containerPath: Laboratory.Utils.getQueryContainerPath(),
+        filterArray: [LABKEY.Filter.create('library_id', rowid, LABKEY.Filter.Types.EQUAL)]
+    }).render('tracks_'+webpart.wrapperDivId);
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'Sequences',
+        schemaName: 'sequenceanalysis',
+        queryName: 'reference_library_members',
+        containerPath: Laboratory.Utils.getQueryContainerPath(),
+        filterArray: [LABKEY.Filter.create('library_id', rowid, LABKEY.Filter.Types.EQUAL)]
+    }).render('sequences_'+webpart.wrapperDivId);
+});
+
+</script>

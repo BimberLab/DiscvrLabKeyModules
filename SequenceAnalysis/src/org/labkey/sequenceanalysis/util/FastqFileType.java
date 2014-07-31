@@ -5,7 +5,6 @@ import org.labkey.api.util.FileType;
 import java.util.Arrays;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 12/3/12
  * Time: 10:32 PM

@@ -19,7 +19,9 @@ import org.labkey.api.security.permissions.ReadPermission;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: bimber
@@ -34,6 +36,7 @@ abstract public class AbstractDataSource
     private String _label;
     protected static final String DELIM = "<>";
     protected static final Logger _log = Logger.getLogger(AbstractDataSource.class);
+    private Map<String, TableInfo> _cachedTables = new HashMap<>();
     
     public AbstractDataSource(String label, @Nullable String containerId, String schemaName, String queryName)
     {
@@ -58,7 +61,7 @@ abstract public class AbstractDataSource
         return _queryName;
     }
 
-    public QueryDefinition getQueryDef(Container c, User u)
+    protected QueryDefinition getQueryDef(Container c, User u)
     {
         Container target = getContainer();
         if (target == null)
@@ -80,12 +83,21 @@ abstract public class AbstractDataSource
 
     public TableInfo getTableInfo(Container c, User u)
     {
+        String key = getTargetContainer(c).getId() + "||" + u.getUserId();
+        if (_cachedTables.containsKey(key))
+        {
+            return _cachedTables.get(key);
+        }
+
         QueryDefinition qd = getQueryDef(c, u);
         if (qd == null)
             return null;
 
         List<QueryException> errors = new ArrayList<>();
-        return qd.getTable(errors,  true);
+        TableInfo ti = qd.getTable(errors,  true);
+        _cachedTables.put(key, ti);
+
+        return ti;
     }
 
     @Nullable
@@ -139,7 +151,7 @@ abstract public class AbstractDataSource
             TableInfo ti = getTableInfo(target, u);
             if (ti == null)
             {
-                return null;
+                return new JSONObject();
             }
 
             //TODO: figure out how to handle substitutions

@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 5/26/14
  * Time: 1:38 PM
@@ -74,12 +73,12 @@ public class FileCleanupTask extends WorkDirectoryTask<FileCleanupTask.Factory>
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();
-        _taskHelper = new SequenceTaskHelper(job);
+        _taskHelper = new SequenceTaskHelper(job, _wd);
 
         getJob().getLogger().info("Cleaning up intermediate files");
         RecordedAction action = new RecordedAction(ACTIONNAME);
 
-        getHelper().deleteDeferredIntermediateFiles();
+        getHelper().getFileManager().deleteDeferredIntermediateFiles();
 
         for (File input : _wd.getDir().listFiles())
         {

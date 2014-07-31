@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 11/20/12
  * Time: 10:27 PM

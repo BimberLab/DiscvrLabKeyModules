@@ -31,31 +31,25 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.analysis.AASnpByCodonAggregator;
-import org.labkey.sequenceanalysis.analysis.AlignmentAggregator;
-import org.labkey.sequenceanalysis.analysis.AvgBaseQualityAggregator;
-import org.labkey.sequenceanalysis.analysis.BamIterator;
-import org.labkey.sequenceanalysis.analysis.MetricsAggregator;
-import org.labkey.sequenceanalysis.analysis.NtCoverageAggregator;
-import org.labkey.sequenceanalysis.analysis.NtSnpByPosAggregator;
-import org.labkey.sequenceanalysis.analysis.SequenceBasedTypingAlignmentAggregator;
-import org.labkey.sequenceanalysis.model.AnalysisModel;
-import org.labkey.sequenceanalysis.model.ReadsetModel;
+import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
+import org.labkey.sequenceanalysis.api.pipeline.BamProcessingStep;
+import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 9/23/12
  * Time: 9:40 AM
@@ -63,11 +57,6 @@ import java.util.Map;
 public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask.Factory>
 {
     private SequenceTaskHelper _taskHelper;
-    private static String ACTION_NAME = "Run Analyses";
-    private static String RUNNING_ANALYSIS_STATUS = "Running Analyses";
-
-    private HashMap<String, List<Object[]>> _outputFiles = new HashMap<>();
-    private HashMap<String, List<Object[]>> _inputFiles = new HashMap<>();
 
     protected SequenceAnalysisTask(Factory factory, PipelineJob job)
     {
@@ -88,7 +77,13 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(ACTION_NAME);
+            List<String> allowableNames = new ArrayList<>();
+            for (PipelineStepProvider provider: SequencePipelineService.get().getProviders(AnalysisStep.class))
+            {
+                allowableNames.add(provider.getLabel());
+            }
+
+            return allowableNames;
         }
 
         public PipelineJob.Task createTask(PipelineJob job)
@@ -111,7 +106,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();
-        _taskHelper = new SequenceTaskHelper(job);
+        _taskHelper = new SequenceTaskHelper(job, _wd);
 
         List<RecordedAction> actions = new ArrayList<>();
 
@@ -133,13 +128,14 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             model.setCreated(new Date());
             model.setModifiedby(getJob().getUser().getUserId());
             model.setModified(new Date());
-            model.setType(_taskHelper.getSettings().getAnalysisType());
-            model.setDescription(_taskHelper.getSettings().getAnalysisDescription());
+            //TODO
+            //model.setType(_taskHelper.getSettings().getAnalysisType());
+            model.setDescription(_taskHelper.getSettings().getProtocolDescription());
             model.setRunId(runId);
             model.setReadset(rs.getReadsetId());
 
             //find BAM
-            List<? extends ExpData> datas = run.getInputDatas(SequenceAlignmentTask.BAM_ROLE, ExpProtocol.ApplicationType.ExperimentRunOutput);
+            List<? extends ExpData> datas = run.getInputDatas(SequenceAlignmentTask.FINAL_BAM_ROLE, ExpProtocol.ApplicationType.ExperimentRunOutput);
             if (datas.size() > 0)
             {
                 boolean found = false;
@@ -273,7 +269,8 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 Table.insert(getJob().getUser(), ti, model);
                 addMetricsForAnalysis(model);
 
-                if (_taskHelper.getSettings().hasAdditionalAnalyses())
+                List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
+                if (!providers.isEmpty())
                 {
                     File bam = ExperimentService.get().getExpData(model.getAlignmentFile()).getFile();
                     if(bam == null)
@@ -289,22 +286,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                         continue;
                     }
 
-                    File inputFile = ExperimentService.get().getExpData(model.getInputFile()).getFile();
-                    if(inputFile == null)
-                    {
-                        getJob().getLogger().error("Skipping SNP calling, unable to find input FASTQ");
-                        continue;
-                    }
-
-                    if (_taskHelper.getSettings().hasCustomReference())
-                    {
-                        getJob().getLogger().info("This run used a custom reference, cannot run downstream analyses");
-                        continue;
-                    }
-
-                    RecordedAction analysesAction = runAnalyses(model, bam, refDB, inputFile);
-                    if (analysesAction != null)
-                        actions.add(analysesAction);
+                    runAnalyses(actions, model, bam, refDB, providers);
                 }
             }
             catch (SQLException e)
@@ -360,66 +342,22 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         }
     }
 
-    private RecordedAction runAnalyses(AnalysisModel model, File inputFile, File refFile, File fastqFile) throws PipelineJobException
+    private void runAnalyses(List<RecordedAction> actions, AnalysisModel model, File inputBam, File refFasta, List<PipelineStepProvider<AnalysisStep>> providers) throws PipelineJobException
     {
-        PipelineJob job = getJob();
-
-        RecordedAction action = new RecordedAction(ACTION_NAME);
-        addInput(action, "Input BAM File", inputFile);
-        addInput(action, "Reference DB FASTA", refFile);
-        addInput(action, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, fastqFile);
-
-        getJob().getLogger().info("Running analyses for analysis: " + model.getRowId());
-        job.getLogger().info("\tUsing alignment: " + inputFile.getPath());
-
-        try
+        for (PipelineStepProvider<AnalysisStep> provider : providers)
         {
-            //first calculate avg qualities at each position
-            getJob().getLogger().info("Calculating avg quality scores");
-            AvgBaseQualityAggregator avg = new AvgBaseQualityAggregator(inputFile, refFile, getJob().getLogger());
-            avg.calculateAvgQuals();
-            getJob().getLogger().info("\tCalculation complete");
+            getJob().getLogger().info("Running analyses for analysis: " + model.getRowId());
+            getJob().getLogger().info("\tUsing alignment: " + inputBam.getPath());
 
-            getJob().getLogger().info("Inspecting alignments in BAM");
-            BamIterator bi = new BamIterator(inputFile, refFile, getJob().getLogger());
+            RecordedAction action = new RecordedAction(provider.getLabel());
+            _taskHelper.getFileManager().addInput(action, "Input BAM File", inputBam);
+            _taskHelper.getFileManager().addInput(action, "Reference DB FASTA", refFasta);
+            //_taskHelper.getFileManager().addInput(action, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, fastqFile);
 
-            List<AlignmentAggregator> aggregators = new ArrayList<>();
-            for (String name : _taskHelper.getSettings().getAggregatorNames())
-            {
-                if (name.equals(SequencePipelineSettings.NT_SNP_AGGREGATOR))
-                    aggregators.add(new NtSnpByPosAggregator(_taskHelper.getSettings(), getJob().getLogger(), avg));
-                else if (name.equals(SequencePipelineSettings.COVERAGE_AGGREGATOR))
-                    aggregators.add(new NtCoverageAggregator(_taskHelper.getSettings(), getJob().getLogger(), avg));
-                else if (name.equals(SequencePipelineSettings.AA_SNP_BY_CODON_AGGREGATOR))
-                    aggregators.add(new AASnpByCodonAggregator(_taskHelper.getSettings(), getJob().getLogger(), avg));
-                else if (name.equals(SequencePipelineSettings.SBT_AGGREGATOR))
-                    aggregators.add(new SequenceBasedTypingAlignmentAggregator(_taskHelper.getSettings(), getJob().getLogger(), avg));
-            }
+            AnalysisStep step = provider.create(_taskHelper);
+            step.performAnalysis(model, inputBam, refFasta);
 
-            aggregators.add(new MetricsAggregator(inputFile, getJob().getLogger()));
-
-            bi.addAggregators(aggregators);
-            bi.iterateReads();
-
-            getJob().getLogger().info("Inspection complete");
-
-            for (AlignmentAggregator a : aggregators)
-            {
-                a.saveToDb(getJob().getUser(), getJob().getContainer(), model);
-            }
-
-            bi.saveSynopsis(getJob().getUser(), model);
-
-            return action;
+            actions.add(action);
         }
-        catch (FileNotFoundException e)
-        {
-            throw new PipelineJobException(e.getMessage());
-        }
-    }
-
-    private void addInput(RecordedAction action, String role, File file)
-    {
-        _taskHelper.addInputOutput(action, role, file, _inputFiles, "Input");
     }
 }
