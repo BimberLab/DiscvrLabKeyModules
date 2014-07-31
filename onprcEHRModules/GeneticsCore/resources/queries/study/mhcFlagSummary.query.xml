@@ -25,7 +25,7 @@
                         <description>This column displays whether this monkey has MHC data (including SSP), or any raw sequence data in the MHC folder (including non-public, or non-analyzed).  The objective is to cast a wide net so that we do not miss data working through the analysis process</description>
                     </column>
                     <column columnName="hasSBTData">
-                        <columnTitle>Has SBT Data?</columnTitle>
+                        <columnTitle>Has SBT Results?</columnTitle>
                         <description>This column displays whether this monkey has SBT data with cached (ie. finalized) results</description>
                     </column>
                     <column columnName="hasFreezerSample">

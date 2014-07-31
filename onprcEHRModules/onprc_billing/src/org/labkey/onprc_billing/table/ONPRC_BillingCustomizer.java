@@ -398,7 +398,19 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         if (chargeType != null)
         {
             chargeType.setLabel("Charge Unit");
+        }
 
+        ColumnInfo creditAccountType = ti.getColumn("creditAccountType");
+        if (creditAccountType != null)
+        {
+            creditAccountType.setLabel("Credit Alias Based On");
+        }
+
+        ColumnInfo currentActiveAlias = ti.getColumn("currentActiveAlias");
+        if (currentActiveAlias != null)
+        {
+            currentActiveAlias.setLabel("Currently Active Alias For Project");
+            currentActiveAlias.setDescription("This shows the alias that is currently active for this project as of today's date, which is not necessarily the same alias as the one used for this transaction.  The latter will use the alias active on the transaction date.");
         }
     }
 

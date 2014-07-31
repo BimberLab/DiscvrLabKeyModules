@@ -14,6 +14,7 @@ SELECT
   e.datefinalized as billingDate,
   e.project,
   e.chargetype,
+  e.assistingstaff,
   e.procedureId,
   p.chargeId,
   e.objectid as sourceRecord,
@@ -24,6 +25,7 @@ JOIN onprc_billing.procedureFeeDefinition p ON (
   p.procedureId = e.procedureId and
   --we want to either have the chargeType match between tables, or allow NULL to act like a wildcard
   (e.chargetype = p.chargetype OR (p.chargetype IS NULL AND (e.chargetype IS NULL OR e.chargetype NOT IN ('Not Billable', 'No Charge')))) AND
+  (e.assistingstaff = p.assistingstaff OR (p.assistingstaff IS NULL AND e.assistingstaff IS NULL)) AND
   p.active = true
 )
 
@@ -40,6 +42,7 @@ SELECT
   e.datefinalized as billingDate,
   e.project,
   e.chargetype,
+  null as assistingstaff,
   null as procedureId,
   (select rowid from onprc_billing_public.chargeableItems ci where ci.name = 'Blood Draw' and ci.active = true) as chargeId,
   max(e.objectid) as sourceRecord,
@@ -62,6 +65,7 @@ GROUP BY e.Id, e.dateOnly, e.dateFinalized, e.project, e.chargetype, e.taskid
 --   CAST(e.dateFinalized as date) as billingDate,
 --   e.project,
 --   e.chargetype,
+--   null as assistingstaff,
 --   null as procedureId,
 --   mfd.chargeId,
 --   max(e.objectid) as sourceRecord,

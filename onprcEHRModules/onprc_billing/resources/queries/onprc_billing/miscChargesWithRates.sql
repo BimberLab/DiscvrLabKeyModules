@@ -11,7 +11,8 @@ SELECT
   p.date,
   p.billingDate,
   p.project,
-  coalesce(p.debitedaccount, pa.account) as account,
+  COALESCE(p.debitedaccount, aliasAtTime.account) as account,
+  p.chargetype,
   p.chargeId,
   coalesce(p.chargeId.name, p.item) as item,
   round(CAST(CASE
@@ -50,11 +51,9 @@ SELECT
   p.createdby,
   p.taskId,
 
-  coalesce(p.creditedaccount, ce.account) as creditAccount,
-  CASE
-    WHEN p.creditedaccount IS NULL THEN ce.rowid
-    ELSE NULL
-  END as creditAccountId,
+  coalesce(p.creditedaccount, cu.account, ce.account) as creditAccount,
+  CASE WHEN (cu.account IS NOT NULL) THEN 'Charge Unit' ELSE 'Chargeable Item' END as creditAccountType,
+  null as creditAccountId,
   coalesce(alias.investigatorId, p.project.investigatorId) as investigatorId,
   CASE
     --dont flag adjustments/reversals as exceptions
@@ -101,7 +100,7 @@ SELECT
     cast(p.date as date) >= a.dateOnly
   ) as assignmentAtTime,
   p.container,
-  CASE WHEN coalesce(p.debitedaccount, pa.account) IS NULL THEN 'Y' ELSE null END as isMissingAccount,
+  CASE WHEN COALESCE(p.debitedaccount, aliasAtTime.account) IS NULL THEN 'Y' ELSE null END as isMissingAccount,
   CASE WHEN alias.fiscalAuthority.faid IS NULL THEN 'Y' ELSE null END as isMissingFaid,
   CASE
     WHEN alias.aliasEnabled IS NULL THEN 'N'
@@ -115,11 +114,11 @@ SELECT
     ELSE null
   END as isExpiredAccount,
   CASE WHEN (TIMESTAMPDIFF('SQL_TSI_DAY', p.date, curdate()) > 45) THEN 'Y' ELSE null END as isOldCharge,
-  aliasAtTime.account as aliasActiveOnDate,
+  p.project.account as currentActiveAlias,
   p.sourceInvoicedItem,
   p.invoiceId,
   CASE
-    WHEN (p.debitedaccount IS NULL OR p.debitedaccount = pa.account) THEN null
+    WHEN (p.debitedaccount IS NULL OR p.debitedaccount = aliasAtTime.account) THEN null
     ELSE 'Y'
   END as accountDiffersFromProject,
   true as isMiscCharge
@@ -139,27 +138,11 @@ LEFT JOIN onprc_billing_public.chargeRateExemptions e ON (
     p.project = e.project
 )
 
-LEFT JOIN onprc_billing_public.projectMultipliers pm ON (
-    CAST(p.date AS DATE) >= CASt(pm.startDate AS DATE) AND
-    (CAST(p.date AS DATE) <= pm.enddateCoalesced OR pm.enddate IS NULL) AND
-    p.project = pm.project
-)
-
 LEFT JOIN onprc_billing_public.creditAccount ce ON (
     CAST(p.date AS DATE) >= CAST(ce.startDate AS DATE) AND
     (CAST(p.date AS DATE) <= ce.enddateCoalesced OR ce.enddate IS NULL) AND
     p.chargeId = ce.chargeId
 )
-
-LEFT JOIN (
-  SELECT
-    pa.project,
-    max(pa.account) as account
-  FROM onprc_billing_public.projectAccountHistory pa
-  WHERE pa.isActive = true
-  GROUP BY pa.project
-  HAVING count(*) = 1
-) pa ON (pa.project = p.project)
 
 LEFT JOIN onprc_billing_public.projectAccountHistory aliasAtTime ON (
   aliasAtTime.project = p.project AND
@@ -168,5 +151,17 @@ LEFT JOIN onprc_billing_public.projectAccountHistory aliasAtTime ON (
 )
 
 LEFT JOIN onprc_billing_public.aliases alias ON (
-  alias.alias = COALESCE(p.debitedaccount, pa.account)
+  alias.alias = COALESCE(p.debitedaccount, aliasAtTime.account)
+)
+
+LEFT JOIN onprc_billing_public.projectMultipliers pm ON (
+    CAST(p.date AS DATE) >= CASt(pm.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= pm.enddateCoalesced OR pm.enddate IS NULL) AND
+    alias.alias = pm.account
+)
+
+LEFT JOIN onprc_billing_public.chargeUnitAccounts cu ON (
+  p.chargetype = cu.chargetype AND
+  cast(cu.startDate AS date) <= cast(p.date as date) AND
+  cast(cu.endDate AS date) >= cast(p.date as date)
 )

@@ -695,7 +695,7 @@ public class MergeSyncRunner implements Job
 
         //NOTE: when a result is flagged as an error, merge seems to store 0 in the numeric result, while keeping the original value as the text result
         //i dont like this behavior, but if there is a remark (a proxy for having an error), the numeric result is 0, and text result is numeric, then defer to the latter
-        if (!StringUtils.isEmpty(remark) && numeric_result == 0 && !StringUtils.isEmpty(text_result) && text_result.matches("[-+]?\\d*\\.?\\d+"))
+        if (!StringUtils.isEmpty(remark) && (numeric_result == null || numeric_result == 0.0) && !StringUtils.isEmpty(text_result) && text_result.matches("[-+]?\\d*\\.?\\d+"))
         {
             _log.info("deferring to text result instead of numeric result: " + text_result);
             numeric_result = ConvertHelper.convert(text_result, Double.class);
@@ -913,20 +913,19 @@ public class MergeSyncRunner implements Job
         }
 
         String cacheKey = this.getClass().getName() + "||" + c.getId() + "||testNameMap";
-        if (CacheManager.getSharedCache().get(cacheKey) == null)
+        Map<String, String> map = (Map)CacheManager.getSharedCache().get(cacheKey);
+        if (map == null)
         {
             TableInfo ti = MergeSyncSchema.getInstance().getSchema().getTable(MergeSyncManager.TABLE_MERGE_TO_LK_MAPPING);
             TableSelector ts = new TableSelector(ti);
-            Map<String, String> ret = new HashMap<>();
+            map = new HashMap<>();
             for (Map<String, Object> row : ts.getMapArray())
             {
-                ret.put((String)row.get("mergetestname"), (String)row.get("servicename"));
+                map.put((String)row.get("mergetestname"), (String)row.get("servicename"));
             }
 
-            CacheManager.getSharedCache().put(cacheKey, ret);
+            CacheManager.getSharedCache().put(cacheKey, map);
         }
-
-        Map<String, String> map = (Map)CacheManager.getSharedCache().get(cacheKey);
 
         return map.get(mergeServiceName) == null ? mergeServiceName : map.get(mergeServiceName);
     }

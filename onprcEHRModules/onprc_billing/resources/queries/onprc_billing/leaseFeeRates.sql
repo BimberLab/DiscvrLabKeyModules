@@ -71,7 +71,7 @@ SELECT
   t.isAcceptingCharges,
   t.isExpiredAccount,
   t.isOldCharge,
-  t.aliasActiveOnDate,
+  t.currentActiveAlias,
   t.datefinalized,
   t.enddatefinalized
   
@@ -82,7 +82,7 @@ SELECT
   p.date,
   p.enddate,
   p.project,
-  pa.account,
+  alias.alias as account,
   p.project.displayName as displayName,
   p.projectedReleaseCondition,
   p.releaseCondition,
@@ -128,7 +128,7 @@ SELECT
     --project-level exemption: pay this value
     WHEN (e2.unitCost IS NOT NULL) THEN e2.unitCost
     --project-level multiplier: multiply NIH rate by this value
-    WHEN (pm2.multiplier IS NOT NULL AND cr2.unitCost IS NOT NULL) THEN (cr2.unitCost * pm2.multiplier)
+    WHEN (pm.multiplier IS NOT NULL AND cr2.unitCost IS NOT NULL) THEN (cr2.unitCost * pm.multiplier)
     --if there is not a known rate, we dont know what do to
     WHEN (cr2.unitCost IS NULL) THEN null
     --for non-OGA aliases, we always use the NIH rate
@@ -152,7 +152,7 @@ SELECT
     --project-level exemption: pay this value
     WHEN (e3.unitCost IS NOT NULL) THEN e3.unitCost
     --project-level multiplier: multiply NIH rate by this value
-    WHEN (pm3.multiplier IS NOT NULL AND cr3.unitCost IS NOT NULL) THEN (cr3.unitCost * pm3.multiplier)
+    WHEN (pm.multiplier IS NOT NULL AND cr3.unitCost IS NOT NULL) THEN (cr3.unitCost * pm.multiplier)
     --if there is not a known rate, we dont know what do to
     WHEN (cr3.unitCost IS NULL) THEN null
     --for non-OGA aliases, we always use the NIH rate
@@ -177,7 +177,7 @@ SELECT
   coalesce(alias.investigatorId, p.project.investigatorId) as investigatorId,
   CASE
     WHEN (e.rowid IS NOT NULL OR e2.rowid IS NOT NULL OR e3.rowid IS NOT NULL) THEN 'Y'
-    WHEN (pm.multiplier IS NOT NULL OR pm2.multiplier IS NOT NULL OR pm3.multiplier IS NOT NULL) THEN 'Multiplier'
+    WHEN (pm.multiplier IS NOT NULL) THEN 'Multiplier'
     ELSE null
   END as isExemption,
   CASE
@@ -221,30 +221,24 @@ SELECT
   END as isExpiredAccount,
 
   CASE WHEN (TIMESTAMPDIFF('SQL_TSI_DAY', p.date, curdate()) > 45) THEN 'Y' ELSE null END as isOldCharge,
-  aliasAtTime.account as aliasActiveOnDate,
+  p.project.account as currentActiveAlias,
   p.datefinalized,
   p.enddatefinalized
 
 FROM onprc_billing.leaseFees p
 
---the first charge
+--the primary charge.  this will be based on transaction date
 LEFT JOIN onprc_billing_public.chargeRates cr ON (
-    CAST(p.date AS DATE) >= CAST(cr.startDate AS DATE) AND
-    (CAST(p.date AS DATE) <= cr.enddateCoalesced OR cr.enddate IS NULL) AND
+    CAST(p.assignmentStart AS DATE) >= CAST(cr.startDate AS DATE) AND
+    (CAST(p.assignmentStart AS DATE) <= cr.enddateCoalesced OR cr.enddate IS NULL) AND
     p.chargeId = cr.chargeId
 )
 
 LEFT JOIN onprc_billing_public.chargeRateExemptions e ON (
-    CAST(p.date AS DATE) >= CAST(e.startDate AS DATE) AND
-    (CAST(p.date AS DATE) <= e.enddateCoalesced OR e.enddate IS NULL) AND
+    CAST(p.assignmentStart AS DATE) >= CAST(e.startDate AS DATE) AND
+    (CAST(p.assignmentStart AS DATE) <= e.enddateCoalesced OR e.enddate IS NULL) AND
     p.chargeId = e.chargeId AND
     p.project = e.project
-)
-
-LEFT JOIN onprc_billing_public.projectMultipliers pm ON (
-    CAST(p.date AS DATE) >= CASt(pm.startDate AS DATE) AND
-    (CAST(p.date AS DATE) <= pm.enddateCoalesced OR pm.enddate IS NULL) AND
-    p.project = pm.project
 )
 
 --the original charge (for adjustments)
@@ -261,12 +255,6 @@ LEFT JOIN onprc_billing_public.chargeRateExemptions e2 ON (
     (CAST(p.assignmentStart AS DATE) <= e2.enddateCoalesced OR e2.enddate IS NULL) AND
     p.leaseCharge1 = e2.chargeId AND
     p.project = e2.project
-)
-
-LEFT JOIN onprc_billing_public.projectMultipliers pm2 ON (
-    CAST(p.assignmentStart AS DATE) >= CASt(pm2.startDate AS DATE) AND
-    (CAST(p.assignmentStart AS DATE) <= pm2.enddateCoalesced OR pm2.enddate IS NULL) AND
-    p.project = pm2.project
 )
 --EO original charge
 
@@ -286,11 +274,6 @@ LEFT JOIN onprc_billing_public.chargeRateExemptions e3 ON (
   p.project = e3.project
 )
 
-LEFT JOIN onprc_billing_public.projectMultipliers pm3 ON (
-    CAST(p.assignmentStart AS DATE) >= CASt(pm3.startDate AS DATE) AND
-    (CAST(p.assignmentStart AS DATE) <= pm3.enddateCoalesced OR pm3.enddate IS NULL) AND
-    p.project = pm3.project
-)
 --EO final charge
 
 LEFT JOIN onprc_billing_public.creditAccount ce ON (
@@ -299,16 +282,6 @@ LEFT JOIN onprc_billing_public.creditAccount ce ON (
     p.chargeId = ce.chargeId
 )
 
-LEFT JOIN (
-  SELECT
-    pa.project,
-    max(pa.account) as account
-  FROM onprc_billing_public.projectAccountHistory pa
-  WHERE pa.isActive = true
-  GROUP BY pa.project
-  HAVING count(*) = 1
-) pa ON (pa.project = p.project)
-
 LEFT JOIN onprc_billing_public.projectAccountHistory aliasAtTime ON (
   aliasAtTime.project = p.project AND
   aliasAtTime.startDate <= cast(p.date as date) AND
@@ -316,7 +289,13 @@ LEFT JOIN onprc_billing_public.projectAccountHistory aliasAtTime ON (
 )
 
 LEFT JOIN onprc_billing_public.aliases alias ON (
-  alias.alias = pa.account
+  aliasAtTime.account = alias.alias
+)
+
+LEFT JOIN onprc_billing_public.projectMultipliers pm ON (
+    CAST(p.date AS DATE) >= CASt(pm.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= pm.enddateCoalesced OR pm.enddate IS NULL) AND
+    alias.alias = pm.account
 )
 
 ) t
@@ -372,7 +351,7 @@ SELECT
   mc.isAcceptingCharges,
   mc.isExpiredAccount,
   mc.isOldCharge,
-  mc.aliasActiveOnDate,
+  mc.currentActiveAlias,
   null as datefinalized,
   null as enddatefinalized
 

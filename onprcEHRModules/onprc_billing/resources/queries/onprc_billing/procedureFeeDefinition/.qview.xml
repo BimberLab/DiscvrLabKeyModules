@@ -3,6 +3,7 @@
         <column name="rowId"/>
         <column name="procedureId"/>
         <column name="chargetype"/>
+        <column name="assistingstaff"/>
         <column name="chargeId"/>
         <column name="chargeId/itemcode"/>
         <column name="active"/>

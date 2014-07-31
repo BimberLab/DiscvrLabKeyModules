@@ -84,7 +84,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 12.367;
+        return 12.368;
     }
 
     @Override
@@ -127,9 +127,10 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
         EHRService.get().registerFormType(new DefaultDataEntryFormFactory(ChargesFormType.class, this));
         EHRService.get().registerFormType(new DefaultDataEntryFormFactory(ReversalFormType.class, this));
 
-        Resource billingTriggers = getModuleResource("/scripts/onprc_billing/billing_triggers.js");
-        assert billingTriggers != null;
-        EHRService.get().registerTriggerScript(this, billingTriggers);
+        //NOTE: not really being used, so have disabled
+        //Resource billingTriggers = getModuleResource("/scripts/onprc_billing/billing_triggers.js");
+        //assert billingTriggers != null;
+        //EHRService.get().registerTriggerScript(this, billingTriggers);
 
         LDKService.get().registerContainerScopedTable(ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_CREDIT_GRANTS, "grantNumber");
         LDKService.get().registerContainerScopedTable(ONPRC_BillingSchema.NAME, ONPRC_BillingSchema.TABLE_ALIASES, "alias");

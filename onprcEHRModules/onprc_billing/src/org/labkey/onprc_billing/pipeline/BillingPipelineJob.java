@@ -50,7 +50,7 @@ public class BillingPipelineJob extends PipelineJob implements BillingPipelineJo
         super(null, new ViewBackgroundInfo(c, user, url), pipeRoot);
 
         _analysisDir = analysisDir;
-        setLogFile(new File(FileUtil.makeFileNameWithTimestamp(new File(analysisDir, "billingPipeline").getPath(), "log")));
+        setLogFile(new File(analysisDir, FileUtil.makeFileNameWithTimestamp("billingPipeline", "log")));
         _form = form;
     }
 

@@ -50,6 +50,9 @@ EHR.model.DataModelManager.registerMetadata('Reversals', {
                 columnConfig: {
                     width: 180
                 }
+            },
+            comment: {
+                allowBlank: false
             }
         }
     }

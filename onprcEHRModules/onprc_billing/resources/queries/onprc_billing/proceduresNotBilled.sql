@@ -14,6 +14,7 @@ SELECT
   e.project,
   e.procedureId,
   e.chargetype,
+  e.assistingstaff,
   e.objectid as sourceRecord,
   e.taskid
 
@@ -22,6 +23,7 @@ LEFT JOIN onprc_billing.procedureFeeDefinition p ON (
   p.procedureId = e.procedureId and
   --we want to either have the chargeType match between tables, or allow NULL to act like a wildcard
   (e.chargetype = p.chargetype OR (p.chargetype IS NULL AND (e.chargetype IS NULL OR e.chargetype NOT IN ('Not Billable', 'No Charge')))) AND
+  (e.assistingstaff = p.assistingstaff OR (p.assistingstaff IS NULL AND e.assistingstaff IS NULL)) AND
   p.active = true
 )
 

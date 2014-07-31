@@ -1375,6 +1375,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billi
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.364-12.365.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.365-12.366.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.366-12.367.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.367-12.368.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.30-12.301.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.301-12.302.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.302-12.303.sql -text
@@ -1435,6 +1436,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billin
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.364-12.365.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.365-12.366.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.366-12.367.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.367-12.368.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing.xml -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing_public.template.xml -text
 onprcEHRModules/onprc_billing/resources/scripts/onprc_billing/billing_triggers.js -text

@@ -1288,12 +1288,13 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="projectMultipliers" tableDbType="TABLE" useColumnOrder="true">
-        <ns:tableTitle>Project Multipliers</ns:tableTitle>
+        <ns:tableTitle>Alias Multipliers</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:columns>
             <ns:column columnName="rowId"/>
-            <ns:column columnName="project">
+            <ns:column columnName="account">
+                <ns:columnTitle>Alias</ns:columnTitle>
                 <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="multiplier">

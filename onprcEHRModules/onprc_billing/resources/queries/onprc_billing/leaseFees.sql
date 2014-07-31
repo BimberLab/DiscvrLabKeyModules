@@ -103,7 +103,7 @@ UNION ALL
 
 SELECT
 a.id,
-a.enddate as date, --use enddate as the date for this charge
+a.enddate as date, --use enddate as the transaction date for this charge
 a.project,
 a.date as assignmentStart,
 a.enddate,

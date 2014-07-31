@@ -581,14 +581,13 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
                 failure: LDK.Utils.getErrorCallback(),
                 success: function(){
                     Ext4.Msg.hide();
-                    Ext4.Msg.confirm('Success', 'Charges have been reversed/adjusted.  These changes will apply to the next billing period.  Do you want to view this form now?  This will give another opportunity to make changes.', function(val){
-                        if (val == 'yes'){
-                            window.open(LABKEY.ActionURL.buildURL('ehr', 'dataEntryForm', this.ehrCtx['EHRStudyContainer'], {
-                                formType: 'Reversals',
-                                taskid: taskId
-                            }));
-                        }
-                    }, this);
+                    var url = LABKEY.ActionURL.buildURL('ehr', 'dataEntryForm', this.ehrCtx['EHRStudyContainer'], {
+                        formType: 'Reversals',
+                        taskid: taskId
+                    });
+
+                    Ext4.Msg.alert('Success', 'A form has been created with the reversals/adjustments.  This form has been opened in a new tab where you are able to make changes.<br><br>Sometimes the browser will block this as a popup.  If this form does not appear, <a href="' + url + '" target="_blank">click here to open it.</a>');
+                    window.open(url, '_blank');
                 }
             });
         }

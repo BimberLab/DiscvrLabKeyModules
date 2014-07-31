@@ -15,7 +15,7 @@
  */
 --first find overlapping intervals
 SELECT
-  r1.project,
+  r1.account,
   r1.rowid as rowId1,
   r1.startDate as startDate1,
   r1.enddate as endDate1,
@@ -23,5 +23,5 @@ SELECT
   r2.startDate as startDate2,
   r2.enddate as endDate2
 FROM onprc_billing.projectMultipliers r1
-JOIN onprc_billing.projectMultipliers r2 ON (r1.rowid != r2.rowid and r1.project = r2.project AND cast(r1.startDate as DATE) <= r2.enddateCoalesced AND r1.enddateCoalesced >= cast(r2.startDate as DATE))
+JOIN onprc_billing.projectMultipliers r2 ON (r1.rowid != r2.rowid and r1.account = r2.account AND cast(r1.startDate as DATE) <= r2.enddateCoalesced AND r1.enddateCoalesced >= cast(r2.startDate as DATE))
 where r1.rowid < r2.rowid --this will result in 1 row per pair of offending records, rather than 2

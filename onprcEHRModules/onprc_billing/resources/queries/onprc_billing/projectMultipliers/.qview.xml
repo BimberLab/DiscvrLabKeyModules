@@ -1,13 +1,13 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All Items">
     <columns>
-        <column name="project"/>
+        <column name="account"/>
         <column name="multiplier"/>
         <column name="startDate"/>
         <column name="endDate"/>
         <column name="comment"/>
     </columns>
     <sorts>
-        <sort column="project"/>
+        <sort column="account"/>
         <sort column="startDate" descending="true"/>
     </sorts>
 </customView>

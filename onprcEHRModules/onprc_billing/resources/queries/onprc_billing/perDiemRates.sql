@@ -19,7 +19,7 @@ SELECT
   p.id,
   p.date,
   p.project,
-  pa.account,
+  alias.alias as account,
   p.chargeId,
   p.categories,
   p.overlappingProjects,
@@ -102,7 +102,7 @@ SELECT
     ELSE null
   END as isMultipleProjects,
   CASE WHEN (TIMESTAMPDIFF('SQL_TSI_DAY', p.date, curdate()) > 45) THEN 'Y' ELSE null END as isOldCharge,
-  aliasAtTime.account as aliasActiveOnDate
+  p.project.account as currentActiveAlias
 
 FROM onprc_billing.perDiems p
 
@@ -119,27 +119,11 @@ LEFT JOIN onprc_billing_public.chargeRateExemptions e ON (
     p.project = e.project
 )
 
-LEFT JOIN onprc_billing_public.projectMultipliers pm ON (
-    CAST(p.date AS DATE) >= CASt(pm.startDate AS DATE) AND
-    (CAST(p.date AS DATE) <= pm.enddateCoalesced OR pm.enddate IS NULL) AND
-    p.project = pm.project
-)
-
 LEFT JOIN onprc_billing_public.creditAccount ce ON (
     CAST(p.date AS DATE) >= CAST(ce.startDate AS DATE) AND
     (CAST(p.date AS DATE) <= ce.enddateCoalesced OR ce.enddate IS NULL) AND
     p.chargeId = ce.chargeId
 )
-
-LEFT JOIN (
-  SELECT
-    pa.project,
-    max(pa.account) as account
-  FROM onprc_billing_public.projectAccountHistory pa
-  WHERE pa.isActive = true
-  GROUP BY pa.project
-  HAVING count(*) = 1
-) pa ON (pa.project = p.project)
 
 LEFT JOIN onprc_billing_public.projectAccountHistory aliasAtTime ON (
   aliasAtTime.project = p.project AND
@@ -148,7 +132,13 @@ LEFT JOIN onprc_billing_public.projectAccountHistory aliasAtTime ON (
 )
 
 LEFT JOIN onprc_billing_public.aliases alias ON (
-  alias.alias = pa.account
+  aliasAtTime.account = alias.alias
+)
+
+LEFT JOIN onprc_billing_public.projectMultipliers pm ON (
+    CAST(p.date AS DATE) >= CASt(pm.startDate AS DATE) AND
+    (CAST(p.date AS DATE) <= pm.enddateCoalesced OR pm.enddate IS NULL) AND
+    alias.alias = pm.account
 )
 
 UNION ALL
@@ -194,7 +184,7 @@ SELECT
   mc.isExpiredAccount,
   null as isMultipleProjects,
   mc.isOldCharge,
-  mc.aliasActiveOnDate
+  mc.currentActiveAlias
 
 FROM onprc_billing.miscChargesFeeRateData mc
 WHERE cast(mc.billingDate as date) >= CAST(StartDate as date) AND cast(mc.billingDate as date) <= CAST(EndDate as date)

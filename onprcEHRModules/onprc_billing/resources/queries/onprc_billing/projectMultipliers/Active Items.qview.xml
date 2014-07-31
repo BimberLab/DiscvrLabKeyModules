@@ -1,6 +1,6 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView">
     <sorts>
-        <sort column="project"/>
+        <sort column="account"/>
         <sort column="startDate" descending="true"/>
     </sorts>
     <filters>
