@@ -23,7 +23,6 @@ import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.RedirectAction;
-import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
@@ -34,11 +33,9 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.AdminConsoleAction;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.permissions.AdminPermission;
-import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
-import org.labkey.api.view.JspView;
-import org.labkey.api.view.NavTree;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sla.etl.ETL;
 import org.labkey.sla.etl.ETLRunnable;
@@ -48,8 +45,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -334,7 +329,7 @@ public class SLAController extends SpringActionController
     {
         public void export(Object o, HttpServletResponse response, BindException errors) throws Exception
         {
-            showLogFile(response, 0, getLogFile("sla-etl.log"));
+            PageFlowUtil.streamLogFile(response, 0, getLogFile("sla-etl.log"));
         }
     }
 
@@ -342,35 +337,6 @@ public class SLAController extends SpringActionController
     {
         File tomcatHome = new File(System.getProperty("catalina.home"));
         return new File(tomcatHome, "logs/" + name);
-    }
-
-    public void showLogFile(HttpServletResponse response, long startingOffset, File logFile) throws Exception
-    {
-        if (logFile.exists())
-        {
-            FileInputStream fIn = null;
-            try
-            {
-                fIn = new FileInputStream(logFile);
-                //noinspection ResultOfMethodCallIgnored
-                fIn.skip(startingOffset);
-                OutputStream out = response.getOutputStream();
-                response.setContentType("text/plain");
-                byte[] b = new byte[4096];
-                int i;
-                while ((i = fIn.read(b)) != -1)
-                {
-                    out.write(b, 0, i);
-                }
-            }
-            finally
-            {
-                if (fIn != null)
-                {
-                    fIn.close();
-                }
-            }
-        }
     }
 
     @RequiresPermissionClass(AdminPermission.class)
