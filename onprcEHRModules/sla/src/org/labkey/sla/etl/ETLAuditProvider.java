@@ -114,7 +114,7 @@ public class ETLAuditProvider extends AbstractAuditTypeProvider implements Audit
     {
         Domain domain = getDomain();
 
-        DefaultAuditTypeTable table = new DefaultAuditTypeTable(this, domain, getSchema(), userSchema)
+        DefaultAuditTypeTable table = new DefaultAuditTypeTable(this, domain, userSchema)
         {
             @Override
             public List<FieldKey> getDefaultVisibleColumns()

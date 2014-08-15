@@ -97,7 +97,7 @@ public class BillingAuditProvider extends AbstractAuditTypeProvider implements A
     {
         Domain domain = getDomain();
 
-        DefaultAuditTypeTable table = new DefaultAuditTypeTable(this, domain, getSchema(), userSchema)
+        DefaultAuditTypeTable table = new DefaultAuditTypeTable(this, domain, userSchema)
         {
             @Override
             public List<FieldKey> getDefaultVisibleColumns()
