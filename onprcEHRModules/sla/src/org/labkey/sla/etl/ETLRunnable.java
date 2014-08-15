@@ -55,7 +55,6 @@ import org.labkey.api.settings.AppProps;
 import org.labkey.api.study.DataSetTable;
 import org.labkey.api.util.ResultSetUtil;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.HttpView;
 import org.labkey.api.view.ViewContext;
 import org.labkey.sla.SLAModule;
 import org.labkey.sla.SLASchema;
@@ -530,7 +529,7 @@ public class ETLRunnable implements Runnable
                     List<Object> searchParams = new ArrayList<>();
                     if (targetTable instanceof DataSetTable)
                     {
-                        if(((DataSetTable)targetTable).getDataSet().isDemographicData())
+                        if(((DataSetTable)targetTable).getDataset().isDemographicData())
                         {
                             log.info("table is demographics, filtering on Id");
                             isDemographics = true;

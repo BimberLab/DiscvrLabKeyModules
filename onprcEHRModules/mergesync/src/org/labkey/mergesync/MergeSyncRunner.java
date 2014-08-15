@@ -1015,7 +1015,7 @@ public class MergeSyncRunner implements Job
         int datasetId = StudyService.get().getDatasetIdByName(c, datasetName);
         if (datasetId > -1)
         {
-            DataSet ds = StudyService.get().getDataSet(c, datasetId);
+            DataSet ds = StudyService.get().getDataset(c, datasetId);
             ret = QueryService.get().getUserSchema(u, c, "study").getTable(ds.getName());
         }
 

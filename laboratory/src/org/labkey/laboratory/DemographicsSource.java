@@ -156,7 +156,7 @@ public class DemographicsSource extends AbstractDataSource
         {
             if (ti instanceof DataSetTable)
             {
-                DataSet ds = ((DataSetTable)ti).getDataSet();
+                DataSet ds = ((DataSetTable)ti).getDataset();
                 if (!(ds.isDemographicData() && ds.getStudy().getSubjectColumnName().equalsIgnoreCase(col.getName())))
                 {
                     throw new IllegalArgumentException("Target column is not a key field: " + targetColumn);
