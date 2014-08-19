@@ -30,7 +30,7 @@ public class VirusReferenceLibraryStep extends DNAReferenceLibraryStep implement
     {
         public Provider()
         {
-            super("Virus", "Viral Sequences", "Select this option to construct a new library by selecting a viral sequence from the server's DNA DB", Arrays.asList(
+            super("Virus", "Viral Sequences", null, "Select this option to construct a new library by selecting a viral sequence from the server's DNA DB", Arrays.asList(
                     ToolParameterDescriptor.create(subset, "Virus Strain", null, "ldk-simplelabkeycombo", new JSONObject()
                     {{
                             put("schemaName", "sequenceanalysis");

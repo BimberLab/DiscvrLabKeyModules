@@ -15,8 +15,8 @@
  */
 package org.labkey.sequenceanalysis.util;
 
-import net.sf.picard.fastq.FastqReader;
-import net.sf.picard.fastq.FastqRecord;
+import htsjdk.samtools.fastq.FastqReader;
+import htsjdk.samtools.fastq.FastqRecord;
 import org.apache.commons.io.IOUtils;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
@@ -60,10 +60,8 @@ public class FastqUtils
 
     public static FastqUtils.FASTQ_ENCODING inferFastqEncoding(File fastq)
     {
-        FastqReader reader = null;
-        try
+        try (FastqReader reader = new FastqReader(fastq))
         {
-            reader = new FastqReader(fastq);
             Iterator<FastqRecord> i = reader.iterator();
             while (i.hasNext())
             {
@@ -84,63 +82,32 @@ public class FastqUtils
 
             }
         }
-        finally
-        {
-            if (reader != null)
-                reader.close();
-        }
 
         return null;
     }
 
     public static int getSequenceCount(File inputFile) throws PipelineJobException
     {
-        BufferedReader lnr = null;
-        InputStream is = null;
         FileType gz = new FileType(".gz");
-
-        try
+        try (InputStream is = gz.isType(inputFile) ? new GZIPInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile);BufferedReader lnr = new BufferedReader(new InputStreamReader(is));)
         {
-            is = new FileInputStream(inputFile);
-            if (gz.isType(inputFile))
-            {
-                is = new GZIPInputStream(is);
-            }
-
-            lnr = new BufferedReader(new InputStreamReader(is));
             int count = 0;
             while (lnr.readLine() != null)
             {
                 count++;
             }
+
             return count / 4;
-        }
-        catch (FileNotFoundException e)
-        {
-            throw new PipelineJobException(e.getMessage());
         }
         catch (IOException e)
         {
             throw new PipelineJobException(e.getMessage());
         }
-        finally
-        {
-            try
-            {
-                if (lnr != null)
-                    lnr.close();
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e.getMessage());
-            }
-        }
     }
 
     public static Map<String, Object> getQualityMetrics(File f)
     {
-        FastqReader reader = null;
-        try
+        try (FastqReader reader = new FastqReader(f))
         {
             int total = 0;
             int sum = 0;
@@ -148,9 +115,8 @@ public class FastqUtils
             int max = 0;
             float avg;
 
-            reader = new FastqReader(f);
             int l;
-            while(reader.hasNext())
+            while (reader.hasNext())
             {
                 FastqRecord fq = reader.next();
                 l = fq.getReadString().length();
@@ -174,11 +140,6 @@ public class FastqUtils
 
             return map;
         }
-        finally
-        {
-            if (reader != null)
-                reader.close();
-        }
     }
 
     public static void mergeFastqFiles(File output, File... inputs) throws IOException
@@ -188,36 +149,18 @@ public class FastqUtils
             output.createNewFile();
         }
 
-        FileInputStream in = null;
-        GZIPInputStream gis = null;
         FileType gz = new FileType(".gz");
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(output)))
+        for (File f : inputs)
         {
-            for (File f : inputs)
+            if (!f.exists())
             {
-                if (!f.exists())
-                {
-                    throw new NotFoundException("File " + f.getPath() + " does not exist");
-                }
-                in = new FileInputStream(f);
-
-                if (gz.isType(f))
-                {
-                    gis = new GZIPInputStream(in);
-                    IOUtils.copy(gis, writer);
-                }
-                else
-                {
-                    IOUtils.copy(in, writer);
-                }
+                throw new NotFoundException("File " + f.getPath() + " does not exist");
             }
-        }
-        finally
-        {
-            if (in != null)
-                in.close();
-            if (gis != null)
-                gis.close();
+
+            try (InputStream in = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f);BufferedWriter writer = new BufferedWriter(new FileWriter(output)))
+            {
+                IOUtils.copy(in, writer);
+            }
         }
     }
 }

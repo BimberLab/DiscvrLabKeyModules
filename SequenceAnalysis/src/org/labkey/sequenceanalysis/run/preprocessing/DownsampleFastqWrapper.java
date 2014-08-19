@@ -76,7 +76,7 @@ public class DownsampleFastqWrapper extends AbstractCommandWrapper
     {
         public Provider()
         {
-            super("DownsampleReads", "Downsample Reads", "If selected, up to the specified number of reads will be randomly selected from each input file.  It can be useful for debugging or trying new settings, as fewer reads will run faster.  Note: this will occur prior to barcode separation, but after merging.", Arrays.asList(
+            super("DownsampleReads", "Downsample Reads", "Picard", "If selected, up to the specified number of reads will be randomly selected from each input file.  It can be useful for debugging or trying new settings, as fewer reads will run faster.  Note: this will occur prior to barcode separation, but after merging.", Arrays.asList(
                     ToolParameterDescriptor.create(DownsampleReadNumber, "Total Reads", "For each input file, up to the this number of reads will be randomly retained", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0);

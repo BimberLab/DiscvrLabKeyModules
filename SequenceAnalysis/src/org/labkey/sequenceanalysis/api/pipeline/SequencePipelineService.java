@@ -40,6 +40,4 @@ abstract public class SequencePipelineService
     abstract public <StepType extends PipelineStep> List<PipelineStepProvider<StepType>> getSteps(PipelineJob job, Class<StepType> stepType);
 
     abstract public File getExeForPackage(String packageName, String exe);
-
-    abstract public ReferenceLibraryHelper getLibraryHelper(File refFasta);
 }

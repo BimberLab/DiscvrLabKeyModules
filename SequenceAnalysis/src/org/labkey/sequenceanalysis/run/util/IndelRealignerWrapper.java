@@ -1,19 +1,16 @@
 package org.labkey.sequenceanalysis.run.util;
 
 import com.drew.lang.annotations.Nullable;
-import net.sf.picard.sam.BuildBamIndex;
-import net.sf.samtools.SAMFileReader;
+import htsjdk.samtools.BAMIndexer;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,7 +21,7 @@ import java.util.List;
  * Date: 7/1/2014
  * Time: 2:40 PM
  */
-public class IndelRealignerWrapper extends AbstractCommandWrapper
+public class IndelRealignerWrapper extends AbstractGatkWrapper
 {
     public IndelRealignerWrapper(Logger log)
     {
@@ -35,8 +32,7 @@ public class IndelRealignerWrapper extends AbstractCommandWrapper
     {
         getLogger().info("Running GATK IndelRealigner for: " + inputBam.getName());
 
-        getLogger().info("\tensure dictionary exists");
-        new CreateSequenceDictionaryWrapper(getLogger()).execute(referenceFasta, false);
+        ensureDictionary(referenceFasta);
 
         File expectedIndex = new File(inputBam.getPath() + ".bai");
         boolean doDeleteIndex = false;
@@ -45,8 +41,8 @@ public class IndelRealignerWrapper extends AbstractCommandWrapper
             getLogger().debug("\tcreating temp index for BAM: " + inputBam.getName());
             try (SAMFileReader reader = new SAMFileReader(inputBam))
             {
-                reader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
-                BuildBamIndex.createIndex(reader, expectedIndex);
+                reader.setValidationStringency(ValidationStringency.SILENT);
+                BAMIndexer.createIndex(reader, expectedIndex);
             }
             doDeleteIndex = true;
         }
@@ -54,7 +50,7 @@ public class IndelRealignerWrapper extends AbstractCommandWrapper
         getLogger().info("\tbuilding target intervals");
         List<String> args = new ArrayList<>();
         args.add("java");
-        args.add("-Xmx2g");
+        args.add("-Xmx4g");
         args.add("-jar");
         args.add(getJAR().getPath());
         args.add("-T");
@@ -95,7 +91,7 @@ public class IndelRealignerWrapper extends AbstractCommandWrapper
         getLogger().info("\trunning IndelRealigner");
         List<String> realignerArgs = new ArrayList<>();
         realignerArgs.add("java");
-        realignerArgs.add("-Xmx2g");
+        realignerArgs.add("-Xmx4g");
         realignerArgs.add("-jar");
         realignerArgs.add(getJAR().getPath());
         realignerArgs.add("-T");
@@ -151,27 +147,5 @@ public class IndelRealignerWrapper extends AbstractCommandWrapper
     public File getExpectedIntervalsFile(File inputBam)
     {
         return new File(getOutputDir(inputBam), FileUtil.getBaseName(inputBam) + ".intervals");
-    }
-
-    private File getJAR()
-    {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARDPATH");
-        if (path != null)
-        {
-            return new File(path);
-        }
-
-        path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
-        if (path == null)
-        {
-            path = PipelineJobService.get().getAppProperties().getToolsDirectory();
-        }
-
-        return path == null ? new File("GenomeAnalysisTK.jar") : new File(path, "GenomeAnalysisTK.jar");
-    }
-
-    public boolean jarExists()
-    {
-        return getJAR() == null || !getJAR().exists();
     }
 }

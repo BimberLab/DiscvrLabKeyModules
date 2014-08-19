@@ -34,6 +34,11 @@ public interface PipelineStepProvider<StepType extends PipelineStep>
     public String getLabel();
 
     /**
+     * @return Optional.  The name of the underlying tool used in this step
+     */
+    public String getToolName();
+
+    /**
      * @return Optional.  If provided, the UI will provide a link to this tool's website
      */
     public String getWebsiteURL();

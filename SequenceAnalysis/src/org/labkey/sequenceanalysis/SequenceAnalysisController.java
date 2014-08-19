@@ -15,6 +15,7 @@
 
 package org.labkey.sequenceanalysis;
 
+import com.allen_sauer.gwt.dnd.client.util.StringUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.ReaderInputStream;
@@ -40,25 +41,24 @@ import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DataRegionSelection;
+import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.ResultsImpl;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.ExperimentException;
+import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.laboratory.LaboratoryService;
-import org.labkey.api.laboratory.assay.AssayImportMethod;
-import org.labkey.api.laboratory.assay.AssayParser;
 import org.labkey.api.module.ModuleHtmlView;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.ParamParser;
@@ -81,16 +81,16 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.resource.Resource;
+import org.labkey.api.security.CSRF;
 import org.labkey.api.security.IgnoresTermsOfUse;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.study.assay.AssayFileWriter;
-import org.labkey.api.study.assay.AssayProvider;
-import org.labkey.api.study.assay.AssayService;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -98,7 +98,6 @@ import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.util.Path;
-import org.labkey.api.util.StringExpression;
 import org.labkey.api.util.StringExpressionFactory;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.HtmlView;
@@ -108,12 +107,14 @@ import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.webdav.WebdavResource;
 import org.labkey.api.webdav.WebdavService;
+import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
+import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
-import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByCodonAggregator;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByReadAggregator;
@@ -122,6 +123,7 @@ import org.labkey.sequenceanalysis.run.analysis.AvgBaseQualityAggregator;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.NtCoverageAggregator;
 import org.labkey.sequenceanalysis.run.analysis.NtSnpByPosAggregator;
+import org.labkey.sequenceanalysis.run.util.BamStatsRunner;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.visualization.VariationChart;
@@ -135,12 +137,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -232,7 +234,87 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermissionClass(ReadPermission.class)
+    public class BamStatsReportAction extends SimpleViewAction<FastqcForm>
+    {
+        @Override
+        public ModelAndView getView(FastqcForm form, BindException errors) throws Exception
+        {
+            if (form.getFilenames() == null && form.getDataIds() == null)
+                errors.reject("Must provide a filename or Exp data Ids");
+
+            //resolve files
+            List<File> files = new ArrayList<>();
+
+            if (form.getFilenames() != null)
+            {
+                for (String fn : form.getFilenames())
+                {
+                    WebdavResource r = WebdavService.get().getRootResolver().lookup(Path.parse(fn));
+                    if (r.getFile().exists())
+                    {
+                        files.add(r.getFile());
+                    }
+                }
+
+            }
+
+            if (form.getDataIds() != null)
+            {
+                for (int id : form.getDataIds())
+                {
+                    ExpData data = ExperimentService.get().getExpData(id);
+                    if (data != null && data.getContainer().hasPermission(getUser(), ReadPermission.class))
+                    {
+                        if (data.getFile().exists())
+                            files.add(data.getFile());
+                    }
+                }
+            }
+
+            if (form.getAnalysisIds() != null)
+            {
+                for (int id : form.getAnalysisIds())
+                {
+                    AnalysisModel m = AnalysisModelImpl.getFromDb(id, getUser());
+                    if (m != null && m.getAlignmentFile() != null)
+                    {
+                        ExpData data = ExperimentService.get().getExpData(m.getAlignmentFile());
+                        if (data != null && data.getContainer().hasPermission(getUser(), ReadPermission.class))
+                        {
+                            if (data.getFile().exists())
+                                files.add(data.getFile());
+                        }
+                    }
+                }
+            }
+
+            if (files.size() == 0)
+            {
+                return new HtmlView("Error: either no files provided or the files did not exist on the server");
+            }
+
+            BamStatsRunner runner = new BamStatsRunner();
+            try
+            {
+                runner.execute(files);
+            }
+            catch (Exception e)
+            {
+                return new HtmlView("Error: " + e.getMessage());
+            }
+
+            return new HtmlView("BamStats Report", runner.processOutput(getContainer()));
+        }
+
+        public NavTree appendNavTrail(NavTree root)
+        {
+            root.addChild("BamStats Report"); //necessary to set page title, it seems
+            return root;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
     public class SequenceAnalysisAction extends SimpleViewAction<Object>
     {
         public void validateCommand(Object form, Errors errors)
@@ -266,6 +348,43 @@ public class SequenceAnalysisController extends SpringActionController
         public NavTree appendNavTrail(NavTree tree)
         {
             return tree.addChild("Sequence Analysis");
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class AlignmentAnalysisAction extends SimpleViewAction<Object>
+    {
+        public void validateCommand(Object form, Errors errors)
+        {
+
+        }
+
+        public URLHelper getSuccessURL(Object form)
+        {
+            return getContainer().getStartURL(getUser());
+        }
+
+        public ModelAndView getView(Object form, BindException errors) throws Exception
+        {
+            LinkedHashSet<ClientDependency> cds = new LinkedHashSet<>();
+            for (PipelineStepProvider fact : SequencePipelineService.get().getAllProviders())
+            {
+                cds.addAll(fact.getClientDependencies());
+            }
+
+            Resource r = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class).getModuleResource(Path.parse("views/alignmentAnalysis.html"));
+            assert r != null;
+
+            ModuleHtmlView view = new ModuleHtmlView(r);
+            view.addClientDependencies(cds);
+            //getPageConfig().setTemplate(view.getPageTemplate());
+
+            return view;
+        }
+
+        public NavTree appendNavTrail(NavTree tree)
+        {
+            return tree.addChild("Analyze Alignments");
         }
     }
 
@@ -483,6 +602,32 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
+    @RequiresPermissionClass(InsertPermission.class) @CSRF
+    public class RunVariantEvalAction extends ApiAction<RunVariantEvalForm>
+    {
+        public ApiResponse execute(RunVariantEvalForm form, BindException errors) throws Exception
+        {
+            Map<String, Object> ret = new HashMap<>();
+
+            return new ApiSimpleResponse(ret);
+        }
+    }
+
+    public static class RunVariantEvalForm
+    {
+        int[] _dataIds;
+
+        public int[] getDataIds()
+        {
+            return _dataIds;
+        }
+
+        public void setDataIds(int[] dataIds)
+        {
+            _dataIds = dataIds;
+        }
+    }
+
     @RequiresPermissionClass(ReadPermission.class)
     public class GetAnalysisToolDetailsAction extends ApiAction<Object>
     {
@@ -505,7 +650,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermissionClass(InsertPermission.class) @CSRF
     public class SaveAnalysisAsTemplateAction extends ApiAction<SaveAnalysisAsTemplateForm>
     {
         public ApiResponse execute(SaveAnalysisAsTemplateForm form, BindException errors) throws Exception
@@ -518,7 +663,7 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            AnalysisModel model = AnalysisModel.getFromDb(form.getAnalysisId(), getUser());
+            AnalysisModel model = AnalysisModelImpl.getFromDb(form.getAnalysisId(), getUser());
             if (model == null)
             {
                 errors.reject(ERROR_MSG, "Unable to find run for analysis: " + form.getAnalysisId());
@@ -588,7 +733,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermissionClass(ReadPermission.class)
-    public class ValidateReadsetFiles extends ApiAction<ValidateReadsetImportForm>
+    public class ValidateReadsetFilesAction extends ApiAction<ValidateReadsetImportForm>
     {
         public ApiResponse execute(ValidateReadsetImportForm form, BindException errors) throws Exception
         {
@@ -742,7 +887,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermissionClass(ReadPermission.class) @CSRF
     public class AnalyzeBamAction extends ApiAction<AnalyzeBamForm>
     {
         public ApiResponse execute(AnalyzeBamForm form, BindException errors) throws Exception
@@ -765,7 +910,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             List<Integer> analysisIds = Arrays.asList(form.getAnalysisIds());
             TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES), new SimpleFilter(FieldKey.fromString("rowid"), analysisIds, CompareType.IN), null);
-            AnalysisModel[] models = ts.getArray(AnalysisModel.class);
+            AnalysisModel[] models = ts.getArray(AnalysisModelImpl.class);
             if (models == null)
             {
                 errors.reject(ERROR_MSG, "Unable selected analyses");
@@ -990,7 +1135,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
             TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("analysis_id"), form.getAnalysisId()), null);
-            AnalysisModel[] records = ts.getArray(AnalysisModel.class);
+            AnalysisModel[] records = ts.getArray(AnalysisModelImpl.class);
             if (records.length != 1)
             {
                 resultProperties.put("success", false);
@@ -1012,7 +1157,7 @@ public class SequenceAnalysisController extends SpringActionController
             if (ref == null || !ref.getFile().exists())
             {
                 resultProperties.put("success", false);
-                resultProperties.put("exception", "Unable to find reference library FASTA, or the file does not exist");
+                resultProperties.put("exception", "Unable to find reference FASTA, or the file does not exist");
                 return new ApiSimpleResponse(resultProperties);
             }
 
@@ -1187,6 +1332,7 @@ public class SequenceAnalysisController extends SpringActionController
         private String[] _filenames;
         private Integer[] _dataIds;
         private Integer[] _readsets;
+        private Integer[] _analysisIds;
 
         public void setFilenames(String... filename)
         {
@@ -1215,6 +1361,16 @@ public class SequenceAnalysisController extends SpringActionController
         public void setReadsets(Integer... readsets)
         {
             _readsets = readsets;
+        }
+
+        public Integer[] getAnalysisIds()
+        {
+            return _analysisIds;
+        }
+
+        public void setAnalysisIds(Integer... analysisIds)
+        {
+            _analysisIds = analysisIds;
         }
     }
 
@@ -1441,7 +1597,7 @@ public class SequenceAnalysisController extends SpringActionController
     /**
      * Called from LABKEY.Pipeline.startAnalysis()
      */
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermissionClass(InsertPermission.class) @CSRF
     public class StartAnalysisAction extends ApiAction<AnalyzeForm>
     {
         public ApiResponse execute(AnalyzeForm form, BindException errors) throws Exception
@@ -1765,7 +1921,7 @@ public class SequenceAnalysisController extends SpringActionController
         return provider.getProtocolFactory(fatp);
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermissionClass(InsertPermission.class) @CSRF
     public class CreateReferenceLibraryAction extends ApiAction<CreateReferenceLibraryForm>
     {
         public ApiResponse execute(CreateReferenceLibraryForm form, BindException errors) throws Exception
@@ -1782,7 +1938,59 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getName(), form.getDescription(), Arrays.asList(form.getSequenceIds()));
+            if (form.getIntervals() != null && form.getIntervals().length != form.getSequenceIds().length)
+            {
+                errors.reject(ERROR_MSG, "If supplying a custom list of intervals, this array must be the same length as sequence IDs");
+                return null;
+            }
+
+            List<ReferenceLibraryMember> members = new ArrayList<>();
+            int idx = 0;
+            for (Integer seqId : form.getSequenceIds())
+            {
+                if (form.getIntervals() != null)
+                {
+                    String intervals = form.getIntervals()[idx];
+                    if (StringUtils.trimToNull(intervals) != null)
+                    {
+                        for (String t : intervals.split(","))
+                        {
+                            ReferenceLibraryMember m = new ReferenceLibraryMember();
+                            m.setRef_nt_id(seqId);
+
+                            String[] coordinates = t.split("-");
+                            if (coordinates.length != 2)
+                            {
+                                errors.reject("Inproper interval: [" + t + "]");
+                                return null;
+                            }
+
+                            Integer start = StringUtils.trimToNull(coordinates[0]) == null ? null : ConvertHelper.convert(coordinates[0], Integer.class);
+                            m.setStart(start);
+                            Integer stop = StringUtils.trimToNull(coordinates[1]) == null ? null : ConvertHelper.convert(coordinates[1], Integer.class);
+                            m.setStop(stop);
+
+                            members.add(m);
+                        }
+                    }
+                    else
+                    {
+                        ReferenceLibraryMember m = new ReferenceLibraryMember();
+                        m.setRef_nt_id(seqId);
+                        members.add(m);
+                    }
+                }
+                else
+                {
+                    ReferenceLibraryMember m = new ReferenceLibraryMember();
+                    m.setRef_nt_id(seqId);
+                    members.add(m);
+                }
+
+                idx++;
+            }
+
+            SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getName(), form.getDescription(), members);
 
             return new ApiSimpleResponse("Success", true);
         }
@@ -1793,6 +2001,7 @@ public class SequenceAnalysisController extends SpringActionController
         private String _name;
         private String _description;
         private Integer[] _sequenceIds;
+        private String[] _intervals;
 
         public String getName()
         {
@@ -1822,6 +2031,16 @@ public class SequenceAnalysisController extends SpringActionController
         public void setSequenceIds(Integer[] sequenceIds)
         {
             _sequenceIds = sequenceIds;
+        }
+
+        public String[] getIntervals()
+        {
+            return _intervals;
+        }
+
+        public void setIntervals(String[] intervals)
+        {
+            _intervals = intervals;
         }
     }
 
@@ -1878,7 +2097,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                     if (form.isCreateLibrary())
                     {
-                        SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getLibraryName(), form.getLibraryDescription(), sequenceIds);
+                        SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, getContainer(), getUser(), form.getLibraryName(), form.getLibraryDescription());
                     }
 
                     resp.put("success", true);
@@ -1964,6 +2183,139 @@ public class SequenceAnalysisController extends SpringActionController
         public void setLibraryDescription(String libraryDescription)
         {
             _libraryDescription = libraryDescription;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class ImportOutputFileAction extends AbstractFileUploadAction<ImportOutputFileForm>
+    {
+        @Override
+        public void export(ImportOutputFileForm form, HttpServletResponse response, BindException errors) throws Exception
+        {
+            response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
+
+            super.export(form, response, errors);
+        }
+
+        protected File getTargetFile(String filename) throws IOException
+        {
+            if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
+                throw new UploadException("Pipeline root must be configured before uploading files", HttpServletResponse.SC_NOT_FOUND);
+
+            AssayFileWriter writer = new AssayFileWriter();
+            try
+            {
+                File targetDirectory = writer.ensureUploadDirectory(getContainer(), "sequenceOutputs");
+                return writer.findUniqueFileName(filename, targetDirectory);
+            }
+            catch (ExperimentException e)
+            {
+                throw new UploadException(e.getMessage(), HttpServletResponse.SC_NOT_FOUND);
+            }
+        }
+
+        protected String getResponse(Map<String, Pair<File, String>> files, ImportOutputFileForm form) throws UploadException
+        {
+            JSONObject resp = new JSONObject();
+            try
+            {
+                for (Map.Entry<String, Pair<File, String>> entry : files.entrySet())
+                {
+                    File file = entry.getValue().getKey();
+
+                    Map<String, Object> params = new CaseInsensitiveHashMap<>();
+                    params.put("name", form.getName());
+                    params.put("description", form.getDescription());
+
+                    ExpData data = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"), file.getName());
+                    data.setDataFileURI(file.toURI());
+                    data.save(getUser());
+                    params.put("dataid", data.getRowId());
+                    params.put("library_id", form.getLibraryId());
+                    if (form.getReadset() > 0)
+                        params.put("readset", form.getReadset());
+                    params.put("category", form.getCategory());
+
+                    params.put("container", getContainer().getId());
+                    params.put("created", new Date());
+                    params.put("createdby", getUser().getUserId());
+                    params.put("modified", new Date());
+                    params.put("modifiedby", getUser().getUserId());
+
+                    Table.insert(getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), params);
+
+                    resp.put("success", true);
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.logExceptionToMothership(getViewContext().getRequest(), e);
+                getViewContext().getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                logger.error(e.getMessage(), e);
+                resp.put("success", false);
+                resp.put("exception", e.getMessage());
+            }
+
+            return resp.toString();
+        }
+    }
+
+    public static class ImportOutputFileForm extends AbstractFileUploadAction.FileUploadForm
+    {
+        private String _name;
+        private String _description;
+        private String _category;
+        private int _libraryId;
+        private int _readset;
+
+        public String getName()
+        {
+            return _name;
+        }
+
+        public void setName(String name)
+        {
+            _name = name;
+        }
+
+        public String getDescription()
+        {
+            return _description;
+        }
+
+        public void setDescription(String description)
+        {
+            _description = description;
+        }
+
+        public int getLibraryId()
+        {
+            return _libraryId;
+        }
+
+        public void setLibraryId(int libraryId)
+        {
+            _libraryId = libraryId;
+        }
+
+        public int getReadset()
+        {
+            return _readset;
+        }
+
+        public void setReadset(int readset)
+        {
+            _readset = readset;
+        }
+
+        public String getCategory()
+        {
+            return _category;
+        }
+
+        public void setCategory(String category)
+        {
+            _category = category;
         }
     }
 
@@ -2190,6 +2542,68 @@ public class SequenceAnalysisController extends SpringActionController
         public void setLineLength(int lineLength)
         {
             _lineLength = lineLength;
+        }
+    }
+
+    @RequiresPermissionClass(AdminPermission.class) @CSRF
+    public class RecreateReferenceLibraryAction extends ApiAction<RecreateReferenceLibraryForm>
+    {
+        public ApiResponse execute(RecreateReferenceLibraryForm form, BindException errors)
+        {
+            if (form.getLibraryIds() == null || form.getLibraryIds().length == 0)
+            {
+                errors.reject("Must provide a list of reference genomes to re-process");
+                return null;
+            }
+
+            try
+            {
+                PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
+                for (Integer libraryId : form.getLibraryIds())
+                {
+                    TableInfo ti = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
+                    String containerId = new TableSelector(ti, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(String.class);
+                    if (containerId == null)
+                    {
+                        throw new PipelineValidationException("Unknown reference genome: " + libraryId);
+                    }
+
+                    Container c = ContainerManager.getForId(containerId);
+                    if (c == null)
+                    {
+                        throw new PipelineValidationException("Unknown container: " + containerId);
+                    }
+
+                    if (!c.hasPermission(getUser(), UpdatePermission.class))
+                    {
+                        throw new PipelineValidationException("Insufficient permissions to update reference genome: " + libraryId);
+                    }
+
+                    PipelineService.get().queueJob(new ReferenceLibraryPipelineJob(c, getUser(), null, root, libraryId));
+                }
+
+                return new ApiSimpleResponse("success", true);
+            }
+            catch (PipelineValidationException | IOException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+        }
+    }
+
+    public static class RecreateReferenceLibraryForm
+    {
+        private int[] _libraryIds;
+
+        public int[] getLibraryIds()
+        {
+            return _libraryIds;
+        }
+
+        public void setLibraryIds(int[] libraryIds)
+        {
+            _libraryIds = libraryIds;
         }
     }
 }

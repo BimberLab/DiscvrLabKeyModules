@@ -26,6 +26,7 @@ SELECT
   t.ageAtTime,
   t.category,
   t.chargeId,
+  t.serviceCenter,
   t.item,
 
   t.leaseCharge1,
@@ -91,6 +92,7 @@ SELECT
   p.ageAtTime,
   p.category,
   p.chargeId,
+  p.chargeId.departmentCode as serviceCenter,
   p.chargeId.name as item,
 
   p.leaseCharge1,
@@ -316,6 +318,7 @@ SELECT
   null as ageAtTime,
   mc.category,
   mc.chargeId,
+  mc.serviceCenter,
   mc.item,
 
   null as leaseCharge1,

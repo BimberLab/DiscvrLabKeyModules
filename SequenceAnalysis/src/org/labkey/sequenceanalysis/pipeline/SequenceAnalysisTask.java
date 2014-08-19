@@ -31,9 +31,10 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
+import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
-import org.labkey.sequenceanalysis.api.pipeline.BamProcessingStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
@@ -47,7 +48,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * User: bimber
@@ -56,8 +56,6 @@ import java.util.Set;
  */
 public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask.Factory>
 {
-    private SequenceTaskHelper _taskHelper;
-
     protected SequenceAnalysisTask(Factory factory, PipelineJob job)
     {
         super(factory, job);
@@ -106,7 +104,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();
-        _taskHelper = new SequenceTaskHelper(job, _wd);
+        SequenceTaskHelper taskHelper = new SequenceTaskHelper(job, _wd);
 
         List<RecordedAction> actions = new ArrayList<>();
 
@@ -117,20 +115,18 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         ExpRun run = ExperimentService.get().getExpRun(runId);
         List<AnalysisModel> analysisModels = new ArrayList<>();
 
-        for (ReadsetModel rs : _taskHelper.getSettings().getReadsets())
+        for (ReadsetModel rs : taskHelper.getSettings().getReadsets())
         {
             String basename = SequenceTaskHelper.getMinimalBaseName(rs.getFileName());
             String basename2 = SequenceTaskHelper.getMinimalBaseName(rs.getFileName2());
 
-            AnalysisModel model = new AnalysisModel();
+            AnalysisModelImpl model = new AnalysisModelImpl();
             model.setContainer(getJob().getContainer().getId());
             model.setCreatedby(getJob().getUser().getUserId());
             model.setCreated(new Date());
             model.setModifiedby(getJob().getUser().getUserId());
             model.setModified(new Date());
-            //TODO
-            //model.setType(_taskHelper.getSettings().getAnalysisType());
-            model.setDescription(_taskHelper.getSettings().getProtocolDescription());
+            model.setDescription(taskHelper.getSettings().getProtocolDescription());
             model.setRunId(runId);
             model.setReadset(rs.getReadsetId());
 
@@ -169,29 +165,10 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 continue;
             }
 
-            //reference library
-            datas = run.getInputDatas(ReferenceLibraryTask.REFERENCE_DB_FASTA, null);
-            if (datas.size() > 0)
-            {
-                for (ExpData d : datas)
-                {
-                    if (d.getFile() == null)
-                    {
-                        getJob().getLogger().debug("No file found for ExpData: " + d.getRowId());
-                    }
-                    else if (d.getFile().exists())
-                    {
-                        model.setReference_library(d.getRowId());
-                        break;
-                    }
-                    else
-                    {
-                        getJob().getLogger().debug("File does not exist: " + d.getFile().getPath());
-                    }
-                }
-            }
-
-            if (model.getReference_library() == null)
+            //reference
+            ReferenceLibraryStep referenceLibraryStep = taskHelper.getSingleStep(ReferenceLibraryStep.class).create(taskHelper);
+            referenceLibraryStep.setLibraryId(getJob(), run, model);
+            if (model.getReferenceLibrary() == null)
             {
                 getJob().getLogger().error("Unable to find reference FASTA for run: " + run.getRowId());
                 continue;
@@ -279,14 +256,14 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                         continue;
                     }
 
-                    File refDB = ExperimentService.get().getExpData(model.getReference_library()).getFile();
+                    File refDB = ExperimentService.get().getExpData(model.getReferenceLibrary()).getFile();
                     if(refDB == null)
                     {
                         getJob().getLogger().error("Skipping SNP calling, unable to find reference DB");
                         continue;
                     }
 
-                    runAnalyses(actions, model, bam, refDB, providers);
+                    runAnalyses(actions, model, bam, refDB, providers, taskHelper);
                 }
             }
             catch (SQLException e)
@@ -342,22 +319,29 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         }
     }
 
-    private void runAnalyses(List<RecordedAction> actions, AnalysisModel model, File inputBam, File refFasta, List<PipelineStepProvider<AnalysisStep>> providers) throws PipelineJobException
+    public static List<AnalysisStep.Output> runAnalyses(List<RecordedAction> actions, AnalysisModel model, File inputBam, File refFasta, List<PipelineStepProvider<AnalysisStep>> providers, SequenceTaskHelper taskHelper) throws PipelineJobException
     {
+        List<AnalysisStep.Output> ret = new ArrayList<>();
         for (PipelineStepProvider<AnalysisStep> provider : providers)
         {
-            getJob().getLogger().info("Running analyses for analysis: " + model.getRowId());
-            getJob().getLogger().info("\tUsing alignment: " + inputBam.getPath());
+            taskHelper.getJob().getLogger().info("Running " + provider.getLabel() + " for analysis: " + model.getRowId());
+            taskHelper.getJob().getLogger().info("\tUsing alignment: " + inputBam.getPath());
 
             RecordedAction action = new RecordedAction(provider.getLabel());
-            _taskHelper.getFileManager().addInput(action, "Input BAM File", inputBam);
-            _taskHelper.getFileManager().addInput(action, "Reference DB FASTA", refFasta);
-            //_taskHelper.getFileManager().addInput(action, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, fastqFile);
+            taskHelper.getFileManager().addInput(action, "Input BAM File", inputBam);
+            taskHelper.getFileManager().addInput(action, "Reference DB FASTA", refFasta);
+            //taskHelper.getFileManager().addInput(action, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, fastqFile);
 
-            AnalysisStep step = provider.create(_taskHelper);
-            step.performAnalysis(model, inputBam, refFasta);
+            AnalysisStep step = provider.create(taskHelper);
+            AnalysisStep.Output o = step.performAnalysisPerSample(model, inputBam, refFasta);
+            if (o != null)
+            {
+                ret.add(o);
+            }
 
             actions.add(action);
         }
+
+        return ret;
     }
 }

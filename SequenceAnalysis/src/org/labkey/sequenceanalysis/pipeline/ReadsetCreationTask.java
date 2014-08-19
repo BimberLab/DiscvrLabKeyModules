@@ -101,13 +101,13 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
         try
         {
-            getJob().setStatus("Importing");
+            getJob().setStatus("IMPORTING READS");
             List<RecordedAction> actions = new ArrayList<>();
 
             //NOTE: this runs after XARgenerator, so it cannot create or modify any additional files
             importReadsets();
 
-            getJob().setStatus("Complete");
+            getJob().setStatus("COMPLETE");
             return new RecordedActionSet(actions);
         }
         catch (Exception e)
@@ -128,14 +128,14 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         getJob().getLogger().debug("Total normalized sequence files created: " + datas.size());
 
         ReadsetModel row;
+        List<ReadsetModel> newReadsets = new ArrayList<>();
+
         try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
         {
             TableInfo rs = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
 
             List<ReadsetModel> readsets = settings.getReadsets();
-            List<ReadsetModel> newReadsets = new ArrayList<>();
-
-            for(ReadsetModel r : readsets)
+            for (ReadsetModel r : readsets)
             {
                 getJob().getLogger().info("Starting readset " + r.getName());
                 row = new ReadsetModel();
@@ -144,7 +144,9 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setSubjectId(r.getSubjectId());
                 row.setSampleDate(r.getSampleDate());
                 row.setPlatform(r.getPlatform());
+                row.setInputMaterial(r.getInputMaterial());
                 row.setName(r.getName());
+                row.setApplication(r.getApplication());
                 row.setInstrumentRunId(r.getInstrumentRunId());
 
                 row.setContainer(getJob().getContainer().getId());
@@ -161,6 +163,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 if (datas.size() > 0)
                 {
                     boolean found = false;
+                    boolean found2 = false;
                     for (ExpData d : datas)
                     {
                         getJob().getLogger().debug("Inspecting exp data file: " + d.getFile().getPath());
@@ -181,9 +184,9 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
                         if (expectedName2 != null && expectedName2.equals(d.getFile().getName()))
                         {
-                            if (found)
+                            if (found2)
                             {
-                                getJob().getLogger().warn("ERROR: More than 1 matching file found second mate file: " + expectedName2);
+                                getJob().getLogger().warn("ERROR: More than 1 matching file found for second mate file: " + expectedName2);
                                 getJob().getLogger().warn("File was: " + d.getFile().getPath());
                             }
 
@@ -191,13 +194,13 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                                 throw new PipelineJobException("Expected file does not exist: " + d.getFile().getPath());
 
                             row.setFileId2(d.getRowId());
-                            found = true;
+                            found2 = true;
                         }
                     }
                 }
 
 
-                if(row.getFileId() == null)
+                if (row.getFileId() == null)
                 {
                     // the rationale here is that an output file should always exist for each readset, unless the input was barcoded,
                     // in which case its possible to lack reads without the user knowing upfront
@@ -214,7 +217,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setRunId(SequenceTaskHelper.getExpRunIdForJob(getJob()));
 
                 //then import
-                if(r.getReadsetId() == null || r.getReadsetId() == 0)
+                if (r.getReadsetId() == null || r.getReadsetId() == 0)
                 {
                     ReadsetModel newRow = Table.insert(getJob().getUser(), rs, row);
                     getJob().getLogger().info("Created readset: " + newRow.getRowId());
@@ -229,38 +232,45 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 }
             }
 
-            for (ReadsetModel model : newReadsets)
-            {
-                addQualityMetricsForReadset(model, model.getFileId());
-                if (model.getFileId2() != null)
-                {
-                    addQualityMetricsForReadset(model, model.getFileId2());
-                }
-            }
-
             transaction.commit();
         }
-        catch (SQLException e)
+
+        //NOTE: this is outside the transaction because it can take a long time.
+        for (ReadsetModel model : newReadsets)
         {
-            throw new RuntimeException(e);
+            addQualityMetricsForReadset(model, model.getFileId());
+            if (model.getFileId2() != null)
+            {
+                addQualityMetricsForReadset(model, model.getFileId2());
+            }
         }
     }
 
-    private void addQualityMetricsForReadset(ReadsetModel rs, int fileId) throws SQLException
+    private void addQualityMetricsForReadset(ReadsetModel rs, int fileId) throws PipelineJobException
     {
-        ExpData d = ExperimentService.get().getExpData(fileId);
-        Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(d.getFile());
-        for (String metricName : metricsMap.keySet())
+        try
         {
-            Map<String, Object> r = new HashMap<>();
-            r.put("metricname", metricName);
-            r.put("metricvalue", metricsMap.get(metricName));
-            r.put("dataid", d.getRowId());
-            r.put("readset", rs.getReadsetId());
-            r.put("container", getJob().getContainer());
-            r.put("createdby", getJob().getUser().getUserId());
+            ExpData d = ExperimentService.get().getExpData(fileId);
+            getJob().getLogger().info("calculating quality metrics for file: " + d.getFile().getName());
+            Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(d.getFile());
+            for (String metricName : metricsMap.keySet())
+            {
+                Map<String, Object> r = new HashMap<>();
+                r.put("metricname", metricName);
+                r.put("metricvalue", metricsMap.get(metricName));
+                r.put("dataid", d.getRowId());
+                r.put("readset", rs.getReadsetId());
+                r.put("container", getJob().getContainer());
+                r.put("createdby", getJob().getUser().getUserId());
 
-            Table.insert(getJob().getUser(), SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), r);
+                Table.insert(getJob().getUser(), SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), r);
+            }
+        }
+        catch (Exception e)
+        {
+            //TODO: roll back changes?
+
+            throw new PipelineJobException(e);
         }
     }
 

@@ -31,7 +31,7 @@ public class CleanSamStep extends AbstractCommandPipelineStep<CleanSamWrapper> i
     {
         public Provider()
         {
-            super("CleanSam", "Clean SAM Reads", "This runs the Picard tools CleanSam tool, which performs various fix up steps", null, null, "http://picard.sourceforge.net/command-line-overview.shtml");
+            super("CleanSam", "Clean SAM Reads", "Picard", "This runs the Picard tools CleanSam tool, which performs various fix up steps", null, null, "http://picard.sourceforge.net/command-line-overview.shtml");
         }
 
         @Override

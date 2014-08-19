@@ -38,7 +38,11 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
+import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
+import org.labkey.sequenceanalysis.run.util.CreateSequenceDictionaryWrapper;
+import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -85,7 +89,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
 
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList("Create Reference Library");
+            return Arrays.asList("Create Reference Genome");
         }
 
         public PipelineJob.Task createTask(PipelineJob job)
@@ -103,21 +107,37 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
 
     public RecordedActionSet run() throws PipelineJobException
     {
-        TableInfo refNtTable = QueryService.get().getUserSchema(getJob().getUser(), getJob().getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
         TableInfo libraryTable = QueryService.get().getUserSchema(getJob().getUser(), getJob().getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
-        TableInfo libraryMembersTable = QueryService.get().getUserSchema(getJob().getUser(), getJob().getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS);
+
+        List<ReferenceLibraryMember> libraryMembers;
+        if (getPipelineJob().getLibraryId() == null)
+        {
+            libraryMembers = getPipelineJob().getLibraryMembers();
+        }
+        else
+        {
+            TableInfo libraryMembersTable = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS);
+            libraryMembers = new TableSelector(libraryMembersTable, new SimpleFilter(FieldKey.fromString("library_id"), getPipelineJob().getLibraryId()), null).getArrayList(ReferenceLibraryMember.class);
+        }
+
+        getJob().getLogger().info("there are " + libraryMembers.size() + " sequences to process");
 
         //make sure sequence names are unique
-        List<RefNtSequenceModel> sequences = new TableSelector(refNtTable, new SimpleFilter(FieldKey.fromString("rowid"), getPipelineJob().getSequenceIds(), CompareType.IN), null).getArrayList(RefNtSequenceModel.class);
         Set<String> names = new CaseInsensitiveHashSet();
-        for (RefNtSequenceModel m : sequences)
+        for (ReferenceLibraryMember lm : libraryMembers)
         {
-            if (names.contains(m.getName()))
+            RefNtSequenceModel m = lm.getSequenceModel();
+            if (m == null)
+            {
+                throw new PipelineJobException("Unable to find reference sequence with rowid: " + lm.getRef_nt_id());
+            }
+
+            if (names.contains(lm.getHeaderName()))
             {
                 throw new PipelineJobException("All sequence names must be unique.  Duplicate was: " + m.getName());
             }
 
-            names.add(m.getName());
+            names.add(lm.getHeaderName());
         }
 
         Integer rowId = null;
@@ -127,45 +147,84 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
         try
         {
             //first create the partial library record
-            Map<String, Object> libraryRow = new CaseInsensitiveHashMap();
-            libraryRow.put("name", getPipelineJob().getName());
-            libraryRow.put("description", getPipelineJob().getLibraryDescription());
-
-            BatchValidationException errors = new BatchValidationException();
-            List<Map<String, Object>> inserted = libraryTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), Arrays.asList(libraryRow), errors, new HashMap<String, Object>());
-            if (errors.hasErrors())
+            if (getPipelineJob().getLibraryId() == null)
             {
-                throw errors;
+                Map<String, Object> libraryRow = new CaseInsensitiveHashMap();
+                libraryRow.put("name", getPipelineJob().getName());
+                libraryRow.put("description", getPipelineJob().getLibraryDescription());
+
+                BatchValidationException errors = new BatchValidationException();
+                List<Map<String, Object>> inserted = libraryTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), Arrays.asList(libraryRow), errors, new HashMap<String, Object>());
+                if (errors.hasErrors())
+                {
+                    throw errors;
+                }
+                libraryRow = new CaseInsensitiveHashMap<>(inserted.get(0));
+                rowId = (Integer) libraryRow.get("rowid");
             }
-            libraryRow = new CaseInsensitiveHashMap<>(inserted.get(0));
-            rowId = (Integer)libraryRow.get("rowid");
+            else
+            {
+                rowId = getPipelineJob().getLibraryId();
+            }
+            getPipelineJob().setLibraryId(rowId);
 
             File outputDir = getPipelineJob().getOutputDir();
 
-            fasta = new File(outputDir, rowId + "_" + getPipelineJob().getName() + ".fasta.gz");
+            fasta = new File(outputDir, rowId + "_" + getPipelineJob().getName().replace(" ", "_") + ".fasta");
+            if (fasta.exists())
+            {
+                fasta.delete();
+            }
             fasta.createNewFile();
             fasta = FileUtil.getAbsoluteCaseSensitiveFile(fasta);
 
-            idFile = new File(outputDir, rowId + "_" + getPipelineJob().getName() + ".idKey.txt");
+            idFile = new File(outputDir, rowId + "_" + getPipelineJob().getName().replace(" ", "_") + ".idKey.txt");
+            if (idFile.exists())
+            {
+                idFile.delete();
+            }
             idFile.createNewFile();
             idFile = FileUtil.getAbsoluteCaseSensitiveFile(idFile);
 
             //then gather sequences and create the FASTA
-            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(fasta)), "UTF-8")); BufferedWriter idWriter = new BufferedWriter(new FileWriter(idFile)))
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fasta), "UTF-8")); BufferedWriter idWriter = new BufferedWriter(new FileWriter(idFile)))
             {
-                idWriter.write("RowId\tName\n");
+                idWriter.write("RowId\tName\tAccession\tStart\tStop\n");
 
-                for (RefNtSequenceModel model : sequences)
+                for (ReferenceLibraryMember lm : libraryMembers)
                 {
-                    getJob().getLogger().info("processing sequence: " + model.getName() + " (" + model.getRowid() + ")");
+                    RefNtSequenceModel model = lm.getSequenceModel();
+                    String name = lm.getHeaderName();
 
-                    writer.write(">" + model.getName() + "\n");
-                    model.writeSequence(writer, 60);
+                    getJob().getLogger().info("processing sequence: " + name + " [" + model.getRowid() + "]");
 
-                    idWriter.write(model.getRowid() + "\t" + model.getName() + "\n");
+                    writer.write(">" + name + "\n");
+                    model.writeSequence(writer, 60, lm.getStart(), lm.getStop());
+
+                    idWriter.write(model.getRowid() + "\t" + model.getName() + "\t" + (model.getGenbank() == null ? "" : model.getGenbank()) + "\t" + (lm.getStart() == null ? "" : lm.getStart()) + "\t" + (lm.getStop() == null ? "" : lm.getStop()) + "\n");
 
                     model.clearCachedSequence();
                 }
+            }
+
+            try
+            {
+                FastaIndexer indexer = new FastaIndexer(getJob().getLogger());
+                indexer.execute(fasta);
+            }
+            catch (PipelineJobException e)
+            {
+                getJob().getLogger().warn("Unable to create FASTA index");
+            }
+
+            try
+            {
+                CreateSequenceDictionaryWrapper wrapper = new CreateSequenceDictionaryWrapper(getJob().getLogger());
+                wrapper.execute(fasta, false);
+            }
+            catch (PipelineJobException e)
+            {
+                getJob().getLogger().warn("Unable to create sequence dictionary");
             }
 
             ExpData d = ExperimentService.get().createData(getJob().getContainer(), new DataType("ReferenceLibrary"));
@@ -181,31 +240,41 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             existingKeys.put("rowid", rowId);
             libraryTable.getUpdateService().updateRows(getJob().getUser(), getJob().getContainer(), Arrays.asList(toUpdate), Arrays.asList(existingKeys), new HashMap<String, Object>());
 
-            //then insert children
-            getJob().getLogger().info("updating database");
+            //then insert children, only if not already present
             List<Map<String, Object>> toInsert = new ArrayList<>();
-            for (RefNtSequenceModel row : sequences)
+            for (ReferenceLibraryMember row : libraryMembers)
             {
-                CaseInsensitiveHashMap childRow = new CaseInsensitiveHashMap();
-                childRow.put("library_id", rowId);
-                childRow.put("ref_nt_id", row.getRowid());
-                toInsert.add(childRow);
+                if (row.getRowid() == 0)
+                {
+                    CaseInsensitiveHashMap childRow = new CaseInsensitiveHashMap();
+                    childRow.put("library_id", rowId);
+                    childRow.put("ref_nt_id", row.getRef_nt_id());
+                    childRow.put("start", row.getStart());
+                    childRow.put("stop", row.getStop());
+                    toInsert.add(childRow);
+                }
             }
 
-            libraryMembersTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), toInsert, errors, new HashMap<String, Object>());
-            if (errors.hasErrors())
+            if (!toInsert.isEmpty())
             {
-                throw errors;
+                getJob().getLogger().info("updating database");
+                BatchValidationException errors = new BatchValidationException();
+                TableInfo libraryMembersTable = QueryService.get().getUserSchema(getJob().getUser(), getJob().getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS);
+                libraryMembersTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), toInsert, errors, new HashMap<String, Object>());
+                if (errors.hasErrors())
+                {
+                    throw errors;
+                }
             }
 
             getJob().getLogger().info("complete");
         }
         catch (Exception e)
         {
-            if (rowId != null)
+            if (getPipelineJob().getLibraryId() == null && rowId != null)
             {
+                getJob().getLogger().info("deleting partial DB records");
                 Table.delete(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), rowId);
-
                 Table.delete(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS), new SimpleFilter(FieldKey.fromString("library_id"), rowId));
             }
 
@@ -216,7 +285,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 idFile.delete();
         }
 
-        return new RecordedActionSet(new RecordedAction("Create Reference Library"));
+        return new RecordedActionSet(new RecordedAction("Create Reference Genome"));
     }
 
     private ReferenceLibraryPipelineJob getPipelineJob()

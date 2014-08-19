@@ -22,16 +22,18 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
 {
     private String _name;
     private String _label;
+    private String _toolName;
     private String _websiteURL;
     private String _description;
     private LinkedHashSet<String> _clientDependencyPaths;
     private List<ToolParameterDescriptor> _parameters;
     List<PipelineStepProvider> _prerequisites = new ArrayList<>();
 
-    public AbstractPipelineStepProvider(String name, String label, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL)
+    public AbstractPipelineStepProvider(String name, String label, @Nullable String toolName, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL)
     {
         _name = name;
         _label = label;
+        _toolName = toolName;
         _description = description;
         _parameters = parameters == null ? Collections.<ToolParameterDescriptor>emptyList() : parameters;
         _clientDependencyPaths = clientDependencyPaths == null ? new LinkedHashSet<String>() : new LinkedHashSet<>(clientDependencyPaths);
@@ -48,6 +50,12 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
     public String getLabel()
     {
         return _label;
+    }
+
+    @Override
+    public String getToolName()
+    {
+        return _toolName;
     }
 
     @Override
@@ -118,6 +126,7 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
         JSONObject json = new JSONObject();
         json.put("name", getName());
         json.put("label", getLabel());
+        json.put("toolName", getToolName());
         json.put("description", getDescription());
         json.put("websiteURL", getWebsiteURL());
         JSONArray parameters = new JSONArray();

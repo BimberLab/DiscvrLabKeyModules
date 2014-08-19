@@ -1,9 +1,8 @@
 package org.labkey.sequenceanalysis;
 
 import org.apache.log4j.Logger;
-import org.labkey.sequenceanalysis.api.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
 
 /**
  * User: bimber
@@ -19,7 +18,7 @@ public class PipelineStartup
     {
         if (_hasRegistered)
         {
-            _log.error("SequenceAnalysis resources have already been registered, skipping");
+            _log.warn("SequenceAnalysis resources have already been registered, skipping");
         }
         else
         {

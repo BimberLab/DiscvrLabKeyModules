@@ -28,8 +28,10 @@ import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.jbrowse.button.AddLibraryButton;
-import org.labkey.jbrowse.button.AddSequenceButton;
 import org.labkey.jbrowse.button.AddTrackButton;
+import org.labkey.jbrowse.button.ReprocessResourcesButton;
+import org.labkey.jbrowse.button.ReprocessSessionsButton;
+import org.labkey.jbrowse.button.ViewOutputsButton;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineProvider;
 import org.labkey.jbrowse.query.JBrowseUserSchema;
 
@@ -50,7 +52,7 @@ public class JBrowseModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 13.33;
+        return 13.35;
     }
 
     @Override
@@ -80,8 +82,10 @@ public class JBrowseModule extends ExtendedSimpleModule
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "jbrowse admin", details.getActionURL());
 
         LaboratoryService.get().registerQueryButton(new AddTrackButton(), "sequenceanalysis", "reference_library_tracks");
-        LaboratoryService.get().registerQueryButton(new AddSequenceButton(), "sequenceanalysis", "ref_nt_sequences");
         LaboratoryService.get().registerQueryButton(new AddLibraryButton(), "sequenceanalysis", "reference_libraries");
+        LaboratoryService.get().registerQueryButton(new ViewOutputsButton(), "sequenceanalysis", "outputfiles");
+        LaboratoryService.get().registerQueryButton(new ReprocessResourcesButton(), JBrowseSchema.NAME, JBrowseSchema.TABLE_JSONFILES);
+        LaboratoryService.get().registerQueryButton(new ReprocessSessionsButton(), JBrowseSchema.NAME, JBrowseSchema.TABLE_DATABASES);
 
         LaboratoryService.get().registerDataProvider(new JBrowseDataProvider(this));
         SystemMaintenance.addTask(new JBrowseMaintenanceTask());

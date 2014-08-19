@@ -13,13 +13,13 @@ SequenceAnalysis.Buttons = new function(){
             var checked = dataRegion.getChecked();
             options = options || {};
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
 
         //    Ext4.Msg.confirm('Type of Search', 'View search panel?  Hit cancel to view all records.', function(button, val, window){
-        //        if(button == 'yes'){
+        //        if (button == 'yes'){
         //            var params = {
         //                schemaName: options.schemaName ? options.schemaName : 'sequenceanalysis',
         //                'query.queryName': options.queryName
@@ -64,13 +64,13 @@ SequenceAnalysis.Buttons = new function(){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
 
             Ext4.Msg.confirm("Deactivate Rows", "You are about to deactivate the selected rows.  They will no longer show up in reports.  Are you sure you want to do this?", function(button){
-                if(button == 'yes'){
+                if (button == 'yes'){
                     var toUpdate = [];
                     Ext4.each(checked, function(pk){
                         toUpdate.push({rowid: pk, status: false});
@@ -97,13 +97,13 @@ SequenceAnalysis.Buttons = new function(){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
 
             Ext4.Msg.confirm("Activate Rows", "You are able to activate the selected rows.  They will now show up in reports.  Are you sure you want to do this?", function(button){
-                if(button == 'yes'){
+                if (button == 'yes'){
                     var toUpdate = [];
                     Ext4.each(checked, function(pk){
                         toUpdate.push({rowid: pk, status: true});
@@ -126,7 +126,7 @@ SequenceAnalysis.Buttons = new function(){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
@@ -141,7 +141,7 @@ SequenceAnalysis.Buttons = new function(){
                 columns: 'runid',
                 scope: this,
                 success: function(data){
-                    if(!data || !data.rows)
+                    if (!data || !data.rows)
                         return;
 
                     var runIds = [];
@@ -180,7 +180,7 @@ SequenceAnalysis.Buttons = new function(){
             var checked = dataRegion.getChecked();
             options = options || {};
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
@@ -198,7 +198,7 @@ SequenceAnalysis.Buttons = new function(){
             var checked = dataRegion.getChecked();
             options = options || {};
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
@@ -212,7 +212,7 @@ SequenceAnalysis.Buttons = new function(){
         },
 
         performAnalysis: function(dataRegionName, btnEl){
-            if(!LABKEY.Security.currentUser.canUpdate){
+            if (!LABKEY.Security.currentUser.canUpdate){
                 alert('You do not have permission to analyze data');
                 return;
             }
@@ -220,54 +220,24 @@ SequenceAnalysis.Buttons = new function(){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
 
-            LABKEY.Query.selectRows({
-                schemaName: 'SequenceAnalysis',
-                queryName: 'sequence_analyses',
-                timeout: 0,
-                includeTotalCount: false,
-                columns: 'rowid,readset,readset/fileid,readset/fileid2',
-                filterArray: [
-                    LABKEY.Filter.create('rowid', checked.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
-                ],
-                scope: this,
-                success: function(data){
-                    if(data.rows && data.rows.length){
-                        var readsets = [];
-
-                        Ext4.each(data.rows, function(row){
-                            if(row['readset'])
-                                readsets.push(row['readset']);
-                        }, this);
-
-                        readsets = Ext4.unique(readsets);
-
-                        if(!readsets.length){
-                            alert('No readsets found');
-                            return;
-                        }
-
-                        Ext4.create('LABKEY.ext.ImportWizardWin', {
-                            controller: 'sequenceanalysis',
-                            action: 'sequenceAnalysis',
-                            urlParams: {
-                                path: './',
-                                readsets: readsets.join(';')
-                            },
-                            workbookFolderType: Laboratory.Utils.getDefaultWorkbookFolderType()
-                        }).show(btnEl);
-                    }
+            Ext4.create('LABKEY.ext.ImportWizardWin', {
+                controller: 'sequenceanalysis',
+                action: 'alignmentAnalysis',
+                urlParams: {
+                    path: './',
+                    analyses: checked.join(';')
                 },
-                failure: LDK.Utils.getErrorCallback()
-            });
+                workbookFolderType: Laboratory.Utils.getDefaultWorkbookFolderType()
+            }).show(btnEl);
         },
 
         performAnalysisFromReadsets: function(dataRegionName, btnEl){
-            if(!LABKEY.Security.currentUser.canUpdate){
+            if (!LABKEY.Security.currentUser.canUpdate){
                 alert('You do not have permission to analyze data');
                 return;
             }
@@ -275,7 +245,7 @@ SequenceAnalysis.Buttons = new function(){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
@@ -296,11 +266,11 @@ SequenceAnalysis.Buttons = new function(){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
-//            if(checked.length != 1){
+//            if (checked.length != 1){
 //                alert('Can only edit one row at a time');
 //                return;
 //            }
@@ -327,7 +297,7 @@ SequenceAnalysis.Buttons = new function(){
                     ],
                     scope: this,
                     success: function(data){
-                        if(data.rows && data.rows.length){
+                        if (data.rows && data.rows.length){
                             Ext4.each(data.rows, function(row){
                                 if (!junctionRecordMap[row.alignment_id])
                                     junctionRecordMap[row.alignment_id] = [];
@@ -335,7 +305,7 @@ SequenceAnalysis.Buttons = new function(){
                                 junctionRecordMap[row.alignment_id].push(row);
 
                                 var ref_name = row['ref_nt_id/name'];
-                                if(!referenceMap[ref_name]){
+                                if (!referenceMap[ref_name]){
                                     referenceMap[ref_name] = {
                                         rowid: ref_name,
                                         name: row['ref_nt_id/name']
@@ -523,11 +493,11 @@ SequenceAnalysis.Buttons = new function(){
                                 if (cb.xtype == 'checkboxgroup')
                                     return;
 
-                                if(!cb.isDirty())
+                                if (!cb.isDirty())
                                     return;
 
                                 Ext4.each(cb.rows, function(r){
-                                    if(!toUpdate[r['alignment_id/container/path']])
+                                    if (!toUpdate[r['alignment_id/container/path']])
                                         toUpdate[r['alignment_id/container/path']] = [];
 
                                     toUpdate[r['alignment_id/container/path']].push({
@@ -539,7 +509,7 @@ SequenceAnalysis.Buttons = new function(){
                                 }, this);
                             }, this);
 
-                            if(!LABKEY.Utils.isEmptyObj(toUpdate)){
+                            if (!LABKEY.Utils.isEmptyObj(toUpdate)){
                                 var multi = new LABKEY.MultiRequest();
 
                                 for(var container in toUpdate){
@@ -573,11 +543,14 @@ SequenceAnalysis.Buttons = new function(){
             }
         },
 
-        generateFastQc: function(dataRegionName){
+        generateFastQc: function(dataRegionName, pkName){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
+            pkName = pkName || 'readsets';
+            var params = {};
+            params[pkName] = checked;
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
@@ -586,7 +559,27 @@ SequenceAnalysis.Buttons = new function(){
                 'sequenceanalysis',
                 'fastqcReport',
                 LABKEY.ActionURL.getContainer(),
-                {readsets: checked}
+                params
+            );
+        },
+
+        generateBamStatsReport: function(dataRegionName, pkName){
+            var dataRegion = LABKEY.DataRegions[dataRegionName];
+            var checked = dataRegion.getChecked();
+            pkName = pkName || 'dataIds';
+            var params = {};
+            params[pkName] = checked;
+
+            if (!checked.length){
+                alert('Must select one or more rows');
+                return;
+            }
+
+            window.location = LABKEY.ActionURL.buildURL(
+                    'sequenceanalysis',
+                    'bamStatsReport',
+                    LABKEY.ActionURL.getContainer(),
+                    params
             );
         },
 
@@ -594,7 +587,7 @@ SequenceAnalysis.Buttons = new function(){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
@@ -640,7 +633,7 @@ SequenceAnalysis.Buttons = new function(){
                         var win = btn.up('window');
                         var selections = win.down('#chooseFiles').getValue().chooseFiles;
 
-                        if(!selections || !selections.length){
+                        if (!selections || !selections.length){
                             alert("Must choose one or more file types");
                             return;
                         }
@@ -666,13 +659,13 @@ SequenceAnalysis.Buttons = new function(){
 
                                 Ext4.each(results.rows, function(row){
                                     Ext4.each(props, function(prop){
-                                        if(row[prop])
+                                        if (row[prop])
                                             ids.push(row[prop]);
                                     }, this);
                                 }, this);
 
 
-                                if(ids.length){
+                                if (ids.length){
                                     window.location = LABKEY.ActionURL.buildURL(
                                         'sequenceanalysis',
                                         'fastqcReport',
@@ -698,7 +691,7 @@ SequenceAnalysis.Buttons = new function(){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
@@ -715,7 +708,7 @@ SequenceAnalysis.Buttons = new function(){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
@@ -734,7 +727,7 @@ SequenceAnalysis.Buttons = new function(){
                     Ext4.Msg.hide();
 
                     var ids = [];
-                    if(result && result.rows.length){
+                    if (result && result.rows.length){
                         Ext4.create('SequenceAnalysis.window.RunExportWindow', {
                             dataRegionName: dataRegionName,
                             records: result.rows,
@@ -753,7 +746,7 @@ SequenceAnalysis.Buttons = new function(){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
@@ -772,7 +765,7 @@ SequenceAnalysis.Buttons = new function(){
                     Ext4.Msg.hide();
 
                     var ids = [];
-                    if(result && result.rows.length){
+                    if (result && result.rows.length){
                         Ext4.create('SequenceAnalysis.window.RunExportWindow', {
                             dataRegionName: dataRegionName,
                             records: result.rows,
@@ -780,7 +773,7 @@ SequenceAnalysis.Buttons = new function(){
                                 'Raw Input File(s)': ['readset/fileid','readset/fileid2'],
                                 'Processed Input File(s)': ['inputfile','inpitfile2'],
                                 'Alignment File': ['alignmentfile', 'alignmentfileindex'],
-                                'Reference Library': ['reference_library']
+                                'Reference Genome': ['reference_library']
                             }
                         }).show(btnEl);
                     }
@@ -790,7 +783,7 @@ SequenceAnalysis.Buttons = new function(){
         },
 
         deleteTable: function(dataRegionName){
-            if(!LABKEY.Security.currentUser.canDelete){
+            if (!LABKEY.Security.currentUser.canDelete){
                 alert('You do not have permission to delete data');
                 return;
             }
@@ -798,7 +791,7 @@ SequenceAnalysis.Buttons = new function(){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
-            if(!checked.length){
+            if (!checked.length){
                 alert('Must select one or more rows');
                 return;
             }
@@ -822,6 +815,34 @@ SequenceAnalysis.Buttons = new function(){
             Ext4.create('SequenceAnalysis.window.IlluminaSampleKitWindow', {
                 dataRegionName: dataRegionName
             }).show(btn);
+        },
+
+        compareVariantsHandler: function(dataRegionName){
+            var dataRegion = LABKEY.DataRegions[dataRegionName];
+            var checked = dataRegion.getChecked();
+
+            if (!checked.length){
+                Ext4.Msg.alert('Error', 'Must select one or more rows');
+                return;
+            }
+
+            window.location = LABKEY.ActionURL.buildURL('sequenceanalysis', 'variantComparison', null, {
+                fileIds: checked
+            });
+        },
+
+        jointGenotypingHandler: function(dataRegionName){
+            var dataRegion = LABKEY.DataRegions[dataRegionName];
+            var checked = dataRegion.getChecked();
+
+            if (!checked.length){
+                Ext4.Msg.alert('Error', 'Must select one or more rows');
+                return;
+            }
+
+            window.location = LABKEY.ActionURL.buildURL('sequenceanalysis', 'jointGenotyping', null, {
+                fileIds: checked
+            });
         }
     }
 };

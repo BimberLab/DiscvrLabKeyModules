@@ -15,10 +15,10 @@
  */
 package org.labkey.sequenceanalysis.api.picard;
 
-import net.sf.picard.util.CigarUtil;
-import net.sf.samtools.Cigar;
-import net.sf.samtools.CigarOperator;
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.util.CigarUtil;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 
 import java.util.Iterator;

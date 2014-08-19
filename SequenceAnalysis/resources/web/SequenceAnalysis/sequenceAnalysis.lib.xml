@@ -6,6 +6,7 @@
         <script path="SequenceAnalysis/window/RunExportWindow.js"/>
         <script path="SequenceAnalysis/window/IlluminaApplicationWindow.js"/>
         <script path="SequenceAnalysis/window/IlluminaSampleKitWindow.js"/>
+        <script path="SequenceAnalysis/field/ReadsetField.js"/>
     </library>
     <dependencies>
         <dependency path="Ext4"/>

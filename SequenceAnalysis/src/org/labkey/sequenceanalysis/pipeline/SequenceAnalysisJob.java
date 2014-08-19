@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.TaskId;
@@ -10,13 +11,16 @@ import org.labkey.api.pipeline.file.FileAnalysisTaskPipeline;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.Pair;
+import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.sequenceanalysis.api.pipeline.SequenceAnalysisJobSupport;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,9 +29,10 @@ import java.util.Map;
  * Date: 4/27/14
  * Time: 5:41 AM
  */
-public class SequenceAnalysisJob extends AbstractFileAnalysisJob
+public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements SequenceAnalysisJobSupport
 {
     private TaskId _taskPipelineId;
+    private Map<Integer, File> _cachedFilePaths = new HashMap<>();
 
     public SequenceAnalysisJob(AbstractFileAnalysisProtocol<AbstractFileAnalysisJob> protocol,
                                ViewBackgroundInfo info,
@@ -199,5 +204,40 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob
             return result;
         }
         return null;
+    }
+
+    @Override
+    public void cacheExpData(ExpData data)
+    {
+        if (data != null)
+        {
+            getLogger().debug("caching ExpData: " + data.getRowId() + " / " + data.getFile().getPath());
+            _cachedFilePaths.put(data.getRowId(), data.getFile());
+        }
+    }
+
+    @Override
+    public File getCachedData(int dataId)
+    {
+        return _cachedFilePaths.get(dataId);
+    }
+
+    @Override
+    public Map<Integer, File> getAllCachedData()
+    {
+        return Collections.unmodifiableMap(_cachedFilePaths);
+    }
+
+
+    @Override
+    public ActionURL getStatusHref()
+    {
+        ActionURL ret = super.getStatusHref();
+        if (ret != null)
+        {
+            ret.setAction("ShowRunGraphDetail");
+        }
+
+        return ret;
     }
 }

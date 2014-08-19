@@ -22,6 +22,7 @@ SELECT
   p.assistingstaff,
   p.procedureId,
   p.chargeId,
+  COALESCE((CASE WHEN (p.chargetype = 'Research Staff') THEN p.assistingstaff.servicecenter ELSE p.chargetype.servicecenter END), p.chargeId.departmentCode) as serviceCenter,
   p.sourceRecord,
 
   p.chargeId.name as item,
@@ -168,6 +169,7 @@ SELECT
   null as assistingstaff,
   null as procedureId,
   mc.chargeId,
+  mc.serviceCenter,
   mc.sourceRecord,
 
   mc.item,

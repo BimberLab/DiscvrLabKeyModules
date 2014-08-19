@@ -14,6 +14,7 @@ SELECT
   COALESCE(p.debitedaccount, aliasAtTime.account) as account,
   p.chargetype,
   p.chargeId,
+  COALESCE(p.chargetype.servicecenter, p.chargeId.departmentCode) as serviceCenter,
   coalesce(p.chargeId.name, p.item) as item,
   round(CAST(CASE
     --order of priority for unit cost:

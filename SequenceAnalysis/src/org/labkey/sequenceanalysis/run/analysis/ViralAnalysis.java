@@ -34,7 +34,7 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
     {
         public Provider()
         {
-            super("ViralAnalysis", "Viral Analysis", "This analysis was orginially designed for viral populations, but can be applied to non-viral sequence as well.  Unlike a diploid organism, a viral population typically contains an unknonw number of variants present at unknown and sometimes low frequencies.  This analysis performs NT SNP calling using base quality scores, using an inclusive approach designed to allow low frequency variants to be included.  If these reference sequences are annotated with open reading frames, it will also calculate AA translations in the context of each read.  This means it will use the true flanking bases for the translation, rather than the consensus.  This can also be important when working with low frequency variation.  Finally, it will populate coverage data in the database.", Arrays.asList(
+            super("ViralAnalysis", "Viral Analysis", null, "This analysis was orginially designed for viral populations, but can be applied to non-viral sequence as well.  Unlike a diploid organism, a viral population typically contains an unknonw number of variants present at unknown and sometimes low frequencies.  This analysis performs NT SNP calling using base quality scores, using an inclusive approach designed to allow low frequency variants to be included.  If these reference sequences are annotated with open reading frames, it will also calculate AA translations in the context of each read.  This means it will use the true flanking bases for the translation, rather than the consensus.  This can also be important when working with low frequency variation.  Finally, it will populate coverage data in the database.", Arrays.asList(
                     ToolParameterDescriptor.create("minSnpQual", "Minimum SNP Qual", "Only SNPs with a quality score above this threshold will be included.", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
@@ -62,7 +62,13 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
     }
 
     @Override
-    public void performAnalysis(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    public void init(List<AnalysisModel> models) throws PipelineJobException
+    {
+
+    }
+
+    @Override
+    public Output performAnalysisPerSample(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
     {
         try
         {
@@ -104,10 +110,18 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
             }
 
             bi.saveSynopsis(getPipelineCtx().getJob().getUser(), model);
+
+            return null;
         }
         catch (FileNotFoundException e)
         {
             throw new PipelineJobException(e);
         }
+    }
+
+    @Override
+    public void performAnalysisOnAll(List<Output> previousSteps)
+    {
+
     }
 }

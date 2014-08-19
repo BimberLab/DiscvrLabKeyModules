@@ -7,7 +7,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
             width: '100%',
             title: 'Readsets',
             editingPluginId: 'cellediting',
-            plugins: [Ext4.create('Ext.grid.plugin.CellEditing', {
+            plugins: [Ext4.create('LDK.grid.plugin.CellEditing', {
                 pluginId: 'cellediting',
                 clicksToEdit: 1,
                 listeners: {
@@ -46,6 +46,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     {name: 'readsetname'},
                     {name: 'platform', allowBlank: false},
                     {name: 'application', allowBlank: false},
+                    {name: 'inputmaterial'},
                     {name: 'subjectid'},
                     {name: 'sampledate'},
                     {name: 'sampleid'},
@@ -221,7 +222,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                 width: 40,
                 editable: true,
                 editor: {
-                    xtype: 'numberfield',
+                    xtype: 'ldk-numberfield',
                     minValue: 1,
                     allowBlank: true
                 }
@@ -306,7 +307,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                 dataIndex: 'sampleid',
                 width: 40,
                 editor: {
-                    xtype: 'numberfield',
+                    xtype: 'ldk-numberfield',
                     minValue: 1,
                     allowBlank: true
                 }
@@ -747,20 +748,27 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
     },
 
     onMidChange: function(c, v){
+        var changed = false;
         Ext4.each(this.columns, function(col){
             if (col.dataIndex=='mid5' || col.dataIndex=='mid3'){
                 col.setVisible(v);
+                changed = true;
             }
         }, this);
 
+        if (changed){
+            this.reconfigure();
+        }
         this.validateReadsets(this.store, this.store.getRange())
 
     },
 
     onPairedEndChange: function(c, v){
+        var changed = false;
         Ext4.each(this.columns, function(col){
             if (col.dataIndex=='fileName2'){
                 col.setVisible(v);
+                changed = true;
 
                 if (!v){
                     this.store.each(function(rec){
@@ -770,6 +778,9 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
             }
         }, this);
 
+        if (changed){
+            this.reconfigure();
+        }
         this.validateReadsets(this.store, this.store.getRange());
     }
 });

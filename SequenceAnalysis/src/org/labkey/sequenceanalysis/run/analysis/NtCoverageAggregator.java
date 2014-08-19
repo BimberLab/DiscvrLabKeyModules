@@ -15,8 +15,8 @@
  */
 package org.labkey.sequenceanalysis.run.analysis;
 
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
@@ -388,7 +388,7 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
                                 n_total += baseTotal;
 
                             double totalQual = (double)getValueForPositionAndBase(refName, position, index, base, _totalQualByBase);
-                            double avgQual = totalQual / baseTotal;
+                            double avgQual = baseTotal == 0 ? 0 : totalQual / baseTotal;
                             row.put("avgqual_" + fieldSuffix, avgQual);
                         }
 

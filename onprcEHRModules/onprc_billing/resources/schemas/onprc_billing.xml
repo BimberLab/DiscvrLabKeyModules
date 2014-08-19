@@ -699,6 +699,16 @@
             <ns:column columnName="chargeId">
                 <ns:nullable>false</ns:nullable>
             </ns:column>
+            <ns:column columnName="chargeunit">
+                <ns:columnTitle>Charge Unit</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+                <ns:fk>
+                    <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>
+                    <ns:fkTable>chargeUnits</ns:fkTable>
+                    <ns:fkColumnName>chargetype</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>chargetype</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
                 <ns:defaultValue>true</ns:defaultValue>
@@ -1330,6 +1340,9 @@
             <ns:column columnName="chargetype">
                 <ns:columnTitle>Name</ns:columnTitle>
             </ns:column>
+            <ns:column columnName="servicecenter">
+                <ns:columnTitle>Service Center</ns:columnTitle>
+            </ns:column>
             <ns:column columnName="shownInBlood">
                 <ns:columnTitle>Shown In Blood Form?</ns:columnTitle>
             </ns:column>
@@ -1362,7 +1375,7 @@
                 <ns:columnTitle>Row Id</ns:columnTitle>
             </ns:column>
             <ns:column columnName="chargetype">
-                <ns:columnTitle>Charge Type</ns:columnTitle>
+                <ns:columnTitle>Charge Unit</ns:columnTitle>
                 <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>onprc_billing</ns:fkDbSchema>

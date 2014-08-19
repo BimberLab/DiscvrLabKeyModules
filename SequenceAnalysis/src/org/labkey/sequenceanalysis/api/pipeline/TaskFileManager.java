@@ -56,6 +56,8 @@ public interface TaskFileManager
 
     public void compressFile(File file);
 
+    public String getInputfileTreatment();
+
     public void handleInputs() throws PipelineJobException;
 
     public void processUnzippedInputs();

@@ -257,20 +257,122 @@ fi
 
 
 #
+#fastq_screen
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install fastq_screen"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/fastq_screen || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf fastq_screen_v0.4.4
+    rm -Rf $LKTOOLS_DIR/fastq_screen
+
+    wget http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/fastq_screen_v0.4.4.tar.gz
+    gunzip fastq_screen_v0.4.4.tar.gz
+    tar -xf fastq_screen_v0.4.4.tar
+    echo "Compressing TAR"
+    gzip fastq_screen_v0.4.4.tar
+    cd fastq_screen_v0.4.4
+
+    ln -s $LKSRC_DIR/fastq_screen_v0.4.4/fastq_screen $LKTOOLS_DIR
+else
+    echo "Already installed"
+fi
+
+
+#
+#bismark
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install bismark"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/bismark || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf bismark_v0.12.5*
+    rm -Rf $LKTOOLS_DIR/bismark
+    rm -Rf $LKTOOLS_DIR/bismark2bedGraph
+    rm -Rf $LKTOOLS_DIR/bismark2report
+    rm -Rf $LKTOOLS_DIR/bismark_genome_preparation
+    rm -Rf $LKTOOLS_DIR/bismark_methylation_extractor
+    rm -Rf $LKTOOLS_DIR/coverage2cytosine
+    rm -Rf $LKTOOLS_DIR/deduplicate_bismark
+
+    wget http://www.bioinformatics.babraham.ac.uk/projects/bismark/bismark_v0.12.5.tar.gz
+    gunzip bismark_v0.12.5.tar.gz
+    tar -xf bismark_v0.12.5.tar
+    echo "Compressing TAR"
+    gzip bismark_v0.12.5.tar
+    cd bismark_v0.12.5
+
+    ln -s $LKSRC_DIR/bismark_v0.12.5/bismark $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/bismark_v0.12.5/bismark2bedGraph $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/bismark_v0.12.5/bismark2report $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/bismark_v0.12.5/bismark_genome_preparation $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/bismark_v0.12.5/bismark_methylation_extractor $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/bismark_v0.12.5/coverage2cytosine $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/bismark_v0.12.5/deduplicate_bismark $LKTOOLS_DIR
+else
+    echo "Already installed"
+fi
+
+
+##
+##tophat
+##
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Install tophat"
+#echo ""
+#cd $LKSRC_DIR
+#
+#if [[ ! -e ${LKTOOLS_DIR}/tophat || ! -z $FORCE_REINSTALL ]];
+#then
+#    echo "Cleaning up previous installs"
+#    rm -Rf tophat-2.0.12*
+#    rm -Rf $LKTOOLS_DIR/tophat2
+#    rm -Rf $LKTOOLS_DIR/prep_reads
+#
+#    wget http://ccb.jhu.edu/software/tophat/downloads/tophat-2.0.12.Linux_x86_64.tar.gz
+#    gunzip tophat-2.0.12.Linux_x86_64.tar.gz
+#    tar -xf tophat-2.0.12.Linux_x86_64.tar
+#    echo "Compressing TAR"
+#    gzip tophat-2.0.12.Linux_x86_64.tar
+#    cd tophat-2.0.12.Linux_x86_64
+#
+#    ln -s $LKSRC_DIR/tophat-2.0.12.Linux_x86_64/tophat2 $LKTOOLS_DIR
+#    ln -s $LKSRC_DIR/tophat-2.0.12.Linux_x86_64/prep_reads $LKTOOLS_DIR
+#else
+#    echo "Already installed"
+#fi
+
+
+#
 #samtools
 #
 echo ""
 echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install samtools"
+echo "Install samtools/bcftools"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/samtools || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/bcftools || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf samtools-0.1.18*
     rm -Rf $LKTOOLS_DIR/samtools
+    rm -Rf $LKTOOLS_DIR/bcftools
 
     wget http://downloads.sourceforge.net/project/samtools/samtools/0.1.18/samtools-0.1.18.tar.bz2
     bunzip2 samtools-0.1.18.tar.bz2
@@ -281,6 +383,7 @@ then
     #note: this is used later by Bio::DB::Samtools
     make CXXFLAGS=-fPIC CFLAGS=-fPIC CPPFLAGS=-fPIC
     ln -s $LKSRC_DIR/samtools-0.1.18/samtools $LKTOOLS_DIR
+    ln -s $LKSRC_DIR/samtools-0.1.18/bcftools/bcftools $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -302,7 +405,7 @@ then
     rm -Rf $LKTOOLS_DIR/tabix
     rm -Rf $LKTOOLS_DIR/bgzip
 
-    wget wget http://downloads.sourceforge.net/project/samtools/tabix/tabix-0.2.6.tar.bz2
+    wget http://downloads.sourceforge.net/project/samtools/tabix/tabix-0.2.6.tar.bz2
     bunzip2 tabix-0.2.6.tar.bz2
     tar -xf tabix-0.2.6.tar
     echo "Compressing TAR"
@@ -314,6 +417,61 @@ then
 else
     echo "Already installed"
 fi
+
+#
+#VCFTools
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install vcftools"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/vcftools || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf vcftools_0.1.12*
+    rm -Rf $LKTOOLS_DIR/vcftools
+
+    wget http://downloads.sourceforge.net/project/vcftools/vcftools_0.1.12b.tar.gz
+    gunzip vcftools_0.1.12b.tar.gz
+    tar -xf vcftools_0.1.12b.tar
+    echo "Compressing TAR"
+    gzip vcftools_0.1.12b.tar
+    cd vcftools_0.1.12b
+    make
+    ln -s $LKSRC_DIR/vcftools_0.1.12b/bin/vcftools $LKTOOLS_DIR
+else
+    echo "Already installed"
+fi
+
+
+#
+#SnpEff
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install SnpEff"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/snpEff/snpEff.jar || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf snpEff*
+    rm -Rf $LKTOOLS_DIR/snpEff
+
+    wget http://downloads.sourceforge.net/project/snpeff/snpEff_latest_core.zip
+    unzip snpEff_latest_core.zip
+    cd snpEff
+
+    ln -s $LKSRC_DIR/snpEff $LKTOOLS_DIR
+else
+    echo "Already installed"
+fi
+
 
 #
 #blat

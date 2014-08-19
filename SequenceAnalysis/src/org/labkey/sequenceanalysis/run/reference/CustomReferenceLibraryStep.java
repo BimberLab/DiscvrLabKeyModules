@@ -1,8 +1,12 @@
 package org.labkey.sequenceanalysis.run.reference;
 
 import org.json.JSONObject;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.gwt.client.util.StringUtils;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.sequenceanalysis.api.model.AnalysisModel;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
@@ -15,6 +19,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * User: bimber
@@ -35,7 +40,7 @@ public class CustomReferenceLibraryStep extends AbstractPipelineStep implements 
     {
         public Provider()
         {
-            super("Custom", "Custom Library", "Note: if selected, AA translations will not be calculated. The name of this reference should not match one of the other reference sequences.  You will also be unable to import into the DB", Arrays.asList(
+            super("Custom", "Custom Library", null, "Note: if selected, AA translations will not be calculated. The name of this reference should not match one of the other reference sequences.  You will also be unable to import into the DB", Arrays.asList(
                     ToolParameterDescriptor.create(CustomReferenceName, "Reference Name", null, "textfield", new JSONObject()
                     {{
                             put("allowBlank", false);
@@ -87,8 +92,32 @@ public class CustomReferenceLibraryStep extends AbstractPipelineStep implements 
             throw new PipelineJobException(e);
         }
         output.addOutput(refFasta, ReferenceLibraryTask.REFERENCE_DB_FASTA);
-        output.addOutput(outputDirectory, "Reference Library Folder");
+        output.addOutput(outputDirectory, "Reference Genome Folder");
 
         return output;
+    }
+
+    public void setLibraryId(PipelineJob job, ExpRun run, AnalysisModel model)
+    {
+        List<? extends ExpData> datas = run.getInputDatas(ReferenceLibraryTask.REFERENCE_DB_FASTA, null);
+        if (datas.size() > 0)
+        {
+            for (ExpData d : datas)
+            {
+                if (d.getFile() == null)
+                {
+                    job.getLogger().debug("No file found for ExpData: " + d.getRowId());
+                }
+                else if (d.getFile().exists())
+                {
+                    model.setReferenceLibrary(d.getRowId());
+                    break;
+                }
+                else
+                {
+                    job.getLogger().debug("File does not exist: " + d.getFile().getPath());
+                }
+            }
+        }
     }
 }

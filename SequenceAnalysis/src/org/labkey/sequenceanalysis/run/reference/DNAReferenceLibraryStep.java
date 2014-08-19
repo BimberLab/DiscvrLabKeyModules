@@ -8,12 +8,15 @@ import org.labkey.api.data.CompareType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
-import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.api.SequenceAnalysisService;
+import org.labkey.sequenceanalysis.api.model.AnalysisModel;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
@@ -29,7 +32,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * User: bimber
@@ -47,8 +49,8 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
     {
         public Provider()
         {
-            super("DNA", "DNA Sequences", "Select this option to construct a new library by filtering sequences in the server's DNA DB", Arrays.asList(
-                    ToolParameterDescriptor.create("species", "Species", "Select the desired species to use in the reference library", "ldk-simplelabkeycombo", new JSONObject()
+            super("DNA", "DNA Sequences", null, "Select this option to construct a new reference genome by filtering sequences in the server's DNA DB", Arrays.asList(
+                    ToolParameterDescriptor.create("species", "Species", "Select the desired species to use in the reference genome", "ldk-simplelabkeycombo", new JSONObject()
                     {{
                             put("schemaName", "laboratory");
                             put("queryName", "species");
@@ -56,7 +58,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
                             put("displayField", "common_name");
                             put("valueField", "common_name");
                         }}, null),
-                    ToolParameterDescriptor.create("subset", "Subset", "Select the DNA regions to use in the reference library.  Leave blank for all.", "ldk-simplelabkeycombo", new JSONObject()
+                    ToolParameterDescriptor.create("subset", "Subset", "Select the DNA regions to use in the reference genome.  Leave blank for all.", "ldk-simplelabkeycombo", new JSONObject()
                     {{
                             put("schemaName", "sequenceanalysis");
                             put("queryName", "dna_region");
@@ -64,7 +66,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
                             put("displayField", "region");
                             put("valueField", "region");
                         }}, null),
-                    ToolParameterDescriptor.create("mol_type", "Molecule Type", "Select the desired molecules types to use in the reference library.  Leave blank for all.", "ldk-simplelabkeycombo", new JSONObject()
+                    ToolParameterDescriptor.create("mol_type", "Molecule Type", "Select the desired molecules types to use in the reference genome.  Leave blank for all.", "ldk-simplelabkeycombo", new JSONObject()
                     {{
                             put("schemaName", "laboratory");
                             put("queryName", "dna_mol_type");
@@ -72,7 +74,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
                             put("displayField", "mol_type");
                             put("valueField", "mol_type");
                         }}, null),
-                    ToolParameterDescriptor.create("geographic_origin", "Geographic Origin", "Select the desired geographic origins to use in the reference library.  Leave blank for all.", "ldk-simplelabkeycombo", new JSONObject()
+                    ToolParameterDescriptor.create("geographic_origin", "Geographic Origin", "Select the desired geographic origins to use in the reference genome.  Leave blank for all.", "ldk-simplelabkeycombo", new JSONObject()
                     {{
                             put("schemaName", "laboratory");
                             put("queryName", "geographic_origins");
@@ -80,7 +82,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
                             put("displayField", "origin");
                             put("valueField", "origin");
                         }}, null),
-                    ToolParameterDescriptor.create("locus", "Loci", "Select the desired loci to use in the reference library.  Leave blank for all.", "ldk-simplelabkeycombo", new JSONObject()
+                    ToolParameterDescriptor.create("locus", "Loci", "Select the desired loci to use in the reference genome.  Leave blank for all.", "ldk-simplelabkeycombo", new JSONObject()
                     {{
                             put("schemaName", "sequenceanalysis");
                             put("queryName", "dna_loci");
@@ -114,7 +116,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
 
     public File getExpectedIdKeyFile(File outputDirectory) throws PipelineJobException
     {
-        return SequencePipelineService.get().getLibraryHelper(getExpectedFastaFile(outputDirectory)).getIdKeyFile();
+        return SequenceAnalysisService.get().getLibraryHelper(getExpectedFastaFile(outputDirectory)).getIdKeyFile();
     }
 
     @Override
@@ -160,7 +162,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
             if (!refFasta.exists())
                 refFasta.createNewFile();
 
-            idWriter.write("RowId\tName" + System.getProperty("line.separator"));
+            idWriter.write("RowId\tName\tAccession\tStart\tStop" + System.getProperty("line.separator"));
 
             for (RefNtSequenceModel row : rows)
             {
@@ -178,7 +180,8 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
         }
 
         output.addOutput(refFasta, ReferenceLibraryTask.REFERENCE_DB_FASTA);
-        output.addOutput(outputDirectory, "Reference Library Folder");
+        output.addOutput(idKey, ReferenceLibraryTask.ID_KEY_FILE);
+        output.addOutput(outputDirectory, "Reference Genome Folder");
 
         return output;
     }
@@ -226,5 +229,29 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
         }
 
         return filter;
+    }
+
+    public void setLibraryId(PipelineJob job, ExpRun run, AnalysisModel model)
+    {
+        List<? extends ExpData> datas = run.getInputDatas(ReferenceLibraryTask.REFERENCE_DB_FASTA, null);
+        if (datas.size() > 0)
+        {
+            for (ExpData d : datas)
+            {
+                if (d.getFile() == null)
+                {
+                    job.getLogger().debug("No file found for ExpData: " + d.getRowId());
+                }
+                else if (d.getFile().exists())
+                {
+                    model.setReferenceLibrary(d.getRowId());
+                    break;
+                }
+                else
+                {
+                    job.getLogger().debug("File does not exist: " + d.getFile().getPath());
+                }
+            }
+        }
     }
 }

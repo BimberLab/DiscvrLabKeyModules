@@ -1,16 +1,11 @@
 package org.labkey.sequenceanalysis.run.bampostprocessing;
 
-import net.sf.picard.sam.MarkDuplicates;
-import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.BamProcessingStep;
-import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepOutput;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.api.run.CommandLineParam;
@@ -36,7 +31,7 @@ public class MarkDuplicatesStep extends AbstractCommandPipelineStep<MarkDuplicat
     {
         public Provider()
         {
-            super("MarkDuplicates", "Mark Duplicates", "This runs Picard tools MarkDuplicates command in order to mark and/or remove duplicate reads.", Arrays.asList(
+            super("MarkDuplicates", "Mark Duplicates", "Picard", "This runs Picard tools MarkDuplicates command in order to mark and/or remove duplicate reads.", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("REMOVE_DUPLICATES"), "removeDuplicates", "Remove Duplicates", "If selected, duplicate reads will be removed, as opposed to flagged as duplicates.", "checkbox", null, null)
             ), null, "http://picard.sourceforge.net/command-line-overview.shtml");
         }

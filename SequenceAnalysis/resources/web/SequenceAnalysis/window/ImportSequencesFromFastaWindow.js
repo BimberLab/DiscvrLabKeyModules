@@ -20,7 +20,7 @@ Ext4.define('SequenceAnalysis.window.ImportSequencesFromFastaWindow', {
                 width: 450
             },
             items: [{
-                html: 'This will create a reference library from the provided FASTA file.  Each sequence of this FASTA will be imported into the reference sequence DB.  Note: this does not check for uniqueness among the imported sequences.  By default, the FASTA header line will be used as the sequence name.  If you set any of the fields below, these values wil be applied to all incoming sequences.  These can also be left blank, and the sequences edited later.',
+                html: 'This will create a reference genome from the provided FASTA file.  Each sequence of this FASTA will be imported into as a reference sequence as well.  Note: this does not check for uniqueness among the imported sequences.  By default, the FASTA header line will be used as the sequence name.  If you set any of the fields below, these values wil be applied to all incoming sequences.  These can also be left blank, and the sequences edited later.',
                 style: 'padding-bottom: 10px;',
                 width: null
             },{
@@ -55,7 +55,7 @@ Ext4.define('SequenceAnalysis.window.ImportSequencesFromFastaWindow', {
                     valueField: 'mol_type'
                 },{
                     xtype: 'checkbox',
-                    fieldLabel: 'Create Reference Library',
+                    fieldLabel: 'Create Reference Genome',
                     name: 'createLibrary',
                     listeners: {
                         change: function (field, val) {
@@ -64,7 +64,7 @@ Ext4.define('SequenceAnalysis.window.ImportSequencesFromFastaWindow', {
                             if (val){
                                 target.add([{
                                     xtype: 'textfield',
-                                    fieldLabel: 'Library Name',
+                                    fieldLabel: 'Name',
                                     name: 'libraryName',
                                     allowBlank: false
                                 },{
@@ -109,7 +109,7 @@ Ext4.define('SequenceAnalysis.window.ImportSequencesFromFastaWindow', {
 
         var createLibrary = this.down('field[name=createLibrary]').getValue();
         if (createLibrary && !this.down('field[name=libraryName]').getValue()){
-            Ext4.Msg.alert('Error', 'Must provide the library name when \'Create Library\' is selected');
+            Ext4.Msg.alert('Error', 'Must provide the genome name when \'Create Genome\' is selected');
             return;
         }
 

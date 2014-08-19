@@ -1,0 +1,7 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Variant Comparison">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis.css"/>
+    </dependencies>
+</view>

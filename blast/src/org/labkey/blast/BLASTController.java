@@ -25,18 +25,31 @@ import org.labkey.api.action.ApiJsonWriter;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.PropertyManager;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.ExperimentException;
+import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineValidationException;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.ExceptionUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.blast.model.BlastJob;
+import org.labkey.blast.pipeline.BlastDatabasePipelineJob;
 import org.springframework.validation.BindException;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
@@ -441,6 +454,68 @@ public class BLASTController extends SpringActionController
         public void setJobId(String jobId)
         {
             _jobId = jobId;
+        }
+    }
+
+    @RequiresPermissionClass(AdminPermission.class)
+    public class RecreateDatabaseAction extends ApiAction<RecreateDatabaseForm>
+    {
+        public ApiResponse execute(RecreateDatabaseForm form, BindException errors)
+        {
+            if (form.getDatabaseIds() == null || form.getDatabaseIds().length == 0)
+            {
+                errors.reject("Must provide a list of databases to re-process");
+                return null;
+            }
+
+            try
+            {
+                PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
+                for (String databaseGuid : form.getDatabaseIds())
+                {
+                    TableInfo databases = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_DATABASES);
+                    String containerId = new TableSelector(databases, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null).getObject(String.class);
+                    if (containerId == null)
+                    {
+                        throw new PipelineValidationException("Unknown BLAST database: " + databaseGuid);
+                    }
+
+                    Container c = ContainerManager.getForId(containerId);
+                    if (c == null)
+                    {
+                        throw new PipelineValidationException("Unknown container: " + containerId);
+                    }
+
+                    if (!c.hasPermission(getUser(), UpdatePermission.class))
+                    {
+                        throw new PipelineValidationException("Insufficient permissions to update BLAST database: " + databaseGuid);
+                    }
+
+                    PipelineService.get().queueJob(new BlastDatabasePipelineJob(c, getUser(), null, root, databaseGuid));
+                }
+
+                return new ApiSimpleResponse("success", true);
+            }
+            catch (PipelineValidationException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+        }
+    }
+
+    public static class RecreateDatabaseForm
+    {
+        private String[] _databaseIds;
+
+        public String[] getDatabaseIds()
+        {
+            return _databaseIds;
+        }
+
+        public void setDatabaseIds(String[] databaseIds)
+        {
+            _databaseIds = databaseIds;
         }
     }
 }

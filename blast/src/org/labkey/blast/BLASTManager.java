@@ -18,29 +18,21 @@ package org.labkey.blast;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
-import org.labkey.api.collections.CaseInsensitiveHashMap;
-import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.DbScope;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.exp.api.DataType;
-import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
-import org.labkey.api.util.Compress;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.blast.model.BlastJob;
@@ -49,11 +41,7 @@ import org.labkey.blast.pipeline.BlastPipelineJob;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 public class BLASTManager
@@ -180,6 +168,7 @@ public class BLASTManager
         databaseRecord.setCreatedBy(u.getUserId());
         databaseRecord.setModified(new Date());
         databaseRecord.setModifiedBy(u.getUserId());
+        databaseRecord.setHasRun(false);
         if (task != null)
             databaseRecord.addParam("task", task);
         Table.insert(u, jobs, databaseRecord);

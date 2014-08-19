@@ -25,6 +25,8 @@ public class ReadsetModel
     private String _subjectId;
     private Date _sampleDate;
     private String _platform;
+    private String _application;
+    private String _inputMaterial;
     private String _name;
     private Integer _instrumentRunId;
     private String _container;
@@ -99,6 +101,26 @@ public class ReadsetModel
     public String getPlatform()
     {
         return _platform;
+    }
+
+    public String getApplication()
+    {
+        return _application;
+    }
+
+    public void setApplication(String application)
+    {
+        _application = application;
+    }
+
+    public String getInputMaterial()
+    {
+        return _inputMaterial;
+    }
+
+    public void setInputMaterial(String inputMaterial)
+    {
+        _inputMaterial = inputMaterial;
     }
 
     public String getName()

@@ -7,6 +7,7 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.jbrowse.JBrowseManager;
 
 import java.io.File;
@@ -40,8 +41,8 @@ public class JsonFile
         if (_trackId == null)
             return null;
 
-        TableInfo ti = DbSchema.get("sequenceanalysis").getTable(" reference_library_tracks");
-        TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("name"), _trackId), null);
+        TableInfo ti = DbSchema.get("sequenceanalysis").getTable("reference_library_tracks");
+        TableSelector ts = new TableSelector(ti, PageFlowUtil.set("name"), new SimpleFilter(FieldKey.fromString("rowid"), _trackId), null);
 
         return ts.getObject(String.class);
     }
@@ -122,23 +123,32 @@ public class JsonFile
 
     public File getBaseDir()
     {
-        return new File(JBrowseManager.get().getJBrowseRoot(), getRelativePath());
+        return getRelativePath() == null ? null : new File(JBrowseManager.get().getJBrowseRoot(), getRelativePath());
     }
 
     public File getTrackListFile()
     {
+        if (getRelativePath() == null)
+            return null;
+
         File ret = new File(getBaseDir(), "trackList.json");
         return ret.exists() ? ret : null;
     }
 
-    public File getTracksFile()
+    public File getTracksJsonFile()
     {
+        if (getRelativePath() == null)
+            return null;
+
         File ret = new File(getBaseDir(), "tracks.json");
         return ret.exists() ? ret : null;
     }
 
     public File getRefSeqsFile()
     {
+        if (getRelativePath() == null)
+            return null;
+
         File ret = new File(getBaseDir(), "seq/refSeqs.json");
         return ret.exists() ? ret : null;
     }

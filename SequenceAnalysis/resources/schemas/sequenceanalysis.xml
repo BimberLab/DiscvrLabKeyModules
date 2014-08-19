@@ -361,7 +361,7 @@
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
         <ns:deleteUrl></ns:deleteUrl>
-        <ns:updateUrl></ns:updateUrl>
+        <!--<ns:updateUrl></ns:updateUrl>-->
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:isAutoInc>true</ns:isAutoInc>
@@ -412,6 +412,7 @@
             </ns:column>
             <ns:column columnName="inputfile">
                 <ns:nullable>true</ns:nullable>
+                <ns:isUserEditable>false</ns:isUserEditable>
                 <ns:columnTitle>Input File</ns:columnTitle>
                 <ns:fk>
                     <ns:fkDbSchema>exp</ns:fkDbSchema>
@@ -421,6 +422,7 @@
             </ns:column>
             <ns:column columnName="inputfile2">
                 <ns:nullable>true</ns:nullable>
+                <ns:isUserEditable>false</ns:isUserEditable>
                 <ns:columnTitle>Input File 2</ns:columnTitle>
                 <ns:fk>
                     <ns:fkDbSchema>exp</ns:fkDbSchema>
@@ -439,6 +441,7 @@
             </ns:column>
             <ns:column columnName="alignmentfile">
                 <ns:nullable>true</ns:nullable>
+                <ns:isUserEditable>false</ns:isUserEditable>
                 <ns:columnTitle>Alignment File</ns:columnTitle>
                 <ns:fk>
                     <ns:fkDbSchema>exp</ns:fkDbSchema>
@@ -446,22 +449,24 @@
                     <ns:fkColumnName>RowId</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="snpfile">
+            <!--TODO: deprecate in favor of this library_id-->
+            <ns:column columnName="reference_library">
                 <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>SNP File</ns:columnTitle>
+                <ns:columnTitle>Reference Genome</ns:columnTitle>
                 <ns:fk>
                     <ns:fkDbSchema>exp</ns:fkDbSchema>
                     <ns:fkTable>data</ns:fkTable>
                     <ns:fkColumnName>RowId</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="reference_library">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Reference Library</ns:columnTitle>
+            <ns:column columnName="library_id">
+                <ns:columnTitle>Reference Genome</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:nullable>false</ns:nullable>
                 <ns:fk>
-                    <ns:fkDbSchema>exp</ns:fkDbSchema>
-                    <ns:fkTable>data</ns:fkTable>
-                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>reference_libraries</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
             <ns:column columnName="makePublic">
@@ -512,7 +517,7 @@
                 <ns:originalText>Page Size</ns:originalText>
             </ns:item>
             <ns:item insertPosition="end" requiresSelection="true" text="More Actions">
-                <ns:item text="Re-analyze Selected">
+                <ns:item text="Analyze Selected BAMs">
                     <ns:onClick>SequenceAnalysis.Buttons.performAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null)</ns:onClick>
                 </ns:item>
                 <ns:item text="View FASTQC Report">
@@ -858,7 +863,7 @@
                 <ns:onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</ns:onClick>
             </ns:item>
             <ns:item insertPosition="end" text="More Actions">
-                <ns:item text="Create Reference Library">
+                <ns:item text="Create Reference Genome">
                     <ns:onClick>SequenceAnalysis.window.CreateReferenceLibraryWindow.buttonHandler(dataRegionName)</ns:onClick>
                 </ns:item>
                 <ns:item text="Import From FASTA">
@@ -1011,6 +1016,8 @@
             </ns:column>
             <ns:column columnName="inputMaterial">
                 <ns:nullable>true</ns:nullable>
+                <ns:scale>50</ns:scale>
+                <ns:inputType>textfield</ns:inputType>
                 <ns:columnTitle>Input Material</ns:columnTitle>
             </ns:column>
             <ns:column columnName="fileid">
@@ -1069,6 +1076,8 @@
             </ns:column>
             <ns:column columnName="comments">
                 <ns:columnTitle>Comments</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="status">
             </ns:column>
             <ns:column columnName="container">
             </ns:column>
@@ -1869,13 +1878,13 @@
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
         <!--<ns:deleteUrl></ns:deleteUrl>-->
-        <ns:tableTitle>Reference Libraries</ns:tableTitle>
+        <ns:tableTitle>Reference Genomes</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:columnTitle>Library Id</ns:columnTitle>
             </ns:column>
             <ns:column columnName="name">
-                <ns:columnTitle>Library Name</ns:columnTitle>
+                <ns:columnTitle>Genome Name</ns:columnTitle>
                 <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="description">
@@ -1936,13 +1945,13 @@
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
         <ns:deleteUrl></ns:deleteUrl>
-        <ns:tableTitle>Reference Library Members</ns:tableTitle>
+        <ns:tableTitle>Reference Genome Members</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
             </ns:column>
             <ns:column columnName="library_id">
-                <ns:columnTitle>Library</ns:columnTitle>
+                <ns:columnTitle>Reference Genome</ns:columnTitle>
                 <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
@@ -1958,6 +1967,12 @@
                     <ns:fkTable>ref_nt_sequences</ns:fkTable>
                     <ns:fkColumnName>rowid</ns:fkColumnName>
                 </ns:fk>
+            </ns:column>
+            <ns:column columnName="start">
+                <ns:description>Optional.  Can be used in conjunction with stop to select a subsequence of the reference.  If blank the region will begin at the first base of the reference</ns:description>
+            </ns:column>
+            <ns:column columnName="stop">
+                <ns:description>Optional.  Can be used in conjunction with start to select a subsequence of the reference.  If blank the region will end with the final base of the reference</ns:description>
             </ns:column>
             <ns:column columnName="container">
                 <ns:isHidden>true</ns:isHidden>
@@ -1999,7 +2014,7 @@
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
         <ns:deleteUrl></ns:deleteUrl>
-        <ns:tableTitle>Reference Library Tracks</ns:tableTitle>
+        <ns:tableTitle>Reference Tracks</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
@@ -2007,7 +2022,7 @@
             <ns:column columnName="name"/>
             <ns:column columnName="description"/>
             <ns:column columnName="library_id">
-                <ns:columnTitle>Library</ns:columnTitle>
+                <ns:columnTitle>Reference Genome</ns:columnTitle>
                 <ns:fk>
                     <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
                     <ns:fkTable>reference_libraries</ns:fkTable>
@@ -2079,6 +2094,9 @@
             </ns:column>
             <ns:column columnName="name"/>
             <ns:column columnName="description"/>
+            <ns:column columnName="taskid">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
             <ns:column columnName="originalAnalysisId">
                 <ns:columnTitle>Original Analysis</ns:columnTitle>
                 <ns:fk>
@@ -2118,6 +2136,114 @@
             </ns:column>
         </ns:columns>
         <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="outputfiles" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableUrl></ns:tableUrl>
+        <ns:updateUrl></ns:updateUrl>
+        <ns:insertUrl></ns:insertUrl>
+        <ns:importUrl></ns:importUrl>
+        <ns:deleteUrl></ns:deleteUrl>
+        <ns:tableTitle>Outputs</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="name"/>
+            <ns:column columnName="description"/>
+            <ns:column columnName="dataid">
+                <ns:columnTitle>File Id</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                    <ns:fkTable>data</ns:fkTable>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="library_id">
+                <ns:nullable>true</ns:nullable>
+                <ns:columnTitle>Reference Genome</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>reference_libraries</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="readset">
+                <ns:nullable>true</ns:nullable>
+                <ns:columnTitle>Readset</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>sequence_readsets</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="analysis_id">
+                <ns:nullable>true</ns:nullable>
+                <ns:columnTitle>Analysis Id</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>sequence_readsets</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="runid">
+                <ns:nullable>true</ns:nullable>
+                <ns:columnTitle>Run</ns:columnTitle>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>true</ns:shownInUpdateView>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:fk>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                    <ns:fkTable>runs</ns:fkTable>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>RowId</ns:fkDisplayColumnName>
+                </ns:fk>
+                <ns:url>/experiment/showRunGraphDetail.view?rowId=${runid}</ns:url>
+            </ns:column>
+            <ns:column columnName="category">
+
+            </ns:column>
+            <ns:column columnName="intermediate">
+                <ns:columnTitle>Is Intermediate File?</ns:columnTitle>
+                <ns:description>This column is used to tag files that are intermediates in a process, as opposed to the final end product.</ns:description>
+            </ns:column>
+            <ns:column columnName="container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="createdby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:includeScript>sequenceanalysis/field/ReadsetField.js</ns:includeScript>
+            <ns:includeScript>sequenceanalysis/window/ImportOutputFileWindow.js</ns:includeScript>
+            <ns:item text="Import Files" insertPosition="beginning">
+                <ns:onClick>SequenceAnalysis.window.ImportOutputFileWindow.buttonHandler(dataRegionName);</ns:onClick>
+            </ns:item>
             <ns:item hidden="true">
                 <ns:originalText>Charts</ns:originalText>
             </ns:item>

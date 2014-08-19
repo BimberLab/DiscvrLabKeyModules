@@ -20,6 +20,7 @@ DISCVR/blast/resources/web/blast/docs/referenceLibrary1.jpg -text
 DISCVR/blast/resources/web/blast/docs/referenceLibrary2.jpg -text
 DISCVR/blast/resources/web/blast/docs/runBlast.jpg -text
 DISCVR/blast/resources/web/blast/window/DatabaseWindow.js -text
+DISCVR/blast/resources/web/blast/window/ReprocessDatabaseWindow.js -text
 DISCVR/blast/src/org/labkey/blast/BLASTController.java -text
 DISCVR/blast/src/org/labkey/blast/BLASTDataProvider.java -text
 DISCVR/blast/src/org/labkey/blast/BLASTMaintenanceTask.java -text
@@ -28,6 +29,7 @@ DISCVR/blast/src/org/labkey/blast/BLASTModule.java -text
 DISCVR/blast/src/org/labkey/blast/BLASTSchema.java -text
 DISCVR/blast/src/org/labkey/blast/BLASTWrapper.java -text
 DISCVR/blast/src/org/labkey/blast/button/CreateDatabaseButton.java -text
+DISCVR/blast/src/org/labkey/blast/button/ReprocessDatabaseButton.java -text
 DISCVR/blast/src/org/labkey/blast/model/BlastJob.java -text
 DISCVR/blast/src/org/labkey/blast/pipeline/BlastDatabasePipelineJob.java -text
 DISCVR/blast/src/org/labkey/blast/pipeline/BlastDatabasePipelineProvider.java -text
@@ -45,9 +47,13 @@ DISCVR/jbrowse/resources/queries/jbrowse/database_members/.qview.xml -text
 DISCVR/jbrowse/resources/schemas/dbscripts/postgresql/jbrowse-13.30-13.31.sql -text
 DISCVR/jbrowse/resources/schemas/dbscripts/postgresql/jbrowse-13.31-13.32.sql -text
 DISCVR/jbrowse/resources/schemas/dbscripts/postgresql/jbrowse-13.32-13.33.sql -text
+DISCVR/jbrowse/resources/schemas/dbscripts/postgresql/jbrowse-13.33-13.34.sql -text
+DISCVR/jbrowse/resources/schemas/dbscripts/postgresql/jbrowse-13.34-13.35.sql -text
 DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.30-13.31.sql -text
 DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.31-13.32.sql -text
 DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.32-13.33.sql -text
+DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.33-13.34.sql -text
+DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.34-13.35.sql -text
 DISCVR/jbrowse/resources/schemas/jbrowse.xml -text
 DISCVR/jbrowse/resources/views/begin.html -text
 DISCVR/jbrowse/resources/views/begin.view.xml -text
@@ -56,6 +62,8 @@ DISCVR/jbrowse/resources/views/databaseDetails.view.xml -text
 DISCVR/jbrowse/resources/views/settings.html -text
 DISCVR/jbrowse/resources/views/settings.view.xml -text
 DISCVR/jbrowse/resources/web/jbrowse/window/DatabaseWindow.js -text
+DISCVR/jbrowse/resources/web/jbrowse/window/ReprocessResourcesWindow.js -text
+DISCVR/jbrowse/resources/web/jbrowse/window/ViewOutputsWindow.js -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseController.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseDataProvider.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseMaintenanceTask.java -text
@@ -63,9 +71,12 @@ DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseManager.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseModule.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseRoot.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseSchema.java -text
+DISCVR/jbrowse/src/org/labkey/jbrowse/button/AddDataButton.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/button/AddLibraryButton.java -text
-DISCVR/jbrowse/src/org/labkey/jbrowse/button/AddSequenceButton.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/button/AddTrackButton.java -text
+DISCVR/jbrowse/src/org/labkey/jbrowse/button/ReprocessResourcesButton.java -text
+DISCVR/jbrowse/src/org/labkey/jbrowse/button/ReprocessSessionsButton.java -text
+DISCVR/jbrowse/src/org/labkey/jbrowse/button/ViewOutputsButton.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/model/Database.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/model/JsonFile.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/pipeline/JBrowseSessionPipelineJob.java -text
@@ -334,6 +345,10 @@ labModules/SequenceAnalysis/pipeline_code/external/trimmomatic/trimmomatic-0.22.
 labModules/SequenceAnalysis/pipeline_code/sequence_tools_install.sh -text
 labModules/SequenceAnalysis/resources/credits/executables.txt -text
 labModules/SequenceAnalysis/resources/credits/jars.txt -text
+labModules/SequenceAnalysis/resources/external/bamstats/BAMStats-1.25.jar -text
+labModules/SequenceAnalysis/resources/external/bamstats/lib/jopt-simple-3.2.jar -text
+labModules/SequenceAnalysis/resources/external/bamstats/lib/poi-3.7-20101029.jar -text
+labModules/SequenceAnalysis/resources/external/bamstats/lib/sam-1.50.jar -text
 labModules/SequenceAnalysis/resources/external/fastqc/Contaminants/contaminant_list.txt -text
 labModules/SequenceAnalysis/resources/external/fastqc/Help/1[!!-~]Introduction/1.1[!!-~]What[!!-~]is[!!-~]FastQC.html -text
 labModules/SequenceAnalysis/resources/external/fastqc/Help/2[!!-~]Basic[!!-~]Operations/2.1[!!-~]Opening[!!-~]a[!!-~]sequence[!!-~]file.html -text
@@ -473,6 +488,7 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/haplotypeMatches.
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/haplotypeMatches/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/nt_snps_by_pos/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/nt_snps_by_pos/Greater[!!-~]Than[!!-~]1[!!-~]Pct.qview.xml -text
+labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfile_categories.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/peptide_positions.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/quality_metrics/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_aa_sequences.js -text
@@ -543,6 +559,8 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.277-12.278.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.278-12.279.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.279-12.280.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.280-12.281.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.281-12.282.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -599,6 +617,8 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.277-12.278.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.278-12.279.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.279-12.280.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.280-12.281.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.281-12.282.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -612,6 +632,10 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/Seque
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.33-11.34.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-12.10-12.11.sql -text
 labModules/SequenceAnalysis/resources/schemas/sequenceanalysis.xml -text
+labModules/SequenceAnalysis/resources/views/alignmentAnalysis.html -text
+labModules/SequenceAnalysis/resources/views/alignmentAnalysis.view.xml -text
+labModules/SequenceAnalysis/resources/views/alignmentImport.html -text
+labModules/SequenceAnalysis/resources/views/alignmentImport.view.xml -text
 labModules/SequenceAnalysis/resources/views/begin.html -text
 labModules/SequenceAnalysis/resources/views/begin.view.xml -text
 labModules/SequenceAnalysis/resources/views/begin.webpart.xml -text
@@ -650,6 +674,8 @@ labModules/SequenceAnalysis/resources/views/snp_viewer.html -text
 labModules/SequenceAnalysis/resources/views/snp_viewer.view.xml -text
 labModules/SequenceAnalysis/resources/views/splitStrings.html -text
 labModules/SequenceAnalysis/resources/views/splitStrings.view.xml -text
+labModules/SequenceAnalysis/resources/views/variantComparison.html -text
+labModules/SequenceAnalysis/resources/views/variantComparison.view.xml -text
 labModules/SequenceAnalysis/resources/views/virusStrainDetails.html -text
 labModules/SequenceAnalysis/resources/views/virusStrainDetails.view.xml -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/Trim.xls -text
@@ -658,12 +684,15 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/color-field.css -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/color-field.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/color-trigger.gif -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/fastqc.css -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/ReadsetField.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/icons/dna_folder.png -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/icons/error.png -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/icons/fastqc_icon.png -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/icons/tick.png -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/icons/warning.png -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/AdapterPanel.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/AlignmentAnalysisPanel.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/AlignmentImportPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/AlignmentPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/AnalysisSectionPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/BaseSequencePanel.js -text
@@ -684,8 +713,10 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CreateReferenc
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/DownloadSequencesWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/IlluminaApplicationWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/IlluminaSampleKitWindow.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportOutputFileWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportSequencesFromFastaWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportTrackWindow.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ReprocessLibraryWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/RunExportWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/AnalysesTableCustomizer.java -text
@@ -703,7 +734,6 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceNavItem.java
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequencePipelineServiceImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceReadset.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/TestHelper.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/SequenceAnalysisService.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/model/AnalysisModel.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/model/ReadsetModel.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/picard/CigarPositionIterable.java -text
@@ -723,6 +753,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/pipeline/Pipelin
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/pipeline/PipelineStepProvider.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/pipeline/PreprocessingStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/pipeline/ReferenceLibraryStep.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/pipeline/SequenceAnalysisJobSupport.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/pipeline/SequencePipelineService.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/pipeline/TaskFileManager.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/pipeline/VariantCallingStep.java -text
@@ -734,11 +765,20 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/CommandWrapp
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/InputStreamHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/ToolParameterDescriptor.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/ToolPreferences.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/CompareVariantsButton.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/ReprocessLibraryButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/AdapterModel.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/AnalysisModelImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/BarcodeModel.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/ReferenceLibraryMember.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/SequenceModel.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/SequenceTag.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AbstractSequenceTaskFactory.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentAnalysisCleanupTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentAnalysisInitTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentAnalysisWorkTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentImportTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentNormalizationTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/CreateReferenceLibraryTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/FileCleanupTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaFastqSplitter.java -text
@@ -765,6 +805,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/Alignm
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BWAMemWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BWASWWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BWAWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BismarkWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BowtieWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/IndexOutputImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/LastzWrapper.java -text
@@ -774,6 +815,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/AASnpBy
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/AASnpByReadAggregator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/AbstractAlignmentAggregator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/AlignmentAggregator.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/AnalysisOutputImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/AvgBaseQualityAggregator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/BamIterator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/HaplotypeCallerAnalysis.java -text
@@ -782,6 +824,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/NtCover
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/NtSnpByPosAggregator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SequenceBasedTypingAlignmentAggregator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SequenceBasedTypingAnalysis.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/VariantComparisonAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/ViralAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/assembly/MiraRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/bampostprocessing/AddOrReplaceReadGroupsStep.java -text
@@ -804,7 +847,9 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/reference/Refere
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/reference/SavedReferenceLibraryStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/reference/VirusReferenceLibraryStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/AASnp.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/AbstractGatkWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/AddOrReplaceReadGroupsWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/BamStatsRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/BuildBamIndexWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CallMdWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CleanSamWrapper.java -text
@@ -814,6 +859,8 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FastaIndexe
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FastqToSamWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FastqcRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FixMateInformationWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/GenotypeGVCFsWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/HaplotypeCallerWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/IndelRealignerWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MarkDuplicatesWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MergeSamFilesWrapper.java -text
@@ -825,6 +872,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SamSorter.j
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SamToFastqWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SamtoolsRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SortSamWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/VariantEvalWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SamtoolsVariantCaller.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/AbstractSequenceMatcher.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/Barcoder.java -text
@@ -1402,6 +1450,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billi
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.365-12.366.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.366-12.367.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.367-12.368.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.368-12.369.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.30-12.301.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.301-12.302.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.302-12.303.sql -text
@@ -1463,6 +1512,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billin
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.365-12.366.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.366-12.367.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.367-12.368.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.368-12.369.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing.xml -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing_public.template.xml -text
 onprcEHRModules/onprc_billing/resources/scripts/onprc_billing/billing_triggers.js -text

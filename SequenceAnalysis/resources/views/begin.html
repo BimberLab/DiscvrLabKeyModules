@@ -22,11 +22,11 @@
                                 sections: [{
                                     header: 'General Information',
                                     items: [
-                                        {name: 'Overview of The Sequence Module', url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'instructions')},
+                                        {name: 'Overview and Instructions', url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'instructions')},
                                         {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL("pipeline-status", "showList.view"), renderer: 'linkWithoutLabel'}
                                     ]
                                 },{
-                                    header: 'Data Analysis',
+                                    header: 'Data Import & Analysis',
                                     items: [
                                         {renderer: function(){
                                             return {
@@ -37,9 +37,12 @@
                                                 handler: function(btn){
                                                     var el = btn.up('button');
                                                     Ext4.create('Laboratory.window.WorkbookCreationWindow', {
-                                                        urlParams: null,
-                                                        controller: 'sequenceanalysis',
-                                                        action: 'sequence_readsets',
+                                                        urlParams: {
+                                                            schemaName: 'sequenceanalysis',
+                                                            queryName: 'sequence_readsets'
+                                                        },
+                                                        controller: 'query',
+                                                        action: 'importData',
                                                         title: 'Create Readsets'
                                                     }).show();
                                                 }
@@ -74,15 +77,15 @@
                                 },{
                                     header: 'Browse Results',
                                     items: [
-                                        {name: 'View Sequence Alignment Summary', schemaName: 'sequenceanalysis', queryName: 'alignment_summary_grouped', showSearch: false, showImport: false, renderer: 'queryRenderer'},
-                                        {name: 'View NT SNP Summary', schemaName: 'sequenceanalysis', queryName: 'nt_snps_by_pos', viewName: 'Search Panel', showSearch: false, showImport: false, renderer: 'queryRenderer'},
-                                        {name: 'View AA SNP Summary', schemaName: 'sequenceanalysis', queryName: 'aa_snps_by_codon', viewName: 'Search Panel', showSearch: false, showImport: false, renderer: 'queryRenderer'}
+                                        {name: 'View Sequence Alignment Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'alignment_summary_grouped'}), renderer: 'linkWithoutLabel'},
+                                        {name: 'View NT SNP Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'nt_snps_by_pos'}), renderer: 'linkWithoutLabel'},
+                                        {name: 'View AA SNP Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'aa_snps_by_codon'}), renderer: 'linkWithoutLabel'}
                                     ]
                                 },{
                                     header: 'References',
                                     items: [
                                         {name: 'Reference Sequences', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'ref_nt_sequences'}), renderer: 'linkWithoutLabel'},
-                                        {name: 'Reference Libraries', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'reference_libraries'}), renderer: 'linkWithoutLabel'}
+                                        {name: 'Reference Genomes', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'reference_libraries'}), renderer: 'linkWithoutLabel'}
                                     ]
                                 }]
                             };
@@ -96,8 +99,7 @@
                             panel.removeAll();
                             panel.add([{
                                 style: 'padding: 5px;padding-bottom: 20px;',
-                                html: 'This module is designed to manage sequence data and assist with analysis and presentation of results.  ' +
-                                        '<p></p>There two components to this module.  First, it can be used to management sequence data and to connect these sequences with sample information.  This allows you to identify current or historic data based on sample attributes such as subject Id, sample date, etc.  The second component of this module is data analysis.  This module provides a flexible pipeline that integrates with a wide range of analysis tools.  You can either create a new pipeline by combining tools/steps, or re-use a previously saved analysis.'
+                                html: 'There two components to the SequenceAnalysis module.  First, it can be used to manage sequence data and to connect these sequences with sample information.  This allows you to identify current or historic data based on sample attributes such as subject Id, sample date, etc.  There are many built in quality control tools, such as integration with FASTQC, that may be useful to evaluate data or track sequencer performance.  The second component of this module is data analysis.  This module provides a flexible pipeline that integrates with a wide range of analysis tools.  You can either create a new pipeline by combining tools/steps, or re-use a previously saved analysis.'
                             }, config]);
                         },
                         failure: LDK.Utils.getErrorCallback(),
@@ -107,11 +109,15 @@
                             queryName: 'sequence_readsets',
                             sql: 'SELECT count(*) as total from sequenceanalysis.sequence_readsets s WHERE s.fileid IS NOT NULL',
                             viewName: 'Data Imported',
-                            name: 'Total Readsets Imported'
+                            name: 'Readsets Imported'
                         },{
                             schemaName: 'sequenceanalysis',
                             queryName: 'sequence_analyses',
-                            name: 'Total Analyses Performed'
+                            name: 'Alignments Created'
+                        },{
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'outputfiles',
+                            name: 'Output Files'
                         }]
                     });
                 }

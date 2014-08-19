@@ -69,6 +69,11 @@ public class TaskFileManagerImpl implements TaskFileManager
     @Override
     public void addStepOutputs(RecordedAction action, PipelineStepOutput output)
     {
+        for (Pair<File, String> pair : output.getInputs())
+        {
+            addInput(action, pair.second, pair.first);
+        }
+
         for (Pair<File, String> pair : output.getOutputs())
         {
             addOutput(action, pair.second, pair.first);
@@ -340,7 +345,8 @@ public class TaskFileManagerImpl implements TaskFileManager
         }
     }
 
-    private String getInputfileTreatment()
+    @Override
+    public String getInputfileTreatment()
     {
         return _job.getParameters().get("inputfile.inputTreatment");
     }

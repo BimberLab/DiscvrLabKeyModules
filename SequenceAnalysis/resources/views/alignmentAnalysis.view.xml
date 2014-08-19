@@ -1,0 +1,13 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Analyze Alignments">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis.css"/>
+        <dependency path="SequenceAnalysis/panel/AnalysisSectionPanel.js"/>
+        <dependency path="SequenceAnalysis/panel/AlignmentPanel.js"/>
+
+        <dependency path="SequenceAnalysis/panel/BaseSequencePanel.js"/>
+        <dependency path="SequenceAnalysis/panel/SequenceAnalysisPanel.js"/>
+        <dependency path="SequenceAnalysis/panel/AlignmentAnalysisPanel.js"/>
+    </dependencies>
+</view>

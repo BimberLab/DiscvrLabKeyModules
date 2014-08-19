@@ -1,6 +1,10 @@
 package org.labkey.sequenceanalysis;
 
-import org.labkey.sequenceanalysis.api.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
+
+import java.io.File;
 
 /**
  * User: bimber
@@ -19,5 +23,11 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     public static SequenceAnalysisServiceImpl get()
     {
         return _instance;
+    }
+
+    @Override
+    public ReferenceLibraryHelper getLibraryHelper(File refFasta)
+    {
+        return new ReferenceLibraryHelperImpl(refFasta);
     }
 }

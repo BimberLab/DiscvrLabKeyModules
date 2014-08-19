@@ -1,12 +1,9 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
-import net.sf.picard.analysis.AlignmentSummaryMetrics;
-import net.sf.picard.analysis.AlignmentSummaryMetricsCollector;
-import net.sf.picard.analysis.MetricAccumulationLevel;
-import net.sf.picard.metrics.MetricsFile;
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.Table;
@@ -18,6 +15,9 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
+import picard.analysis.AlignmentSummaryMetrics;
+import picard.analysis.AlignmentSummaryMetricsCollector;
+import picard.analysis.MetricAccumulationLevel;
 
 import java.io.File;
 import java.util.ArrayList;

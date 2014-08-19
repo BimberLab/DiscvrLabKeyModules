@@ -53,6 +53,7 @@ import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
+import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 
 import java.io.File;
@@ -359,12 +360,25 @@ public class SequenceAnalysisManager
         return new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), sql).getObject(String.class);
     }
 
-    public void createReferenceLibrary(Container c, User u, String name, String description, List<Integer> sequenceIds) throws Exception
+    public void createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String description) throws Exception
+    {
+        List<ReferenceLibraryMember> libraryMembers = new ArrayList<>();
+        for (Integer sequenceId : sequenceIds)
+        {
+            ReferenceLibraryMember m = new ReferenceLibraryMember();
+            m.setRef_nt_id(sequenceId);
+            libraryMembers.add(m);
+        }
+
+        createReferenceLibrary(c, u, name, description, libraryMembers);
+    }
+
+    public void createReferenceLibrary(Container c, User u, String name, String description, List<ReferenceLibraryMember> libraryMembers) throws Exception
     {
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            PipelineService.get().queueJob(new ReferenceLibraryPipelineJob(c, u, null, root, name, description, sequenceIds));
+            PipelineService.get().queueJob(new ReferenceLibraryPipelineJob(c, u, null, root, name, description, libraryMembers));
         }
         catch (PipelineValidationException e)
         {

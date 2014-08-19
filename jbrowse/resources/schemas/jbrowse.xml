@@ -97,6 +97,7 @@
         <ns:tableUrl>/jbrowse/databaseDetails.view?databaseId=${objectid}</ns:tableUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
+        <ns:updateUrl>/ldk/manageRecord.view?schemaName=jbrowse&amp;query.queryName=databases&amp;keyField=objectid&amp;key=${objectid}</ns:updateUrl>
         <ns:tableTitle>JBrowse Sessions</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowid">
@@ -108,6 +109,14 @@
             <ns:column columnName="description">
 
             </ns:column>
+            <ns:column columnName="libraryId">
+                <ns:columnTitle>Base Genome</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>reference_libraries</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="objectid">
                 <ns:columnTitle>Key</ns:columnTitle>
                 <ns:shownInDetailsView>false</ns:shownInDetailsView>
@@ -116,6 +125,16 @@
             <ns:column columnName="temporary">
                 <ns:columnTitle>Temporary?</ns:columnTitle>
                 <ns:description>If true, this session will be deleted at the end of the day, as part of the routine system maintenance.</ns:description>
+            </ns:column>
+            <ns:column columnName="jobid">
+                <ns:columnTitle>Pipeline Job</ns:columnTitle>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:fk>
+                    <ns:fkDbSchema>pipeline</ns:fkDbSchema>
+                    <ns:fkTable>job</ns:fkTable>
+                    <ns:fkColumnName>Job</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>RowId</ns:fkDisplayColumnName>
+                </ns:fk>
             </ns:column>
             <ns:column columnName="viewlink" wrappedColumnName="objectid">
                 <ns:columnTitle>JBrowse Link</ns:columnTitle>
@@ -159,7 +178,6 @@
         <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableUrl></ns:tableUrl>
-        <ns:updateUrl></ns:updateUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
         <ns:tableTitle>JBrowse Session Members</ns:tableTitle>
@@ -169,6 +187,7 @@
             </ns:column>
             <ns:column columnName="database">
                 <ns:columnTitle>Session Name</ns:columnTitle>
+                <ns:isUserEditable>false</ns:isUserEditable>
                 <ns:fk>
                     <ns:fkDbSchema>jbrowse</ns:fkDbSchema>
                     <ns:fkTable>databases</ns:fkTable>
@@ -177,11 +196,15 @@
             </ns:column>
             <ns:column columnName="jsonfile">
                 <ns:columnTitle>Resource</ns:columnTitle>
+                <ns:isUserEditable>false</ns:isUserEditable>
                 <ns:fk>
                     <ns:fkDbSchema>jbrowse</ns:fkDbSchema>
                     <ns:fkTable>jsonfiles</ns:fkTable>
                     <ns:fkColumnName>objectid</ns:fkColumnName>
                 </ns:fk>
+            </ns:column>
+            <ns:column columnName="category">
+                <ns:columnTitle>Category</ns:columnTitle>
             </ns:column>
             <ns:column columnName="container">
                 <ns:isHidden>true</ns:isHidden>

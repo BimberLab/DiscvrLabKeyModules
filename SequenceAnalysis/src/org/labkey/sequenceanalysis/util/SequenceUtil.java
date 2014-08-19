@@ -1,13 +1,17 @@
 package org.labkey.sequenceanalysis.util;
 
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.util.BlockCompressedOutputStream;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Writer;
@@ -78,7 +82,7 @@ public class SequenceUtil
     {
         try (SAMFileReader reader = new SAMFileReader(bam))
         {
-            reader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+            reader.setValidationStringency(ValidationStringency.SILENT);
 
             SAMRecordIterator it = reader.iterator();
             long count = 0;
@@ -101,6 +105,18 @@ public class SequenceUtil
             {
                 writer.write(sequence.substring(i, Math.min(len, i + lineLength)) + "\n");
             }
+        }
+    }
+
+    public static void bgzip(File input, File output)
+    {
+        try (FileInputStream i = new FileInputStream(input); BlockCompressedOutputStream o = new BlockCompressedOutputStream(new FileOutputStream(output), output))
+        {
+            FileUtil.copyData(i, o);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
         }
     }
 }

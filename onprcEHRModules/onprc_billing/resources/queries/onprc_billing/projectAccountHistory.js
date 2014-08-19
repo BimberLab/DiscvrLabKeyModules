@@ -24,8 +24,4 @@ EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Even
     if (row.endDate){
         row.endDate = ldkUtils.removeTimeFromDate(row.endDate);
     }
-
-    if (row.startDate && row.startDate.getTime() > (new Date()).getTime()){
-        EHR.Server.Utils.addError(scriptErrors, 'startdate', 'You cannot currently enter dates in the future', 'WARN');
-    }
 });

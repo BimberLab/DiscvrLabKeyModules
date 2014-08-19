@@ -58,7 +58,7 @@ public class SequencePipelineSettings
         _params = params;
 
         AppProps.Interface appProps = AppProps.getInstance();
-        if(appProps != null)
+        if (appProps != null)
             _params.put("serverBaseUrl", appProps.getBaseServerUrl());
 
         initInstrumentRun();
@@ -74,9 +74,9 @@ public class SequencePipelineSettings
     private List<ReadsetModel> parseReadsets()
     {
         List<ReadsetModel> readsets = new ArrayList<>();
-        for(String key : _params.keySet())
+        for (String key : _params.keySet())
         {
-            if(key.startsWith("sample_"))
+            if (key.startsWith("sample_"))
             {
                 readsets.add(createReadsetModel(new JSONObject(_params.get(key))));
             }
@@ -85,7 +85,7 @@ public class SequencePipelineSettings
         return readsets;
     }
 
-    private ReadsetModel createReadsetModel(JSONObject o)
+    public ReadsetModel createReadsetModel(JSONObject o)
     {
         ReadsetModel model = new ReadsetModel();
         //_rawJSON = o;
@@ -116,6 +116,8 @@ public class SequencePipelineSettings
             }
         }
         model.setPlatform(o.getString("platform"));
+        model.setApplication(o.getString("application"));
+        model.setInputMaterial(o.getString("inputMaterial"));
         model.setName(o.getString("readsetname"));
         model.setReadsetId(getInt(o.getString("readset")));
         model.setInstrumentRunId(getInt(o.getString("instrument_run_id")));
@@ -131,7 +133,7 @@ public class SequencePipelineSettings
     public String getBasename(String filename)
     {
         String basename;
-        if(isDoMerge()){
+        if (isDoMerge()){
             basename = _params.get("inputfile.merge.basename");
         }
         else {

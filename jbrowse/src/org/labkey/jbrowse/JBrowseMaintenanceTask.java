@@ -72,10 +72,11 @@ public class JBrowseMaintenanceTask implements SystemMaintenance.MaintenanceTask
                 if (deleted > 0)
                     _log.info("deleted " + deleted + " orphan database members");
 
+                //TODO: disabled until we can handle libraries
                 //finally orphan JSONFiles
-                int deleted2 = new SqlExecutor(JBrowseSchema.getInstance().getSchema()).execute(new SQLFragment("DELETE FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_JSONFILES + " WHERE (SELECT count(rowid) FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASE_MEMBERS + " d WHERE d.jsonfile = " + JBrowseSchema.TABLE_JSONFILES + ".objectid) = 0"));
-                if (deleted2 > 0)
-                    _log.info("deleted " + deleted2 + " JSON files because they are not used by any sessions");
+                //int deleted2 = new SqlExecutor(JBrowseSchema.getInstance().getSchema()).execute(new SQLFragment("DELETE FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_JSONFILES + " WHERE (SELECT count(rowid) FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASE_MEMBERS + " d WHERE d.jsonfile = " + JBrowseSchema.TABLE_JSONFILES + ".objectid) = 0"));
+                //if (deleted2 > 0)
+                //    _log.info("deleted " + deleted2 + " JSON files because they are not used by any sessions");
 
                 TableInfo jsonFiles = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
                 List<String> sequenceFolders = new TableSelector(jsonFiles, PageFlowUtil.set("sequenceid"), new SimpleFilter(FieldKey.fromString("sequenceId"), null, CompareType.NONBLANK), null).getArrayList(String.class);

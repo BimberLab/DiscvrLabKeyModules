@@ -31,7 +31,7 @@ public class CallMdTagsStep extends AbstractCommandPipelineStep<CallMdWrapper> i
     {
         public Provider()
         {
-            super("CallMdTags", "Call MD Tags", "This runs the samtools calmd command to populate MD tags in the BAM if not present.  Some tools require these, or will complain if the tag is missing or inaccurate.  Certain downstream steps may require these to be present", null, null, "http://samtools.sourceforge.net/samtools.shtml");
+            super("CallMdTags", "Call MD Tags", "Samtools", "This runs the samtools calmd command to populate MD tags in the BAM if not present.  Some tools require these, or will complain if the tag is missing or inaccurate.  Certain downstream steps may require these to be present", null, null, "http://samtools.sourceforge.net/samtools.shtml");
         }
 
         @Override

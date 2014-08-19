@@ -62,7 +62,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
 
         public AbstractTrimmomaticProvider(String stepName, String name, String label, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths)
         {
-            super(name, label, description, parameters, clientDependencyPaths, "http://www.usadellab.org/cms/?page=trimmomatic");
+            super(name, label, "Trimmomatic", description, parameters, clientDependencyPaths, "http://www.usadellab.org/cms/?page=trimmomatic");
             _stepName = stepName;
         }
 

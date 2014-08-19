@@ -16,7 +16,7 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
             }).show();
         },
 
-        sequenceHandler: function(dataRegionName){
+        dataHandler: function(dataRegionName){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
             if (!checked || !checked.length){
@@ -26,7 +26,7 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
 
             Ext4.create('JBrowse.window.DatabaseWindow', {
                 dataRegionName: dataRegionName,
-                sequenceIds: checked
+                dataIds: checked
             }).show();
         },
 
@@ -40,7 +40,7 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
 
             Ext4.create('JBrowse.window.DatabaseWindow', {
                 dataRegionName: dataRegionName,
-                hideCreate: false,
+                hideCreate: true,
                 trackIds: checked
             }).show();
         }
@@ -149,17 +149,17 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
             }, this);
         }
 
-        if (this.sequenceIds){
-            vals.sequenceIds = [];
-            Ext4.Array.forEach(this.sequenceIds, function(i){
-                vals.sequenceIds.push(parseInt(i));
-            }, this);
-        }
-
         if (this.trackIds){
             vals.trackIds = [];
             Ext4.Array.forEach(this.trackIds, function(i){
                 vals.trackIds.push(parseInt(i));
+            }, this);
+        }
+
+        if (this.dataIds){
+            vals.dataIds = [];
+            Ext4.Array.forEach(this.dataIds, function(i){
+                vals.dataIds.push(parseInt(i));
             }, this);
         }
 

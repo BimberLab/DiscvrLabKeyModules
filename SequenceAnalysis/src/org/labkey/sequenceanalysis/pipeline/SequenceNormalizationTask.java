@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.apache.commons.io.FileUtils;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
@@ -41,6 +42,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -165,11 +167,12 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         {
             if (!FastqUtils.FASTQ_ENCODING.Standard.equals(FastqUtils.inferFastqEncoding(f)))
             {
-                job.getLogger().debug("fastq file does not appear to use standard encoding: " + f.getPath());
+                job.getLogger().debug("fastq file does not appear to use standard encoding (ASCII 33): " + f.getPath());
                 return true;
             }
             else
             {
+                job.getLogger().debug("normalization not required: " + f.getPath());
                 return false;
             }
         }
@@ -198,7 +201,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         {
             List<File> inputs = getHelper().getSupport().getInputFiles();
             List<File> inputFiles = getFilesToNormalize(getJob(), inputs);
-            if(inputFiles.size() == 0)
+            if (inputFiles.size() == 0)
             {
                 getJob().getLogger().info("There are no files to normalized");
                 return new RecordedActionSet(_actions);
@@ -206,15 +209,17 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
             //decompress any files, if needed
             RecordedAction action = new RecordedAction(DECOMPRESS_ACTIONNAME);
+            action.setStartTime(new Date());
             List<Pair<File, File>> unzippedMap = new ArrayList<>();
             FileType gz = new FileType(".gz");
-            for(File i : inputFiles)
+            for (File i : inputFiles)
             {
                 //NOTE: because we can initate runs on readsets from different containers, we cannot rely on dataDirectory() to be consistent
                 //b/c inputs are always copied to the root of the analysis folder, we will use relative paths
-                if(gz.isType(i))
+                if (gz.isType(i))
                 {
-                    getJob().getLogger().debug("\tDecompressing file: " + i.getName());
+                    String size = FileUtils.byteCountToDisplaySize(FileUtils.sizeOfAsBigInteger(i));
+                    getJob().getLogger().debug("\tDecompressing file: " + i.getName() + " (" + size + ")");
 
                     File unzipped = new File(_wd.getDir(), i.getName().replaceAll(".gz$", ""));
                     unzipped = Compress.decompressGzip(i, unzipped);
@@ -225,7 +230,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 }
             }
 
-            if(unzippedMap.size() > 0)
+            if (unzippedMap.size() > 0)
             {
                 //swap unzipped files
                 for (Pair<File, File> p : unzippedMap)
@@ -234,6 +239,8 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     inputFiles.add(p.second);
                 }
             }
+
+            action.setEndTime(new Date());
             _actions.add(action);
 
             List<File> normalizedFiles = new ArrayList<>();
@@ -245,6 +252,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             //merge if needed
             List<File> postMerge = new ArrayList<>();
             RecordedAction mergeAction = new RecordedAction(MERGE_ACTIONNAME);
+            mergeAction.setStartTime(new Date());
             if (getHelper().getSettings().isDoMerge())
             {
                 getJob().getLogger().info("Merging sequence files");
@@ -273,10 +281,13 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             {
                 postMerge.addAll(normalizedFiles);
             }
+
+            mergeAction.setEndTime(new Date());
             _actions.add(mergeAction);
 
             //barcode, if needed
             RecordedAction barcodeAction = new RecordedAction(BARCODE_ACTIONNAME);
+            barcodeAction.setStartTime(new Date());
             if (getHelper().getSettings().isDoBarcode())
             {
                 getJob().getLogger().info("Separating reads by barcode");
@@ -336,6 +347,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             {
                 getHelper().getFileManager().addFinalOutputFiles(postMerge);
             }
+            barcodeAction.setEndTime(new Date());
             _actions.add(barcodeAction);
 
             //add final action for later tracking based on role
@@ -349,6 +361,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             }
 
             RecordedAction finalAction = new RecordedAction(COMPRESS_ACTIONNAME);
+            finalAction.setStartTime(new Date());
             for (File f : getHelper().getFileManager().getFinalOutputFiles())
             {
                 getHelper().getFileManager().addInput(finalAction, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, f);
@@ -362,11 +375,12 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 }
                 getHelper().getFileManager().addOutput(finalAction, SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, output);
             }
+            finalAction.setEndTime(new Date());
             _actions.add(finalAction);
 
             //remove unzipped files
             job.getLogger().info("Removing unzipped inputs");
-            for(Pair<File, File> z : unzippedMap)
+            for (Pair<File, File> z : unzippedMap)
             {
                 getJob().getLogger().debug("\tRemoving unzipped file: " + z.getValue().getName());
                 z.getValue().delete();
@@ -395,6 +409,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         job.setStatus(PREPARE_INPUT_STATUS);
 
         RecordedAction action = new RecordedAction(PREPARE_INPUT_ACTIONNAME);
+        action.setStartTime(new Date());
 
         getJob().getLogger().info("Normalizing to FASTQ: " + input.getName());
 
@@ -421,12 +436,17 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         if (type.equals(SequenceUtil.FILETYPE.fastq))
         {
             FastqUtils.FASTQ_ENCODING encoding = FastqUtils.inferFastqEncoding(input);
+            if (encoding == null)
+            {
+                throw new PipelineJobException("Unable to infer FASTQ encoding for file: " + input.getPath());
+            }
+
             if (encoding.equals(FastqUtils.FASTQ_ENCODING.Illumina))
             {
                 getJob().getLogger().info("Converting Illumina/Solexa FASTQ (ASCII 64) to standard encoding (ASCII 33)");
                 SeqCrumbsRunner runner = new SeqCrumbsRunner(getJob().getLogger());
                 output = new File(workingDir, SequenceTaskHelper.getMinimalBaseName(input) + ".fastq");
-                runner.convertFormat(output, input);
+                runner.convertFormat(input, output);
             }
             else
             {
@@ -452,9 +472,10 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
         //we expect each input file to create a subfolder of the same name.
         File directory = new File(baseDirectory, basename);
-        if(directory.exists())
+        if (directory.exists())
             getHelper().getFileManager().addOutput(action, "Normalization Files", directory);
 
+        action.setEndTime(new Date());
         _actions.add(action);
 
         if (!input.getPath().equals(output.getPath()))

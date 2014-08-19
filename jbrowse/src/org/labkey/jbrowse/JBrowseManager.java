@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -37,6 +38,7 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.jbrowse.model.JsonFile;
@@ -45,6 +47,7 @@ import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -60,7 +63,16 @@ public class JBrowseManager
     public final static String JBROWSE_BIN = "jbrowseBinDir";
     public final static String JBROWSE_COMPRESS_JSON = "compressJson";
     public final static String SEQUENCE_ANALYSIS = "sequenceanalysis";
-
+    public static final List<FileType> ALLOWABLE_TRACK_EXTENSIONS = Arrays.asList(
+            new FileType("vcf", true),
+            new FileType("bcf", false),
+            new FileType(Arrays.asList("bw", "bigwig"), "bw", false),
+            new FileType("gff", false),
+            new FileType("gff3", false),
+            new FileType("gtf", false),
+            new FileType("bed", false),
+            new FileType("bam", false)
+    );
 
     private JBrowseManager()
     {
@@ -197,12 +209,12 @@ public class JBrowseManager
         return false;
     }
 
-    public void createDatabase(Container c, User u, String name, String description, List<Integer> libraryIds, List<Integer> ntIds, List<Integer> trackIds) throws IOException
+    public void createDatabase(Container c, User u, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> dataIds) throws IOException
     {
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            PipelineService.get().queueJob(JBrowseSessionPipelineJob.createNewDatabase(c, u, root, name, description, libraryIds, ntIds, trackIds));
+            PipelineService.get().queueJob(JBrowseSessionPipelineJob.createNewDatabase(c, u, root, name, description, libraryId, trackIds, dataIds));
         }
         catch (PipelineValidationException e)
         {
@@ -210,7 +222,7 @@ public class JBrowseManager
         }
     }
 
-    public void addDatabaseMember(Container c, User u, String databaseGuid, List<Integer> libraryIds, List<Integer> ntIds, List<Integer> trackIds) throws IOException
+    public void addDatabaseMember(Container c, User u, String databaseGuid, List<Integer> trackIds, List<Integer> dataIds) throws IOException
     {
         //make sure this is a valid database
         TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
@@ -222,7 +234,7 @@ public class JBrowseManager
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            PipelineService.get().queueJob(JBrowseSessionPipelineJob.addMembers(c, u, root, databaseGuid, libraryIds, ntIds, trackIds));
+            PipelineService.get().queueJob(JBrowseSessionPipelineJob.addMembers(c, u, root, databaseGuid, trackIds, dataIds));
         }
         catch (PipelineValidationException e)
         {
@@ -230,21 +242,40 @@ public class JBrowseManager
         }
     }
 
-    public JsonFile preprareTrackJson(Container c, User u, int trackId, @Nullable Logger log) throws IOException
+    public JsonFile preprareFeatureTrackJson(Container c, User u, int trackId, @Nullable Logger log, boolean forceRecreateJson) throws IOException
     {
         JBrowseRoot root = JBrowseRoot.getRoot();
         if (log != null)
             root.setLogger(log);
 
-        return root.prepareTrack(c, u, trackId);
+        return root.prepareFeatureTrack(c, u, trackId, forceRecreateJson);
     }
 
-    public JsonFile preprareReferenceJson(Container c, User u, int ntId, @Nullable Logger log) throws IOException
+    public JsonFile preprareReferenceJson(Container c, User u, int ntId, @Nullable Logger log, boolean forceRecreateJson) throws IOException
     {
         JBrowseRoot root = JBrowseRoot.getRoot();
         if (log != null)
             root.setLogger(log);
 
-        return root.prepareRefSeq(c, u, ntId);
+        return root.prepareRefSeq(c, u, ntId, forceRecreateJson);
+    }
+
+    public boolean canDisplayAsTrack(File f)
+    {
+        String extension = FileUtil.getExtension(f);
+        if (extension == null)
+        {
+            return false;
+        }
+
+        for (FileType ft : ALLOWABLE_TRACK_EXTENSIONS)
+        {
+            if (ft.isType(f))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

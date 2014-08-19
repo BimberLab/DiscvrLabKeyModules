@@ -1,0 +1,150 @@
+<script type="text/javascript">
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.define('SequenceAnalysis.panel.VariantComparisonPanel', {
+            extend: 'Ext.panel.Panel',
+
+            initComponent: function(){
+                Ext4.apply(this, {
+                    border: false,
+                    defaults: {
+                        border: false
+                    },
+                    items: [{
+                        html: 'Loading...'
+                    }]
+                });
+
+                this.callParent(arguments);
+
+                this.loadData();
+            },
+
+            loadData: function(){
+                Ext4.Msg.wait('Loading...');
+
+                this.fileStore = Ext4.create('LABKEY.ext4.Store', {
+                    containerPath: Laboratory.Utils.getQueryContainerPath(),
+                    schemaName: 'sequenceanalysis',
+                    queryName: 'outputfiles',
+                    columns: 'rowid,name,description,library_id,library_id/name,readset,readset/name,dataid,dataid/Name,dataid/FileExists,dataid/FileExtension',
+                    filterArray: [LABKEY.Filter.create('rowid', this.fileIds.join(';'), LABKEY.Filter.Types.IN)],
+                    autoLoad: true,
+                    listeners: {
+                        load: this.onDataLoad,
+                        scope: this
+                    },
+                    metadata: {
+                        queryContainerPath: {
+                            createIfDoesNotExist: true,
+                            setValueOnLoad: true,
+                            defaultValue: (LABKEY.Security.currentContainer.type == 'workbook' ? LABKEY.Security.currentContainer.parentPath : LABKEY.Security.currentContainer.path)
+                        }
+                    }
+                });
+            },
+
+            onDataLoad: function(store){
+                Ext4.Msg.hide();
+                var errors = [];
+                this.dataIds = [];
+                store.each(function(r){
+                    console.log(r.data);
+
+                    if (!r.get('dataid/FileExists')){
+                        errors.push('File does not exist: ' + r.get('dataid/Name'));
+                    }
+                    else if (!r.get('dataid/FileExtension') || ['vcf', 'gvcf'].indexOf(!r.get('dataid/FileExtension')) == -1){
+                        errors.push('Only VCF/gVCF files are supported.  This is determined by file extension.  Skipping: ' + r.get('dataid/Name'));
+                    }
+                    else {
+                        this.dataIds.push(r.get('dataid'));
+                    }
+                }, this);
+
+                if (!this.dataIds.length){
+                    errors.push('There are no suitable files for analysis.');
+                }
+
+                if (errors.length){
+                    Ext4.Msg.alert('Error', 'One or more files produced an error and will be skipped.<br><br>' + errors.join('<br>'));
+                }
+
+                this.removeAll();
+                this.add(this.getItems());
+            },
+
+            getItems: function(){
+                return [this.getFileInfoCfg(), {
+                    xtype: 'panel',
+                    itemId: 'variantEvalPanel',
+                    title: 'Comparison (GATK VariantEval)',
+                    border: true,
+                    bodyStyle: 'padding: 5px;',
+                    defaults: {
+                        border: false
+                    },
+                    items: [{
+                        html: 'VariantEval is can be used to compare different VCF files, creating a summary and Venn Diagram of the results.',
+                        buttons: [{
+                            text: 'Submit',
+                            scope: this,
+                            handler: function(btn){
+                                var panel = btn.up('#variantEvalPanel');
+
+
+                                LABKEY.Ajax.request({
+                                    url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runVariantEval', null, {dataIds: this.dataIds}),
+                                    scope: this,
+                                    success: LABKEY.Utils.getCallbackWrapper(function(results) {
+                                        console.log(results)
+                                    }, this),
+                                    failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback(), this)
+                                })
+                            }
+                        }]
+                    }]
+                }];
+            },
+
+            getFileInfoCfg: function(){
+                return {
+                    xtype: 'panel',
+                    width: '100%',
+                    title: 'File Information',
+                    style: 'padding-bottom: 20px;',
+                    border: true,
+                    items: [{
+                        xtype: 'dataview',
+                        store: this.fileStore,
+                        itemSelector: 'tr.file_list',
+                        tpl: [
+                            '<table class="fileNames"><tr class="fileNames"><td>Name</td><td>Description</td><td>Genome</td><td>Readset</td><td>File</td></tr>',
+                            '<tpl for=".">',
+                            '<tr class="file_list">',
+                            '<td>{name:htmlEncode}</td>',
+                            '<td>{description:htmlEncode}</td>',
+                            '<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "sequenceanalysis", "query.queryName":"reference_libraries", "query.rowid~eq": values.library_id})]}" target="_blank">{[Ext4.htmlEncode(values["library_id/name"])]}</a></td>',
+                            '<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "sequenceanalysis", "query.queryName":"sequence_readsets", "query.rowid~eq": values.readset})]}" target="_blank">{[Ext4.htmlEncode(values["readset/name"])]}</a></td>',
+
+                            '<td',
+                            '<tpl if="values.fileid && !values[\'dataid/fileexists\']"> style="background: red;" data-qtip="File does not exist"</tpl>',
+                            '><a href="{[LABKEY.ActionURL.buildURL("experiment", "showData", values.queryContainerPath, {rowId: values.dataid})]}" target="_blank">{[Ext4.htmlEncode(values["dataid/Name"])]}</a></td>',
+
+                            '<td><a href="{[LABKEY.ActionURL.buildURL("project", "start", values["container/path"], {})]}" target="_blank">{[Ext4.htmlEncode(values["container/displayName"])]}</a></td>',
+                            '</tr>',
+                            '</tpl>',
+                            '</table>'
+                        ]
+                    }]
+                }
+            }
+        });
+
+        Ext4.create('SequenceAnalysis.panel.VariantComparisonPanel', {
+            fileIds: LABKEY.ActionURL.getParameterArray("fileIds") ? LABKEY.ActionURL.getParameterArray("fileIds").join(';').split(';') : []
+        }).render(webpart.wrapperDivId);
+    });
+
+</script>

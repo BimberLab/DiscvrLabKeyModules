@@ -28,7 +28,7 @@ public class RecalibrateBamStep extends AbstractPipelineStep implements BamProce
     {
         public Provider()
         {
-            super("RecalibrateBam", "Variant Quality Score Recalibration", "This will use GATK to perform variant quality score recalibration (VQSR) on the BAM file.  This requires your input library to be associated with a set of know SNPs", null, null, "http");
+            super("RecalibrateBam", "Base Quality Score Recalibration", "GATK", "This will use GATK to perform base quality score recalibration (BQSR) on the BAM file.  This requires your input library to be associated with a set of know SNPs", null, null, "http");
         }
 
         @Override

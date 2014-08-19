@@ -15,14 +15,16 @@
  */
 package org.labkey.sequenceanalysis.run.analysis;
 
-import net.sf.picard.reference.FastaSequenceIndex;
-import net.sf.picard.reference.IndexedFastaSequenceFile;
-import net.sf.picard.util.Interval;
-import net.sf.picard.util.IntervalList;
-import net.sf.picard.util.SamLocusIterator;
-import net.sf.samtools.SAMFileHeader;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.reference.FastaSequenceIndex;
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
+
+import htsjdk.samtools.util.SamLocusIterator;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -70,7 +72,7 @@ public class AvgBaseQualityAggregator
         try
         {
             sam = new SAMFileReader(_bam, _bai);
-            sam.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+            sam.setValidationStringency(ValidationStringency.SILENT);
 
             SAMFileHeader header = sam.getFileHeader();
             List<SAMSequenceRecord> sequences = header.getSequenceDictionary().getSequences();
@@ -109,7 +111,7 @@ public class AvgBaseQualityAggregator
         try
         {
             sam = new SAMFileReader(_bam, _bai);
-            sam.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+            sam.setValidationStringency(ValidationStringency.SILENT);
 
             SAMFileHeader header = sam.getFileHeader();
             List<SAMSequenceRecord> sequences = header.getSequenceDictionary().getSequences();

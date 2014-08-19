@@ -21,12 +21,6 @@ Ext4.onReady(function (){
             '<br>' +
             '<div id="qualityMetrics_'+webpart.wrapperDivId+'"></div>' +
             '<div style="margin-bottom: 10px;"></div>' +
-            '<div id="analysisSummary_'+webpart.wrapperDivId+'"></div>' +
-            '<div style="margin-bottom: 10px;"></div>' +
-            '<div id="coverageReportDiv_'+webpart.wrapperDivId+'">Loading Coverage Summary...</div>' +
-            '<div style="margin-bottom: 10px;"></div>' +
-            '<div id="ntSnpReportDiv_'+webpart.wrapperDivId+'">Loading NT SNP Summary...</div>' +
-            '<div style="margin-bottom: 10px;"></div>' +
             '<div id="readsetDiv_'+webpart.wrapperDivId+'"/>'
         );
 
@@ -125,7 +119,6 @@ Ext4.onReady(function (){
                     }
                 }
             });
-
         }
 
         LDK.Utils.getReadOnlyQWP({
@@ -138,72 +131,6 @@ Ext4.onReady(function (){
             filterArray: [LABKEY.Filter.create('TargetProtocolApplication/Run', row.runid, LABKEY.Filter.Types.EQUAL)]
          }).render('fileSummary_'+webpart.wrapperDivId);
     }
-
-//    new LABKEY.WebPart({
-//        partName: 'Report',
-//        renderTo: 'readSummaryDiv',
-//        partConfig: {
-//            title: 'Alignment Length Distribution',
-//            schemaName: 'sequenceanalysis',
-//            'query.queryName': 'sequence_analyses',
-//            'reportId': 'module:SequenceAnalysis/reports/sequenceanalysis/sequence_analyses/Read Summary.r',
-//            'query.rowid~eq': analysisId,
-//            showSection: 'read_length.png'
-//        },
-//        failure: function(error){
-//            console.log(error)
-//        },
-//        scope: this
-//    }).render();
-
-    LABKEY.WebPart.createReportWebpart({
-        schemaName: 'sequenceanalysis',
-        queryName: 'sequence_analyses',
-        reportName: 'Sequence Coverage Depth Graph',
-        renderTo: 'coverageReportDiv_'+webpart.wrapperDivId,
-        webPartConfig: {
-            title: 'Coverage Depth'
-        },
-        reportProperties: {
-            'query.RowId~eq': analysisId,
-            showSection: 'graph.png'
-        },
-        failure: function(error){
-            console.log(error)
-        },
-        scope: this
-    }).render();
-
-    LABKEY.WebPart.createReportWebpart({
-        schemaName: 'sequenceanalysis',
-        queryName: 'sequence_analyses',
-        reportName: 'NT SNP Summary Graph',
-        renderTo: 'ntSnpReportDiv_'+webpart.wrapperDivId,
-        webPartConfig: {
-            title: 'NT SNP Summary'
-        },
-        reportProperties: {
-            'query.rowid~eq': analysisId,
-            showSection: 'nt_snp_graph.png'
-        },
-        failure: function(error){
-            console.log(error)
-        },
-        scope: this
-    }).render();
-
-    new LABKEY.QueryWebPart({
-        title: 'Result Summary',
-        schemaName: 'sequenceanalysis',
-        queryName: 'sequence_analysis_summary',
-        maxRows: 10,
-        allowChooseQuery: false,
-        showRecordSelectors: true,
-        filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)],
-        scope: this,
-        failure: LDK.Utils.getErrorCallback()
-     }).render('analysisSummary_'+webpart.wrapperDivId);
-
 });
 
 </script>

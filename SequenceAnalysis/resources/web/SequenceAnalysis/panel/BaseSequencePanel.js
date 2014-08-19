@@ -148,9 +148,15 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
 
             var val = field.getValue();
             if (field.allowBlank === false && Ext4.isEmpty(val) && !field.isDisabled()){
-                alert('The field: ' + (field.fieldLabel || field.header || field.name) + ' cannot be blank');
-                error = 1;
-                return false;
+                //little ugly, crude proxy for gridpanel fields.
+                if (field.up('editor')){
+                    //console.log('field is part of grid: ' + field.name);
+                }
+                else {
+                    Ext4.Msg.alert('Error', 'The field: ' + (field.fieldLabel || field.header || field.name) + ' cannot be blank');
+                    error = 1;
+                    return false;
+                }
             }
 
             fields[field.name] = val;
@@ -187,7 +193,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
             saveProtocol: jsonParameters.saveProtocol || false,
             protocolName: jsonParameters.protocolName,
             jsonParameters: jsonParameters,
-            protocolDescription: jsonParameters.protocolDescription,
+            protocolDescription: jsonParameters.protocolDescription || jsonParameters.description,
             scope: this,
             successCallback: function() {
                 Ext4.Msg.alert('Success', 'Analysis Started!', function(){

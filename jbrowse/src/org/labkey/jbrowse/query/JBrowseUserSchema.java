@@ -38,10 +38,17 @@ public class JBrowseUserSchema extends SimpleUserSchema
         });
     }
 
-//    @Override
-//    @Nullable
-//    protected TableInfo createWrappedTable(String name, @NotNull TableInfo sourceTable)
-//    {
-//        return super.createWrappedTable(name, sourceTable);
-//    }
+    @Override
+    @Nullable
+    protected TableInfo createWrappedTable(String name, @NotNull TableInfo sourceTable)
+    {
+        if (JBrowseSchema.TABLE_DATABASES.equalsIgnoreCase(name))
+            return new SharedDataTable(this, sourceTable, true).init();
+        else if (JBrowseSchema.TABLE_DATABASE_MEMBERS.equalsIgnoreCase(name))
+            return new SharedDataTable(this, sourceTable, true).init();
+        else if (JBrowseSchema.TABLE_JSONFILES.equalsIgnoreCase(name))
+            return new SharedDataTable(this, sourceTable, true).init();
+        else
+            return super.createWrappedTable(name, sourceTable);
+    }
 }

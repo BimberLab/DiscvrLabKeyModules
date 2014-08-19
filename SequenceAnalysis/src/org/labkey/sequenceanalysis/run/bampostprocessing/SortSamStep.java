@@ -1,6 +1,6 @@
 package org.labkey.sequenceanalysis.run.bampostprocessing;
 
-import net.sf.samtools.SAMFileReader;
+import htsjdk.samtools.ValidationStringency;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
@@ -34,7 +34,7 @@ public class SortSamStep extends AbstractCommandPipelineStep<SortSamWrapper> imp
     {
         public Provider()
         {
-            super("SortSam", "Sort BAM", "This step uses samtools to coordinate sort the BAM file", null, null, "http://samtools.sourceforge.net/");
+            super("SortSam", "Sort BAM", "Samtools", "This step uses samtools to coordinate sort the BAM file", null, null, "http://samtools.sourceforge.net/");
         }
 
         @Override
@@ -49,7 +49,7 @@ public class SortSamStep extends AbstractCommandPipelineStep<SortSamWrapper> imp
     {
         BamProcessingOutputImpl output = new BamProcessingOutputImpl();
         getWrapper().setOutputDir(outputDirectory);
-        getWrapper().setStringency(SAMFileReader.ValidationStringency.SILENT);
+        getWrapper().setStringency(ValidationStringency.SILENT);
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".sorted.bam");
         output.addIntermediateFile(outputBam);

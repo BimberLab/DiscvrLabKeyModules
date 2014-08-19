@@ -30,6 +30,26 @@
                     <property name="location" value="webserver" />
                     <property name="join" value="true" />
                 </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentImportTask$Factory">
+                    <property name="location" value="webserver" />
+                    <property name="join" value="false" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentNormalizationTask$Factory">
+                    <property name="location" value="webserver" />
+                    <property name="join" value="false" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisInitTask$Factory">
+                    <property name="location" value="webserver" />
+                    <property name="join" value="true" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisWorkTask$Factory">
+                    <property name="location" value="webserver" />
+                    <property name="join" value="true" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisCleanupTask$Factory">
+                    <property name="location" value="webserver" />
+                    <property name="join" value="true" />
+                </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.IlluminaImportTask$Factory">
                     <property name="location" value="webserver" />
                     <!--<property name="join" value="true" />-->
@@ -104,6 +124,38 @@
                         </list>
                     </property>
                 </bean>
+                <bean class="org.labkey.api.pipeline.file.FileAnalysisTaskPipelineSettings">
+                    <constructor-arg value="AlignmentImportPipeline"/>
+                    <property name="analyzeURL" value="/sequenceAnalysis/alignmentImport.view" />
+                    <property name="description" value="Import Alignment(s)"/>
+                    <property name="protocolName" value="Alignment Import" />
+                    <property name="protocolFactoryName" value="alignmentImport"/>
+                    <property name="initialInputExt" ref="bamFileType" />
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentNormalizationTask</value>
+                            <ref bean="xarGeneratorJoin"/>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentImportTask</value>
+                        </list>
+                    </property>
+                </bean>
+                <bean class="org.labkey.api.pipeline.file.FileAnalysisTaskPipelineSettings">
+                    <constructor-arg value="AlignmentAnalysisPipeline"/>
+                    <property name="analyzeURL" value="/sequenceAnalysis/alignmentAnalysis.view" />
+                    <property name="description" value="Analyze Alignment(s)"/>
+                    <property name="protocolName" value="Analyze Alignment" />
+                    <property name="protocolFactoryName" value="analyzeAlignment"/>
+                    <property name="initialInputExt" ref="bamFileType" />
+                    <property name="defaultDisplayState" value="disabled"/>
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisInitTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisWorkTask</value>
+                            <ref bean="xarGeneratorJoin"/>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisCleanupTask</value>
+                        </list>
+                    </property>
+                </bean>
                 <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
                     <constructor-arg type="java.lang.Class" value="org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob"/>
                     <property name="taskProgressionSpec">
@@ -138,6 +190,10 @@
 
     <bean id="csvFileType" class="org.labkey.api.util.FileType">
         <constructor-arg value=".csv"/>
+    </bean>
+
+    <bean id="bamFileType" class="org.labkey.api.util.FileType">
+        <constructor-arg value=".bam"/>
     </bean>
 
     <!--<bean id="pipelineJobService" class="org.labkey.pipeline.api.PipelineJobServiceImpl">-->

@@ -40,6 +40,7 @@ public class SequenceAnalysisSchema
     public static final String TABLE_AA_SNP_BY_CODON = "aa_snps_by_codon";
     public static final String TABLE_BARCODES = "barcodes";
     public static final String TABLE_REF_LIBRARIES = "reference_libraries";
+    public static final String TABLE_OUTPUTFILES = "outputfiles";
     public static final String TABLE_REF_LIBRARY_MEMBERS = "reference_library_members";
     public static final String TABLE_SAVED_ANALYSES = "saved_analyses";
     public static final String TABLE_LIBRARY_TRACKS = "reference_library_tracks";

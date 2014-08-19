@@ -192,21 +192,21 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     itemId: 'scanAllBarcodes',
                     helpPopup: 'Samples will be checked for all barcodes in the selected groups, at both 5\' and 3\' ends.  A summary report will be created, but no FASTQ files will be made for combinations not associated with a sample.  This is sometimes useful to be sure no contaminants are in your sample.'
                 },{
-                    xtype: 'numberfield',
+                    xtype: 'ldk-numberfield',
                     fieldLabel: 'Mismatches Tolerated',
                     name: 'inputfile.barcodeEditDistance',
                     value: 0,
                     minValue: 0,
                     helpPopup: 'When identifying barcodes, up to the following number of mismatches will be tolerated.  Note: if too lax, multiple barcodes will be detected and the sample discarded'
                 },{
-                    xtype: 'numberfield',
+                    xtype: 'ldk-numberfield',
                     fieldLabel: 'Deletions Tolerated',
                     name: 'inputfile.barcodeDeletions',
                     value: 0,
                     minValue: 0,
                     helpPopup: 'If provided, the barcode can have up to this many deletions from the outer end of the barcode.  This allows partial matches if a barcode was clipped by quality trimming or poor sequence.  If a matching barcode is found without deletions, it will be preferentially used.'
                 },{
-                    xtype: 'numberfield',
+                    xtype: 'ldk-numberfield',
                     fieldLabel: 'Allowed Distance From Read End',
                     name: 'inputfile.barcodeOffset',
                     value: 0,
@@ -230,18 +230,18 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 preventBodyReset: true,
                 html:
                     'The purpose of this import process is to normalize the sequence data into a common format (FASTQ), create one file per sample, and capture sample metadata (name, sample type, subject name, etc).  Reads are organized into readsets.  ' +
-                    'Each readset is roughly equals to one input file, and it connects the sequences in this file with sample attributes, such as subject name, sample type, platform, etc.  ' +
+                    'Each readset is roughly equals to one input file (or 2 for pair-end data), and it connects the sequences in this file with sample attributes, such as subject name, sample type, platform, etc.  ' +
 
                     'This tool is heavily linked to the lab management system, and information about the subject and/or sample are entered separately from this page.  The Subject Id and Sample Id fields connect your data with specific subjects or samples.  To view or enter these, click the links below:' +
-                    '<br><br><ul style="padding-left: 20px;">' +
+                    '<br><ul style="padding-left: 20px;">' +
                     '<li style="list-style: circle;"><a href="'+LABKEY.ActionURL.buildURL('query', 'executeQuery', Laboratory.Utils.getQueryContainerPath(), {schemaName: 'laboratory', 'query.queryName': 'Samples'})+'" target="_blank">View/Enter Samples</a></li>' +
                     '<li style="list-style: circle;"><a href="'+LABKEY.ActionURL.buildURL('query', 'executeQuery', Laboratory.Utils.getQueryContainerPath(), {schemaName: 'sequenceanalysis', 'query.queryName': 'Sequence_Readsets'})+'" target="_blank">View/Edit Readsets</a></li>' +
                     '</ul>' +
-                    '<br><br>There are two ways to create readsets: ' +
-                    '<br><br><ol style="padding-left: 20px;">' +
+                    'There are two ways to create readsets: ' +
+                    '<br><ol style="padding-left: 20px;">' +
                     '<li style="list-style: decimal;">You are able to enter the readset information ahead of time using the \'Enter Readsets\' link above.  When you create those readsets, you can will be able to enter sample information and expected barcode usage.  You will not be able to pick the file, because often the file does not exist yet (for example, if the raw input needs to be converted to FASTQ or demultiplexed).  If you previously created the readsets, just enter the readset Id into the correct row below and the rest of the readset information should populate automatically.</li>' +
                     '<li style="list-style: decimal;">If there is not an existing readset, just supply the readset name and platform (and optional sample/subject Id), and a readset will be automatically created when the pipeline runs.  You do not need to enter anything separately.</li>' +
-                    '</ol><br>',
+                    '</ol>',
 
                 width: '100%'
             },{
@@ -252,7 +252,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 fileNameStore: this.distinctFileStore
             }]
         }]);
-   },
+    },
 
     populateSamples: function(){
         var merge = this.down('#mergeCheckbox').getValue();
@@ -362,7 +362,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             }
             barcodeUsage = barcodeUsageTmp;
 
-            if (!r.get('fileName') || (!r.get('readset') && (!r.get('platform') && !r.get('readsetname')))){
+            if (!r.get('fileName') || (!r.get('readset') && !(r.get('platform') && r.get('readsetname')))){
                 Ext4.Msg.alert('Error', 'For each file, you must provide either the Id of an existing, unused readset or a name/platform to create a new one');
                 error = 1;
             }
@@ -490,6 +490,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             '><a href="{[LABKEY.ActionURL.buildURL("experiment", "showData", values.containerPath, {rowId: values.dataId})]}" target="_blank">{fileName:htmlEncode}</a></td>',
                         //'<td>{RowId:htmlEncode}</td>',
                         '<td><a href="{[LABKEY.ActionURL.buildURL("project", "start", null, {})]}" target="_blank">{containerPath:htmlEncode}</a></td>',
+                        '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "fastqcReport", values["container/path"], {dataIds: values.dataId})]}" target="_blank">View FASTQC Report</a></td>',
                         '</tr>',
                     '</tpl>',
                     '</table>'

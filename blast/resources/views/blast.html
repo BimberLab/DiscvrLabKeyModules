@@ -131,6 +131,7 @@
                         fieldLabel: 'Choose Database',
                         schemaName: 'blast',
                         queryName: 'databases',
+                        sortField: 'name',
                         labelWidth: 120,
                         width: 600,
                         filterArray: [LABKEY.Filter.create('datedisabled', null, LABKEY.Filter.Types.ISBLANK)],
@@ -187,10 +188,8 @@
 
                         Ext4.Msg.hide();
                         if (jobId) {
-                            Ext4.Msg.confirm('Success', 'BLAST Started!  Do you want to view progress?', function (val) {
-                                if (val == 'yes') {
-                                    window.location = LABKEY.ActionURL.buildURL('blast', 'jobDetails', null, {jobId: jobId})
-                                }
+                            Ext4.Msg.alert('Success', 'BLAST Started!  Click to view progress.', function (val) {
+                                window.location = LABKEY.ActionURL.buildURL('blast', 'jobDetails', null, {jobId: jobId});
                             }, this);
                         }
                         else {

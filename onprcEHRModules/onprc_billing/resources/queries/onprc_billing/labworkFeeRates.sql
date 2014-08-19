@@ -20,6 +20,7 @@ SELECT
   alias.alias as account,
   p.servicerequested,
   p.chargeId,
+  p.chargeId.departmentCode as serviceCenter,
   p.sourceRecord,
   p.chargeCategory,
 
@@ -163,6 +164,7 @@ SELECT
   mc.account,
   null as procedureId,
   mc.chargeId,
+  mc.serviceCenter,
   mc.sourceRecord,
   mc.chargeCategory,
 

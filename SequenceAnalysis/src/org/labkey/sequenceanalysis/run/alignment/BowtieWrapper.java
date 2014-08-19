@@ -1,9 +1,7 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
-import net.sf.samtools.BAMFileWriter;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractAlignmentStepProvider;
@@ -135,7 +133,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
             super("Bowtie", "Bowtie is a fast aligner often used for short reads. Disadvantages are that it does not perform gapped alignment. It will return a single hit for each read.", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-l"), "seed_length", "Seed Length", null, "ldk-numberfield", null, 20),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), "max_seed_mismatches", "Max Seed Mismatches", null, "ldk-numberfield", null, 3)
-            ), null, "http://bowtie-bio.sourceforge.net/index.shtml", false);
+            ), null, "http://bowtie-bio.sourceforge.net/index.shtml", true);
         }
 
         public BowtieAlignmentStep create(PipelineContext context)

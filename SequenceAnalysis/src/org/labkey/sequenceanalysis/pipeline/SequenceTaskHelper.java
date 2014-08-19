@@ -41,6 +41,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.api.pipeline.TaskFileManager;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
@@ -101,9 +102,7 @@ public class SequenceTaskHelper implements PipelineContext
     public void createExpDatasForInputs()
     {
         //make sure Exp data objects exist for all input files.
-        Map<String, String> params = _settings.getParams();
-
-        for(ReadsetModel rs : _settings.getReadsets())
+        for (ReadsetModel rs : _settings.getReadsets())
         {
             String fn = rs.getFileName();
             Integer id = rs.getFileId();
@@ -249,6 +248,11 @@ public class SequenceTaskHelper implements PipelineContext
     public FileAnalysisJobSupport getSupport()
     {
         return (FileAnalysisJobSupport)_job;
+    }
+
+    public SequenceAnalysisJobSupport getSequenceSupport()
+    {
+        return (SequenceAnalysisJobSupport)_job;
     }
 
     public File getExtraBarcodesFile()

@@ -11,8 +11,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
         TASKID: 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceAnalysisPipeline'
     },
 
+    taskId: 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceAnalysisPipeline',
+
     initComponent: function(){
-        this.taskId = SequenceAnalysis.panel.SequenceAnalysisPanel.TASKID;
         this.readsets = this.readsets ? this.readsets.split(';') : [];
 
         Ext4.apply(this, {
@@ -86,8 +87,10 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 style: 'margin-left: ' + (this.fieldDefaults.labelWidth + 4) + 'px;',
                 text: 'Copy Settings From Previous Run',
                 linkCls: 'labkey-text-link',
+                scope: this,
                 handler: function(btn){
                     Ext4.create('Ext.window.Window', {
+                        taskId: this.taskId,
                         modal: true,
                         sequencePanel: this.up('#sequenceAnalysisPanel'),
                         title: 'Copy Settings From Previous Run',
@@ -138,6 +141,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                                         });
                                     }
                                     else if (val.selector == 'allRuns'){
+                                        console.log(win.taskId);
                                         toAdd.push({
                                             xtype: 'combo',
                                             width: 450,
@@ -149,20 +153,21 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                                             displayField: 'name',
                                             valueField: 'rowid',
                                             queryMode: 'local',
+                                            taskId: win.taskId,
                                             listeners: {
                                                 render: function(field){
                                                     Ext4.Msg.wait('Loading...');
                                                     LABKEY.Pipeline.getProtocols({
                                                         containerPath: Laboratory.Utils.getQueryContainerPath(),
-                                                        taskId: SequenceAnalysis.panel.SequenceAnalysisPanel.TASKID,
+                                                        taskId: field.taskId,
                                                         path: './',
                                                         includeWorkbooks: true,
                                                         scope: this,
                                                         success: function(results){
                                                             Ext4.Msg.hide();
 
+                                                            var records = [];
                                                             if (results && results.length){
-                                                                var records = [];
                                                                 Ext4.Array.forEach(results, function(r, idx){
                                                                     records.push(field.store.createModel({
                                                                         name: r.name,
@@ -256,13 +261,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             xtype: 'sequenceanalysis-alignmentpanel',
             toolConfig: results
         });
-
-//        items.push({
-//            xtype: 'sequenceanalysis-analysissectionpanel',
-//            toolConfig: results,
-//            title: 'Step 3.5: Variant Calling (optional)',
-//            stepType: 'variantCalling'
-//        });
 
         items.push({
             xtype: 'sequenceanalysis-analysissectionpanel',
@@ -445,7 +443,11 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
     },
 
     applySavedValues: function(values){
-        this.down('sequenceanalysis-alignmentpanel').down('#doAlignment').setValue(!!values.alignment);
+        //allows for subclasses to exclude this panel
+        var alignPanel = this.down('sequenceanalysis-alignmentpanel');
+        if (alignPanel) {
+            alignPanel.down('#doAlignment').setValue(!!values.alignment);
+        }
 
         var sections = this.query('sequenceanalysis-analysissectionpanel');
         Ext4.Array.forEach(sections, function(s){

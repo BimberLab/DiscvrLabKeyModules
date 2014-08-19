@@ -19,7 +19,7 @@ public class SamtoolsRunner extends AbstractCommandWrapper
         super(logger);
     }
 
-    protected File getSamtoolsPath()
+    public File getSamtoolsPath()
     {
         return SequencePipelineService.get().getExeForPackage("SAMTOOLSPATH", "samtools");
     }

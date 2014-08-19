@@ -1,6 +1,9 @@
 package org.labkey.sequenceanalysis.api.pipeline;
 
+import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.sequenceanalysis.api.model.AnalysisModel;
 
 import java.io.File;
 
@@ -14,6 +17,8 @@ public interface ReferenceLibraryStep extends PipelineStep
     public File getExpectedFastaFile(File outputDirectory) throws PipelineJobException;
 
     public Output createReferenceFasta(File outputDirectory) throws PipelineJobException;
+
+    public void setLibraryId(PipelineJob job, ExpRun run, AnalysisModel model) throws PipelineJobException;
 
     public static interface Output extends PipelineStepOutput
     {

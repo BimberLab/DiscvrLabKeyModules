@@ -32,7 +32,7 @@ public class FixMateInformationStep extends AbstractCommandPipelineStep<FixMateI
     {
         public Provider()
         {
-            super("FixMateInformation", "Fix Mate Information", "Runs the Picard tool FixMateInformation command, which ensures that information is synced between each read and its mate pair", null, null, "http://picard.sourceforge.net/command-line-overview.shtml");
+            super("FixMateInformation", "Fix Mate Information", "Picard", "Runs the Picard tool FixMateInformation command, which ensures that information is synced between each read and its mate pair", null, null, "http://picard.sourceforge.net/command-line-overview.shtml");
         }
 
         @Override

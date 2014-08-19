@@ -16,6 +16,12 @@ import java.util.List;
 public interface PipelineStepOutput
 {
     /**
+     * Returns a list of pairs giving additional input files and role of this file.  Note: inputs are usually set upfront, so this will only include
+     * any non-standard inputs created during the course of this step
+     */
+    public List<Pair<File, String>> getInputs();
+
+    /**
      * Returns a list of pairs giving the output file and role of this output
      */
     public List<Pair<File, String>> getOutputs();

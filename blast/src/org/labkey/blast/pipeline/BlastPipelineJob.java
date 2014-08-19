@@ -7,11 +7,14 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
+import org.labkey.api.query.QueryAction;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.blast.BLASTSchema;
 import org.labkey.blast.model.BlastJob;
 
 import java.io.File;
@@ -41,7 +44,14 @@ public class BlastPipelineJob extends PipelineJob
     @Override
     public ActionURL getStatusHref()
     {
-        return PageFlowUtil.urlProvider(FileUrls.class).urlBegin(getContainer());
+        if (_blastJob != null && _blastJob.getDatabaseId() != null)
+        {
+            ActionURL ret = QueryService.get().urlFor(getUser(), getContainer(), QueryAction.executeQuery, BLASTSchema.NAME, BLASTSchema.TABLE_DATABASES);
+            ret.addParameter("query.objectid~eq", _blastJob.getDatabaseId());
+
+            return ret;
+        }
+        return null;
     }
 
     @Override

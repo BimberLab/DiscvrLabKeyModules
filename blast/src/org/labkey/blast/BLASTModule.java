@@ -25,6 +25,7 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.blast.button.CreateDatabaseButton;
+import org.labkey.blast.button.ReprocessDatabaseButton;
 import org.labkey.blast.pipeline.BlastDatabasePipelineProvider;
 import org.labkey.blast.pipeline.BlastPipelineProvider;
 import org.labkey.blast.query.BlastUserSchema;
@@ -73,6 +74,7 @@ public class BLASTModule extends ExtendedSimpleModule
     {
         LaboratoryService.get().registerDataProvider(new BLASTDataProvider(this));
         LaboratoryService.get().registerQueryButton(new CreateDatabaseButton(), "sequenceanalysis", "reference_libraries");
+        LaboratoryService.get().registerQueryButton(new ReprocessDatabaseButton(), BLASTSchema.NAME, BLASTSchema.TABLE_DATABASES);
 
         SystemMaintenance.addTask(new BLASTMaintenanceTask());
         PipelineService.get().registerPipelineProvider(new BlastPipelineProvider(this));

@@ -49,7 +49,7 @@ public class BLASTWrapper
         File exe = new File(binDir, "blastn" + getExtension());
         if (!exe.exists())
         {
-            throw new IllegalArgumentException("Unable to find makeblastdb executable");
+            throw new IllegalArgumentException("Unable to find blastn executable");
         }
 
         File dbDir = BLASTManager.get().getDatabaseDir();
@@ -129,6 +129,9 @@ public class BLASTWrapper
 
         args.add("-dbtype");
         args.add("nucl");
+
+        args.add("-parse_seqids");
+        args.add("-hash_index");
 
         if (title != null)
         {

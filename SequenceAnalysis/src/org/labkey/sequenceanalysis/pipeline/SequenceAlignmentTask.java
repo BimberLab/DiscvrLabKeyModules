@@ -15,8 +15,9 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
-import net.sf.picard.sam.BuildBamIndex;
-import net.sf.samtools.SAMFileReader;
+import htsjdk.samtools.BAMIndexer;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -31,14 +32,13 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
 import org.labkey.sequenceanalysis.api.pipeline.BamProcessingStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.PreprocessingStep;
 import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.run.bampostprocessing.BamProcessingOutputImpl;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,18 +65,19 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 {
     private static final String PREPROCESS_FASTQ_STATUS = "PREPROCESSING FASTQ FILES";
     private static final String ALIGNMENT_STATUS = "PERFORMING ALIGNMENT";
-    public static final String FINAL_BAM_ROLE = "Final Alignment";
-    public static final String FINAL_BAM_INDEX_ROLE = "Final Alignment Index";
+    public static final String FINAL_BAM_ROLE = "Aligned Reads";
+    public static final String FINAL_BAM_INDEX_ROLE = "Aligned Reads Index";
 
     //public static final String PREPROCESS_FASTQ_ACTIONNAME = "Preprocess FASTQ";
     public static final String ALIGNMENT_ACTIONNAME = "Performing Alignment";
     public static final String SORT_BAM_ACTION = "Sorting BAM";
     public static final String INDEX_ACTION = "Indexing BAM";
+    public static final String NORMALIZE_FILENAMES_ACTION = "Normalizing File Names";
 
     //public static final String MERGE_ALIGNMENT_ACTIONNAME = "Merging Alignments";
     public static final String DECOMPRESS_ACTIONNAME = "Decompressing Inputs";
     private static final String ALIGNMENT_SUBFOLDER_NAME = "Alignment";  //the subfolder within which alignment data will be placed
-    private static final String COPY_REFERENCE_LIBRARY_ACTIONNAME = "Copy Reference Library";
+    private static final String COPY_REFERENCE_LIBRARY_ACTIONNAME = "Copy Reference";
 
     private SequenceTaskHelper _taskHelper;
 
@@ -123,6 +125,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             allowableNames.add(SORT_BAM_ACTION);
             allowableNames.add(INDEX_ACTION);
             allowableNames.add(COPY_REFERENCE_LIBRARY_ACTIONNAME);
+            allowableNames.add(NORMALIZE_FILENAMES_ACTION);
 
             return allowableNames;
         }
@@ -234,12 +237,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         try
         {
+            RecordedAction action = new RecordedAction(COPY_REFERENCE_LIBRARY_ACTIONNAME);
+            action.setStartTime(new Date());
+
             File movedSharedDir = _wd.inputFile(sharedDirectory, true);
             File movedFasta = new File(movedSharedDir, refFasta.getName());
-
-            RecordedAction action = new RecordedAction(COPY_REFERENCE_LIBRARY_ACTIONNAME);
             action.addInput(refFasta, "Initial FASTA");
             action.addOutput(movedFasta, "Temportary FASTA", true);
+            action.setEndTime(new Date());
             actions.add(action);
 
             return movedFasta;
@@ -326,6 +331,9 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
         else
         {
+            String originalbaseName = SequenceTaskHelper.getMinimalBaseName(inputFile1);
+            String originalbaseName2 = null;
+
             //log read count:
             Integer previousCount1 = FastqUtils.getSequenceCount(inputFile1);
             Integer previousCount2 = null;
@@ -335,9 +343,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             {
                 previousCount2 = FastqUtils.getSequenceCount(inputFile2);
                 getJob().getLogger().info("\t" + inputFile2.getName() + ": " + previousCount2 + " sequences");
+
+                originalbaseName2 = SequenceTaskHelper.getMinimalBaseName(inputFile2);
             }
 
-            File outputDir = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(inputFile1));
+            File outputDir = new File(getHelper().getWorkingDirectory(), originalbaseName);
             outputDir = new File(outputDir, SequenceTaskHelper.PREPROCESSING_SUBFOLDER_NAME);
             if (!outputDir.exists())
             {
@@ -351,6 +361,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 getJob().getLogger().info("***Preprocessing: " + provider.getLabel());
 
                 RecordedAction action = new RecordedAction(provider.getLabel());
+                action.setStartTime(new Date());
                 getHelper().getFileManager().addInput(action, "Input FASTQ", pair.first);
                 if (inputFile2 != null)
                 {
@@ -384,10 +395,32 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
                 //TODO: read count / metrics
 
+                action.setEndTime(new Date());
                 actions.add(action);
             }
 
-            //TODO: normalize names
+            //normalize name
+            RecordedAction action = new RecordedAction(NORMALIZE_FILENAMES_ACTION);
+            action.setStartTime(new Date());
+            File renamed1 = new File(pair.first.getParentFile(), originalbaseName + ".preprocessed.fastq");
+            pair.first.renameTo(renamed1);
+            getHelper().getFileManager().addInput(action, "Input", pair.first);
+            getHelper().getFileManager().addOutput(action, "Output", renamed1);
+            pair.first = renamed1;
+            getHelper().getFileManager().addIntermediateFile(renamed1);
+
+            getHelper().getFileManager().addIntermediateFile(pair.first);
+            if (pair.second != null)
+            {
+                File renamed2 = new File(pair.second.getParentFile(), originalbaseName2 + ".preprocessed.fastq");
+                pair.second.renameTo(renamed2);
+                getHelper().getFileManager().addInput(action, "Input", pair.second);
+                getHelper().getFileManager().addOutput(action, "Output", renamed2);
+                getHelper().getFileManager().addIntermediateFile(pair.second);
+                pair.second = renamed2;
+                getHelper().getFileManager().addIntermediateFile(renamed2);
+            }
+            action.setEndTime(new Date());
 
             return pair;
         }
@@ -418,6 +451,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
     public void doAlignmentForPair(List<RecordedAction> actions, ReadsetModel rs, String outputBaseName, Pair<File, File> inputFiles, File referenceFasta) throws PipelineJobException, IOException
     {
         RecordedAction alignmentAction = new RecordedAction(ALIGNMENT_ACTIONNAME);
+        alignmentAction.setStartTime(new Date());
         getHelper().getFileManager().addInput(alignmentAction, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, inputFiles.first);
 
         if (inputFiles.second != null)
@@ -445,12 +479,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             throw new PipelineJobException("Unable to find BAM file after alignment");
         }
         getHelper().getFileManager().addIntermediateFile(alignmentOutput.getBAM());
+        alignmentAction.setEndTime(new Date());
         actions.add(alignmentAction);
 
         //sort
         File bam = alignmentOutput.getBAM();
         getJob().getLogger().info("***Sorting BAM: " + bam.getPath());
         RecordedAction sortAction = new RecordedAction(SORT_BAM_ACTION);
+        sortAction.setStartTime(new Date());
         getHelper().getFileManager().addInput(sortAction, "Input BAM", bam);
 
         SortSamStep sortStep = new SortSamStep.Provider().create(getHelper());
@@ -459,6 +495,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         bam = sortOutput.getBAM();
         getHelper().getFileManager().addOutput(sortAction, "Sorted BAM", bam);
 
+        sortAction.setEndTime(new Date());
         actions.add(sortAction);
 
         //post-processing
@@ -474,20 +511,24 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             {
                 getJob().getLogger().info("performing step: " + provider.getLabel());
                 RecordedAction action = new RecordedAction(provider.getLabel());
+                action.setStartTime(new Date());
                 getHelper().getFileManager().addInput(action, "Input BAM", bam);
 
                 BamProcessingStep step = provider.create(getHelper());
                 BamProcessingStep.Output output = step.processBam(rs, bam, referenceFasta, bam.getParentFile());
                 getHelper().getFileManager().addStepOutputs(action, output);
-                actions.add(action);
 
                 bam = output.getBAM();
                 getJob().getLogger().info("\ttotal alignments in processed BAM: " + SequenceUtil.getAlignmentCount(bam));
+
+                action.setEndTime(new Date());
+                actions.add(action);
             }
         }
 
         //then index
         RecordedAction indexAction = new RecordedAction(INDEX_ACTION);
+        indexAction.setStartTime(new Date());
         getHelper().getFileManager().addInput(indexAction, "Input BAM", bam);
         File finalBam = new File(bam.getParentFile(), outputBaseName + ".bam");
         if (!finalBam.getPath().equals(bam.getPath()))
@@ -500,13 +541,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         try (SAMFileReader reader = new SAMFileReader(finalBam))
         {
             getJob().getLogger().info("\tcreating BAM index");
-            reader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+            reader.setValidationStringency(ValidationStringency.SILENT);
             File bai = new File(finalBam.getPath() + ".bai");
-            BuildBamIndex.createIndex(reader, bai);
             getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_INDEX_ROLE, bai);
+            BAMIndexer.createIndex(reader, bai);
         }
         getJob().getLogger().info("\ttotal alignments in final BAM: " + SequenceUtil.getAlignmentCount(finalBam));
 
+        indexAction.setEndTime(new Date());
         actions.add(indexAction);
     }
 }

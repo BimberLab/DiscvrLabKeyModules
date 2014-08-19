@@ -16,41 +16,41 @@
 
 package org.labkey.jbrowse;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
-import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
-import org.labkey.api.data.ConvertHelper;
+import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
-import org.labkey.api.security.permissions.ReadPermission;
-import org.labkey.api.security.permissions.UpdatePermission;
-import org.labkey.api.view.JspView;
-import org.labkey.api.view.NavTree;
+import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
+import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 import org.springframework.validation.BindException;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 public class JBrowseController extends SpringActionController
 {
@@ -182,21 +182,15 @@ public class JBrowseController extends SpringActionController
     {
         public ApiResponse execute(DatabaseForm form, BindException errors)
         {
-            if (form.getName() == null)
+            if (form.getName() == null || form.getLibraryId() == null)
             {
-                errors.reject(ERROR_MSG, "Must provide the database name");
-                return null;
-            }
-
-            if (form.getSequenceIdList().isEmpty() && form.getTrackIdList().isEmpty() && form.getLibraryIdList().isEmpty())
-            {
-                errors.reject(ERROR_MSG, "Must provide either a list of NT IDs or Track IDs to include");
+                errors.reject(ERROR_MSG, "Must provide the database name and reference genome");
                 return null;
             }
 
             try
             {
-                JBrowseManager.get().createDatabase(getContainer(), getUser(), form.getName(), form.getDescription(), form.getLibraryIdList(), form.getSequenceIdList(), form.getTrackIdList());
+                JBrowseManager.get().createDatabase(getContainer(), getUser(), form.getName(), form.getDescription(), form.getLibraryId(), form.getTrackIdList(), form.getDataIdList());
             }
             catch (IOException e)
             {
@@ -213,21 +207,21 @@ public class JBrowseController extends SpringActionController
     {
         public ApiResponse execute(DatabaseForm form, BindException errors)
         {
-            if (form.getDatabaseId() == null)
+            if (form.getName() == null)
             {
-                errors.reject(ERROR_MSG, "Must provide the database Id");
+                errors.reject(ERROR_MSG, "Must provide the database name");
                 return null;
             }
 
-            if (form.getSequenceIdList().isEmpty() && form.getTrackIdList().isEmpty())
+            if (form.getTrackIdList().isEmpty() && form.getDataIdList().isEmpty())
             {
-                errors.reject(ERROR_MSG, "Must provide either a list of NT IDs or Track IDs to add");
+                errors.reject(ERROR_MSG, "Must provide either a list track or file IDs to include");
                 return null;
             }
 
             try
             {
-                JBrowseManager.get().addDatabaseMember(getContainer(), getUser(), form.getDatabaseId(), form.getLibraryIdList(), form.getSequenceIdList(), form.getTrackIdList());
+                JBrowseManager.get().addDatabaseMember(getContainer(), getUser(), form.getDatabaseId(), form.getTrackIdList(), form.getDataIdList());
             }
             catch (IOException e)
             {
@@ -244,9 +238,9 @@ public class JBrowseController extends SpringActionController
         String _databaseId;
         String _name;
         String _description;
-        Integer[] _sequenceIds;
         Integer[] _trackIds;
-        Integer[] _libraryIds;
+        Integer _libraryId;
+        Integer[] _dataIds;
 
         public String getDatabaseId()
         {
@@ -279,26 +273,6 @@ public class JBrowseController extends SpringActionController
         }
 
         @NotNull
-        public List<Integer> getSequenceIdList()
-        {
-            if (_sequenceIds == null)
-                return Collections.emptyList();
-
-            List<Integer> ret = new ArrayList<>();
-            for (Integer o : _sequenceIds)
-            {
-                ret.add(o);
-            }
-
-            return ret;
-        }
-
-        public void setSequenceIds(Integer[] sequenceIds)
-        {
-            _sequenceIds = sequenceIds;
-        }
-
-        @NotNull
         public List<Integer> getTrackIdList()
         {
             if (_trackIds == null)
@@ -318,14 +292,24 @@ public class JBrowseController extends SpringActionController
             _trackIds = trackIds;
         }
 
-        @NotNull
-        public List<Integer> getLibraryIdList()
+        public Integer getLibraryId()
         {
-            if (_libraryIds == null)
+            return _libraryId;
+        }
+
+        public void setLibraryId(Integer libraryId)
+        {
+            _libraryId = libraryId;
+        }
+
+        @NotNull
+        public List<Integer> getDataIdList()
+        {
+            if (_dataIds == null)
                 return Collections.emptyList();
 
             List<Integer> ret = new ArrayList<>();
-            for (Integer o : _libraryIds)
+            for (Integer o : _dataIds)
             {
                 ret.add(o);
             }
@@ -333,9 +317,179 @@ public class JBrowseController extends SpringActionController
             return ret;
         }
 
-        public void setLibraryIds(Integer[] libraryIds)
+        public void setDataIds(Integer[] dataIds)
         {
-            _libraryIds = libraryIds;
+            _dataIds = dataIds;
+        }
+    }
+
+    @RequiresPermissionClass(AdminPermission.class)
+    public class ReprocessResourcesAction extends ApiAction<ReprocessResourcesForm>
+    {
+        public ApiResponse execute(ReprocessResourcesForm form, BindException errors)
+        {
+            if ((form.getJsonFiles() == null || form.getJsonFiles().length == 0) && (form.getDatabaseIds() == null || form.getDatabaseIds().length == 0))
+            {
+                errors.reject("Must provide a list of sessions or JSON files to re-process");
+                return null;
+            }
+
+            try
+            {
+                PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
+                if (form.getJsonFiles() != null)
+                {
+                    PipelineService.get().queueJob(JBrowseSessionPipelineJob.refreshResources(getContainer(), getUser(), root, Arrays.asList(form.getJsonFiles())));
+                }
+
+                if (form.getDatabaseIds() != null)
+                {
+                    for (String databaseGuid : form.getDatabaseIds())
+                    {
+                        PipelineService.get().queueJob(JBrowseSessionPipelineJob.recreateDatabase(getContainer(), getUser(), root, databaseGuid));
+                    }
+                }
+
+                return new ApiSimpleResponse("success", true);
+            }
+            catch (PipelineValidationException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+        }
+    }
+
+    public static class ReprocessResourcesForm
+    {
+        String[] _jsonFiles;
+        String[] _databaseIds;
+
+        public String[] getJsonFiles()
+        {
+            return _jsonFiles;
+        }
+
+        public void setJsonFiles(String[] jsonFiles)
+        {
+            _jsonFiles = jsonFiles;
+        }
+
+        public String[] getDatabaseIds()
+        {
+            return _databaseIds;
+        }
+
+        public void setDatabaseIds(String[] databaseIds)
+        {
+            _databaseIds = databaseIds;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class CheckFileStatusAction extends ApiAction<CheckFileStatusForm>
+    {
+        public ApiResponse execute(CheckFileStatusForm form, BindException errors)
+        {
+            Map<String, Object> ret = new HashMap<>();
+
+            JSONArray arr = new JSONArray();
+            if (form.getDataIds() != null)
+            {
+                for (int dataId : form.getDataIds())
+                {
+                    arr.put(getDataJson(dataId, null));
+                }
+            }
+
+            if (form.getOutputFileIds() != null)
+            {
+                TableInfo ti = DbSchema.get("sequenceanalysis").getTable("outputfiles");
+                for (int outputFileId : form.getOutputFileIds())
+                {
+                    Map rowMap = new TableSelector(ti, PageFlowUtil.set("dataId", "library_id"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getObject(Map.class);
+                    if (rowMap == null || rowMap.get("dataid") == null)
+                    {
+                        JSONObject o = new JSONObject();
+                        o.put("outputFileId", outputFileId);
+                        o.put("fileExists", false);
+                        o.put("error", true);
+                        arr.put(o);
+                        continue;
+                    }
+
+                    Integer dataId = (Integer)rowMap.get("dataid");
+                    Integer libraryId = (Integer)rowMap.get("library_id");
+                    ExpData d = ExperimentService.get().getExpData(dataId);
+                    if (dataId == null)
+                    {
+                        JSONObject o = new JSONObject();
+                        o.put("outputFileId", outputFileId);
+                        o.put("fileExists", false);
+                        o.put("error", true);
+                        arr.put(o);
+                        continue;
+                    }
+
+                    JSONObject o = getDataJson(d.getRowId(), outputFileId);
+                    o.put("libraryId", libraryId);
+                    arr.put(o);
+                }
+            }
+
+            ret.put("files", arr);
+
+            return new ApiSimpleResponse(ret);
+        }
+
+        private JSONObject getDataJson(int dataId, @Nullable Integer outputFileId)
+        {
+            JSONObject o = new JSONObject();
+            o.put("dataId", dataId);
+            o.put("outputFileId", outputFileId);
+
+            ExpData d = ExperimentService.get().getExpData(dataId);
+            if (d.getFile() == null || !d.getFile().exists())
+            {
+                o.put("fileExists", false);
+                o.put("error", true);
+                return o;
+            }
+
+            o.put("fileName", d.getFile().getName());
+            o.put("fileExists", true);
+            o.put("extension", FileUtil.getExtension(d.getFile()));
+
+            boolean canDisplay = JBrowseManager.get().canDisplayAsTrack(d.getFile());
+            o.put("canDisplay", canDisplay);
+
+            return o;
+        }
+    }
+
+    public static class CheckFileStatusForm
+    {
+        int[] _outputFileIds;
+        int[] _dataIds;
+
+        public int[] getOutputFileIds()
+        {
+            return _outputFileIds;
+        }
+
+        public void setOutputFileIds(int[] outputFileIds)
+        {
+            _outputFileIds = outputFileIds;
+        }
+
+        public int[] getDataIds()
+        {
+            return _dataIds;
+        }
+
+        public void setDataIds(int[] dataIds)
+        {
+            _dataIds = dataIds;
         }
     }
 }

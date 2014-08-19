@@ -15,8 +15,8 @@
  */
 package org.labkey.sequenceanalysis.run.analysis;
 
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.reference.ReferenceSequence;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;

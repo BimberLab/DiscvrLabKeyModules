@@ -34,7 +34,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
     {
         public Provider()
         {
-            super("SBT", "Sequence Based Genotyping", "If selected, each alignment will be inspected, and those alignments lacking any high quality SNPs will be retained.  A report will be generated summarizing these matches, per read.", Arrays.asList(
+            super("SBT", "Sequence Based Genotyping", null, "If selected, each alignment will be inspected, and those alignments lacking any high quality SNPs will be retained.  A report will be generated summarizing these matches, per read.", Arrays.asList(
                     ToolParameterDescriptor.create("minSnpQual", "Minimum SNP Qual", "Only SNPs with a quality score above this threshold will be included.", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
@@ -75,7 +75,13 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
     }
 
     @Override
-    public void performAnalysis(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    public void init(List<AnalysisModel> models) throws PipelineJobException
+    {
+
+    }
+
+    @Override
+    public Output performAnalysisPerSample(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
     {
         try
         {
@@ -108,10 +114,18 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             }
 
             bi.saveSynopsis(getPipelineCtx().getJob().getUser(), model);
+
+            return null;
         }
         catch (FileNotFoundException e)
         {
             throw new PipelineJobException(e);
         }
+    }
+
+    @Override
+    public void performAnalysisOnAll(List<Output> previousSteps)
+    {
+
     }
 }

@@ -16,11 +16,11 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
-import net.sf.picard.fastq.AsyncFastqWriter;
-import net.sf.picard.fastq.BasicFastqWriter;
-import net.sf.picard.fastq.FastqReader;
-import net.sf.picard.fastq.FastqRecord;
-import net.sf.picard.fastq.FastqWriter;
+import htsjdk.samtools.fastq.AsyncFastqWriter;
+import htsjdk.samtools.fastq.BasicFastqWriter;
+import htsjdk.samtools.fastq.FastqReader;
+import htsjdk.samtools.fastq.FastqRecord;
+import htsjdk.samtools.fastq.FastqWriter;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;

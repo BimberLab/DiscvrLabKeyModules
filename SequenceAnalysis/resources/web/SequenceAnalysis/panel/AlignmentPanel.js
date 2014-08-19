@@ -48,11 +48,11 @@ Ext4.define('SequenceAnalysis.panel.AlignmentPanel', {
             panel.add({
                 xtype: 'displayfield',
                 style: 'margin-top: 10px;',
-                fieldLabel: 'Reference Library'
+                fieldLabel: 'Reference Genome'
             },{
                 xtype: 'sequenceanalysis-analysissectionpanel',
                 stepType: 'referenceLibraryCreation',
-                comboLabel: 'Reference Library Type',
+                comboLabel: 'Reference Genome Type',
                 singleTool: true,
                 toolConfig: this.toolConfig
             },{

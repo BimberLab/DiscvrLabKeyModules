@@ -93,6 +93,8 @@ public class TranslatingReferenceSequence
         for (SequenceModel model : _peptides)
         {
             byte[] refBases = _nt.getSequenceBases();
+            assert refBases != null : "No reference bases found for sequence";
+
             int rPos0 = pi.getLastRefPosition(); //0-based
             int rPos1 = rPos0 + 1; //1-based
 

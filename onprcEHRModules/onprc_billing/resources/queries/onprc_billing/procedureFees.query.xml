@@ -48,6 +48,21 @@
                             <fkColumnName>rowid</fkColumnName>
                         </fk>
                     </column>
+                    <column columnName="chargetype">
+                        <columnTitle>Charge Unit</columnTitle>
+                        <fk>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
+                            <fkTable>chargeunits</fkTable>
+                            <fkColumnName>chargetype</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="assistingstaff">
+                        <fk>
+                            <fkDbSchema>onprc_billing_public</fkDbSchema>
+                            <fkTable>chargeunits</fkTable>
+                            <fkColumnName>chargetype</fkColumnName>
+                        </fk>
+                    </column>
                     <column columnName="creditAccountId">
                         <isHidden>true</isHidden>
                     </column>

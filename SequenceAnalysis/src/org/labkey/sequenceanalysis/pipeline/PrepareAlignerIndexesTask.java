@@ -98,7 +98,7 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
         RecordedAction action = new RecordedAction(ALIGNER_INDEXES_ACTIONNAME);
 
         ReferenceLibraryStep libraryStep = getHelper().getSingleStep(ReferenceLibraryStep.class).create(getHelper());
-        getJob().getLogger().debug("using reference library type: " + libraryStep.getProvider().getLabel());
+        getJob().getLogger().debug("using reference type: " + libraryStep.getProvider().getLabel());
 
         AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
 

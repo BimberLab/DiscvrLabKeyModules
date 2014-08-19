@@ -1,8 +1,8 @@
 package org.labkey.sequenceanalysis.util;
 
 import au.com.bytecode.opencsv.CSVWriter;
-import net.sf.picard.fastq.FastqRecord;
-import net.sf.picard.fastq.FastqWriter;
+import htsjdk.samtools.fastq.FastqRecord;
+import htsjdk.samtools.fastq.FastqWriter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.sequenceanalysis.model.SequenceTag;

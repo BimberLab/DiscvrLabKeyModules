@@ -117,8 +117,16 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
         PipelineJob job = getJob();
         _support = (FileAnalysisJobSupport) job;
         _taskHelper = new SequenceTaskHelper(job, _wd);
-        _taskHelper.createExpDatasForInputs();
+
         getJob().getLogger().info("Importing sequence data");
+        getJob().getLogger().info("input files:");
+        for (File input : getHelper().getSupport().getInputFiles())
+        {
+            getJob().getLogger().info(input.getPath());
+        }
+
+        _taskHelper.createExpDatasForInputs();
+
 
         List<RecordedAction> actions = new ArrayList<>();
         RecordedAction action = new RecordedAction(COMPRESS_INPUT_ACTIONNAME);

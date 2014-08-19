@@ -1,25 +1,18 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
-import net.sf.samtools.SAMFileReader;
-import org.apache.commons.io.FileUtils;
+import htsjdk.samtools.ValidationStringency;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.SequenceAnalysisController;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.run.util.FixMateInformationWrapper;
-import org.labkey.sequenceanalysis.run.util.PicardWrapper;
 import org.labkey.sequenceanalysis.run.util.SamFormatConverterWrapper;
-import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,7 +67,7 @@ public class BWASWWrapper extends BWAWrapper
             //convert to BAM
             File bam = new File(outputDirectory, basename + ".bam");
             SamFormatConverterWrapper converter = new SamFormatConverterWrapper(getPipelineCtx().getLogger());
-            converter.setStringency(SAMFileReader.ValidationStringency.SILENT);
+            converter.setStringency(ValidationStringency.SILENT);
             bam = converter.execute(sam, bam, true);
             if (!bam.exists())
             {

@@ -15,8 +15,8 @@
  */
 package org.labkey.sequenceanalysis.run.analysis;
 
-import net.sf.picard.reference.ReferenceSequence;
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
@@ -28,8 +28,8 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
 import org.labkey.sequenceanalysis.run.util.AASnp;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
 

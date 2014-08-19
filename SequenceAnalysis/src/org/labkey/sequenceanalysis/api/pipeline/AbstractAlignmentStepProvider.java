@@ -19,7 +19,7 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
 
     public AbstractAlignmentStepProvider(String name, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL, boolean supportsPairedEnd)
     {
-        super(name, name, description, parameters, clientDependencyPaths, websiteURL);
+        super(name, name, name, description, parameters, clientDependencyPaths, websiteURL);
 
         _supportsPairedEnd = supportsPairedEnd;
     }

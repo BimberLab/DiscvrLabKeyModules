@@ -5,6 +5,9 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.exp.api.ExperimentUrls;
 import org.labkey.api.files.FileUrls;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
@@ -12,6 +15,9 @@ import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryAction;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.query.QueryUrls;
 import org.labkey.api.security.User;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.GUID;
@@ -32,15 +38,16 @@ import java.util.Map;
  */
 public class JBrowseSessionPipelineJob extends PipelineJob
 {
-    private List<Integer> _libraryIds;
-    private List<Integer> _ntIds;
-    private List<Integer> _trackIds;
-    private String _databaseGuid;
-    private String _name;
-    private String _description;
-    private boolean _createNew;
+    private Integer _libraryId = null;
+    private List<Integer> _trackIds = null;
+    private List<Integer> _dataIds = null;
+    private String _databaseGuid = null;
+    private String _name = null;
+    private String _description = null;
+    private List<String> _jsonFiles = null;
+    private Mode _mode;
 
-    public static JBrowseSessionPipelineJob addMembers(Container c, User user, PipeRoot pipeRoot, String databaseGuid, List<Integer> libraryIds, List<Integer> ntIds, List<Integer> trackIds)
+    public static JBrowseSessionPipelineJob addMembers(Container c, User user, PipeRoot pipeRoot, String databaseGuid, List<Integer> trackIds, List<Integer> dataIds)
     {
         //find existing record
         TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
@@ -50,24 +57,45 @@ public class JBrowseSessionPipelineJob extends PipelineJob
             throw new IllegalArgumentException("Unknown database: " + databaseGuid);
         }
 
-        return new JBrowseSessionPipelineJob(c, user, pipeRoot, (String)existingRow.get("name"), (String)existingRow.get("description"), libraryIds, ntIds, trackIds, databaseGuid);
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, (String)existingRow.get("name"), (String)existingRow.get("description"), null, trackIds, dataIds, databaseGuid);
     }
 
-    public static JBrowseSessionPipelineJob createNewDatabase(Container c, User user, PipeRoot pipeRoot, String name, String description, List<Integer> libraryIds, List<Integer> ntIds, List<Integer> trackIds)
+    public static JBrowseSessionPipelineJob refreshResources(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles)
     {
-        return new JBrowseSessionPipelineJob(c, user, pipeRoot, name, description, libraryIds, ntIds, trackIds, null);
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, jsonFiles, null, Mode.ReprocessResources);
     }
 
-    private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, List<Integer> libraryIds, List<Integer> ntIds, List<Integer> trackIds, @Nullable String existingDatabaseGuid)
+    public static JBrowseSessionPipelineJob recreateDatabase(Container c, User user, PipeRoot pipeRoot, String databaseGuid)
+    {
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, null, databaseGuid, Mode.RecreateDatabase);
+    }
+
+    public static JBrowseSessionPipelineJob createNewDatabase(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> dataIds)
+    {
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, name, description, libraryId, trackIds, dataIds, null);
+    }
+
+    private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles, String databaseGuid, Mode mode)
     {
         super(null, new ViewBackgroundInfo(c, user, null), pipeRoot);
-        _libraryIds = libraryIds;
+        _jsonFiles = jsonFiles;
+        _databaseGuid = databaseGuid;
+        _mode = mode;
+
+        AssayFileWriter writer = new AssayFileWriter();
+        setLogFile(writer.findUniqueFileName("jbrowse-" + (new GUID().toString()) + ".log", JBrowseManager.get().getJBrowseRoot()));
+    }
+
+    private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> dataIds, @Nullable String existingDatabaseGuid)
+    {
+        super(null, new ViewBackgroundInfo(c, user, null), pipeRoot);
+        _libraryId = libraryId;
         _trackIds = trackIds;
-        _ntIds = ntIds;
+        _dataIds = dataIds;
 
         _name = name;
         _description = description;
-        _createNew = existingDatabaseGuid == null;
+        _mode = existingDatabaseGuid == null ? Mode.CreateNew : Mode.AddToExisting;
         _databaseGuid = existingDatabaseGuid == null ? new GUID().toString().toUpperCase() : existingDatabaseGuid;
 
         AssayFileWriter writer = new AssayFileWriter();
@@ -77,13 +105,21 @@ public class JBrowseSessionPipelineJob extends PipelineJob
     @Override
     public String getDescription()
     {
-        return "Create JBrowse Session";
+        return _mode.getDescription();
     }
+
 
     @Override
     public ActionURL getStatusHref()
     {
-        return PageFlowUtil.urlProvider(FileUrls.class).urlBegin(getContainer());
+        if (getDatabaseGuid() != null)
+        {
+            ActionURL ret = QueryService.get().urlFor(getUser(), getContainer(), QueryAction.executeQuery, JBrowseSchema.NAME, JBrowseSchema.TABLE_DATABASES);
+            ret.addParameter("query.objectid~eq", getDatabaseGuid());
+
+            return ret;
+        }
+        return null;
     }
 
     @Override
@@ -107,14 +143,9 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         return _description;
     }
 
-    public List<Integer> getLibraryIds()
+    public Integer getLibraryId()
     {
-        return _libraryIds;
-    }
-
-    public List<Integer> getNtIds()
-    {
-        return _ntIds;
+        return _libraryId;
     }
 
     public List<Integer> getTrackIds()
@@ -122,8 +153,38 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         return _trackIds;
     }
 
-    public boolean isCreateNew()
+    public List<String> getJsonFiles()
     {
-        return _createNew;
+        return _jsonFiles;
+    }
+
+    public List<Integer> getDataIds()
+    {
+        return _dataIds;
+    }
+
+    public Mode getMode()
+    {
+        return _mode;
+    }
+
+    public enum Mode
+    {
+        CreateNew("Create New Session"),
+        AddToExisting("Add To Existing Session"),
+        ReprocessResources("Recreating Resources"),
+        RecreateDatabase("Recreate Session");
+
+        private String _description;
+
+        Mode(String description)
+        {
+            _description = description;
+        }
+
+        public String getDescription()
+        {
+            return _description;
+        }
     }
 }

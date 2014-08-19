@@ -1,11 +1,11 @@
 package org.labkey.sequenceanalysis.util;
 
-import net.sf.picard.fastq.FastqReader;
-import net.sf.picard.fastq.FastqRecord;
-import net.sf.picard.fastq.FastqWriter;
-import net.sf.picard.fastq.FastqWriterFactory;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.fastq.FastqReader;
+import htsjdk.samtools.fastq.FastqRecord;
+import htsjdk.samtools.fastq.FastqWriter;
+import htsjdk.samtools.fastq.FastqWriterFactory;
 import org.apache.log4j.Logger;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;

@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.util;
 
-import net.sf.samtools.SAMFileReader;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +21,7 @@ import java.util.List;
  */
 abstract public class PicardWrapper extends AbstractCommandWrapper
 {
-    private SAMFileReader.ValidationStringency _stringency = SAMFileReader.ValidationStringency.STRICT;
+    private ValidationStringency _stringency = ValidationStringency.STRICT;
 
     public PicardWrapper(@Nullable Logger logger)
     {
@@ -58,12 +59,12 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         return new File(baseDir, jarName);
     }
 
-    public SAMFileReader.ValidationStringency getStringency()
+    public ValidationStringency getStringency()
     {
         return _stringency;
     }
 
-    public void setStringency(SAMFileReader.ValidationStringency stringency)
+    public void setStringency(ValidationStringency stringency)
     {
         _stringency = stringency;
     }

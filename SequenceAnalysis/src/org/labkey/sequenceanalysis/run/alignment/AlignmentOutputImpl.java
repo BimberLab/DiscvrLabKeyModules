@@ -1,7 +1,5 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
-import net.sf.picard.sam.BuildBamIndex;
-import net.sf.samtools.SAMFileReader;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
 import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
 

@@ -45,12 +45,15 @@
                     },{
                         name: 'Surgery Rates',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'onprc_billing_public', 'query.queryName': 'chargeableItems', 'query.active~eq': true, 'query.category~eq': 'Surgery'})
+                    },{
+                        name: 'Census',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'encounters', 'query.type/value~eq': 'Surgery', 'query.sort': '-date', 'query.columns': 'Id,date,enddate,project,project/investigatorId,participants/participants,procedureid,Id/Demographics/death,QCState,taskid,afterHours'})
                     }]
                 },{
                     header: 'Review',
                     items: [{
                         name: 'Surgeries Needing Review',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'encounters', 'query.viewName': 'Surgeries', 'query.qcstate/label~eq': 'Review Required', 'query.columns': 'Id,date,project,procedureid,procedureid/major,participants%2Fparticipants,summaries/summary,history,QCState,taskid/updateTaskId,requestid,chargetype'})
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'encounters', 'query.viewName': 'Surgeries', 'query.qcstate/label~eq': 'Review Required', 'query.columns': 'Id,date,project,procedureid,procedureid/major,participants/participants,summaries/summary,history,QCState,taskid/updateTaskId,requestid,chargetype'})
                     },{
                         name: 'All Tasks Needing Review',
                         url: LABKEY.ActionURL.buildURL('ehr', 'enterData', ctx['EHRStudyContainer'], null)

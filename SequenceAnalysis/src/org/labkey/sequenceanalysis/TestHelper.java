@@ -1,9 +1,10 @@
 package org.labkey.sequenceanalysis;
 
-import net.sf.picard.fastq.FastqRecord;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.fastq.FastqRecord;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.lang3.StringUtils;
@@ -1059,6 +1060,8 @@ public class TestHelper
                 json.put("fileId2", m.getFileId2());
                 json.put("fileName2", m.getFileName2());
                 json.put("platform", m.getPlatform());
+                json.put("application", m.getApplication());
+                json.put("inputMaterial", m.getInputMaterial());
                 json.put("sampleid", m.getSampleId());
                 json.put("readset", m.getRowId());
                 json.put("readsetname", m.getName());
@@ -1148,6 +1151,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.mosaik"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
@@ -1214,6 +1218,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.mosaik"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
@@ -1346,6 +1351,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -1381,7 +1387,7 @@ public class TestHelper
             try
             {
                 reader = new SAMFileReader(bam);
-                reader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+                reader.setValidationStringency(ValidationStringency.SILENT);
 
                 SAMRecordIterator it = reader.iterator();
                 int aligned = 0;
@@ -1435,6 +1441,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -1483,6 +1490,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -1553,6 +1561,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -1560,7 +1569,7 @@ public class TestHelper
             File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
             expectedOutputs.add(bam1);
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fasta"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fasta"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
@@ -1568,7 +1577,7 @@ public class TestHelper
             File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
             expectedOutputs.add(bam2);
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fasta"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fasta"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
@@ -1576,7 +1585,7 @@ public class TestHelper
             File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
             expectedOutputs.add(bam3);
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fasta"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fasta"));
 
             expectedOutputs.add(new File(basedir, "paired1/Preprocessing/"));
             expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.fastq"));
@@ -1589,8 +1598,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.CropReads.fastq"));
             expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.fastq"));
             expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.preprocessed.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.preprocessed.fastq"));
 
             expectedOutputs.add(new File(basedir, "paired3/Preprocessing"));
             expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.downsampled.fastq"));
@@ -1598,7 +1607,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.downsampled.adaptertrimmed.HeadCropReads.fastq"));
             expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.downsampled.adaptertrimmed.HeadCropReads.CropReads.fastq"));
             expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.fastq"));
-            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fastq"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.preprocessed.fastq"));
 
             expectedOutputs.add(new File(basedir, "paired4/Preprocessing/"));
             expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.downsampled.fastq"));
@@ -1606,7 +1615,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.downsampled.adaptertrimmed.HeadCropReads.fastq"));
             expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.downsampled.adaptertrimmed.HeadCropReads.CropReads.fastq"));
             expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.fastq"));
-            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.fastq"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.preprocessed.fastq"));
 
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
@@ -1654,6 +1663,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -1708,6 +1718,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.amb"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.ann"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.bwt"));
@@ -1770,6 +1781,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.amb"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.ann"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.bwt"));
@@ -1836,6 +1848,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.amb"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.ann"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.bwt"));
@@ -1845,40 +1858,40 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1"));
 
             expectedOutputs.add(new File(basedir, "paired1/Preprocessing/"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.adaptertrimmed.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.adaptertrimmed.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.preprocessed.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.preprocessed.fastq"));
 
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bwa.bam"));
             File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
             expectedOutputs.add(bam1);
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.adaptertrimmed.fastq.sai"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired2.adaptertrimmed.fastq.sai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq.sai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired2.preprocessed.fastq.sai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
 
             expectedOutputs.add(new File(basedir, "paired3/Preprocessing/"));
-            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.adaptertrimmed.fastq"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.preprocessed.fastq"));
 
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bwa.bam"));
             File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
             expectedOutputs.add(bam2);
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.adaptertrimmed.fastq.sai"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fastq.sai"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
 
             expectedOutputs.add(new File(basedir, "paired4/Preprocessing/"));
-            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.adaptertrimmed.fastq"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.preprocessed.fastq"));
 
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bwa.bam"));
             File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
             expectedOutputs.add(bam3);
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.adaptertrimmed.fastq.sai"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fastq.sai"));
 
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
@@ -1916,6 +1929,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.amb"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.ann"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.bwt"));
@@ -1983,6 +1997,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.1.ebwt"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.2.ebwt"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.3.ebwt"));
@@ -2053,6 +2068,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -2106,6 +2122,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared"));
             expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
             expectedOutputs.add(new File(basedir, "Shared/Ref_DB.mosaik"));
 
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME1));

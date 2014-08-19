@@ -14,6 +14,7 @@ import java.util.List;
  */
 public class DefaultPipelineStepOutput implements PipelineStepOutput
 {
+    private List<Pair<File, String>> _inputs = new ArrayList<>();
     private List<Pair<File, String>> _outputs = new ArrayList<>();
     private List<File> _intermediateFiles = new ArrayList<>();
     private List<File> _deferredDeleteFiles = new ArrayList<>();
@@ -21,6 +22,12 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
     public DefaultPipelineStepOutput()
     {
 
+    }
+
+    @Override
+    public List<Pair<File, String>> getInputs()
+    {
+        return Collections.unmodifiableList(_inputs);
     }
 
     @Override
@@ -54,6 +61,11 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
     public List<File> getDeferredDeleteIntermediateFiles()
     {
         return Collections.unmodifiableList(_deferredDeleteFiles);
+    }
+
+    public void addInput(File input, String role)
+    {
+        _inputs.add(Pair.of(input, role));
     }
 
     public void addOutput(File output, String role)

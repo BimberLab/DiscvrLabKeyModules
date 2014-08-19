@@ -25,7 +25,7 @@ public class SamtoolsVariantCaller extends AbstractPipelineStep implements Varia
     {
         public Provider()
         {
-            super("SamtoolsVariantCaller", "Samtools/Pileup", "Call variants using samtools/pileup", null, null, "");
+            super("SamtoolsVariantCaller", "Samtools/Pileup", "Samtools", "Call variants using samtools/pileup", null, null, "");
         }
 
         public SamtoolsVariantCaller create(PipelineContext ctx)

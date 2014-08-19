@@ -11,11 +11,8 @@ import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
-import org.labkey.api.pipeline.PipelineJobService;
-import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
-import org.labkey.api.util.FileUtil;
 import org.labkey.blast.BLASTManager;
 import org.labkey.blast.BLASTSchema;
 
@@ -39,7 +36,7 @@ public class BlastJob
     private String _title;
     private Map<String, Object> _params;
     private boolean _saveResults;
-    private Boolean _hasRun;
+    private boolean _hasRun;
     private String _objectid;
     private String _container;
     private int _createdBy;
@@ -120,7 +117,7 @@ public class BlastJob
         _saveResults = saveResults;
     }
 
-    public Boolean getHasRun()
+    public boolean getHasRun()
     {
         return _hasRun;
     }
@@ -187,10 +184,10 @@ public class BlastJob
 
     public boolean isHasRun()
     {
-        return _hasRun == null ? false : _hasRun;
+        return _hasRun;
     }
 
-    public void setHasRun(Boolean hasRun)
+    public void setHasRun(boolean hasRun)
     {
         _hasRun = hasRun;
     }
@@ -296,7 +293,11 @@ public class BlastJob
 
         if (includeHTML)
         {
-            if (!expectedOutput.exists())
+            if (!getHasRun())
+            {
+                ret.put("html", "The job has not yet finished.  Please refresh the page to see updated progress");
+            }
+            else if (!expectedOutput.exists())
             {
                 ret.put("html", "Output file not found");
             }
@@ -305,7 +306,7 @@ public class BlastJob
                 try
                 {
                     String html = readFile(expectedOutput);
-                    ret.put("html", html == null || html.isEmpty() ? (getHasRun() ? "BLAST did not produce any output, see the log file for more information" : "The job has not yet completed") : html);
+                    ret.put("html", html == null || html.isEmpty() ? "BLAST did not produce any output, see the log file for more information" : html);
                 }
                 catch (IOException e)
                 {

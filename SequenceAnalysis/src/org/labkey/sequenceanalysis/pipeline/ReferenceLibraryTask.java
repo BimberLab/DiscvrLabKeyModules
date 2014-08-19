@@ -25,9 +25,11 @@ import java.util.List;
  */
 public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask.Factory>
 {
-    private static final String ACTIONNAME = "Creating Reference Library FASTA";
-    public static final String REFERENCE_DB_FASTA = "Reference Library FASTA";
-    public static final String REFERENCE_DB_FASTA_OUTPUT = "Reference Library Output";
+    private static final String ACTIONNAME = "Creating Reference FASTA";
+    public static final String REFERENCE_DB_FASTA = "Reference FASTA";
+    public static final String REFERENCE_DB_FASTA_IDX = "Reference FASTA Index";
+    public static final String ID_KEY_FILE = "Reference Id Key";
+    public static final String REFERENCE_DB_FASTA_OUTPUT = "Reference Output";
 
     private SequenceTaskHelper _taskHelper;
 

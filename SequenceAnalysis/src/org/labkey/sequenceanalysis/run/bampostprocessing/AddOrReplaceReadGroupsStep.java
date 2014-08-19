@@ -34,7 +34,7 @@ public class AddOrReplaceReadGroupsStep extends AbstractCommandPipelineStep<AddO
     {
         public Provider()
         {
-            super("AddOrReplaceReadGroups", "Add Or Replace Read Groups", "This runs the Picard tools AddOrReplaceReadGroups tool, which uses the readset information to ensure we have the proper samplename, platform, etc. set in the BAM file", null, null, "http://picard.sourceforge.net/command-line-overview.shtml");
+            super("AddOrReplaceReadGroups", "Add Or Replace Read Groups", "Picard", "This runs the Picard tools AddOrReplaceReadGroups tool, which uses the readset information to ensure we have the proper samplename, platform, etc. set in the BAM file", null, null, "http://picard.sourceforge.net/command-line-overview.shtml");
         }
 
         @Override

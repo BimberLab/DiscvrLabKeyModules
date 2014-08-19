@@ -185,6 +185,15 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
             value: cfg.description
         });
 
+        if (cfg.toolName){
+            items.push({
+                xtype: 'displayfield',
+                width: '100%',
+                fieldLabel: 'Tool name',
+                value: cfg.toolName
+            });
+        }
+
         if (cfg.websiteURL){
             items.push({
                 xtype: 'displayfield',
@@ -396,6 +405,15 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
                 width: '100%',
                 fieldLabel: 'Description',
                 value: cfg.description
+            })
+        }
+
+        if (cfg.toolName){
+            paramCfg.push({
+                xtype: 'displayfield',
+                width: '100%',
+                fieldLabel: 'Tool Name',
+                value: cfg.toolName
             })
         }
 

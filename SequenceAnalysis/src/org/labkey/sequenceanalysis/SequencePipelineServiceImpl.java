@@ -133,10 +133,4 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
 
         return providers;
     }
-
-    @Override
-    public ReferenceLibraryHelper getLibraryHelper(File refFasta)
-    {
-        return new ReferenceLibraryHelperImpl(refFasta);
-    }
 }

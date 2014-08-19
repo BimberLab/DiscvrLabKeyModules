@@ -31,7 +31,7 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
     {
         public Provider()
         {
-            super("IndelRealigner", "Indel Realigner", "The step runs GATK's IndelRealigner tool.  This tools performs local realignment to minmize the number of mismatching bases across all the reads.", null, null, "http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_indels_IndelRealigner.html");
+            super("IndelRealigner", "Indel Realigner", "GATK", "The step runs GATK's IndelRealigner tool.  This tools performs local realignment to minmize the number of mismatching bases across all the reads.", null, null, "http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_indels_IndelRealigner.html");
         }
 
         @Override

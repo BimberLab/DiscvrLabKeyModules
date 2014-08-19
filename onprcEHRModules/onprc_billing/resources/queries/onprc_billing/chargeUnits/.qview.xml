@@ -1,6 +1,7 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All Items">
     <columns>
         <column name="chargetype"/>
+        <column name="servicecenter"/>
         <column name="shownInBlood"/>
         <column name="shownInLabwork"/>
         <column name="shownInMedications"/>

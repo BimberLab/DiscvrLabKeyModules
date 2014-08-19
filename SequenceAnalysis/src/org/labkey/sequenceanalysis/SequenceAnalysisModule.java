@@ -25,18 +25,23 @@ import org.labkey.api.exp.ExperimentRunTypeSource;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
+import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.button.CompareVariantsButton;
+import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
 import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
+import org.labkey.sequenceanalysis.run.alignment.BismarkWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
 import org.labkey.sequenceanalysis.run.alignment.LastzWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
@@ -44,6 +49,7 @@ import org.labkey.sequenceanalysis.run.alignment.TophatWrapper;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.VariantComparisonAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.ViralAnalysis;
 import org.labkey.sequenceanalysis.run.bampostprocessing.AddOrReplaceReadGroupsStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.CallMdTagsStep;
@@ -59,13 +65,13 @@ import org.labkey.sequenceanalysis.run.reference.CustomReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.DNAReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.SavedReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.VirusReferenceLibraryStep;
-import org.labkey.sequenceanalysis.run.variant.SamtoolsVariantCaller;
 import org.labkey.sequenceanalysis.util.Barcoder;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -83,7 +89,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.280;
+        return 12.282;
     }
 
     public boolean hasScripts()
@@ -149,6 +155,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new LastzWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new MosaikWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new TophatWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.Provider());
 
         //bam postprocessing
         SequencePipelineService.get().registerPipelineStep(new AddOrReplaceReadGroupsStep.Provider());
@@ -160,13 +167,11 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         //SequencePipelineService.get().registerPipelineStep(new RecalibrateBamStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SortSamStep.Provider());
 
-        //variant calling
-        SequencePipelineService.get().registerPipelineStep(new SamtoolsVariantCaller.Provider());
-
         //analysis
         SequencePipelineService.get().registerPipelineStep(new SequenceBasedTypingAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new ViralAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new HaplotypeCallerAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VariantComparisonAnalysis.Provider());
     }
 
     @Override
@@ -211,6 +216,10 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "sequence analysis module admin", details.getActionURL());
 
         PipelineService.get().registerPipelineProvider(new ReferenceLibraryPipelineProvider(this));
+
+        LaboratoryService.get().registerQueryButton(new SimpleButtonConfigFactory(this, "BamStats Report", "SequenceAnalysis.Buttons.generateBamStatsReport(dataRegionName, 'analysisIds');", new LinkedHashSet<ClientDependency>(Arrays.asList(ClientDependency.fromFilePath("sequenceanalysis/sequenceanalysisButtons.js")))), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES);
+        LaboratoryService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
+        LaboratoryService.get().registerQueryButton(new CompareVariantsButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES);
     }
 
     @Override
