@@ -21,33 +21,24 @@ import org.json.JSONObject;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.ehr.EHRService;
 import org.labkey.api.ehr.buttons.MarkCompletedButton;
 import org.labkey.api.ehr.dataentry.DefaultDataEntryFormFactory;
-import org.labkey.api.ehr.dataentry.FormSection;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
-import org.labkey.api.ldk.buttons.ShowEditUIButton;
 import org.labkey.api.ldk.notification.NotificationService;
-import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.QuerySchema;
-import org.labkey.api.query.QueryService;
-import org.labkey.api.resource.Resource;
-import org.labkey.api.security.User;
 import org.labkey.api.security.roles.RoleManager;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.onprc_billing.button.ChangeBillDateButton;
 import org.labkey.onprc_billing.button.ChargeEditButton;
 import org.labkey.onprc_billing.button.ProjectEditButton;
 import org.labkey.onprc_billing.dataentry.ChargesAdvancedFormType;
-import org.labkey.onprc_billing.dataentry.ChargesFormSection;
 import org.labkey.onprc_billing.dataentry.ChargesFormType;
 import org.labkey.onprc_billing.dataentry.ReversalFormType;
 import org.labkey.onprc_billing.notification.BillingValidationNotification;
@@ -61,7 +52,6 @@ import org.labkey.onprc_billing.security.ONPRCAliasEditorPermission;
 import org.labkey.onprc_billing.security.ONPRCAliasEditorRole;
 import org.labkey.onprc_billing.security.ONPRCBillingAdminPermission;
 import org.labkey.onprc_billing.security.ONPRCBillingAdminRole;
-import org.labkey.onprc_billing.security.ONPRCChargesEntryRole;
 import org.labkey.onprc_billing.table.ChargeableItemsCustomizer;
 import org.labkey.onprc_billing.table.ONPRC_BillingCustomizer;
 
@@ -174,13 +164,13 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
         });
     }
 
+    @NotNull
     @Override
     public JSONObject getPageContextJson(ViewContext ctx)
     {
         Map<String, Object> ret = new HashMap<>();
         Map<String, String> map = getDefaultPageContextJson(ctx.getContainer());
-        if (map != null)
-            ret.putAll(map);
+        ret.putAll(getDefaultPageContextJson(ctx.getContainer()));
 
         if (map.containsKey(ONPRC_BillingManager.BillingContainerPropName) && map.get(ONPRC_BillingManager.BillingContainerPropName) != null)
         {

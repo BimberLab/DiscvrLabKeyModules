@@ -27,7 +27,6 @@ import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.notification.NotificationService;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
-import org.labkey.api.security.User;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
@@ -151,14 +150,15 @@ public class LaboratoryModule extends ExtendedSimpleModule
         return PageFlowUtil.set(SCHEMA_NAME);
     }
 
+    @NotNull
     @Override
-    public LinkedHashSet<ClientDependency> getClientDependencies(Container c, User u)
+    public LinkedHashSet<ClientDependency> getClientDependencies(Container c)
     {
         // allow other modules to register with EHR service, and include their dependencies automatically
         // whenever laboratory context is requested
         LinkedHashSet<ClientDependency> ret = new LinkedHashSet<>();
-        ret.addAll(super.getClientDependencies(c, u));
-        ret.addAll(LaboratoryService.get().getRegisteredClientDependencies(c, u));
+        ret.addAll(super.getClientDependencies(c));
+        ret.addAll(LaboratoryService.get().getRegisteredClientDependencies(c));
 
         return ret;
     }

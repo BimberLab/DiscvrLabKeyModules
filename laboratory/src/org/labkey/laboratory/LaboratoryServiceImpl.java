@@ -17,7 +17,6 @@ package org.labkey.laboratory;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
-import org.labkey.api.action.AbstractFileUploadAction;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
@@ -27,7 +26,6 @@ import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.ChangePropertyDescriptorException;
 import org.labkey.api.exp.ExperimentException;
-import org.labkey.api.exp.api.AssayDomainType;
 import org.labkey.api.exp.api.ExpExperiment;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
@@ -303,9 +301,9 @@ public class LaboratoryServiceImpl extends LaboratoryService
         _clientDependencies.put(owner, list);
     }
 
-    public Set<ClientDependency> getRegisteredClientDependencies(Container c, User u)
+    public Set<ClientDependency> getRegisteredClientDependencies(Container c)
     {
-        Set<ClientDependency> set = new HashSet<ClientDependency>();
+        Set<ClientDependency> set = new HashSet<>();
         for (Module m : _clientDependencies.keySet())
         {
             if (c.getActiveModules().contains(m))
@@ -321,11 +319,11 @@ public class LaboratoryServiceImpl extends LaboratoryService
     {
         Map<String, List<ButtonConfigFactory>> schemaMap = _queryButtons.get(schema);
         if (schemaMap == null)
-            schemaMap = new CaseInsensitiveHashMap<List<ButtonConfigFactory>>();
+            schemaMap = new CaseInsensitiveHashMap<>();
 
         List<ButtonConfigFactory> list = schemaMap.get(query);
         if (list == null)
-            list = new ArrayList<ButtonConfigFactory>();
+            list = new ArrayList<>();
 
         list.add(btn);
 
