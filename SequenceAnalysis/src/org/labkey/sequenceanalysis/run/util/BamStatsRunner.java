@@ -41,6 +41,7 @@ public class BamStatsRunner
     private List<File> _sequenceFiles;
     private Map<File, File> _outputDirs = new HashMap<>();
     private String _commandOutput = null;
+    private static final Logger _log = Logger.getLogger(BamStatsRunner.class);
 
     public BamStatsRunner()
     {
@@ -71,8 +72,7 @@ public class BamStatsRunner
             File outputDir = new File(getTmpDir(), new GUID().toString());
             _outputDirs.put(f, outputDir);
             params.add("\"" + outputDir.getPath() + "\"");
-            Logger log = Logger.getLogger(BamStatsRunner.class);
-            log.info(StringUtils.join(params, " "));
+            _log.info(StringUtils.join(params, " "));
 
             ProcessBuilder pb = new ProcessBuilder(params);
             pb.redirectErrorStream(true);
@@ -90,7 +90,7 @@ public class BamStatsRunner
                     {
                         output.append(line);
                         output.append(System.getProperty("line.separator"));
-                        log.info(line);
+                        _log.info(line);
                     }
 
                     int returnCode = p.waitFor();
@@ -101,12 +101,12 @@ public class BamStatsRunner
                         throw new IOException("BamStats failed with error code " + returnCode + " - " + output.toString());
                     }
                 }
-                catch (IOException eio)
+                catch (Exception eio)
                 {
                     throw new RuntimeException("Failed writing output for process: "  + output.toString(), eio);
                 }
             }
-            catch (IOException | InterruptedException e)
+            catch (Exception e)
             {
                 throw new RuntimeException(e);
             }
@@ -117,18 +117,17 @@ public class BamStatsRunner
     {
         List<String> params = new LinkedList<>();
         params.add("java");
-        params.add("-Xmx4g");
+        params.add("-Xmx6g");
 
         File baseDir = lookupFile("external/bamstats");
 
         List<String> classPath = new ArrayList<>();
-        File samJar = SequenceAnalysisManager.getSamJar();
 
         classPath.add(".");
-        classPath.add(new File(baseDir, "jopt-simple-3.2.jar").getPath());
-        classPath.add(new File(baseDir, "poi-3.7-20101029.jar").getPath());
+        classPath.add(new File(baseDir, "lib/jopt-simple-3.2.jar").getPath());
+        classPath.add(new File(baseDir, "lib/poi-3.7-20101029.jar").getPath());
+        classPath.add(new File(baseDir, "lib/sam-1.50.jar").getPath());
         classPath.add(new File(baseDir, "BAMStats-1.25.jar").getPath());
-        classPath.add(samJar.getPath());
 
         params.add("-classpath");
         params.add(StringUtils.join(classPath, File.pathSeparator));
@@ -154,7 +153,7 @@ public class BamStatsRunner
                 _tmpDir = FileUtil.getAbsoluteCaseSensitiveFile(FileUtil.createTempDirectory("bamstats_"));
 
             if (!_tmpDir.exists())
-                _tmpDir.createNewFile();
+                _tmpDir.mkdirs();
         }
         catch (IOException e)
         {
@@ -207,16 +206,24 @@ public class BamStatsRunner
 
                 if (!htmlFile.exists())
                 {
-                    output += "<p>Unable to find output for file: " + origFile.getName() + "</p>";
+                    output += "<p>Unable to find output for file: " + origFile.getName() + ".  This probably indicates a problem running BAMStats.</p>";
+                    if (_commandOutput != null)
+                    {
+                         _log.error("Something went wrong running BAMStats.  Here is the program's output, which might help debug the problem");
+                        _log.error(_commandOutput);
+                    }
                     continue;
                 }
 
                 String html = readFileToString(htmlFile, c, "");
                 if (html.isEmpty())
                 {
+                    html += "Something went wrong running BAMStats. Please contact your administrator for more detail";
+
                     if (_commandOutput != null)
                     {
-                        html += "Something went wrong running BamStats.  Here is the program's output, which might help debug the problem: <p>" + _commandOutput.replace("\n", "<br>");
+                        _log.error("Something went wrong running BAMStats.  Here is the program's output, which might help debug the problem");
+                        _log.error(_commandOutput);
                     }
                 }
 

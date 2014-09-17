@@ -34,7 +34,7 @@ public class AnalysesTableCustomizer implements TableCustomizer
                     "FROM sequenceanalysis.sequence_analyses sa\n" +
                     "JOIN exp.data d1 ON (d1.RowId = sa.alignmentFile)\n" +
                     "JOIN exp.Data d2 ON (d2.Name LIKE (" + ti.getSqlDialect().concatenate("d1.Name", "'%'") + "))\n" +
-                    "JOIN exp.DataInput di ON (d2.RowId = di.DataId AND di.Role = 'BAM File Index')\n" +
+                    "JOIN exp.DataInput di ON (d2.RowId = di.DataId AND di.Role = 'Aligned Reads Index')\n" +
                     "WHERE sa.rowId = " + ExprColumn.STR_TABLE_ALIAS + ".RowId\n" +
                     "GROUP BY sa.rowid)");
 

@@ -19,7 +19,7 @@
                     <property name="location" value="sequenceAnalysis" />
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisWorkTask$Factory">
-                    <property name="location" value="remotePipelineVagrant" />
+                    <property name="location" value="sequenceAnalysis" />
                 </bean>
             </list>
         </property>

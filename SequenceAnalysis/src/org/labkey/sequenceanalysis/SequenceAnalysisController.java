@@ -21,6 +21,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.ReaderInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.jfree.chart.JFreeChart;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,6 +33,8 @@ import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.ExportAction;
+import org.labkey.api.action.FormViewAction;
+import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
@@ -90,6 +93,7 @@ import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
+import org.labkey.api.sequenceanalysis.SequenceFileHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
@@ -100,6 +104,7 @@ import org.labkey.api.util.Pair;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.StringExpressionFactory;
 import org.labkey.api.util.URLHelper;
+import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
@@ -137,6 +142,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -150,6 +156,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class SequenceAnalysisController extends SpringActionController
 {
@@ -171,8 +179,6 @@ public class SequenceAnalysisController extends SpringActionController
 
             //resolve files
             List<File> files = new ArrayList<>();
-
-            String html = "";
 
             if (form.getFilenames() != null)
             {
@@ -214,17 +220,16 @@ public class SequenceAnalysisController extends SpringActionController
                 return new HtmlView("Error: either no files provided or the files did not exist on the server");
             }
 
-            FastqcRunner runner = new FastqcRunner();
+            FastqcRunner runner = new FastqcRunner(null);
             try
             {
-                runner.execute(files);
+                String html = runner.execute(files);
+                return new HtmlView("FastQC Report", html);
             }
             catch (FileNotFoundException e)
             {
                 return new HtmlView("Error: " + e.getMessage());
             }
-
-            return new HtmlView("FastQC Report", runner.processOutput(getContainer()));
         }
 
         public NavTree appendNavTrail(NavTree root)
@@ -494,7 +499,8 @@ public class SequenceAnalysisController extends SpringActionController
             if (_table.getColumn("container") != null)
             {
                 TableSelector ts = new TableSelector(_table, Collections.singleton("container"), filter, null);
-                ts.forEach(new TableSelector.ForEachBlock<ResultSet>(){
+                ts.forEach(new TableSelector.ForEachBlock<ResultSet>()
+                {
                     public void exec(ResultSet rs) throws SQLException
                     {
                         Container c = ContainerManager.getForId(rs.getString("container"));
@@ -516,6 +522,7 @@ public class SequenceAnalysisController extends SpringActionController
             {
                 msg.append("analyses " + StringUtils.join(keys, ", ") + "?  This will delete the analyses, plus all associated data.  This includes:<br>");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Output Files", keys, "analysis_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "analysis_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "analysis_id");
@@ -597,12 +604,13 @@ public class SequenceAnalysisController extends SpringActionController
         {
             URLHelper url = form.getReturnURLHelper();
             return url != null ? url :
-                _table.getGridURL(getContainer()) != null ? _table.getGridURL(getContainer()) :
-                getContainer().getStartURL(getUser());
+                    _table.getGridURL(getContainer()) != null ? _table.getGridURL(getContainer()) :
+                            getContainer().getStartURL(getUser());
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class) @CSRF
+    @RequiresPermissionClass(InsertPermission.class)
+    @CSRF
     public class RunVariantEvalAction extends ApiAction<RunVariantEvalForm>
     {
         public ApiResponse execute(RunVariantEvalForm form, BindException errors) throws Exception
@@ -650,7 +658,8 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class) @CSRF
+    @RequiresPermissionClass(InsertPermission.class)
+    @CSRF
     public class SaveAnalysisAsTemplateAction extends ApiAction<SaveAnalysisAsTemplateForm>
     {
         public ApiResponse execute(SaveAnalysisAsTemplateForm form, BindException errors) throws Exception
@@ -887,7 +896,8 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class) @CSRF
+    @RequiresPermissionClass(ReadPermission.class)
+    @CSRF
     public class AnalyzeBamAction extends ApiAction<AnalyzeBamForm>
     {
         public ApiResponse execute(AnalyzeBamForm form, BindException errors) throws Exception
@@ -1167,7 +1177,7 @@ public class SequenceAnalysisController extends SpringActionController
             Map<String, String> params = new HashMap<>();
             AvgBaseQualityAggregator avg = new AvgBaseQualityAggregator(log, bam.getFile(), ref.getFile());
             AASnpByReadAggregator aaAggregator = new AASnpByReadAggregator(log, ref.getFile(), avg, params);
-            bi.addAggregators(Collections.singletonList((AlignmentAggregator)aaAggregator));
+            bi.addAggregators(Collections.singletonList((AlignmentAggregator) aaAggregator));
 
             String refName = SequenceAnalysisManager.get().getNTRefForAARef(form.getRefAaId());
             bi.iterateReads(refName, form.getStart(), form.getEnd());
@@ -1338,6 +1348,7 @@ public class SequenceAnalysisController extends SpringActionController
         {
             _filenames = filename;
         }
+
         public String[] getFilenames()
         {
             return _filenames;
@@ -1521,7 +1532,7 @@ public class SequenceAnalysisController extends SpringActionController
             Map<String, Object> props = vc.toSVG(charts, form.getWidth(), form.getSectionHeight());
             if (props.containsKey("filePath"))
             {
-                File targetFile = new File((String)props.get("filePath"));
+                File targetFile = new File((String) props.get("filePath"));
                 if (targetFile.exists())
                 {
                     PageFlowUtil.streamFile(response, targetFile, false);
@@ -1597,7 +1608,8 @@ public class SequenceAnalysisController extends SpringActionController
     /**
      * Called from LABKEY.Pipeline.startAnalysis()
      */
-    @RequiresPermissionClass(InsertPermission.class) @CSRF
+    @RequiresPermissionClass(InsertPermission.class)
+    @CSRF
     public class StartAnalysisAction extends ApiAction<AnalyzeForm>
     {
         public ApiResponse execute(AnalyzeForm form, BindException errors) throws Exception
@@ -1723,7 +1735,10 @@ public class SequenceAnalysisController extends SpringActionController
 
     public static class AnalyzeForm extends PipelinePathForm
     {
-        public enum Params { path, taskId, file }
+        public enum Params
+        {
+            path, taskId, file
+        }
 
         private String taskId = "";
         private String protocolName = "";
@@ -1749,7 +1764,7 @@ public class SequenceAnalysisController extends SpringActionController
             fileInputStatus = new String[len + 1];
             for (int i = 0; i < len; i++)
                 fileInputStatus[i] = initStatusFile(protocol, dirData, dirAnalysis, getFile()[i], true);
-            fileInputStatus[len] = initStatusFile(protocol,  dirData, dirAnalysis, null, false);
+            fileInputStatus[len] = initStatusFile(protocol, dirData, dirAnalysis, null, false);
         }
 
         private String initStatusFile(AbstractFileAnalysisProtocol protocol, File dirData, File dirAnalysis,
@@ -1916,12 +1931,13 @@ public class SequenceAnalysisController extends SpringActionController
         if (!(taskPipeline instanceof FileAnalysisTaskPipeline))
             throw new NotFoundException("Task pipeline is not a FileAnalysisTaskPipeline: " + taskPipeline);
 
-        FileAnalysisTaskPipeline fatp = (FileAnalysisTaskPipeline)taskPipeline;
+        FileAnalysisTaskPipeline fatp = (FileAnalysisTaskPipeline) taskPipeline;
         //noinspection unchecked
         return provider.getProtocolFactory(fatp);
     }
 
-    @RequiresPermissionClass(InsertPermission.class) @CSRF
+    @RequiresPermissionClass(InsertPermission.class)
+    @CSRF
     public class CreateReferenceLibraryAction extends ApiAction<CreateReferenceLibraryForm>
     {
         public ApiResponse execute(CreateReferenceLibraryForm form, BindException errors) throws Exception
@@ -2223,6 +2239,8 @@ public class SequenceAnalysisController extends SpringActionController
                 {
                     File file = entry.getValue().getKey();
 
+                    //TODO: consider automatically processing certain types, such as gzipping VCFs, etc.
+
                     Map<String, Object> params = new CaseInsensitiveHashMap<>();
                     params.put("name", form.getName());
                     params.put("description", form.getDescription());
@@ -2478,7 +2496,7 @@ public class SequenceAnalysisController extends SpringActionController
                         if (seq != null)
                         {
                             int len = seq.length();
-                            for (int i=0; i<len; i+=lineLength)
+                            for (int i = 0; i < len; i += lineLength)
                             {
                                 response.getWriter().write(seq.substring(i, Math.min(len, i + lineLength)) + "\n");
                             }
@@ -2545,7 +2563,8 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class) @CSRF
+    @RequiresPermissionClass(AdminPermission.class)
+    @CSRF
     public class RecreateReferenceLibraryAction extends ApiAction<RecreateReferenceLibraryForm>
     {
         public ApiResponse execute(RecreateReferenceLibraryForm form, BindException errors)
@@ -2604,6 +2623,326 @@ public class SequenceAnalysisController extends SpringActionController
         public void setLibraryIds(int[] libraryIds)
         {
             _libraryIds = libraryIds;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    @CSRF
+    public class CheckFileStatusAction extends ApiAction<CheckFileStatusForm>
+    {
+        public ApiResponse execute(CheckFileStatusForm form, BindException errors)
+        {
+            Map<String, Object> ret = new HashMap<>();
+
+            if (StringUtils.isEmpty(form.getHandlerClass()))
+            {
+                errors.reject(ERROR_MSG, "Must provide the file handler");
+                return null;
+            }
+
+            SequenceFileHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass());
+
+            JSONArray arr = new JSONArray();
+            if (form.getDataIds() != null)
+            {
+                for (int dataId : form.getDataIds())
+                {
+                    arr.put(getDataJson(handler, dataId, null));
+                }
+            }
+
+            if (form.getOutputFileIds() != null)
+            {
+                TableInfo ti = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+                for (int outputFileId : form.getOutputFileIds())
+                {
+                    Map rowMap = new TableSelector(ti, PageFlowUtil.set("dataId", "library_id"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getObject(Map.class);
+                    if (rowMap == null || rowMap.get("dataid") == null)
+                    {
+                        JSONObject o = new JSONObject();
+                        o.put("outputFileId", outputFileId);
+                        o.put("fileExists", false);
+                        o.put("error", true);
+                        arr.put(o);
+                        continue;
+                    }
+
+                    Integer dataId = (Integer) rowMap.get("dataid");
+                    Integer libraryId = (Integer) rowMap.get("library_id");
+                    ExpData d = ExperimentService.get().getExpData(dataId);
+                    if (d == null)
+                    {
+                        JSONObject o = new JSONObject();
+                        o.put("outputFileId", outputFileId);
+                        o.put("fileExists", false);
+                        o.put("error", true);
+                        arr.put(o);
+                        continue;
+                    }
+
+                    JSONObject o = getDataJson(handler, d.getRowId(), outputFileId);
+                    o.put("libraryId", libraryId);
+                    arr.put(o);
+                }
+            }
+
+            ret.put("files", arr);
+
+            return new ApiSimpleResponse(ret);
+        }
+
+        private JSONObject getDataJson(SequenceFileHandler handler, int dataId, @Nullable Integer outputFileId)
+        {
+            JSONObject o = new JSONObject();
+            o.put("dataId", dataId);
+            o.put("outputFileId", outputFileId);
+
+            ExpData d = ExperimentService.get().getExpData(dataId);
+            if (d.getFile() == null || !d.getFile().exists())
+            {
+                o.put("fileExists", false);
+                o.put("error", true);
+                return o;
+            }
+
+            o.put("fileName", d.getFile().getName());
+            o.put("fileExists", true);
+            o.put("extension", FileUtil.getExtension(d.getFile()));
+
+            boolean canProcess = handler.canProcess(d.getFile());
+            o.put("canProcess", canProcess);
+
+            return o;
+        }
+    }
+
+    public static class CheckFileStatusForm
+    {
+        private String _handlerClass;
+        private int[] _outputFileIds;
+        private int[] _dataIds;
+
+        public String getHandlerClass()
+        {
+            return _handlerClass;
+        }
+
+        public void setHandlerClass(String handlerClass)
+        {
+            _handlerClass = handlerClass;
+        }
+
+        public int[] getOutputFileIds()
+        {
+            return _outputFileIds;
+        }
+
+        public void setOutputFileIds(int[] outputFileIds)
+        {
+            _outputFileIds = outputFileIds;
+        }
+
+        public int[] getDataIds()
+        {
+            return _dataIds;
+        }
+
+        public void setDataIds(int[] dataIds)
+        {
+            _dataIds = dataIds;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class OutputFileHandler extends RedirectAction<OutputFileHandlerForm>
+    {
+        private URLHelper _url;
+
+        public void validateCommand(OutputFileHandlerForm form, Errors errors)
+        {
+            if (form.getHandlerClass() == null || form.getOutputFileIds() == null)
+            {
+                errors.reject(ERROR_MSG, "Must provide the name of the file handler and list of files to process");
+            }
+
+            SequenceFileHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass());
+            if (handler == null)
+            {
+                errors.reject(ERROR_MSG, "Unable to find handler matching: " + form.getHandlerClass());
+            }
+
+            List<Integer> idList = new ArrayList<>();
+            for (String token : StringUtils.split(form.getOutputFileIds()))
+            {
+                idList.add(ConvertHelper.convert(token, Integer.class));
+            }
+
+            _url = handler.getSuccessURL(getContainer(), getUser(), idList);
+            if (_url == null)
+            {
+                errors.reject(ERROR_MSG, "This handler is not supported through this action.  This is probably an error by the software developer.");
+            }
+        }
+
+        public URLHelper getSuccessURL(OutputFileHandlerForm form)
+        {
+            return _url;
+        }
+
+        public boolean doAction(OutputFileHandlerForm form, BindException errors) throws Exception
+        {
+            return true;
+        }
+    }
+
+    public static class OutputFileHandlerForm
+    {
+        private String _handlerClass;
+        private String _outputFileIds;
+
+        public String getHandlerClass()
+        {
+            return _handlerClass;
+        }
+
+        public void setHandlerClass(String handlerClass)
+        {
+            _handlerClass = handlerClass;
+        }
+
+        public String getOutputFileIds()
+        {
+            return _outputFileIds;
+        }
+
+        public void setOutputFileIds(String outputFileIds)
+        {
+            _outputFileIds = outputFileIds;
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    public class ExportSequenceFilesAction extends ExportAction<ExportSequenceFilesForm>
+    {
+        public void export(ExportSequenceFilesForm form, HttpServletResponse response, BindException errors) throws Exception
+        {
+            if (form.getDataIds() == null || form.getDataIds().length == 0)
+            {
+                throw new NotFoundException("No files provided");
+            }
+
+            String filename = form.getZipFileName();
+            if (filename == null)
+            {
+                throw new NotFoundException("Must provide a filename for the archive");
+            }
+
+            if (!"zip".equalsIgnoreCase(FileUtil.getExtension(filename)))
+            {
+                filename += ".zip";
+            }
+
+            List<File> files = new ArrayList<>();
+            FileType bamFileType = new FileType("bam");
+            FileType fastaFileType = new FileType("fasta", FileType.gzSupportLevel.SUPPORT_GZ);
+            FileType gzFileType = new FileType("gz");
+            for (int id : form.getDataIds())
+            {
+                ExpData data = ExperimentService.get().getExpData(id);
+                if (data == null || !data.getContainer().hasPermission(getUser(), ReadPermission.class) || !data.getFile().exists())
+                {
+                    throw new NotFoundException("Could not find file " + id);
+                }
+
+                files.add(data.getFile());
+
+                if (bamFileType.isType(data.getFile()))
+                {
+                    File index = new File(data.getFile() + ".bai");
+                    if (index.exists())
+                    {
+                        files.add(index);
+                    }
+                }
+                else if (fastaFileType.isType(data.getFile()))
+                {
+                    File index = new File(data.getFile() + ".fai");
+                    if (index.exists())
+                    {
+                        files.add(index);
+                    }
+                    else
+                    {
+                        if (gzFileType.isType(data.getFile()))
+                        {
+                            File compressedFileIndex = new File(data.getFile().getParentFile(), FileUtil.getBaseName(data.getFile()) + ".fai");
+                            if (compressedFileIndex.exists())
+                            {
+                                files.add(compressedFileIndex);
+                            }
+                        }
+                    }
+                }
+            }
+
+            PageFlowUtil.prepareResponseForFile(response, Collections.<String, String>emptyMap(), filename, true);
+
+            try (ZipOutputStream zOut = new ZipOutputStream(response.getOutputStream()))
+            {
+                for (File f : files)
+                {
+                    if (!f.exists())
+                    {
+                        throw new NotFoundException("File " + f.getPath() + " does not exist");
+                    }
+
+                    ZipEntry fileEntry = new ZipEntry(f.getName());
+                    zOut.putNextEntry(fileEntry);
+
+                    try (FileInputStream in = new FileInputStream(f))
+                    {
+                        IOUtils.copy(new FileInputStream(f), zOut);
+                        zOut.closeEntry();
+                    }
+                    catch (Exception e)
+                    {
+                        // insert the stack trace into the zip file
+                        ZipEntry errorEntry = new ZipEntry("error.log");
+                        zOut.putNextEntry(errorEntry);
+
+                        final PrintStream ps = new PrintStream(zOut, true);
+                        ps.println("Failed to complete export of the file: ");
+                        e.printStackTrace(ps);
+                        zOut.closeEntry();
+                    }
+                }
+            }
+        }
+    }
+
+    public static class ExportSequenceFilesForm
+    {
+        private String _zipFileName;
+        private int[] _dataIds;
+
+        public String getZipFileName()
+        {
+            return _zipFileName;
+        }
+
+        public void setZipFileName(String zipFileName)
+        {
+            _zipFileName = zipFileName;
+        }
+
+        public int[] getDataIds()
+        {
+            return _dataIds;
+        }
+
+        public void setDataIds(int[] dataIds)
+        {
+            _dataIds = dataIds;
         }
     }
 }

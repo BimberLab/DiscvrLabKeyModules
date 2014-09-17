@@ -13,21 +13,8 @@ import java.util.List;
  */
 public class AnalysisOutputImpl extends DefaultPipelineStepOutput implements AnalysisStep.Output
 {
-    private List<File> _vcfFiles = new ArrayList<>();
-
     public AnalysisOutputImpl()
     {
 
-    }
-
-    public void addVcfFile(File file)
-    {
-        _vcfFiles.add(file);
-    }
-
-    @Override
-    public List<File> getVcfFiles()
-    {
-        return Collections.unmodifiableList(_vcfFiles);
     }
 }

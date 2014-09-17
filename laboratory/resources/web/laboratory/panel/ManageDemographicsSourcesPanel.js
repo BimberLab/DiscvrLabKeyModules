@@ -195,7 +195,9 @@ Ext4.define('Laboratory.panel.ManageDemographicsSourcesPanel', {
                         }
                     },
                     loadColumns: function(qd){
-                        this.store.removeAll();
+                        if (this.store) {
+                            this.store.removeAll();
+                        }
                         this.reset();
                         this.setDisabled(true);
 
@@ -208,9 +210,12 @@ Ext4.define('Laboratory.panel.ManageDemographicsSourcesPanel', {
                             containerPath: panel.down('#containerId').getValue(),
                             schemaName: panel.down('#schemaName').getValue(),
                             queryName: qd.name,
-
                             scope: this,
                             success: function(results){
+                                if (!this.store){
+                                    return;
+                                }
+
                                 Ext4.each(results.columns, function(col){
                                     if (col.jsonType == 'string'){
                                         this.store.add(LDK.StoreUtils.createModelInstance(this.store, {

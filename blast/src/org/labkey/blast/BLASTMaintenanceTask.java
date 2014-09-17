@@ -1,6 +1,7 @@
 package org.labkey.blast;
 
 import org.apache.log4j.Logger;
+import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
@@ -9,6 +10,8 @@ import org.labkey.api.data.Selector;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
@@ -64,7 +67,7 @@ public class BLASTMaintenanceTask implements SystemMaintenance.MaintenanceTask
         TableInfo blastJobs = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_BLAST_JOBS);
         TableSelector ts = new TableSelector(blastJobs);
         List<BlastJob> jobs = ts.getArrayList(BlastJob.class);
-        Set<String> allowablePaths = new HashSet<>();
+        Set<String> allowablePaths = new CaseInsensitiveHashSet();
         for (BlastJob j : jobs)
         {
             File output = j.getExpectedOutputFile();
@@ -78,7 +81,7 @@ public class BLASTMaintenanceTask implements SystemMaintenance.MaintenanceTask
             }
             else
             {
-                allowablePaths.add(output.getPath());
+                allowablePaths.add(output.getAbsolutePath());
             }
 
             File input = j.getExpectedInputFile();
@@ -92,7 +95,7 @@ public class BLASTMaintenanceTask implements SystemMaintenance.MaintenanceTask
             }
             else
             {
-                allowablePaths.add(input.getPath());
+                allowablePaths.add(input.getAbsolutePath());
             }
 
             File log = new File(j.getOutputDir(), "blast-" + j.getObjectid() + ".log");
@@ -106,13 +109,13 @@ public class BLASTMaintenanceTask implements SystemMaintenance.MaintenanceTask
             }
             else
             {
-                allowablePaths.add(log.getPath());
+                allowablePaths.add(log.getAbsolutePath());
             }
 
-            //TODO: now look for orphan files under the file root
+            //now look for orphan files under the file root
             if (!allowablePaths.isEmpty())
             {
-
+                processContainer(ContainerManager.getRoot(), allowablePaths);
             }
         }
 
@@ -136,6 +139,30 @@ public class BLASTMaintenanceTask implements SystemMaintenance.MaintenanceTask
                         f.delete();
                     }
                 }
+            }
+        }
+    }
+
+    private void processContainer(Container c, Set<String> allowablePaths)
+    {
+        File outputDir = BLASTManager.get().getBlastRoot(c, false);
+        if (outputDir != null && outputDir.exists())
+        {
+            for (File f : outputDir.listFiles())
+            {
+                if (!allowablePaths.contains(f.getAbsolutePath()))
+                {
+                    _log.info("deleting BLAST file: " + f.getPath());
+                }
+            }
+        }
+
+        List<Container> children = c.getChildren();
+        if (!children.isEmpty())
+        {
+            for (Container child : children)
+            {
+                processContainer(child, allowablePaths);
             }
         }
     }

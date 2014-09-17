@@ -1,6 +1,8 @@
 package org.labkey.sequenceanalysis.api.pipeline;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.util.Pair;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 
 import java.io.File;
 import java.util.List;
@@ -46,4 +48,41 @@ public interface PipelineStepOutput
      */
     public List<File> getDeferredDeleteIntermediateFiles();
 
+    public List<SequenceOutput> getSequenceOutputs();
+
+    public static class SequenceOutput
+    {
+        private File _file;
+        private String _label;
+        private String _category;
+        private ReadsetModel _rs;
+
+        public SequenceOutput(File file, String label, String category, @Nullable ReadsetModel rs)
+        {
+            _file = file;
+            _label = label;
+            _category = category;
+            _rs = rs;
+        }
+
+        public File getFile()
+        {
+            return _file;
+        }
+
+        public String getLabel()
+        {
+            return _label;
+        }
+
+        public String getCategory()
+        {
+            return _category;
+        }
+
+        public ReadsetModel getReadset()
+        {
+            return _rs;
+        }
+    }
 }

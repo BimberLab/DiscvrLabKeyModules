@@ -1,5 +1,7 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import htsjdk.samtools.util.FastqQualityFormat;
+import htsjdk.samtools.util.QualityEncodingDetector;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -17,7 +19,7 @@ import java.util.List;
  */
 public class FastqToSamWrapper extends PicardWrapper
 {
-    private FastqUtils.FASTQ_ENCODING _fastqEncoding = null;
+    private FastqQualityFormat _fastqEncoding = null;
 
     public FastqToSamWrapper(@Nullable Logger logger)
     {
@@ -55,18 +57,18 @@ public class FastqToSamWrapper extends PicardWrapper
         if (file2 != null)
             params.add("FASTQ2=" + file2.getPath());
 
-        FastqUtils.FASTQ_ENCODING encoding = _fastqEncoding;
+        FastqQualityFormat encoding = _fastqEncoding;
         if (encoding == null)
         {
             encoding = FastqUtils.inferFastqEncoding(file);
             if (encoding != null)
             {
-                getLogger().info("\tInferred FASTQ encoding of file " + file.getName() + " was: " + encoding);
+                getLogger().info("\tInferred FASTQ encoding of file " + file.getName() + " was: " + encoding.name());
             }
             else
             {
-                encoding = FastqUtils.FASTQ_ENCODING.Illumina;
-                getLogger().warn("\tUnable to infer FASTQ encoding for file: " + file.getPath() + ", defaulting to " + encoding);
+                encoding = FastqQualityFormat.Standard;
+                getLogger().warn("\tUnable to infer FASTQ encoding for file: " + file.getPath() + ", defaulting to " + encoding.name());
             }
         }
 
@@ -82,8 +84,8 @@ public class FastqToSamWrapper extends PicardWrapper
         return FileUtil.getBaseName(file) + ".sam";
     }
 
-    public void setFastqEncoding(FastqUtils.FASTQ_ENCODING fastqEncoding)
-    {
-        _fastqEncoding = fastqEncoding;
-    }
+//    public void setFastqEncoding(FastqUtils.FASTQ_ENCODING fastqEncoding)
+//    {
+//        _fastqEncoding = fastqEncoding;
+//    }
 }

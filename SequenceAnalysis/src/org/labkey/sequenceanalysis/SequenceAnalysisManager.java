@@ -16,6 +16,7 @@
 package org.labkey.sequenceanalysis;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
@@ -49,6 +50,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
+import org.labkey.api.sequenceanalysis.SequenceFileHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
@@ -58,6 +60,7 @@ import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -188,6 +191,7 @@ public class SequenceAnalysisManager
 
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION + " WHERE analysis_id = ?", rowId));
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY + " WHERE analysis_id = ?", rowId));
+                new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " WHERE analysis_id = ?", rowId));
 
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON + " WHERE analysis_id = ?", rowId));
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS + " WHERE analysis_id = ?", rowId));
@@ -280,6 +284,16 @@ public class SequenceAnalysisManager
         }
     }
 
+    public static File getHtsJdkJar()
+    {
+        File samJar = new File(ModuleLoader.getInstance().getWebappDir(), "WEB-INF/lib");
+        samJar = new File(samJar, "htsjdk-1.118.jar");
+        if (!samJar.exists())
+            throw new RuntimeException("Not found: " + samJar.getPath());
+
+        return samJar;
+    }
+
     public static File getSamJar()
     {
         File samJar = new File(ModuleLoader.getInstance().getWebappDir(), "WEB-INF/lib");
@@ -327,6 +341,31 @@ public class SequenceAnalysisManager
             filter.addWhereClause(sql, new Object[]{keyValue}, FieldKey.fromParts(keyField));
         }
         Table.delete(table, filter);
+    }
+
+    public static void deleteReferenceLibrary(int userId, String containerId, Integer rowId) throws SQLException, IOException
+    {
+        Container c = ContainerManager.getForId(containerId);
+        if (c == null)
+        {
+            return;
+
+        }
+
+        cascadeDelete(userId, containerId, "sequenceanalysis", "reference_library_members", "library_id", rowId);
+        cascadeDelete(userId, containerId, "sequenceanalysis", "reference_library_tracks", "library_id", rowId);
+
+        //then delete files
+        File dir = SequenceAnalysisManager.get().getReferenceLibraryDir(c);
+        if (dir != null && dir.exists())
+        {
+            File libraryDir = new File(dir, rowId.toString());
+            if (libraryDir != null && libraryDir.exists())
+            {
+                _log.info("deleting reference library dir: " + libraryDir.getPath());
+                FileUtils.deleteDirectory(libraryDir);
+            }
+        }
     }
 
     public File findResource(String path) throws FileNotFoundException
@@ -472,5 +511,34 @@ public class SequenceAnalysisManager
         map.put("modified", new Date());
         map.put("modifiedby", u.getUserId());
         Table.insert(u, trackTable, map);
+    }
+
+    public SequenceFileHandler getFileHandler(String handlerClass)
+    {
+        if (StringUtils.isEmpty(handlerClass))
+        {
+            return null;
+        }
+
+        for (SequenceFileHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers())
+        {
+            if (handler.getClass().getName().equals(handlerClass))
+            {
+                return handler;
+            }
+        }
+
+        return null;
+    }
+
+    public File getReferenceLibraryDir(Container c)
+    {
+        File pipelineDir = PipelineService.get().getPipelineRootSetting(c).getRootPath();
+        if (pipelineDir == null)
+        {
+            return null;
+        }
+
+        return new File(pipelineDir, ".referenceLibraries");
     }
 }

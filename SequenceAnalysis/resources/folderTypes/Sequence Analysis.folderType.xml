@@ -1,22 +1,117 @@
 <folderType xmlns="http://labkey.org/data/xml/folderType">
     <name>Sequence Analysis</name>
     <description>The default folder layout for the sequence analysis module</description>
-    <requiredWebParts>
-        <!--<webPart>-->
-            <!--<name>Workbook Description</name>-->
-            <!--<location>body</location>-->
-        <!--</webPart>-->
-    </requiredWebParts>
-    <preferredWebParts>
-        <webPart>
-            <name>SequenceAnalysis</name>
-            <location>body</location>
-        </webPart>
-        <webPart>
-            <name>Lab Tools</name>
-            <location>right</location>
-        </webPart>
-    </preferredWebParts>
+    <folderTabs>
+        <folderTab>
+            <name>overview</name>
+            <caption>Sequence Data</caption>
+            <selectors>
+                <selector>
+                    <controller>sequenceanalysis</controller>
+                </selector>
+            </selectors>
+            <requiredWebParts>
+
+            </requiredWebParts>
+            <preferredWebParts>
+                <webPart>
+                    <name>SequenceAnalysis</name>
+                    <location>body</location>
+                </webPart>
+                <webPart>
+                    <name>Lab Tools</name>
+                    <location>right</location>
+                </webPart>
+            </preferredWebParts>
+        </folderTab>
+        <folderTab>
+            <name>general</name>
+            <caption>Lab Data</caption>
+            <selectors>
+            </selectors>
+            <requiredWebParts>
+
+            </requiredWebParts>
+            <preferredWebParts>
+                <webPart>
+                    <name>Laboratory Home</name>
+                    <location>body</location>
+                </webPart>
+                <webPart>
+                    <name>Lab Tools</name>
+                    <location>right</location>
+                </webPart>
+            </preferredWebParts>
+        </folderTab>
+        <folderTab>
+            <name>workbooks</name>
+            <caption>Workbooks</caption>
+            <selectors>
+                <selector>
+                    <view>importData</view>
+                </selector>
+            </selectors>
+            <requiredWebParts>
+            </requiredWebParts>
+            <preferredWebParts>
+                <webPart>
+                    <name>Lab Workbooks</name>
+                    <location>body</location>
+                </webPart>
+                <webPart>
+                    <name>Lab Tools</name>
+                    <location>right</location>
+                </webPart>
+            </preferredWebParts>
+        </folderTab>
+        <folderTab>
+            <name>reports</name>
+            <caption>Reports</caption>
+            <selectors>
+                <selector>
+                    <controller>assay</controller>
+                </selector>
+                <selector>
+                    <view>executeQuery</view>
+                </selector>
+                <selector>
+                    <view>dataBrowser</view>
+                </selector>
+                <selector>
+                    <controller>reports</controller>
+                </selector>
+            </selectors>
+            <requiredWebParts>
+            </requiredWebParts>
+            <preferredWebParts>
+                <webPart>
+                    <name>Lab Reports</name>
+                    <location>body</location>
+                </webPart>
+                <webPart>
+                    <name>Lab Tools</name>
+                    <location>right</location>
+                </webPart>
+            </preferredWebParts>
+        </folderTab>
+        <folderTab>
+            <name>dataBrowser</name>
+            <caption>Data Browser</caption>
+            <selectors>
+                <selector>
+                    <view>dataBrowser</view>
+                </selector>
+            </selectors>
+            <requiredWebParts>
+            </requiredWebParts>
+            <preferredWebParts>
+                <webPart>
+                    <name>Laboratory Data Browser</name>
+                    <location>body</location>
+                </webPart>
+            </preferredWebParts>
+        </folderTab>
+    </folderTabs>
     <modules>
         <moduleName>SequenceAnalysis</moduleName>
         <moduleName>Laboratory</moduleName>
@@ -25,6 +120,6 @@
         <moduleName>Core</moduleName>
     </modules>
     <defaultModule>Core</defaultModule>
-    <!--<workbookType>true</workbookType>-->
+    <forceAssayUploadIntoWorkbooks>true</forceAssayUploadIntoWorkbooks>
     <folderIconPath>/sequenceanalysis/icons/dna_folder.png</folderIconPath>
 </folderType>

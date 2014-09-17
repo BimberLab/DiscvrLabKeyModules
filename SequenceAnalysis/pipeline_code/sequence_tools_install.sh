@@ -113,6 +113,12 @@ if [ $(which yum) ]; then
     yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion cpan git cmake liblzf-devel
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
+
+    #this is a possible setup for R
+    #add-apt-repository "deb http://cran.cnr.berkeley.edu/bin/linux/ubuntu/ precise/"
+    #gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9 or gpg --hkp://keyserver keyserver.ubuntu.com:80 --recv-key E084DAB9
+    #gpg -a --export E084DAB9 | sudo apt-key add -
+
     apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake
 else
     echo "No known package manager present, aborting"
@@ -321,6 +327,12 @@ then
     ln -s $LKSRC_DIR/bismark_v0.12.5/bismark_methylation_extractor $LKTOOLS_DIR
     ln -s $LKSRC_DIR/bismark_v0.12.5/coverage2cytosine $LKTOOLS_DIR
     ln -s $LKSRC_DIR/bismark_v0.12.5/deduplicate_bismark $LKTOOLS_DIR
+
+    if [ $(which apt-get) ]; then
+        apt-get -q -y install libgd-graph-perl
+    elif [ $(which yum) ]; then
+        yum -y install perl-GD perl-GDGraph
+    fi
 else
     echo "Already installed"
 fi
@@ -414,6 +426,34 @@ then
     make
     ln -s $LKSRC_DIR/tabix-0.2.6/tabix $LKTOOLS_DIR
     ln -s $LKSRC_DIR/tabix-0.2.6/bgzip $LKTOOLS_DIR
+else
+    echo "Already installed"
+fi
+
+#
+#bedtools
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install bedtools"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/bedtools/bedtools || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf tabix-0.2.6*
+    rm -Rf $LKTOOLS_DIR/bedtools
+
+    wget https://github.com/arq5x/bedtools2/releases/download/v2.20.1/bedtools-2.20.1.tar.gz
+    gunzip bedtools-2.20.1.tar.gz
+    tar -xf bedtools-2.20.1.tar
+    echo "Compressing TAR"
+    gzip bedtools-2.20.1.tar
+    cd bedtools2-2.20.1
+    make
+    ln -s $LKSRC_DIR/bedtools2-2.20.1/bin $LKTOOLS_DIR/bedtools
 else
     echo "Already installed"
 fi
@@ -604,7 +644,7 @@ echo "Install bowtie"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/bowtie || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/bowtie || ! -e ${LKTOOLS_DIR}/bowtie-build || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
 
@@ -634,7 +674,7 @@ echo "Install cutadapt"
 echo ""
 cd $LKSRC_DIR
 
-if [[ $(which cutadapt) || ! -z $FORCE_REINSTALL ]];
+if [[ -z $(which cutadapt) || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
 

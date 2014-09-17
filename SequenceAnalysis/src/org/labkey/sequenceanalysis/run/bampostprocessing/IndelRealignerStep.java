@@ -10,6 +10,7 @@ import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepOutput;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.run.util.IndelRealignerWrapper;
 
@@ -42,17 +43,38 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
     }
 
     @Override
-    public Output processBam(ReadsetModel rs, File inputBam, File referenceFasta, File outputDirectory) throws PipelineJobException
+    public Output processBam(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException
     {
         BamProcessingOutputImpl output = new BamProcessingOutputImpl();
         getWrapper().setOutputDir(outputDirectory);
 
-        File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".realigned.bam");
+        File dictionary = new File(referenceGenome.getFastaFile().getParentFile(), FileUtil.getBaseName(referenceGenome.getFastaFile().getName()) + ".dict");
+        boolean dictionaryExists = dictionary.exists();
+        getPipelineCtx().getLogger().debug("dict exists: " + dictionaryExists + ", " + dictionary.getPath());
 
+        File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".realigned.bam");
+        output.setBAM(getWrapper().execute(inputBam, outputBam, referenceGenome.getFastaFile(), null));
         output.addIntermediateFile(outputBam);
-        output.addIntermediateFile(new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".realigned.bai"));
         output.addIntermediateFile(getWrapper().getExpectedIntervalsFile(inputBam), "Realigner Intervals File");
-        output.setBAM(getWrapper().execute(inputBam, outputBam, referenceFasta, null));
+
+        if (!dictionaryExists && dictionary.exists())
+        {
+            output.addIntermediateFile(dictionary);
+        }
+
+        //note: we might sort the input
+        File sortedBam = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + ".sorted.bam");
+        if (sortedBam.exists())
+        {
+            getPipelineCtx().getLogger().debug("sorted file exists: " + sortedBam.getPath());
+            output.addIntermediateFile(sortedBam);
+            output.addIntermediateFile(new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".realigned.bai"));
+        }
+        else
+        {
+            getPipelineCtx().getLogger().debug("sorted file does not exist: " + sortedBam.getPath());
+            output.addIntermediateFile(new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".realigned.bai"));
+        }
 
         return output;
     }

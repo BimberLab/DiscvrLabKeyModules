@@ -46,6 +46,7 @@ public class BlastTask extends PipelineJob.Task<BlastTask.Factory>
         public Factory()
         {
             super(BlastTask.class);
+            setLocation("webserver-high-priority");
         }
 
         public List<FileType> getInputTypes()

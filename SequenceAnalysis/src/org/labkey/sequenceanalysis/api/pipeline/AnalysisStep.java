@@ -22,15 +22,19 @@ public interface AnalysisStep extends PipelineStep
     public void init(List<AnalysisModel> models) throws PipelineJobException;
 
     /**
-     * @return
-     * @throws PipelineJobException
+     * Will perform analysis steps on the remote pipeline server
      */
-    public Output performAnalysisPerSample(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException;
+    public Output performAnalysisPerSampleRemote(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException;
 
-    public void performAnalysisOnAll(List<Output> previousSteps);
+    /**
+     * Will perform analysis steps on the local webserver
+     */
+    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException;
 
-    public interface Output
+    public void performAnalysisOnAll(List<AnalysisModel> analysisModels) throws PipelineJobException;
+
+    public interface Output extends PipelineStepOutput
     {
-        public List<File> getVcfFiles();
+
     }
 }

@@ -1,10 +1,12 @@
 package org.labkey.sequenceanalysis;
 
+import com.google.common.collect.Sets;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.fastq.FastqRecord;
+import org.apache.commons.collections15.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.lang3.StringUtils;
@@ -326,8 +328,9 @@ public class TestHelper
                 }
             };
 
-            Collection<File> files = FileUtils.listFilesAndDirs(basedir, filter, filter);
-            if (expectedOutputs.size() != (files.size() - 1))
+            Set<File> files = new HashSet<>(FileUtils.listFilesAndDirs(basedir, filter, filter));
+            expectedOutputs.add(basedir);
+            if (expectedOutputs.size() != files.size())
             {
                 for (File f : files)
                 {
@@ -337,7 +340,24 @@ public class TestHelper
                     }
                 }
             }
-            Assert.assertEquals("Incorrect number of outputs created", expectedOutputs.size(), files.size() - 1);
+
+            Collection<File> diff = CollectionUtils.disjunction(expectedOutputs, files);
+            if (!diff.isEmpty())
+            {
+                for (File f: diff)
+                {
+                    if (expectedOutputs.contains(f))
+                    {
+                        _log.error("missing file: " + f.getPath());
+                    }
+                    else
+                    {
+                        _log.error("unexpected output found: " + f.getPath());
+                    }
+                }
+            }
+
+            Assert.assertEquals("Incorrect number of outputs created", expectedOutputs.size(), files.size());
         }
 
         protected PipelineJob createPipelineJob(String protocolName, String taskId, String config, String[] files) throws Exception
@@ -521,7 +541,8 @@ public class TestHelper
                 {
                     if (_pipelineRoot.exists())
                     {
-                        for (File f : _pipelineRoot.listFiles())
+                        File[] contents = _pipelineRoot.listFiles();
+                        for (File f : contents)
                         {
                             if (f.exists())
                             {
@@ -1062,6 +1083,7 @@ public class TestHelper
                 json.put("platform", m.getPlatform());
                 json.put("application", m.getApplication());
                 json.put("inputMaterial", m.getInputMaterial());
+                json.put("sampletype", m.getSampleType());
                 json.put("sampleid", m.getSampleId());
                 json.put("readset", m.getRowId());
                 json.put("readsetname", m.getName());
@@ -1132,7 +1154,8 @@ public class TestHelper
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
             config.put("alignment", "Mosaik");
-            config.put("analyses", "SBT;ViralAnalysis");
+            config.put("analysis", "SBT;ViralAnalysis;AlignmentMetricsAnalysis");
+            config.put("analysis.AlignmentMetricsAnalysis.windowSize", 1000);
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
@@ -1181,6 +1204,12 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaikreads"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.stat"));
 
+            expectedOutputs.add(new File(basedir, "totalAlignments.bed"));
+            expectedOutputs.add(new File(basedir, "totalReads.bed"));
+            expectedOutputs.add(new File(basedir, "duplicateReads.bed"));
+            expectedOutputs.add(new File(basedir, "notPrimaryAlignments.bed"));
+            expectedOutputs.add(new File(basedir, "avgMappingQual.bed"));
+
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
             validateAlignment(bam1, 338, 70);
@@ -1219,6 +1248,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.dict"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.mosaik"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
@@ -1226,26 +1256,26 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaikreads"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.stat"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.bam"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.bam"));
 
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.bam"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.bam"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.bam"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.bam"));
 
             if (isGATKPresent())
             {
-                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.intervals"));
-                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.bam"));
-                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.bai"));
-                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
-                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.metrics"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.intervals"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.sorted.bam"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bam"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bai"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.realigned.metrics"));
             }
             else
             {
-                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.bam"));
-                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.markduplicates.bam"));
-                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.sorted.readgroups.calmd.cleaned.fixmate.metrics"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.bam"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.bam"));
+                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.metrics"));
             }
             
             File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
@@ -1257,25 +1287,25 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaikreads"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.stat"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.bam"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.bam"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.bam"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.bam"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.bam"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.bam"));
 
             if (isGATKPresent())
             {
-                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.intervals"));
-                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.bam"));
-                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.bai"));
-                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
-                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.metrics"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.intervals"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.sorted.bam"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bam"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bai"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.metrics"));
             }
             else
             {
-                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.bam"));
-                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.markduplicates.bam"));
-                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.sorted.readgroups.calmd.cleaned.fixmate.metrics"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.bam"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.bam"));
+                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.metrics"));
             }
             
             File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
@@ -1287,25 +1317,25 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaikreads"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.stat"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.bam"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.bam"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.bam"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.bam"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.bam"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.bam"));
 
             if (isGATKPresent())
             {
-                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.intervals"));
-                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.bam"));
-                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.bai"));
-                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
-                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.realigned.metrics"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.intervals"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.sorted.bam"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bam"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bai"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.metrics"));
             }
             else
             {
-                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.metrics"));
-                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.bam"));
-                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.sorted.readgroups.calmd.cleaned.fixmate.markduplicates.bam"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.metrics"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.bam"));
+                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.bam"));
             }
 
             File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
@@ -1383,32 +1413,27 @@ public class TestHelper
 
         private void validateAlignment(File bam, int expectedAligned, int expectedUnaligned)
         {
-            SAMFileReader reader = null;
-            try
+            try (SAMFileReader reader = new SAMFileReader(bam))
             {
-                reader = new SAMFileReader(bam);
                 reader.setValidationStringency(ValidationStringency.SILENT);
 
-                SAMRecordIterator it = reader.iterator();
-                int aligned = 0;
-                int unaligned = 0;
-
-                while (it.hasNext())
+                try (SAMRecordIterator it = reader.iterator())
                 {
-                    SAMRecord rec = it.next();
-                    if (rec.getReadUnmappedFlag())
-                        unaligned++;
-                    else
-                        aligned++;
-                }
+                    int aligned = 0;
+                    int unaligned = 0;
 
-                Assert.assertEquals("Incorrect aligned count for BAM: " + bam.getPath(), expectedAligned, aligned);
-                Assert.assertEquals("Incorrect unaligned count for BAM: " + bam.getPath(), expectedUnaligned, unaligned);
-            }
-            finally
-            {
-                if (reader != null)
-                    reader.close();
+                    while (it.hasNext())
+                    {
+                        SAMRecord rec = it.next();
+                        if (rec.getReadUnmappedFlag())
+                            unaligned++;
+                        else
+                            aligned++;
+                    }
+
+                    Assert.assertEquals("Incorrect aligned count for BAM: " + bam.getPath(), expectedAligned, aligned);
+                    Assert.assertEquals("Incorrect unaligned count for BAM: " + bam.getPath(), expectedUnaligned, unaligned);
+                }
             }
         }
 

@@ -121,6 +121,9 @@ public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask
                 throw new PipelineJobException("Reference file does not exist: " + refFasta.getPath());
             }
 
+            assert getJob() instanceof SequenceAnalysisJob;
+            ((SequenceAnalysisJob)getJob()).setReferenceGenome(output.getReferenceGenome());
+
             getHelper().getFileManager().addStepOutputs(action, output);
             getHelper().getFileManager().cleanup();
 

@@ -50,12 +50,10 @@
                 var errors = [];
                 this.dataIds = [];
                 store.each(function(r){
-                    console.log(r.data);
-
                     if (!r.get('dataid/FileExists')){
                         errors.push('File does not exist: ' + r.get('dataid/Name'));
                     }
-                    else if (!r.get('dataid/FileExtension') || ['vcf', 'gvcf'].indexOf(!r.get('dataid/FileExtension')) == -1){
+                    else if (!r.get('dataid/FileExtension') || ['vcf', 'gvcf'].indexOf(r.get('dataid/FileExtension')) == -1){
                         errors.push('Only VCF/gVCF files are supported.  This is determined by file extension.  Skipping: ' + r.get('dataid/Name'));
                     }
                     else {
@@ -143,7 +141,7 @@
         });
 
         Ext4.create('SequenceAnalysis.panel.VariantComparisonPanel', {
-            fileIds: LABKEY.ActionURL.getParameterArray("fileIds") ? LABKEY.ActionURL.getParameterArray("fileIds").join(';').split(';') : []
+            fileIds: LABKEY.ActionURL.getParameterArray("outputFileIds") ? LABKEY.ActionURL.getParameterArray("outputFileIds").join(';').split(';') : []
         }).render(webpart.wrapperDivId);
     });
 

@@ -67,6 +67,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         public Factory()
         {
             super(JBrowseSessionTask.class);
+            setLocation("webserver-high-priority");
         }
 
         public List<FileType> getInputTypes()
@@ -119,8 +120,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
 
     private void recreateDatabase(String databaseGuid) throws PipelineJobException
     {
-        JBrowseRoot root = JBrowseRoot.getRoot();
-        root.setLogger(getJob().getLogger());
+        JBrowseRoot root = new JBrowseRoot(getJob().getLogger());
 
         try
         {
@@ -140,19 +140,25 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         List<JsonFile> jsonFiles = ts.getArrayList(JsonFile.class);
         try
         {
+            JBrowseRoot root = new JBrowseRoot(getJob().getLogger());
+            getJob().getLogger().info("total files to reprocess: " + jsonFiles.size());
             for (JsonFile f : jsonFiles)
             {
                 if (f.getSequenceId() != null)
                 {
-                    JBrowseManager.get().preprareReferenceJson(getJob().getContainer(), getJob().getUser(), f.getSequenceId(), getJob().getLogger(), true);
+                    root.prepareRefSeq(getJob().getContainer(), getJob().getUser(), f.getSequenceId(), true);
                 }
                 else if (f.getTrackId() != null)
                 {
-                    JBrowseManager.get().preprareFeatureTrackJson(getJob().getContainer(), getJob().getUser(), f.getTrackId(), getJob().getLogger(), true);
+                    root.prepareFeatureTrack(getJob().getContainer(), getJob().getUser(), f.getTrackId(), null, true);
+                }
+                else if (f.getOutputFile() != null)
+                {
+                    root.prepareOutputFile(getJob().getContainer(), getJob().getUser(), f.getOutputFile(), true);
                 }
                 else
                 {
-                    //nothing to do?
+                    getJob().getLogger().info("no need to reprocess jsonfile: " + f.getObjectId());
                 }
             }
 
@@ -182,6 +188,8 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
 
         try
         {
+            JBrowseRoot root = new JBrowseRoot(getJob().getLogger());
+
             //first create the database record
             if (getPipelineJob().getMode() == JBrowseSessionPipelineJob.Mode.CreateNew)
             {
@@ -204,46 +212,9 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
             if (getPipelineJob().getTrackIds() != null)
                 trackIdList.addAll(getPipelineJob().getTrackIds());
 
-            List<Integer> dataIdList = new ArrayList<>();
-            if (getPipelineJob().getDataIds() != null)
-                dataIdList.addAll(getPipelineJob().getDataIds());
-
-            List<Integer> ntIdList = new ArrayList<>();
-            if (getPipelineJob().getLibraryId() != null)
-            {
-                TableInfo refLibMembers = DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("reference_library_members");
-                TableSelector ts = new TableSelector(refLibMembers, Collections.singleton("ref_nt_id"), new SimpleFilter(FieldKey.fromString("library_id"), getPipelineJob().getLibraryId(), CompareType.EQUAL), null);
-                if (ts.exists())
-                {
-                    ntIdList.addAll(ts.getArrayList(Integer.class));
-                }
-
-                TableInfo refLibTracks = DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("reference_library_tracks");
-                TableSelector ts2 = new TableSelector(refLibTracks, Collections.singleton("rowid"), new SimpleFilter(FieldKey.fromString("library_id"), getPipelineJob().getLibraryId(), CompareType.EQUAL), null);
-                if (ts2.exists())
-                {
-                    trackIdList.addAll(ts2.getArrayList(Integer.class));
-                }
-            }
-
-            if (!ntIdList.isEmpty())
-            {
-                getJob().getLogger().info("processing: " + ntIdList.size() + " reference sequences");
-
-                //find any existing database_member records for these sequences so we dont duplicate
-                for (Integer ntId : ntIdList)
-                {
-                    JsonFile json = JBrowseManager.get().preprareReferenceJson(getJob().getContainer(), getJob().getUser(), ntId, getJob().getLogger(), false);
-                    if (json == null || !json.getBaseDir().exists() || json.getBaseDir().listFiles().length == 0)
-                    {
-                        getJob().getLogger().error("sequence did not appear to process correctly, skipping: " + ntId);
-                    }
-                }
-            }
-            else
-            {
-                getJob().getLogger().error("there are no reference sequences to process");
-            }
+            List<Integer> outputFileIdList = new ArrayList<>();
+            if (getPipelineJob().getOutputFileIds() != null)
+                outputFileIdList.addAll(getPipelineJob().getOutputFileIds());
 
             if (!trackIdList.isEmpty())
             {
@@ -258,7 +229,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
 
                 for (Integer trackId : trackIdList)
                 {
-                    JsonFile json = JBrowseManager.get().preprareFeatureTrackJson(getJob().getContainer(), getJob().getUser(), trackId, getJob().getLogger(), false);
+                    JsonFile json = root.prepareFeatureTrack(getJob().getContainer(), getJob().getUser(), trackId, null, false);
                     //this could indicate a non-supported filetype
                     if (json == null)
                         continue;
@@ -295,27 +266,32 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
             }
 
             //handle ad hoc files
-            if (!dataIdList.isEmpty())
+            if (!outputFileIdList.isEmpty())
             {
-                getJob().getLogger().info("processing: " + dataIdList.size() + " files");
+                getJob().getLogger().info("processing: " + outputFileIdList.size() + " files");
 
                 //find any existing database_member records for these sequences so we dont duplicate
-                Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(databaseMembers, PageFlowUtil.set(FieldKey.fromString("jsonfile/dataid")));
+                Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(databaseMembers, PageFlowUtil.set(FieldKey.fromString("jsonfile/outputfile")));
                 SimpleFilter filter = new SimpleFilter(FieldKey.fromString("database"), getPipelineJob().getDatabaseGuid(), CompareType.EQUAL);
-                filter.addCondition(FieldKey.fromString("jsonfile/dataid"), null, CompareType.NONBLANK);
+                filter.addCondition(FieldKey.fromString("jsonfile/outputfile"), null, CompareType.NONBLANK);
                 TableSelector ts = new TableSelector(databaseMembers, cols.values(), filter, null);
-                List<Integer> existingDataIds = ts.getArrayList(Integer.class);
+                List<Integer> existingOutputFileIds = ts.getArrayList(Integer.class);
 
-                for (Integer dataId : dataIdList)
+                for (Integer outputFileId : outputFileIdList)
                 {
-                    JBrowseRoot root = JBrowseRoot.getRoot();
-                    root.setLogger(getJob().getLogger());
-                    JsonFile json = root.prepareFile(getJob().getContainer(), getJob().getUser(), dataId, false);
+                    Integer dataId = new TableSelector(DbSchema.get("sequenceanalysis").getTable("outputfiles"), PageFlowUtil.set("dataid"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getObject(Integer.class);
+                    if (dataId == null)
+                    {
+                        getJob().getLogger().error("Unable to find dataId for output file: " + outputFileId);
+                        continue;
+                    }
+
+                    JsonFile json = root.prepareOutputFile(getJob().getContainer(), getJob().getUser(), outputFileId, false);
                     //this could indicate a non-supported filetype
                     if (json == null)
                         continue;
 
-                    if (existingDataIds.contains(dataId))
+                    if (existingOutputFileIds.contains(outputFileId))
                     {
                         getJob().getLogger().info("data file is already a member of this database, skipping");
                         continue;
@@ -334,14 +310,13 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                 }
             }
 
-            JBrowseRoot root = JBrowseRoot.getRoot();
-            root.setLogger(getJob().getLogger());
-
             getJob().getLogger().info("preparing session JSON files");
             root.prepareDatabase(getJob().getContainer(), getJob().getUser(), databaseGuid);
+
+            getJob().getLogger().info("complete");
             success = true;
         }
-        catch (IOException e)
+        catch (Exception e)
         {
             throw new PipelineJobException(e);
         }
@@ -356,7 +331,8 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                     Table.delete(databases, databaseGuid);
                     Table.delete(databaseMembers, new SimpleFilter(FieldKey.fromString("database"), databaseGuid));
 
-                    File expectedDir = new File(JBrowseManager.get().getJBrowseRoot(), "databases");
+                    JBrowseRoot root = new JBrowseRoot(getJob().getLogger());
+                    File expectedDir = root.getDatabaseDir(getJob().getContainer());
                     if (expectedDir.exists())
                     {
                         try

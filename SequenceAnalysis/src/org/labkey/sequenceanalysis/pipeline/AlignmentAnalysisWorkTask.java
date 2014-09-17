@@ -104,6 +104,8 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
 
         getJob().getLogger().info("Processing Alignments");
         Map<String, AnalysisModel> alignmentMap = analysisHelper.getAnalysisMap();
+        List<AnalysisStep.Output> outputs = new ArrayList<>();
+        List<AnalysisModel> analysisModels = new ArrayList<>();
         for (File inputBam : getTaskHelper().getSupport().getInputFiles())
         {
             AnalysisModel m = alignmentMap.get(inputBam.getName());
@@ -111,6 +113,7 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
             {
                 throw new PipelineJobException("Unable to find analysis details for file: " + inputBam.getName());
             }
+            analysisModels.add(m);
 
             File refFasta = m.getReferenceLibraryFile();
             if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
@@ -125,7 +128,12 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
                 }
             }
 
-            SequenceAnalysisTask.runAnalyses(actions, m, inputBam, refFasta, providers, getTaskHelper());
+            outputs.addAll(SequenceAnalysisTask.runAnalyses(actions, m, inputBam, refFasta, providers, getTaskHelper()));
+        }
+
+        for (PipelineStepProvider<AnalysisStep> p : providers)
+        {
+            p.create(getTaskHelper()).performAnalysisOnAll(analysisModels);
         }
 
         return new RecordedActionSet(actions);

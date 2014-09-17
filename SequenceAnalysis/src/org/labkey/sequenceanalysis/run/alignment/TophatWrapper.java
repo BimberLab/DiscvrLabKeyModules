@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -8,6 +9,7 @@ import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
 import org.labkey.sequenceanalysis.api.run.CommandLineParam;
@@ -36,21 +38,20 @@ public class TophatWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public IndexOutput createIndex(File refFasta, File outputDir) throws PipelineJobException
+        public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
-            IndexOutputImpl output = new IndexOutputImpl(refFasta);
+            //IndexOutputImpl output = new IndexOutputImpl(refFasta);
+            //output.appendOutputs(refFasta, outputDir);
+            //return output;
 
-            //TODO
-
-            output.appendOutputs(refFasta, outputDir);
-
-            return output;
+            throw new NotImplementedException("tophat support has not yet been fully added.  if interested, please contact your administrator");
         }
 
         @Override
-        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, File refFasta, String basename) throws PipelineJobException
+        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
-            return new AlignmentOutputImpl();
+            //return new AlignmentOutputImpl();
+            throw new NotImplementedException("tophat support has not yet been fully added.  if interested, please contact your administrator");
         }
     }
 

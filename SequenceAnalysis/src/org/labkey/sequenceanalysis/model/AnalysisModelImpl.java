@@ -32,9 +32,6 @@ public class AnalysisModelImpl implements AnalysisModel
     private Integer _rowId;
     private String _type;
     private Integer _runId;
-    private Integer _inputFile;
-    private Integer _inputFile2;
-    private Integer _outputFile;
     private Integer _createdby;
     private Date _created;
     private Integer _modifiedby;
@@ -42,7 +39,6 @@ public class AnalysisModelImpl implements AnalysisModel
     private String _container;
     private Integer _readset;
     private Integer _alignmentFile;
-    private Integer _snpFile;
     private Integer _reference_library;
     private Integer _library_id;
     private String _description;
@@ -91,21 +87,6 @@ public class AnalysisModelImpl implements AnalysisModel
         _runId = runId;
     }
 
-    public void setInputFile(Integer inputFile)
-    {
-        _inputFile = inputFile;
-    }
-
-    public void setInputFile2(Integer inputFile2)
-    {
-        _inputFile2 = inputFile2;
-    }
-
-    public void setOutputFile(Integer outputFile)
-    {
-        _outputFile = outputFile;
-    }
-
     public void setCreatedby(Integer createdby)
     {
         _createdby = createdby;
@@ -131,11 +112,6 @@ public class AnalysisModelImpl implements AnalysisModel
         _alignmentFile = alignmentFile;
     }
 
-    public void setSnpFile(Integer snpFile)
-    {
-        _snpFile = snpFile;
-    }
-
     public void setReference_library(Integer reference_library)
     {
         _reference_library = reference_library;
@@ -159,16 +135,6 @@ public class AnalysisModelImpl implements AnalysisModel
     public Integer getRunId()
     {
         return _runId;
-    }
-
-    public Integer getInputFile()
-    {
-        return _inputFile;
-    }
-
-    public Integer getInputFile2()
-    {
-        return _inputFile2;
     }
 
     public String getContainer()
@@ -217,6 +183,11 @@ public class AnalysisModelImpl implements AnalysisModel
         return _reference_library;
     }
 
+    public Integer getReference_Library()
+    {
+        return _reference_library;
+    }
+
     public ExpData getReferenceLibraryData()
     {
         return getData(_reference_library);
@@ -258,16 +229,6 @@ public class AnalysisModelImpl implements AnalysisModel
         return _createdby;
     }
 
-    public Integer getOutputFile()
-    {
-        return _outputFile;
-    }
-
-    public Integer getSnpFile()
-    {
-        return _snpFile;
-    }
-
     public Integer getRowId()
     {
         return _rowId;
@@ -294,6 +255,11 @@ public class AnalysisModelImpl implements AnalysisModel
     }
 
     public Integer getLibraryId()
+    {
+        return _library_id;
+    }
+
+    public Integer getLibrary_Id()
     {
         return _library_id;
     }
@@ -339,17 +305,6 @@ public class AnalysisModelImpl implements AnalysisModel
         ret.put("type", _type);
         ret.put("runId", _runId);
 
-        ret.put("inputFile", _inputFile);
-
-        JSONObject filePaths = new JSONObject();
-        if (_inputFile != null)
-            filePaths.put(_inputFile.toString(), getFilePath(_inputFile));
-
-        ret.put("inputFile2", _inputFile2);
-        if (_inputFile2 != null)
-            filePaths.put(_inputFile2.toString(), getFilePath(_inputFile2));
-
-        ret.put("outputFile", _outputFile);
         ret.put("createdby", _createdby);
         ret.put("created", _created);
         ret.put("modifiedby", _modifiedby);
@@ -357,6 +312,7 @@ public class AnalysisModelImpl implements AnalysisModel
         ret.put("container", _container);
         ret.put("readset", _readset);
 
+        JSONObject filePaths = new JSONObject();
         ret.put("alignmentFile", _alignmentFile);
         if (_alignmentFile != null)
             filePaths.put(_alignmentFile.toString(), getFilePath(_alignmentFile));
@@ -380,9 +336,6 @@ public class AnalysisModelImpl implements AnalysisModel
         ret.setRowId(o.optInt("rowId"));
         ret.setType(o.optString("type"));
         ret.setRunId(o.optInt("type"));
-        ret.setInputFile(o.optInt("inputFile"));
-        ret.setInputFile2(o.optInt("inputFile2"));
-        ret.setOutputFile(o.optInt("outputFile"));
         ret.setCreatedby(o.optInt("createdby"));
         ret.setCreated(ConvertHelper.convert(o.optString("created"), Date.class));
         ret.setModifiedby(o.optInt("modifiedby"));

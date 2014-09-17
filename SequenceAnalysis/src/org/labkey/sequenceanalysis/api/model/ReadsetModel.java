@@ -1,6 +1,16 @@
 package org.labkey.sequenceanalysis.api.model;
 
 import org.apache.commons.lang3.StringUtils;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.view.UnauthorizedException;
+import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import java.util.Date;
@@ -27,6 +37,7 @@ public class ReadsetModel
     private String _platform;
     private String _application;
     private String _inputMaterial;
+    private String _sampleType;
     private String _name;
     private Integer _instrumentRunId;
     private String _container;
@@ -38,11 +49,6 @@ public class ReadsetModel
     public ReadsetModel()
     {
 
-    }
-
-    public String getExpectedFileNameForPrefix(String prefix)
-    {
-        return getExpectedFileNameForPrefix(prefix, false);
     }
 
     public String getExpectedFileNameForPrefix(String prefix, boolean gzip)
@@ -121,6 +127,16 @@ public class ReadsetModel
     public void setInputMaterial(String inputMaterial)
     {
         _inputMaterial = inputMaterial;
+    }
+
+    public String getSampleType()
+    {
+        return _sampleType;
+    }
+
+    public void setSampleType(String sampleType)
+    {
+        _sampleType = sampleType;
     }
 
     public String getName()
@@ -281,5 +297,25 @@ public class ReadsetModel
     public void setRunId(Integer runId)
     {
         _runId = runId;
+    }
+
+    public static ReadsetModel getForId(int readsetId, User u)
+    {
+        TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_READSETS);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), readsetId);
+
+        ReadsetModel model = new TableSelector(ti, filter, null).getObject(ReadsetModel.class);
+        if (model == null)
+        {
+            return null;
+        }
+
+        Container c = ContainerManager.getForId(model.getContainer());
+        if (!c.hasPermission(u, ReadPermission.class))
+        {
+            throw new UnauthorizedException("Cannot read data in container: " + c.getPath());
+        }
+
+        return model;
     }
 }

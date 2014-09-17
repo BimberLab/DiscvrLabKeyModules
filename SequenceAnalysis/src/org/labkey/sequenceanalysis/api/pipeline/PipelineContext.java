@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.api.pipeline;
 
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.WorkDirectory;
 
 import java.io.File;
 import java.util.Map;
@@ -16,6 +17,10 @@ public interface PipelineContext
     public Logger getLogger();
 
     public PipelineJob getJob();
+
+    public WorkDirectory getWorkDir();
+
+    public SequenceAnalysisJobSupport getSequenceSupport();
 
     /**
      * This is the directory where most of the work should take place, usually the remote pipeline working folder.

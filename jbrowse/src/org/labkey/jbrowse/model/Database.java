@@ -1,13 +1,22 @@
 package org.labkey.jbrowse.model;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import org.labkey.api.data.CompareType;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.files.FileContentService;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.services.ServiceRegistry;
 import org.labkey.jbrowse.JBrowseSchema;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -17,6 +26,8 @@ import java.util.List;
  */
 public class Database
 {
+    private static final Logger _log = Logger.getLogger(Database.class);
+
     private int _rowId;
     private String _name;
     private String _description;
@@ -109,6 +120,46 @@ public class Database
         }
 
         return _members;
+    }
+
+    public static void onDatabaseDelete(String containerId, String databaseId) throws IOException
+    {
+        Container c = ContainerManager.getForId(containerId);
+        if (c == null)
+        {
+            return;
+        }
+
+        //delete children
+        TableInfo ti = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
+        int deleted = Table.delete(ti, new SimpleFilter(FieldKey.fromString("database"), databaseId, CompareType.EQUAL));
+
+        //then delete files
+        FileContentService fileService = ServiceRegistry.get().getService(FileContentService.class);
+        File fileRoot = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);
+        if (fileRoot == null || !fileRoot.exists())
+        {
+            return;
+        }
+
+        File jbrowseDir = new File(fileRoot, ".jbrowse");
+        if (!jbrowseDir.exists())
+        {
+            return;
+        }
+
+        File databaseDir = new File(jbrowseDir, "databases");
+        if (!databaseDir.exists())
+        {
+            return;
+        }
+
+        File databaseDir2 = new File(databaseDir, databaseId);
+        if (databaseDir2.exists())
+        {
+            _log.info("deleting jbrowse database dir: " + databaseDir2.getPath());
+            FileUtils.deleteDirectory(databaseDir2);
+        }
     }
 
     public static class DatabaseMember

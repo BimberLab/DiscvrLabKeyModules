@@ -5,7 +5,7 @@
         <column name="jsonfile"/>
         <column name="jsonfile/trackid"/>
         <column name="jsonfile/sequenceid"/>
-        <column name="jsonfile/dataid"/>
+        <column name="jsonfile/outputfile"/>
         <column name="category"/>
     </columns>
 </customView>

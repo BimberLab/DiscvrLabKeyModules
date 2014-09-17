@@ -7,6 +7,7 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
@@ -103,7 +104,13 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
         AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
 
         File sharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
-        File refFasta = libraryStep.getExpectedFastaFile(sharedDirectory);
+        ReferenceGenome referenceGenome = getHelper().getSequenceSupport().getReferenceGenome();
+        if (referenceGenome == null)
+        {
+            throw new PipelineJobException("No refernece genome was cached prior to preparing aligned indexes");
+        }
+
+        File refFasta = new File(sharedDirectory, referenceGenome.getFastaFile().getName());
         if (!refFasta.exists())
         {
             throw new PipelineJobException("Reference fasta does not exist: " + refFasta.getPath());
@@ -119,7 +126,11 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
         }
         getHelper().getFileManager().addOutput(action, "Reference DB FASTA Index", refFastaIndex);
 
-        AlignmentStep.IndexOutput output = alignmentStep.createIndex(refFasta, refFasta.getParentFile());
+        assert getHelper().getSequenceSupport().getReferenceGenome() != null;
+
+        getJob().getLogger().info("location of cached ref fasta: " + getHelper().getSequenceSupport().getReferenceGenome().getFastaFile().getPath());
+
+        AlignmentStep.IndexOutput output = alignmentStep.createIndex(referenceGenome, refFasta.getParentFile());
         getHelper().getFileManager().addStepOutputs(action, output);
 
         return action;

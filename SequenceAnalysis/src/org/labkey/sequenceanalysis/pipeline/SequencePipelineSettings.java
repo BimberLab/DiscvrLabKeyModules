@@ -117,7 +117,8 @@ public class SequencePipelineSettings
         }
         model.setPlatform(o.getString("platform"));
         model.setApplication(o.getString("application"));
-        model.setInputMaterial(o.getString("inputMaterial"));
+        model.setInputMaterial(o.getString("inputmaterial"));
+        model.setSampleType(o.getString("sampletype"));
         model.setName(o.getString("readsetname"));
         model.setReadsetId(getInt(o.getString("readset")));
         model.setInstrumentRunId(getInt(o.getString("instrument_run_id")));
@@ -192,6 +193,11 @@ public class SequencePipelineSettings
     public boolean isDoBarcode()
     {
         return ("true".equals(_params.get("inputfile.barcode")));
+    }
+
+    public boolean isRunFastqc()
+    {
+        return ("true".equals(_params.get("inputfile.runFastqc")));
     }
 
     @NotNull

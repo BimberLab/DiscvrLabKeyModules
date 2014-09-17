@@ -59,7 +59,7 @@ public class VirusReferenceLibraryStep extends DNAReferenceLibraryStep implement
     }
 
     @Override
-    public File getExpectedFastaFile(File outputDirectory) throws PipelineJobException
+    protected File getExpectedFastaFile(File outputDirectory) throws PipelineJobException
     {
         String strainName = extractParamValue(subset, String.class);
         return new File(outputDirectory, strainName + ".fasta");

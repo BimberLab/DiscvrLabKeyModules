@@ -12,6 +12,7 @@ import org.labkey.sequenceanalysis.api.model.AnalysisModel;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -68,7 +69,7 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
     }
 
     @Override
-    public Output performAnalysisPerSample(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
     {
         try
         {
@@ -100,7 +101,7 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
             aaSnp.setCoverageAggregator(coverage);
             aggregators.add(aaSnp);
 
-            aggregators.add(new MetricsAggregator(getPipelineCtx().getJob().getLogger(), inputBam));
+            bi.addAggregators(aggregators);
             bi.iterateReads();
             getPipelineCtx().getLogger().info("Inspection complete");
 
@@ -113,14 +114,20 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
 
             return null;
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             throw new PipelineJobException(e);
         }
     }
 
     @Override
-    public void performAnalysisOnAll(List<Output> previousSteps)
+    public Output performAnalysisPerSampleRemote(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    {
+        return null;
+    }
+
+    @Override
+    public void performAnalysisOnAll(List<AnalysisModel> analysisModels) throws PipelineJobException
     {
 
     }

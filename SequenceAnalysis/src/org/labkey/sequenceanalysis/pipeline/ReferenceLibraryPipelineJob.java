@@ -20,6 +20,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 
@@ -109,15 +110,19 @@ public class ReferenceLibraryPipelineJob extends PipelineJob
         _libraryId = libraryId;
     }
 
+    public boolean isCreateNew()
+    {
+        return getLibraryId() == null;
+    }
+
     public File getOutputDir() throws IOException
     {
-        File pipelineDir = PipelineService.get().getPipelineRootSetting(getContainer()).getRootPath();
-        if (pipelineDir == null)
+        File outputDir = SequenceAnalysisManager.get().getReferenceLibraryDir(getContainer());
+        if (outputDir == null)
         {
             throw new IOException("No pipeline directory set for folder: " + getContainer().getPath());
         }
 
-        File outputDir = new File(pipelineDir, ".referenceLibraries");
         if (!outputDir.exists())
         {
             outputDir.mkdirs();

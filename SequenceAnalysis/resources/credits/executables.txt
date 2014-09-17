@@ -3,6 +3,6 @@ The following executable files are distributed with the Sequence Analysis module
 {table}
 Filename|Component|Version|Source|License|LabKey Dev|Purpose
 BamStats|{link:BamStats|http://sourceforge.net/projects/bamstats/}|1.25|{link:BamStats|http://sourceforge.net/projects/bamstats/}|GNU General public license|bbimber|Produces HTML reports with QC data for BAM files
-FastQC|{link:FastQC|http://www.bioinformatics.babraham.ac.uk/projects/fastqc/}|0.10.1|{link:FastQC|http://www.bioinformatics.babraham.ac.uk/projects/download.html#fastqc}|GNU General public license|bbimber|Produces HTML reports with QC data for sequence files
+FastQC|{link:FastQC|http://www.bioinformatics.babraham.ac.uk/projects/fastqc/}|0.11.2|{link:FastQC|http://www.bioinformatics.babraham.ac.uk/projects/download.html#fastqc}|GNU General public license|bbimber|Produces HTML reports with QC data for sequence files
 Trimmomatic|{link:Trimmomatic|http://www.usadellab.org/cms/index.php?page=trimmomatic/}|0.22|{link:Trimmomatic|http://www.usadellab.org/cms/index.php?page=trimmomatic}|GNU General public license|bbimber|Utility to trim sequence data
 {table}

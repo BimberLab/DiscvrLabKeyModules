@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import htsjdk.samtools.SAMFileHeader;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -25,7 +26,7 @@ public class SortSamWrapper extends PicardWrapper
     }
 
     //if outputFile is null, the input will be replaced
-    public File execute(File inputFile, @Nullable File outputFile, boolean coordinateSort) throws PipelineJobException
+    public File execute(File inputFile, @Nullable File outputFile, SAMFileHeader.SortOrder order) throws PipelineJobException
     {
         getLogger().info("Coordinate Sorting BAM: " + inputFile.getPath());
 
@@ -38,7 +39,7 @@ public class SortSamWrapper extends PicardWrapper
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
         params.add("INPUT=" + inputFile.getPath());
         params.add("OUTPUT=" + outputBam.getPath());
-        params.add("SORT_ORDER=" + (coordinateSort ? "coordinate" : "queryname"));
+        params.add("SORT_ORDER=" + order.name());
 
         execute(params);
 

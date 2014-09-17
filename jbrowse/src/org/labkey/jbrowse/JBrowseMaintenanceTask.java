@@ -2,7 +2,8 @@ package org.labkey.jbrowse;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.labkey.api.data.CompareType;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
@@ -11,12 +12,15 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
+import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -57,88 +61,115 @@ public class JBrowseMaintenanceTask implements SystemMaintenance.MaintenanceTask
     public void run()
     {
         //delete JSON in output dir not associated with DB record
-        File dbDir = JBrowseManager.get().getJBrowseRoot();
-        if (dbDir != null && dbDir.exists())
+        try
         {
-            JBrowseRoot root = JBrowseRoot.getRoot();
+            //delete sessions marked as temporary
+            Table.delete(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("temporary"), true));
 
-            try
+            //then orphan DB members
+            int deleted = new SqlExecutor(JBrowseSchema.getInstance().getSchema()).execute(new SQLFragment("DELETE FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASE_MEMBERS + " WHERE (SELECT count(objectid) FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASES + " d WHERE d.objectid = " + JBrowseSchema.TABLE_DATABASE_MEMBERS + "." + JBrowseSchema.getInstance().getSqlDialect().makeLegalIdentifier("database") + ") = 0"));
+            if (deleted > 0)
+                _log.info("deleted " + deleted + " orphan database members");
+
+            //finally orphan JSONFiles
+            int deleted2 = new SqlExecutor(JBrowseSchema.getInstance().getSchema()).execute(new SQLFragment("DELETE FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_JSONFILES +
+                    " WHERE " +
+                    //find JSONFiles not associated with a database_member record
+                    " (SELECT count(rowid) FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASE_MEMBERS + " d WHERE d.jsonfile = " + JBrowseSchema.TABLE_JSONFILES + ".objectid) = 0 AND " +
+                    //or library reference sequences
+                    " (SELECT count(rowid) FROM sequenceanalysis.reference_library_members d WHERE d.ref_nt_id = " + JBrowseSchema.TABLE_JSONFILES + ".sequenceid) = 0 AND " +
+                    //or library tracks
+                    " (SELECT count(rowid) FROM sequenceanalysis.reference_library_tracks d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".trackid) = 0 "
+            ));
+
+            if (deleted2 > 0)
+                _log.info("deleted " + deleted2 + " JSON files because they are not used by any sessions");
+
+            //now iterate every container and find orphan files
+            processContainer(ContainerManager.getRoot());
+        }
+        catch (Exception e)
+        {
+            _log.error(e.getMessage(), e);
+        }
+    }
+
+    private void processContainer(Container c) throws IOException
+    {
+        JBrowseRoot root = new JBrowseRoot(_log);
+        if (root != null)
+        {
+            File jbrowseRoot = root.getBaseDir(c);
+            if (jbrowseRoot != null && jbrowseRoot.exists())
             {
-                //delete sessions marked as temporary
-                Table.delete(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("temporary"), true));
-
-                //then orphan members
-                int deleted = new SqlExecutor(JBrowseSchema.getInstance().getSchema()).execute(new SQLFragment("DELETE FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASE_MEMBERS + " WHERE (SELECT count(objectid) FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASES + " d WHERE d.objectid = " + JBrowseSchema.TABLE_DATABASE_MEMBERS + ".database) = 0"));
-                if (deleted > 0)
-                    _log.info("deleted " + deleted + " orphan database members");
-
-                //TODO: disabled until we can handle libraries
-                //finally orphan JSONFiles
-                //int deleted2 = new SqlExecutor(JBrowseSchema.getInstance().getSchema()).execute(new SQLFragment("DELETE FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_JSONFILES + " WHERE (SELECT count(rowid) FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASE_MEMBERS + " d WHERE d.jsonfile = " + JBrowseSchema.TABLE_JSONFILES + ".objectid) = 0"));
-                //if (deleted2 > 0)
-                //    _log.info("deleted " + deleted2 + " JSON files because they are not used by any sessions");
-
-                TableInfo jsonFiles = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
-                List<String> sequenceFolders = new TableSelector(jsonFiles, PageFlowUtil.set("sequenceid"), new SimpleFilter(FieldKey.fromString("sequenceId"), null, CompareType.NONBLANK), null).getArrayList(String.class);
-                List<String> trackFolders = new TableSelector(jsonFiles, PageFlowUtil.set("trackId"), new SimpleFilter(FieldKey.fromString("trackId"), null, CompareType.NONBLANK), null).getArrayList(String.class);
-
-                //reference
-                for (File f : root.getReferenceDir().listFiles())
+                //find jsonfiles we expect to exist
+                TableInfo tableJsonFiles = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
+                final Set<File> expectedDirs = new HashSet<>();
+                TableSelector ts = new TableSelector(tableJsonFiles, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
+                List<JsonFile> rows = ts.getArrayList(JsonFile.class);
+                for (JsonFile json : rows)
                 {
-                    if (!sequenceFolders.contains(f.getName()))
+                    if (json.getBaseDir() != null)
                     {
-                        _log.info("deleting unused JBrowse reference directory: " + f.getName());
-                        if (f.isDirectory())
+                        expectedDirs.add(json.getBaseDir());
+                    }
+                }
+
+                File trackDir = new File(jbrowseRoot, "tracks");
+                if (trackDir.exists())
+                {
+                    for (File childDir : trackDir.listFiles())
+                    {
+                        if (!expectedDirs.contains(childDir))
                         {
-                            FileUtils.deleteDirectory(f);
-                        }
-                        else
-                        {
-                            f.delete();
+                            _log.info("deleting track dir: " + childDir.getPath());
+                            FileUtils.deleteDirectory(childDir);
                         }
                     }
                 }
 
-                //tracks
-                for (File f : root.getTracksDir().listFiles())
+                File dataDir = new File(jbrowseRoot, "data");
+                if (dataDir.exists())
                 {
-                    if (!trackFolders.contains(f.getName()))
+                    _log.info("deleting legacy jbrowse data dir: " + dataDir.getPath());
+                    FileUtils.deleteDirectory(dataDir);
+                }
+
+                File referenceDir = new File(jbrowseRoot, "references");
+                if (referenceDir.exists())
+                {
+                    for (File childDir : referenceDir.listFiles())
                     {
-                        _log.info("deleting unused JBrowse track directory: " + f.getName());
-                        if (f.isDirectory())
+                        if (!expectedDirs.contains(childDir))
                         {
-                            FileUtils.deleteDirectory(f);
-                        }
-                        else
-                        {
-                            f.delete();
+                            _log.info("deleting reference sequence dir: " + childDir.getPath());
+                            FileUtils.deleteDirectory(childDir);
                         }
                     }
                 }
 
-                //databases
-                TableInfo databases = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES);
-                List<String> dbFolders = new TableSelector(databases, PageFlowUtil.set("objectid")).getArrayList(String.class);
-                for (File f : root.getDatabaseDir().listFiles())
+                //also databases
+                TableInfo tableJsonDatabases = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES);
+                TableSelector ts2 = new TableSelector(tableJsonDatabases, Collections.singleton("objectid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
+                List<String> expectedDatabases = ts2.getArrayList(String.class);
+                File databaseDir = new File(jbrowseRoot, "databases");
+                if (databaseDir.exists())
                 {
-                    if (!dbFolders.contains(f.getName()))
+                    for (File childDir : databaseDir.listFiles())
                     {
-                        _log.info("deleting unused JBrowse database directory: " + f.getName());
-                        if (f.isDirectory())
+                        if (!expectedDatabases.contains(childDir.getName()))
                         {
-                            FileUtils.deleteDirectory(f);
-                        }
-                        else
-                        {
-                            f.delete();
+                            _log.info("deleting jbrowse database dir: " + childDir.getPath());
+                            FileUtils.deleteDirectory(childDir);
                         }
                     }
                 }
             }
-            catch (IOException e)
-            {
-                _log.error(e.getMessage(), e);
-            }
+        }
+
+        for (Container child : c.getChildren())
+        {
+            processContainer(child);
         }
     }
 }

@@ -44,10 +44,6 @@ public interface AnalysisModel
 
     public Integer getRunId();
 
-    public Integer getInputFile();
-
-    public Integer getInputFile2();
-
     public String getContainer();
 
     public Integer getReadset();
@@ -75,8 +71,6 @@ public interface AnalysisModel
     public Date getCreated();
 
     public Integer getCreatedby();
-
-    public Integer getOutputFile();
 
     public Integer getRowId();
 

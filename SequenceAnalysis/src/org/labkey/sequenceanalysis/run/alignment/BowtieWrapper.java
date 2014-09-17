@@ -8,6 +8,7 @@ import org.labkey.sequenceanalysis.api.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
@@ -41,9 +42,10 @@ public class BowtieWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, File refFasta, String basename) throws PipelineJobException
+        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getFastaFile().getParentFile(), getProvider().getName());
             BowtieWrapper wrapper = getWrapper();
 
             List<String> args = new ArrayList<>();
@@ -62,7 +64,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
             args.add(new File(outputDirectory, SequenceTaskHelper.getMinimalBaseName(inputFastq1) + ".bowtie.unaligned.fastq").getPath());
             args.addAll(getClientCommandArgs());
 
-            File indexFile = new File(refFasta.getParentFile(), getExpectedIndexName(refFasta));
+            File indexFile = new File(referenceGenome.getFastaFile().getParentFile(), getExpectedIndexName(referenceGenome.getFastaFile()));
             args.add(indexFile.getPath());
 
             if (inputFastq2 != null)
@@ -102,20 +104,28 @@ public class BowtieWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public IndexOutput createIndex(File refFasta, File outputDir) throws PipelineJobException
+        public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             getPipelineCtx().getLogger().info("Creating Bowtie index");
-            IndexOutputImpl output = new IndexOutputImpl(refFasta);
+            IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
-            List<String> args = new ArrayList<>();
-            args.add(getWrapper().getBuildExe().getPath());
-            args.add("-f");  //input is FASTA
-            args.add("-q");  //quiet mode
-            args.add(refFasta.getPath());
-            args.add(new File(outputDir, getExpectedIndexName(refFasta)).getPath());
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName());
+            if (!hasCachedIndex)
+            {
+                List<String> args = new ArrayList<>();
+                args.add(getWrapper().getBuildExe().getPath());
+                args.add("-f");  //input is FASTA
+                args.add("-q");  //quiet mode
+                args.add(referenceGenome.getFastaFile().getPath());
+                args.add(new File(outputDir, getExpectedIndexName(referenceGenome.getFastaFile())).getPath());
 
-            getWrapper().execute(args);
-            output.appendOutputs(refFasta, outputDir);
+                getWrapper().execute(args);
+            }
+
+            output.appendOutputs(referenceGenome.getFastaFile(), outputDir);
+
+            //recache if not already
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), outputDir, getProvider().getName(), output);
 
             return output;
         }

@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.reference;
 
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask;
 
@@ -15,20 +16,22 @@ import java.util.List;
  */
 public class ReferenceLibraryOutputImpl extends DefaultPipelineStepOutput implements ReferenceLibraryStep.Output
 {
-    public ReferenceLibraryOutputImpl()
-    {
+    private ReferenceGenome _referenceGenome;
 
+    public ReferenceLibraryOutputImpl(ReferenceGenome referenceGenome)
+    {
+        _referenceGenome = referenceGenome;
+    }
+
+    @Override
+    public ReferenceGenome getReferenceGenome()
+    {
+        return _referenceGenome;
     }
 
     @Override
     public File getReferenceFasta() throws PipelineJobException
     {
-        List<File> ret = getOutputsOfRole(ReferenceLibraryTask.REFERENCE_DB_FASTA);
-        if (ret.size() != 1)
-        {
-            throw new PipelineJobException("More than reference FASTA file found, expected 1");
-        }
-
-        return ret.get(0);
+        return _referenceGenome == null ? null : _referenceGenome.getFastaFile();
     }
 }

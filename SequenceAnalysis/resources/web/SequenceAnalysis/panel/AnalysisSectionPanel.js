@@ -3,6 +3,7 @@
  * @cfg stepType
  * @cfg singleTool This determines how the panel is rendered.  If true, a combo will be rendered, allowing a single tool to be selected (like aligners).  If false, each tool will be given a checkbox, allowing any combination to run (like preprocessing)
  * @cfg comboLabel If running in singleTool mode, this is the label used to render the selector combo
+ * @cfg comboValue If running in singleTool mode, this is the starting value for the combo
  * @cfg sectionDescription
  */
 Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
@@ -251,19 +252,26 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
     },
 
     getSingleSelectCombo: function(toolConfig){
+        var listeners = {
+            scope: this,
+            change: this.onComboSelect
+        };
+
+        if (this.comboValue){
+            listeners.afterrender = this.onComboSelect
+        }
+
         return [{
             xtype: 'combo',
             fieldLabel: this.comboLabel,
+            value: this.comboValue,
             itemId: 'selectorCombo',
             allowBlank: false,
             displayField: 'label',
             valueField: 'name',
             width: 450,
             store: this.getToolStore(),
-            listeners: {
-                scope: this,
-                change: this.onComboSelect
-            },
+            listeners: listeners,
             forceSelection: true,
             queryMode: 'local',
             triggerAction: 'all'
@@ -483,7 +491,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         if (params && params.length) {
             Ext4.Array.forEach(params, function (p) {
                 if (Ext4.isDefined(values[p.name])){
-                    console.log('setting: ' + p.name);
+                    console.log('setting: ' + p.name + ' to: ' + values[p.name]);
                     p.setValue(values[p.name]);
                 }
             }, this);

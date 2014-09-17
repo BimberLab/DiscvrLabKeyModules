@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.bampostprocessing;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
@@ -9,6 +10,7 @@ import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepOutput;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 
 import java.io.File;
 
@@ -39,11 +41,11 @@ public class RecalibrateBamStep extends AbstractPipelineStep implements BamProce
     }
 
     @Override
-    public Output processBam(ReadsetModel rs, File inputBam, File referenceFasta, File outputDirectory) throws PipelineJobException
+    public Output processBam(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException
     {
-        BamProcessingOutputImpl output = new BamProcessingOutputImpl();
+        //BamProcessingOutputImpl output = new BamProcessingOutputImpl();
+        //return output;
 
-
-        return output;
+        throw new NotImplementedException("This step has not yet been implemented");
     }
 }

@@ -17,7 +17,11 @@ package org.labkey.sequenceanalysis.util;
 
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
+import htsjdk.samtools.util.FastqQualityFormat;
+import htsjdk.samtools.util.QualityEncodingDetector;
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
 import org.labkey.api.view.NotFoundException;
@@ -26,11 +30,11 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -45,45 +49,12 @@ public class FastqUtils
 {
     public static FileType FqFileType = new FastqFileType();
 
-    public static enum FASTQ_ENCODING {
-        Illumina(64), //ascii64
-        Standard(33); //ascii33
-
-        FASTQ_ENCODING(int offset)
-        {
-            this.offset = offset;
-        }
-
-        public int offset;
-
-    }
-
-    public static FastqUtils.FASTQ_ENCODING inferFastqEncoding(File fastq)
+    public static FastqQualityFormat inferFastqEncoding(File fastq)
     {
         try (FastqReader reader = new FastqReader(fastq))
         {
-            Iterator<FastqRecord> i = reader.iterator();
-            while (i.hasNext())
-            {
-                FastqRecord fq = i.next();
-                String quals = fq.getBaseQualityString();
-                for (char c : quals.toCharArray())
-                {
-                    byte val = (byte)c;
-                    if (val > 73)
-                    {
-                        return FASTQ_ENCODING.Illumina;
-                    }
-                    else if (val < 59)
-                    {
-                        return FASTQ_ENCODING.Standard;
-                    }
-                }
-
-            }
+            return QualityEncodingDetector.detect(reader);
         }
-
-        return null;
     }
 
     public static int getSequenceCount(File inputFile) throws PipelineJobException
@@ -105,32 +76,47 @@ public class FastqUtils
         }
     }
 
-    public static Map<String, Object> getQualityMetrics(File f)
+    public static Map<String, Object> getQualityMetrics(File f, @Nullable Logger log)
     {
+        if (log != null)
+        {
+            log.info("calculating quality metrics for file: " + f.getName());
+        }
+
         try (FastqReader reader = new FastqReader(f))
         {
-            int total = 0;
-            int sum = 0;
-            int min = 0;
-            int max = 0;
+            long total = 0;
+            long sum = 0;
+            long min = 0;
+            long max = 0;
             float avg;
 
-            int l;
+            long len;
             while (reader.hasNext())
             {
                 FastqRecord fq = reader.next();
-                l = fq.getReadString().length();
+                len = fq.getReadString().length();
 
                 total++;
-                if(l < min || min == 0)
-                    min = l;
-                if(l > max)
-                    max = l;
+                if (len < min || min == 0)
+                    min = len;
+                if (len > max)
+                    max = len;
 
-                sum += l;
+                sum += len;
+
+                if (log != null && total % 1000000L == 0)
+                {
+                    log.info("processed " + NumberFormat.getInstance().format(total) + " reads");
+                }
             }
 
-            avg = sum / total;
+            if (log != null)
+            {
+                log.info("processed " + NumberFormat.getInstance().format(total) + " reads");
+            }
+
+            avg = sum / (float)total;
 
             Map<String, Object> map = new HashMap<>();
             map.put("Total Sequences", total);
@@ -161,6 +147,22 @@ public class FastqUtils
             {
                 IOUtils.copy(in, writer);
             }
+        }
+    }
+
+    public static Integer getQualityOffset(FastqQualityFormat encoding)
+    {
+        if (FastqQualityFormat.Illumina == encoding || FastqQualityFormat.Solexa == encoding)
+        {
+            return 64;
+        }
+        else if (FastqQualityFormat.Standard == encoding)
+        {
+            return 33;
+        }
+        else
+        {
+            return null;
         }
     }
 }

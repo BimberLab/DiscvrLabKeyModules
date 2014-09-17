@@ -16,22 +16,18 @@
 package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.commons.io.IOUtils;
-import org.labkey.api.data.Container;
-import org.labkey.api.gwt.client.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
-import org.labkey.api.query.DetailsURL;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.MergedDirectoryResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.GUID;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
-import org.labkey.api.view.ActionURL;
-import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.io.BufferedReader;
@@ -42,12 +38,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * User: bbimber
@@ -59,123 +51,91 @@ import java.util.Set;
 // is patterned after DotRunner.
 public class FastqcRunner
 {
-    private File _tmpDir = null;
-    private List<File> _sequenceFiles;
-    private Map<File, File> _unzippedFiles = new HashMap<>();
+    private Logger _logger;
+    private int _threads = 1;
 
-    public FastqcRunner()
+    public FastqcRunner(@Nullable Logger log)
     {
+        if (log == null)
+        {
+            _logger = Logger.getLogger(FastqcRunner.class);
+        }
+        else
+        {
+            _logger = log;
+        }
     }
 
-    public List<File> getSequenceFiles()
+    public String execute(List<File> sequenceFiles) throws FileNotFoundException
     {
-        return _sequenceFiles;
-    }
-
-    public void execute(List<File> sequenceFiles) throws FileNotFoundException
-    {
-        _sequenceFiles = sequenceFiles;
-
         //remove duplicates
-        List<File> tmpList = new ArrayList<>();
-        for (File f : _sequenceFiles)
+        List<File> uniqueFiles = new ArrayList<>();
+        for (File f : sequenceFiles)
         {
-            if (!tmpList.contains(f))
-                tmpList.add(f);
+            if (!uniqueFiles.contains(f))
+                uniqueFiles.add(f);
         }
-        _sequenceFiles = tmpList;
 
-        List<String> params = getParams();
-
-        //verify names are unique
-        Set<String> basenames = new HashSet<>();
-        for (File f : _sequenceFiles)
+        for (File f : uniqueFiles)
         {
-            String bn = getExpectedBasename(f);
-            if (basenames.contains(bn))
+            //first see if we have cached HTML, otherwise run
+            File expectedHtml = getExpectedHtmlFile(f);
+            if (!expectedHtml.exists())
             {
-                File copy = new File(getTmpDir(), (new GUID()).toString() + "_" + f.getName());
-                try
-                {
-                    FileUtil.copyFile(f, copy);
-                }
-                catch (IOException e)
-                {
-                    throw new RuntimeException(e);
-                }
-                _unzippedFiles.put(f, copy);
-                f = copy;
-            }
+                runForFile(f);
 
-            params.add(f.getAbsolutePath());
-            basenames.add(bn);
+                File zip = new File(expectedHtml.getParentFile(), FileUtil.getBaseName(expectedHtml) + ".zip");
+                if (zip.exists())
+                {
+                    if (!zip.delete())
+                    {
+                        throw new RuntimeException("Unable to delete ZIP file: " + zip.getPath());
+                    }
+                }
+            }
         }
 
-        ProcessBuilder pb = new ProcessBuilder(params);
-        pb.directory(getTmpDir());
-        pb.redirectErrorStream(true);
+        return processOutput(uniqueFiles);
+    }
 
+    private void runForFile(File f)
+    {
         try
         {
-            Process p = pb.start();
-            BufferedReader procReader = null;
-            StringBuffer output = new StringBuffer();
+            List<String> params = getParams(f);
+            params.add(f.getAbsolutePath());
 
-            try
+            _logger.info("running fastqc:");
+            _logger.info(StringUtils.join(params, " "));
+            ProcessBuilder pb = new ProcessBuilder(params);
+            pb.redirectErrorStream(true);
+            pb.directory(f.getParentFile());
+
+            Process p = pb.start();
+            try (BufferedReader procReader = new BufferedReader(new InputStreamReader(p.getInputStream())))
             {
-                procReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
                 String line;
                 while ((line = procReader.readLine()) != null)
                 {
-                    output.append(line);
-                    output.append(System.getProperty("line.separator"));
+                    _logger.info(line);
                 }
 
                 int returnCode = p.waitFor();
 
                 if (returnCode != 0)
                 {
-                    throw new IOException("FastQC failed with error code " + returnCode + " - " + output.toString());
+                    throw new IOException("FastQC failed with error code " + returnCode);
                 }
             }
-            catch (IOException eio)
+            catch (Exception e)
             {
-                throw new RuntimeException("Failed writing output for process in '" + pb.directory().getPath() + "'.", eio);
-            }
-            finally
-            {
-                if (procReader != null)
-                    try {procReader.close();} catch(IOException ignored) {}
+                _logger.error(e.getMessage(), e);
+                throw new RuntimeException("Failed writing output for process in '" + (pb != null && pb.directory() != null ? pb.directory().getPath() : "") + "'.", e);
             }
         }
         catch (IOException e)
         {
             throw new RuntimeException(e);
-        }
-        catch (InterruptedException e)
-        {
-            throw new RuntimeException(e);
-        }
-        finally
-        {
-            //cleanup unwanted outputs and unzipped files
-            for (File f : _sequenceFiles)
-            {
-                if (_unzippedFiles.containsKey(f))
-                {
-                    f = _unzippedFiles.get(f);
-                    if (!f.delete())
-                    {
-                        f.deleteOnExit();
-                    }
-                }
-
-                File zip = new File(_tmpDir, getExpectedBasename(f) + "_fastqc.zip");
-                if (!zip.delete())
-                {
-                    zip.deleteOnExit();
-                }
-            }
         }
     }
 
@@ -190,42 +150,31 @@ public class FastqcRunner
         return basename;
     }
 
-    public String processOutput(Container c)
+    private File getExpectedHtmlFile(File f)
+    {
+        return new File(f.getParentFile().getAbsolutePath(), getExpectedBasename(f) + "_fastqc.html");
+    }
+
+    private String processOutput(List<File> inputFiles)
     {
         String output = "";
         String header = "<div class=\"fastqc_overview\"><h2>File Summary:</h2><ul>";
-
-        DetailsURL d = DetailsURL.fromString("/SequenceAnalysis/downloadTempImage.view?");
 
         try
         {
             String delim = "";
             String css = AppProps.getInstance().getContextPath() + "/SequenceAnalysis/fastqc.css";
             int counter = 0;
-            for (File f : _sequenceFiles)
+            for (File f : inputFiles)
             {
-                File origFile = f;
-                f = _unzippedFiles.containsKey(f) ? _unzippedFiles.get(f) : f;
-                String basename = getExpectedBasename(f);
-                File outputDir = new File(getTmpDir().getAbsolutePath(), basename + "_fastqc");
-                File htmlFile = new File(outputDir, "fastqc_report.html");
-
+                File htmlFile = getExpectedHtmlFile(f);
                 if (!htmlFile.exists())
                 {
-                    output += "<p>Unable to find output for file: " + origFile.getName() + "</p>";
+                    output += "<p>Unable to find output for file: " + f.getName() + "</p>";
                     continue;
                 }
 
                 String html = readHtmlReport(htmlFile);
-                html = html.replaceAll("Icons/", AppProps.getInstance().getContextPath() + "/SequenceAnalysis/icons/");
-
-                ActionURL a = d.copy(c).getActionURL();
-                a.addParameter("directory", new File(FileUtil.getBaseName(_tmpDir), basename + "_fastqc/Images").getPath());
-
-                String url = a.toString();
-                url += "&fileName=";
-
-                html = html.replaceAll("Images/", url);
 
                 //add an outer DIV so we can apply styles only to the report
                 html = html.replaceAll("<body>", "<div class=\"fastqc\">");
@@ -234,7 +183,7 @@ public class FastqcRunner
 
                 //update IDs so links will point to correct file after concatenated:
                 String suffix = f.getName().replaceAll("\\.", "_");
-                html = html.replaceAll("<h2>Summary</h2>", "<h2 id=\"report_" + suffix + "\">Overview: " + origFile.getName() + "</h2>");
+                html = html.replaceAll("<h2>Summary</h2>", "<h2 id=\"report_" + suffix + "\">Overview: " + f.getName() + "</h2>");
 
                 for (int i=0;i < 10;i++)
                 {
@@ -247,29 +196,14 @@ public class FastqcRunner
                 css = "";
                 html = html.replaceAll("<link href=\"\" type=\"text/css\" rel=\"stylesheet\">\n", "");
 
-                File iconDir = new File(outputDir, "Icons");
-                for (File icon : iconDir.listFiles())
-                {
-                    icon.delete();
-                }
-                iconDir.delete();
-                htmlFile.delete();
-
-                //NOTE: images will be deleted when they are loaded using DownloadTempImageAction
-                //File imageDir = new File(outputDir, "Images");
-                //imageDir.deleteOnExit();
-
-                (new File(outputDir, "fastqc_data.txt")).delete();
-                (new File(outputDir, "summary.txt")).delete();
-
                 output += delim + html;
                 delim = "<hr>";
 
                 //also build a header:
-                header += "<li><a href=\"#report_" + suffix + "\">" + origFile.getName() + "</a></li>";
+                header += "<li><a href=\"#report_" + suffix + "\">" + f.getName() + "</a></li>";
 
                 //remove footer except on final file
-                if (counter < _sequenceFiles.size() - 1)
+                if (counter < inputFiles.size() - 1)
                 {
                     output = output.replaceAll("<div class=\"footer\">.*</div>", "");
                 }
@@ -277,7 +211,7 @@ public class FastqcRunner
                 counter++;
             }
 
-            if (_sequenceFiles.size() > 1)
+            if (inputFiles.size() > 1)
             {
                 header += "</ul><p /></div><hr>";
                 String tag = "<div class=\"fastqc\">";
@@ -295,24 +229,12 @@ public class FastqcRunner
     private String readHtmlReport(File htmlFile) throws IOException
     {
         StringWriter writer = new StringWriter();
-        FileInputStream is = null;
-        try
+        try (FileInputStream is = new FileInputStream(htmlFile))
         {
-            is = new FileInputStream(htmlFile);
             IOUtils.copy(is, writer, "UTF-8");
-        }
-        finally
-        {
-            if (is != null)
-                is.close();
         }
 
         return writer.toString();
-    }
-
-    private List<String> getParams() throws FileNotFoundException
-    {
-        return getParams(false);
     }
 
     private File lookupFile(String path) throws FileNotFoundException
@@ -340,87 +262,71 @@ public class FastqcRunner
         return file;
     }
 
-    private List<String> getParams(boolean showVersion) throws FileNotFoundException
+    private List<String> getBaseParams() throws FileNotFoundException
     {
         List<String> params = new LinkedList<>();
         params.add("java");
-        params.add("-Xmx250m");
+
+        int threads = getThreads();
+        params.add("-Xmx" + (250 * threads) + "m");
+
+        if (threads > 1)
+        {
+            params.add("-Dfastqc.threads=" + threads);
+        }
 
         File fastqcDir = lookupFile("external/fastqc");
 
         List<String> classPath = new ArrayList<>();
-        File samJar = SequenceAnalysisManager.getSamJar();
 
-        File bzJar = lookupFile("external");
-        bzJar = new File(bzJar, "jbzip2-0.9.jar");
+        File externalDir = lookupFile("external");
+        File bzJar = new File(externalDir, "jbzip2-0.9.jar");
         if (!bzJar.exists())
             throw new RuntimeException("Not found: " + bzJar.getPath());
+
+        File samJar = new File(externalDir, "sam-1.96.jar");
+        if (!samJar.exists())
+            throw new RuntimeException("Not found: " + samJar.getPath());
+
+        File commonsMath = new File(ModuleLoader.getInstance().getWebappDir(), "WEB-INF/lib");
+        commonsMath = new File(commonsMath, "commons-math3-3.0.jar");
+        if (!commonsMath.exists())
+            throw new RuntimeException("Not found: " + commonsMath.getPath());
 
         classPath.add(".");
         classPath.add(fastqcDir.getPath());
         classPath.add(samJar.getPath());
         classPath.add(bzJar.getPath());
+        classPath.add(commonsMath.getPath());
 
         params.add("-classpath");
         params.add(StringUtils.join(classPath, File.pathSeparator));
 
-        if (showVersion)
-        {
-            params.add("-Dfastqc.show_version=true");
-        }
-        else
-        {
-            params.add("-Dfastqc.output_dir=" + getTmpDir().getAbsolutePath());
-            params.add("-Dfastqc.quiet=true");
-        }
-
-        params.add("uk.ac.bbsrc.babraham.FastQC.FastQCApplication");
+        params.add("-Djava.awt.headless=true");
 
         return params;
     }
 
-    private File getTmpDir()
+    private int getThreads()
     {
-        try
-        {
-            if (_tmpDir == null)
-                _tmpDir = FileUtil.getAbsoluteCaseSensitiveFile(FileUtil.createTempDirectory("fastqc_"));
-
-            if (!_tmpDir.exists())
-                _tmpDir.createNewFile();
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException(e);
-        }
-
-        return _tmpDir;
+        return _threads;
     }
 
-    public static String getConfigurationErrorHtml(Exception e)
+    private void setThreads(int threads)
     {
-        if (e.getMessage() != null)
-        {
-            return getConfigurationErrorHtml(e.getMessage());
-        }
-        else
-        {
-            return getConfigurationErrorHtml(e.toString());
-        }
+        _threads = threads;
     }
 
-    public static String getConfigurationErrorHtml(String message)
+    private List<String> getParams(File f) throws FileNotFoundException
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Unable to display FASTQC output: cannot run ");
-        //sb.append(exePath);
-        sb.append(" due to an error.\n<BR><pre>");
-        sb.append(PageFlowUtil.filter(message));
-        sb.append("</pre>");
-        sb.append("This likely means either FASTQC is not installed or the executable is not in the PATH.  FastQC can be obtained <a href=\"http://www.bioinformatics.babraham.ac.uk/projects/fastqc/\">here</a>");
-        sb.append(".<br>");
+        List<String> params = getBaseParams();
 
-        return sb.toString();
+        params.add("-Dfastqc.output_dir=" + f.getParentFile().getAbsolutePath());
+        //params.add("-Dfastqc.quiet=true");
+
+        params.add("uk.ac.babraham.FastQC.FastQCApplication");
+
+        return params;
     }
 }
 

@@ -2,6 +2,14 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
@@ -11,6 +19,8 @@ import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepOutput;
 import org.labkey.sequenceanalysis.api.pipeline.TaskFileManager;
 
@@ -22,6 +32,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -55,6 +66,28 @@ public class TaskFileManagerImpl implements TaskFileManager
     }
 
     @Override
+    public void addSequenceOutput(File file, String label, String category, @Nullable ReadsetModel rs)
+    {
+        String path = FilenameUtils.normalize(file.getPath());
+        String relPath = FileUtil.relativePath(_workLocation.getPath(), path);
+        _job.getLogger().debug("Adding sequence output file: " + relPath + " || " + path);
+        if (relPath == null)
+        {
+            relPath = file.getPath();
+        }
+
+        File log = getSequenceOutputLog(true);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(log, true)))
+        {
+            writer.write(StringUtils.join(new String[]{relPath, label, category, (rs == null ? "" : rs.getRowId().toString())}, '\t') + '\n');
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void addOutput(RecordedAction action, String role, File file)
     {
         addInputOutput(action, role, file, _outputFiles, "Output");
@@ -84,6 +117,16 @@ public class TaskFileManagerImpl implements TaskFileManager
         for (File file : output.getDeferredDeleteIntermediateFiles())
         {
             addDeferredIntermediateFile(file);
+        }
+
+        for (File file : output.getDeferredDeleteIntermediateFiles())
+        {
+            addDeferredIntermediateFile(file);
+        }
+
+        for (PipelineStepOutput.SequenceOutput o : output.getSequenceOutputs())
+        {
+            addSequenceOutput(o.getFile(), o.getLabel(), o.getCategory(), o.getReadset());
         }
     }
 
@@ -198,6 +241,25 @@ public class TaskFileManagerImpl implements TaskFileManager
         return logFile;
     }
 
+    private File getSequenceOutputLog(boolean create)
+    {
+        File logFile = new File(getSupport().getAnalysisDirectory(), "sequenceOutputs.txt");
+        if (create && !logFile.exists())
+        {
+            try
+            {
+                logFile.createNewFile();
+            }
+            catch (IOException e)
+            {
+                _job.getLogger().error("Unable to create log file: " + logFile.getPath());
+                return null;
+            }
+        }
+
+        return logFile;
+    }
+
     @Override
     public void deleteDeferredIntermediateFiles()
     {
@@ -239,7 +301,21 @@ public class TaskFileManagerImpl implements TaskFileManager
                     if (f.exists())
                     {
                         _job.getLogger().debug("deleting file: " + f.getPath());
-                        f.delete();
+                        if (f.isDirectory())
+                        {
+                            try
+                            {
+                                FileUtils.deleteDirectory(f);
+                            }
+                            catch (IOException e)
+                            {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                        else
+                        {
+                            f.delete();
+                        }
 
                         File parentDir = f.getParentFile();
                         if (parentDir.list().length == 0)
@@ -249,7 +325,7 @@ public class TaskFileManagerImpl implements TaskFileManager
                     }
                     else
                     {
-                        _job.getLogger().warn("could not find file to delete");
+                        _job.getLogger().warn("could not find file to delete: " + f.getPath());
                     }
                 }
             }
@@ -260,6 +336,77 @@ public class TaskFileManagerImpl implements TaskFileManager
 
             //always delete the log
             log.delete();
+        }
+    }
+
+    @Override
+    public void createSequenceOutputRecords()
+    {
+        File log = getSequenceOutputLog(false);
+        if (log != null && log.exists())
+        {
+            _job.getLogger().info("Importing sequence output files");
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(log)))
+            {
+                TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
+                    String[] tokens = StringUtils.split(line, '\t');
+                    File f = new File(((FileAnalysisJobSupport)_job).getAnalysisDirectory(), tokens[0]);
+                    if (!f.exists())
+                    {
+                        _job.getLogger().error("unable to find file: " + f.getPath());
+                        continue;
+                    }
+
+                    ExpData d = ExperimentService.get().getExpDataByURL(f, _job.getContainer());
+                    if (d == null)
+                    {
+                        _job.getLogger().error("unable to find ExpData for file: " + f.getPath());
+                        continue;
+                    }
+
+                    Map<String, Object> map = new CaseInsensitiveHashMap<>();
+                    map.put("name", tokens[1]);
+                    map.put("category", tokens[2]);
+                    map.put("dataid", d.getRowId());
+
+                    Integer readsetId = Integer.parseInt(tokens[3]);
+                    map.put("readset", readsetId);
+
+
+                    //TODO
+
+//                    //analysis_id
+//                    ReadsetModel model = ReadsetModel.getForId(readsetId, _job.getUser());
+//                    if (model != null)
+//                    {
+//                        map.put("library_id", )
+//                    }
+
+                    Integer runId = SequenceTaskHelper.getExpRunIdForJob(_job);
+                    map.put("runid", runId);
+                    map.put("container", _job.getContainer().getId());
+                    map.put("createdby", _job.getUser().getUserId());
+                    map.put("modifiedby", _job.getUser().getUserId());
+                    map.put("created", new Date());
+                    map.put("modified", new Date());
+
+                    Table.insert(_job.getUser(), ti, map);
+                }
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException(e);
+            }
+
+            log.delete();
+        }
+        else
+        {
+            _job.getLogger().debug("There are no sequence outputs to add");
         }
     }
 
@@ -533,7 +680,7 @@ public class TaskFileManagerImpl implements TaskFileManager
         {
             _job.getLogger().debug("Copying directory: " +  file.getPath());
             _job.getLogger().debug("Directory has " + file.listFiles().length + " children");
-            for(File f : file.listFiles())
+            for (File f : file.listFiles())
             {
                 processCopiedFile(f);
             }
@@ -746,11 +893,11 @@ public class TaskFileManagerImpl implements TaskFileManager
             if (gz.isType(i))
             {
                 //NOTE: we use relative paths in all cases here
-                _job.getLogger().debug("Decompressing file: " + i.getPath());
+                _job.getLogger().info("Decompressing file: " + i.getPath());
 
                 unzipped = new File(_wd.getDir(), i.getName().replaceAll(".gz$", ""));
-                _job.getLogger().debug("\tunzipped: " + unzipped.getPath());
                 unzipped = Compress.decompressGzip(i, unzipped);
+                _job.getLogger().debug("\tunzipped: " + unzipped.getPath());
 
                 _unzippedMap.put(i, unzipped);
 

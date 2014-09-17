@@ -14,14 +14,12 @@ import java.io.File;
  */
 public interface ReferenceLibraryStep extends PipelineStep
 {
-    public File getExpectedFastaFile(File outputDirectory) throws PipelineJobException;
-
     public Output createReferenceFasta(File outputDirectory) throws PipelineJobException;
-
-    public void setLibraryId(PipelineJob job, ExpRun run, AnalysisModel model) throws PipelineJobException;
 
     public static interface Output extends PipelineStepOutput
     {
         public File getReferenceFasta() throws PipelineJobException;
+
+        public ReferenceGenome getReferenceGenome();
     }
 }

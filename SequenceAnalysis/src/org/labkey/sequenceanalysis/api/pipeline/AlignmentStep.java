@@ -16,7 +16,7 @@ public interface AlignmentStep extends PipelineStep
      * Creates any indexes needed by this aligner if not already present.
      * @throws PipelineJobException
      */
-    public IndexOutput createIndex(File refFasta, File outputDir) throws PipelineJobException;
+    public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException;
 
     /**
      * Performs a reference guided alignment using the provided files.
@@ -25,7 +25,7 @@ public interface AlignmentStep extends PipelineStep
      * @param basename The basename to use as the output
      * @throws PipelineJobException
      */
-    public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, File refFasta, String basename) throws PipelineJobException;
+    public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException;
 
     public static interface AlignmentOutput extends PipelineStepOutput
     {
@@ -39,6 +39,6 @@ public interface AlignmentStep extends PipelineStep
 
     public static interface IndexOutput extends PipelineStepOutput
     {
-        public File getPrimaryIndexFile() throws PipelineJobException;
+
     }
 }

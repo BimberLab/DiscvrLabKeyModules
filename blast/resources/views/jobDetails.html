@@ -50,6 +50,7 @@
             },
 
             doLoad: function(){
+                console.log('loading');
                 LABKEY.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('blast', 'getBlastResult', null, {jobId: jobId}),
                     scope: this,
@@ -59,34 +60,45 @@
             },
 
             onLoad: function(results){
+                if (this.loadMask){
+                    this.loadMask.hide();
+                    this.loadMask.destroy();
+                }
+
                 if (results){
                     var target = this.down('#htmlArea');
                     target.removeAll();
 
-                    if (results.jobId){
-                        target.add([{
-                            html: '<br>'
-                        },{
-                            xtype: 'ldk-querypanel',
-                            queryConfig: {
-                                schemaName: 'pipeline',
-                                queryName: 'job',
-                                filterArray: [LABKEY.Filter.create('job', results.jobId)]
-                            }
-                        },{
-                            html: '<br><hr>'
-                        }]);
-                    }
-
                     if (results.html) {
-                        target.add({
-                            html: results.html
-                        });
+                        if (!results.hasRun) {
+                            target.add({
+                                minHeight: 200,
+                                listeners: {
+                                    scope: this,
+                                    delay: 100,
+                                    afterrender: function(){
+                                        this.loadMask = new Ext4.LoadMask(target, {msg: results.html});
+                                        this.loadMask.show();
+                                        Ext4.Function.defer(this.doLoad, 5000, this);
+                                    }
+                                }
+                            });
+                        }
+                        else {
+                            target.add({
+                                html: results.html
+                            });
+                        }
                     }
                     else if (!results.hasRun) {
-                        target.add({
-                            html: 'This job has not yet run.  Reload this page to update this status.'
+                       target.add({
+                            html: 'This job has not yet run.  This page will reload every 5 seconds to monitor progress.',
+                            minHeight: 300
                         });
+
+                        this.loadMask = new Ext4.LoadMask(target, {msg: 'Loading...'});
+                        this.loadMask.show();
+                        Ext4.Function.defer(this.doLoad, 5000, this);
                     }
                     else if (results.hasRun && !results.html){
                         target.add({
@@ -95,7 +107,6 @@
                     }
                 }
             }
-
         });
 
         Ext4.create('BLAST.panel.BlastDetailsPanel', {

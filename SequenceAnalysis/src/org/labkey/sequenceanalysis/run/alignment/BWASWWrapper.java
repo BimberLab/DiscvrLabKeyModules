@@ -9,6 +9,7 @@ import org.labkey.sequenceanalysis.api.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.run.util.SamFormatConverterWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
@@ -36,9 +37,8 @@ public class BWASWWrapper extends BWAWrapper
         }
 
         @Override
-        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, File refFasta, String basename) throws PipelineJobException
+        protected AlignmentOutput _performAlignment(AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
-            AlignmentOutputImpl output = new AlignmentOutputImpl();
             getWrapper().setOutputDir(outputDirectory);
 
             getPipelineCtx().getLogger().info("Running BWA-SW");
@@ -49,7 +49,7 @@ public class BWASWWrapper extends BWAWrapper
             args.addAll(getClientCommandArgs());
             getWrapper().appendThreads(getPipelineCtx().getJob(), args);
 
-            args.add(new File(refFasta.getParentFile(), FileUtil.getBaseName(refFasta.getName()) + ".bwa.index").getPath());
+            args.add(new File(referenceGenome.getFastaFile().getParentFile(), FileUtil.getBaseName(referenceGenome.getFastaFile().getName()) + ".bwa.index").getPath());
             args.add(inputFastq1.getPath());
 
             if (inputFastq2 != null)

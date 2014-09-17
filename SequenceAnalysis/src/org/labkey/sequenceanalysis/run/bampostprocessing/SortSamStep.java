@@ -1,19 +1,16 @@
 package org.labkey.sequenceanalysis.run.bampostprocessing;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.BamProcessingStep;
-import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepOutput;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
-import org.labkey.sequenceanalysis.run.util.PicardWrapper;
-import org.labkey.sequenceanalysis.run.util.SamSorter;
 import org.labkey.sequenceanalysis.run.util.SortSamWrapper;
 
 import java.io.File;
@@ -34,7 +31,7 @@ public class SortSamStep extends AbstractCommandPipelineStep<SortSamWrapper> imp
     {
         public Provider()
         {
-            super("SortSam", "Sort BAM", "Samtools", "This step uses samtools to coordinate sort the BAM file", null, null, "http://samtools.sourceforge.net/");
+            super("SortSam", "Sort BAM (Coordinate)", "Picard", "This step uses picard tools to coordinate sort the BAM file", null, null, "http://picard.sourceforge.net/command-line-overview.shtml");
         }
 
         @Override
@@ -45,7 +42,7 @@ public class SortSamStep extends AbstractCommandPipelineStep<SortSamWrapper> imp
     }
 
     @Override
-    public Output processBam(ReadsetModel rs, File inputBam, File referenceFasta, File outputDirectory) throws PipelineJobException
+    public Output processBam(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException
     {
         BamProcessingOutputImpl output = new BamProcessingOutputImpl();
         getWrapper().setOutputDir(outputDirectory);
@@ -53,7 +50,7 @@ public class SortSamStep extends AbstractCommandPipelineStep<SortSamWrapper> imp
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".sorted.bam");
         output.addIntermediateFile(outputBam);
-        File sorted = getWrapper().execute(inputBam, outputBam, true);
+        File sorted = getWrapper().execute(inputBam, outputBam, SAMFileHeader.SortOrder.coordinate);
         output.setBAM(sorted);
 
         return output;

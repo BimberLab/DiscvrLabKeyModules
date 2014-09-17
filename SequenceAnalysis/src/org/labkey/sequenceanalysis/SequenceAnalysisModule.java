@@ -29,12 +29,15 @@ import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.template.ClientDependency;
+import org.labkey.sequenceanalysis.analysis.CompareVariantsHandler;
+import org.labkey.sequenceanalysis.analysis.VariantSearchHandler;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.button.CompareVariantsButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
@@ -46,10 +49,10 @@ import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
 import org.labkey.sequenceanalysis.run.alignment.LastzWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
 import org.labkey.sequenceanalysis.run.alignment.TophatWrapper;
+import org.labkey.sequenceanalysis.run.analysis.AlignmentMetricsAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
-import org.labkey.sequenceanalysis.run.analysis.VariantComparisonAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.ViralAnalysis;
 import org.labkey.sequenceanalysis.run.bampostprocessing.AddOrReplaceReadGroupsStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.CallMdTagsStep;
@@ -89,7 +92,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.282;
+        return 12.285;
     }
 
     public boolean hasScripts()
@@ -166,12 +169,13 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new MarkDuplicatesStep.Provider());
         //SequencePipelineService.get().registerPipelineStep(new RecalibrateBamStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SortSamStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.MethylationExtractorProvider());
 
         //analysis
         SequencePipelineService.get().registerPipelineStep(new SequenceBasedTypingAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new ViralAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new HaplotypeCallerAnalysis.Provider());
-        SequencePipelineService.get().registerPipelineStep(new VariantComparisonAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new AlignmentMetricsAnalysis.Provider());
     }
 
     @Override
@@ -219,7 +223,11 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         LaboratoryService.get().registerQueryButton(new SimpleButtonConfigFactory(this, "BamStats Report", "SequenceAnalysis.Buttons.generateBamStatsReport(dataRegionName, 'analysisIds');", new LinkedHashSet<ClientDependency>(Arrays.asList(ClientDependency.fromFilePath("sequenceanalysis/sequenceanalysisButtons.js")))), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES);
         LaboratoryService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
-        LaboratoryService.get().registerQueryButton(new CompareVariantsButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+
+        SequenceAnalysisService.get().registerFileHandler(new VariantSearchHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CompareVariantsHandler());
+
+        SystemMaintenance.addTask(new SequenceAnalyssiMaintenanceTask());
     }
 
     @Override

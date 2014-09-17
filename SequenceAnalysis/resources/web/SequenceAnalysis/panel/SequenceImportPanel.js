@@ -213,6 +213,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     minValue: 0,
                     helpPopup: 'If provided, the barcode can be located up to this many bases from the end of the read'
                 }]
+            },{
+                fieldLabel: 'Run FastQC',
+                helpPopup: 'Use this option to automatically run and cache a FastQC report.  For large input files, FastQC can take a long time to run.  Pre-caching this information may be useful later.',
+                name: 'inputfile.runFastqc',
+                xtype:'checkbox',
+                itemId: 'runFastqc',
+                checked: true
             }]
         },{
             xtype:'panel',
@@ -256,28 +263,44 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
     populateSamples: function(){
         var merge = this.down('#mergeCheckbox').getValue();
+        var paired = this.down('#usePairedEnd').getValue();
+
         var sampleGrid = this.down('#sampleGrid');
         sampleGrid.store.removeAll();
 
         //find file names
         var filenames = [];
         if (merge){
-            filenames.push(this.down('#mergeName').getValue())
+            filenames.push([this.down('#mergeName').getValue()]);
         }
         else {
-            this.fileNameStore.each(function(rec){
-                filenames.push(rec.get('fileName'))
-            }, this);
+            for (var i=0;i<this.fileNameStore.getCount();i++){
+                var rec = this.fileNameStore.getAt(i);
+                if (paired){
+                    var rec2 = this.fileNameStore.getAt(i + 1);
+                    filenames.push([rec.get('fileName'), rec2 ? rec2.get('fileName') : null]);
+                    i++;
+                }
+                else {
+                    filenames.push([rec.get('fileName')]);
+                }
+            }
         }
 
-        Ext4.each(filenames, function(fn){
-            var info = this.fileNameMap[fn];
+        Ext4.each(filenames, function(fnArray){
+            var info1 = this.fileNameMap[fnArray[0]];
+            var info2 = fnArray[1] ? this.fileNameMap[fnArray[1]] : {};
 
-            var obj = {fileName: fn};
+            var obj = {fileName: fnArray[0], fileName2: fnArray[1]};
             var error = false;
-            if (info){
-                obj.fileId = info.dataId;
-                if (info.error)
+            if (info1){
+                obj.fileId = info1.dataId;
+                if (info1.error)
+                    error = true;
+            }
+            if (info2){
+                obj.fileId2 = info2.dataId;
+                if (info2.error)
                     error = true;
             }
 
@@ -584,6 +607,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             }
             this.fileNameMap[f.fileName] = f;
         }, this);
+
+        this.distinctFileStore.sort('fileName');
+        this.fileNameStore.sort('fileName');
 
         this.down('#fileListView').refresh();
 

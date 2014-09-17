@@ -10,6 +10,7 @@ import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepOutput;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -45,7 +46,7 @@ public class AddOrReplaceReadGroupsStep extends AbstractCommandPipelineStep<AddO
     }
 
     @Override
-    public Output processBam(ReadsetModel rs, File inputBam, File referenceFasta, File outputDirectory) throws PipelineJobException
+    public Output processBam(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException
     {
         BamProcessingOutputImpl output = new BamProcessingOutputImpl();
         getWrapper().setOutputDir(outputDirectory);

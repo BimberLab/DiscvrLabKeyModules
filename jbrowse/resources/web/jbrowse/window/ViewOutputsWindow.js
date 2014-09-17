@@ -52,7 +52,10 @@ Ext4.define('JBrowse.window.ViewOutputsWindow', {
     },
 
     loadData: function(){
-        var obj = {};
+        var obj = {
+            handlerClass: 'org.labkey.jbrowse.JBrowseSequenceFileHandler'
+        };
+
         if (this.dataIds){
             obj.dataIds = this.dataIds;
         }
@@ -63,7 +66,7 @@ Ext4.define('JBrowse.window.ViewOutputsWindow', {
 
         LABKEY.Ajax.request({
             method: 'POST',
-            url: LABKEY.ActionURL.buildURL('jbrowse', 'checkFileStatus'),
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatus'),
             params: obj,
             scope: this,
             failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback(), this),
@@ -76,12 +79,12 @@ Ext4.define('JBrowse.window.ViewOutputsWindow', {
         var errors = [];
         var distinctGenomes = [];
         Ext4.Array.forEach(results.files, function(r){
-            if (!r.canDisplay){
+            if (!r.canProcess){
                 if (!r.fileExists){
-                    errors.push('File does not exist for output: ' + r.ouputFileId);
+                    errors.push('File does not exist for output: ' + r.outputFileId);
                 }
-                else if (!r.canDisplay){
-                    errors.push('Cannot display files of extension: ' + r.extension);
+                else if (!r.canProcess){
+                    errors.push('Cannot process files of extension: ' + r.extension);
                 }
             }
             else {
@@ -105,7 +108,12 @@ Ext4.define('JBrowse.window.ViewOutputsWindow', {
                 xtype: 'textfield',
                 allowBlank: false,
                 fieldLabel: 'Session Name',
-                name: 'name'
+                name: 'name',
+                listeners: {
+                    afterrender: function(field){
+                        field.focus.defer(100, field);
+                    }
+                }
             },{
                 xtype: 'textarea',
                 fieldLabel: 'Description',
@@ -144,7 +152,7 @@ Ext4.define('JBrowse.window.ViewOutputsWindow', {
             jsonData: {
                 name: name,
                 libraryId: libraryId,
-                dataIds: this.fileInfo
+                outputFileIds: this.outputFileIds
             },
             scope: this,
             success: function(){

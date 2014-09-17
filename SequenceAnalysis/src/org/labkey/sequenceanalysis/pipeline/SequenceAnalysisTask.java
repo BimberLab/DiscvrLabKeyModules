@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.metrics.MetricsFile;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -22,7 +23,6 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.gwt.client.util.StringUtils;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
@@ -31,14 +31,17 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
-import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
+import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
+import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
+import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
+import org.labkey.sequenceanalysis.run.util.BamMetricsRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
+import picard.analysis.AlignmentSummaryMetrics;
 
 import java.io.File;
 import java.sql.SQLException;
@@ -87,6 +90,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         public PipelineJob.Task createTask(PipelineJob job)
         {
             SequenceAnalysisTask task = new SequenceAnalysisTask(this, job);
+            setJoin(true);
             return task;
         }
 
@@ -113,12 +117,11 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         //first validate all analysis records before actually creating any DB records
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         ExpRun run = ExperimentService.get().getExpRun(runId);
-        List<AnalysisModel> analysisModels = new ArrayList<>();
+        List<AnalysisModelImpl> analysisModels = new ArrayList<>();
 
         for (ReadsetModel rs : taskHelper.getSettings().getReadsets())
         {
             String basename = SequenceTaskHelper.getMinimalBaseName(rs.getFileName());
-            String basename2 = SequenceTaskHelper.getMinimalBaseName(rs.getFileName2());
 
             AnalysisModelImpl model = new AnalysisModelImpl();
             model.setContainer(getJob().getContainer().getId());
@@ -166,8 +169,41 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             }
 
             //reference
-            ReferenceLibraryStep referenceLibraryStep = taskHelper.getSingleStep(ReferenceLibraryStep.class).create(taskHelper);
-            referenceLibraryStep.setLibraryId(getJob(), run, model);
+            ReferenceGenome referenceGenome = taskHelper.getSequenceSupport().getReferenceGenome();
+            if (referenceGenome == null)
+            {
+                throw new PipelineJobException("unable to find cached reference genome");
+            }
+
+            model.setLibraryId(referenceGenome.getGenomeId());
+            if (referenceGenome.getFastaExpDataId() != null)
+            {
+                model.setReferenceLibrary(referenceGenome.getFastaExpDataId());
+            }
+            else
+            {
+                List<? extends ExpData> fastaDatas = run.getInputDatas(ReferenceLibraryTask.REFERENCE_DB_FASTA, null);
+                if (fastaDatas.size() > 0)
+                {
+                    for (ExpData d : fastaDatas)
+                    {
+                        if (d.getFile() == null)
+                        {
+                            job.getLogger().debug("No file found for ExpData: " + d.getRowId());
+                        }
+                        else if (d.getFile().exists())
+                        {
+                            model.setReferenceLibrary(d.getRowId());
+                            break;
+                        }
+                        else
+                        {
+                            job.getLogger().debug("File does not exist: " + d.getFile().getPath());
+                        }
+                    }
+                }
+            }
+
             if (model.getReferenceLibrary() == null)
             {
                 getJob().getLogger().error("Unable to find reference FASTA for run: " + run.getRowId());
@@ -185,45 +221,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                         getJob().getLogger().debug("No file found for data: " + d.getRowId() + " / run: " + run.getRowId());
                         continue;
                     }
-
-                    if (basename != null && basename.equals(SequenceTaskHelper.getMinimalBaseName(d.getFile())))
-                    {
-                        //if the file doesnt exist, such as a deleted intermediate, dont override a potentially better input
-                        if (!d.getFile().exists() && model.getInputFile() != null)
-                        {
-                            getJob().getLogger().debug("A file is already been selected for input1.  match will be skipped: " + d.getFile().getPath());
-                        }
-                        else
-                        {
-                            model.setInputFile(d.getRowId());
-                        }
-                    }
-
-                    if (basename2 != null && basename2.equals(SequenceTaskHelper.getMinimalBaseName(d.getFile())))
-                    {
-                        //if the file doesnt exist, such as a deleted intermediate, dont override a potentially better input
-                        if (!d.getFile().exists() && model.getInputFile2() != null)
-                        {
-                            getJob().getLogger().debug("A file is already been selected for input2.  match will be skipped: " + d.getFile().getPath());
-                        }
-                        else
-                        {
-                            model.setInputFile2(d.getRowId());
-                        }
-                    }
                 }
-            }
-
-            if (model.getInputFile() == null)
-            {
-                getJob().getLogger().error("Unable to find first input FASTQ file for run: " + run.getRowId() + ". Expected file beginning with: " + basename);
-                continue;
-            }
-
-            if (!StringUtils.isEmpty(rs.getFileName2()) && model.getInputFile2() == null)
-            {
-                getJob().getLogger().error("Unable to find second input FASTQ file for run: " + run.getRowId() + ". Expected file beginning with: " + basename2);
-                continue;
             }
 
             analysisModels.add(model);
@@ -235,35 +233,42 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         }
 
         int i = 0;
-        for (AnalysisModel model : analysisModels)
+        List<AnalysisStep.Output> outputs = new ArrayList<>();
+        List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
+        if (providers.isEmpty())
+        {
+            getJob().getLogger().info("no analyses were selected");
+        }
+
+        for (AnalysisModelImpl model : analysisModels)
         {
             try
             {
                 i++;
                 getJob().getLogger().info("processing BAM " + i + " of " + analysisModels.size());
 
+                File bam = ExperimentService.get().getExpData(model.getAlignmentFile()).getFile();
+                if (bam == null)
+                {
+                    getJob().getLogger().error("unable to find BAM, skipping");
+                    continue;
+                }
+
+                File refDB = ExperimentService.get().getExpData(model.getReferenceLibrary()).getFile();
+                if (refDB == null)
+                {
+                    getJob().getLogger().error("unable to find reference fasta, skipping");
+                    continue;
+                }
+
+                getJob().getLogger().info("creating analysis model for BAM: " + bam.getName());
                 TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
                 Table.insert(getJob().getUser(), ti, model);
                 addMetricsForAnalysis(model);
 
-                List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
                 if (!providers.isEmpty())
                 {
-                    File bam = ExperimentService.get().getExpData(model.getAlignmentFile()).getFile();
-                    if(bam == null)
-                    {
-                        getJob().getLogger().error("Skipping SNP calling, unable to find BAM");
-                        continue;
-                    }
-
-                    File refDB = ExperimentService.get().getExpData(model.getReferenceLibrary()).getFile();
-                    if(refDB == null)
-                    {
-                        getJob().getLogger().error("Skipping SNP calling, unable to find reference DB");
-                        continue;
-                    }
-
-                    runAnalyses(actions, model, bam, refDB, providers, taskHelper);
+                    outputs.addAll(runAnalyses(actions, model, bam, refDB, providers, taskHelper));
                 }
             }
             catch (SQLException e)
@@ -272,26 +277,64 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             }
         }
 
+        List<AnalysisModel> models = new ArrayList<>();
+        models.addAll(analysisModels);
+        for (PipelineStepProvider<AnalysisStep> p : providers)
+        {
+            p.create(taskHelper).performAnalysisOnAll(models);
+        }
+
+        taskHelper.getFileManager().createSequenceOutputRecords();
+
         return new RecordedActionSet();
     }
 
-    private void addMetricsForAnalysis(AnalysisModel model) throws SQLException
+    private void addMetricsForAnalysis(AnalysisModel model) throws SQLException, PipelineJobException
     {
-        int analysisId = model.getRowId();
-
-        if (model.getAlignmentFile() != null)
+        if (model.getAlignmentFile() != null && model.getReferenceLibraryFile() != null && model.getReferenceLibraryFile().exists())
         {
+            ExpData d = ExperimentService.get().getExpData(model.getAlignmentFile());
+            if (!d.getFile().exists())
+            {
+                return;
+            }
 
-        }
+            File fai = new File(model.getReferenceLibraryFile().getPath() + ".fai");
+            if (!fai.exists())
+            {
+                getJob().getLogger().error("missing FASTA index, cannot calculate BAM metrics");
+            }
 
-        if (model.getInputFile() != null)
-        {
-            addFastqFileMetrics(analysisId, model.getInputFile());
-        }
+            getJob().getLogger().info("calculating metrics for BAM using Picard AlignmentSummaryMetricsCollector: " + d.getFile().getName());
 
-        if (model.getInputFile2() != null)
-        {
-            addFastqFileMetrics(analysisId, model.getInputFile());
+            MetricsFile metricsFile = new BamMetricsRunner(getJob().getLogger()).addMetricsForFile(d.getFile(), model.getReferenceLibraryFile());
+            List<AlignmentSummaryMetrics> metrics = metricsFile.getMetrics();
+            TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
+            for (AlignmentSummaryMetrics m : metrics)
+            {
+                Map<String, Object> row = new HashMap<>();
+                row.put("Avg Sequence Length", m.MEAN_READ_LENGTH);
+                row.put("%Reads Aligned In Pairs", m.PCT_READS_ALIGNED_IN_PAIRS * 100);
+                row.put("Total Sequences", m.TOTAL_READS);
+                row.put("Total Sequences Passed Filter", m.PF_READS);
+                row.put("Reads Aligned", m.PF_READS_ALIGNED);
+                row.put("%Reads Aligned", m.PCT_PF_READS_ALIGNED * 100);
+
+                for (String metricName : row.keySet())
+                {
+                    Map<String, Object> r = new HashMap<>();
+                    r.put("category", m.CATEGORY);
+                    r.put("metricname", metricName);
+                    r.put("metricvalue", row.get(metricName));
+                    r.put("dataid", d.getRowId());
+                    r.put("analysis_id", model.getAnalysisId());
+                    r.put("readset", model.getReadset());
+                    r.put("container", getJob().getContainer().getEntityId());
+                    r.put("createdby", getJob().getUser().getUserId());
+
+                    Table.insert(getJob().getUser(), ti, r);
+                }
+            }
         }
     }
 
@@ -304,7 +347,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             return;
         }
 
-        Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(d.getFile());
+        Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(d.getFile(), getJob().getLogger());
         for (String metricName : metricsMap.keySet())
         {
             Map<String, Object> r = new HashMap<>();
@@ -333,7 +376,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             //taskHelper.getFileManager().addInput(action, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, fastqFile);
 
             AnalysisStep step = provider.create(taskHelper);
-            AnalysisStep.Output o = step.performAnalysisPerSample(model, inputBam, refFasta);
+            AnalysisStep.Output o = step.performAnalysisPerSampleLocal(model, inputBam, refFasta);
             if (o != null)
             {
                 ret.add(o);

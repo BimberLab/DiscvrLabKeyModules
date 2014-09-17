@@ -8,6 +8,7 @@ import org.labkey.sequenceanalysis.api.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
@@ -42,13 +43,13 @@ public class LastzWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public IndexOutput createIndex(File refFasta, File outputDir) throws PipelineJobException
+        public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
-            return new IndexOutputImpl(refFasta);
+            return new IndexOutputImpl(referenceGenome);
         }
 
         @Override
-        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, File refFasta, String basename) throws PipelineJobException
+        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
@@ -62,7 +63,7 @@ public class LastzWrapper extends AbstractCommandWrapper
             output.addInput(tempFasta, "Converted FASTA");
             output.addIntermediateFile(tempFasta);
 
-            File outputBam = getWrapper().doAlignment(tempFasta, refFasta, outputDirectory, basename, getClientCommandArgs());
+            File outputBam = getWrapper().doAlignment(tempFasta, referenceGenome.getFastaFile(), outputDirectory, basename, getClientCommandArgs());
             output.addOutput(outputBam, AlignmentOutputImpl.BAM_ROLE);
 
             return output;

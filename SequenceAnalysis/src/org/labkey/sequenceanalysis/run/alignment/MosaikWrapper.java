@@ -9,6 +9,7 @@ import org.labkey.sequenceanalysis.api.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
@@ -41,33 +42,41 @@ public class MosaikWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public IndexOutput createIndex(File refFasta, File outputDir) throws PipelineJobException
+        public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
-            IndexOutputImpl output = new IndexOutputImpl(refFasta);
-            File outputFile = getWrapper().getExpectedMosaikRefFile(outputDir, refFasta);
+            IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
-            getWrapper().executeMosaikBuild(refFasta, null, outputFile, "-oa", getClientCommandArgs());
-            if (!outputFile.exists())
-                throw new PipelineJobException("Unable to find file: " + outputFile.getPath());
+            File outputFile = getWrapper().getExpectedMosaikRefFile(outputDir, referenceGenome.getFastaFile());
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName());
+            if (!hasCachedIndex)
+            {
+                getWrapper().executeMosaikBuild(referenceGenome.getFastaFile(), null, outputFile, "-oa", getClientCommandArgs());
+                if (!outputFile.exists())
+                    throw new PipelineJobException("Unable to find file: " + outputFile.getPath());
+            }
 
             output.addOutput(outputFile, IndexOutputImpl.PRIMARY_ALIGNER_INDEX_FILE);
             output.addDeferredDeleteIntermediateFile(outputFile);
-            output.appendOutputs(refFasta, outputDir);
+            output.appendOutputs(referenceGenome.getFastaFile(), outputDir);
+
+            //recache if not already
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), outputDir, getProvider().getName(), output);
 
             return output;
         }
 
         @Override
-        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, File refFasta, String basename) throws PipelineJobException
+        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getFastaFile().getParentFile(), getProvider().getName());
             getWrapper().setOutputDir(outputDirectory);
 
             //TODO: can we infer the technology?
             File reads = getWrapper().buildFastqReads(outputDirectory, inputFastq1, inputFastq2, SequencingTechnology.illumina_long);
             output.addIntermediateFile(reads);
 
-            File bam = getWrapper().executeMosaikAligner(refFasta, reads, outputDirectory, basename, getClientCommandArgs());
+            File bam = getWrapper().executeMosaikAligner(referenceGenome.getFastaFile(), reads, outputDirectory, basename, getClientCommandArgs());
             if (!bam.exists())
             {
                 throw new PipelineJobException("BAM not created, expected: " + bam.getPath());

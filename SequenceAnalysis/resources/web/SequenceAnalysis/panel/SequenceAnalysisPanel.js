@@ -7,6 +7,7 @@
 Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
     extend: 'SequenceAnalysis.panel.BaseSequencePanel',
     analysisController: 'sequenceanalysis',
+    alias: 'widget.sequenceanalysis-sequenceanalysispanel',
     statics: {
         TASKID: 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceAnalysisPipeline'
     },
@@ -92,7 +93,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                     Ext4.create('Ext.window.Window', {
                         taskId: this.taskId,
                         modal: true,
-                        sequencePanel: this.up('#sequenceAnalysisPanel'),
+                        sequencePanel: this,
                         title: 'Copy Settings From Previous Run',
                         width: 700,
                         bodyStyle: 'padding: 5px;',
@@ -141,7 +142,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                                         });
                                     }
                                     else if (val.selector == 'allRuns'){
-                                        console.log(win.taskId);
                                         toAdd.push({
                                             xtype: 'combo',
                                             width: 450,
@@ -165,7 +165,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                                                         scope: this,
                                                         success: function(results){
                                                             Ext4.Msg.hide();
-
                                                             var records = [];
                                                             if (results && results.length){
                                                                 Ext4.Array.forEach(results, function(r, idx){

@@ -154,6 +154,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                     {name: 'platform', allowBlank: false},
                     {name: 'application', allowBlank: false},
                     {name: 'inputmaterial'},
+                    {name: 'sampletype'},
                     {name: 'subjectid'},
                     {name: 'sampledate'},
                     {name: 'sampleid'},
@@ -295,6 +296,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                     valueField: 'platform',
                     editable: false,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
+                        containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
                         queryName: 'sequence_platforms',
                         autoLoad: true
@@ -314,8 +316,29 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                     valueField: 'application',
                     editable: false,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
+                        containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
                         queryName: 'sequence_applications',
+                        autoLoad: true
+                    })
+                }
+            },{
+                text: 'Sample Type',
+                name: 'sampletype',
+                width: 80,
+                dataIndex: 'sampletype',
+                editor: {
+                    xtype: 'labkey-combo',
+                    allowBlank: true,
+                    forceSelection: true,
+                    displayField: 'type',
+                    valueField: 'type',
+                    plugins: ['ldk-usereditablecombo'],
+                    editable: false,
+                    store: Ext4.create('LABKEY.ext4.data.Store', {
+                        containerPath: Laboratory.Utils.getQueryContainerPath(),
+                        schemaName: 'laboratory',
+                        queryName: 'sample_type',
                         autoLoad: true
                     })
                 }
@@ -325,8 +348,19 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 width: 80,
                 dataIndex: 'inputmaterial',
                 editor: {
-                    xtype: 'textfield',
-                    allowBlank: true
+                    xtype: 'labkey-combo',
+                    allowBlank: true,
+                    forceSelection: true,
+                    displayField: 'material',
+                    valueField: 'material',
+                    plugins: ['ldk-usereditablecombo'],
+                    editable: false,
+                    store: Ext4.create('LABKEY.ext4.data.Store', {
+                        containerPath: Laboratory.Utils.getQueryContainerPath(),
+                        schemaName: 'sequenceanalysis',
+                        queryName: 'input_material',
+                        autoLoad: true
+                    })
                 }
             },{
                 text: 'Subject Id',
@@ -360,6 +394,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                     queryMode: 'local',
                     showValueInList: true,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
+                        containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
                         queryName: 'instrument_runs',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
@@ -397,7 +432,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
         }
 
         var sql = 'select  ' +
-                'r.rowid,r.name,r.platform,r.application,r.inputMaterial,r.subjectid,r.sampledate,r.sampleid,r.barcode5,r.barcode3,r.fileid,r.fileid2,r.instrument_run_id,r.fileid2.name as fileName,r.fileid.name as fileName2 \n' +
+                'r.rowid,r.name,r.platform,r.application,r.inputmaterial,r.sampletype,r.subjectid,r.sampledate,r.sampleid,r.barcode5,r.barcode3,r.fileid,r.fileid2,r.instrument_run_id,r.fileid2.name as fileName,r.fileid.name as fileName2 \n' +
                 'from sequenceanalysis.sequence_readsets r \n';
 
         sql += 'WHERE rowid IN (' + readsets.join(',') + ')';
@@ -426,13 +461,6 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
 
                     var row = rowMap[readset];
 
-                    if (row.fileid || row.fileid2){
-                        msgs.push('Readset ' + readset + ' has already been associated with files and cannot be re-used.  If you would like to reanalyze this readset, load the table of readsets and look for the \'Analyze Data\' button.');
-                        record.data.isValid = false;
-                        record.data.readset = null;
-                        return;
-                    }
-
                     //update row based on saved readset.  avoid firing event
                     Ext4.apply(record.data, {
                         readsetname: row.name,
@@ -442,6 +470,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                         subjectid: row.subjectid,
                         sampledate: row.sampledate,
                         inputmaterial: row.inputmaterial,
+                        sampletype: row.sampletype,
                         instrument_run_id: row.instrument_run_id,
                         isValid: true
                     });
@@ -532,88 +561,6 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
         }, this);
 
         this.fireEvent('dataready');
-    },
-
-    getBulkEditWin: function(){
-        return Ext4.create('Ext.window.Window', {
-            width: 280,
-            closeAction:'destroy',
-            modal: true,
-            scope: this,
-            keys: [{
-                key: Ext4.EventObject.ENTER,
-                handler: this.onBulkEdit,
-                scope: this
-            }],
-            title: 'Bulk Edit',
-            items: [{
-                xtype: 'form',
-                border: false,
-                bodyStyle:'padding:5px',
-                items: [{
-                    emptyText: '',
-                    fieldLabel: 'Select Field',
-                    itemId: 'fieldName',
-                    xtype: 'labkey-combo',
-                    displayField: 'name',
-                    valueField: 'value',
-                    typeAhead: true,
-                    triggerAction: 'all',
-                    queryMode: 'local',
-                    width: '100%',
-                    editable: false,
-                    required: true,
-                    store: Ext4.create('Ext.data.ArrayStore', {
-                        fields: ['value', 'name', 'column'],
-                        data: (function(cols){
-                            var values = [];
-                            Ext4.each(cols, function(c){
-                                if (!c.hidden)
-                                    values.push([c.dataIndex, c.text, c])
-                            }, this);
-                            return values;
-                        })(this.down('#sampleGrid').columns)
-                    })
-                },{
-                    xtype: 'textfield',
-                    itemId: 'fieldVal',
-                    fieldLabel: 'Enter Value'
-                }]
-            }],
-            buttons: [{
-                text:'Submit',
-                disabled:false,
-                formBind: true,
-                itemId: 'submit',
-                scope: this,
-                handler: this.onBulkEdit
-            },{
-                text: 'Close',
-                itemId: 'close',
-                scope: this,
-                handler: function(c){
-                    c.up('window').close();
-                }
-            }]
-        });
-    },
-
-    onBulkEdit: function(btn){
-        var win = btn.up('window');
-        win.close();
-
-        var f = win.down('#fieldName').getValue();
-        var v = win.down('#fieldVal').getValue();
-        var s = this.down('#sampleGrid').getSelectionModel().getSelection();
-        if (!s.length){
-            Ext4.Msg.alert('Error', 'No rows selected');
-            return;
-        }
-        for (var i = 0, r; r = s[i]; i++){
-            r.set(f, v);
-        }
-        win.down('#fieldName').reset();
-        win.down('#fieldVal').reset();
     },
 
     onSubmit: function(btn){

@@ -77,15 +77,15 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
 
     getFileTypeItems: function(){
         var items = [];
-        for (var ft in this.fileTypes){
+        Ext4.Array.forEach(this.fileTypes, function(ft){
             items.push({
                 xtype: 'checkbox',
-                boxLabel: ft,
-                name: ft,
-                inputValue: this.fileTypes[ft],
-                checked: true
+                boxLabel: ft.name,
+                name: ft.name,
+                inputValue: ft.fields,
+                checked: ft.checked !== false
             });
-        }
+        }, this);
 
         var config = {
             xtype: 'checkboxgroup',
@@ -154,8 +154,8 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
         }
 
         var url;
-        if(exportType == 'zip'){
-            url = LABKEY.ActionURL.buildURL('experiment', 'exportFiles', null, {dataIds: dataIds, zipFileName: fileName});
+        if (exportType == 'zip'){
+            url = LABKEY.ActionURL.buildURL('sequenceanalysis', 'exportSequenceFiles', null, {dataIds: dataIds, zipFileName: fileName});
         }
         else {
             url = LABKEY.ActionURL.buildURL('sequenceanalysis', 'mergeFastqFiles', null, {dataIds: dataIds, zipFileName: fileName});

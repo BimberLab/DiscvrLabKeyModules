@@ -21,7 +21,7 @@ EHR.model.DataModelManager.registerMetadata('ChargesAdvanced', {
             },
             chargetype: {
                 allowBlank: true,
-                hidden: true
+                hidden: false
             }
         }
     }

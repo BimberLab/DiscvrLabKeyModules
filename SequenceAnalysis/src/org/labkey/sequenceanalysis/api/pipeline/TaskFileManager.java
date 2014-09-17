@@ -1,7 +1,9 @@
 package org.labkey.sequenceanalysis.api.pipeline;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 
 import java.io.File;
 import java.util.Collection;
@@ -17,6 +19,8 @@ import java.util.List;
  */
 public interface TaskFileManager
 {
+    public void addSequenceOutput(File file, String label, String category, @Nullable ReadsetModel rs);
+
     public void addOutput(RecordedAction action, String role, File file);
 
     public void addInput(RecordedAction action, String role, File file);
@@ -37,6 +41,8 @@ public interface TaskFileManager
     public void addIntermediateFiles(Collection<File> files);
 
     public void deleteIntermediateFiles() throws PipelineJobException;
+
+    public void createSequenceOutputRecords();
 
     //should be used for remote jobs or local jobs running in a separate working directory
     public void cleanup() throws PipelineJobException;

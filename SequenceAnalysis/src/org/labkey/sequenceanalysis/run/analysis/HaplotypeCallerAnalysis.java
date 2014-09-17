@@ -59,20 +59,26 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
     }
 
     @Override
-    public Output performAnalysisPerSample(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    public Output performAnalysisPerSampleRemote(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
 
         File outputFile = new File(getWrapper().getOutputDir(inputBam), FileUtil.getBaseName(inputBam) + ".gvcf");
         getWrapper().execute(inputBam, referenceFasta, outputFile, getClientCommandArgs());
 
-        output.addVcfFile(outputFile);
+        //output.addSequenceOutput(outputFile, "Haplotype Caller Output", "Haplotype Caller Output", null);
 
         return output;
     }
 
     @Override
-    public void performAnalysisOnAll(List<Output> previousSteps)
+    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    {
+        return null;
+    }
+
+    @Override
+    public void performAnalysisOnAll(List<AnalysisModel> analysisModels) throws PipelineJobException
     {
 
     }

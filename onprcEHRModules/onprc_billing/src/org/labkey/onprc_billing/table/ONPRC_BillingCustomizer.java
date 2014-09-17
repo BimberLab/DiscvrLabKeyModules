@@ -172,15 +172,24 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             return _billingUserSchema;
         }
 
+        //first try to actual container
         Container c = ONPRC_BillingManager.get().getBillingContainer(table.getUserSchema().getContainer());
-        if (c != null)
+        if (c != null && c.hasPermission(table.getUserSchema().getUser(), ReadPermission.class))
         {
             UserSchema us = QueryService.get().getUserSchema(table.getUserSchema().getUser(), c, ONPRC_BillingSchema.NAME);
-            if (us != null && us.getContainer().hasPermission(table.getUserSchema().getUser(), ReadPermission.class))
+            if (us != null)
             {
                 _billingUserSchema = us;
                 return us;
             }
+        }
+
+        //then a linked schema
+        UserSchema us = QueryService.get().getUserSchema(table.getUserSchema().getUser(), table.getUserSchema().getContainer(), "onprc_billing_public");
+        if (us != null)
+        {
+            _billingUserSchema = us;
+            return us;
         }
 
         return null;
@@ -425,8 +434,18 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             col.setIsUnselectable(true);
             ti.addColumn(col);
         }
+
         //NOTE: this is separated to allow linked schemas to use the same column
-        ti.getColumn(activeAccount).setFk(new QueryForeignKey(getBillingUserSchema(ti), null, ONPRC_BillingSchema.TABLE_ALIASES, "alias", "alias"));
+        UserSchema us = getUserSchema(ti, "onprc_billing_public");
+        if (us == null)
+        {
+            us = getUserSchema(ti, "onprc_billing");
+        }
+
+        if (us != null)
+        {
+            ti.getColumn(activeAccount).setFk(new QueryForeignKey(us, null, ONPRC_BillingSchema.TABLE_ALIASES, "alias", "alias"));
+        }
     }
 
     private void customizeChargeableItems(AbstractTableInfo ti)

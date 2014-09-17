@@ -1,6 +1,8 @@
 package org.labkey.sequenceanalysis.api.pipeline;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.util.Pair;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
     private List<Pair<File, String>> _outputs = new ArrayList<>();
     private List<File> _intermediateFiles = new ArrayList<>();
     private List<File> _deferredDeleteFiles = new ArrayList<>();
+    private List<SequenceOutput> _sequenceOutputs = new ArrayList<>();
 
     public DefaultPipelineStepOutput()
     {
@@ -61,6 +64,17 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
     public List<File> getDeferredDeleteIntermediateFiles()
     {
         return Collections.unmodifiableList(_deferredDeleteFiles);
+    }
+
+    @Override
+    public List<SequenceOutput> getSequenceOutputs()
+    {
+        return Collections.unmodifiableList(_sequenceOutputs);
+    }
+
+    public void addSequenceOutput(File file, String label, String category, @Nullable ReadsetModel rs)
+    {
+        _sequenceOutputs.add(new SequenceOutput(file, label, category, rs));
     }
 
     public void addInput(File input, String role)

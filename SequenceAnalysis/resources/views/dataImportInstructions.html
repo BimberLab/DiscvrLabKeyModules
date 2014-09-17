@@ -1,0 +1,66 @@
+A key part of the sequence module involves managing your raw data and output files.  All too often, a sequence project is just a collection of files on a hard disk.
+They are organized by the grad student or post doc into folders, and named using whatever conventions make sense at that time.  This may be adequate for single projects,
+but the more data your labs collects, the more time you waste on menial tasks.  It is also expensive to generate the data.  Data managed through the system are readily searchable, making
+it practical to find and re-analyze data.
+<p></p>
+
+<h3>Import Raw Data</h3>
+
+There are two ways to do this.  If you have already generated the data and have the output files, click 'Upload Files / Start Analysis'.  You can also use the system to plan a run ahead of time,
+in which case you can upload a spreadsheet of your sample information, barcodes/indexes, etc.  For the instructions we will assume you are starting with the output files.
+
+<br><br>
+<img src="<%=contextPath%>/sequenceanalysis/docs/import1.jpg" style="border: 1px solid black"/>
+<br><br>
+
+After clicking, the system will ask you which workbook to use for the import.  All data are organized into workbooks.  You can think of these as folders within your project.  It allows you to separate
+different datasets or projects.  Note: you can always analyze or compare data stored in different workbooks, so this choice is not critical.  At time of import, you can either create a new workbook or add
+to an existing one.
+
+<br><br>
+<img src="<%=contextPath%>/sequenceanalysis/docs/import2.jpg" style="border: 1px solid black"/>
+<br><br>
+
+After you click submit, you will see a standard LabKey files webpart.  This allows you to select files from your computer to upload.  Note: you can use the multi-file upload option to load multiple files
+and/or use drag & drop upload.
+
+<br><br>
+<img src="<%=contextPath%>/sequenceanalysis/docs/import3.jpg" style="border: 1px solid black"/>
+<br><br>
+
+Next, select the files you want to import, then click the 'Import Data' from the button bar.  You should see a popup window where you can select 'Import sequence data'.
+
+<br><br>
+<img src="<%=contextPath%>/sequenceanalysis/docs/import4.jpg" style="border: 1px solid black"/>
+<br><br>
+
+The next form has many sections, but is fairly straightforward.   In the top sections, simply fill out the fields to match your data.
+In the 'Run Information' section, you can give your import a name and an optional description.  The second section summarizes the files you selected to upload.  The third section allows you to
+choose how the original files are treated, and other information about your data such as whether it is paired end.  Note: if you hover over the question marks, more detailed information will
+appear about that option.
+
+<br><br>
+<img src="<%=contextPath%>/sequenceanalysis/docs/import5.jpg" style="border: 1px solid black"/>
+<br><br>
+
+The most important step if the section where you enter sample information.  The general idea is that we need to capture the relevant sample attributes, such as subject name, sample type, sequencing platform, etc.
+Most of these are optional, but any information you enter now many help you search and identify these data later.  You can edit these after the fact as well.  Note: if your data are paired-end, we expect 2 files per readset.  If the data are not paired, we expect only a single file per readset.
+
+<br><br>
+<img src="<%=contextPath%>/sequenceanalysis/docs/import6.jpg" style="border: 1px solid black"/>
+<br><br>
+
+After you are done with your samples, click 'Import Data' to import.  During import, the system will normalize your sequence files.  This means it that while you could import multiple sequence formats, all
+imported data will be converted to FASTQ (standard encoding) and compressed to save space.  Most next-gen sequence will already be in FASTQ format, but this step is can be helpful so downstream analyses
+do not need to bother with format conversions.  Once complete, your new readsets will appear on the summary:
+
+<br><br>
+<img src="<%=contextPath%>/sequenceanalysis/docs/import7.jpg" style="border: 1px solid black"/>
+<br><br>
+
+You can click on the readset number to view your data.  The image below shows an example with 99 imported.  This grid operates like any other LabKey grid.  This means you are able to click on the column
+headers to sort or filter, allowing easy search across all your data.  Note: the 'More Actions' button will have many additional options, such as the ability to download the data or running <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/">FastQC</a> (a tool to generate a summary report) on your data.
+
+<br><br>
+<img src="<%=contextPath%>/sequenceanalysis/docs/import8.jpg" style="border: 1px solid black"/>
+<br><br>

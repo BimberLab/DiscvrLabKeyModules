@@ -18,6 +18,7 @@
  -->
 <ns:tables xsi:schemaLocation="http://labkey.org/data/xml" xmlns:ns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ns:table tableName="jsonfiles" tableDbType="TABLE" useColumnOrder="true">
+        <!--NOTE: required to allow modules to register buttons-->
         <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableUrl></ns:tableUrl>
@@ -42,12 +43,12 @@
                     <ns:fkColumnName>rowid</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="dataid">
+            <ns:column columnName="outputfile">
                 <ns:columnTitle>File Id</ns:columnTitle>
                 <ns:fk>
-                    <ns:fkDbSchema>exp</ns:fkDbSchema>
-                    <ns:fkTable>data</ns:fkTable>
-                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>outputfiles</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
             <ns:column columnName="relpath">
@@ -58,6 +59,9 @@
                 <ns:columnTitle>Key</ns:columnTitle>
                 <ns:shownInDetailsView>false</ns:shownInDetailsView>
                 <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="trackJson">
+                <ns:columnTitle>Additional Track Configuration</ns:columnTitle>
             </ns:column>
             <ns:column columnName="container">
                 <ns:isHidden>true</ns:isHidden>
@@ -92,6 +96,7 @@
         </ns:buttonBarOptions>
     </ns:table>
     <ns:table tableName="databases" tableDbType="TABLE" useColumnOrder="true">
+        <!--NOTE: required to allow modules to register buttons-->
         <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableUrl>/jbrowse/databaseDetails.view?databaseId=${objectid}</ns:tableUrl>
@@ -175,7 +180,7 @@
         </ns:buttonBarOptions>
     </ns:table>
     <ns:table tableName="database_members" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableUrl></ns:tableUrl>
         <ns:insertUrl></ns:insertUrl>

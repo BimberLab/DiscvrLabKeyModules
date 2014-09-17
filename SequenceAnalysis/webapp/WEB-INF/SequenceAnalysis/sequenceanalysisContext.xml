@@ -24,7 +24,7 @@
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceAnalysisTask$Factory">
                     <property name="location" value="webserver" />
-                    <property name="join" value="false" />
+                    <property name="join" value="true" />
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.ReadsetImportTask$Factory">
                     <property name="location" value="webserver" />

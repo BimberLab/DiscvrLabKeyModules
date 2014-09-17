@@ -18,38 +18,19 @@ SequenceAnalysis.Buttons = new function(){
                 return;
             }
 
-        //    Ext4.Msg.confirm('Type of Search', 'View search panel?  Hit cancel to view all records.', function(button, val, window){
-        //        if (button == 'yes'){
-        //            var params = {
-        //                schemaName: options.schemaName ? options.schemaName : 'sequenceanalysis',
-        //                'query.queryName': options.queryName
-        //            };
-        //
-        //            params['query.'+(options.keyField ? options.keyField :'analysis_id')+'~in'] = checked.join(';');
-        //
-        //            changeLocation(LABKEY.ActionURL.buildURL(
-        //                    'query',
-        //                    'executeQuery.view',
-        //                    LABKEY.ActionURL.getContainer(),
-        //                    params
-        //                ));
-        //        }
-        //        else {
-                    var params = {
-                        schemaName: options.schemaName ? options.schemaName : 'sequenceanalysis',
-                        'query.queryName': options.queryName
-                    };
+            var params = {
+                schemaName: options.schemaName ? options.schemaName : 'sequenceanalysis',
+                'query.queryName': options.queryName
+            };
 
-                    params['query.'+(options.keyField ? options.keyField :'analysis_id')+'~in'] = checked.join(';');
+            params['query.'+(options.keyField ? options.keyField :'analysis_id')+'~in'] = checked.join(';');
 
-                    changeLocation(LABKEY.ActionURL.buildURL(
-                            'query',
-                            'executeQuery.view',
-                            LABKEY.ActionURL.getContainer(),
-                            params
-                    ));
-        //        }
-        //    }, this);
+            changeLocation(LABKEY.ActionURL.buildURL(
+                    'query',
+                    'executeQuery.view',
+                    LABKEY.ActionURL.getContainer(),
+                    params
+            ));
 
             function changeLocation(location){
                 window.location = location;
@@ -270,10 +251,6 @@ SequenceAnalysis.Buttons = new function(){
                 alert('Must select one or more rows');
                 return;
             }
-//            if (checked.length != 1){
-//                alert('Can only edit one row at a time');
-//                return;
-//            }
 
             Ext4.Msg.wait('Loading...');
 
@@ -555,12 +532,14 @@ SequenceAnalysis.Buttons = new function(){
                 return;
             }
 
-            window.location = LABKEY.ActionURL.buildURL(
-                'sequenceanalysis',
-                'fastqcReport',
-                LABKEY.ActionURL.getContainer(),
-                params
-            );
+            Ext4.Msg.alert('FastQC', 'You are about to run FastQC, a tool that generates reports on the selected sequence files.  Note: unless the report was previously cached for these files, it runs on the fly, meaning it may take time for the page to load, depending on the size of your input files.', function() {
+                window.location = LABKEY.ActionURL.buildURL(
+                    'sequenceanalysis',
+                    'fastqcReport',
+                    LABKEY.ActionURL.getContainer(),
+                    params
+                );
+            }, this);
         },
 
         generateBamStatsReport: function(dataRegionName, pkName){
@@ -575,12 +554,14 @@ SequenceAnalysis.Buttons = new function(){
                 return;
             }
 
-            window.location = LABKEY.ActionURL.buildURL(
-                    'sequenceanalysis',
-                    'bamStatsReport',
-                    LABKEY.ActionURL.getContainer(),
-                    params
-            );
+            Ext4.Msg.alert('BAMStats', 'You are about to run BAMStats, a tool that generates reports on the selected BAM files.  Note: this tool runs on the fly, meaning it may take time for the page to load, depending on the size of your input files.  Also, we have found BAMStats to sometimes be picky and give errors on certain BAM inputs.  If you hit an error please let you administrator know so we can report these problems to the tool\'s authors.', function(){
+                window.location = LABKEY.ActionURL.buildURL(
+                        'sequenceanalysis',
+                        'bamStatsReport',
+                        LABKEY.ActionURL.getContainer(),
+                        params
+                );
+            }, this);
         },
 
         generateFastQcForAnalysis: function(dataRegionName, btnEl){
@@ -614,11 +595,6 @@ SequenceAnalysis.Buttons = new function(){
                             name: 'chooseFiles',
                             boxLabel: 'Raw Input File(s)',
                             inputValue: 'readset/fileid;readset/fileid2'
-                        },{
-                            name: 'chooseFiles',
-                            boxLabel: 'Processed Input File(s)',
-                            inputValue: 'inputfile;inputfile2',
-                            checked: true
                         },{
                             name: 'chooseFiles',
                             boxLabel: 'Alignment File',
@@ -731,10 +707,10 @@ SequenceAnalysis.Buttons = new function(){
                         Ext4.create('SequenceAnalysis.window.RunExportWindow', {
                             dataRegionName: dataRegionName,
                             records: result.rows,
-                            fileTypes: {
-                                'Forward Reads': ['fileid'],
-                                'Reverse Reads': ['fileid2']
-                            }
+                            fileTypes: [
+                                {name: 'Forward Reads', fields: ['fileid'], checked: true},
+                                {name: 'Reverse Reads', fields: ['fileid2'], checked: true}
+                            ]
                         }).show(btnEl);
                     }
                 },
@@ -769,12 +745,11 @@ SequenceAnalysis.Buttons = new function(){
                         Ext4.create('SequenceAnalysis.window.RunExportWindow', {
                             dataRegionName: dataRegionName,
                             records: result.rows,
-                            fileTypes: {
-                                'Raw Input File(s)': ['readset/fileid','readset/fileid2'],
-                                'Processed Input File(s)': ['inputfile','inpitfile2'],
-                                'Alignment File': ['alignmentfile', 'alignmentfileindex'],
-                                'Reference Genome': ['reference_library']
-                            }
+                            fileTypes: [
+                                {name: 'Raw Input File(s)', fields: ['readset/fileid','readset/fileid2'], checked: false},
+                                {name: 'Alignment File', fields: ['alignmentfile'], checked: true},
+                                {name: 'Reference Genome', fields: ['reference_library'], checked: true}
+                            ]
                         }).show(btnEl);
                     }
                 },
@@ -817,7 +792,7 @@ SequenceAnalysis.Buttons = new function(){
             }).show(btn);
         },
 
-        compareVariantsHandler: function(dataRegionName){
+        sequenceOutputHandler: function(dataRegionName, handlerClass){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
@@ -826,22 +801,42 @@ SequenceAnalysis.Buttons = new function(){
                 return;
             }
 
-            window.location = LABKEY.ActionURL.buildURL('sequenceanalysis', 'variantComparison', null, {
-                fileIds: checked
-            });
-        },
+            Ext4.Msg.wait('Loading file info...');
+            LABKEY.Ajax.request({
+                method: 'POST',
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatus'),
+                params: {
+                    handlerClass: handlerClass,
+                    outputFileIds: checked
+                },
+                scope: this,
+                failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback(), this),
+                success: LABKEY.Utils.getCallbackWrapper(function(results){
+                    Ext4.Msg.hide();
 
-        jointGenotypingHandler: function(dataRegionName){
-            var dataRegion = LABKEY.DataRegions[dataRegionName];
-            var checked = dataRegion.getChecked();
+                    var errors = [];
+                    Ext4.Array.forEach(results.files, function(r){
+                        if (!r.canProcess){
+                            if (!r.fileExists){
+                                errors.push('File does not exist for output: ' + r.outputFileId);
+                            }
+                            else if (!r.canProcess){
+                                errors.push('Cannot process files of extension: ' + r.extension);
+                            }
+                        }
+                    }, this);
 
-            if (!checked.length){
-                Ext4.Msg.alert('Error', 'Must select one or more rows');
-                return;
-            }
+                    if (errors.length){
+                        errors = Ext4.Array.unique(errors);
+                        Ext4.Msg.alert('Error', errors.join('<br>'));
+                        return;
+                    }
 
-            window.location = LABKEY.ActionURL.buildURL('sequenceanalysis', 'jointGenotyping', null, {
-                fileIds: checked
+                    window.location = LABKEY.ActionURL.buildURL('sequenceanalysis', 'outputFileHandler', null, {
+                        handlerClass: handlerClass,
+                        outputFileIds: checked.join(';')
+                    });
+                }, this)
             });
         }
     }

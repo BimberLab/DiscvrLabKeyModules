@@ -88,33 +88,6 @@
                 </ft:webPart>
             </ft:preferredWebParts>
         </ft:folderTab>
-        <!--<ft:folderTab>-->
-            <!--<ft:name>settings</ft:name>-->
-            <!--<ft:caption>Settings</ft:caption>-->
-            <!--<ft:selectors>-->
-                <!--<ft:selector>-->
-                    <!--<ft:view>labSettings</ft:view>-->
-                <!--</ft:selector>-->
-                <!--<ft:selector>-->
-                    <!--<ft:view>assayDefaults</ft:view>-->
-                <!--</ft:selector>-->
-                <!--<ft:selector>-->
-                    <!--<ft:view>itemVisibility</ft:view>-->
-                <!--</ft:selector>-->
-            <!--</ft:selectors>-->
-            <!--<ft:requiredWebParts>-->
-            <!--</ft:requiredWebParts>-->
-            <!--<ft:preferredWebParts>-->
-                <!--<ft:webPart>-->
-                    <!--<ft:name>Lab Settings</ft:name>-->
-                    <!--<ft:location>body</ft:location>-->
-                <!--</ft:webPart>-->
-                <!--<ft:webPart>-->
-                    <!--<ft:name>Lab Tools</ft:name>-->
-                    <!--<ft:location>right</ft:location>-->
-                <!--</ft:webPart>-->
-            <!--</ft:preferredWebParts>-->
-        <!--</ft:folderTab>-->
     </ft:folderTabs>
     <ft:modules>
         <ft:moduleName>Laboratory</ft:moduleName>

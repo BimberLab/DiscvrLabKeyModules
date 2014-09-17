@@ -36,7 +36,11 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         params.add(getJar().getPath());
         params.add("--version");
 
-        return StringUtils.trim(execute(params));
+        setWarnNonZeroExits(false);
+        String ret = StringUtils.trim(execute(params));
+        setWarnNonZeroExits(true);
+
+        return ret;
     }
 
     public File getPicardJar(String jarName)

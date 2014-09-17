@@ -54,7 +54,8 @@ Ext4.define('SequenceAnalysis.panel.AlignmentPanel', {
                 stepType: 'referenceLibraryCreation',
                 comboLabel: 'Reference Genome Type',
                 singleTool: true,
-                toolConfig: this.toolConfig
+                toolConfig: this.toolConfig,
+                comboValue: 'SavedLibrary'
             },{
                 xtype: 'displayfield',
                 style: 'margin-top: 10px;',

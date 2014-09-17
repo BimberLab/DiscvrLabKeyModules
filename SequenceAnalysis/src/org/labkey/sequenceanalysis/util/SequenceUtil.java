@@ -1,9 +1,13 @@
 package org.labkey.sequenceanalysis.util;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.BlockCompressedOutputStream;
+import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -84,14 +88,16 @@ public class SequenceUtil
         {
             reader.setValidationStringency(ValidationStringency.SILENT);
 
-            SAMRecordIterator it = reader.iterator();
-            long count = 0;
-            while (it.next() != null)
+            try (SAMRecordIterator it = reader.iterator())
             {
-                count++;
-            }
+                long count = 0;
+                while (it.next() != null)
+                {
+                    count++;
+                }
 
-            return count;
+                return count;
+            }
         }
     }
 
@@ -117,6 +123,78 @@ public class SequenceUtil
         catch (IOException e)
         {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static SAMFileHeader.SortOrder getBamSortOrder(File bam)
+    {
+        try (SAMFileReader reader = new SAMFileReader(bam))
+        {
+            return reader.getFileHeader().getSortOrder();
+        }
+    }
+
+    public static void logFastqBamDifferences(Logger log, File bam, Integer fastqReadCount, @Nullable Integer fastq2ReadCount)
+    {
+        int totalFirstMateAlignments = 0;
+        int totalFirstMatePrimaryAlignments = 0;
+
+        int totalSecondMateAlignments = 0;
+        int totalSecondMatePrimaryAlignments = 0;
+
+        try (SAMFileReader reader = new SAMFileReader(bam))
+        {
+            reader.setValidationStringency(ValidationStringency.SILENT);
+
+            try (SAMRecordIterator it = reader.iterator())
+            {
+                while (it.hasNext())
+                {
+                    SAMRecord r = it.next();
+                    if (r.getReadUnmappedFlag())
+                    {
+                        continue;
+                    }
+
+                    //count all alignments
+                    if (r.getReadPairedFlag() && r.getSecondOfPairFlag())
+                    {
+                        totalSecondMateAlignments++;
+                    }
+                    else
+                    {
+                        totalFirstMateAlignments++;
+                    }
+
+                    //also just primary alignments
+                    if (!r.isSecondaryOrSupplementary())
+                    {
+                        if (r.getReadPairedFlag() && r.getSecondOfPairFlag())
+                        {
+                            totalSecondMatePrimaryAlignments++;
+                        }
+                        else
+                        {
+                            totalFirstMatePrimaryAlignments++;
+                        }
+                    }
+                }
+
+                log.info("Total first mate alignments: " + totalFirstMateAlignments);
+                log.info("Total first second mate alignments: " + totalSecondMateAlignments);
+
+                log.info("Total first mate primary alignments: " + totalFirstMatePrimaryAlignments);
+                if (fastqReadCount != null)
+                {
+                    log.info("\tDifference from FASTQ: " + (fastqReadCount - totalFirstMatePrimaryAlignments));
+                }
+
+                log.info("Total second mate primary alignments: " + totalSecondMatePrimaryAlignments);
+                if (fastq2ReadCount != null)
+                {
+                    log.info("\tDifference from second FASTQ: " + (fastq2ReadCount - totalSecondMatePrimaryAlignments));
+                }
+            }
         }
     }
 }

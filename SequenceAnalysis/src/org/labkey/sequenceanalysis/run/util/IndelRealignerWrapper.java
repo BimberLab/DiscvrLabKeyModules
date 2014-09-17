@@ -2,12 +2,14 @@ package org.labkey.sequenceanalysis.run.util;
 
 import com.drew.lang.annotations.Nullable;
 import htsjdk.samtools.BAMIndexer;
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -32,10 +34,33 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
     {
         getLogger().info("Running GATK IndelRealigner for: " + inputBam.getName());
 
+        File intervalsFile = getExpectedIntervalsFile(inputBam);
+        List<File> tempFiles = new ArrayList<>();
+
+        //ensure BAM sorted
+        SAMFileHeader.SortOrder order = SequenceUtil.getBamSortOrder(inputBam);
+        if (SAMFileHeader.SortOrder.coordinate != order)
+        {
+            getLogger().info("coordinate sorting BAM, order was: " + (order == null ? "not provided" : order.name()));
+            File sorted = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + ".sorted.bam");
+            new SortSamWrapper(getLogger()).execute(inputBam, sorted, SAMFileHeader.SortOrder.coordinate);
+
+            //this indicates we expect to replace the original in place, in which case we should delete the unsorted BAM
+            if (outputBam == null)
+            {
+                tempFiles.add(inputBam);
+            }
+
+            inputBam = sorted;
+        }
+        else
+        {
+            getLogger().info("bam is already in coordinate sort order");
+        }
+
         ensureDictionary(referenceFasta);
 
         File expectedIndex = new File(inputBam.getPath() + ".bai");
-        boolean doDeleteIndex = false;
         if (!expectedIndex.exists())
         {
             getLogger().debug("\tcreating temp index for BAM: " + inputBam.getName());
@@ -44,7 +69,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
                 reader.setValidationStringency(ValidationStringency.SILENT);
                 BAMIndexer.createIndex(reader, expectedIndex);
             }
-            doDeleteIndex = true;
+            tempFiles.add(expectedIndex);
         }
 
         getLogger().info("\tbuilding target intervals");
@@ -61,7 +86,6 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
         args.add(inputBam.getPath());
         args.add("-o");
 
-        File intervalsFile = getExpectedIntervalsFile(inputBam);
         args.add(intervalsFile.getPath());
 
         if (knownSnpsVcf != null)
@@ -118,10 +142,13 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
             throw new PipelineJobException("Expected BAM not found: " + realignedBam.getPath());
         }
 
-        if (doDeleteIndex)
+        if (!tempFiles.isEmpty())
         {
-            getLogger().debug("\tdeleting temp BAM index: " + expectedIndex.getPath());
-            expectedIndex.delete();
+            for (File f : tempFiles)
+            {
+                getLogger().debug("\tdeleting temp file: " + f.getPath());
+                f.delete();
+            }
         }
 
         try

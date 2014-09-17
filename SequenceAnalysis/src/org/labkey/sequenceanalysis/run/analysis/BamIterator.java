@@ -87,7 +87,6 @@ public class BamIterator
     private File _bam;
     private File _bai;
     private File _ref;
-    private IndexedFastaSequenceFile _refFastq;
 
     private Logger _logger;
     private Map<String, ReferenceSequence> _references = new HashMap<>();
@@ -110,8 +109,6 @@ public class BamIterator
         File fai = new File(_ref.getPath() + ".fai");
         if(!fai.exists())
             throw new FileNotFoundException("Missing index for FASTA, expected: " + fai.getPath());
-
-        _refFastq = new IndexedFastaSequenceFile(_ref, new FastaSequenceIndex(fai));
     }
 
     public void addAggregators(List<AlignmentAggregator> aggregators)
@@ -124,13 +121,11 @@ public class BamIterator
         _alignmentAggregators.add(aggregator);
     }
 
-    public void iterateReads(String refName, int start, int stop)
+    public void iterateReads(String refName, int start, int stop) throws IOException
     {
-        SAMFileReader sam = null;
-
-        try
+        File fai = new File(_ref.getPath() + ".fai");
+        try (SAMFileReader sam = new SAMFileReader(_bam, _bai);IndexedFastaSequenceFile indexedRef = new IndexedFastaSequenceFile(_ref, new FastaSequenceIndex(fai)))
         {
-            sam = new SAMFileReader(_bam, _bai);
             sam.setValidationStringency(ValidationStringency.SILENT);
 
             //TODO: verify whether this is useful
@@ -144,35 +139,32 @@ public class BamIterator
                 _logger.info("\tUnaligned read count: " + unaligned);
             }
 
-            SAMRecordIterator it = sam.iterator();
-            int i = 0;
-            long startTime = new Date().getTime();
-
-            while (it.hasNext())
+            try (SAMRecordIterator it = sam.iterator())
             {
-                i++;
+                int i = 0;
+                long startTime = new Date().getTime();
 
-                SAMRecord r = it.next();
-                if (r.getReadUnmappedFlag() || !refName.equals(r.getReferenceName()))
-                    continue;
-
-                if (r.getAlignmentEnd() < start || r.getAlignmentStart() > stop)
-                    continue;
-
-                processRead(r);
-
-                if (i % 10000 == 0)
+                while (it.hasNext())
                 {
-                    long newTime = new Date().getTime();
-                    _logger.info("processed " + i + " reads in " + ((newTime - startTime) / 1000) + " seconds");
-                    startTime = newTime;
+                    i++;
+
+                    SAMRecord r = it.next();
+                    if (r.getReadUnmappedFlag() || !refName.equals(r.getReferenceName()))
+                        continue;
+
+                    if (r.getAlignmentEnd() < start || r.getAlignmentStart() > stop)
+                        continue;
+
+                    processRead(r, indexedRef);
+
+                    if (i % 10000 == 0)
+                    {
+                        long newTime = new Date().getTime();
+                        _logger.info("processed " + i + " reads in " + ((newTime - startTime) / 1000) + " seconds");
+                        startTime = newTime;
+                    }
                 }
             }
-        }
-        finally
-        {
-            if (sam != null)
-                sam.close();
         }
     }
 
@@ -180,43 +172,38 @@ public class BamIterator
      * Iterates all reads in the alignment
      * @return
      */
-    public void iterateReads()
+    public void iterateReads() throws IOException
     {
-        SAMFileReader sam = null;
-
-        try
+        File fai = new File(_ref.getPath() + ".fai");
+        try (SAMFileReader sam = new SAMFileReader(_bam, _bai);IndexedFastaSequenceFile indexedRef = new IndexedFastaSequenceFile(_ref, new FastaSequenceIndex(fai)))
         {
-            sam = new SAMFileReader(_bam, _bai);
             sam.setValidationStringency(ValidationStringency.SILENT);
 
-            SAMRecordIterator it = sam.iterator();
-            int i = 0;
-            long startTime = new Date().getTime();
-
-            while (it.hasNext())
+            try (SAMRecordIterator it = sam.iterator())
             {
-                i++;
+                int i = 0;
+                long startTime = new Date().getTime();
 
-                processRead(it.next());
-
-                if (i % 25000 == 0)
+                while (it.hasNext())
                 {
-                    long newTime = new Date().getTime();
-                    _logger.info("processed " + i + " reads in " + ((newTime - startTime) / 1000) + " seconds");
-                    startTime = newTime;
+                    i++;
+
+                    processRead(it.next(), indexedRef);
+
+                    if (i % 25000 == 0)
+                    {
+                        long newTime = new Date().getTime();
+                        _logger.info("processed " + i + " reads in " + ((newTime - startTime) / 1000) + " seconds");
+                        startTime = newTime;
+                    }
                 }
             }
         }
-        finally
-        {
-            if (sam != null)
-                sam.close();
-        }
     }
 
-    private void processRead(SAMRecord r)
+    private void processRead(SAMRecord r, IndexedFastaSequenceFile indexedRef)
     {
-        if(r.getReadUnmappedFlag())
+        if (r.getReadUnmappedFlag())
         {
             for (AlignmentAggregator aggregator : _alignmentAggregators)
             {
@@ -226,7 +213,7 @@ public class BamIterator
         }
         assert !(r.getReferenceName().equals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME));
 
-        ReferenceSequence ref = getReferenceSequenceFromFasta(r.getReferenceName());
+        ReferenceSequence ref = getReferenceSequenceFromFasta(r.getReferenceName(), indexedRef);
 
         Map<Integer, List<NTSnp>> snpPositions = new TreeMap<>();
         CigarPositionIterable cpi = new CigarPositionIterable(r);
@@ -277,7 +264,7 @@ public class BamIterator
         }
     }
 
-    private ReferenceSequence getReferenceSequenceFromFasta(String refName)
+    private ReferenceSequence getReferenceSequenceFromFasta(String refName, IndexedFastaSequenceFile indexedRef)
     {
         if (_references.containsKey(refName))
         {
@@ -285,7 +272,7 @@ public class BamIterator
         }
         else
         {
-            _references.put(refName, _refFastq.getSequence(refName));
+            _references.put(refName, indexedRef.getSequence(refName));
             return _references.get(refName);
         }
     }

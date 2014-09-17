@@ -13,6 +13,7 @@ import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
 import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
+import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask;
 
 import java.io.File;
@@ -63,8 +64,7 @@ public class CustomReferenceLibraryStep extends AbstractPipelineStep implements 
         }
     }
 
-    @Override
-    public File getExpectedFastaFile(File outputDirectory) throws PipelineJobException
+    private File getExpectedFastaFile(File outputDirectory) throws PipelineJobException
     {
         return new File(outputDirectory, "Custom.fasta");
     }
@@ -72,12 +72,12 @@ public class CustomReferenceLibraryStep extends AbstractPipelineStep implements 
     @Override
     public Output createReferenceFasta(File outputDirectory) throws PipelineJobException
     {
-        ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl();
-
         String name = StringUtils.trimToNull(extractParamValue(CustomReferenceName, String.class));
         String seq = StringUtils.trimToNull(extractParamValue(RefSequence, String.class));
         if (name == null || seq == null)
+        {
             throw new PipelineJobException("Must provide both a name and sequence for custom reference sequences, cannot create library");
+        }
 
         File refFasta = getExpectedFastaFile(outputDirectory);
         try (FileWriter writer = new FileWriter(refFasta))
@@ -91,33 +91,12 @@ public class CustomReferenceLibraryStep extends AbstractPipelineStep implements 
         {
             throw new PipelineJobException(e);
         }
+
+
+        ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(refFasta, null, null));
         output.addOutput(refFasta, ReferenceLibraryTask.REFERENCE_DB_FASTA);
         output.addOutput(outputDirectory, "Reference Genome Folder");
 
         return output;
-    }
-
-    public void setLibraryId(PipelineJob job, ExpRun run, AnalysisModel model)
-    {
-        List<? extends ExpData> datas = run.getInputDatas(ReferenceLibraryTask.REFERENCE_DB_FASTA, null);
-        if (datas.size() > 0)
-        {
-            for (ExpData d : datas)
-            {
-                if (d.getFile() == null)
-                {
-                    job.getLogger().debug("No file found for ExpData: " + d.getRowId());
-                }
-                else if (d.getFile().exists())
-                {
-                    model.setReferenceLibrary(d.getRowId());
-                    break;
-                }
-                else
-                {
-                    job.getLogger().debug("File does not exist: " + d.getFile().getPath());
-                }
-            }
-        }
     }
 }

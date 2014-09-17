@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.preprocessing;
 
+import htsjdk.samtools.util.FastqQualityFormat;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -375,10 +376,10 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         params.add("-trimlog");
         params.add(trimLog.getPath());
 
-        FastqUtils.FASTQ_ENCODING encoding = FastqUtils.inferFastqEncoding(input);
+        FastqQualityFormat encoding = FastqUtils.inferFastqEncoding(input);
         if (encoding != null)
         {
-            params.add("-phred" +  encoding.offset);
+            params.add("-phred" +  FastqUtils.getQualityOffset(encoding));
         }
 
         params.add(input.getPath());

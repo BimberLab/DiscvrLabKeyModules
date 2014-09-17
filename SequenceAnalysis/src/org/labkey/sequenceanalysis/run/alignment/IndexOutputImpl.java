@@ -4,6 +4,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
 import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask;
 
 import java.io.File;
@@ -18,21 +19,9 @@ public class IndexOutputImpl extends DefaultPipelineStepOutput implements Alignm
 {
     public static final String PRIMARY_ALIGNER_INDEX_FILE = "Primary Aligner Index File";
 
-    public IndexOutputImpl(File refFasta)
+    public IndexOutputImpl(ReferenceGenome referenceGenome)
     {
-        addOutput(refFasta, ReferenceLibraryTask.REFERENCE_DB_FASTA);
-    }
-
-    @Override
-    public File getPrimaryIndexFile() throws PipelineJobException
-    {
-        List<File> ret = getOutputsOfRole(PRIMARY_ALIGNER_INDEX_FILE);
-        if (ret.size() != 1)
-        {
-            throw new PipelineJobException("More than aligner index file found, expected 1");
-        }
-
-        return ret.get(0);
+        addOutput(referenceGenome.getFastaFile(), ReferenceLibraryTask.REFERENCE_DB_FASTA);
     }
 
     public void appendOutputs(File refFasta, File outputDir)

@@ -34,8 +34,10 @@ import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
+import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 
+import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -145,6 +147,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setSampleDate(r.getSampleDate());
                 row.setPlatform(r.getPlatform());
                 row.setInputMaterial(r.getInputMaterial());
+                row.setSampleType(r.getSampleType());
                 row.setName(r.getName());
                 row.setApplication(r.getApplication());
                 row.setInstrumentRunId(r.getInstrumentRunId());
@@ -236,12 +239,43 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         }
 
         //NOTE: this is outside the transaction because it can take a long time.
+        int idx = 0;
         for (ReadsetModel model : newReadsets)
         {
+            idx++;
+            getJob().getLogger().info("calculating quality metrics for readset: " + model.getName() + ", " + idx + " of " + newReadsets.size());
+
             addQualityMetricsForReadset(model, model.getFileId());
             if (model.getFileId2() != null)
             {
                 addQualityMetricsForReadset(model, model.getFileId2());
+            }
+
+            if (settings.isRunFastqc())
+            {
+                runFastqcForFile(model.getFileId());
+                if (model.getFileId2() != null)
+                {
+                    runFastqcForFile(model.getFileId2());
+                }
+            }
+        }
+    }
+
+    private void runFastqcForFile(Integer fileId) throws PipelineJobException
+    {
+        ExpData d1 = ExperimentService.get().getExpData(fileId);
+        if (d1 != null && d1.getFile().exists())
+        {
+            try
+            {
+                getJob().getLogger().info("running FastQC for file: " + d1.getFile().getName());
+                FastqcRunner runner = new FastqcRunner(getJob().getLogger());
+                runner.execute(Arrays.asList(d1.getFile()));
+            }
+            catch (FileNotFoundException e)
+            {
+                throw new PipelineJobException(e);
             }
         }
     }
@@ -251,8 +285,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         try
         {
             ExpData d = ExperimentService.get().getExpData(fileId);
-            getJob().getLogger().info("calculating quality metrics for file: " + d.getFile().getName());
-            Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(d.getFile());
+            Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(d.getFile(), getJob().getLogger());
             for (String metricName : metricsMap.keySet())
             {
                 Map<String, Object> r = new HashMap<>();

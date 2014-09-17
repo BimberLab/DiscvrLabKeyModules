@@ -25,6 +25,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.jbrowse.JBrowseManager;
+import org.labkey.jbrowse.JBrowseRoot;
 import org.labkey.jbrowse.JBrowseSchema;
 
 import java.io.File;
@@ -40,14 +41,14 @@ public class JBrowseSessionPipelineJob extends PipelineJob
 {
     private Integer _libraryId = null;
     private List<Integer> _trackIds = null;
-    private List<Integer> _dataIds = null;
+    private List<Integer> _outputFileIds = null;
     private String _databaseGuid = null;
     private String _name = null;
     private String _description = null;
     private List<String> _jsonFiles = null;
     private Mode _mode;
 
-    public static JBrowseSessionPipelineJob addMembers(Container c, User user, PipeRoot pipeRoot, String databaseGuid, List<Integer> trackIds, List<Integer> dataIds)
+    public static JBrowseSessionPipelineJob addMembers(Container c, User user, PipeRoot pipeRoot, String databaseGuid, List<Integer> trackIds, List<Integer> outputFileIds)
     {
         //find existing record
         TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
@@ -57,7 +58,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
             throw new IllegalArgumentException("Unknown database: " + databaseGuid);
         }
 
-        return new JBrowseSessionPipelineJob(c, user, pipeRoot, (String)existingRow.get("name"), (String)existingRow.get("description"), null, trackIds, dataIds, databaseGuid);
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, (String)existingRow.get("name"), (String)existingRow.get("description"), null, trackIds, outputFileIds, databaseGuid);
     }
 
     public static JBrowseSessionPipelineJob refreshResources(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles)
@@ -70,9 +71,9 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         return new JBrowseSessionPipelineJob(c, user, pipeRoot, null, databaseGuid, Mode.RecreateDatabase);
     }
 
-    public static JBrowseSessionPipelineJob createNewDatabase(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> dataIds)
+    public static JBrowseSessionPipelineJob createNewDatabase(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds)
     {
-        return new JBrowseSessionPipelineJob(c, user, pipeRoot, name, description, libraryId, trackIds, dataIds, null);
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, name, description, libraryId, trackIds, outputFileIds, null);
     }
 
     private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles, String databaseGuid, Mode mode)
@@ -83,15 +84,16 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         _mode = mode;
 
         AssayFileWriter writer = new AssayFileWriter();
-        setLogFile(writer.findUniqueFileName("jbrowse-" + (new GUID().toString()) + ".log", JBrowseManager.get().getJBrowseRoot()));
+        JBrowseRoot root = new JBrowseRoot(null);
+        setLogFile(writer.findUniqueFileName("jbrowse-" + (new GUID().toString()) + ".log", root.getBaseDir(c)));
     }
 
-    private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> dataIds, @Nullable String existingDatabaseGuid)
+    private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, @Nullable String existingDatabaseGuid)
     {
         super(null, new ViewBackgroundInfo(c, user, null), pipeRoot);
         _libraryId = libraryId;
         _trackIds = trackIds;
-        _dataIds = dataIds;
+        _outputFileIds = outputFileIds;
 
         _name = name;
         _description = description;
@@ -99,7 +101,8 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         _databaseGuid = existingDatabaseGuid == null ? new GUID().toString().toUpperCase() : existingDatabaseGuid;
 
         AssayFileWriter writer = new AssayFileWriter();
-        setLogFile(writer.findUniqueFileName("jbrowse-" + _databaseGuid + ".log", JBrowseManager.get().getJBrowseRoot()));
+        JBrowseRoot root = new JBrowseRoot(getLogger());
+        setLogFile(writer.findUniqueFileName("jbrowse-" + _databaseGuid + ".log", root.getBaseDir(c)));
     }
 
     @Override
@@ -158,9 +161,9 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         return _jsonFiles;
     }
 
-    public List<Integer> getDataIds()
+    public List<Integer> getOutputFileIds()
     {
-        return _dataIds;
+        return _outputFileIds;
     }
 
     public Mode getMode()

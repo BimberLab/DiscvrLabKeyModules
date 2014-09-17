@@ -12,6 +12,8 @@ import java.util.Map;
  */
 public interface SequenceAnalysisJobSupport
 {
+    public ReferenceGenome getReferenceGenome();
+
     public void cacheExpData(ExpData data);
 
     public File getCachedData(int dataId);

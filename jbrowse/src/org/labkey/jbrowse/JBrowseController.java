@@ -17,32 +17,27 @@
 package org.labkey.jbrowse;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
+import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.PropertyManager;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
-import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
-import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
-import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.view.JspView;
+import org.labkey.api.view.NavTree;
+import org.labkey.api.view.WebPartView;
+import org.labkey.api.view.template.PageConfig;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 import org.springframework.validation.BindException;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,7 +63,7 @@ public class JBrowseController extends SpringActionController
         public ApiResponse execute(Object form, BindException errors)
         {
             Map<String, Object> resultProperties = new HashMap<>();
-            String[] etlConfigKeys = {JBrowseManager.JBROWSE_URL, JBrowseManager.JBROWSE_ROOT, JBrowseManager.JBROWSE_BIN, JBrowseManager.JBROWSE_DB_PREFIX, JBrowseManager.JBROWSE_COMPRESS_JSON};
+            String[] etlConfigKeys = {JBrowseManager.JBROWSE_BIN, JBrowseManager.JBROWSE_COMPRESS_JSON};
 
             resultProperties.put("configKeys", etlConfigKeys);
             resultProperties.put("config", PropertyManager.getProperties(JBrowseManager.CONFIG_PROPERTY_DOMAIN));
@@ -89,20 +84,11 @@ public class JBrowseController extends SpringActionController
             }
 
             Map<String, String> configMap = new HashMap<>();
-            if (form.getJbrowseURL() != null)
-                configMap.put(JBrowseManager.JBROWSE_URL, form.getJbrowseURL());
-
-            if (form.getJbrowseRoot() != null)
-                configMap.put(JBrowseManager.JBROWSE_ROOT, form.getJbrowseRoot());
-
             if (form.getJbrowseBinDir() != null)
                 configMap.put(JBrowseManager.JBROWSE_BIN, form.getJbrowseBinDir());
 
             if (form.getCompressJson() != null)
                 configMap.put(JBrowseManager.JBROWSE_COMPRESS_JSON, form.getCompressJson().toString());
-
-            if (form.getJbrowseDatabasePrefix() != null)
-                configMap.put(JBrowseManager.JBROWSE_DB_PREFIX, form.getJbrowseDatabasePrefix());
 
             try
             {
@@ -120,31 +106,8 @@ public class JBrowseController extends SpringActionController
 
     public static class SettingsForm
     {
-        private String _jbrowseURL;
-        private String _jbrowseRoot;
         private String _jbrowseBinDir;
-        private String _jbrowseDatabasePrefix;
         private Boolean _compressJson;
-
-        public String getJbrowseURL()
-        {
-            return _jbrowseURL;
-        }
-
-        public void setJbrowseURL(String jbrowseURL)
-        {
-            _jbrowseURL = jbrowseURL;
-        }
-
-        public String getJbrowseRoot()
-        {
-            return _jbrowseRoot;
-        }
-
-        public void setJbrowseRoot(String jbrowseRoot)
-        {
-            _jbrowseRoot = jbrowseRoot;
-        }
 
         public String getJbrowseBinDir()
         {
@@ -165,16 +128,6 @@ public class JBrowseController extends SpringActionController
         {
             _compressJson = compressJson;
         }
-
-        public String getJbrowseDatabasePrefix()
-        {
-            return _jbrowseDatabasePrefix;
-        }
-
-        public void setJbrowseDatabasePrefix(String jbrowseDatabasePrefix)
-        {
-            _jbrowseDatabasePrefix = jbrowseDatabasePrefix;
-        }
     }
 
     @RequiresPermissionClass(InsertPermission.class)
@@ -190,7 +143,7 @@ public class JBrowseController extends SpringActionController
 
             try
             {
-                JBrowseManager.get().createDatabase(getContainer(), getUser(), form.getName(), form.getDescription(), form.getLibraryId(), form.getTrackIdList(), form.getDataIdList());
+                JBrowseManager.get().createDatabase(getContainer(), getUser(), form.getName(), form.getDescription(), form.getLibraryId(), form.getTrackIdList(), form.getOutputFileIdList());
             }
             catch (IOException e)
             {
@@ -213,7 +166,7 @@ public class JBrowseController extends SpringActionController
                 return null;
             }
 
-            if (form.getTrackIdList().isEmpty() && form.getDataIdList().isEmpty())
+            if (form.getTrackIdList().isEmpty() && form.getOutputFileIdList().isEmpty())
             {
                 errors.reject(ERROR_MSG, "Must provide either a list track or file IDs to include");
                 return null;
@@ -221,7 +174,7 @@ public class JBrowseController extends SpringActionController
 
             try
             {
-                JBrowseManager.get().addDatabaseMember(getContainer(), getUser(), form.getDatabaseId(), form.getTrackIdList(), form.getDataIdList());
+                JBrowseManager.get().addDatabaseMember(getContainer(), getUser(), form.getDatabaseId(), form.getTrackIdList(), form.getOutputFileIdList());
             }
             catch (IOException e)
             {
@@ -240,7 +193,7 @@ public class JBrowseController extends SpringActionController
         String _description;
         Integer[] _trackIds;
         Integer _libraryId;
-        Integer[] _dataIds;
+        Integer[] _outputFileIds;
 
         public String getDatabaseId()
         {
@@ -303,13 +256,13 @@ public class JBrowseController extends SpringActionController
         }
 
         @NotNull
-        public List<Integer> getDataIdList()
+        public List<Integer> getOutputFileIdList()
         {
-            if (_dataIds == null)
+            if (_outputFileIds == null)
                 return Collections.emptyList();
 
             List<Integer> ret = new ArrayList<>();
-            for (Integer o : _dataIds)
+            for (Integer o : _outputFileIds)
             {
                 ret.add(o);
             }
@@ -317,9 +270,9 @@ public class JBrowseController extends SpringActionController
             return ret;
         }
 
-        public void setDataIds(Integer[] dataIds)
+        public void setOutputFileIds(Integer[] outputFileIds)
         {
-            _dataIds = dataIds;
+            _outputFileIds = outputFileIds;
         }
     }
 
@@ -386,110 +339,40 @@ public class JBrowseController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
-    public class CheckFileStatusAction extends ApiAction<CheckFileStatusForm>
+    @RequiresPermissionClass(ReadPermission.class)
+    public class BrowserAction extends SimpleViewAction<BrowserForm>
     {
-        public ApiResponse execute(CheckFileStatusForm form, BindException errors)
+        @Override
+        public ModelAndView getView(BrowserForm form, BindException errors) throws Exception
         {
-            Map<String, Object> ret = new HashMap<>();
+            JspView<BrowserForm> view = new JspView<>("/org/labkey/jbrowse/view/browser.jsp", form);
+            view.setTitle("JBrowse");
+            view.setHidePageTitle(true);
+            view.setFrame(WebPartView.FrameType.NONE);
+            getPageConfig().setTemplate(PageConfig.Template.None);
 
-            JSONArray arr = new JSONArray();
-            if (form.getDataIds() != null)
-            {
-                for (int dataId : form.getDataIds())
-                {
-                    arr.put(getDataJson(dataId, null));
-                }
-            }
-
-            if (form.getOutputFileIds() != null)
-            {
-                TableInfo ti = DbSchema.get("sequenceanalysis").getTable("outputfiles");
-                for (int outputFileId : form.getOutputFileIds())
-                {
-                    Map rowMap = new TableSelector(ti, PageFlowUtil.set("dataId", "library_id"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getObject(Map.class);
-                    if (rowMap == null || rowMap.get("dataid") == null)
-                    {
-                        JSONObject o = new JSONObject();
-                        o.put("outputFileId", outputFileId);
-                        o.put("fileExists", false);
-                        o.put("error", true);
-                        arr.put(o);
-                        continue;
-                    }
-
-                    Integer dataId = (Integer)rowMap.get("dataid");
-                    Integer libraryId = (Integer)rowMap.get("library_id");
-                    ExpData d = ExperimentService.get().getExpData(dataId);
-                    if (dataId == null)
-                    {
-                        JSONObject o = new JSONObject();
-                        o.put("outputFileId", outputFileId);
-                        o.put("fileExists", false);
-                        o.put("error", true);
-                        arr.put(o);
-                        continue;
-                    }
-
-                    JSONObject o = getDataJson(d.getRowId(), outputFileId);
-                    o.put("libraryId", libraryId);
-                    arr.put(o);
-                }
-            }
-
-            ret.put("files", arr);
-
-            return new ApiSimpleResponse(ret);
+            return view;
         }
 
-        private JSONObject getDataJson(int dataId, @Nullable Integer outputFileId)
+        @Override
+        public NavTree appendNavTrail(NavTree root)
         {
-            JSONObject o = new JSONObject();
-            o.put("dataId", dataId);
-            o.put("outputFileId", outputFileId);
-
-            ExpData d = ExperimentService.get().getExpData(dataId);
-            if (d.getFile() == null || !d.getFile().exists())
-            {
-                o.put("fileExists", false);
-                o.put("error", true);
-                return o;
-            }
-
-            o.put("fileName", d.getFile().getName());
-            o.put("fileExists", true);
-            o.put("extension", FileUtil.getExtension(d.getFile()));
-
-            boolean canDisplay = JBrowseManager.get().canDisplayAsTrack(d.getFile());
-            o.put("canDisplay", canDisplay);
-
-            return o;
+            return root.addChild("JBrowse");
         }
     }
 
-    public static class CheckFileStatusForm
+    public static class BrowserForm
     {
-        int[] _outputFileIds;
-        int[] _dataIds;
+        private String _database;
 
-        public int[] getOutputFileIds()
+        public String getDatabase()
         {
-            return _outputFileIds;
+            return _database;
         }
 
-        public void setOutputFileIds(int[] outputFileIds)
+        public void setDatabase(String database)
         {
-            _outputFileIds = outputFileIds;
-        }
-
-        public int[] getDataIds()
-        {
-            return _dataIds;
-        }
-
-        public void setDataIds(int[] dataIds)
-        {
-            _dataIds = dataIds;
+            _database = database;
         }
     }
 }

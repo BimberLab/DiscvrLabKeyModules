@@ -295,7 +295,7 @@ public class BlastJob
         {
             if (!getHasRun())
             {
-                ret.put("html", "The job has not yet finished.  Please refresh the page to see updated progress");
+                ret.put("html", "The job has not yet finished.  The page will refresh every 5 seconds until the job is complete.");
             }
             else if (!expectedOutput.exists())
             {

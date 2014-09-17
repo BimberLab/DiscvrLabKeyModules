@@ -2,8 +2,10 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
+import org.labkey.sequenceanalysis.api.pipeline.SequenceAnalysisJobSupport;
 
 import java.io.File;
 import java.util.Map;
@@ -34,6 +36,18 @@ public class PipelineContextImpl implements PipelineContext
     public PipelineJob getJob()
     {
         return _job;
+    }
+
+    @Override
+    public WorkDirectory getWorkDir()
+    {
+        return null;
+    }
+
+    @Override
+    public SequenceAnalysisJobSupport getSequenceSupport()
+    {
+        return (SequenceAnalysisJobSupport)_job;
     }
 
     public FileAnalysisJobSupport getSupport()

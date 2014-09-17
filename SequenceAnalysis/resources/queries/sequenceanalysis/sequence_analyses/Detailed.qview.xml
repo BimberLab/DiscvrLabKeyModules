@@ -14,8 +14,6 @@
                <property name="columnTitle" value="Sample Date"/>
            </properties>
        </column>
-       <column name="inputfile" />
-       <column name="inputfile2" />
        <column name="alignmentfile" />
        <column name="reference_library" />
        <column name="description" />

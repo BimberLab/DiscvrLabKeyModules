@@ -22,6 +22,7 @@ import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.blast.button.CreateDatabaseButton;
@@ -79,6 +80,8 @@ public class BLASTModule extends ExtendedSimpleModule
         SystemMaintenance.addTask(new BLASTMaintenanceTask());
         PipelineService.get().registerPipelineProvider(new BlastPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new BlastDatabasePipelineProvider(this));
+
+        SequenceAnalysisService.get().registerGenomeTrigger(new BlastGenomeTrigger());
     }
 
     @Override

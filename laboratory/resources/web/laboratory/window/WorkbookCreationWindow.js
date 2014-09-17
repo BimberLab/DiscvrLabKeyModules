@@ -66,13 +66,15 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
     },
 
     formSubmit: function(btn){
+        btn.setDisabled(true);
         var panel = btn.up('form') || btn.up('window');
         var type = panel.down('#inputType');
-        if(type.getValue().inputType=='new'){
+        if (type.getValue().inputType=='new'){
             // this should really be enforced upstream.
             // it is possible some actions would be available to users w/ read access only, so we dont completely hide this dialog
             if(!LABKEY.Security.currentUser.canUpdate){
                 alert('You do not have permission to create new workbooks.  Please choose an existing one.');
+                btn.setDisabled(false);
                 return;
             }
 
@@ -90,24 +92,26 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
                 scope: this,
                 failure: function(error){
                     Ext4.Msg.hide();
-                    if(error.exception)
+                    btn.setDisabled(false);
+                    if (error.exception)
                         alert(error.exception);
                     LABKEY.Utils.onError(error);
                 }
-
-            })
+            });
         }
         else {
             var combo = panel.down('#workbookName');
             var rowid = combo.getValue();
-            if(!rowid){
+            if (!rowid){
                 alert('Must pick a workbook');
+                btn.setDisabled(false);
                 return;
             }
 
             var rec = combo.store.getAt(combo.store.findExact('container/RowId', rowid));
-            if(!rec){
+            if (!rec){
                 alert('Must pick a workbook');
+                btn.setDisabled(false);
                 return;
             }
 

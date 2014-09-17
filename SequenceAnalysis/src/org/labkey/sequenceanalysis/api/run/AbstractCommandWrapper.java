@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.api.run;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.NOPLoggerRepository;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +21,10 @@ import java.util.List;
 abstract public class AbstractCommandWrapper implements CommandWrapper
 {
     private File _outputDir = null;
+    private File _workingDir = null;
     private Logger _log = null;
+    private Level _logLevel = Level.DEBUG;
+    private boolean _warnNonZeroExits = true;
 
     public AbstractCommandWrapper(@Nullable Logger logger)
     {
@@ -41,6 +45,13 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
 
         ProcessBuilder pb = new ProcessBuilder(params);
         setPath(pb);
+
+        if (getWorkingDir() != null)
+        {
+            getLogger().debug("using working directory: " + getWorkingDir().getPath());
+            pb.directory(getWorkingDir());
+        }
+
         pb.redirectErrorStream(false);
         if (stdout != null)
         {
@@ -56,9 +67,8 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         try
         {
             p = pb.start();
-            //InputStreamHandler in = new InputStreamHandler(getLogger(), Level.INFO, p.getInputStream());
-            //InputStreamHandler err = new InputStreamHandler(getLogger(), Level.ERROR, p.getErrorStream());
-            try (BufferedReader procReader = new BufferedReader(new InputStreamReader(p.getInputStream())))
+
+            try (BufferedReader procReader = new BufferedReader(new InputStreamReader(stdout == null ? p.getInputStream() : p.getErrorStream())))
             {
                 String line;
                 while ((line = procReader.readLine()) != null)
@@ -66,12 +76,12 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
                     output.append(line);
                     output.append(System.getProperty("line.separator"));
 
-                    getLogger().debug("\t" + line);
+                    getLogger().log(_logLevel, "\t" + line);
                 }
             }
 
             int returnCode = p.waitFor();
-            if (returnCode != 0)
+            if (returnCode != 0 && _warnNonZeroExits)
             {
                 getLogger().warn("\tprocess exited with non-zero value: " + returnCode);
             }
@@ -134,6 +144,16 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         return _outputDir == null ? file.getParentFile() : _outputDir;
     }
 
+    public void setWorkingDir(File workingDir)
+    {
+        _workingDir = workingDir;
+    }
+
+    public File getWorkingDir()
+    {
+        return _workingDir;
+    }
+
     public Logger getLogger()
     {
         if (_log == null)
@@ -142,5 +162,15 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         }
 
         return _log;
+    }
+
+    public void setLogLevel(Level logLevel)
+    {
+        _logLevel = logLevel;
+    }
+
+    public void setWarnNonZeroExits(boolean warnNonZeroExits)
+    {
+        _warnNonZeroExits = warnNonZeroExits;
     }
 }

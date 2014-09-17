@@ -12,7 +12,7 @@ import java.io.File;
  */
 public interface BamProcessingStep extends PipelineStep
 {
-    public BamProcessingStep.Output processBam(ReadsetModel rs, File inputBam, File referenceFasta, File outputDirectory) throws PipelineJobException;
+    public BamProcessingStep.Output processBam(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException;
 
     public static interface Output extends PipelineStepOutput
     {

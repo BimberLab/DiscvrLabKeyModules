@@ -91,7 +91,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     {
         _uniqueReads.add(record.getReadName());
 
-        if(record.getReferenceName().equals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME))
+        if (record.getReferenceName().equals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME))
         {
             _unaligned.add(record.getReadName());
         }

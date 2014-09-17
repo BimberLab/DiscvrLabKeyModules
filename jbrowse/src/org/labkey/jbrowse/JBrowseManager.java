@@ -17,39 +17,23 @@
 package org.labkey.jbrowse;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.validator.routines.UrlValidator;
-import org.apache.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
-import org.json.JSONObject;
-import org.labkey.api.collections.CaseInsensitiveHashMap;
-import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.DbScope;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.Table;
-import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipeRoot;
-import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.GUID;
-import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -57,21 +41,19 @@ public class JBrowseManager
 {
     private static final JBrowseManager _instance = new JBrowseManager();
     public final static String CONFIG_PROPERTY_DOMAIN = "org.labkey.jbrowse.settings";
-    public final static String JBROWSE_ROOT = "jbrowseRoot";
-    public final static String JBROWSE_URL = "jbrowseURL";
-    public final static String JBROWSE_DB_PREFIX = "jbrowseDatabasePrefix";
     public final static String JBROWSE_BIN = "jbrowseBinDir";
     public final static String JBROWSE_COMPRESS_JSON = "compressJson";
     public final static String SEQUENCE_ANALYSIS = "sequenceanalysis";
     public static final List<FileType> ALLOWABLE_TRACK_EXTENSIONS = Arrays.asList(
-            new FileType("vcf", true),
-            new FileType("bcf", false),
-            new FileType(Arrays.asList("bw", "bigwig"), "bw", false),
-            new FileType("gff", false),
-            new FileType("gff3", false),
-            new FileType("gtf", false),
-            new FileType("bed", false),
-            new FileType("bam", false)
+            new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ),
+            new FileType("bcf", FileType.gzSupportLevel.NO_GZ),
+            new FileType(Arrays.asList("bw", "bigwig", "wig"), "bw", FileType.gzSupportLevel.NO_GZ),
+            new FileType("gff", FileType.gzSupportLevel.NO_GZ),
+            new FileType("gff3", FileType.gzSupportLevel.NO_GZ),
+            new FileType("gtf", FileType.gzSupportLevel.NO_GZ),
+            new FileType("bed", FileType.gzSupportLevel.NO_GZ),
+            new FileType("bedgraph", FileType.gzSupportLevel.NO_GZ),
+            new FileType("bam", FileType.gzSupportLevel.NO_GZ)
     );
 
     private JBrowseManager()
@@ -87,40 +69,6 @@ public class JBrowseManager
     public void saveSettings(Map<String, String> props) throws IllegalArgumentException
     {
         PropertyManager.PropertyMap configMap = PropertyManager.getWritableProperties(JBrowseManager.CONFIG_PROPERTY_DOMAIN, true);
-
-        //validate URL
-        String url = StringUtils.trimToNull(props.get(JBROWSE_URL));
-        if (url == null)
-        {
-            throw new IllegalArgumentException("URL to JBrowse server not provided");
-        }
-
-        if (!new UrlValidator(new String[] {"http", "https"}, UrlValidator.ALLOW_LOCAL_URLS).isValid(url))
-        {
-            throw new IllegalArgumentException("Invalid URL: " + url);
-        }
-
-        configMap.put(JBROWSE_URL, url);
-        configMap.put(JBROWSE_DB_PREFIX, props.get(JBROWSE_DB_PREFIX));
-
-        //validate file root
-        String root = StringUtils.trimToNull(props.get(JBROWSE_ROOT));
-        if (root == null)
-        {
-            throw new IllegalArgumentException("JBrowse file root not provided");
-        }
-
-        File fileRoot = new File(root);
-        if (!fileRoot.exists())
-        {
-            throw new IllegalArgumentException("JBrowse file root does not exist or is not acessible: " + fileRoot.getPath());
-        }
-
-        if (!fileRoot.canWrite() || !fileRoot.canRead())
-        {
-            throw new IllegalArgumentException("The user running tomcat must have read/write access to the JBrowse file root: " + fileRoot.getPath());
-        }
-        configMap.put(JBROWSE_ROOT, root);
 
         //validate bin
         String binDir = StringUtils.trimToNull(props.get(JBROWSE_BIN));
@@ -147,46 +95,6 @@ public class JBrowseManager
         PropertyManager.saveProperties(configMap);
     }
 
-    /**
-     * Note: does not check whether path is valid
-     */
-    public File getJBrowseRoot()
-    {
-        Map<String, String> props = PropertyManager.getProperties(JBrowseManager.CONFIG_PROPERTY_DOMAIN);
-        if (props.containsKey(JBROWSE_ROOT))
-        {
-            return new File(props.get(JBROWSE_ROOT));
-        }
-
-        return null;
-    }
-
-    public String getJBrowseDbPrefix()
-    {
-        Map<String, String> props = PropertyManager.getProperties(JBrowseManager.CONFIG_PROPERTY_DOMAIN);
-        if (props.containsKey(JBROWSE_DB_PREFIX) && props.get(JBROWSE_DB_PREFIX) != null)
-        {
-            String prefix = props.get(JBROWSE_DB_PREFIX);
-            if (prefix.startsWith("/"))
-                prefix = prefix.substring(1);
-
-            return  prefix + (props.get(JBROWSE_DB_PREFIX).endsWith("/") ? "" : "/");
-        }
-
-        return null;
-    }
-
-    public String getJBrowseBaseUrl()
-    {
-        Map<String, String> props = PropertyManager.getProperties(JBrowseManager.CONFIG_PROPERTY_DOMAIN);
-        if (props.containsKey(JBROWSE_URL) && props.get(JBROWSE_URL) != null)
-        {
-            return props.get(JBROWSE_URL) + (props.get(JBROWSE_URL).endsWith("/") ? "" : "/");
-        }
-
-        return null;
-    }
-
     public File getJBrowseBinDir()
     {
         Map<String, String> props = PropertyManager.getProperties(JBrowseManager.CONFIG_PROPERTY_DOMAIN);
@@ -209,12 +117,12 @@ public class JBrowseManager
         return false;
     }
 
-    public void createDatabase(Container c, User u, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> dataIds) throws IOException
+    public void createDatabase(Container c, User u, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds) throws IOException
     {
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            PipelineService.get().queueJob(JBrowseSessionPipelineJob.createNewDatabase(c, u, root, name, description, libraryId, trackIds, dataIds));
+            PipelineService.get().queueJob(JBrowseSessionPipelineJob.createNewDatabase(c, u, root, name, description, libraryId, trackIds, outputFileIds));
         }
         catch (PipelineValidationException e)
         {
@@ -222,7 +130,7 @@ public class JBrowseManager
         }
     }
 
-    public void addDatabaseMember(Container c, User u, String databaseGuid, List<Integer> trackIds, List<Integer> dataIds) throws IOException
+    public void addDatabaseMember(Container c, User u, String databaseGuid, List<Integer> trackIds, List<Integer> outputFileIds) throws IOException
     {
         //make sure this is a valid database
         TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
@@ -234,30 +142,12 @@ public class JBrowseManager
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            PipelineService.get().queueJob(JBrowseSessionPipelineJob.addMembers(c, u, root, databaseGuid, trackIds, dataIds));
+            PipelineService.get().queueJob(JBrowseSessionPipelineJob.addMembers(c, u, root, databaseGuid, trackIds, outputFileIds));
         }
         catch (PipelineValidationException e)
         {
             throw new IllegalArgumentException(e);
         }
-    }
-
-    public JsonFile preprareFeatureTrackJson(Container c, User u, int trackId, @Nullable Logger log, boolean forceRecreateJson) throws IOException
-    {
-        JBrowseRoot root = JBrowseRoot.getRoot();
-        if (log != null)
-            root.setLogger(log);
-
-        return root.prepareFeatureTrack(c, u, trackId, forceRecreateJson);
-    }
-
-    public JsonFile preprareReferenceJson(Container c, User u, int ntId, @Nullable Logger log, boolean forceRecreateJson) throws IOException
-    {
-        JBrowseRoot root = JBrowseRoot.getRoot();
-        if (log != null)
-            root.setLogger(log);
-
-        return root.prepareRefSeq(c, u, ntId, forceRecreateJson);
     }
 
     public boolean canDisplayAsTrack(File f)

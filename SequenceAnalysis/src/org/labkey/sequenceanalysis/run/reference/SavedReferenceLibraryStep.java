@@ -14,10 +14,8 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
-import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
-import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -27,10 +25,9 @@ import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
+import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask;
-import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,8 +54,8 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
     {
         public Provider()
         {
-            super("SavedLibrary", "Saved Library", null, "Select this option to reuse a previously saved reference genome", Arrays.asList(
-                    ToolParameterDescriptor.create(LIBRARY_ID, "Choose Library", "Select a previously saved reference library from the list.", "ldk-simplelabkeycombo", new JSONObject()
+            super("SavedLibrary", "Saved Genome", null, "Select this option to reuse a previously saved reference genome", Arrays.asList(
+                    ToolParameterDescriptor.create(LIBRARY_ID, "Choose Genome", "Select a previously saved reference genome from the list.", "ldk-simplelabkeycombo", new JSONObject()
                     {{
                             put("width", 400);
                             put("schemaName", "sequenceanalysis");
@@ -66,10 +63,11 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
                             put("containerPath", "js:Laboratory.Utils.getQueryContainerPath()");
                             put("displayField", "name");
                             put("valueField", "rowid");
+                            put("allowBlank", false);
                         }}, null),
                     ToolParameterDescriptor.create(null, null, null, "ldk-linkbutton", new JSONObject()
                     {{
-                            put("text", "Click here to view saved reference libraries");
+                            put("text", "Click here to view saved references");
                             put("linkCls", "labkey-text-link");
                             put("linkTarget", "_blank");
                             put("isToolParam", false);
@@ -85,13 +83,12 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
         }
     }
 
-    @Override
-    public File getExpectedFastaFile(File outputDirectory) throws PipelineJobException
+    private File getExpectedFastaFile(File outputDirectory) throws PipelineJobException
     {
         if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
             File originalFasta = getOriginalFastaFile();
-            //TODO: GZ
+
             return new File(outputDirectory, originalFasta.getName());
         }
         else
@@ -123,6 +120,8 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
 
     private ExpData getLibraryExpData() throws PipelineJobException
     {
+        assert PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer : "This method can only be run on the webserver";
+
         Integer libraryId = ConvertHelper.convert(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider()), Integer.class);
         if (libraryId == null)
         {
@@ -131,7 +130,7 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
 
         Container targetContainer = getPipelineCtx().getJob().getContainer().isWorkbook() ? getPipelineCtx().getJob().getContainer().getParent() : getPipelineCtx().getJob().getContainer();
         TableInfo ti = QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
-        Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, PageFlowUtil.set(FieldKey.fromString("fasta_file/RowId")));
+        Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, PageFlowUtil.set(FieldKey.fromString("fasta_file")));
         TableSelector ts = new TableSelector(ti, cols.values(), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null);
         Integer dataId = ts.getObject(Integer.class);
         if (dataId == null)
@@ -156,17 +155,19 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
     @Override
     public Output createReferenceFasta(File outputDirectory) throws PipelineJobException
     {
-        ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl();
-
-        output.addOutput(outputDirectory, "Reference Genome Folder");
         File originalFasta = getOriginalFastaFile();
         File outputFasta = getExpectedFastaFile(outputDirectory);
+
+        ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(outputFasta, getLibraryExpData(), getLibraryId()));
+        output.addOutput(outputDirectory, "Reference Genome Folder");
         if (!outputFasta.exists())
         {
             try
             {
+                getPipelineCtx().getLogger().info("copying file to work location");
                 FileUtils.copyFile(originalFasta, outputFasta);
                 assert originalFasta.exists() : "Original FASTA does not exist after copy";
+                output.addInput(originalFasta, ReferenceLibraryTask.REFERENCE_DB_FASTA);
                 output.addOutput(outputFasta, ReferenceLibraryTask.REFERENCE_DB_FASTA);
                 output.addDeferredDeleteIntermediateFile(outputFasta);
 
@@ -179,6 +180,8 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
                     output.addOutput(outputIndex, ReferenceLibraryTask.REFERENCE_DB_FASTA_IDX);
                     output.addDeferredDeleteIntermediateFile(outputIndex);
                 }
+
+                getPipelineCtx().getLogger().info("finished copying files");
             }
             catch (IOException e)
             {
@@ -189,16 +192,8 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
         return output;
     }
 
-    @Override
-    public void setLibraryId(PipelineJob job, ExpRun run, AnalysisModel model) throws PipelineJobException
+    public Integer getLibraryId() throws PipelineJobException
     {
-        Integer libraryId = ConvertHelper.convert(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider()), Integer.class);
-        model.setLibraryId(libraryId);
-
-        ExpData d = getLibraryExpData();
-        if (d != null)
-        {
-            model.setReferenceLibrary(d.getRowId());
-        }
+        return ConvertHelper.convert(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider()), Integer.class);
     }
 }

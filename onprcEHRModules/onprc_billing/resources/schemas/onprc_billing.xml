@@ -686,7 +686,7 @@
             </ns:column>
             <ns:column columnName="maxAge">
                 <ns:columnTitle>Max Age</ns:columnTitle>
-                <ns:nullable>false</ns:nullable>
+                <ns:nullable>true</ns:nullable>
             </ns:column>
             <ns:column columnName="assignCondition">
                 <ns:columnTitle>Assign Condition</ns:columnTitle>
@@ -697,7 +697,7 @@
                 <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="chargeId">
-                <ns:nullable>false</ns:nullable>
+                <ns:nullable>true</ns:nullable>
             </ns:column>
             <ns:column columnName="chargeunit">
                 <ns:columnTitle>Charge Unit</ns:columnTitle>
@@ -1166,7 +1166,8 @@
             </ns:column>
             <ns:column columnName="chargetype">
                 <ns:columnTitle>Charge Type</ns:columnTitle>
-                <ns:nullable>false</ns:nullable>
+                <ns:nullable>true</ns:nullable>
+                <ns:isHidden>true</ns:isHidden>
                 <ns:fk>
                     <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
                     <ns:fkTable>labworkChargeType</ns:fkTable>

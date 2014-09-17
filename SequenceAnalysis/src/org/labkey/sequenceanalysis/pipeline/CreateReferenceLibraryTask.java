@@ -35,11 +35,13 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
+import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
+import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.run.util.CreateSequenceDictionaryWrapper;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
@@ -110,7 +112,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
         TableInfo libraryTable = QueryService.get().getUserSchema(getJob().getUser(), getJob().getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
 
         List<ReferenceLibraryMember> libraryMembers;
-        if (getPipelineJob().getLibraryId() == null)
+        if (getPipelineJob().isCreateNew())
         {
             libraryMembers = getPipelineJob().getLibraryMembers();
         }
@@ -147,7 +149,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
         try
         {
             //first create the partial library record
-            if (getPipelineJob().getLibraryId() == null)
+            if (getPipelineJob().isCreateNew())
             {
                 Map<String, Object> libraryRow = new CaseInsensitiveHashMap();
                 libraryRow.put("name", getPipelineJob().getName());
@@ -168,9 +170,14 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             }
             getPipelineJob().setLibraryId(rowId);
 
-            File outputDir = getPipelineJob().getOutputDir();
+            String basename = rowId + "_" + getPipelineJob().getName().replace(" ", "_");
+            File outputDir = new File(getPipelineJob().getOutputDir(), rowId.toString());
+            if (!outputDir.exists())
+            {
+                outputDir.mkdirs();
+            }
 
-            fasta = new File(outputDir, rowId + "_" + getPipelineJob().getName().replace(" ", "_") + ".fasta");
+            fasta = new File(outputDir, basename + ".fasta");
             if (fasta.exists())
             {
                 fasta.delete();
@@ -267,11 +274,28 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 }
             }
 
-            getJob().getLogger().info("complete");
+            getJob().getLogger().info("creation complete");
+
+            Set<GenomeTrigger> triggers = SequenceAnalysisServiceImpl.get().getGenomeTriggers();
+            if (!triggers.isEmpty())
+            {
+                for (GenomeTrigger t : triggers)
+                {
+                    getJob().getLogger().info("running genome trigger: " + t.getName());
+                    if (getPipelineJob().isCreateNew())
+                    {
+                        t.onCreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), rowId);
+                    }
+                    else
+                    {
+                        t.onRecreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), rowId);
+                    }
+                }
+            }
         }
         catch (Exception e)
         {
-            if (getPipelineJob().getLibraryId() == null && rowId != null)
+            if (getPipelineJob().isCreateNew() && rowId != null)
             {
                 getJob().getLogger().info("deleting partial DB records");
                 Table.delete(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), rowId);

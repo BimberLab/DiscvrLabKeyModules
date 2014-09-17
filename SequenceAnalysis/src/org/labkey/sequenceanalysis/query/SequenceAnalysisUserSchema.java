@@ -56,6 +56,8 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             return new SharedDataTable(this, sourceTable, true).init();
         else if (SequenceAnalysisSchema.TABLE_NT_FEATURES.equalsIgnoreCase(name))
             return new SharedDataTable(this, sourceTable, true).init();
+        else if (SequenceAnalysisSchema.TABLE_SAVED_ANALYSES.equalsIgnoreCase(name))
+            return new SharedDataTable(this, sourceTable, true).init();
         else
             return super.createWrappedTable(name, sourceTable);
     }

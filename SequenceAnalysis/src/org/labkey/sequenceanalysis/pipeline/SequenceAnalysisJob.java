@@ -13,6 +13,7 @@ import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.Pair;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.pipeline.SequenceAnalysisJobSupport;
 
 import java.io.File;
@@ -33,6 +34,7 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
 {
     private TaskId _taskPipelineId;
     private Map<Integer, File> _cachedFilePaths = new HashMap<>();
+    private ReferenceGenome _referenceGenome;
 
     public SequenceAnalysisJob(AbstractFileAnalysisProtocol<AbstractFileAnalysisJob> protocol,
                                ViewBackgroundInfo info,
@@ -50,7 +52,10 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
     {
         super(job, filesInput);
 
+        //NOTE: must copy any relevant properties from parent->child
         _taskPipelineId = job._taskPipelineId;
+        _cachedFilePaths.putAll(job._cachedFilePaths);
+        setReferenceGenome(job.getReferenceGenome());
     }
 
     @Override
@@ -79,7 +84,10 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
     public List<PipelineJob> createSplitJobs()
     {
         ArrayList<PipelineJob> jobs = new ArrayList<>();
-        if ((getActiveTaskFactory().getId().getNamespaceClass().equals(SequenceAlignmentTask.class) || getActiveTaskFactory().getId().getNamespaceClass().equals(SequenceAnalysisTask.class)) && getInputFiles().size() > 1)
+        if ((getActiveTaskFactory().getId().getNamespaceClass().equals(SequenceAlignmentTask.class)
+                //NOTE: this is disabled until this task is configured
+                //|| getActiveTaskFactory().getId().getNamespaceClass().equals(SequenceAnalysisTask.class)
+        ) && getInputFiles().size() > 1)
         {
             Collection<Pair<File, File>> files = SequenceAlignmentTask.getAlignmentFiles(this, getInputFiles(), false).values();
             for (Pair<File, File> pair : files)
@@ -93,6 +101,15 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
 
                 if (!toRun.isEmpty())
                 {
+                    if (getLogger() != null)
+                    {
+                        getLogger().debug("creating split job for: ");
+                        for (File f : toRun)
+                        {
+                            getLogger().debug("\t" + f.getName());
+                        }
+                    }
+
                     SequenceAnalysisJob newJob = new SequenceAnalysisJob(this, toRun);
                     newJob.setSplittable(false);
                     jobs.add(newJob);
@@ -228,6 +245,16 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
         return Collections.unmodifiableMap(_cachedFilePaths);
     }
 
+    @Override
+    public ReferenceGenome getReferenceGenome()
+    {
+        return _referenceGenome;
+    }
+
+    public void setReferenceGenome(ReferenceGenome referenceGenome)
+    {
+        _referenceGenome = referenceGenome;
+    }
 
     @Override
     public ActionURL getStatusHref()

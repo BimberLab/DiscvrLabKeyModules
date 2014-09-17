@@ -65,6 +65,7 @@ import java.util.Map;
 public class SequenceTaskHelper implements PipelineContext
 {
     private PipelineJob _job;
+    private WorkDirectory _wd;
     private SequencePipelineSettings _settings;
     private TaskFileManager _fileManager;
     private File _workLocation;
@@ -84,6 +85,7 @@ public class SequenceTaskHelper implements PipelineContext
     public SequenceTaskHelper(PipelineJob job, WorkDirectory wd)
     {
         _job = job;
+        _wd = wd;
         _workLocation = wd.getDir();  //TODO: is this the right behavior??
         _fileManager = new TaskFileManagerImpl(_job, getWorkingDirectory(), wd);
         _settings = new SequencePipelineSettings(_job.getParameters());
@@ -144,9 +146,16 @@ public class SequenceTaskHelper implements PipelineContext
         return d;
     }
 
+    @Override
     public PipelineJob getJob()
     {
         return _job;
+    }
+
+    @Override
+    public WorkDirectory getWorkDir()
+    {
+        return _wd;
     }
 
     @Override
@@ -213,7 +222,7 @@ public class SequenceTaskHelper implements PipelineContext
         if (rows.length != 1)
         {
             if (throwUnlessFound)
-                throw new PipelineJobException("Incorrect row count when querying ExpRuns.  Found: " + rows.length);
+                throw new PipelineJobException("Incorrect row count when querying ExpRuns for: " + jobId + ".  Found: " + rows.length);
             else
                 return null;
         }

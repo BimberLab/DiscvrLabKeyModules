@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.util.FastqQualityFormat;
 import org.apache.commons.io.FileUtils;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -62,8 +63,6 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
     private static final String BARCODE_ACTIONNAME = "Separate By Barcode";
     private static final String COMPRESS_ACTIONNAME = "Compressing Outputs";
     private static final String RELOCATE_ACTIONNAME = "Processing Input Files";
-
-    private Set<File> _unalteredInputs = new HashSet<>();
 
     private List<RecordedAction> _actions;
 
@@ -165,7 +164,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
         if (FastqUtils.FqFileType.isType(f))
         {
-            if (!FastqUtils.FASTQ_ENCODING.Standard.equals(FastqUtils.inferFastqEncoding(f)))
+            if (!FastqQualityFormat.Standard.equals(FastqUtils.inferFastqEncoding(f)))
             {
                 job.getLogger().debug("fastq file does not appear to use standard encoding (ASCII 33): " + f.getPath());
                 return true;
@@ -435,13 +434,13 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         //NOTE: if the file is ASCII33 FASTQ, it should not reach this stage, unless we're doing barcoding or merging
         if (type.equals(SequenceUtil.FILETYPE.fastq))
         {
-            FastqUtils.FASTQ_ENCODING encoding = FastqUtils.inferFastqEncoding(input);
+            FastqQualityFormat encoding = FastqUtils.inferFastqEncoding(input);
             if (encoding == null)
             {
                 throw new PipelineJobException("Unable to infer FASTQ encoding for file: " + input.getPath());
             }
 
-            if (encoding.equals(FastqUtils.FASTQ_ENCODING.Illumina))
+            if (encoding == FastqQualityFormat.Illumina || encoding == FastqQualityFormat.Solexa)
             {
                 getJob().getLogger().info("Converting Illumina/Solexa FASTQ (ASCII 64) to standard encoding (ASCII 33)");
                 SeqCrumbsRunner runner = new SeqCrumbsRunner(getJob().getLogger());
@@ -451,7 +450,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             else
             {
                 output = input;
-                _unalteredInputs.add(input);
+                getHelper().getFileManager().addFinalOutputFile(input);
             }
         }
         else if (type.equals(SequenceUtil.FILETYPE.fasta))

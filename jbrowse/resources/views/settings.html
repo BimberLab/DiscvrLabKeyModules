@@ -11,21 +11,9 @@ Ext4.onReady(function (){
                 Ext4.apply(this, {
                     border: false,
                     items: [{
-                        html: 'This page allows site-level administration of integration with a JBrowse server.  In this scenario, LabKey serves as the database and source of sequence data and tracks.  LabKey allows the user to choose tracks and load a customized JBrowse session.  For this to work, LabKey must have access to the JBrowse root.  LabKey will create a new folder under this root names /labkey, and will create two subfolders here.  The first is a directory holding processed JSON for the tracks and other data.  There is a single list, with each LabKey resource only being processed once.  There is a separate subfolder of datasources.  Each time the user creates a new session, a folder is created with the config files specifying which resources to load.  These sessions can be saved for future use.  These are the config properties:' +
+                        html: 'This page allows site-level administration of integration with JBrowse.  In this scenario, LabKey serves as the database and source of sequence data and tracks.  LabKey allows the user to choose tracks and load a customized JBrowse session.  In the background, this module will prepare your sequences and tracks for viewing in JBrowse.  This module includes the code for JBrowse, and wraps that application.  These are the config properties:' +
                             '<p></p>' +
                             '<ul>' +
-                                '<li>' +
-                                    'jbrowseURL: the base URL to the JBrowse server' +
-                                '</li>' +
-                                '<li>' +
-                                    'jbrowseRoot: the path where the processed JSON files will be stored.  It should be accessible to the JBrowse/Apache config.  The OS user that is used to run tomcat must have r/w access to this folder.  This location could reside elsewhere on the filesystem if you configure apache appropriately.' +
-                                '</li>' +
-                                '<li>' +
-                                    'jbrowseBinDir: the path to the jbrowse bin directory, typically something like /var/www/jbrowse/bin.' +
-                                '</li>' +
-                                '<li>' +
-                                    'jbrowseDbPrefix: this is the URL relative path to the folder you provided as the jbrowseRoot.  For example, if the root of your JBrowse server is http://myServer.com/jbrowse/, and your custom data location is accessible using http://myServer.com/jbrowse/labkey, then you should set this to \'labkey\'.  This is appended to all URLs to allow JBrowse to load the data appropriately.' +
-                                '</li>' +
                                 '<li>' +
                                     'compressJson: Either true or false.  If true, the JSON files will be compressed when created.  In order for this to work, you must follow the JBrowse docs for enabling compression in Apache.' +
                                 '</li>' +

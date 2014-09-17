@@ -7,6 +7,7 @@
        <column name="platform" />
        <column name="application" />
        <column name="inputMaterial" />
+       <column name="sampletype" />
        <column name="fileid" />
        <!--<column name="qc_file" />-->
        <column name="fileid2" />

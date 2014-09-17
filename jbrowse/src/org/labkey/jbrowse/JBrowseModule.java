@@ -24,6 +24,7 @@ import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
@@ -31,7 +32,6 @@ import org.labkey.jbrowse.button.AddLibraryButton;
 import org.labkey.jbrowse.button.AddTrackButton;
 import org.labkey.jbrowse.button.ReprocessResourcesButton;
 import org.labkey.jbrowse.button.ReprocessSessionsButton;
-import org.labkey.jbrowse.button.ViewOutputsButton;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineProvider;
 import org.labkey.jbrowse.query.JBrowseUserSchema;
 
@@ -52,7 +52,7 @@ public class JBrowseModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 13.35;
+        return 13.37;
     }
 
     @Override
@@ -83,13 +83,16 @@ public class JBrowseModule extends ExtendedSimpleModule
 
         LaboratoryService.get().registerQueryButton(new AddTrackButton(), "sequenceanalysis", "reference_library_tracks");
         LaboratoryService.get().registerQueryButton(new AddLibraryButton(), "sequenceanalysis", "reference_libraries");
-        LaboratoryService.get().registerQueryButton(new ViewOutputsButton(), "sequenceanalysis", "outputfiles");
+
         LaboratoryService.get().registerQueryButton(new ReprocessResourcesButton(), JBrowseSchema.NAME, JBrowseSchema.TABLE_JSONFILES);
         LaboratoryService.get().registerQueryButton(new ReprocessSessionsButton(), JBrowseSchema.NAME, JBrowseSchema.TABLE_DATABASES);
 
         LaboratoryService.get().registerDataProvider(new JBrowseDataProvider(this));
         SystemMaintenance.addTask(new JBrowseMaintenanceTask());
         PipelineService.get().registerPipelineProvider(new JBrowseSessionPipelineProvider(this));
+
+        SequenceAnalysisService.get().registerGenomeTrigger(new JBrowseGenomeTrigger());
+        SequenceAnalysisService.get().registerFileHandler(new JBrowseSequenceFileHandler());
     }
 
     @Override

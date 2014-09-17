@@ -7,6 +7,7 @@ import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.BamProcessingStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.api.run.CommandLineParam;
 import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
@@ -44,7 +45,7 @@ public class MarkDuplicatesStep extends AbstractCommandPipelineStep<MarkDuplicat
     }
 
     @Override
-    public Output processBam(ReadsetModel rs, File inputBam, File referenceFasta, File outputDirectory) throws PipelineJobException
+    public Output processBam(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException
     {
         BamProcessingOutputImpl output = new BamProcessingOutputImpl();
         getWrapper().setOutputDir(outputDirectory);
