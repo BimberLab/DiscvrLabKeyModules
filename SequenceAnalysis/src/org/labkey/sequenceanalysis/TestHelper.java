@@ -46,6 +46,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.TestContext;
 import org.labkey.api.view.ViewServlet;
+import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -999,6 +1000,22 @@ public class TestHelper
             if (isExternalPipelineEnabled())
             {
                 super.setUp();
+
+                //log the files in the sequence tools dir, for debugging team city
+                String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
+                path = StringUtils.trimToNull(path);
+                if (path != null)
+                {
+                    File dir = new File(path);
+                    if (dir.exists())
+                    {
+                        _log.info("files in sequence tools dir: " +  dir.getPath());
+                        for (File f : dir.listFiles())
+                        {
+                            _log.info(f.getName());
+                        }
+                    }
+                }
 
                 if (!_hasPerformedSetup)
                 {
