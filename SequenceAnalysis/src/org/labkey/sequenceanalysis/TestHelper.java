@@ -225,6 +225,30 @@ public class TestHelper
             }
             _project = ContainerManager.getForPath(PROJECT_NAME);
             _pipelineRoot = PipelineService.get().getPipelineRootSetting(_project).getRootPath();
+
+            String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
+            path = StringUtils.trimToNull(path);
+            if (path != null)
+            {
+                File dir = new File(path);
+                _log.info("sequence junit tests will look for tools in: [" + path + "]");
+                if (dir.exists())
+                {
+                    _log.info("files in sequence tools dir: ");
+                    for (File f : dir.listFiles())
+                    {
+                        _log.info(f.getName());
+                    }
+                }
+                else
+                {
+                    _log.info("directory does not exist");
+                }
+            }
+            else
+            {
+                _log.info("param: " + SequencePipelineService.SEQUENCE_TOOLS_PARAM + " not defined");
+            }
         }
 
         private File getSampleDataDir()
@@ -1001,22 +1025,6 @@ public class TestHelper
             {
                 super.setUp();
 
-                //log the files in the sequence tools dir, for debugging team city
-                String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
-                path = StringUtils.trimToNull(path);
-                if (path != null)
-                {
-                    File dir = new File(path);
-                    if (dir.exists())
-                    {
-                        _log.info("files in sequence tools dir: " +  dir.getPath());
-                        for (File f : dir.listFiles())
-                        {
-                            _log.info(f.getName());
-                        }
-                    }
-                }
-
                 if (!_hasPerformedSetup)
                 {
                     copyInputFiles();
@@ -1294,7 +1302,7 @@ public class TestHelper
                 expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.bam"));
                 expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.metrics"));
             }
-            
+
             File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
             expectedOutputs.add(bam1);
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
@@ -1324,11 +1332,11 @@ public class TestHelper
                 expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.bam"));
                 expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.metrics"));
             }
-            
+
             File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
             expectedOutputs.add(bam2);
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
-            
+
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaikreads"));
