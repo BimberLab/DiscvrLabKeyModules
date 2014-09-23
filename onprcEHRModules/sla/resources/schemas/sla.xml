@@ -22,9 +22,12 @@
         <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
         <columns>
             <column columnName="project" />
-            <column columnName="date" />
+            <column columnName="date">
+                <formatString>yyyy-MM-dd HH:mm</formatString>
+            </column>
             <column columnName="investigatorid">
                 <columnTitle>Investigator</columnTitle>
+                <isHidden>true</isHidden>
                 <fk>
                     <fkDbSchema>onprc_ehr</fkDbSchema>
                     <fkTable>investigators</fkTable>
@@ -32,17 +35,27 @@
                 </fk>
             </column>
             <column columnName="room" />
-            <column columnName="species" />
+            <column columnName="species">
+                <columnTitle>Species</columnTitle>
+                <fk>
+                    <fkDbSchema>sla</fkDbSchema>
+                    <fkTable>species</fkTable>
+                    <fkColumnName>species</fkColumnName>
+                </fk>
+            </column>
             <column columnName="cagetype">
                 <columnTitle>Cage Type</columnTitle>
             </column>
-            <column columnName="cagesize" />
-            <column columnName="counttype" />
-            <column columnName="animalcount" />
-            <column columnName="cagecount" />
+            <column columnName="cageSize" />
+            <column columnName="countType" />
+            <column columnName="animalCount" />
+            <column columnName="cageCount" />
             <column columnName="dlaminventory">
                 <columnTitle>DLAM Inventory</columnTitle>
+                <isHidden>true</isHidden>
             </column>
+            <column columnName="taskid" />
+            <column columnName="formsort" />
             <column columnName="objectid" />
             <column columnName="container" />
             <column columnName="createdby" />
@@ -318,6 +331,7 @@
         <columns>
             <column columnName="gender">
                 <columnTitle>Gender</columnTitle>
+                <isKeyField>true</isKeyField>
             </column>
             <column columnName="datedisabled">
                 <columnTitle>Date Disabled</columnTitle>

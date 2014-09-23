@@ -22,6 +22,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.ehr.EHRService;
 import org.labkey.api.ehr.buttons.EHRShowEditUIButton;
+import org.labkey.api.ehr.dataentry.DefaultDataEntryFormFactory;
 import org.labkey.api.ehr.security.EHRProtocolEditPermission;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.Module;
@@ -29,11 +30,14 @@ import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.QuerySchema;
+import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.sla.dataentry.CensusFormType;
 import org.labkey.sla.etl.ETL;
 import org.labkey.sla.etl.ETLAuditProvider;
 import org.labkey.sla.etl.ETLAuditViewFactory;
+import org.labkey.sla.security.SLAEntryRole;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -53,7 +57,7 @@ public class SLAModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 13.25;
+        return 13.26;
     }
 
     @Override
@@ -66,6 +70,8 @@ public class SLAModule extends ExtendedSimpleModule
     protected void init()
     {
         addController(CONTROLLER_NAME, SLAController.class);
+
+        RoleManager.registerRole(new SLAEntryRole());
     }
 
     @Override
@@ -79,6 +85,8 @@ public class SLAModule extends ExtendedSimpleModule
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "sla etl admin", details.getActionURL());
 
         EHRService.get().registerMoreActionsButton(new EHRShowEditUIButton(this, "sla", "allowableAnimals", EHRProtocolEditPermission.class), "sla", "allowableAnimals");
+
+        EHRService.get().registerFormType(new DefaultDataEntryFormFactory(CensusFormType.class, this));
     }
 
     @Override
