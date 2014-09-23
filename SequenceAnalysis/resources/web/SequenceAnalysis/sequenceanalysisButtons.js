@@ -532,7 +532,7 @@ SequenceAnalysis.Buttons = new function(){
                 return;
             }
 
-            Ext4.Msg.alert('FastQC', 'You are about to run FastQC, a tool that generates reports on the selected sequence files.  Note: unless the report was previously cached for these files, it runs on the fly, meaning it may take time for the page to load, depending on the size of your input files.', function() {
+            Ext4.Msg.alert('FastQC', 'You are about to run FastQC, a tool that generates reports on the selected sequence files.  Note: unless the report was previously cached for these files, it runs on the fly, meaning it may take time for the page to load, depending on the size of your input files.<p>FastQC is a third party tool, not written by the authors of this module.', function() {
                 window.location = LABKEY.ActionURL.buildURL(
                     'sequenceanalysis',
                     'fastqcReport',

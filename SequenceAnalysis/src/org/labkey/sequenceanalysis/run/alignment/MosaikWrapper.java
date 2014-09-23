@@ -46,21 +46,26 @@ public class MosaikWrapper extends AbstractCommandWrapper
         {
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
-            File outputFile = getWrapper().getExpectedMosaikRefFile(outputDir, referenceGenome.getFastaFile());
+            File indexDir = new File(outputDir, getProvider().getName());
+            File outputFile = getWrapper().getExpectedMosaikRefFile(indexDir, referenceGenome.getWorkingFastaFile());
             boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName());
             if (!hasCachedIndex)
             {
-                getWrapper().executeMosaikBuild(referenceGenome.getFastaFile(), null, outputFile, "-oa", getClientCommandArgs());
+                if (!indexDir.exists())
+                {
+                    indexDir.mkdirs();
+                }
+                getWrapper().executeMosaikBuild(referenceGenome.getWorkingFastaFile(), null, outputFile, "-oa", getClientCommandArgs());
                 if (!outputFile.exists())
                     throw new PipelineJobException("Unable to find file: " + outputFile.getPath());
             }
 
             output.addOutput(outputFile, IndexOutputImpl.PRIMARY_ALIGNER_INDEX_FILE);
             output.addDeferredDeleteIntermediateFile(outputFile);
-            output.appendOutputs(referenceGenome.getFastaFile(), outputDir);
+            output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), outputDir, getProvider().getName(), output);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getProvider().getName(), output);
 
             return output;
         }
@@ -69,14 +74,14 @@ public class MosaikWrapper extends AbstractCommandWrapper
         public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getFastaFile().getParentFile(), getProvider().getName());
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getWorkingFastaFile().getParentFile(), getProvider().getName());
             getWrapper().setOutputDir(outputDirectory);
 
             //TODO: can we infer the technology?
             File reads = getWrapper().buildFastqReads(outputDirectory, inputFastq1, inputFastq2, SequencingTechnology.illumina_long);
             output.addIntermediateFile(reads);
 
-            File bam = getWrapper().executeMosaikAligner(referenceGenome.getFastaFile(), reads, outputDirectory, basename, getClientCommandArgs());
+            File bam = getWrapper().executeMosaikAligner(referenceGenome.getWorkingFastaFile(), reads, outputDirectory, basename, getClientCommandArgs());
             if (!bam.exists())
             {
                 throw new PipelineJobException("BAM not created, expected: " + bam.getPath());
@@ -176,7 +181,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
         List<String> args = new ArrayList<>();
         args.add(getAlignExe().getPath());
         args.add("-ia");
-        File mosaikRef = getExpectedMosaikRefFile(refFasta.getParentFile(), refFasta);
+        File mosaikRef = getExpectedMosaikRefFile(new File(refFasta.getParentFile(), "Mosaik"), refFasta);
         if (!mosaikRef.exists())
         {
             throw new PipelineJobException("Unable to find reference file: " + mosaikRef.getPath());

@@ -48,12 +48,12 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
         BamProcessingOutputImpl output = new BamProcessingOutputImpl();
         getWrapper().setOutputDir(outputDirectory);
 
-        File dictionary = new File(referenceGenome.getFastaFile().getParentFile(), FileUtil.getBaseName(referenceGenome.getFastaFile().getName()) + ".dict");
+        File dictionary = new File(referenceGenome.getWorkingFastaFile().getParentFile(), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".dict");
         boolean dictionaryExists = dictionary.exists();
         getPipelineCtx().getLogger().debug("dict exists: " + dictionaryExists + ", " + dictionary.getPath());
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".realigned.bam");
-        output.setBAM(getWrapper().execute(inputBam, outputBam, referenceGenome.getFastaFile(), null));
+        output.setBAM(getWrapper().execute(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null));
         output.addIntermediateFile(outputBam);
         output.addIntermediateFile(getWrapper().getExpectedIntervalsFile(inputBam), "Realigner Intervals File");
 

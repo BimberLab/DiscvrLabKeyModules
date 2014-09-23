@@ -15,10 +15,12 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.Results;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
@@ -59,8 +61,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -518,9 +522,21 @@ public class JBrowseRoot
                 getLogger().info("processing output file: " + f.getOutputFile());
 
                 TableInfo ti = QueryService.get().getUserSchema(u, c, JBrowseManager.SEQUENCE_ANALYSIS).getTable("outputfiles");
-                TableSelector outputFileTs = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("rowid"), f.getOutputFile()), null);
-                Map<String, Object> outputFileRowMap = outputFileTs.getMap();
-                if (outputFileRowMap == null)
+                Set<FieldKey> keys = PageFlowUtil.set(
+                        FieldKey.fromString("description"),
+                        FieldKey.fromString("analysis_id"),
+                        FieldKey.fromString("analysis_id/name"),
+                        FieldKey.fromString("readset"),
+                        FieldKey.fromString("readset/name"),
+                        FieldKey.fromString("readset/subjectid"),
+                        FieldKey.fromString("readset/sampletype"),
+                        FieldKey.fromString("readset/platform"),
+                        FieldKey.fromString("readset/application")
+                );
+
+                Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, keys);
+                TableSelector outputFileTs = new TableSelector(ti, cols.values(), new SimpleFilter(FieldKey.fromString("rowid"), f.getOutputFile()), null);
+                if (!outputFileTs.exists())
                 {
                     _log.error("unable to find outputfile: " + f.getOutputFile());
                     continue;
@@ -540,7 +556,26 @@ public class JBrowseRoot
                 }
                 outputDir.mkdirs();
 
-                List<JSONObject> objList = processFile(d, outputDir, "data-" + f.getOutputFile(), f.getLabel(), (String)outputFileRowMap.get("description"), f.getCategory(), f.getRefLibraryData());
+                Map<String, Object> metadata = new HashMap<>();
+                if (outputFileTs.exists())
+                {
+                    try (Results results = outputFileTs.getResults())
+                    {
+                        results.next();
+                        metadata.put("Description", results.getString(FieldKey.fromString("description")));
+                        metadata.put("Readset", results.getString(FieldKey.fromString("readset/name")));
+                        metadata.put("Subject Id", results.getString(FieldKey.fromString("readset/subjectid")));
+                        metadata.put("Sample Type", results.getString(FieldKey.fromString("readset/sampletype")));
+                        metadata.put("Platform", results.getString(FieldKey.fromString("readset/platform")));
+                        metadata.put("Application", results.getString(FieldKey.fromString("readset/application")));
+                    }
+                    catch(SQLException e)
+                    {
+                        throw new IOException(e);
+                    }
+                }
+
+                List<JSONObject> objList = processFile(d, outputDir, "data-" + f.getOutputFile(), f.getLabel(), metadata, f.getCategory(), f.getRefLibraryData());
                 if (objList != null && !objList.isEmpty())
                 {
                     for (JSONObject o : objList)
@@ -790,12 +825,15 @@ public class JBrowseRoot
             jsonFile = ts1.getObject(JsonFile.class);
         }
 
-        processFile(data, outDir, "track-" + (trackRowMap.get("rowid")).toString(), (String)trackRowMap.get("name"), (String)trackRowMap.get("description"), category == null ? (String)trackRowMap.get("category") : category, null);
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("Description", trackRowMap.get("description"));
+
+        processFile(data, outDir, "track-" + (trackRowMap.get("rowid")).toString(), (String)trackRowMap.get("name"), metadata, category == null ? (String)trackRowMap.get("category") : category, null);
 
         return jsonFile;
     }
 
-    private List<JSONObject> processFile(ExpData data, File outDir, String featureName, String featureLabel, String description, String category, @Nullable ExpData refGenomeData) throws IOException
+    private List<JSONObject> processFile(ExpData data, File outDir, String featureName, String featureLabel, Map<String, Object> metadata, String category, @Nullable ExpData refGenomeData) throws IOException
     {
         FileType bamType = new FileType("bam", FileType.gzSupportLevel.NO_GZ);
         FileType vcfType = new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ);
@@ -804,27 +842,27 @@ public class JBrowseRoot
         String ext = FileUtil.getExtension(data.getFile());
         if ("gff3".equalsIgnoreCase(ext) || "gff".equalsIgnoreCase(ext) || "gtf".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processFlatFile(data, outDir, "--gff", featureName, featureLabel, description, category);
+            JSONObject ret = processFlatFile(data, outDir, "--gff", featureName, featureLabel, metadata, category);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("bed".equalsIgnoreCase(ext) || "bedgraph".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processFlatFile(data, outDir, "--bed", featureName, featureLabel, description, category);
+            JSONObject ret = processFlatFile(data, outDir, "--bed", featureName, featureLabel, metadata, category);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("gbk".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processFlatFile(data, outDir, "--gbk", featureName, featureLabel, description, category);
+            JSONObject ret = processFlatFile(data, outDir, "--gbk", featureName, featureLabel, metadata, category);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("bigwig".equalsIgnoreCase(ext) || "bw".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processBigWig(data, outDir, featureName, featureLabel, description, category);
+            JSONObject ret = processBigWig(data, outDir, featureName, featureLabel, metadata, category);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if (bamType.isType(input))
         {
-            JSONObject ret = processBam(data, outDir, featureName, featureLabel, description, category);
+            JSONObject ret = processBam(data, outDir, featureName, featureLabel, metadata, category);
 
             //TODO: consider adding coverage track
 
@@ -832,7 +870,7 @@ public class JBrowseRoot
         }
         else if (vcfType.isType(input))
         {
-            JSONObject ret = processVCF(data, outDir, featureName, featureLabel, description, category, refGenomeData);
+            JSONObject ret = processVCF(data, outDir, featureName, featureLabel, metadata, category, refGenomeData);
             return ret == null ? null : Arrays.asList(ret);
         }
         else
@@ -842,7 +880,7 @@ public class JBrowseRoot
         }
     }
 
-    private JSONObject processBam(ExpData data, File outDir, String featureName, String featureLabel, String description, String category) throws IOException
+    private JSONObject processBam(ExpData data, File outDir, String featureName, String featureLabel, Map<String, Object> metadata, String category) throws IOException
     {
         getLogger().info("processing BAM file");
         if (outDir.exists())
@@ -882,11 +920,8 @@ public class JBrowseRoot
         getLogger().debug("using relative path: " + relPath);
         o.put("urlTemplate", relPath + "/" + targetFile.getName());
 
-        JSONObject metadata = new JSONObject();
-        if (description != null)
-            metadata.put("description", description);
-
-        o.put("metadata", metadata);
+        if (metadata != null)
+            o.put("metadata", metadata);
 
         if (category != null)
             o.put("category", category);
@@ -894,7 +929,7 @@ public class JBrowseRoot
         return o;
     }
 
-    private JSONObject processVCF(ExpData data, File outDir, String featureName, String featureLabel, String description, String category, @Nullable ExpData refGenomeData) throws IOException
+    private JSONObject processVCF(ExpData data, File outDir, String featureName, String featureLabel, Map<String, Object> metadata, String category, @Nullable ExpData refGenomeData) throws IOException
     {
         getLogger().info("processing VCF file: " + data.getFile().getName());
         FileType vcfType = new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ);
@@ -969,11 +1004,8 @@ public class JBrowseRoot
         getLogger().debug("using relative path: " + relPath);
         o.put("urlTemplate", relPath + "/" + targetFile.getName());
 
-        JSONObject metadata = new JSONObject();
-        if (description != null)
-            metadata.put("description", description);
-
-        o.put("metadata", metadata);
+        if (metadata != null)
+            o.put("metadata", metadata);
 
         if (category != null)
             o.put("category", category);
@@ -981,7 +1013,7 @@ public class JBrowseRoot
         return o;
     }
 
-    private JSONObject processBigWig(ExpData data, File outDir, String featureName, String featureLabel, String description, String category) throws IOException
+    private JSONObject processBigWig(ExpData data, File outDir, String featureName, String featureLabel, Map<String, Object> metadata, String category) throws IOException
     {
         if (outDir.exists())
         {
@@ -1003,18 +1035,16 @@ public class JBrowseRoot
         getLogger().debug("using relative path: " + relPath);
         o.put("urlTemplate", relPath + "/" + targetFile.getName());
 
-        JSONObject metadata = new JSONObject();
-        if (description != null)
-            metadata.put("description", description);
+        if (metadata != null)
+            o.put("metadata", metadata);
 
-        o.put("metadata", metadata);
         if (category != null)
             o.put("category", category);
 
         return o;
     }
 
-    private JSONObject processFlatFile(ExpData data, File outDir, String typeArg, String featureName, String featureLabel, String description, String category) throws IOException
+    private JSONObject processFlatFile(ExpData data, File outDir, String typeArg, String featureName, String featureLabel, Map<String, Object> metadata, String category) throws IOException
     {
         List<String> args = new ArrayList<>();
 
@@ -1056,11 +1086,11 @@ public class JBrowseRoot
             getLogger().debug("new urlTemplate: " + urlTemplate);
             obj.getJSONArray("tracks").getJSONObject(0).put("urlTemplate", urlTemplate);
 
-            JSONObject metadata = obj.getJSONArray("tracks").getJSONObject(0).containsKey("metadata") ? obj.getJSONArray("tracks").getJSONObject(0).getJSONObject("metadata") : new JSONObject();
-            if (description != null)
-                metadata.put("description", description);
+            JSONObject metadataObj = obj.getJSONArray("tracks").getJSONObject(0).containsKey("metadata") ? obj.getJSONArray("tracks").getJSONObject(0).getJSONObject("metadata") : new JSONObject();
+            if (metadata != null)
+                metadataObj.putAll(metadata);
 
-            obj.getJSONArray("tracks").getJSONObject(0).put("metadata", metadata);
+            obj.getJSONArray("tracks").getJSONObject(0).put("metadata", metadataObj);
 
             if (category != null)
                 obj.getJSONArray("tracks").getJSONObject(0).put("category", category);

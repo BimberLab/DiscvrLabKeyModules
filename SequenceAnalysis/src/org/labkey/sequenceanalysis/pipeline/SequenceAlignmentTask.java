@@ -179,7 +179,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             if (groupedFiles.size() > 0)
             {
                 ReferenceGenome referenceGenome = getHelper().getSequenceSupport().getReferenceGenome();
-                copyReferenceLibrary(actions);
+                copyReferenceResources(actions);
                 for (ReadsetModel rs : groupedFiles.keySet()){
                     Pair<File, File> pair = groupedFiles.get(rs);
                     String outputBasename = FileUtil.getBaseName(pair.first);
@@ -196,6 +196,9 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         getJob().getLogger().info("Alignment not selected, skipping");
                     }
                 }
+
+                //NOTE: we set this back to NULL, so subsequent steps will continue to use the local copy
+                referenceGenome.setWorkingFasta(null);
             }
 
             //TODO
@@ -231,17 +234,17 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         return new RecordedActionSet(actions);
     }
 
-    private File copyReferenceLibrary(List<RecordedAction> actions) throws PipelineJobException
+    private void copyReferenceResources(List<RecordedAction> actions) throws PipelineJobException
     {
         getJob().getLogger().info("copying reference library files");
         ReferenceGenome referenceGenome = getHelper().getSequenceSupport().getReferenceGenome();
         if (referenceGenome == null)
         {
-            throw new PipelineJobException("No refernece genome was cached prior to preparing aligned indexes");
+            throw new PipelineJobException("No reference genome was cached prior to preparing aligned indexes");
         }
 
         File sharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
-        File refFasta = new File(sharedDirectory, referenceGenome.getFastaFile().getName());
+        File refFasta = referenceGenome.getSourceFastaFile();
         if (!refFasta.exists())
         {
             throw new PipelineJobException("Error: reference file does not exist: " + refFasta.getPath());
@@ -261,18 +264,23 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             RecordedAction action = new RecordedAction(COPY_REFERENCE_LIBRARY_ACTIONNAME);
             action.setStartTime(new Date());
 
-            File movedSharedDir = _wd.inputFile(sharedDirectory, true);
-            File movedFasta = new File(movedSharedDir, refFasta.getName());
-            action.addInput(refFasta, "Initial FASTA");
-            action.addOutput(movedFasta, "Temportary FASTA", true);
+            String basename = FileUtil.getBaseName(refFasta);
+            for (File f : refFasta.getParentFile().listFiles())
+            {
+                if (f.getName().startsWith(basename))
+                {
+                    getJob().getLogger().debug("copying reference file: " + f.getPath());
+                    File movedFile = _wd.inputFile(f, true);
 
-            action.addInput(fai, "Initial FASTA Index");
-            action.addOutput(new File(movedFasta + ".fai"), "Temportary FASTA Index", true);
+                    action.addInput(f, "Reference File");
+                    action.addOutput(movedFile, "Copied Reference File", true);
+                }
+            }
 
             action.setEndTime(new Date());
             actions.add(action);
 
-            return movedFasta;
+            referenceGenome.setWorkingFasta(new File(sharedDirectory, refFasta.getName()));
         }
         catch (IOException e)
         {
@@ -485,7 +493,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             getHelper().getFileManager().addInput(alignmentAction, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, inputFiles.second);
         }
 
-        getHelper().getFileManager().addInput(alignmentAction, ReferenceLibraryTask.REFERENCE_DB_FASTA, referenceGenome.getFastaFile());
+        getHelper().getFileManager().addInput(alignmentAction, ReferenceLibraryTask.REFERENCE_DB_FASTA, referenceGenome.getSourceFastaFile());
         getJob().getLogger().info("Beginning alignment for: " + inputFiles.first.getName() + (inputFiles.second == null ? "" : " and " + inputFiles.second.getName()));
 
         File outputDirectory = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(inputFiles.first));

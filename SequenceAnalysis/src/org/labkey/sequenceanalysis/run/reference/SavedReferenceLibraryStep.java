@@ -139,9 +139,14 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
         }
 
         ExpData data = ExperimentService.get().getExpData(dataId);
-        if (data == null || data.getFile() == null || !data.getFile().exists())
+        if (data == null || data.getFile() == null)
         {
-            throw new PipelineJobException("Could not find the FASTA file for the selected reference");
+            throw new PipelineJobException("Could not find the FASTA file for the selected reference, expected");
+        }
+
+        if (!data.getFile().exists())
+        {
+            throw new PipelineJobException("Could not find the FASTA file for the selected reference, expected: " + data.getFile().getPath());
         }
 
         return data;
@@ -156,38 +161,9 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
     public Output createReferenceFasta(File outputDirectory) throws PipelineJobException
     {
         File originalFasta = getOriginalFastaFile();
-        File outputFasta = getExpectedFastaFile(outputDirectory);
-
-        ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(outputFasta, getLibraryExpData(), getLibraryId()));
+        ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(originalFasta, getLibraryExpData(), getLibraryId()));
         output.addOutput(outputDirectory, "Reference Genome Folder");
-        if (!outputFasta.exists())
-        {
-            try
-            {
-                getPipelineCtx().getLogger().info("copying file to work location");
-                FileUtils.copyFile(originalFasta, outputFasta);
-                assert originalFasta.exists() : "Original FASTA does not exist after copy";
-                output.addInput(originalFasta, ReferenceLibraryTask.REFERENCE_DB_FASTA);
-                output.addOutput(outputFasta, ReferenceLibraryTask.REFERENCE_DB_FASTA);
-                output.addDeferredDeleteIntermediateFile(outputFasta);
-
-                File originalIndexFile = new File(originalFasta.getPath() + ".fai");
-                if (originalIndexFile.exists())
-                {
-                    File outputIndex = new File(outputFasta.getPath() + ".fai");
-                    FileUtils.copyFile(originalIndexFile, outputIndex);
-                    assert originalFasta.exists() : "Original FASTA index does not exist after copy";
-                    output.addOutput(outputIndex, ReferenceLibraryTask.REFERENCE_DB_FASTA_IDX);
-                    output.addDeferredDeleteIntermediateFile(outputIndex);
-                }
-
-                getPipelineCtx().getLogger().info("finished copying files");
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
+        output.addInput(originalFasta, ReferenceLibraryTask.REFERENCE_DB_FASTA);
 
         return output;
     }

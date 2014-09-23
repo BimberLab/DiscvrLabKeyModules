@@ -51,7 +51,7 @@ public class CallMdTagsStep extends AbstractCommandPipelineStep<CallMdWrapper> i
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".calmd.bam");
         output.addIntermediateFile(outputBam);
-        File calMdBam = getWrapper().execute(inputBam, outputBam, referenceGenome.getFastaFile());
+        File calMdBam = getWrapper().execute(inputBam, outputBam, referenceGenome.getWorkingFastaFile());
         output.setBAM(calMdBam);
 
         return output;

@@ -28,10 +28,4 @@ public class ReferenceLibraryOutputImpl extends DefaultPipelineStepOutput implem
     {
         return _referenceGenome;
     }
-
-    @Override
-    public File getReferenceFasta() throws PipelineJobException
-    {
-        return _referenceGenome == null ? null : _referenceGenome.getFastaFile();
-    }
 }

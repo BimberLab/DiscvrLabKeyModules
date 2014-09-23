@@ -80,7 +80,7 @@ public class BWAWrapper extends AbstractCommandWrapper
             getPipelineCtx().getLogger().info("Creating BWA index");
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
-
+            File indexDir = new File(outputDir, "bwa");
             boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), "bwa");
             if (!hasCachedIndex)
             {
@@ -90,16 +90,21 @@ public class BWAWrapper extends AbstractCommandWrapper
                 args.add("index");
                 args.add("-p");
 
-                String outPrefix = FileUtil.getBaseName(referenceGenome.getFastaFile()) + ".bwa.index";
-                args.add(new File(outputDir, outPrefix).getPath());
-                args.add(referenceGenome.getFastaFile().getPath());
+                String outPrefix = FileUtil.getBaseName(referenceGenome.getSourceFastaFile()) + ".bwa.index";
+                if (!indexDir.exists())
+                {
+                    indexDir.mkdirs();
+                }
+
+                args.add(new File(indexDir, outPrefix).getPath());
+                args.add(referenceGenome.getWorkingFastaFile().getPath());
                 getWrapper().execute(args);
             }
 
-            output.appendOutputs(referenceGenome.getFastaFile(), outputDir);
+            output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), outputDir, "bwa", output);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, "bwa", output);
 
             return output;
         }
@@ -108,7 +113,7 @@ public class BWAWrapper extends AbstractCommandWrapper
         public final AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getFastaFile().getParentFile(), "bwa");
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getWorkingFastaFile().getParentFile(), "bwa");
 
             return _performAlignment(output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename);
         }
@@ -118,11 +123,11 @@ public class BWAWrapper extends AbstractCommandWrapper
             getWrapper().setOutputDir(outputDirectory);
 
             getPipelineCtx().getLogger().info("Running BWA");
-            File sai1 = getWrapper().runBWAAln(getPipelineCtx().getJob(), referenceGenome.getFastaFile(), inputFastq1);
+            File sai1 = getWrapper().runBWAAln(getPipelineCtx().getJob(), referenceGenome.getWorkingFastaFile(), inputFastq1);
             File sai2 = null;
             if (inputFastq2 != null)
             {
-                sai2 = getWrapper().runBWAAln(getPipelineCtx().getJob(), referenceGenome.getFastaFile(), inputFastq2);
+                sai2 = getWrapper().runBWAAln(getPipelineCtx().getJob(), referenceGenome.getWorkingFastaFile(), inputFastq2);
             }
 
             List<String> args = new ArrayList<>();
@@ -130,17 +135,17 @@ public class BWAWrapper extends AbstractCommandWrapper
             args.add(inputFastq2 == null ? "samse" : "sampe");
             args.addAll(getClientCommandArgs());
 
-            if (!referenceGenome.getFastaFile().exists())
+            if (!referenceGenome.getWorkingFastaFile().exists())
             {
-                throw new PipelineJobException("Reference FASTA does not exist: " + referenceGenome.getFastaFile().getPath());
+                throw new PipelineJobException("Reference FASTA does not exist: " + referenceGenome.getWorkingFastaFile().getPath());
             }
 
-            File expectedIndex = new File(referenceGenome.getFastaFile().getParentFile(), FileUtil.getBaseName(referenceGenome.getFastaFile()) + ".bwa.index.sa");
+            File expectedIndex = new File(referenceGenome.getWorkingFastaFile().getParentFile() + "/bwa", FileUtil.getBaseName(referenceGenome.getWorkingFastaFile()) + ".bwa.index.sa");
             if (!expectedIndex.exists())
             {
                 throw new PipelineJobException("Expected index does not exist: " + expectedIndex);
             }
-            args.add(new File(referenceGenome.getFastaFile().getParentFile(), FileUtil.getBaseName(referenceGenome.getFastaFile().getName()) + ".bwa.index").getPath());
+            args.add(new File(referenceGenome.getWorkingFastaFile().getParentFile() + "/bwa", FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
 
             //add SAI
             args.add(sai1.getPath());
@@ -183,7 +188,7 @@ public class BWAWrapper extends AbstractCommandWrapper
         args.add(getExe().getPath());
         args.add("aln");
         appendThreads(job, args);
-        args.add(new File(refFasta.getParentFile(), FileUtil.getBaseName(refFasta.getName()) + ".bwa.index").getPath());
+        args.add(new File(refFasta.getParentFile() + "/bwa", FileUtil.getBaseName(refFasta.getName()) + ".bwa.index").getPath());
         args.add(inputFile.getPath());
 
         File output = new File(getOutputDir(inputFile), inputFile.getName() + ".sai");

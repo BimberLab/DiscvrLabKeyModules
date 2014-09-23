@@ -10,13 +10,18 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
                 return;
             }
 
+            if (checked.length > 1){
+                Ext4.Msg.alert('Error', 'Can only select 1 reference at a time');
+                return;
+            }
+
             Ext4.create('JBrowse.window.DatabaseWindow', {
                 dataRegionName: dataRegionName,
-                libraryIds: checked
+                libraryId: parseInt(checked[0])
             }).show();
         },
 
-        dataHandler: function(dataRegionName){
+        outputFilesHandler: function(dataRegionName){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
             if (!checked || !checked.length){
@@ -26,7 +31,7 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
 
             Ext4.create('JBrowse.window.DatabaseWindow', {
                 dataRegionName: dataRegionName,
-                dataIds: checked
+                outputFileIds: checked
             }).show();
         },
 
@@ -71,6 +76,7 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
                 }],
                 listeners: {
                     change: function (field, val){
+                        var win = field.up('window');
                         var toAdd = [];
                         if (val.mode == 'createNew'){
                             toAdd.push({
@@ -84,6 +90,18 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
                                 xtype: 'textarea',
                                 fieldLabel: 'Description',
                                 name: 'description'
+                            });
+
+                            toAdd.push({
+                                xtype: win.libraryId ? 'hidden' : 'ldk-simplelabkeycombo',
+                                name: 'libraryId',
+                                fieldLabel: 'Reference Genome',
+                                schemaName: 'sequenceanalysis',
+                                queryName: 'reference_libraries',
+                                displayField: 'name',
+                                valueField: 'rowid',
+                                allowBlank: false,
+                                value: win.libraryId
                             });
                         }
                         else {
@@ -100,7 +118,7 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
                             });
                         }
 
-                        var target = field.up('window').down('#target');
+                        var target = win.down('#target');
                         target.removeAll();
                         target.add(toAdd);
                     },
@@ -114,7 +132,8 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
                 bodyStyle: 'padding: 5px;padding-top: 15px;',
                 border: false,
                 defaults: {
-                    width: 400
+                    width: 400,
+                    labelWidth: 130
                 }
             }],
             buttons: [{
@@ -142,11 +161,9 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
         var mode = this.down('radiogroup').getValue().mode;
         var vals = form.getValues();
 
-        if (this.libraryIds){
-            vals.libraryIds = [];
-            Ext4.Array.forEach(this.libraryIds, function(i){
-                vals.libraryIds.push(parseInt(i));
-            }, this);
+        if (!vals.libraryId){
+            Ext4.Msg.alert('Error', 'Must provide the reference genome');
+            return;
         }
 
         if (this.trackIds){
@@ -156,10 +173,10 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
             }, this);
         }
 
-        if (this.dataIds){
-            vals.dataIds = [];
-            Ext4.Array.forEach(this.dataIds, function(i){
-                vals.dataIds.push(parseInt(i));
+        if (this.outputFileIds){
+            vals.outputFileIds = [];
+            Ext4.Array.forEach(this.outputFileIds, function(i){
+                vals.outputFileIds.push(parseInt(i));
             }, this);
         }
 

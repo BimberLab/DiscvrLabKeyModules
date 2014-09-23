@@ -1200,7 +1200,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.mosaik"));
+            expectedOutputs.add(new File(basedir, "Shared/Mosaik"));
+            expectedOutputs.add(new File(basedir, "Shared/Mosaik/SIVmac239.mosaik"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -1274,7 +1275,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.dict"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.mosaik"));
+
+            expectedOutputs.add(new File(basedir, "Shared/Mosaik"));
+            expectedOutputs.add(new File(basedir, "Shared/Mosaik/SIVmac239.mosaik"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -1769,11 +1772,13 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.amb"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.ann"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.bwt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.pac"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.sa"));
+
+            expectedOutputs.add(new File(basedir, "Shared/bwa"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.amb"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.ann"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.bwt"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.pac"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.sa"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -1832,11 +1837,13 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.amb"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.ann"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.bwt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.pac"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.sa"));
+
+            expectedOutputs.add(new File(basedir, "Shared/bwa"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.amb"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.ann"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.bwt"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.pac"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.sa"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -1899,11 +1906,13 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.amb"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.ann"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.bwt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.pac"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.sa"));
+
+            expectedOutputs.add(new File(basedir, "Shared/bwa"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.amb"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.ann"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.bwt"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.pac"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.sa"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
 
@@ -1980,11 +1989,13 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.amb"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.ann"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.bwt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.pac"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bwa.index.sa"));
+
+            expectedOutputs.add(new File(basedir, "Shared/bwa"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.amb"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.ann"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.bwt"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.pac"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/SIVmac239.bwa.index.sa"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -2048,12 +2059,14 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.1.ebwt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.2.ebwt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.3.ebwt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.4.ebwt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.rev.1.ebwt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.bowtie.index.rev.2.ebwt"));
+
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie"));
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie/SIVmac239.bowtie.index.1.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie/SIVmac239.bowtie.index.2.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie/SIVmac239.bowtie.index.3.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie/SIVmac239.bowtie.index.4.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie/SIVmac239.bowtie.index.rev.1.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie/SIVmac239.bowtie.index.rev.2.ebwt"));
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
@@ -2173,7 +2186,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/Ref_DB.fasta.fai"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
-            expectedOutputs.add(new File(basedir, "Shared/Ref_DB.mosaik"));
+
+            expectedOutputs.add(new File(basedir, "Shared/Mosaik"));
+            expectedOutputs.add(new File(basedir, "Shared/Mosaik/Ref_DB.mosaik"));
 
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME1));
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME2));

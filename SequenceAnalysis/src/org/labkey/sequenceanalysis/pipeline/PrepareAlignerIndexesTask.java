@@ -103,34 +103,38 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
 
         AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
 
-        File sharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
         ReferenceGenome referenceGenome = getHelper().getSequenceSupport().getReferenceGenome();
         if (referenceGenome == null)
         {
-            throw new PipelineJobException("No refernece genome was cached prior to preparing aligned indexes");
+            throw new PipelineJobException("No reference genome was cached prior to preparing aligned indexes");
         }
 
-        File refFasta = new File(sharedDirectory, referenceGenome.getFastaFile().getName());
+        File refFasta = referenceGenome.getSourceFastaFile();
         if (!refFasta.exists())
         {
             throw new PipelineJobException("Reference fasta does not exist: " + refFasta.getPath());
         }
         getHelper().getFileManager().addInput(action, ReferenceLibraryTask.REFERENCE_DB_FASTA, refFasta);
-        getHelper().getFileManager().addOutput(action, ReferenceLibraryTask.REFERENCE_DB_FASTA, refFasta);
 
         FastaIndexer indexer = new FastaIndexer(getJob().getLogger());
         File refFastaIndex = indexer.getExpectedIndexName(refFasta);
         if (!refFastaIndex.exists())
         {
             indexer.execute(refFasta);
+            getHelper().getFileManager().addOutput(action, "Reference DB FASTA Index", refFastaIndex);
         }
-        getHelper().getFileManager().addOutput(action, "Reference DB FASTA Index", refFastaIndex);
 
-        assert getHelper().getSequenceSupport().getReferenceGenome() != null;
+        getJob().getLogger().debug("location of source FASTA: " + getHelper().getSequenceSupport().getReferenceGenome().getSourceFastaFile().getPath());
 
-        getJob().getLogger().info("location of cached ref fasta: " + getHelper().getSequenceSupport().getReferenceGenome().getFastaFile().getPath());
+        //NOTE: always create the index back in the local working dir, since we'll need to move it back there anyway
+        File localSharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
+        if (!localSharedDirectory.exists())
+        {
+            localSharedDirectory.mkdirs();
+        }
+        getJob().getLogger().debug("indexes will be created in: " + localSharedDirectory.getPath());
 
-        AlignmentStep.IndexOutput output = alignmentStep.createIndex(referenceGenome, refFasta.getParentFile());
+        AlignmentStep.IndexOutput output = alignmentStep.createIndex(referenceGenome, localSharedDirectory);
         getHelper().getFileManager().addStepOutputs(action, output);
 
         return action;

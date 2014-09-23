@@ -45,7 +45,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
         public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getFastaFile().getParentFile(), getProvider().getName());
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getWorkingFastaFile().getParentFile(), getProvider().getName());
             BowtieWrapper wrapper = getWrapper();
 
             List<String> args = new ArrayList<>();
@@ -64,7 +64,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
             args.add(new File(outputDirectory, SequenceTaskHelper.getMinimalBaseName(inputFastq1) + ".bowtie.unaligned.fastq").getPath());
             args.addAll(getClientCommandArgs());
 
-            File indexFile = new File(referenceGenome.getFastaFile().getParentFile(), getExpectedIndexName(referenceGenome.getFastaFile()));
+            File indexFile = new File(referenceGenome.getWorkingFastaFile().getParentFile() + "/" + getProvider().getName(), getExpectedIndexName(referenceGenome.getWorkingFastaFile()));
             args.add(indexFile.getPath());
 
             if (inputFastq2 != null)
@@ -109,23 +109,29 @@ public class BowtieWrapper extends AbstractCommandWrapper
             getPipelineCtx().getLogger().info("Creating Bowtie index");
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
+            File indexDir = new File(outputDir, getProvider().getName());
             boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName());
             if (!hasCachedIndex)
             {
+                if (!indexDir.exists())
+                {
+                    indexDir.mkdirs();
+                }
+
                 List<String> args = new ArrayList<>();
                 args.add(getWrapper().getBuildExe().getPath());
                 args.add("-f");  //input is FASTA
                 args.add("-q");  //quiet mode
-                args.add(referenceGenome.getFastaFile().getPath());
-                args.add(new File(outputDir, getExpectedIndexName(referenceGenome.getFastaFile())).getPath());
+                args.add(referenceGenome.getWorkingFastaFile().getPath());
+                args.add(new File(indexDir, getExpectedIndexName(referenceGenome.getWorkingFastaFile())).getPath());
 
                 getWrapper().execute(args);
             }
 
-            output.appendOutputs(referenceGenome.getFastaFile(), outputDir);
+            output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), outputDir, getProvider().getName(), output);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getProvider().getName(), output);
 
             return output;
         }

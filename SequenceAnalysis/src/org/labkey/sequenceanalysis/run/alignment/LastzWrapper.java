@@ -63,7 +63,7 @@ public class LastzWrapper extends AbstractCommandWrapper
             output.addInput(tempFasta, "Converted FASTA");
             output.addIntermediateFile(tempFasta);
 
-            File outputBam = getWrapper().doAlignment(tempFasta, referenceGenome.getFastaFile(), outputDirectory, basename, getClientCommandArgs());
+            File outputBam = getWrapper().doAlignment(tempFasta, referenceGenome.getWorkingFastaFile(), outputDirectory, basename, getClientCommandArgs());
             output.addOutput(outputBam, AlignmentOutputImpl.BAM_ROLE);
 
             return output;

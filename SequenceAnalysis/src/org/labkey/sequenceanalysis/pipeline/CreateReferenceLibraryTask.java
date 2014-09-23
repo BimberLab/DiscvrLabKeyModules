@@ -40,6 +40,9 @@ import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.ViewContext;
+import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
@@ -146,7 +149,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
         File fasta = null;
         File idFile = null;
 
-        try
+        try (ViewContext.StackResetter ignored = ViewContext.pushMockViewContext(getJob().getUser(), getJob().getContainer(), new ActionURL(SequenceAnalysisModule.NAME, "fake.view", getJob().getContainer())))
         {
             //first create the partial library record
             if (getPipelineJob().isCreateNew())
@@ -302,11 +305,14 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 Table.delete(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS), new SimpleFilter(FieldKey.fromString("library_id"), rowId));
             }
 
+            getJob().getLogger().info("deleting partial files");
             if (fasta != null && fasta.exists())
                 fasta.delete();
 
             if (idFile != null && idFile.exists())
                 idFile.delete();
+
+            throw new PipelineJobException(e);
         }
 
         return new RecordedActionSet(new RecordedAction("Create Reference Genome"));

@@ -72,12 +72,12 @@ public class BismarkWrapper extends AbstractCommandWrapper
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getFastaFile().getParentFile(), getProvider().getName());
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getWorkingFastaFile().getParentFile(), getProvider().getName());
             BismarkWrapper wrapper = getWrapper();
 
             List<String> args = new ArrayList<>();
             args.add(wrapper.getExe().getPath());
-            args.add(referenceGenome.getFastaFile().getParentFile().getPath());
+            args.add(referenceGenome.getWorkingFastaFile().getParentFile().getPath());
 
             args.add("--samtools_path");
             args.add(new SamtoolsRunner(getPipelineCtx().getLogger()).getSamtoolsPath().getParentFile().getPath());
@@ -133,6 +133,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
             getPipelineCtx().getLogger().info("Preparing reference for bismark");
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
+            File indexDir = new File(referenceGenome.getWorkingFastaFile().getParentFile(), getProvider().getName());
             boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName());
             if (!hasCachedIndex)
             {
@@ -142,21 +143,25 @@ public class BismarkWrapper extends AbstractCommandWrapper
                 args.add(new BowtieWrapper(getPipelineCtx().getLogger()).getExe().getParentFile().getPath());
 
                 //args.add("--verbose");
-                args.add(referenceGenome.getFastaFile().getParentFile().getPath());
+                if (!indexDir.exists())
+                {
+                    indexDir.mkdirs();
+                }
+                args.add(indexDir.getPath());
 
                 getWrapper().execute(args);
 
-                File genomeBuild = new File(outputDir, "Bisulfite_Genome");
+                File genomeBuild = new File(indexDir, "Bisulfite_Genome");
                 if (!genomeBuild.exists())
                 {
                     throw new PipelineJobException("Unable to find file, expected: " + genomeBuild.getPath());
                 }
             }
 
-            output.appendOutputs(referenceGenome.getFastaFile(), outputDir);
+            output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), outputDir, getProvider().getName(), output);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getProvider().getName(), output);
 
             return output;
         }

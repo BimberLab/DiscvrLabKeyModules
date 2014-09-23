@@ -18,8 +18,6 @@ public interface ReferenceLibraryStep extends PipelineStep
 
     public static interface Output extends PipelineStepOutput
     {
-        public File getReferenceFasta() throws PipelineJobException;
-
         public ReferenceGenome getReferenceGenome();
     }
 }

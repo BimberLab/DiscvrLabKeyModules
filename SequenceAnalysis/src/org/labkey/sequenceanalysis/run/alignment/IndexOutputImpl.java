@@ -21,7 +21,7 @@ public class IndexOutputImpl extends DefaultPipelineStepOutput implements Alignm
 
     public IndexOutputImpl(ReferenceGenome referenceGenome)
     {
-        addOutput(referenceGenome.getFastaFile(), ReferenceLibraryTask.REFERENCE_DB_FASTA);
+        addInput(referenceGenome.getWorkingFastaFile(), ReferenceLibraryTask.REFERENCE_DB_FASTA);
     }
 
     public void appendOutputs(File refFasta, File outputDir)

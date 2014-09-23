@@ -115,7 +115,7 @@ public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask
             }
 
             ReferenceLibraryStep.Output output = step.createReferenceFasta(sharedDirectory);
-            File refFasta = output.getReferenceFasta();
+            File refFasta = output.getReferenceGenome().getSourceFastaFile();
             if (!refFasta.exists())
             {
                 throw new PipelineJobException("Reference file does not exist: " + refFasta.getPath());

@@ -12,27 +12,40 @@ import java.io.File;
  */
 public class ReferenceGenomeImpl implements ReferenceGenome
 {
-    private File _fastaFileWork;
+    private File _sourceFasta;
+    private File _workingFasta;
     private Integer _genomeId;
     private Integer _expDataId;
 
-    public ReferenceGenomeImpl(File fastaFileWork, @Nullable ExpData fastaExpData, @Nullable Integer genomeId)
+    public ReferenceGenomeImpl(@NotNull File sourceFasta, @Nullable ExpData fastaExpData, @Nullable Integer genomeId)
     {
-        _fastaFileWork = fastaFileWork;
+        _sourceFasta = sourceFasta;
         _expDataId = fastaExpData == null ? null : fastaExpData.getRowId();
         _genomeId = genomeId;
     }
 
     @Override
-    public File getFastaFile()
+    public @NotNull File getSourceFastaFile()
     {
-        return _fastaFileWork;
+        return _sourceFasta;
+    }
+
+    @Override
+    public @NotNull File getWorkingFastaFile()
+    {
+        return _workingFasta == null ? _sourceFasta : _workingFasta;
+    }
+
+    @Override
+    public void setWorkingFasta(File workingFasta)
+    {
+        _workingFasta = workingFasta;
     }
 
     @Override
     public File getFastaIndex()
     {
-        return _fastaFileWork == null ? null : new File(_fastaFileWork.getPath() + ".fai");
+        return getWorkingFastaFile() == null ? null : new File(getWorkingFastaFile().getPath() + ".fai");
     }
 
     @Override

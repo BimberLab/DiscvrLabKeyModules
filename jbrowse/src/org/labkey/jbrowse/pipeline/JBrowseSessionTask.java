@@ -142,15 +142,20 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         {
             JBrowseRoot root = new JBrowseRoot(getJob().getLogger());
             getJob().getLogger().info("total files to reprocess: " + jsonFiles.size());
+            Set<Integer> sequenceIds = new HashSet<>();
+            Set<Integer> trackIds = new HashSet<>();
+
             for (JsonFile f : jsonFiles)
             {
                 if (f.getSequenceId() != null)
                 {
                     root.prepareRefSeq(getJob().getContainer(), getJob().getUser(), f.getSequenceId(), true);
+                    sequenceIds.add(f.getSequenceId());
                 }
                 else if (f.getTrackId() != null)
                 {
                     root.prepareFeatureTrack(getJob().getContainer(), getJob().getUser(), f.getTrackId(), null, true);
+                    trackIds.add(f.getTrackId());
                 }
                 else if (f.getOutputFile() != null)
                 {
@@ -166,6 +171,21 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
             TableInfo databaseMembers = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
             TableSelector ts2 = new TableSelector(databaseMembers, PageFlowUtil.set("database"), new SimpleFilter(FieldKey.fromString("jsonfile"), getPipelineJob().getJsonFiles(), CompareType.IN), null);
             Set<String> databaseGuids = new HashSet<>(ts2.getArrayList(String.class));
+
+            //look for libraries using these resources.  then find any sessions based on these libraries
+            Set<Integer> libraryIds = new HashSet<>();
+            libraryIds.addAll(new TableSelector(DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("reference_library_tracks"), PageFlowUtil.set("library_id"), new SimpleFilter(FieldKey.fromString("rowid"), trackIds, CompareType.IN), null).getArrayList(Integer.class));
+            libraryIds.addAll(new TableSelector(DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("reference_library_members"), PageFlowUtil.set("library_id"), new SimpleFilter(FieldKey.fromString("ref_nt_id"), sequenceIds, CompareType.IN), null).getArrayList(Integer.class));
+            if (!libraryIds.isEmpty())
+            {
+                List<String> newIds = new TableSelector(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("objectid"), new SimpleFilter(FieldKey.fromString("libraryId"), libraryIds, CompareType.IN), null).getArrayList(String.class);
+                if (!newIds.isEmpty())
+                {
+                    getJob().getLogger().info("re-processing " + new HashSet<>(newIds).size() + " additional sessions because they use reference genomes that were modified");
+                    databaseGuids.addAll(newIds);
+                }
+            }
+
             getJob().getLogger().info("recreating " + databaseGuids.size() + " sessions because resources may have changed");
             for (String databaseGuid : databaseGuids)
             {
