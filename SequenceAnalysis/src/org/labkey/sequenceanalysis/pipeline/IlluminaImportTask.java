@@ -111,136 +111,128 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         String prefix = job.getParameters().get("fastqPrefix");
 
         List<File> inputFiles = _helper.getSupport().getInputFiles();
-        if(inputFiles.size() == 0)
+        if (inputFiles.size() == 0)
             throw new PipelineJobException("No input files");
 
         DbSchema schema = SequenceAnalysisSchema.getInstance().getSchema();
 
-        try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
+        handleInstrumentRun(schema);
+
+        //iterate over each CSV
+        for (File input : inputFiles)
         {
-            handleInstrumentRun(schema);
+            RecordedAction action = new RecordedAction(ACTION_NAME);
+            action.addInput(input, "Illumina Sample CSV");
 
-            //iterate over each CSV
-            for (File input : inputFiles)
+            Map<Integer, Integer> sampleMap = parseCsv(input, schema);
+
+            //this step will be slow
+            IlluminaFastqSplitter<Integer> parser = new IlluminaFastqSplitter<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
+            parser.setDestinationDir(_helper.getSupport().getAnalysisDirectory());
+
+            // the first element of the pair is the sample ID.  the second is either 1 or 2,
+            // depending on whether the file represents the forward or reverse reads
+            Map<Pair<Integer, Integer>, File> fileMap = parser.parseFastqFiles();
+
+            for (File f : parser.getFiles())
             {
-                RecordedAction action = new RecordedAction(ACTION_NAME);
-                action.addInput(input, "Illumina Sample CSV");
+                action.addInput(f, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME);
+            }
 
-                Map<Integer, Integer> sampleMap = parseCsv(input, schema);
+            getJob().getLogger().info("Created " + fileMap.keySet().size() + " FASTQ files");
 
-                //this step will be slow
-                IlluminaFastqSplitter<Integer> parser = new IlluminaFastqSplitter<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
-                parser.setDestinationDir(_helper.getSupport().getAnalysisDirectory());
+            getJob().getLogger().info("Compressing FASTQ files");
+            for (Pair<Integer, Integer> sampleKey : fileMap.keySet())
+            {
+                File inputFile = fileMap.get(sampleKey);
+                File output = Compress.compressGzip(inputFile);
+                inputFile.delete();
+                if (inputFile.exists())
+                    throw new PipelineJobException("Unable to delete file: " + inputFile.getPath());
 
-                // the first element of the pair is the sample ID.  the second is either 1 or 2,
-                // depending on whether the file represents the forward or reverse reads
-                Map<Pair<Integer, Integer>, File> fileMap = parser.parseFastqFiles();
+                fileMap.put(sampleKey, output);
+            }
 
-                for(File f : parser.getFiles())
+            TableInfo rs = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
+
+            //update the readsets
+            Map<String, Object> row;
+            for (Object key : sampleMap.values())
+            {
+                Integer readsetId = (Integer) key;
+
+                row = new HashMap<>();
+                Pair<Integer, Integer> pair = Pair.of(readsetId, 1);
+                if (fileMap.containsKey(pair))
                 {
-                    action.addInput(f, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME);
-                }
-
-                getJob().getLogger().info("Created " + fileMap.keySet().size() + " FASTQ files");
-
-                getJob().getLogger().info("Compressing FASTQ files");
-                for(Pair<Integer, Integer> sampleKey : fileMap.keySet())
-                {
-                    File inputFile = fileMap.get(sampleKey);
-                    File output = Compress.compressGzip(inputFile);
-                    inputFile.delete();
-                    if(inputFile.exists())
-                        throw new PipelineJobException("Unable to delete file: " + inputFile.getPath());
-
-                    fileMap.put(sampleKey, output);
-                }
-
-                TableInfo rs = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
-
-                //update the readsets
-                Map<String, Object> row;
-                for(Object key : sampleMap.values())
-                {
-                    Integer readsetId = (Integer)key;
-
-                    row = new HashMap<>();
-                    Pair<Integer, Integer> pair = Pair.of(readsetId, 1);
-                    if(fileMap.containsKey(pair))
+                    action.addOutput(fileMap.get(pair), "FASTQ File", false);
+                    ExpData d = createExpData(fileMap.get(pair));
+                    if (d != null)
                     {
-                        action.addOutput(fileMap.get(pair), "FASTQ File", false);
-                        ExpData d = createExpData(fileMap.get(pair));
-                        if(d != null)
-                        {
-                            row.put("fileid", d.getRowId());
+                        row.put("fileid", d.getRowId());
 
-                            //now add quality metrics
-                            addQualityMetrics(schema, readsetId, pair, parser, d);
-                        }
-                        else
-                        {
-                            getJob().getLogger().error("Unable to create ExpData for: " + fileMap.get(pair).getPath());
-                            continue;
-                        }
+                        //now add quality metrics
+                        addQualityMetrics(schema, readsetId, pair, parser, d);
                     }
                     else
                     {
-                        getJob().getLogger().warn("No output file was created for readset: " + readsetId);
-                    }
-
-                    pair = Pair.of(readsetId, 2);
-                    if(fileMap.containsKey(pair))
-                    {
-                        action.addOutput(fileMap.get(pair), "Paired FASTQ File", false);
-                        ExpData d = createExpData(fileMap.get(pair));
-                        if(d != null)
-                        {
-                            row.put("fileid2", d.getRowId());
-
-                            //now add quality metrics
-                            addQualityMetrics(schema, readsetId, pair, parser, d);
-                        }
-                        else
-                            getJob().getLogger().error("Unable to create ExpData for: " + fileMap.get(pair).getPath());
-                    }
-
-                    if(readsetId == 0)
+                        getJob().getLogger().error("Unable to create ExpData for: " + fileMap.get(pair).getPath());
                         continue;
-
-                    row.put("rowid", readsetId);
-
-                    if(_instrumentRunId != null)
-                        row.put("instrument_run_id", _instrumentRunId);
-
-                    Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
-                    if (runId != null)
-                        row.put("runid", runId);
-
-                    Object[] pks = {readsetId};
-                    try
-                    {
-                        Table.update(getJob().getUser(), rs, row, pks);
-                        getJob().getLogger().info("Updated readset: " + readsetId);
                     }
-                    catch (Table.OptimisticConflictException e)
-                    {
-                        //row doesnt exist..
-                        getJob().getLogger().error("readset doesnt exist: " + readsetId);
-                    }
-
-                    actions.add(action);
                 }
+                else
+                {
+                    getJob().getLogger().warn("No output file was created for readset: " + readsetId);
+                }
+
+                pair = Pair.of(readsetId, 2);
+                if (fileMap.containsKey(pair))
+                {
+                    action.addOutput(fileMap.get(pair), "Paired FASTQ File", false);
+                    ExpData d = createExpData(fileMap.get(pair));
+                    if (d != null)
+                    {
+                        row.put("fileid2", d.getRowId());
+
+                        //now add quality metrics
+                        addQualityMetrics(schema, readsetId, pair, parser, d);
+                    }
+                    else
+                        getJob().getLogger().error("Unable to create ExpData for: " + fileMap.get(pair).getPath());
+                }
+
+                if (readsetId == 0)
+                    continue;
+
+                row.put("rowid", readsetId);
+
+                if (_instrumentRunId != null)
+                    row.put("instrument_run_id", _instrumentRunId);
+
+                Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
+                if (runId != null)
+                    row.put("runid", runId);
+
+                Object[] pks = {readsetId};
+                try
+                {
+                    Table.update(getJob().getUser(), rs, row, pks);
+                    getJob().getLogger().info("Updated readset: " + readsetId);
+                }
+                catch (Table.OptimisticConflictException e)
+                {
+                    //row doesnt exist..
+                    getJob().getLogger().error("readset doesnt exist: " + readsetId);
+                }
+
+                actions.add(action);
             }
-            transaction.commit();
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeSQLException(e);
         }
 
         return new RecordedActionSet(actions);
     }
 
-    private void handleInstrumentRun(DbSchema schema) throws SQLException
+    private void handleInstrumentRun(DbSchema schema)
     {
         TableInfo runTable = schema.getTable(SequenceAnalysisSchema.TABLE_INSTRUMENT_RUNS);
 
@@ -272,13 +264,13 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         r.put("metricname", "Total Sequences");
         r.put("metricvalue", count);
         r.put("dataid", d.getRowId());
-        if(readsetId > 0)
+        if (readsetId > 0)
             r.put("readset", readsetId);
 
         r.put("container", getJob().getContainer());
         r.put("createdby", getJob().getUser().getUserId());
 
-        if(_instrumentRunId > 0)
+        if (_instrumentRunId > 0)
             r.put("runid", _instrumentRunId);
 
         Table.insert(getJob().getUser(), schema.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), r);
@@ -290,15 +282,11 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         return _helper.createExpData(f);
     }
 
-    private Map<Integer, Integer> parseCsv(File sampleFile, DbSchema schema) throws PipelineJobException, SQLException
+    private Map<Integer, Integer> parseCsv(File sampleFile, DbSchema schema) throws PipelineJobException
     {
-        CSVReader reader = null;
-        try
+        getJob().getLogger().info("Parsing Sample File: " + sampleFile.getName());
+        try (CSVReader reader = new CSVReader(new FileReader(sampleFile)))
         {
-            getJob().getLogger().info("Parsing Sample File: " + sampleFile.getName());
-
-            reader = new CSVReader(new FileReader(sampleFile));
-
             //parse the samples file
             String [] nextLine;
             Map<Integer, Integer> sampleMap = new HashMap<>();
@@ -306,22 +294,23 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
             Boolean inSamples = false;
             int sampleIdx = 0;
-            while ((nextLine = reader.readNext()) != null) {
+            while ((nextLine = reader.readNext()) != null)
+            {
                 getJob().getLogger().debug("Parsing line starting with: " + nextLine[0]);
-                if(nextLine.length > 0 && "[Data]".equals(nextLine[0]))
+                if (nextLine.length > 0 && "[Data]".equals(nextLine[0]))
                 {
                     inSamples = true;
                     continue;
                 }
 
                 //NOTE: for now we only parse samples.  at a future point we might consider using more of this file
-                if(!inSamples)
+                if (!inSamples)
                     continue;
 
-                if(nextLine.length == 0 || null == nextLine[0])
+                if (nextLine.length == 0 || null == nextLine[0])
                     continue;
 
-                if("Sample_ID".equalsIgnoreCase(nextLine[0]))
+                if ("Sample_ID".equalsIgnoreCase(nextLine[0]))
                     continue;
 
                 Integer readsetId;
@@ -329,7 +318,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 {
                     sampleIdx++;
                     readsetId = Integer.parseInt(nextLine[0]);
-                    if(validateReadsetId(readsetId))
+                    if (validateReadsetId(readsetId))
                     {
                         sampleMap.put(sampleIdx, readsetId);
                     }
@@ -353,28 +342,9 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
             return sampleMap;
         }
-        catch (FileNotFoundException e)
-        {
-            throw new PipelineJobException(e);
-        }
         catch (IOException e)
         {
             throw new PipelineJobException(e);
-        }
-        finally
-        {
-            if (reader != null)
-            {
-                try
-                {
-                    reader.close();
-                }
-                catch (IOException e)
-                {
-                    //ignore
-                }
-
-            }
         }
     }
 
@@ -384,14 +354,14 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_READSETS), Collections.singleton("fileid"),
             new SimpleFilter(FieldKey.fromString("rowid"), id), null);
 
-        if(ts.getRowCount() < 1)
+        if (ts.getRowCount() < 1)
         {
             getJob().getLogger().warn("No readsets found that match Id " + id + ", skipping.");
             return false;
         }
 
         List<Integer> fileId = (List)ts.getCollection(Integer.class);
-        if(fileId.get(0) != null && fileId.get(0) > 0)
+        if (fileId.get(0) != null && fileId.get(0) > 0)
         {
             getJob().getLogger().warn("Readset " + id + " already has a file associated with it and cannot be re-imported.  It will be skipped");
             return false;
@@ -400,7 +370,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         return true;
     }
 
-    private Integer tryCreateReadset(DbSchema schema, String[] line) throws SQLException, PipelineJobException
+    private Integer tryCreateReadset(DbSchema schema, String[] line) throws PipelineJobException
     {
         if (!_helper.getSettings().doAutoCreateReadsets())
             throw new PipelineJobException("Unable to find existing readset matching ID: " + line[0]);
@@ -410,9 +380,9 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
         String barcode5 = null;
         String barcode3 = null;
-        if(line.length >= 5)
+        if (line.length >= 5)
             barcode5 = resolveBarcode(line[4]);
-        if(line.length >= 7)
+        if (line.length >= 7)
             barcode3 = resolveBarcode(line[6]);
 
         TableInfo rsTable = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
@@ -420,12 +390,12 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         row.put("name", name);
         row.put("platform", "ILLUMINA");
 
-        if(barcode5 != null)
+        if (barcode5 != null)
             row.put("barcode5", barcode5);
-        if(barcode3 != null)
+        if (barcode3 != null)
             row.put("barcode3", barcode3);
 
-        if(_instrumentRunId != null)
+        if (_instrumentRunId != null)
             row.put("instrument_run_id", _instrumentRunId);
 
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
@@ -442,7 +412,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
     private String resolveBarcode(String barcode)
     {
-        if(StringUtils.isEmpty(barcode))
+        if (StringUtils.isEmpty(barcode))
             return null;
 
         String name = null;

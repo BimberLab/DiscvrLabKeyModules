@@ -4,10 +4,6 @@ import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.BlockCompressedOutputStream;
-import htsjdk.tribble.index.IndexFactory;
-import htsjdk.tribble.index.tabix.TabixFormat;
-import htsjdk.tribble.index.tabix.TabixIndex;
-import htsjdk.variant.vcf.VCFCodec;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -62,6 +58,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -424,7 +421,7 @@ public class JBrowseRoot
         });
 
         int compressedRefs = 0;
-        int totalRefs = 0;
+        Set<Integer> referenceIds = new HashSet<>();
 
         getLogger().info("total JSON files: " + jsonFiles.size());
         for (JsonFile f : jsonFiles)
@@ -443,7 +440,7 @@ public class JBrowseRoot
                     throw new IOException("There was an error preparing ref seq file for sequence: " + f.getSequenceId());
                 }
 
-                totalRefs++;
+                referenceIds.add(f.getSequenceId());
                 JSONArray arr = readFileToJsonArray(f.getRefSeqsFile());
                 for (int i = 0; i < arr.length(); i++)
                 {
@@ -620,9 +617,9 @@ public class JBrowseRoot
             }
         }
 
-        if (totalRefs != compressedRefs && compressedRefs > 0)
+        if (referenceIds.size() != compressedRefs && compressedRefs > 0)
         {
-            getLogger().error("Some references are compressed and some are not.  Total ref: " + totalRefs + ", compressed: " + compressedRefs + ".  This will cause rendering problems.");
+            getLogger().error("Some references are compressed and some are not.  Total ref: " + referenceIds.size() + ", compressed: " + compressedRefs + ".  This will cause rendering problems.");
         }
 
         //add single track for reference sequence
@@ -638,13 +635,31 @@ public class JBrowseRoot
         o.put("showTranslation", false);
 
         //NOTE: this isnt perfect.  these tracks might have been created in the past with a different setting, and in fact some might be compressed and some not.
-        if (compressedRefs > 0 && compressedRefs == totalRefs)
+        if (compressedRefs > 0 && compressedRefs == referenceIds.size())
         {
             o.put("compress", 1);
         }
         o.put("urlTemplate", "seq/{refseq_dirpath}/{refseq}-");
         existingTracks.put(o);
         trackList.put("tracks", existingTracks);
+
+        //look in reference_aa_sequences and ref_nt_features and create track of these if they exist
+        JSONObject codingRegionTrack = createCodingRegionTrack(c, referenceIds, trackDir);
+        if (codingRegionTrack != null)
+        {
+            JSONArray existingTracks2 = trackList.containsKey("tracks") ? trackList.getJSONArray("tracks") : new JSONArray();
+            existingTracks2.put(codingRegionTrack);
+            trackList.put("tracks", existingTracks2);
+        }
+
+
+        JSONObject featureTrack = createFeatureTrack(c, referenceIds, trackDir);
+        if (featureTrack != null)
+        {
+            JSONArray existingTracks2 = trackList.containsKey("tracks") ? trackList.getJSONArray("tracks") : new JSONArray();
+            existingTracks2.put(featureTrack);
+            trackList.put("tracks", existingTracks2);
+        }
 
         writeJsonToFile(new File(seqDir, "refSeqs.json"), refSeq.toString(1));
         writeJsonToFile(new File(outDir, "trackList.json"), trackList.toString(1));
@@ -669,6 +684,162 @@ public class JBrowseRoot
         args.add("100");
 
         runScript("generate-names.pl", args);
+    }
+
+    private JSONObject createCodingRegionTrack(Container c, Set<Integer> referenceIds, File databaseTrackDir) throws IOException
+    {
+        //first add coding regions
+        TableSelector ts = new TableSelector(DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("ref_aa_sequences"), new SimpleFilter(FieldKey.fromString("ref_nt_id"), referenceIds, CompareType.IN), new Sort("ref_nt_id,start_location"));
+        if (!ts.exists())
+        {
+            return null;
+        }
+
+        File aaFeaturesOutFile = new File(databaseTrackDir, "aaFeatures.gff");
+        try (final BufferedWriter writer = new BufferedWriter(new FileWriter(aaFeaturesOutFile)))
+        {
+            //first find ref_aa_sequences
+            ts.forEach(new Selector.ForEachBlock<ResultSet>()
+            {
+                @Override
+                public void exec(ResultSet rs) throws SQLException
+                {
+                    String name = rs.getString("name");
+                    Integer refNtId = rs.getInt("ref_nt_id");
+                    Boolean isComplement = rs.getObject("isComplement") != null && rs.getBoolean("isComplement");
+                    String exons = StringUtils.trimToNull(rs.getString("exons"));
+                    if (exons == null)
+                    {
+                        return;
+                    }
+
+                    RefNtSequenceModel ref = RefNtSequenceModel.getForRowId(refNtId);
+                    String refName = ref.getName();
+
+                    try
+                    {
+                        String[] tokens = StringUtils.split(exons, ";");
+
+                        String featureId = refName + "_" + name;
+                        String strand = isComplement ? "-" : "+";
+                        String[] lastExon = StringUtils.split(tokens[tokens.length - 1], "-");
+                        if (lastExon.length != 2)
+                        {
+                            return;
+                        }
+
+                        writer.write(StringUtils.join(new String[]{refName, "ReferenceAA", "gene", rs.getString("start_location"), lastExon[1], ".", strand, ".", "ID=" + featureId + ";Note="}, '\t') + System.getProperty("line.separator"));
+
+                        for (String exon : tokens)
+                        {
+                            String[] borders = StringUtils.split(exon, "-");
+                            if (borders.length != 2)
+                            {
+                                getLogger().error("improper exon: " + exon);
+                                return;
+                            }
+
+                            writer.write(StringUtils.join(new String[]{refName, "ReferenceAA", "CDS", borders[0], borders[1], ".", strand, ".", "Parent=" + featureId}, '\t') + System.getProperty("line.separator"));
+                        }
+                    }
+                    catch (IOException e)
+                    {
+                        throw new SQLException(e);
+                    }
+                }
+            });
+        }
+
+        //now process track
+        String featureName = "CodingRegions";
+        File outDir = new File(databaseTrackDir, "tmpTrackDir");
+        if (outDir.exists())
+        {
+            FileUtils.deleteDirectory(outDir);
+        }
+
+        outDir.mkdirs();
+
+        JSONObject ret = processFlatFile(c, aaFeaturesOutFile, outDir, "--gff", featureName, "Coding Regions", null, "Reference Annotations");
+
+        //move file, so name parsing works properly
+        File source = new File(databaseTrackDir, "tmpTrackDir/data/tracks/" + featureName);
+        File dest = new File(databaseTrackDir, featureName);
+        FileUtils.moveDirectory(source, dest);
+        FileUtils.deleteDirectory(outDir);
+
+        //update urlTemplate
+        String relPath = FileUtil.relativePath(getBaseDir(c).getPath(), databaseTrackDir.getPath());
+        getLogger().debug("using relative path: " + relPath);
+        ret.put("urlTemplate", "tracks/" + featureName + "/{refseq}/trackData.json");
+
+        aaFeaturesOutFile.delete();
+
+        return ret;
+    }
+
+    private JSONObject createFeatureTrack(Container c, Set<Integer> referenceIds, File databaseTrackDir) throws IOException
+    {
+        //first add coding regions
+        TableSelector ts = new TableSelector(DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("ref_nt_features"), new SimpleFilter(FieldKey.fromString("ref_nt_id"), referenceIds, CompareType.IN), new Sort("ref_nt_id,nt_start"));
+        if (!ts.exists())
+        {
+            return null;
+        }
+
+        File aaFeaturesOutFile = new File(databaseTrackDir, "ntFeatures.gff");
+        try (final BufferedWriter writer = new BufferedWriter(new FileWriter(aaFeaturesOutFile)))
+        {
+            //first find ref_aa_sequences
+            ts.forEach(new Selector.ForEachBlock<ResultSet>()
+            {
+                @Override
+                public void exec(ResultSet rs) throws SQLException
+                {
+                    String name = rs.getString("name");
+                    Integer refNtId = rs.getInt("ref_nt_id");
+                    RefNtSequenceModel ref = RefNtSequenceModel.getForRowId(refNtId);
+                    String refName = ref.getName();
+
+                    try
+                    {
+                        String featureId = refName + "_" + name;
+                        writer.write(StringUtils.join(new String[]{refName, "ReferenceNTFeatures", rs.getString("category"), rs.getString("nt_start"), rs.getString("nt_stop"), ".", "+", ".", "ID=" + featureId + ";Note="}, '\t') + System.getProperty("line.separator"));
+                    }
+                    catch (IOException e)
+                    {
+                        throw new SQLException(e);
+                    }
+                }
+            });
+        }
+
+        //now process track
+        String featureName = "SequenceFeatures";
+        File outDir = new File(databaseTrackDir, "tmpTrackDir");
+        if (outDir.exists())
+        {
+            FileUtils.deleteDirectory(outDir);
+        }
+
+        outDir.mkdirs();
+
+        JSONObject ret = processFlatFile(c, aaFeaturesOutFile, outDir, "--gff", featureName, "Coding Regions", null, "Reference Annotations");
+
+        //move file, so name parsing works properly
+        File source = new File(databaseTrackDir, "tmpTrackDir/data/tracks/" + featureName);
+        File dest = new File(databaseTrackDir, featureName);
+        FileUtils.moveDirectory(source, dest);
+        FileUtils.deleteDirectory(outDir);
+
+        //update urlTemplate
+        String relPath = FileUtil.relativePath(getBaseDir(c).getPath(), databaseTrackDir.getPath());
+        getLogger().debug("using relative path: " + relPath);
+        ret.put("urlTemplate", featureName + "/{refseq}/trackData.json");
+
+        aaFeaturesOutFile.delete();
+
+        return ret;
     }
 
     private boolean hasFilesWithExtension(File root, String ext)
@@ -842,17 +1013,17 @@ public class JBrowseRoot
         String ext = FileUtil.getExtension(data.getFile());
         if ("gff3".equalsIgnoreCase(ext) || "gff".equalsIgnoreCase(ext) || "gtf".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processFlatFile(data, outDir, "--gff", featureName, featureLabel, metadata, category);
+            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--gff", featureName, featureLabel, metadata, category);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("bed".equalsIgnoreCase(ext) || "bedgraph".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processFlatFile(data, outDir, "--bed", featureName, featureLabel, metadata, category);
+            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--bed", featureName, featureLabel, metadata, category);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("gbk".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processFlatFile(data, outDir, "--gbk", featureName, featureLabel, metadata, category);
+            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--gbk", featureName, featureLabel, metadata, category);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("bigwig".equalsIgnoreCase(ext) || "bw".equalsIgnoreCase(ext))
@@ -862,11 +1033,9 @@ public class JBrowseRoot
         }
         else if (bamType.isType(input))
         {
-            JSONObject ret = processBam(data, outDir, featureName, featureLabel, metadata, category);
+            List<JSONObject> ret = processBam(data, outDir, featureName, featureLabel, metadata, category);
 
-            //TODO: consider adding coverage track
-
-            return ret == null ? null : Arrays.asList(ret);
+            return ret.isEmpty() ? null : ret;
         }
         else if (vcfType.isType(input))
         {
@@ -880,9 +1049,11 @@ public class JBrowseRoot
         }
     }
 
-    private JSONObject processBam(ExpData data, File outDir, String featureName, String featureLabel, Map<String, Object> metadata, String category) throws IOException
+    private List<JSONObject> processBam(ExpData data, File outDir, String featureName, String featureLabel, Map<String, Object> metadata, String category) throws IOException
     {
         getLogger().info("processing BAM file");
+        List<JSONObject> ret = new ArrayList<>();
+
         if (outDir.exists())
         {
             outDir.delete();
@@ -926,7 +1097,17 @@ public class JBrowseRoot
         if (category != null)
             o.put("category", category);
 
-        return o;
+        ret.add(o);
+
+        //add coverage track
+        JSONObject coverage = new JSONObject();
+        coverage.putAll(o);
+        coverage.put("label", featureName + "_coverage");
+        coverage.put("key", featureLabel + " Coverage");
+        coverage.put("type", "JBrowse/View/Track/SNPCoverage");
+        ret.add(coverage);
+
+        return ret;
     }
 
     private JSONObject processVCF(ExpData data, File outDir, String featureName, String featureLabel, Map<String, Object> metadata, String category, @Nullable ExpData refGenomeData) throws IOException
@@ -1044,12 +1225,12 @@ public class JBrowseRoot
         return o;
     }
 
-    private JSONObject processFlatFile(ExpData data, File outDir, String typeArg, String featureName, String featureLabel, Map<String, Object> metadata, String category) throws IOException
+    private JSONObject processFlatFile(Container c, File inputFile, File outDir, String typeArg, String featureName, String featureLabel, Map<String, Object> metadata, String category) throws IOException
     {
         List<String> args = new ArrayList<>();
 
         args.add(typeArg);
-        args.add(data.getFile().getPath());
+        args.add(inputFile.getPath());
 
         //NOTE: this oddity is a quirk of jbrowse.  label is the background name.  'key' is the user-facing label.
         args.add("--trackLabel");
@@ -1079,7 +1260,7 @@ public class JBrowseRoot
         {
             JSONObject obj = readFileToJson(trackList);
             String urlTemplate = obj.getJSONArray("tracks").getJSONObject(0).getString("urlTemplate");
-            String relPath = FileUtil.relativePath(getBaseDir(data.getContainer()).getPath(), new File(outDir, "data").getPath());
+            String relPath = FileUtil.relativePath(getBaseDir(c).getPath(), new File(outDir, "data").getPath());
             getLogger().debug("using relative path: " + relPath);
             getLogger().debug("original urlTemplate: " + urlTemplate);
             urlTemplate = relPath + "/" + urlTemplate;

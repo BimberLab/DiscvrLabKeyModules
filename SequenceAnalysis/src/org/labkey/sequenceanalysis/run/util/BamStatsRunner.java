@@ -47,7 +47,7 @@ public class BamStatsRunner
     {
     }
 
-    public void execute(List<File> sequenceFiles) throws FileNotFoundException
+    public void execute(List<File> sequenceFiles) throws IOException
     {
         _sequenceFiles = sequenceFiles;
 
@@ -88,8 +88,7 @@ public class BamStatsRunner
                     String line;
                     while ((line = procReader.readLine()) != null)
                     {
-                        output.append(line);
-                        output.append(System.getProperty("line.separator"));
+                        output.append(line).append(System.getProperty("line.separator"));
                         _log.info(line);
                     }
 
@@ -145,19 +144,19 @@ public class BamStatsRunner
         return params;
     }
 
-    private File getTmpDir()
+    private File getTmpDir() throws IOException
     {
-        try
+        if (_tmpDir == null)
         {
-            if (_tmpDir == null)
-                _tmpDir = FileUtil.getAbsoluteCaseSensitiveFile(FileUtil.createTempDirectory("bamstats_"));
-
-            if (!_tmpDir.exists())
-                _tmpDir.mkdirs();
+            _tmpDir = FileUtil.getAbsoluteCaseSensitiveFile(FileUtil.createTempDirectory("bamstats_"));
         }
-        catch (IOException e)
+
+        if (!_tmpDir.exists())
         {
-            throw new RuntimeException(e);
+            if (!_tmpDir.mkdirs())
+            {
+                throw new IOException("unable to create directory: " + _tmpDir.getPath());
+            }
         }
 
         return _tmpDir;

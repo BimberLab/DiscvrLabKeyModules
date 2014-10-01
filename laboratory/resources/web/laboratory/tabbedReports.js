@@ -4,7 +4,7 @@ Laboratory.tabbedReports = new function(){
     return {
         subjectSummary: function(tabPanel, tab){
             var subjectIds = tab.filters.subjects;
-            if (!subjectIds){
+            if (!subjectIds || !subjectIds.length){
                 tab.add({
                     html: 'Either no subject IDs were provided or this report cannot be used with the selected filter type',
                     border: false

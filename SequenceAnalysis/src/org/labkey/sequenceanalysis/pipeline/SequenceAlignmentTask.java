@@ -265,12 +265,13 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             action.setStartTime(new Date());
 
             String basename = FileUtil.getBaseName(refFasta);
+            File targetDir = new File(_wd.getDir(), "Shared");
             for (File f : refFasta.getParentFile().listFiles())
             {
                 if (f.getName().startsWith(basename))
                 {
                     getJob().getLogger().debug("copying reference file: " + f.getPath());
-                    File movedFile = _wd.inputFile(f, true);
+                    File movedFile = _wd.inputFile(f, new File(targetDir, f.getName()), true);
 
                     action.addInput(f, "Reference File");
                     action.addOutput(movedFile, "Copied Reference File", true);
@@ -280,7 +281,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             action.setEndTime(new Date());
             actions.add(action);
 
-            referenceGenome.setWorkingFasta(new File(sharedDirectory, refFasta.getName()));
+            referenceGenome.setWorkingFasta(new File(targetDir, refFasta.getName()));
         }
         catch (IOException e)
         {

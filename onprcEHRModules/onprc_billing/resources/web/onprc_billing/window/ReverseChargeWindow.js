@@ -35,7 +35,7 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             return;
         }
 
-        LABKEY.ExtAdapter.apply(this, {
+        Ext4.apply(this, {
             modal: true,
             closeAction: 'destroy',
             title: 'Reverse/Adjust Charges',
@@ -509,8 +509,8 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             objectIds.push(sr.getValue('objectid'));
 
             if (reversalType == 'reversal'){
-                var toInsert = LABKEY.ExtAdapter.apply({}, baseValues);
-                LABKEY.ExtAdapter.apply(toInsert, {
+                var toInsert = Ext4.apply({}, baseValues);
+                Ext4.apply(toInsert, {
                     chargecategory: 'Reversal',
                     unitcost: -1 * sr.getValue('unitcost')
                 });
@@ -520,16 +520,16 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
             else if (reversalType == 'adjustment'){
                 //first create a charge to reverse the original
                 //we expect to use the same credit/debit alias as the original
-                var reversalCharge = LABKEY.ExtAdapter.apply({}, baseValues);
-                LABKEY.ExtAdapter.apply(reversalCharge, {
+                var reversalCharge = Ext4.apply({}, baseValues);
+                Ext4.apply(reversalCharge, {
                     chargecategory: 'Reversal',
                     unitcost: -1 * sr.getValue('unitcost')
                 });
 
                 miscChargesInserts.push(reversalCharge);
 
-                var newCharge = LABKEY.ExtAdapter.apply({}, baseValues);
-                LABKEY.ExtAdapter.apply(newCharge, toApply);
+                var newCharge = Ext4.apply({}, baseValues);
+                Ext4.apply(newCharge, toApply);
 
                 miscChargesInserts.push(newCharge);
             }

@@ -39,6 +39,10 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
                 style:'padding:5px',
                 bodyStyle:'padding:5px'
             },
+            items: [{
+                html: 'Loading...',
+                border: true
+            }],
             buttonAlign: 'left',
             dockedItems: [{
                 xtype: 'toolbar',
@@ -96,6 +100,8 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
     },
 
     onMetaLoad: function(result){
+        this.removeAll();
+
         if (!result.domains || LABKEY.Utils.isEmptyObj(result.domains)){
             Ext4.Msg.alert('Error', 'Error: assay not found: ' + this.assayId);
             console.log(result);

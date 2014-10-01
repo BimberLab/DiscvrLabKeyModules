@@ -25,6 +25,7 @@ import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SQLFragment;
@@ -288,7 +289,7 @@ public class ETLRunnable implements Runnable
                 if (domain != null)
                 {
                     String tableName = domain.getStorageTableName();
-                    dbSchema = DbSchema.get("studydataset");
+                    dbSchema = DbSchema.get("studydataset", DbSchemaType.Provisioned);
                     realTable = dbSchema.getTable(tableName);
                 }
             }

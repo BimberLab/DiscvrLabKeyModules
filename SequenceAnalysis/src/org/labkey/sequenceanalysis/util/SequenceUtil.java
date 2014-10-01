@@ -91,8 +91,9 @@ public class SequenceUtil
             try (SAMRecordIterator it = reader.iterator())
             {
                 long count = 0;
-                while (it.next() != null)
+                while (it.hasNext())
                 {
+                    it.next();
                     count++;
                 }
 
