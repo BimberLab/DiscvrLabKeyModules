@@ -113,7 +113,7 @@ public class BWAWrapper extends AbstractCommandWrapper
         public final AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getWorkingFastaFile().getParentFile(), "bwa");
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, "bwa");
 
             return _performAlignment(output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename);
         }

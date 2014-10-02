@@ -243,7 +243,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             throw new PipelineJobException("No reference genome was cached prior to preparing aligned indexes");
         }
 
-        File sharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
         File refFasta = referenceGenome.getSourceFastaFile();
         if (!refFasta.exists())
         {

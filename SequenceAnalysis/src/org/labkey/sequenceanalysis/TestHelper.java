@@ -43,12 +43,14 @@ import org.labkey.api.test.TestTimeout;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.TestContext;
 import org.labkey.api.view.ViewServlet;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
+import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.IndelRealignerWrapper;
 import org.labkey.sequenceanalysis.util.FastqUtils;
@@ -63,6 +65,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -2216,6 +2219,341 @@ public class TestHelper
             validateAlignment(bam1, 40, 0);
             validateAlignment(bam2, 20, 0);
             validateAlignment(bam3, 20, 0);
+        }
+
+        private Integer createSavedLibrary() throws Exception
+        {
+            //look for existing
+            String libraryName = "TestLibrary";
+            SimpleFilter libraryFilter = new SimpleFilter(FieldKey.fromString("name"), libraryName);
+            libraryFilter.addCondition(FieldKey.fromString("container"), _project.getId());
+            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid"), libraryFilter, null);
+            if (ts.exists())
+            {
+                return ts.getObject(Integer.class);
+            }
+
+            //otherwise create saved library
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
+            filter.addCondition(FieldKey.fromString("container"), ContainerManager.getSharedContainer().getId());
+            Integer mac239Id = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("rowid"), filter, null).getObject(Integer.class);
+            ReferenceLibraryPipelineJob libraryJob = SequenceAnalysisManager.get().createReferenceLibrary(Arrays.asList(mac239Id), _project, _context.getUser(), libraryName, null);
+            waitForJob(libraryJob);
+
+            return new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid"), libraryFilter, null).getObject(Integer.class);
+        }
+
+        @Test
+        public void testBwaMemWithSavedLibrary() throws Exception
+        {
+            if (!isExternalPipelineEnabled())
+                return;
+
+            //run using this library
+            Integer libraryId = createSavedLibrary();
+            Integer dataId = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(Integer.class);
+            ExpData data = ExperimentService.get().getExpData(dataId);
+            File alignmentIndexDir = new File(data.getFile().getParentFile(), "bwa");
+            if (alignmentIndexDir.exists())
+            {
+                FileUtils.deleteDirectory(alignmentIndexDir);
+            }
+
+            String protocolName = "TestBWAMemWithSavedLibrary_" + System.currentTimeMillis();
+            String[] fileNames = getFilenamesForReadsets();
+            JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
+            config.put("alignment", "BWA-Mem");
+            config.put("referenceLibraryCreation", "SavedLibrary");
+            config.put("referenceLibraryCreation.SavedLibrary.libraryId", libraryId);
+            appendSamples(config, _readsetModels);
+
+            PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
+            waitForJob(job);
+
+            //we expect the index to get copied back to the reference library location
+            assert alignmentIndexDir.exists() && alignmentIndexDir.listFiles().length > 0 : "Aligner index was not cached";
+
+            Set<File> expectedOutputs = new HashSet<>();
+            File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
+            //NOTE: the first time we create a library, we make the indexes.  this job did not choose to delete intermediates, so they remain in the analysis dir too
+            expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
+            expectedOutputs.add(new File(basedir, "Shared"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/" + libraryId + "_TestLibrary.bwa.index.amb"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/" + libraryId + "_TestLibrary.bwa.index.ann"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/" + libraryId + "_TestLibrary.bwa.index.bwt"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/" + libraryId + "_TestLibrary.bwa.index.pac"));
+            expectedOutputs.add(new File(basedir, "Shared/bwa/" + libraryId + "_TestLibrary.bwa.index.sa"));
+
+            expectedOutputs.add(new File(basedir, "paired1"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bwa-mem.bam"));
+            File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
+            expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
+
+            expectedOutputs.add(new File(basedir, "paired3"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bwa-mem.bam"));
+            File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
+            expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
+
+            expectedOutputs.add(new File(basedir, "paired4"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bwa-mem.bam"));
+            File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
+            expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
+
+            validateInputs();
+            verifyFileOutputs(basedir, expectedOutputs);
+            validateAlignment(bam1, 402, 10);
+            validateAlignment(bam2, 201, 5);
+            validateAlignment(bam3, 201, 5);
+
+            //run second job after this one, in order to verify behavior when cached index already exists
+            //it should use the index, and also not retain a local copy when finished (even though did didnt pick 'delete intermediates'
+            testBwaMemWithSavedLibrary2();
+
+            //delete the cached index
+            FileUtils.deleteDirectory(alignmentIndexDir);
+        }
+
+        //NOTE: this is called above
+        public void testBwaMemWithSavedLibrary2() throws Exception
+        {
+            if (!isExternalPipelineEnabled())
+                return;
+
+            //run using this library
+            Integer libraryId = createSavedLibrary();
+            String protocolName = "TestBWAMemWithSavedLibrary2_" + System.currentTimeMillis();
+            String[] fileNames = getFilenamesForReadsets();
+            JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
+            config.put("alignment", "BWA-Mem");
+            config.put("referenceLibraryCreation", "SavedLibrary");
+            config.put("referenceLibraryCreation.SavedLibrary.libraryId", libraryId);
+            appendSamples(config, _readsetModels);
+
+            PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
+            waitForJob(job);
+
+            Set<File> expectedOutputs = new HashSet<>();
+            File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
+            expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
+            expectedOutputs.add(new File(basedir, "Shared"));
+
+            expectedOutputs.add(new File(basedir, "paired1"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bwa-mem.bam"));
+            File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
+            expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
+
+            expectedOutputs.add(new File(basedir, "paired3"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bwa-mem.bam"));
+            File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
+            expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
+
+            expectedOutputs.add(new File(basedir, "paired4"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bwa-mem.bam"));
+            File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
+            expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
+
+            validateInputs();
+            verifyFileOutputs(basedir, expectedOutputs);
+            validateAlignment(bam1, 402, 10);
+            validateAlignment(bam2, 201, 5);
+            validateAlignment(bam3, 201, 5);
+        }
+
+        @Test
+        public void testBismarkWithSavedLibraryAndAdapters() throws Exception
+        {
+            if (!isExternalPipelineEnabled())
+                return;
+
+            //run using this library
+            Integer libraryId = createSavedLibrary();
+            Integer dataId = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(Integer.class);
+            ExpData data = ExperimentService.get().getExpData(dataId);
+            File alignmentIndexDir = new File(data.getFile().getParentFile(), "Bisulfite_Genome");
+            if (alignmentIndexDir.exists())
+            {
+                FileUtils.deleteDirectory(alignmentIndexDir);
+            }
+
+            String protocolName = "TestBismarkWithSavedLibrary_" + System.currentTimeMillis();
+            String[] fileNames = getFilenamesForReadsets();
+            JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
+            config.put("alignment", "Bismark");
+            config.put("alignment.Bismark.seed_length", "65");
+            config.put("alignment.Bismark.max_seed_mismatches", "3");
+            config.put("alignment.Bismark.maqerr", "240");
+            config.put("referenceLibraryCreation", "SavedLibrary");
+            config.put("referenceLibraryCreation.SavedLibrary.libraryId", libraryId);
+
+            config.put("fastqProcessing", "AdapterTrimming");
+            config.put("fastqProcessing.AdapterTrimming.adapters", "[[\"Nextera Transposon Adapter A\",\"AGATGTGTATAAGAGACAG\",true,true]]");
+            List<ReadsetModel> models = Arrays.asList(_readsetModels.get(1), _readsetModels.get(2));
+            appendSamples(config, models);
+
+            PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
+            waitForJob(job);
+
+            //we expect the index to get copied back to the reference library location
+            assert alignmentIndexDir.exists() && alignmentIndexDir.listFiles().length > 0 : "Aligner index was not cached";
+
+            Set<File> expectedOutputs = new HashSet<>();
+            File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            //expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
+            expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
+            expectedOutputs.add(new File(basedir, "Shared"));
+
+//            expectedOutputs.add(new File(basedir, "paired1"));
+//            expectedOutputs.add(new File(basedir, "paired1/Preprocessing"));
+//            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.preprocessed.fastq"));
+//            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.preprocessed.fastq"));
+//
+//            expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+//            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq_bismark_PE_report.txt"));
+//            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq_C_to_T.fastq"));
+//            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired2.preprocessed.fastq_G_to_A.fastq"));
+//            File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
+//            expectedOutputs.add(bam1);
+//            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
+//            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq_bismark_pe.bam"));
+
+            expectedOutputs.add(new File(basedir, "paired3"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing"));
+            expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.preprocessed.fastq"));
+
+            expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fastq_bismark_SE.alignment_overview.png"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fastq_bismark_SE_report.txt"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fastq_bismark.bam"));
+
+            File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
+            expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
+
+            expectedOutputs.add(new File(basedir, "paired4"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing"));
+            expectedOutputs.add(new File(basedir, "paired4/Preprocessing/paired4.preprocessed.fastq"));
+
+            expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fastq_bismark_SE.alignment_overview.png"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fastq_bismark_SE_report.txt"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fastq_bismark.bam"));
+
+            File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
+            expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
+
+            validateInputs();
+            verifyFileOutputs(basedir, expectedOutputs);
+            //validateAlignment(bam1, 0, 0);
+            validateAlignment(bam2, 31, 0);
+            validateAlignment(bam3, 31, 0);
+
+            //repeat, which will use the index cached above
+            testBismarkWithSavedLibraryAdaptersAndDelete();
+
+            assert alignmentIndexDir.exists() && alignmentIndexDir.listFiles().length > 0 : "Aligner index was deleted during run";
+
+            //delete the cached index
+            FileUtils.deleteDirectory(alignmentIndexDir);
+        }
+
+        public void testBismarkWithSavedLibraryAdaptersAndDelete() throws Exception
+        {
+            if (!isExternalPipelineEnabled())
+                return;
+
+            //run using this library
+            Integer libraryId = createSavedLibrary();
+            String protocolName = "TestBismarkWithSavedLibraryAndDelete_" + System.currentTimeMillis();
+            String[] fileNames = getFilenamesForReadsets();
+            JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
+            config.put("alignment", "Bismark");
+            config.put("alignment.Bismark.seed_length", "65");
+            config.put("alignment.Bismark.max_seed_mismatches", "3");
+            config.put("alignment.Bismark.maqerr", "240");
+            config.put("deleteIntermediateFiles", true);
+            config.put("referenceLibraryCreation", "SavedLibrary");
+            config.put("referenceLibraryCreation.SavedLibrary.libraryId", libraryId);
+
+            config.put("fastqProcessing", "AdapterTrimming");
+            config.put("fastqProcessing.AdapterTrimming.adapters", "[[\"Nextera Transposon Adapter A\",\"AGATGTGTATAAGAGACAG\",true,true]]");
+            List<ReadsetModel> models = Arrays.asList(_readsetModels.get(1), _readsetModels.get(2));
+            appendSamples(config, models);
+
+            PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
+            waitForJob(job);
+
+            Set<File> expectedOutputs = new HashSet<>();
+            File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            //expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
+            expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
+            expectedOutputs.add(new File(basedir, "Shared"));
+
+//            expectedOutputs.add(new File(basedir, "paired1"));
+//            expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+//            File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
+//            expectedOutputs.add(bam1);
+//            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
+//            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq_bismark_PE_report.txt"));
+//            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq_C_to_T.fastq"));
+//            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired2.preprocessed.fastq_G_to_A.fastq"));
+
+            expectedOutputs.add(new File(basedir, "paired3"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
+            expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fastq_bismark_SE.alignment_overview.png"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fastq_bismark_SE_report.txt"));
+
+            expectedOutputs.add(new File(basedir, "paired4"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
+            expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fastq_bismark_SE.alignment_overview.png"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fastq_bismark_SE_report.txt"));
+
+            validateInputs();
+            verifyFileOutputs(basedir, expectedOutputs);
+            //validateAlignment(bam1, 0, 0);
+            validateAlignment(bam2, 31, 0);
+            validateAlignment(bam3, 31, 0);
         }
     }
 }

@@ -55,6 +55,8 @@ import java.util.zip.GZIPInputStream;
  */
 public class BismarkWrapper extends AbstractCommandWrapper
 {
+    private static String CACHED_NAME = "Bisulfite_Genome";
+
     public BismarkWrapper(@Nullable Logger logger)
     {
         super(logger);
@@ -72,7 +74,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getWorkingFastaFile().getParentFile(), getProvider().getName());
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, CACHED_NAME);
             BismarkWrapper wrapper = getWrapper();
 
             List<String> args = new ArrayList<>();
@@ -116,7 +118,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
                 args.add(inputFastq1.getPath());
             }
 
-            String outputBasename = inputFastq1.getName() + "_bismark_" + (inputFastq2 == null ? "se" : "pe");
+            String outputBasename = inputFastq1.getName() + "_bismark" + (inputFastq2 == null ? "" : "_pe");
             File bam = new File(outputDirectory, outputBasename + ".bam");
             getWrapper().setWorkingDir(outputDirectory);
             getWrapper().execute(args);
@@ -133,8 +135,16 @@ public class BismarkWrapper extends AbstractCommandWrapper
             getPipelineCtx().getLogger().info("Preparing reference for bismark");
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
-            File indexDir = new File(referenceGenome.getWorkingFastaFile().getParentFile(), getProvider().getName());
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName());
+            File indexOutputDir = outputDir;
+            File fastaParentDir = referenceGenome.getWorkingFastaFile().getParentFile();
+            if (!fastaParentDir.equals(outputDir))
+            {
+                indexOutputDir = referenceGenome.getWorkingFastaFile().getParentFile();
+            }
+
+
+            File genomeBuild = new File(indexOutputDir, CACHED_NAME);
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), CACHED_NAME);
             if (!hasCachedIndex)
             {
                 List<String> args = new ArrayList<>();
@@ -143,25 +153,25 @@ public class BismarkWrapper extends AbstractCommandWrapper
                 args.add(new BowtieWrapper(getPipelineCtx().getLogger()).getExe().getParentFile().getPath());
 
                 //args.add("--verbose");
-                if (!indexDir.exists())
+                if (!indexOutputDir.exists())
                 {
-                    indexDir.mkdirs();
+                    indexOutputDir.mkdirs();
                 }
-                args.add(indexDir.getPath());
+                //NOTE: this needs to be where the FASTA is located (probably the top level /Shared dir)
+                args.add(indexOutputDir.getPath());
 
                 getWrapper().execute(args);
 
-                File genomeBuild = new File(indexDir, "Bisulfite_Genome");
                 if (!genomeBuild.exists())
                 {
                     throw new PipelineJobException("Unable to find file, expected: " + genomeBuild.getPath());
                 }
             }
 
-            output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
+            output.appendOutputs(referenceGenome.getWorkingFastaFile(), genomeBuild, !(fastaParentDir.equals(outputDir)));
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getProvider().getName(), output);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), genomeBuild, CACHED_NAME, output);
 
             return output;
         }

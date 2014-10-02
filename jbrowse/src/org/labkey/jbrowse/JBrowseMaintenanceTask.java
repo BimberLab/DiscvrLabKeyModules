@@ -99,7 +99,7 @@ public class JBrowseMaintenanceTask implements SystemMaintenance.MaintenanceTask
         JBrowseRoot root = new JBrowseRoot(_log);
         if (root != null)
         {
-            File jbrowseRoot = root.getBaseDir(c);
+            File jbrowseRoot = root.getBaseDir(c, false);
             if (jbrowseRoot != null && jbrowseRoot.exists())
             {
                 //find jsonfiles we expect to exist

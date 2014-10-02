@@ -3,11 +3,9 @@ package org.labkey.sequenceanalysis.run.alignment;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.util.FileUtil;
+import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
-import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.run.CommandWrapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,17 +22,21 @@ public class AlignerIndexUtil
         return verifyOrCreateCachedIndex(ctx, null, null, name);
     }
 
-    public static boolean copyIndexIfExists(PipelineContext ctx, DefaultPipelineStepOutput idxOutput, File localSharedDir, String name) throws PipelineJobException
+    public static boolean copyIndexIfExists(PipelineContext ctx, AlignmentOutputImpl output, String name) throws PipelineJobException
     {
         ctx.getLogger().debug("copying index to shared dir if exists: " + name);
+        if (ctx.getWorkDir() == null)
+        {
+            throw new PipelineJobException("PipelineContext.getWorkDir() is null");
+        }
 
-        return verifyOrCreateCachedIndex(ctx, idxOutput, localSharedDir, name);
+        return verifyOrCreateCachedIndex(ctx, ctx.getWorkDir(), output, name);
     }
 
     /**
      * If outputDir is null, files will not be copied.  Otherwise files be be copied to this destination.
      */
-    private static boolean verifyOrCreateCachedIndex(PipelineContext ctx, @Nullable DefaultPipelineStepOutput idxOutput, File localSharedDir, String name) throws PipelineJobException
+    private static boolean verifyOrCreateCachedIndex(PipelineContext ctx, @Nullable WorkDirectory wd, @Nullable AlignmentOutputImpl output, String name) throws PipelineJobException
     {
         boolean hasCachedIndex = false;
         if (ctx.getSequenceSupport().getReferenceGenome() != null)
@@ -48,9 +50,10 @@ public class AlignerIndexUtil
 
                 try
                 {
-                    if (localSharedDir != null)
+                    if (wd != null)
                     {
-                        ctx.getLogger().info("copying files to work location");
+                        ctx.getLogger().info("copying index files to work location");
+                        File localSharedDir = new File(wd.getDir(), "Shared");
                         File destination = new File(localSharedDir, name);
                         ctx.getLogger().debug(destination.getPath());
                         File[] files = webserverIndexDir.listFiles();
@@ -59,37 +62,8 @@ public class AlignerIndexUtil
                             return false;
                         }
 
-                        for (File f : files)
-                        {
-                            File dest = new File(destination, FileUtil.relativePath(webserverIndexDir.getPath(), f.getPath()));
-                            if (!dest.getParentFile().exists())
-                            {
-                                dest.getParentFile().mkdirs();
-                            }
-
-                            if (!dest.exists())
-                            {
-                                if (f.isDirectory())
-                                {
-                                    ctx.getLogger().info("copying directory: " + dest.getPath());
-                                    FileUtils.copyDirectory(f, dest);
-                                }
-                                else
-                                {
-                                    ctx.getLogger().info("copying file: " + dest.getPath());
-                                    FileUtils.copyFile(f, dest);
-                                }
-
-                                if (idxOutput != null)
-                                {
-                                    idxOutput.addDeferredDeleteIntermediateFile(dest);
-                                }
-                            }
-                            else
-                            {
-                                ctx.getLogger().info("target file exists, will not copy: " + dest.getPath());
-                            }
-                        }
+                        wd.inputFile(webserverIndexDir, destination, true);
+                        output.addDeferredDeleteIntermediateFile(destination);
 
                         ctx.getLogger().info("finished copying files");
                     }
@@ -105,7 +79,7 @@ public class AlignerIndexUtil
             }
             else
             {
-                ctx.getLogger().debug("folder does not exist, nothing to do: " + webserverIndexDir.getPath());
+                ctx.getLogger().debug("expected location of cached index does not exist: " + webserverIndexDir.getPath());
             }
         }
         else
@@ -130,6 +104,12 @@ public class AlignerIndexUtil
                 for (File f : files)
                 {
                     File dest = new File(cachingDir, f.getName());
+                    if (f.equals(dest))
+                    {
+                        ctx.getLogger().debug("source/destination are the same, skipping: " + dest.getName());
+                        continue;
+                    }
+
                     ctx.getLogger().debug("copying file: " + dest.getName());
                     if (f.isDirectory())
                     {

@@ -45,7 +45,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
         public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, referenceGenome.getWorkingFastaFile().getParentFile(), getProvider().getName());
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName());
             BowtieWrapper wrapper = getWrapper();
 
             List<String> args = new ArrayList<>();

@@ -85,6 +85,11 @@ public class JBrowseRoot
 
     public File getBaseDir(Container c)
     {
+        return getBaseDir(c, true);
+    }
+
+    public @Nullable File getBaseDir(Container c, boolean doCreate)
+    {
         FileContentService fileService = ServiceRegistry.get().getService(FileContentService.class);
         File fileRoot = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);
         if (fileRoot == null || !fileRoot.exists())
@@ -95,6 +100,11 @@ public class JBrowseRoot
         File jbrowseDir = new File(fileRoot, ".jbrowse");
         if (!jbrowseDir.exists())
         {
+            if (!doCreate)
+            {
+                return null;
+            }
+
             jbrowseDir.mkdirs();
         }
 

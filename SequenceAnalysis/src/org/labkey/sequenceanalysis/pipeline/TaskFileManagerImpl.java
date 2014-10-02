@@ -291,7 +291,7 @@ public class TaskFileManagerImpl implements TaskFileManager
                     File f = new File(_workLocation, line);
                     if (!f.exists())
                     {
-                        File test = new File(line);
+                        File test = new File(getSupport().getAnalysisDirectory(), line);
                         if (test.exists())
                         {
                             f = test;
@@ -327,6 +327,11 @@ public class TaskFileManagerImpl implements TaskFileManager
                     {
                         _job.getLogger().warn("could not find file to delete: " + f.getPath());
                     }
+                }
+
+                if (toDelete.isEmpty())
+                {
+                    _job.getLogger().debug("there are no deferred delete intermediate files");
                 }
             }
             else
@@ -413,13 +418,17 @@ public class TaskFileManagerImpl implements TaskFileManager
     @Override
     public void addIntermediateFile(File f)
     {
+        _job.getLogger().debug("adding intermediate file: " + f.getPath());
         _intermediateFiles.add(f);
     }
 
     @Override
     public void addIntermediateFiles(Collection<File> files)
     {
-        _intermediateFiles.addAll(files);
+        for (File f : files)
+        {
+            addIntermediateFile(f);
+        }
     }
 
     private void swapFiles(File original, File newFile)
@@ -767,17 +776,14 @@ public class TaskFileManagerImpl implements TaskFileManager
         try
         {
             // Get rid of any copied input files.
+            _job.getLogger().debug("discarding copied inputs");
             _wd.discardCopiedInputs();
 
             //NOTE: preserving relative locations is a pain.  therefore we copy all outputs, including directories
             //then sort out which files were specified as named outputs later
-            for(File input : _wd.getDir().listFiles())
+            for (File input : _wd.getDir().listFiles())
             {
-                String path = _wd.getRelativePath(input);
-                File dest = new File(getSupport().getAnalysisDirectory(), path);
-                dest = _wd.outputFile(input, dest);
-
-                processCopiedFile(dest);
+                copyFile(input);
             }
 
             for (String relPath : _inputFiles.keySet())
@@ -809,6 +815,47 @@ public class TaskFileManagerImpl implements TaskFileManager
         catch (IOException e)
         {
             throw new PipelineJobException(e);
+        }
+    }
+
+    private void copyFile(File input) throws IOException
+    {
+        _job.getLogger().debug("copying file: " + input.getPath());
+
+        if (input.isDirectory() && input.list().length == 0)
+        {
+            _job.getLogger().debug("deleting empty directory: " + input.getPath());
+            FileUtils.deleteDirectory(input);
+        }
+
+        String path = _wd.getRelativePath(input);
+        File dest = new File(getSupport().getAnalysisDirectory(), path);
+        if (dest.exists())
+        {
+            if (input.isDirectory())
+            {
+                _job.getLogger().debug("attempting to copy a directory that already exists in destination.  will try to merge");
+                for (File child : input.listFiles())
+                {
+                    copyFile(child);
+                }
+
+                FileUtils.deleteDirectory(input);
+            }
+            else
+            {
+                //ignore
+                _job.getLogger().debug("file already exists, deleting file");
+                input.delete();
+            }
+        }
+        else
+        {
+            _job.getLogger().debug("copying input: " + input.getPath());
+            _job.getLogger().debug("to: " + dest.getPath());
+
+            dest = _wd.outputFile(input, dest);
+            processCopiedFile(dest);
         }
     }
 

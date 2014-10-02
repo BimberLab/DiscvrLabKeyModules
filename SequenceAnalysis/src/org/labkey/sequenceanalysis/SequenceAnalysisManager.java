@@ -399,7 +399,7 @@ public class SequenceAnalysisManager
         return new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), sql).getObject(String.class);
     }
 
-    public void createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String description) throws Exception
+    public ReferenceLibraryPipelineJob createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String description) throws Exception
     {
         List<ReferenceLibraryMember> libraryMembers = new ArrayList<>();
         for (Integer sequenceId : sequenceIds)
@@ -409,15 +409,18 @@ public class SequenceAnalysisManager
             libraryMembers.add(m);
         }
 
-        createReferenceLibrary(c, u, name, description, libraryMembers);
+        return createReferenceLibrary(c, u, name, description, libraryMembers);
     }
 
-    public void createReferenceLibrary(Container c, User u, String name, String description, List<ReferenceLibraryMember> libraryMembers) throws Exception
+    public ReferenceLibraryPipelineJob createReferenceLibrary(Container c, User u, String name, String description, List<ReferenceLibraryMember> libraryMembers) throws Exception
     {
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            PipelineService.get().queueJob(new ReferenceLibraryPipelineJob(c, u, null, root, name, description, libraryMembers));
+            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, null, root, name, description, libraryMembers);
+            PipelineService.get().queueJob(job);
+
+            return job;
         }
         catch (PipelineValidationException e)
         {

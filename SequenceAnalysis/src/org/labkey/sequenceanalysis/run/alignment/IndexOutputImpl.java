@@ -26,19 +26,27 @@ public class IndexOutputImpl extends DefaultPipelineStepOutput implements Alignm
 
     public void appendOutputs(File refFasta, File outputDir)
     {
+        appendOutputs(refFasta, outputDir, true);
+    }
+
+    public void appendOutputs(File refFasta, File outputDir, boolean addOutputsAsIntermediates)
+    {
         File refFastaIndex = new File(refFasta.getPath() + ".fai");
         File refFastaIdKey = new File(refFasta.getParentFile(), FileUtil.getBaseName(refFasta) + ".idKey.txt");
-        addOutput(outputDir, ReferenceLibraryTask.REFERENCE_DB_FASTA_OUTPUT);
-        if (!outputDir.exists())
+        if (outputDir == null || !outputDir.exists())
         {
             return;
         }
 
+        addOutput(outputDir, ReferenceLibraryTask.REFERENCE_DB_FASTA_OUTPUT);
         for (File f : outputDir.listFiles())
         {
             if (!f.equals(refFasta) && !f.equals(refFastaIndex) && !f.equals(refFastaIdKey))
             {
-                addIntermediateFile(f);
+                if (addOutputsAsIntermediates)
+                {
+                    addIntermediateFile(f);
+                }
             }
         }
     }

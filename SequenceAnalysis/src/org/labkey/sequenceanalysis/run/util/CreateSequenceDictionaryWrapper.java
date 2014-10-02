@@ -20,8 +20,6 @@ import java.util.List;
  */
 public class CreateSequenceDictionaryWrapper extends PicardWrapper
 {
-    private static String COMMAND = "calmd";
-
     public CreateSequenceDictionaryWrapper(@Nullable Logger logger)
     {
         super(logger);

@@ -57,9 +57,16 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
         output.addIntermediateFile(outputBam);
         output.addIntermediateFile(getWrapper().getExpectedIntervalsFile(inputBam), "Realigner Intervals File");
 
-        if (!dictionaryExists && dictionary.exists())
+        if (!dictionaryExists)
         {
-            output.addIntermediateFile(dictionary);
+            if (dictionary.exists())
+            {
+                output.addIntermediateFile(dictionary);
+            }
+            else
+            {
+                getPipelineCtx().getLogger().debug("dict file not found: " + dictionary.getPath());
+            }
         }
 
         //note: we might sort the input
