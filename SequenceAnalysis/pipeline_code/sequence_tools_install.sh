@@ -29,7 +29,6 @@
 # NOTE: this script will delete any previously downloaded versions of these tools, assuming they were downloaded to the location
 # expected by this script.  This is deliberate so that the script can be re-run to perform incremental upgrades of these tools.
 #
-# If you encounter issues, please contact bimber -at- ohsu.edu
 #
 # Variables
 #

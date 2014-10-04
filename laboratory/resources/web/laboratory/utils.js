@@ -198,31 +198,6 @@ Laboratory.Utils = new function(){
         },
 
         /**
-         * An API to send a message to the maintainers of this module, without publically exposing the contact email.
-         * @param {String} config.email The reply email for this message
-         * @param {String} config.message The message to appear in the body of the email
-         */
-        sendSupportMessage: function(config){
-            if (!config || !config.message || !config.email){
-                alert('Must provide a reply email and message');
-            }
-
-            Ext4.Ajax.request({
-                url : LABKEY.ActionURL.buildURL('laboratory', 'supportMessage'),
-                method : 'POST',
-                success: LABKEY.Utils.getCallbackWrapper(LABKEY.Utils.getOnSuccess(config), config.scope),
-                failure: LABKEY.Utils.getCallbackWrapper(LABKEY.Utils.getOnFailure(config), config.scope, true),
-                jsonData : {
-                    email: config.email,
-                    message: config.message
-                },
-                headers : {
-                    'Content-Type' : 'application/json'
-                }
-            });
-        },
-
-        /**
          * A helper to retrieve the default set of columns used in the assay import
          * excel template.  Will return an empty list if templates are not supported
          * @param config.assayId The Id of the assay

@@ -1,0 +1,139 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+        var div = Ext4.get(webpart.wrapperDivId).parent('div');
+        if (div)
+            div.setStyle('padding', '0px');
+        else
+            div = Ext4.get(webpart.wrapperDivId);  //allow this to work in non-menu contexts
+
+        Ext4.QuickTips.init();
+
+        var panel = Ext4.create('Ext.panel.Panel', {
+            cls: 'labkey-iconpanel',
+            width: 300,
+            border: true,
+            itemId: 'menuPanel',
+            defaults: {
+                //bodyStyle: 'padding: 5px;',
+                items: [{
+                    xtype: 'dataview',
+                    overItemCls: 'x4-item-over',
+                    trackOver: true,
+                    itemSelector: 'div.thumb-wrap',
+                    cls: 'labkey-iconpanel',
+                    tpl: [
+                        '<tpl for=".">',
+                            '<tpl if="publicUrl">',
+                                '<div style="width: 300px;font-weight: bold;" class="thumb-wrap thumb-wrap-side">',
+                                    '<span style="float: left;position: relative;">{name:htmlEncode}:</span>',
+                                    '<span style="float: right;position: relative;margin-right: 5px;">',
+                                    '<tpl if="!canReadPublic"><span data-qtip="You do not have permission to view this page"> [Public] </a>',
+                                    '<tpl else><a href="{publicUrl}"> [Public] </a>',
+                                    '</tpl>',
+
+                                    '<tpl if="!canRead"><span data-qtip="You do not have permission to view this page" > [Private] </span>',
+                                    '<tpl else><a href="{url}"> [Private] </a>',
+                                    '</tpl>',
+                                    '</span>',
+                                '</div>',
+                            '<tpl else>',
+                                '<div ',
+                                '<tpl if="!canRead">data-qtip="You do not have permission to view this page"</tpl>',
+                                'style="width: 300px;" class="thumb-wrap thumb-wrap-side">',
+                                '<tpl if="url"><a href="{url}"></tpl>',
+                                    '<span style="font-weight: bold" class="thumb-label-side">{name:htmlEncode}</span>',
+                                '<tpl if="url"></a></tpl>',
+                                '</div>',
+                            '</tpl>',
+                        '</tpl>',
+                        '<div class="x-clear"></div>'
+                    ],
+                    store: {
+                        proxy: 'memory',
+                        fields: ['name', 'url', 'canRead', 'publicUrl', 'canReadPublic']
+                    }
+                }],
+                border: true,
+                minHeight: 50,
+                collapsed: true,
+                header: {
+                    listeners: {
+                        click: function(header){
+                            var panel = header.up('panel');
+                            if (panel.collapsed)
+                                panel.expand(Ext4.Component.DIRECTION_BOTTOM, true);
+                            else
+                                panel.collapse(Ext4.Component.DIRECTION_TOP, true);
+                        }
+                    }
+                },
+                listeners: {
+                    collapse: function(panel){
+                        if (LABKEY.HoverPopup && LABKEY.HoverPopup._visiblePopup && LABKEY.HoverPopup._visiblePopup.extPopup){
+                            LABKEY.HoverPopup._visiblePopup.extPopup.sync();
+                        }
+                    },
+                    beforeexpand: function(panel){
+                        this.up('#menuPanel').items.each(function(i){
+                            if (i != panel){
+                                i.collapse(Ext4.Component.DIRECTION_TOP, true);
+                            }
+                        }, this);
+                    }
+                }
+            },
+            items: [{
+                title: 'Public Resources',
+                itemId: 'public'
+            },{
+                itemId: 'collaborations',
+                title: 'Collaborations'
+            },{
+                title: 'Labs',
+                itemId: 'labs'
+            },{
+                itemId: 'internal',
+                title: 'Internal Projects'
+            }]
+        });
+        panel.render(div.id);
+
+        Ext4.Ajax.request({
+            url : LABKEY.ActionURL.buildURL('geneticsCore', 'getNavItems', 'home'),
+            method : 'POST',
+            scope: this,
+            failure: LDK.Utils.getErrorCallback(),
+            success: LABKEY.Utils.getCallbackWrapper(function(results){
+                Ext4.each(['public', 'internal', 'collaborations', 'labs'], function(name){
+                    var section = panel.down('#' + name).items.get(0);
+                    var toAdd = [];
+                    if (results[name] && results[name].length){
+                        Ext4.each(results[name], function(item){
+                            toAdd.push(LDK.StoreUtils.createModelInstance(section.store, {
+                                name: item.name,
+                                url: item.canRead ? item.url : null,
+                                canRead: item.canRead,
+                                publicUrl: item.publicContainer ? item.publicContainer.url : null,
+                                canReadPublic: item.publicContainer ? item.publicContainer.canRead : false
+                            }));
+                        }, this);
+                    }
+                    else
+                    {
+                        toAdd.push(LDK.StoreUtils.createModelInstance(section.store, {
+                            name: 'You do not have permission to view any of these items',
+                            url: null,
+                            canRead: true
+                        }));
+                    }
+
+                    if (toAdd.length)
+                        section.store.add(toAdd);
+                }, this);
+            }, this)
+        });
+    });
+
+</script>

@@ -16,6 +16,7 @@
 
 package org.labkey.mergesync;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -34,6 +35,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 
+import java.util.Calendar;
 import java.util.Date;
 
 public class MergeSyncManager
@@ -209,6 +211,7 @@ public class MergeSyncManager
     public void setLastRun(Date date)
     {
         PropertyManager.PropertyMap pm = PropertyManager.getWritableProperties(CONFIG_PROPERTY_DOMAIN, true);
+        date = DateUtils.round(date, Calendar.MINUTE);  //always round to nearest minute
         pm.put(LAST_RUN_PROP_NAME, String.valueOf(date.getTime()));
         PropertyManager.saveProperties(pm);
     }

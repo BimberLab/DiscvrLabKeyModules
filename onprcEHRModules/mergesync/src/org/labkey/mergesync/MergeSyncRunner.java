@@ -121,7 +121,7 @@ public class MergeSyncRunner implements Job
         }
 
         TableInfo resultTable = MergeSyncUserSchema.getMergeDataTable(mergeSchema);
-        if (mergeSchema == null)
+        if (resultTable == null)
         {
             _log.error("Unable to create merge results table");
             return;

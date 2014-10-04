@@ -7,7 +7,7 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
     extend: 'Ext.form.Panel',
     LABEL_WIDTH: 150,
     FIELD_WIDTH: 450,
-    HEADER_HTML: 'This assay was originally designed and written by Ben Bimber, Ph.D.  Feel free to <a href="' + LABKEY.ActionURL.buildURL('laboratory', 'contact') + '" target="">contact</a> with questions.',
+    HEADER_HTML: 'This assay is part of the <a href="https://code.google.com/p/discvr/">DISCVR software package</a>, an open-source collection of extensions to LabKey Server.  Please use the previous link for more detail.',
 
     getDomainConfig: function(domain, forTemplate){
         var meta = this.getMetadata(forTemplate)[domain].map;

@@ -1,5 +1,0 @@
-<view xmlns="http://labkey.org/data/xml/view">
-    <dependencies>
-        <dependency path="laboratory.context"/>
-    </dependencies>
-</view>

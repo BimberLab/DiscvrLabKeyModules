@@ -1,0 +1,9 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart"
+    title="ONPRC Genetics Menu">
+   <view name="geneticsMenu"/>
+   <locations>
+		<location name="menu"/>
+       <location name="right"/>
+       <location name="body"/>
+   </locations>
+</webpart>

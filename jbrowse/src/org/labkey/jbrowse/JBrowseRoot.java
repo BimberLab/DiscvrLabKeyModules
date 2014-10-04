@@ -1095,6 +1095,7 @@ public class JBrowseRoot
         o.put("storeClass", "JBrowse/Store/SeqFeature/BAM");
         o.put("label", featureName);
         o.put("type", "JBrowse/View/Track/Alignments2");
+        o.put("maxHeight", 900);   //1.5X the default maxHeight
         o.put("key", featureLabel);
 
         String relPath = FileUtil.relativePath(getBaseDir(data.getContainer()).getPath(), outDir.getPath());

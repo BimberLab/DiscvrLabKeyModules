@@ -32,7 +32,7 @@ public class MarkDuplicatesStep extends AbstractCommandPipelineStep<MarkDuplicat
     {
         public Provider()
         {
-            super("MarkDuplicates", "Mark Duplicates", "Picard", "This runs Picard tools MarkDuplicates command in order to mark and/or remove duplicate reads.", Arrays.asList(
+            super("MarkDuplicates", "Mark Duplicates", "Picard", "This runs Picard tools MarkDuplicates command in order to mark and/or remove duplicate reads.  Please note this can have implications for downstream analysis, because reads marked as duplicates are frequently omitted.  This is often desired, but can be a problem for sequencing of PCR products.", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("REMOVE_DUPLICATES"), "removeDuplicates", "Remove Duplicates", "If selected, duplicate reads will be removed, as opposed to flagged as duplicates.", "checkbox", null, null)
             ), null, "http://picard.sourceforge.net/command-line-overview.shtml");
         }

@@ -32,8 +32,8 @@ function beforeUpsert(row, errors) {
         }
 
         //enforce no slashes in name
-        if(row.name.match(/[\/|\\]/)){
-            addError(errors, 'name', 'Sequence name cannot contain slashes ("/" or "\\")');
+        if(row.name.match(/[\\]/)){
+            addError(errors, 'name', 'Sequence name cannot contain backslashes');
         }
     }
 

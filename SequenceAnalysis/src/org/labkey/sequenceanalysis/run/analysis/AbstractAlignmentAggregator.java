@@ -118,7 +118,7 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
 
         if (avgQualAtPosition == null)
         {
-            getLogger().error("missing avgQual: " + r.getReadName() + " / " + snp.getIndel() + " / " + snp.getReadPosition() + " / " + snp.getLastReadPosition() + " / [" + snp.getReadBaseString() + "] / " + snp.getLastRefPosition() + " / " + (avgQuals == null ? "" : StringUtils.join(Arrays.asList(avgQuals.keySet()), ";")));
+            getLogger().error("missing avgQual: " + r.getReadName() + " / " + r.isSecondaryOrSupplementary() + " / " + r.getDuplicateReadFlag() + " / " + snp.getIndel() + " / " + snp.getReadPosition() + " / " + snp.getLastReadPosition() + " /read base: [" + snp.getReadBaseString() + "] /lastRef: " + snp.getLastRefPosition() + " /bases with quals: " + (avgQuals == null ? "" : StringUtils.join(Arrays.asList(avgQuals.keySet()), ";")));
             avgQualAtPosition = 95.0;
         }
 

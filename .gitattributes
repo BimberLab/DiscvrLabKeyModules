@@ -3459,8 +3459,6 @@ labModules/laboratory/resources/views/assayDefaults.view.xml -text
 labModules/laboratory/resources/views/begin.html -text
 labModules/laboratory/resources/views/begin.view.xml -text
 labModules/laboratory/resources/views/begin.webpart.xml -text
-labModules/laboratory/resources/views/contact.html -text
-labModules/laboratory/resources/views/contact.view.xml -text
 labModules/laboratory/resources/views/customizeDataBrowser.html -text
 labModules/laboratory/resources/views/customizeDataBrowser.view.xml -text
 labModules/laboratory/resources/views/dataBrowser.html -text
@@ -3592,6 +3590,9 @@ onprcEHRModules/GeneticsCore/resources/queries/study/parentageFlagSummary.sql -t
 onprcEHRModules/GeneticsCore/resources/views/begin.html -text
 onprcEHRModules/GeneticsCore/resources/views/begin.view.xml -text
 onprcEHRModules/GeneticsCore/resources/views/begin.webpart.xml -text
+onprcEHRModules/GeneticsCore/resources/views/geneticsMenu.html -text
+onprcEHRModules/GeneticsCore/resources/views/geneticsMenu.view.xml -text
+onprcEHRModules/GeneticsCore/resources/views/geneticsMenu.webpart.xml -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/buttons.js -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/window/ManageFlagsWindow.js -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreController.java -text

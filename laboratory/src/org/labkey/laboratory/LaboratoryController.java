@@ -2025,48 +2025,6 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
-    public class SupportMessageAction extends ApiAction<SupportMessageForm>
-    {
-        public ApiResponse execute(SupportMessageForm form, BindException errors)
-        {
-            Map<String, Object> results = new HashMap<>();
-            if (form.getEmail() == null || form.getMessage() == null)
-            {
-                errors.reject(ERROR_MSG, "Must provide an email and message");
-                return null;
-            }
-            try
-            {
-                ValidEmail email = new ValidEmail(form.getEmail());
-
-                //TODO: eventually replace this with a static URL
-                ValidEmail supportEmail = new ValidEmail("bimber@ohsu.edu");
-
-                MailHelper.MultipartMessage msg = MailHelper.createMultipartMessage();
-                msg.setSubject("Contact request from laboratory module");
-                msg.setBodyContent(PageFlowUtil.filter(form.getMessage()), "text/html");
-                msg.setFrom(email.getAddress());
-                msg.setRecipient(Message.RecipientType.TO, supportEmail.getAddress());
-
-                new MailHelper().send(msg, getUser(), getContainer());
-                results.put("success", true);
-            }
-            catch (ValidEmail.InvalidEmailException e)
-            {
-                errors.reject(ERROR_MSG, "Unable to parse email: " + form.getEmail());
-                return null;
-            }
-            catch (Exception e)
-            {
-                _log.error("There was an error from the laboratory module contact action: " + e.getMessage(), e);
-                return null;
-            }
-
-            return new ApiSimpleResponse(results);
-        }
-    }
-
     public static class ImportMethodsForm
     {
         String assayType;
@@ -2186,32 +2144,6 @@ public class LaboratoryController extends SpringActionController
         public void setTemplateId(int templateId)
         {
             _templateId = templateId;
-        }
-    }
-
-    public static class SupportMessageForm
-    {
-        private String _email;
-        private String _message;
-
-        public String getEmail()
-        {
-            return _email;
-        }
-
-        public void setEmail(String email)
-        {
-            _email = email;
-        }
-
-        public String getMessage()
-        {
-            return _message;
-        }
-
-        public void setMessage(String message)
-        {
-            _message = message;
         }
     }
 
