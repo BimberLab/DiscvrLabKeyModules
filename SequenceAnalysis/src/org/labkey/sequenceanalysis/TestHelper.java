@@ -238,7 +238,9 @@ public class TestHelper
                 if (dir.exists())
                 {
                     _log.info("files in sequence tools dir: ");
-                    for (File f : dir.listFiles())
+                    File[] fileNames = dir.listFiles();
+                    Arrays.sort(fileNames);
+                    for (File f : fileNames)
                     {
                         _log.info(f.getName());
                     }

@@ -3,6 +3,7 @@
         <column name="Id"/>
         <column name="Id/demographics/species"/>
         <column name="Id/demographics/geographic_origin"/>
+        <column name="hasSBTData"/>
         <column name="Mamu-A1*001g::result"/>
         <column name="Mamu-A1*002g::result"/>
         <column name="Mamu-B*001g::result"/>

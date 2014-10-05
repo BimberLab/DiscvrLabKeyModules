@@ -101,24 +101,18 @@ public class GeneticsCoreController extends SpringActionController
             {
                 for (Container c : mainContainer.getChildren())
                 {
+                    //NOTE: unlike EHR, omit children if the current user cannot read them
+                    if (!c.hasPermission(getUser(), ReadPermission.class))
+                    {
+                        continue;
+                    }
+
                     JSONObject json = new JSONObject();
                     json.put("name", c.getName());
                     json.put("path", c.getPath());
                     json.put("url", c.getStartURL(getUser()));
                     json.put("canRead", c.hasPermission(getUser(), ReadPermission.class));
                     ret.add(json);
-
-                    Container publicContainer = ContainerManager.getForPath(c.getPath() + "/Public");
-                    if (publicContainer != null)
-                    {
-                        JSONObject childJson = new JSONObject();
-                        childJson.put("name", publicContainer.getName());
-                        childJson.put("path", publicContainer.getPath());
-                        childJson.put("url", publicContainer.getStartURL(getUser()));
-                        childJson.put("canRead", publicContainer.hasPermission(getUser(), ReadPermission.class));
-
-                        json.put("publicContainer", childJson);
-                    }
                 }
             }
 

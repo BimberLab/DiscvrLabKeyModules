@@ -101,7 +101,7 @@
         panel.render(div.id);
 
         Ext4.Ajax.request({
-            url : LABKEY.ActionURL.buildURL('geneticsCore', 'getNavItems', 'home'),
+            url : LABKEY.ActionURL.buildURL('geneticsCore', 'getNavItems', null),
             method : 'POST',
             scope: this,
             failure: LDK.Utils.getErrorCallback(),

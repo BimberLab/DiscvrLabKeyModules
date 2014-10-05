@@ -4059,6 +4059,7 @@ onprcEHRModules/onprc_reports/resources/queries/laboratory/parentageSamples.quer
 onprcEHRModules/onprc_reports/resources/queries/laboratory/parentageSamples.sql -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Animals.query.xml -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Animals.sql -text
+onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Pivoted.query.xml -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Pivoted.sql -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Unified.query.xml -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Unified.sql -text
