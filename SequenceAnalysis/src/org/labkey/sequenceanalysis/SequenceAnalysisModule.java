@@ -38,6 +38,7 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.analysis.CompareVariantsHandler;
 import org.labkey.sequenceanalysis.analysis.VariantSearchHandler;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.button.QualiMapButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
@@ -221,7 +222,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         PipelineService.get().registerPipelineProvider(new ReferenceLibraryPipelineProvider(this));
 
-        LaboratoryService.get().registerQueryButton(new SimpleButtonConfigFactory(this, "BamStats Report", "SequenceAnalysis.Buttons.generateBamStatsReport(dataRegionName, 'analysisIds');", new LinkedHashSet<ClientDependency>(Arrays.asList(ClientDependency.fromFilePath("sequenceanalysis/sequenceanalysisButtons.js")))), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES);
+        LaboratoryService.get().registerQueryButton(new QualiMapButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES);
         LaboratoryService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
 
         SequenceAnalysisService.get().registerFileHandler(new VariantSearchHandler());

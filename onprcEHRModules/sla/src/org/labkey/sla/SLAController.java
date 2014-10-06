@@ -31,6 +31,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.AdminConsoleAction;
+import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.PageFlowUtil;
@@ -142,6 +143,7 @@ public class SLAController extends SpringActionController
     }
 
     @RequiresPermissionClass(AdminPermission.class)
+    @CSRF
     public class SetEtlDetailsAction extends ApiAction<EtlAdminForm>
     {
         public ApiResponse execute(EtlAdminForm form, BindException errors)
@@ -340,6 +342,7 @@ public class SLAController extends SpringActionController
     }
 
     @RequiresPermissionClass(AdminPermission.class)
+    @CSRF
     public class GetEtlDetailsAction extends ApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)

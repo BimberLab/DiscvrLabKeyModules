@@ -107,7 +107,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
 
                     '<td><a href="{[LABKEY.ActionURL.buildURL("project", "start", values["container/path"], {})]}" target="_blank">{[Ext4.htmlEncode(values["container/displayName"])]}</a></td>',
                     '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "fastqcReport", values["container/path"], {dataIds: values.alignmentfile})]}" target="_blank">FASTQC Report</a></td>',
-                    '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "bamStatsReport", values["container/path"], {analysisIds: values.rowid})]}" target="_blank">BAMStats Report</a></td>',
+                    '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "qualiMapReport", values["container/path"], {analysisIds: values.rowid})]}" target="_blank">QualiMap Report</a></td>',
                     '</tr>',
                     '</tpl>',
                     '</table>'

@@ -26,6 +26,7 @@ import org.labkey.api.data.PropertyManager;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
+import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
@@ -58,6 +59,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermissionClass(AdminPermission.class)
+    @CSRF
     public class GetSettingsAction extends ApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
@@ -73,6 +75,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresSiteAdmin
+    @CSRF
     public class SetSettingsAction extends ApiAction<SettingsForm>
     {
         public ApiResponse execute(SettingsForm form, BindException errors)
@@ -131,6 +134,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermissionClass(InsertPermission.class)
+    @CSRF
     public class CreateDataBaseAction extends ApiAction<DatabaseForm>
     {
         public ApiResponse execute(DatabaseForm form, BindException errors)
@@ -156,6 +160,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermissionClass(InsertPermission.class)
+    @CSRF
     public class AddDatabaseMemberAction extends ApiAction<DatabaseForm>
     {
         public ApiResponse execute(DatabaseForm form, BindException errors)
@@ -277,6 +282,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermissionClass(AdminPermission.class)
+    @CSRF
     public class ReprocessResourcesAction extends ApiAction<ReprocessResourcesForm>
     {
         public ApiResponse execute(ReprocessResourcesForm form, BindException errors)

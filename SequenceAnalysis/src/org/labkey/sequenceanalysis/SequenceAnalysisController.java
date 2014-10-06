@@ -15,7 +15,6 @@
 
 package org.labkey.sequenceanalysis;
 
-import com.allen_sauer.gwt.dnd.client.util.StringUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.ReaderInputStream;
@@ -33,7 +32,6 @@ import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.ExportAction;
-import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleViewAction;
@@ -47,6 +45,7 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DataRegionSelection;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.ResultsImpl;
 import org.labkey.api.data.SQLFragment;
@@ -87,6 +86,7 @@ import org.labkey.api.resource.Resource;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.IgnoresTermsOfUse;
 import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
@@ -95,6 +95,7 @@ import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceFileHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
+import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -104,19 +105,19 @@ import org.labkey.api.util.Pair;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.StringExpressionFactory;
 import org.labkey.api.util.URLHelper;
-import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.UnauthorizedException;
+import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.webdav.WebdavResource;
 import org.labkey.api.webdav.WebdavService;
-import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
+import org.labkey.sequenceanalysis.api.model.AnalysisModel;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
@@ -128,8 +129,8 @@ import org.labkey.sequenceanalysis.run.analysis.AvgBaseQualityAggregator;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.NtCoverageAggregator;
 import org.labkey.sequenceanalysis.run.analysis.NtSnpByPosAggregator;
-import org.labkey.sequenceanalysis.run.util.BamStatsRunner;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
+import org.labkey.sequenceanalysis.run.util.QualiMapRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.visualization.VariationChart;
 import org.springframework.validation.BindException;
@@ -240,7 +241,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermissionClass(ReadPermission.class)
-    public class BamStatsReportAction extends SimpleViewAction<FastqcForm>
+    public class QualiMapReportAction extends SimpleViewAction<FastqcForm>
     {
         @Override
         public ModelAndView getView(FastqcForm form, BindException errors) throws Exception
@@ -299,22 +300,23 @@ public class SequenceAnalysisController extends SpringActionController
                 return new HtmlView("Error: either no files provided or the files did not exist on the server");
             }
 
-            BamStatsRunner runner = new BamStatsRunner();
+            QualiMapRunner runner = new QualiMapRunner();
             try
             {
-                runner.execute(files);
+                HtmlView view = new HtmlView("QualiMap Report", runner.execute(files));
+                view.setHidePageTitle(true);
+
+                return view;
             }
             catch (Exception e)
             {
                 return new HtmlView("Error: " + e.getMessage());
             }
-
-            return new HtmlView("BamStats Report", runner.processOutput(getContainer()));
         }
 
         public NavTree appendNavTrail(NavTree root)
         {
-            root.addChild("BamStats Report"); //necessary to set page title, it seems
+            root.addChild("QualiMap Report"); //necessary to set page title, it seems
             return root;
         }
     }
@@ -637,6 +639,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermissionClass(ReadPermission.class)
+    @CSRF
     public class GetAnalysisToolDetailsAction extends ApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors) throws Exception
@@ -687,6 +690,10 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
+            String[] tokens = run.getProtocol().getLSID().split(":");
+            String taskId = tokens[tokens.length - 1];
+            taskId = PageFlowUtil.decode(taskId);
+
             File xml = datas.get(0).getFile();
             ParamParser parser = PipelineJobService.get().createParamParser();
             parser.parse(new ReaderInputStream(new FileReader(xml)));
@@ -694,6 +701,7 @@ public class SequenceAnalysisController extends SpringActionController
             Map<String, Object> toSave = new CaseInsensitiveHashMap<>();
             toSave.put("name", form.getName());
             toSave.put("description", form.getDescription());
+            toSave.put("taskid", taskId);
             toSave.put("originalAnalysisId", form.getAnalysisId());
             toSave.put("json", new JSONObject(parser.getInputParameters()).toString());
 
@@ -742,6 +750,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermissionClass(ReadPermission.class)
+    @CSRF
     public class ValidateReadsetFilesAction extends ApiAction<ValidateReadsetImportForm>
     {
         public ApiResponse execute(ValidateReadsetImportForm form, BindException errors) throws Exception
@@ -1482,6 +1491,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermissionClass(ReadPermission.class)
+    @CSRF
     public class GenerateChartAction extends ApiAction<GenerateChartForm>
     {
         public ApiResponse execute(GenerateChartForm form, BindException errors) throws Exception
@@ -2943,6 +2953,63 @@ public class SequenceAnalysisController extends SpringActionController
         public void setDataIds(int[] dataIds)
         {
             _dataIds = dataIds;
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    @CSRF
+    public class GetQualiMapPathAction extends ApiAction<Object>
+    {
+        public ApiResponse execute(Object form, BindException errors)
+        {
+            PropertyManager.PropertyMap configMap = PropertyManager.getWritableProperties(QualiMapRunner.CONFIG_PROPERTY_DOMAIN, true);
+
+            Map<String, Object> props = new HashMap<>();
+            props.put(QualiMapRunner.QUALIMAP_DIR, configMap.get(QualiMapRunner.QUALIMAP_DIR));
+            try
+            {
+                QualiMapRunner.isQualiMapDirValid();
+                props.put("isValid", true);
+            }
+            catch (ConfigurationException e)
+            {
+                props.put("validationMessage", e.getMessage());
+                props.put("isValid", false);
+            }
+
+            return new ApiSimpleResponse(props);
+        }
+    }
+
+    @RequiresSiteAdmin
+    @CSRF
+    public class SetQualiMapPathAction extends ApiAction<SetQualiMapForm>
+    {
+        public ApiResponse execute(SetQualiMapForm form, BindException errors)
+        {
+            PropertyManager.PropertyMap configMap = PropertyManager.getWritableProperties(QualiMapRunner.CONFIG_PROPERTY_DOMAIN, true);
+
+            String path = StringUtils.trimToNull(form.getPath());
+            configMap.put(QualiMapRunner.QUALIMAP_DIR, path);
+
+            PropertyManager.saveProperties(configMap);
+
+            return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    public static class SetQualiMapForm
+    {
+        private String _path;
+
+        public String getPath()
+        {
+            return _path;
+        }
+
+        public void setPath(String path)
+        {
+            _path = path;
         }
     }
 }

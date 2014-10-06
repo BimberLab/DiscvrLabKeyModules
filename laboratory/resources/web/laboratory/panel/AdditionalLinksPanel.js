@@ -211,7 +211,7 @@ Ext4.define('Laboratory.panel.AdditionalLinksPanel', {
 
     saveSources: function(sources, win){
         Ext4.Msg.wait('Saving...');
-        Ext4.Ajax.request({
+        LABKEY.Ajax.request({
             url : LABKEY.ActionURL.buildURL('laboratory', 'setUrlDataSources'),
             params: {
                 sources: Ext4.encode(sources)

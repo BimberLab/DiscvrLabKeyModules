@@ -100,7 +100,7 @@
         });
         panel.render(div.id);
 
-        Ext4.Ajax.request({
+        LABKEY.Ajax.request({
             url : LABKEY.ActionURL.buildURL('geneticsCore', 'getNavItems', null),
             method : 'POST',
             scope: this,

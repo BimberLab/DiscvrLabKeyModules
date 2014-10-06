@@ -121,7 +121,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                     //'<td>{RowId:htmlEncode}</td>',
                     '<td><a href="{[LABKEY.ActionURL.buildURL("project", "start", null, {})]}" target="_blank">{containerPath:htmlEncode}</a></td>',
                     '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "fastqcReport", values["container/path"], {dataIds: values.dataId})]}" target="_blank">View FASTQC Report</a></td>',
-                    '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "bamStatsReport", values["container/path"], {dataIds: values.dataId})]}" target="_blank">View BamStats Report</a></td>',
+                    '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "qualiMapReport", values["container/path"], {dataIds: values.dataId})]}" target="_blank">View QualiMap Report</a></td>',
                     '</tr>',
                     '</tpl>',
                     '</table>'
@@ -495,7 +495,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
             data: []
         });
 
-        Ext4.Ajax.request({
+        LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'validateReadsetFiles'),
             params: {
                 path: LABKEY.ActionURL.getParameter('path'),

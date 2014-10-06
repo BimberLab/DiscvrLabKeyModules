@@ -209,6 +209,30 @@ fi
 
 
 #
+# qualimap
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install qualimap"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKSRC_DIR}/qualimap_v2.0 || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf qualimap_v2.0*
+
+    wget http://qualimap.bioinfo.cipf.es/release/qualimap_v2.0.zip
+    unzip http://qualimap.bioinfo.cipf.es/release/qualimap_v2.0.zip
+
+    cd qualimap_v2.0
+else
+    echo "Already installed"
+fi
+
+
+#
 #mosaik
 #
 echo ""

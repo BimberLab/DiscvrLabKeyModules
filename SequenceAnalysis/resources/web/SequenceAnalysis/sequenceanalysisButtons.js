@@ -542,7 +542,7 @@ SequenceAnalysis.Buttons = new function(){
             }, this);
         },
 
-        generateBamStatsReport: function(dataRegionName, pkName){
+        generateQualiMapReport: function(dataRegionName, pkName){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
             pkName = pkName || 'dataIds';
@@ -554,10 +554,10 @@ SequenceAnalysis.Buttons = new function(){
                 return;
             }
 
-            Ext4.Msg.alert('BAMStats', 'You are about to run BAMStats, a tool that generates reports on the selected BAM files.  Note: this tool runs on the fly, meaning it may take time for the page to load, depending on the size of your input files.  Also, we have found BAMStats to sometimes be picky and give errors on certain BAM inputs.  If you hit an error please let you administrator know so we can report these problems to the tool\'s authors.', function(){
+            Ext4.Msg.alert('QualiMap', 'You are about to run QualiMap, an external tool that generates QC reports on the selected BAM files.  Note: this tool runs on the fly, meaning it may take time for the page to load, depending on the size of your input files.<p>QualiMap is a third party tool, not written by the authors of this module.', function(){
                 window.location = LABKEY.ActionURL.buildURL(
                         'sequenceanalysis',
-                        'bamStatsReport',
+                        'qualiMapReport',
                         LABKEY.ActionURL.getContainer(),
                         params
                 );

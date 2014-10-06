@@ -110,7 +110,7 @@ Ext4.define('Laboratory.panel.AssayDefaultsPanel', {
 
         Ext4.Msg.wait('Saving...');
 
-        Ext4.Ajax.request({
+        LABKEY.Ajax.request({
             url : LABKEY.ActionURL.buildURL('laboratory', 'saveAssayDefaults'),
             params: {
                 jsonData: Ext4.encode(items)

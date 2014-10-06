@@ -49,7 +49,7 @@ Laboratory.Utils = new function(){
                 }
             }
 
-            return Ext4.Ajax.request(requestConfig);
+            return LABKEY.Ajax.request(requestConfig);
         },
 
         /**
@@ -134,7 +134,7 @@ Laboratory.Utils = new function(){
                 failure: LDK.Utils.getErrorCallback()
             }
 
-            return Ext4.Ajax.request(requestConfig);
+            return LABKEY.Ajax.request(requestConfig);
         },
 
         /**
@@ -160,7 +160,7 @@ Laboratory.Utils = new function(){
                 })
             }
 
-            return Ext4.Ajax.request(requestConfig);
+            return LABKEY.Ajax.request(requestConfig);
         },
 
         /**
@@ -194,7 +194,7 @@ Laboratory.Utils = new function(){
                 })
             }
 
-            return Ext4.Ajax.request(requestConfig);
+            return LABKEY.Ajax.request(requestConfig);
         },
 
         /**
@@ -211,7 +211,7 @@ Laboratory.Utils = new function(){
                 return;
             }
 
-            return Ext4.Ajax.request({
+            return LABKEY.Ajax.request({
                 url : LABKEY.ActionURL.buildURL('laboratory', 'getAssayImportHeaders', config.containerPath),
                 params: {
                     protocol: config.assayId,
@@ -362,7 +362,7 @@ Laboratory.Utils = new function(){
                 return;
             }
 
-            return Ext4.Ajax.request({
+            return LABKEY.Ajax.request({
                 url : LABKEY.ActionURL.buildURL('laboratory', 'setItemVisibility', config.containerPath),
                 params: {
                     jsonData: Ext4.encode(config.items)
@@ -393,7 +393,7 @@ Laboratory.Utils = new function(){
             if (config.includeSiteSummary)
                 params.includeSiteSummary = config.includeSiteSummary;
 
-            return Ext4.Ajax.request({
+            return LABKEY.Ajax.request({
                 url : LABKEY.ActionURL.buildURL('laboratory', 'getDemographicsSources', config.containerPath),
                 method : 'POST',
                 params: params,
@@ -423,7 +423,7 @@ Laboratory.Utils = new function(){
             if (config.includeSiteSummary)
                 params.includeSiteSummary = config.includeSiteSummary;
 
-            return Ext4.Ajax.request({
+            return LABKEY.Ajax.request({
                 url : LABKEY.ActionURL.buildURL('laboratory', 'getAdditionalDataSources', config.containerPath),
                 method : 'POST',
                 params: params,

@@ -574,7 +574,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             data: []
        });
 
-        Ext4.Ajax.request({
+        LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'validateReadsetFiles'),
             params: {
                 path: LABKEY.ActionURL.getParameter('path'),

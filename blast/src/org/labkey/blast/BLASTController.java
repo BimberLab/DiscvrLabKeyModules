@@ -457,7 +457,7 @@ public class BLASTController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermissionClass(AdminPermission.class) @CSRF
     public class RecreateDatabaseAction extends ApiAction<RecreateDatabaseForm>
     {
         public ApiResponse execute(RecreateDatabaseForm form, BindException errors)

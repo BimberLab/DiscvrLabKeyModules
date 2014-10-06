@@ -8,6 +8,7 @@ import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
@@ -38,6 +39,7 @@ public class GeneticsCoreController extends SpringActionController
     }
 
     @RequiresPermissionClass(ReadPermission.class)
+    @CSRF
     public class GetNavItemsAction extends ApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)

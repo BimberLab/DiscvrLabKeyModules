@@ -101,7 +101,7 @@ Ext4.define('Laboratory.panel.ItemDefaultViewsPanel', {
 
         Ext4.Msg.wait('Saving...');
 
-        return Ext4.Ajax.request({
+        return LABKEY.Ajax.request({
             url : LABKEY.ActionURL.buildURL('laboratory', 'setItemDefaultView', null),
             params: {
                 jsonData: Ext4.encode(items)

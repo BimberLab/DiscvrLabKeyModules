@@ -143,7 +143,7 @@ Ext4.define('Laboratory.panel.WebpartHeaderPanel', {
         values.tags = this.tags;
         values.forceTagUpdate = true;
 
-        Ext4.Ajax.request({
+        LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('laboratory', 'updateWorkbook'),
             method: 'POST',
             params: values,

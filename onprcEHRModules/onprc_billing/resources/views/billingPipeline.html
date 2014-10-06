@@ -132,7 +132,7 @@
                     return;
                 }
 
-                Ext4.Ajax.request({
+                LABKEY.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('onprc_billing', 'RunBillingPipeline'),
                     params: jsonParameters,
                     scope: this,

@@ -34,7 +34,7 @@ Ext4.onReady(function (){
             },
 
             loadData: function(){
-                Ext4.Ajax.request({
+                LABKEY.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('jbrowse', 'getSettings', null),
                     method : 'GET',
                     scope: this,
@@ -86,7 +86,7 @@ Ext4.onReady(function (){
                         json[field.itemId] = field.getValue();
                 }, this);
 
-                Ext4.Ajax.request({
+                LABKEY.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('jbrowse', 'setSettings', '/'),
                     method : 'POST',
                     params: json,

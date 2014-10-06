@@ -18,9 +18,14 @@
                     html: 'The majority of this module\'s settings are controlled through the Laboratory Module Admin page, which can be found here: ' +  '<a href="' + LABKEY.ActionURL.buildURL('laboratory', 'siteLabSettings', '/') + '">Laboratory Module Site Admin</a>',
                     style: 'padding-bottom: 10px;'
                 },{
-                    style: 'padding-top: 10px;padding-bottom:10px;',
-                    html: 'This page does provide helpers to ensure the sequence module\'s remote pipeline is configured correctly.  These are automated tests that will attempt to perform several sequence analysis and import pipeline jobs that exercise most aspects of the pipeline.  If you have configured the sequence pipeline and installed the external tools, you must then perform one additional step to enable these tests.  Have your site admin modify the tomcat startup script and include the following additional param in the CATALINA_OPTIONS setting:<br><br>' +
-                        '-DsequencePipelineEnabled=true<br><br>' +
+                    html: '<h3>Sequence Tools Config and Validation</h3>'
+                },{
+                    style: 'padding-bottom:10px;',
+                    html: 'This page does provide helpers to ensure the sequence module\'s remote pipeline is configured correctly.  These are automated tests that will attempt to perform several sequence analysis and import pipeline jobs that exercise most aspects of the pipeline.  If you have configured the sequence pipeline and installed the external tools, you must then perform one additional step to enable these tests.  Have your site admin modify the tomcat startup script and include the following additional params in the CATALINA_OPTIONS setting:<br><br>' +
+                        '-DsequencePipelineEnabled=true<br>' +
+                        'and also:<br>' +
+                        '-DgatkInstalled=true<br><br>' +
+                        'If you have installed the GATK JAR.  These paramters are typically added to the init script used to start tomcat, usually /etc/init.d/tomcat on a linux server.<br><br>' +
                         'Please see the <b><a href="https://www.labkey.org/wiki/home/Documentation/page.view?name=configWebappMemory">documentation on configuring webapp memory</a></b>, which is analogous to the setting you need to add.  Once you have done this, click the links below to run the tests:'
                 },{
                     xtype: 'ldk-linkbutton',
@@ -35,6 +40,63 @@
                 },{
                     style: 'margin-top:10px;margin-bottom:10px;',
                     html: 'If tests fail, please check your site log file for additional information.  Note: if you did not enable the startup param, the tests will pass without actually exercising the pipeline (this is by design).  However, your site log file should contain the line "Sequence pipeline is not enabled on this server, so some tests will be skipped"<br>'
+                },{
+                    html: '<hr>'
+                },{
+                    html: '<h3>QualiMap Configuration</h3>'
+                },{
+                    defaults: {
+                        border: false
+                    },
+                    items: [{
+                        html: 'This module integrates with QualiMap, an external tool used to generate BAM file QC reports.  To enable this feature, you need to <a href="http://qualimap.bioinfo.cipf.es/">download QualiMap to your server</a>, and provide the path below.  The module currently supports QualiMap 2.0',
+                        style: 'padding-bottom: 10px;'
+                    },{
+                        xtype: 'textfield',
+                        width: 500,
+                        fieldLabel: 'QualiMap Path',
+                        itemId: 'qualimapPath',
+                        style: 'margin-bottom: 10px;',
+                        listeners: {
+                            render: function(field){
+                                field.loadServerValue();
+                            }
+                        },
+                        loadServerValue: function(){
+                            LABKEY.Ajax.request({
+                                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getQualiMapPath', null),
+                                method: 'POST',
+                                scope: this,
+                                failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback(), this),
+                                success: LABKEY.Utils.getCallbackWrapper(function (response) {
+                                    this.setValue(response.qualiMapDir);
+                                    if (response.qualiMapDir && !response.isValid){
+                                        this.markInvalid(response.validationMessage);
+                                    }
+                                }, this)
+                            });
+                        }
+                    },{
+                        xtype: 'button',
+                        text: 'Save',
+                        border: true,
+                        handler: function (btn) {
+                            LABKEY.Ajax.request({
+                                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'setQualiMapPath', null),
+                                method: 'POST',
+                                params: {
+                                    path: btn.up('panel').down('#qualimapPath').getValue()
+                                },
+                                scope: this,
+                                failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback(), this),
+                                success: LABKEY.Utils.getCallbackWrapper(function (response) {
+                                    Ext4.Msg.alert('Success', 'Save Successful', function () {
+                                        window.location.reload();
+                                    });
+                                }, this)
+                            });
+                        }
+                    }]
                 }]
             }).render(webpart.wrapperDivId);
         }

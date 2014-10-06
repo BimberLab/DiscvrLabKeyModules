@@ -336,7 +336,7 @@ Ext4.define('Laboratory.panel.ManageDemographicsSourcesPanel', {
 
     saveSources: function(sources, win){
         Ext4.Msg.wait('Saving...');
-        Ext4.Ajax.request({
+        LABKEY.Ajax.request({
             url : LABKEY.ActionURL.buildURL('laboratory', 'setDemographicsSources'),
             params: {
                 tables: Ext4.encode(sources)
