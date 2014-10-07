@@ -298,13 +298,21 @@ public class QualiMapRunner
             for (File child : imgDir.listFiles())
             {
                 String encoded = Base64.encodeBase64String(FileUtils.readFileToByteArray(child));
-                html = html.replaceAll("src=\"images_qualimapReport\\\\" + child.getName() + "\">", "src=\"data:image/png;base64," + encoded + "\">");
+                html = html.replaceAll("src=\"images_qualimapReport" + Pattern.quote(File.separator) + child.getName() + "\">", "src=\"data:image/png;base64," + encoded + "\">");
                 html = html.replaceAll("href=\"#" + child.getName() + "\"", "href=\"#" + fileGuid + "_" + child.getName() + "\"");
                 html = html.replaceAll("name=\"" + child.getName() + "\"", "name=\"" + fileGuid + "_" + child.getName() + "\"");
 
                 child.delete();
             }
-            FileUtils.deleteDirectory(imgDir);
+
+            if (imgDir.list().length == 0)
+            {
+                FileUtils.deleteDirectory(imgDir);
+            }
+            else
+            {
+                _log.info("img dir is not empty: " + imgDir.getPath());
+            }
         }
 
         //also update other links
