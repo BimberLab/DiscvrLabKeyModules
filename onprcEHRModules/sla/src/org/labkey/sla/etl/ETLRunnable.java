@@ -54,6 +54,7 @@ import org.labkey.api.security.UserManager;
 import org.labkey.api.security.ValidEmail;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.study.DataSetTable;
+import org.labkey.api.study.StudyService;
 import org.labkey.api.util.ResultSetUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
@@ -289,7 +290,7 @@ public class ETLRunnable implements Runnable
                 if (domain != null)
                 {
                     String tableName = domain.getStorageTableName();
-                    dbSchema = DbSchema.get("studydataset", DbSchemaType.Provisioned);
+                    dbSchema = StudyService.get().getDatasetSchema();
                     realTable = dbSchema.getTable(tableName);
                 }
             }
