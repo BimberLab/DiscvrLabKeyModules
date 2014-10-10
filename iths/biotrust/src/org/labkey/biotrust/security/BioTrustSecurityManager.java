@@ -222,7 +222,7 @@ public class BioTrustSecurityManager
             try {
                 User u = UserManager.getUser(new ValidEmail(email));
                 if (u == null)
-                    return SecurityManager.addUser(new ValidEmail(email)).getUser();
+                    return SecurityManager.addUser(new ValidEmail(email), null).getUser();
                 else
                     return u;
             }

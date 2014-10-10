@@ -1639,7 +1639,7 @@ public class BioTrustController extends SpringActionController
                 {
                     if (_user == null)
                     {
-                        SecurityManager.NewUserStatus status = org.labkey.api.security.SecurityManager.addUser(_email);
+                        SecurityManager.NewUserStatus status = org.labkey.api.security.SecurityManager.addUser(_email, getUser());
                         _user = status.getUser();
 
                         User newUser = UserManager.getUser(_user.getUserId());
@@ -2552,7 +2552,7 @@ public class BioTrustController extends SpringActionController
             DbScope scope = CoreSchema.getInstance().getSchema().getScope();
             try (DbScope.Transaction transaction = scope.ensureTransaction())
             {
-                SecurityManager.NewUserStatus status = org.labkey.api.security.SecurityManager.addUser(_email);
+                SecurityManager.NewUserStatus status = org.labkey.api.security.SecurityManager.addUser(_email, getUser());
                 User user = status.getUser();
 
                 User newUser = UserManager.getUser(user.getUserId());
