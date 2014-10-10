@@ -99,6 +99,8 @@ public class OGASyncRunner implements Job
             doMergeOGAAccounts(u, c, sourceTable, targetSchema);
 
             doMergeOtherAccounts(u, c, sourceTable, targetSchema);
+
+            updateStats(targetSchema);
         }
         catch (SQLException e)
         {
@@ -169,6 +171,13 @@ public class OGASyncRunner implements Job
 
         TableSelector ts = new TableSelector(sourceTable, new LinkedHashSet<>(fieldMap.values()));
         doMerge(u, c, targetTable, ts, "projectNumber", fieldMap, null, null, null, null);
+    }
+
+    public void updateStats(DbSchema targetSchema) throws SQLException
+    {
+        TableInfo aliases = DbSchema.get("onprc_billing").getTable("aliases");
+        String analyze = targetSchema.getSqlDialect().getAnalyzeCommandForTable(aliases.getSelectName());
+        new SqlExecutor(aliases.getSchema()).execute(new SQLFragment(analyze));
     }
 
     public void doMergeOtherAccounts(User u, Container c, TableInfo sourceTable, DbSchema targetSchema) throws SQLException

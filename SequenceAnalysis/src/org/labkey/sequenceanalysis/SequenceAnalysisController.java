@@ -114,12 +114,14 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.webdav.WebdavResource;
 import org.labkey.api.webdav.WebdavService;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByCodonAggregator;
@@ -1655,6 +1657,13 @@ public class SequenceAnalysisController extends SpringActionController
                     throw new IllegalArgumentException("Must specify a protocol name");
                 }
 
+                JSONObject o = new JSONObject(form.getConfigureJson());
+                Map<String, String> params = new HashMap<>();
+                for (Map.Entry<String, Object> entry : o.entrySet())
+                {
+                    params.put(entry.getKey(), entry.getValue() == null ? null : entry.getValue().toString());
+                }
+
                 AbstractFileAnalysisProtocol protocol = getProtocol(root, dirData, factory, form.getProtocolName());
                 if (protocol == null)
                 {
@@ -1674,12 +1683,6 @@ public class SequenceAnalysisController extends SpringActionController
                             throw new IllegalArgumentException("Parameters must be defined, either as XML or JSON");
                         }
                         ParamParser parser = PipelineJobService.get().createParamParser();
-                        JSONObject o = new JSONObject(form.getConfigureJson());
-                        Map<String, String> params = new HashMap<>();
-                        for (Map.Entry<String, Object> entry : o.entrySet())
-                        {
-                            params.put(entry.getKey(), entry.getValue() == null ? null : entry.getValue().toString());
-                        }
                         xml = parser.getXMLFromMap(params);
                     }
 
@@ -1693,8 +1696,7 @@ public class SequenceAnalysisController extends SpringActionController
                     if (form.isSaveProtocol())
                     {
                         protocol.saveDefinition(root);
-                        PipelineService.get().rememberLastProtocolSetting(protocol.getFactory(),
-                                getContainer(), getUser(), protocol.getName());
+                        PipelineService.get().rememberLastProtocolSetting(protocol.getFactory(), getContainer(), getUser(), protocol.getName());
                     }
                 }
                 else
@@ -1703,8 +1705,7 @@ public class SequenceAnalysisController extends SpringActionController
                     {
                         throw new IllegalArgumentException("Cannot redefine an existing protocol");
                     }
-                    PipelineService.get().rememberLastProtocolSetting(protocol.getFactory(),
-                            getContainer(), getUser(), protocol.getName());
+                    PipelineService.get().rememberLastProtocolSetting(protocol.getFactory(), getContainer(), getUser(), protocol.getName());
                 }
 
                 protocol.getFactory().ensureDefaultParameters(root);
@@ -1725,14 +1726,36 @@ public class SequenceAnalysisController extends SpringActionController
                     throw new IllegalArgumentException("Active jobs already exist for this protocol.");
                 }
 
-                AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, filesInputList);
-
-                PipelineService.get().queueJob(job);
-
                 Map<String, Object> resultProperties = new HashMap<>();
+                if (form.getSplitJobs())
+                {
+                    List<String> jobGUIDs = new ArrayList<>();
+                    Map<ReadsetModel, Pair<File, File>> toRun = SequenceAlignmentTask.getAlignmentFiles(params, filesInputList, false);
+                    for (Pair<File, File> files : toRun.values())
+                    {
+                        List<File> fileList = new ArrayList<>();
+                        fileList.add(files.first);
+                        if (files.second != null)
+                        {
+                            fileList.add(files.second);
+                        }
+
+                        AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, fileList);
+                        PipelineService.get().queueJob(job);
+                        jobGUIDs.add(job.getJobGUID());
+                    }
+
+                    resultProperties.put("jobGUIDs", jobGUIDs);
+                }
+                else
+                {
+                    AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, filesInputList);
+                    PipelineService.get().queueJob(job);
+
+                    resultProperties.put("jobGUIDs", Arrays.asList(job.getJobGUID()));
+                }
 
                 resultProperties.put("status", "success");
-                resultProperties.put("jobGUID", job.getJobGUID());
 
                 return new ApiSimpleResponse(resultProperties);
             }
@@ -1750,31 +1773,32 @@ public class SequenceAnalysisController extends SpringActionController
             path, taskId, file
         }
 
-        private String taskId = "";
-        private String protocolName = "";
-        private String protocolDescription = "";
-        private String[] fileInputStatus = null;
-        private String configureXml;
-        private String configureJson;
-        private boolean saveProtocol = false;
-        private boolean runAnalysis = false;
-        private boolean activeJobs = false;
-        private Boolean allowNonExistentFiles;
+        private String _taskId = "";
+        private String _protocolName = "";
+        private String _protocolDescription = "";
+        private String[] _fileInputStatus = null;
+        private String _configureXml;
+        private String _configureJson;
+        private boolean _saveProtocol = false;
+        private boolean _runAnalysis = false;
+        private boolean _activeJobs = false;
+        private Boolean _allowNonExistentFiles;
+        private Boolean _splitJobs;
 
         private static final String UNKNOWN_STATUS = "UNKNOWN";
 
         public void initStatus(AbstractFileAnalysisProtocol protocol, File dirData, File dirAnalysis)
         {
-            if (fileInputStatus != null)
+            if (_fileInputStatus != null)
                 return;
 
-            activeJobs = false;
+            _activeJobs = false;
 
             int len = getFile().length;
-            fileInputStatus = new String[len + 1];
+            _fileInputStatus = new String[len + 1];
             for (int i = 0; i < len; i++)
-                fileInputStatus[i] = initStatusFile(protocol, dirData, dirAnalysis, getFile()[i], true);
-            fileInputStatus[len] = initStatusFile(protocol, dirData, dirAnalysis, null, false);
+                _fileInputStatus[i] = initStatusFile(protocol, dirData, dirAnalysis, getFile()[i], true);
+            _fileInputStatus[len] = initStatusFile(protocol, dirData, dirAnalysis, null, false);
         }
 
         private String initStatusFile(AbstractFileAnalysisProtocol protocol, File dirData, File dirAnalysis,
@@ -1806,103 +1830,113 @@ public class SequenceAnalysisController extends SpringActionController
                 if (sf == null)
                     return null;
 
-                activeJobs = activeJobs || sf.isActive();
+                _activeJobs = _activeJobs || sf.isActive();
                 return sf.getStatus();
             }
 
             // Failed to get status.  Assume job is active, and return unknown status.
-            activeJobs = true;
+            _activeJobs = true;
             return UNKNOWN_STATUS;
         }
 
         public String getTaskId()
         {
-            return taskId;
+            return _taskId;
         }
 
         public void setTaskId(String taskId)
         {
-            this.taskId = taskId;
+            _taskId = taskId;
         }
 
         public String getConfigureXml()
         {
-            return configureXml;
+            return _configureXml;
         }
 
         public void setConfigureXml(String configureXml)
         {
-            this.configureXml = (configureXml == null ? "" : configureXml);
+            _configureXml = (configureXml == null ? "" : configureXml);
         }
 
         public String getConfigureJson()
         {
-            return configureJson;
+            return _configureJson;
         }
 
         public void setConfigureJson(String configureJson)
         {
-            this.configureJson = configureJson;
+            _configureJson = configureJson;
         }
 
         public String getProtocolName()
         {
-            return protocolName;
+            return _protocolName;
         }
 
         public void setProtocolName(String protocolName)
         {
-            this.protocolName = (protocolName == null ? "" : protocolName);
+            _protocolName = (protocolName == null ? "" : protocolName);
         }
 
         public String getProtocolDescription()
         {
-            return protocolDescription;
+            return _protocolDescription;
         }
 
         public void setProtocolDescription(String protocolDescription)
         {
-            this.protocolDescription = (protocolDescription == null ? "" : protocolDescription);
+            _protocolDescription = (protocolDescription == null ? "" : protocolDescription);
         }
 
         public String[] getFileInputStatus()
         {
-            return fileInputStatus;
+            return _fileInputStatus;
         }
 
         public boolean isActiveJobs()
         {
-            return activeJobs;
+            return _activeJobs;
         }
 
         public boolean isSaveProtocol()
         {
-            return saveProtocol;
+            return _saveProtocol;
         }
 
         public void setSaveProtocol(boolean saveProtocol)
         {
-            this.saveProtocol = saveProtocol;
+            _saveProtocol = saveProtocol;
         }
 
         public boolean isRunAnalysis()
         {
-            return runAnalysis;
+            return _runAnalysis;
         }
 
         public void setRunAnalysis(boolean runAnalysis)
         {
-            this.runAnalysis = runAnalysis;
+            _runAnalysis = runAnalysis;
         }
 
         public Boolean isAllowNonExistentFiles()
         {
-            return allowNonExistentFiles;
+            return _allowNonExistentFiles;
         }
 
         public void setAllowNonExistentFiles(Boolean allowNonExistentFiles)
         {
-            this.allowNonExistentFiles = allowNonExistentFiles;
+            _allowNonExistentFiles = allowNonExistentFiles;
+        }
+
+        public Boolean getSplitJobs()
+        {
+            return _splitJobs == null ? false : true;
+        }
+
+        public void setSplitJobs(Boolean splitJobs)
+        {
+            _splitJobs = splitJobs;
         }
     }
 

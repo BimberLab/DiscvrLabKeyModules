@@ -28,6 +28,7 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.api.webdav.WebdavService;
 import org.labkey.jbrowse.button.AddLibraryButton;
 import org.labkey.jbrowse.button.AddTrackButton;
 import org.labkey.jbrowse.button.ReprocessResourcesButton;
@@ -93,6 +94,9 @@ public class JBrowseModule extends ExtendedSimpleModule
 
         SequenceAnalysisService.get().registerGenomeTrigger(new JBrowseGenomeTrigger());
         SequenceAnalysisService.get().registerFileHandler(new JBrowseSequenceFileHandler());
+
+        WebdavService.get().registerPreGzippedExtensions("jsonz");
+        WebdavService.get().registerPreGzippedExtensions("txtz");
     }
 
     @Override

@@ -43,7 +43,7 @@ public class ReferenceLibraryPipelineJob extends PipelineJob
 
     public ReferenceLibraryPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, String name, String description, List<ReferenceLibraryMember> libraryMembers) throws IOException
     {
-        super(null, new ViewBackgroundInfo(c, user, url), pipeRoot);
+        super(ReferenceLibraryPipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
         _name = name;
         _description = description;
         _libraryMembers = libraryMembers;

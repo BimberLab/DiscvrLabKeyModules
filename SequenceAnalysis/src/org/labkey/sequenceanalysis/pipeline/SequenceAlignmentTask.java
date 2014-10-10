@@ -175,7 +175,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             getHelper().getFileManager().decompressInputFiles(inputFiles, actions);
 
             //then we preprocess FASTQ files, if needed
-            Map<ReadsetModel, Pair<File, File>> groupedFiles = getAlignmentFiles(getJob(), inputFiles, true);
+            Map<ReadsetModel, Pair<File, File>> groupedFiles = getAlignmentFiles(getJob().getParameters(), inputFiles, true);
             if (groupedFiles.size() > 0)
             {
                 ReferenceGenome referenceGenome = getHelper().getSequenceSupport().getReferenceGenome();
@@ -293,7 +293,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         return _taskHelper;
     }
 
-    public static Map<ReadsetModel, Pair<File, File>> getAlignmentFiles(PipelineJob job, List<File> inputFiles, boolean returnOutputName)
+    public static Map<ReadsetModel, Pair<File, File>> getAlignmentFiles(Map<String, String> jobParameters, List<File> inputFiles, boolean returnOutputName)
     {
         HashMap<String, File> map = new HashMap<>();
         for (File f : inputFiles)
@@ -304,7 +304,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         //this iterates over each incoming readset and groups paired end reads, if applicable.
         Map<ReadsetModel, Pair<File, File>> alignFiles = new HashMap<>();
 
-        SequencePipelineSettings settings = new SequencePipelineSettings(job.getParameters());
+        SequencePipelineSettings settings = new SequencePipelineSettings(jobParameters);
         for (ReadsetModel r : settings.getReadsets())
         {
             String fn = r.getFileName();

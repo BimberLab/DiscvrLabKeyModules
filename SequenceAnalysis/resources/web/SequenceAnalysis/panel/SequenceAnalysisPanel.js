@@ -45,7 +45,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             bodyBorder: false,
             title: 'Step 1: Run Information',
             itemId: 'runInformation',
-            width: 'auto',
+            width: '100%',
             defaults: Ext4.Object.merge({}, this.fieldDefaults, {bodyStyle: 'padding:5px;'}),
             defaultType: 'textfield',
             items :[{
@@ -235,7 +235,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
         },{
             xtype: 'panel',
             title: 'Analysis Options',
-            width: 'auto',
+            width: '100%',
             itemId: 'analysisOptions',
             items: [{
                 border: false,
@@ -400,7 +400,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             border: true,
             title: 'Selected Readsets',
             itemId: 'files',
-            width: 'auto',
+            width: '100%',
             defaults: {
                 border: false,
                 style: 'padding: 5px;'
@@ -410,8 +410,16 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 style: 'padding-bottom: 10px;'
             },{
                 xtype: 'dataview',
+                width: '100%',
                 store: this.readsetStore,
                 itemSelector: 'tr.file_list',
+//                listeners: {
+//                    viewready: function(panel){
+//                        console.log(panel.getWidth());
+//                        var owner = panel.up('sequenceanalysis-sequenceanalysispanel');
+//                        console.log(owner.getWidth());
+//                    }
+//                },
                 tpl: [
                     '<table class="fileNames"><tr class="fileNames"><td>Readset Id</td><td>Readset Name</td><td>Sample Id</td><td>Platform</td><td>File 1</td><td>File 2</td><td>Folder</td><td></td></tr>',
                     '<tpl for=".">',

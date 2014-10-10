@@ -20,8 +20,6 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.blast.BLASTManager;
 import org.labkey.blast.BLASTSchema;
-import org.labkey.blast.model.BlastJob;
-import org.labkey.folder.xml.PagesDocument;
 
 import java.io.File;
 
@@ -37,7 +35,7 @@ public class BlastDatabasePipelineJob extends PipelineJob
 
     public BlastDatabasePipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, Integer libraryId)
     {
-        super(null, new ViewBackgroundInfo(c, user, url), pipeRoot);
+        super(BlastDatabasePipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
         _libraryId = libraryId;
         _databaseGuid = new GUID().toString().toUpperCase();
         setLogFile(new File(BLASTManager.get().getDatabaseDir(), "blast-" + _databaseGuid + ".log"));

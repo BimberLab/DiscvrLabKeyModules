@@ -95,7 +95,7 @@ public class BillingTriggerHelper
                     {
                         _lastInvoiceDate = (Date)r.getValue();
                         if (_lastInvoiceDate != null)
-                            _lastInvoiceDate = DateUtils.round(_lastInvoiceDate, Calendar.DATE);
+                            _lastInvoiceDate = DateUtils.truncate(_lastInvoiceDate, Calendar.DATE);
                     }
                 }
             }
@@ -111,7 +111,7 @@ public class BillingTriggerHelper
         if (lastInvoice == null)
             return false;
 
-        Date toTest = DateUtils.round(new Date(d.getTime()), Calendar.DATE);
+        Date toTest = DateUtils.truncate(new Date(d.getTime()), Calendar.DATE);
         return toTest.before(lastInvoice);
     }
 

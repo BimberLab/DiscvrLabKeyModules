@@ -220,6 +220,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         var params = {
             taskId: config.taskId,
             path: config.path,
+            splitJobs: true,
             protocolName: config.protocolName,
             protocolDescription: config.protocolDescription,
             file: config.files,

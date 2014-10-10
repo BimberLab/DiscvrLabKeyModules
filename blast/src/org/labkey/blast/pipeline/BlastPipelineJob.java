@@ -30,7 +30,7 @@ public class BlastPipelineJob extends PipelineJob
 
     public BlastPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, BlastJob blastJob)
     {
-        super(null, new ViewBackgroundInfo(c, user, url), pipeRoot);
+        super(BlastPipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
         _blastJob = blastJob;
         setLogFile(new File(blastJob.getOutputDir(), "blast-" + getBlastJob().getObjectid() + ".log"));
     }

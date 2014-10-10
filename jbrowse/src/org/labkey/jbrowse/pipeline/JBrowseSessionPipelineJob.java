@@ -78,7 +78,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
 
     private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles, String databaseGuid, Mode mode)
     {
-        super(null, new ViewBackgroundInfo(c, user, null), pipeRoot);
+        super(JBrowseSessionPipelineProvider.NAME, new ViewBackgroundInfo(c, user, null), pipeRoot);
         _jsonFiles = jsonFiles;
         _databaseGuid = databaseGuid;
         _mode = mode;
@@ -90,7 +90,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
 
     private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, @Nullable String existingDatabaseGuid)
     {
-        super(null, new ViewBackgroundInfo(c, user, null), pipeRoot);
+        super(JBrowseSessionPipelineProvider.NAME, new ViewBackgroundInfo(c, user, null), pipeRoot);
         _libraryId = libraryId;
         _trackIds = trackIds;
         _outputFileIds = outputFileIds;

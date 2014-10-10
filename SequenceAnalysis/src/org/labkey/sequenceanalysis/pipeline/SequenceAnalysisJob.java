@@ -89,7 +89,7 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
                 //|| getActiveTaskFactory().getId().getNamespaceClass().equals(SequenceAnalysisTask.class)
         ) && getInputFiles().size() > 1)
         {
-            Collection<Pair<File, File>> files = SequenceAlignmentTask.getAlignmentFiles(this, getInputFiles(), false).values();
+            Collection<Pair<File, File>> files = SequenceAlignmentTask.getAlignmentFiles(getParameters(), getInputFiles(), false).values();
             for (Pair<File, File> pair : files)
             {
                 List<File> toRun = new ArrayList<>();
