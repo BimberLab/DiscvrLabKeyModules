@@ -418,8 +418,9 @@ public class TestHelper
             if (response.getStatus() != HttpServletResponse.SC_OK)
                 throw new RuntimeException("Problem creating pipeline job: " + responseJson.getString("exception"));
 
-            String guid = responseJson.getString("jobGUID");
-            Integer jobId = PipelineService.get().getJobId(_context.getUser(), _project, guid);
+            JSONArray guidList = responseJson.getJSONArray("jobGUIDs");
+            assert guidList.length() == 1;
+            Integer jobId = PipelineService.get().getJobId(_context.getUser(), _project, guidList.getString(0));
 
             return PipelineJobService.get().getJobStore().getJob(jobId);
         }

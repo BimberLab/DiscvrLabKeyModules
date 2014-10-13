@@ -7,3 +7,13 @@
     });
 
 </script>
+
+The JBrowse module is part of DISCVR-Seq.  It provides a wrapper around the JBrowse Genome Browser, which lets users rapidly take data generated or uploaded into DISCRV-Seq and view it using JBrowse.
+The module ships with a version of JBrowse, meaning very little extra configuration is required in order to start using these tools.  The primary reasons we created this wrapper around JBrowse are:
+<p></p>
+<ul>
+    <li>We selected JBrowse as the browser because it is a modern web-based genome viewer, with a large support base</li>
+    <li>This wrapper makes is very simple for non-technical users to take data uploaded into DISCVR-Seq and use the power of JBrowse to see your data.  While we find JBrowse easy to use, preparing samples for the browser often requires command-line tools or was otherwise beyond the level of a typical scientist</li>
+    <li>For our usage, we find it important to be able to quickly view different combinations of files.  For example, after running an alignment or calling SNPs on a set of samples, you might want to view these specific samples in conjunction with a specific set of genome annotations (coding regions, regulatory regions, site of known variation, etc).  </li>
+    <li>The files createde by genome-scale projects can become large.  If we allow users to create many different JBrowse databases, we need to be careful about the amount of files this creates.  The JBrowse module does a fair amount of work behind the scenes to avoid duplicating files.  For example, if the same genome is used as the base for 100s of JBrowse sessions, there will only be one copy of the processed sequences files saved.  The same is true for all tracks that are loaded.</li>
+</ul>

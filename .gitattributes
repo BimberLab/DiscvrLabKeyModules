@@ -6,6 +6,7 @@ DISCVR/blast/resources/schemas/dbscripts/postgresql/blast-13.30-13.31.sql -text
 DISCVR/blast/resources/schemas/dbscripts/postgresql/blast-13.31-13.32.sql -text
 DISCVR/blast/resources/schemas/dbscripts/sqlserver/blast-13.30-13.31.sql -text
 DISCVR/blast/resources/schemas/dbscripts/sqlserver/blast-13.31-13.32.sql -text
+DISCVR/blast/resources/views/begin.html -text
 DISCVR/blast/resources/views/blast.html -text
 DISCVR/blast/resources/views/blast.view.xml -text
 DISCVR/blast/resources/views/instructions.html -text

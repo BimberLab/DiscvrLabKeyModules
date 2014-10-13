@@ -781,7 +781,7 @@ public class JBrowseRoot
         //update urlTemplate
         String relPath = FileUtil.relativePath(getBaseDir(c).getPath(), databaseTrackDir.getPath());
         getLogger().debug("using relative path: " + relPath);
-        ret.put("urlTemplate", "tracks/" + featureName + "/{refseq}/trackData.json");
+        ret.put("urlTemplate", "tracks/" + featureName + "/{refseq}/trackData.json" + (JBrowseManager.get().compressJSON() ? "z" : ""));
 
         aaFeaturesOutFile.delete();
 
@@ -845,7 +845,7 @@ public class JBrowseRoot
         //update urlTemplate
         String relPath = FileUtil.relativePath(getBaseDir(c).getPath(), databaseTrackDir.getPath());
         getLogger().debug("using relative path: " + relPath);
-        ret.put("urlTemplate", featureName + "/{refseq}/trackData.json");
+        ret.put("urlTemplate", featureName + "/{refseq}/trackData.json" + (JBrowseManager.get().compressJSON() ? "z" : ""));
 
         aaFeaturesOutFile.delete();
 
