@@ -65,7 +65,7 @@ public class JBrowseController extends SpringActionController
         public ApiResponse execute(Object form, BindException errors)
         {
             Map<String, Object> resultProperties = new HashMap<>();
-            String[] etlConfigKeys = {JBrowseManager.JBROWSE_BIN, JBrowseManager.JBROWSE_COMPRESS_JSON};
+            String[] etlConfigKeys = {JBrowseManager.JBROWSE_BIN};
 
             resultProperties.put("configKeys", etlConfigKeys);
             resultProperties.put("config", PropertyManager.getProperties(JBrowseManager.CONFIG_PROPERTY_DOMAIN));
@@ -90,9 +90,6 @@ public class JBrowseController extends SpringActionController
             if (form.getJbrowseBinDir() != null)
                 configMap.put(JBrowseManager.JBROWSE_BIN, form.getJbrowseBinDir());
 
-            if (form.getCompressJson() != null)
-                configMap.put(JBrowseManager.JBROWSE_COMPRESS_JSON, form.getCompressJson().toString());
-
             try
             {
                 JBrowseManager.get().saveSettings(configMap);
@@ -110,7 +107,6 @@ public class JBrowseController extends SpringActionController
     public static class SettingsForm
     {
         private String _jbrowseBinDir;
-        private Boolean _compressJson;
 
         public String getJbrowseBinDir()
         {
@@ -120,16 +116,6 @@ public class JBrowseController extends SpringActionController
         public void setJbrowseBinDir(String jbrowseBinDir)
         {
             _jbrowseBinDir = jbrowseBinDir;
-        }
-
-        public Boolean getCompressJson()
-        {
-            return _compressJson;
-        }
-
-        public void setCompressJson(Boolean compressJson)
-        {
-            _compressJson = compressJson;
         }
     }
 

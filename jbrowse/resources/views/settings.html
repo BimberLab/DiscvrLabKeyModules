@@ -11,11 +11,11 @@ Ext4.onReady(function (){
                 Ext4.apply(this, {
                     border: false,
                     items: [{
-                        html: 'This page allows site-level administration of integration with JBrowse.  In this scenario, LabKey serves as the database and source of sequence data and tracks.  LabKey allows the user to choose tracks and load a customized JBrowse session.  In the background, this module will prepare your sequences and tracks for viewing in JBrowse.  This module includes the code for JBrowse, and wraps that application.  These are the config properties:' +
+                        html: 'This page allows site-level administration of the JBrowse module.  The JBrowse module is a wrapper around the JBrowse Genome Browser.  It is separate from JBrowse and not written by the JBrowse authors.  With the module, LabKey serves as the database and source of sequence data and tracks.  LabKey allows the user to choose genomes/tracks and create a customized JBrowse session.  In the background, this module will handle most of the configuration and prepare your sequences and tracks for viewing in JBrowse.  This module ships with all JBrowse viewer code, meaning no additional configuration is necessary.  However, for this mondule to work properly, you will need to install the JBrowse bin files, which are the scripts used to prepare input files for the browser.  Because these scripts require dependenies, and installing JBrowse is very straightforward, we recommend you <a href=""">follow the official JBrowse installation instructions here<a/>.  You only need to download JBrowse and run setup.sh.  You do not need to run or configure Apache (LabKey Server replaces the need for this).  Once installed, enter the path to the /bin folder below:' +
                             '<p></p>' +
                             '<ul>' +
                                 '<li>' +
-                                    'compressJson: Either true or false.  If true, the JSON files will be compressed when created.  In order for this to work, you must follow the JBrowse docs for enabling compression in Apache.' +
+                                      'jbrowseBinDir: The path where the /bin directory from JBrowse is located.  This contains the scripts used to process flatfiles to show in JBrowse' +
                                 '</li>' +
                             '</ul>',
                         border: false,

@@ -164,6 +164,7 @@ import java.util.zip.ZipOutputStream;
 
 public class SequenceAnalysisController extends SpringActionController
 {
+    private static final Logger _log = Logger.getLogger(SequenceAnalysisController.class);
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(SequenceAnalysisController.class);
 
     public SequenceAnalysisController()
@@ -1731,6 +1732,7 @@ public class SequenceAnalysisController extends SpringActionController
                 {
                     List<String> jobGUIDs = new ArrayList<>();
                     Map<ReadsetModel, Pair<File, File>> toRun = SequenceAlignmentTask.getAlignmentFiles(params, filesInputList, false);
+                    _log.info("creating split sequence jobs for " + filesInputList.size() + " files.  These divided into: " + toRun.size() + " jobs.");
                     for (Pair<File, File> files : toRun.values())
                     {
                         List<File> fileList = new ArrayList<>();
@@ -1749,6 +1751,7 @@ public class SequenceAnalysisController extends SpringActionController
                 }
                 else
                 {
+                    _log.info("creating single sequence job for " + filesInputList.size() + " files.");
                     AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, filesInputList);
                     PipelineService.get().queueJob(job);
 

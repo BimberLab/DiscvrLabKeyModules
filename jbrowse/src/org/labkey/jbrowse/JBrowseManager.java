@@ -42,7 +42,6 @@ public class JBrowseManager
     private static final JBrowseManager _instance = new JBrowseManager();
     public final static String CONFIG_PROPERTY_DOMAIN = "org.labkey.jbrowse.settings";
     public final static String JBROWSE_BIN = "jbrowseBinDir";
-    public final static String JBROWSE_COMPRESS_JSON = "compressJson";
     public final static String SEQUENCE_ANALYSIS = "sequenceanalysis";
     public static final List<FileType> ALLOWABLE_TRACK_EXTENSIONS = Arrays.asList(
             new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ),
@@ -89,9 +88,6 @@ public class JBrowseManager
         }
         configMap.put(JBROWSE_BIN, binDir);
 
-        Boolean compress = props.containsKey(JBROWSE_COMPRESS_JSON) ? Boolean.parseBoolean(props.get(JBROWSE_COMPRESS_JSON)) : false;
-        configMap.put(JBROWSE_COMPRESS_JSON, compress.toString());
-
         PropertyManager.saveProperties(configMap);
     }
 
@@ -108,13 +104,8 @@ public class JBrowseManager
 
     public boolean compressJSON()
     {
-        Map<String, String> props = PropertyManager.getProperties(JBrowseManager.CONFIG_PROPERTY_DOMAIN);
-        if (props.containsKey(JBROWSE_COMPRESS_JSON))
-        {
-            return Boolean.parseBoolean(props.get(JBROWSE_COMPRESS_JSON));
-        }
-
-        return false;
+        //hard coded for now until webdav supports otherwise
+        return true;
     }
 
     public void createDatabase(Container c, User u, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds) throws IOException
