@@ -139,6 +139,13 @@
                         valueField: 'objectid',
                         value: LABKEY.ActionURL.getParameter('database'),
                         displayField: 'name'
+                    },{
+                        xtype: 'ldk-linkbutton',
+                        text: 'View Detail on Reference Databases',
+                        linkCls: 'labkey-text-link',
+                        linkTarget: '_blank',
+                        href: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', 'query.queryName': 'reference_libraries'}),
+                        style: 'margin-left: 125px;'
                     }]
                 },{
                     xtype: 'fieldset',
@@ -188,9 +195,7 @@
 
                         Ext4.Msg.hide();
                         if (jobId) {
-                            Ext4.Msg.alert('Success', 'BLAST Started!  Click to view progress.', function (val) {
-                                window.location = LABKEY.ActionURL.buildURL('blast', 'jobDetails', null, {jobId: jobId});
-                            }, this);
+                            window.location = LABKEY.ActionURL.buildURL('blast', 'jobDetails', null, {jobId: jobId});
                         }
                         else {
                             Ext4.Msg.alert('Error', 'Error, Job Not Started');

@@ -153,6 +153,7 @@ public class SequenceDataProvider extends AbstractDataProvider
         {
             items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Analyses"));
             items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Readsets"));
+            items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Outputs"));
         }
 
         return items;
