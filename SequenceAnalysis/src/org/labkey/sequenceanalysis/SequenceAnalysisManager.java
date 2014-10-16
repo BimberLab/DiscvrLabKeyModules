@@ -34,6 +34,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
@@ -440,28 +441,30 @@ public class SequenceAnalysisManager
         List<Integer> sequenceIds = new ArrayList<>();
         try (DataLoader loader = new FastaDataLoader.Factory().createLoader(file, false))
         {
-            Iterator<Map<String, Object>> i = loader.iterator();
-            while (i.hasNext())
+            try (CloseableIterator<Map<String, Object>> i = loader.iterator())
             {
-                Map<String, Object> fastaRecord = i.next();
-                CaseInsensitiveHashMap map = new CaseInsensitiveHashMap();
-                if (params != null)
-                    map.putAll(params);
+                while (i.hasNext())
+                {
+                    Map<String, Object> fastaRecord = i.next();
+                    CaseInsensitiveHashMap map = new CaseInsensitiveHashMap();
+                    if (params != null)
+                        map.putAll(params);
 
-                map.put("name", fastaRecord.get("header"));
-                map.put("container", c.getId());
-                map.put("created", new Date());
-                map.put("createdby", u.getUserId());
-                map.put("modified", new Date());
-                map.put("modifiedby", u.getUserId());
+                    map.put("name", fastaRecord.get("header"));
+                    map.put("container", c.getId());
+                    map.put("created", new Date());
+                    map.put("createdby", u.getUserId());
+                    map.put("modified", new Date());
+                    map.put("modifiedby", u.getUserId());
 
-                map = Table.insert(u, dnaTable, map);
-                sequenceIds.add((Integer) map.get("rowid"));
+                    map = Table.insert(u, dnaTable, map);
+                    sequenceIds.add((Integer) map.get("rowid"));
 
-                RefNtSequenceModel m = new TableSelector(dnaTable, new SimpleFilter(FieldKey.fromString("rowid"), map.get("rowid")), null).getObject(RefNtSequenceModel.class);
+                    RefNtSequenceModel m = new TableSelector(dnaTable, new SimpleFilter(FieldKey.fromString("rowid"), map.get("rowid")), null).getObject(RefNtSequenceModel.class);
 
-                //to better handle large sequences, write sequence to a gzipped text file
-                m.createFileForSequence(u, (String) fastaRecord.get("sequence"));
+                    //to better handle large sequences, write sequence to a gzipped text file
+                    m.createFileForSequence(u, (String) fastaRecord.get("sequence"));
+                }
             }
         }
 

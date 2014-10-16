@@ -338,7 +338,7 @@ public class JBrowseRoot
 
     public void prepareDatabase(Container c, User u, String databaseId) throws IOException
     {
-        File outDir = new File(getDatabaseDir(c), databaseId.toString());
+        File outDir = new File(getDatabaseDir(c), databaseId);
 
         //Note: delete entire directory to ensure we recreate symlinks, etc.
         if (outDir.exists())

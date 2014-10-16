@@ -71,7 +71,6 @@ DISCVR/jbrowse/resources/views/settings.html -text
 DISCVR/jbrowse/resources/views/settings.view.xml -text
 DISCVR/jbrowse/resources/web/jbrowse/window/DatabaseWindow.js -text
 DISCVR/jbrowse/resources/web/jbrowse/window/ReprocessResourcesWindow.js -text
-DISCVR/jbrowse/resources/web/jbrowse/window/ViewOutputsWindow.js -text
 DISCVR/jbrowse/resources/web/jbrowseApp/LICENSE -text
 DISCVR/jbrowse/resources/web/jbrowseApp/README.md -text
 DISCVR/jbrowse/resources/web/jbrowseApp/combination_tracks.css -text
@@ -3260,6 +3259,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/NtCover
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/NtSnpByPosAggregator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SequenceBasedTypingAlignmentAggregator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SequenceBasedTypingAnalysis.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SnpCountAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/ViralAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/assembly/MiraRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/bampostprocessing/AddOrReplaceReadGroupsStep.java -text
@@ -3890,6 +3890,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billi
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.366-12.367.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.367-12.368.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.368-12.369.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.369-12.370.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.30-12.301.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.301-12.302.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.302-12.303.sql -text
@@ -3952,6 +3953,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billin
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.366-12.367.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.367-12.368.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.368-12.369.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.369-12.370.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing.xml -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing_public.template.xml -text
 onprcEHRModules/onprc_billing/resources/scripts/onprc_billing/billing_triggers.js -text

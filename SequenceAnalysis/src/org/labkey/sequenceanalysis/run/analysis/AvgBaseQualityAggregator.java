@@ -140,45 +140,47 @@ public class AvgBaseQualityAggregator
     {
         Map<String, Double> quals = new HashMap<>();
 
-        SamLocusIterator sli = new SamLocusIterator(sam, il, true);
-        sli.setEmitUncoveredLoci(false);
-
-        Iterator<SamLocusIterator.LocusInfo> it = sli.iterator();
-        int idx = 0;
-        while (it.hasNext())
+        try (SamLocusIterator sli = new SamLocusIterator(sam, il, true))
         {
-            SamLocusIterator.LocusInfo locus = it.next();
-            idx++;
+            sli.setEmitUncoveredLoci(false);
 
-            if (idx % 2500 == 0)
+            Iterator<SamLocusIterator.LocusInfo> it = sli.iterator();
+            int idx = 0;
+            while (it.hasNext())
             {
-                _log.info("processed " + idx + " loci in AvgBaseQualityAggregator");
-            }
+                SamLocusIterator.LocusInfo locus = it.next();
+                idx++;
 
-            Map<String, Integer> snpMap = new HashMap<>();
-            Map<String, Integer> baseCountMap = new HashMap<>();
-
-            for (SamLocusIterator.RecordAndOffset r : locus.getRecordAndPositions())
-            {
-                String base = Character.toString((char)r.getReadBase());
-                if (!snpMap.containsKey(base))
+                if (idx % 2500 == 0)
                 {
-                    snpMap.put(base, (int)r.getBaseQuality());
-                    baseCountMap.put(base, 1);
+                    _log.info("processed " + idx + " loci in AvgBaseQualityAggregator");
                 }
-                else
-                {
-                    snpMap.put(base, snpMap.get(base) + r.getBaseQuality());
-                    baseCountMap.put(base, baseCountMap.get(base) + 1);
-                }
-            }
 
-            for (String b : baseCountMap.keySet())
-            {
-                double avg = snpMap.get(b) / baseCountMap.get(b);
-                Integer pos = locus.getPosition() - 1; //convert to 0-based
-                String key = getBaseKey(pos, b);
-                quals.put(key, avg);
+                Map<String, Integer> snpMap = new HashMap<>();
+                Map<String, Integer> baseCountMap = new HashMap<>();
+
+                for (SamLocusIterator.RecordAndOffset r : locus.getRecordAndPositions())
+                {
+                    String base = Character.toString((char) r.getReadBase());
+                    if (!snpMap.containsKey(base))
+                    {
+                        snpMap.put(base, (int) r.getBaseQuality());
+                        baseCountMap.put(base, 1);
+                    }
+                    else
+                    {
+                        snpMap.put(base, snpMap.get(base) + r.getBaseQuality());
+                        baseCountMap.put(base, baseCountMap.get(base) + 1);
+                    }
+                }
+
+                for (String b : baseCountMap.keySet())
+                {
+                    double avg = snpMap.get(b) / baseCountMap.get(b).doubleValue();
+                    Integer pos = locus.getPosition() - 1; //convert to 0-based
+                    String key = getBaseKey(pos, b);
+                    quals.put(key, avg);
+                }
             }
         }
 

@@ -70,7 +70,7 @@ public class BLASTWrapper
         args.add(input.getPath());
 
         args.add("-outfmt");
-        args.add("1");
+        args.add("0");
 
         args.add("-html");
 

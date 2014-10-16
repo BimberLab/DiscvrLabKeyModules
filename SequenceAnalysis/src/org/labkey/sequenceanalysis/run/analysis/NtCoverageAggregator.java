@@ -388,7 +388,7 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
                                 n_total += baseTotal;
 
                             double totalQual = (double)getValueForPositionAndBase(refName, position, index, base, _totalQualByBase);
-                            double avgQual = baseTotal == 0 ? 0 : totalQual / baseTotal;
+                            double avgQual = baseTotal == 0 ? 0 : totalQual / baseTotal.doubleValue();
                             row.put("avgqual_" + fieldSuffix, avgQual);
                         }
 

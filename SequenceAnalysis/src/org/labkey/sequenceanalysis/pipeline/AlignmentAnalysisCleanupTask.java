@@ -18,8 +18,6 @@ import java.util.List;
  */
 public class AlignmentAnalysisCleanupTask extends WorkDirectoryTask<AlignmentAnalysisCleanupTask.Factory>
 {
-    private SequenceTaskHelper _taskHelper;
-
     protected AlignmentAnalysisCleanupTask(Factory factory, PipelineJob job)
     {
         super(factory, job);
@@ -67,9 +65,10 @@ public class AlignmentAnalysisCleanupTask extends WorkDirectoryTask<AlignmentAna
 
     public RecordedActionSet run() throws PipelineJobException
     {
-        _taskHelper = new SequenceTaskHelper(getJob(), _wd);
+        SequenceTaskHelper taskHelper = new SequenceTaskHelper(getJob(), _wd);
 
-        
+        taskHelper.getFileManager().createSequenceOutputRecords();
+
         return new RecordedActionSet();
     }    
 }

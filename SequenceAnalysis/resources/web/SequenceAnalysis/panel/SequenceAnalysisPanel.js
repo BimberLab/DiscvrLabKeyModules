@@ -128,6 +128,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                                             xtype: 'labkey-combo',
                                             width: 450,
                                             fieldLabel: 'Select Run',
+                                            editable: false,
                                             store: {
                                                 type: 'labkey-store',
                                                 containerPath: Laboratory.Utils.getQueryContainerPath(),
@@ -146,6 +147,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                                             xtype: 'combo',
                                             width: 450,
                                             fieldLabel: 'Select Run',
+                                            editable: false,
                                             store: {
                                                 type: 'json',
                                                 fields: ['rowid', 'name', 'json']

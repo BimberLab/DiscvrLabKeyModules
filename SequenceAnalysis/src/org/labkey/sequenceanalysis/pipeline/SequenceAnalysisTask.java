@@ -380,6 +380,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             if (o != null)
             {
                 ret.add(o);
+                taskHelper.getFileManager().addStepOutputs(action, o);
             }
 
             actions.add(action);

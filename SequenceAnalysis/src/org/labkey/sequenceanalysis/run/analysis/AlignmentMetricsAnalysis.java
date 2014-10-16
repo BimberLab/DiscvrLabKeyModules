@@ -93,29 +93,6 @@ public class AlignmentMetricsAnalysis extends AbstractPipelineStep implements An
             return;
         }
 
-//        Set<File> refFastas = new HashSet<>();
-//        for (AnalysisModel m : analysisModels)
-//        {
-//            File r = m.getReferenceLibraryFile();
-//            if (r != null && r.exists())
-//            {
-//                refFastas.add(r);
-//            }
-//        }
-//
-//        if (refFastas.size() == 0)
-//        {
-//            getPipelineCtx().getLogger().info("unable to find reference FASTA, aborting");
-//            return;
-//        }
-//
-//        //File refFasta = refFastas.iterator().next();
-//        if (refFastas.size() > 1)
-//        {
-//            getPipelineCtx().getLogger().warn("more than 1 reference FASTA was used by these BAMs.  this analysis will use the first one as a guess, but this may result in inappropriate results.");
-//            getPipelineCtx().getLogger().warn("using: " + refFasta.getPath());
-//        }
-
         List<File> bams  = new ArrayList<>();
         for (File f : getPipelineCtx().getJob().getJobSupport(FileAnalysisJobSupport.class).getInputFiles())
         {

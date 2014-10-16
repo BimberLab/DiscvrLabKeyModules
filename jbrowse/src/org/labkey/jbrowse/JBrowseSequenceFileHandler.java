@@ -33,7 +33,7 @@ public class JBrowseSequenceFileHandler implements SequenceFileHandler
     @Override
     public ButtonConfigFactory getButtonConfig()
     {
-        return new SimpleButtonConfigFactory(ModuleLoader.getInstance().getModule(JBrowseModule.class), "View In JBrowse", "JBrowse.window.ViewOutputsWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromFilePath("jbrowse/window/ViewOutputsWindow.js"))));
+        return new SimpleButtonConfigFactory(ModuleLoader.getInstance().getModule(JBrowseModule.class), "View In JBrowse", "JBrowse.window.DatabaseWindow.outputFilesHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromFilePath("jbrowse/window/DatabaseWindow.js"))));
     }
 
     @Override

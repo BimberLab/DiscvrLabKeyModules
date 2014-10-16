@@ -54,6 +54,7 @@ import org.labkey.sequenceanalysis.run.analysis.AlignmentMetricsAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.ViralAnalysis;
 import org.labkey.sequenceanalysis.run.bampostprocessing.AddOrReplaceReadGroupsStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.CallMdTagsStep;
@@ -177,6 +178,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new ViralAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new HaplotypeCallerAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new AlignmentMetricsAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SnpCountAnalysis.Provider());
     }
 
     @Override

@@ -55,14 +55,18 @@ public interface PipelineStepOutput
         private File _file;
         private String _label;
         private String _category;
-        private ReadsetModel _rs;
+        private Integer _readsetId;
+        private Integer _analysisId;
+        private Integer _genomeId;
 
-        public SequenceOutput(File file, String label, String category, @Nullable ReadsetModel rs)
+        public SequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId)
         {
             _file = file;
             _label = label;
             _category = category;
-            _rs = rs;
+            _readsetId = readsetId;
+            _analysisId = analysisId;
+            _genomeId = genomeId;
         }
 
         public File getFile()
@@ -80,9 +84,19 @@ public interface PipelineStepOutput
             return _category;
         }
 
-        public ReadsetModel getReadset()
+        public Integer getReadsetId()
         {
-            return _rs;
+            return _readsetId;
+        }
+
+        public Integer getAnalysisId()
+        {
+            return _analysisId;
+        }
+
+        public Integer getGenomeId()
+        {
+            return _genomeId;
         }
     }
 }

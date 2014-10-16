@@ -54,6 +54,7 @@ public interface AnalysisModel
 
     public ExpData getAlignmentData();
 
+    @Deprecated
     public Integer getReferenceLibrary();
 
     public void setReferenceLibrary(Integer libraryId);

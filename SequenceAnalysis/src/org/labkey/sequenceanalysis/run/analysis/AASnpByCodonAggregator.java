@@ -321,7 +321,7 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
                 depth += getCoverageAggregator().getDepthAtPosition(_ntRefName, nt.first, 0); //always use depth at last non-indel position
             }
 
-            return (depth / _ntPositions.size());
+            return (depth / (double)_ntPositions.size());
         }
 
         public int getRefNtId()

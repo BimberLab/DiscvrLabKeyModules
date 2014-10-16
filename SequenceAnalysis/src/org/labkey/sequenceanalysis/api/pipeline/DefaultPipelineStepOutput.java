@@ -72,9 +72,9 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
         return Collections.unmodifiableList(_sequenceOutputs);
     }
 
-    public void addSequenceOutput(File file, String label, String category, @Nullable ReadsetModel rs)
+    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId)
     {
-        _sequenceOutputs.add(new SequenceOutput(file, label, category, rs));
+        _sequenceOutputs.add(new SequenceOutput(file, label, category, readsetId, analysisId, genomeId));
     }
 
     public void addInput(File input, String role)

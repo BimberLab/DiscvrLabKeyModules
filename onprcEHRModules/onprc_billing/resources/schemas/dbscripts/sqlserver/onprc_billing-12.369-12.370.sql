@@ -1,0 +1,1 @@
+CREATE INDEX IDX_projectAccountHistory_project_enddate ON onprc_billing.projectAccountHistory (project, enddate);

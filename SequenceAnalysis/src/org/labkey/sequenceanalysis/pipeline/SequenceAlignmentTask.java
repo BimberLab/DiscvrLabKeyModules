@@ -599,8 +599,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         actions.add(indexAction);
 
         //add as output
-        //TODO: set analysisId, library_id
-        getHelper().getFileManager().addSequenceOutput(finalBam, finalBam.getName(), "Alignment", rs);
+        getHelper().getFileManager().addSequenceOutput(finalBam, finalBam.getName(), "Alignment", rs.getRowId(), null, referenceGenome.getGenomeId());
     }
 }
 

@@ -206,7 +206,7 @@ SequenceAnalysis.Buttons = new function(){
                 return;
             }
 
-            Ext4.create('LABKEY.ext.ImportWizardWin', {
+            Ext4.create('Laboratory.window.WorkbookCreationWindow', {
                 controller: 'sequenceanalysis',
                 action: 'alignmentAnalysis',
                 urlParams: {
@@ -231,7 +231,7 @@ SequenceAnalysis.Buttons = new function(){
                 return;
             }
 
-            Ext4.create('LABKEY.ext.ImportWizardWin', {
+            Ext4.create('Laboratory.window.WorkbookCreationWindow', {
                 controller: 'sequenceanalysis',
                 action: 'sequenceAnalysis',
                 urlParams: {
@@ -329,21 +329,29 @@ SequenceAnalysis.Buttons = new function(){
                                             if (!alleleCombinations[alleleSet].alleles[allele])
                                                 alleleCombinations[alleleSet].alleles[allele] = {
                                                     total: 0,
+                                                    alignmentIds: [],
                                                     rows: []
                                                 };
 
                                             alleleCombinations[alleleSet].alleles[allele].rows.push(row);
-                                            alleleCombinations[alleleSet].alleles[allele].total += row['alignment_id/total'];
+                                            if (alleleCombinations[alleleSet].alleles[allele].alignmentIds.indexOf(row['alignment_id']) == -1){
+                                                alleleCombinations[alleleSet].alleles[allele].alignmentIds.push(row['alignment_id']);
+                                                alleleCombinations[alleleSet].alleles[allele].total += row['alignment_id/total'];
+                                            }
                                         }
                                         else {
                                             if (!alleleCombinations[alleleSet].inactiveAlleles[allele])
                                                 alleleCombinations[alleleSet].inactiveAlleles[allele] = {
                                                     total: 0,
+                                                    alignmentIds: [],
                                                     rows: []
                                                 };
 
                                             alleleCombinations[alleleSet].inactiveAlleles[allele].rows.push(row);
-                                            alleleCombinations[alleleSet].inactiveAlleles[allele].total += row['alignment_id/total'];
+                                            if (alleleCombinations[alleleSet].inactiveAlleles[allele].alignmentIds.indexOf(row['alignment_id']) == -1){
+                                                alleleCombinations[alleleSet].inactiveAlleles[allele].alignmentIds.push(row['alignment_id']);
+                                                alleleCombinations[alleleSet].inactiveAlleles[allele].total += row['alignment_id/total'];
+                                            }
                                         }
                                     }, this);
                                 }
@@ -489,7 +497,7 @@ SequenceAnalysis.Buttons = new function(){
                             if (!LABKEY.Utils.isEmptyObj(toUpdate)){
                                 var multi = new LABKEY.MultiRequest();
 
-                                for(var container in toUpdate){
+                                for (var container in toUpdate){
                                     multi.add(LABKEY.Query.updateRows, {
                                         containerPath: container,
                                         schemaName: 'sequenceanalysis',

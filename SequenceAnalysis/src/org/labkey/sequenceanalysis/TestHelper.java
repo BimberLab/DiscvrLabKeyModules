@@ -1185,8 +1185,10 @@ public class TestHelper
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
             config.put("alignment", "Mosaik");
-            config.put("analysis", "SBT;ViralAnalysis;AlignmentMetricsAnalysis");
+            config.put("analysis", "SBT;ViralAnalysis;AlignmentMetricsAnalysis;SnpCountAnalysis");
             config.put("analysis.AlignmentMetricsAnalysis.windowSize", 1000);
+            config.put("analysis.SnpCountAnalysis.intervals", "SIVmac239:5500-5600\nSIVmac239:9700-9900\nSIVmac239:10000-10020");
+
             appendSamples(config, _readsetModels);
 
             PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
@@ -1217,6 +1219,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaikreads"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.stat"));
+            expectedOutputs.add(new File(basedir, "paired1.snps.txt"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
@@ -1226,6 +1229,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaikreads"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.stat"));
+            expectedOutputs.add(new File(basedir, "paired3.snps.txt"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
@@ -1235,6 +1239,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaikreads"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.stat"));
+            expectedOutputs.add(new File(basedir, "paired4.snps.txt"));
 
             expectedOutputs.add(new File(basedir, "totalAlignments.bed"));
             expectedOutputs.add(new File(basedir, "totalReads.bed"));
@@ -2230,10 +2235,21 @@ public class TestHelper
             String libraryName = "TestLibrary";
             SimpleFilter libraryFilter = new SimpleFilter(FieldKey.fromString("name"), libraryName);
             libraryFilter.addCondition(FieldKey.fromString("container"), _project.getId());
-            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid"), libraryFilter, null);
+            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid", "fasta_file"), libraryFilter, null);
             if (ts.exists())
             {
-                return ts.getObject(Integer.class);
+                Map<String, Object> rowMap = ts.getObject(Map.class);
+                Integer fasta_file = (Integer)rowMap.get("fasta_file");
+                ExpData d = fasta_file == null ? null : ExperimentService.get().getExpData(fasta_file);
+                if (d != null && d.getFile() != null && d.getFile().exists())
+                {
+                    return (Integer) rowMap.get("rowid");
+                }
+                else
+                {
+                    _log.info("deleting incomplete saved reference library");
+                    Table.delete(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), rowMap.get("rowid"));
+                }
             }
 
             //otherwise create saved library
@@ -2403,7 +2419,7 @@ public class TestHelper
                 FileUtils.deleteDirectory(alignmentIndexDir);
             }
 
-            String protocolName = "TestBismarkWithSavedLibrary_" + System.currentTimeMillis();
+            String protocolName = "TestBismarkWithSavedLibraryAndAdapters_" + System.currentTimeMillis();
             String[] fileNames = getFilenamesForReadsets();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
             config.put("alignment", "Bismark");
@@ -2479,7 +2495,7 @@ public class TestHelper
             verifyFileOutputs(basedir, expectedOutputs);
             //validateAlignment(bam1, 0, 0);
             validateAlignment(bam2, 31, 0);
-            validateAlignment(bam3, 31, 0);
+            validateAlignment(bam3, 13, 0);
 
             //repeat, which will use the index cached above
             testBismarkWithSavedLibraryAdaptersAndDelete();

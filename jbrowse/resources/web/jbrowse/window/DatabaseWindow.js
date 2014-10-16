@@ -29,10 +29,51 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
                 return;
             }
 
-            Ext4.create('JBrowse.window.DatabaseWindow', {
-                dataRegionName: dataRegionName,
-                outputFileIds: checked
-            }).show();
+            //first validate
+            Ext4.Msg.wait('Validating files...');
+            LABKEY.Ajax.request({
+                method: 'POST',
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatus'),
+                params: {
+                    handlerClass: 'org.labkey.jbrowse.JBrowseSequenceFileHandler',
+                    outputFileIds: checked
+                },
+                scope: this,
+                failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback(), this),
+                success: LABKEY.Utils.getCallbackWrapper(function(results){
+                    Ext4.Msg.hide();
+
+                    var errors = [];
+                    var distinctGenomes = [];
+                    Ext4.Array.forEach(results.files, function(r){
+                        if (!r.canProcess){
+                            if (!r.fileExists){
+                                errors.push('File does not exist for output: ' + r.outputFileId);
+                            }
+                            else if (!r.canProcess){
+                                errors.push('Cannot process files of extension: ' + r.extension);
+                            }
+                        }
+                        else if (r.libraryId){
+                            distinctGenomes.push(r.libraryId);
+                        }
+                    }, this);
+
+                    if (errors.length){
+                        errors = Ext4.Array.unique(errors);
+                        Ext4.Msg.alert('Error', errors.join('<br>'));
+                    }
+                    else {
+                        distinctGenomes = Ext4.Array.unique(distinctGenomes);
+
+                        Ext4.create('JBrowse.window.DatabaseWindow', {
+                            dataRegionName: dataRegionName,
+                            outputFileIds: checked,
+                            libraryId: distinctGenomes.length == 1 ? distinctGenomes[0] : null
+                        }).show();
+                    }
+                }, this)
+            });
         },
 
         trackHandler: function(dataRegionName){
@@ -113,6 +154,7 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
                                 containerPath: Laboratory.Utils.getQueryContainerPath(),
                                 schemaName: 'jbrowse',
                                 queryName: 'databases',
+                                filterArray: this.libraryId ? [LABKEY.Filter.create('libraryId', this.libraryId)] : null,
                                 valueField: 'objectid',
                                 displayField: 'name'
                             });

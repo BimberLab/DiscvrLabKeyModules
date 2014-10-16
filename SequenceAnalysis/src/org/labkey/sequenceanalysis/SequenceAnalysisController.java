@@ -1786,7 +1786,7 @@ public class SequenceAnalysisController extends SpringActionController
         private boolean _runAnalysis = false;
         private boolean _activeJobs = false;
         private Boolean _allowNonExistentFiles;
-        private Boolean _splitJobs;
+        private Boolean _splitJobs = false;
 
         private static final String UNKNOWN_STATUS = "UNKNOWN";
 
@@ -1934,7 +1934,7 @@ public class SequenceAnalysisController extends SpringActionController
 
         public Boolean getSplitJobs()
         {
-            return _splitJobs == null ? false : true;
+            return _splitJobs == null ? false : _splitJobs;
         }
 
         public void setSplitJobs(Boolean splitJobs)

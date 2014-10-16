@@ -7,6 +7,7 @@
 Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
     extend: 'Ext.form.Panel',
     analysisController: 'pipeline-analysis',
+    splitJobs: true,
 
     initComponent: function(){
         //NOTE: if we're in a workbook, default to serch against the parent, since it will include children by default
@@ -220,7 +221,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         var params = {
             taskId: config.taskId,
             path: config.path,
-            splitJobs: true,
+            splitJobs: this.splitJobs,
             protocolName: config.protocolName,
             protocolDescription: config.protocolDescription,
             file: config.files,

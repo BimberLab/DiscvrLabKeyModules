@@ -19,7 +19,7 @@ import java.util.List;
  */
 public interface TaskFileManager
 {
-    public void addSequenceOutput(File file, String label, String category, @Nullable ReadsetModel rs);
+    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId);
 
     public void addOutput(RecordedAction action, String role, File file);
 

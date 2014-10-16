@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
@@ -22,6 +23,7 @@ import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepOutput;
+import org.labkey.sequenceanalysis.api.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.sequenceanalysis.api.pipeline.TaskFileManager;
 
 import java.io.BufferedReader;
@@ -66,7 +68,7 @@ public class TaskFileManagerImpl implements TaskFileManager
     }
 
     @Override
-    public void addSequenceOutput(File file, String label, String category, @Nullable ReadsetModel rs)
+    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId)
     {
         String path = FilenameUtils.normalize(file.getPath());
         String relPath = FileUtil.relativePath(_workLocation.getPath(), path);
@@ -79,7 +81,7 @@ public class TaskFileManagerImpl implements TaskFileManager
         File log = getSequenceOutputLog(true);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(log, true)))
         {
-            writer.write(StringUtils.join(new String[]{relPath, label, category, (rs == null ? "" : rs.getRowId().toString())}, '\t') + '\n');
+            writer.write(StringUtils.join(new String[]{relPath, label, category, (readsetId == null ? "" : readsetId.toString()), (analysisId == null ? "" : analysisId.toString()), (genomeId == null ? "" : genomeId.toString())}, '\t') + '\n');
         }
         catch (IOException e)
         {
@@ -126,7 +128,7 @@ public class TaskFileManagerImpl implements TaskFileManager
 
         for (PipelineStepOutput.SequenceOutput o : output.getSequenceOutputs())
         {
-            addSequenceOutput(o.getFile(), o.getLabel(), o.getCategory(), o.getReadset());
+            addSequenceOutput(o.getFile(), o.getLabel(), o.getCategory(), o.getReadsetId(), o.getAnalysisId(), o.getGenomeId());
         }
     }
 
@@ -220,6 +222,11 @@ public class TaskFileManagerImpl implements TaskFileManager
     private FileAnalysisJobSupport getSupport()
     {
         return (FileAnalysisJobSupport)_job;
+    }
+
+    private SequenceAnalysisJobSupport getSequenceSupport()
+    {
+        return _job instanceof SequenceAnalysisJobSupport ? (SequenceAnalysisJobSupport)_job : null;
     }
 
     private File getDeferredDeleteLog(boolean create)
@@ -362,15 +369,23 @@ public class TaskFileManagerImpl implements TaskFileManager
                     File f = new File(((FileAnalysisJobSupport)_job).getAnalysisDirectory(), tokens[0]);
                     if (!f.exists())
                     {
-                        _job.getLogger().error("unable to find file: " + f.getPath());
-                        continue;
+                        f = new File(tokens[0]);
+                        if (!f.exists())
+                        {
+                            _job.getLogger().error("unable to find file: " + f.getPath());
+                            continue;
+                        }
                     }
 
                     ExpData d = ExperimentService.get().getExpDataByURL(f, _job.getContainer());
                     if (d == null)
                     {
-                        _job.getLogger().error("unable to find ExpData for file: " + f.getPath());
-                        continue;
+                        _job.getLogger().info("creating ExpData for file: " + f.getPath());
+
+                        d = ExperimentService.get().createData(_job.getContainer(), new DataType(tokens[2]));
+                        d.setDataFileURI(f.toURI());
+                        d.setName(tokens[1]);
+                        d.save(_job.getUser());
                     }
 
                     Map<String, Object> map = new CaseInsensitiveHashMap<>();
@@ -378,18 +393,25 @@ public class TaskFileManagerImpl implements TaskFileManager
                     map.put("category", tokens[2]);
                     map.put("dataid", d.getRowId());
 
-                    Integer readsetId = Integer.parseInt(tokens[3]);
-                    map.put("readset", readsetId);
+                    if (tokens.length >= 4)
+                    {
+                        Integer readsetId = Integer.parseInt(tokens[3]);
+                        map.put("readset", readsetId);
+                    }
 
+                    if (tokens.length >= 5)
+                    {
+                        map.put("analysis_id", Integer.parseInt(tokens[4]));
+                    }
 
-                    //TODO
-
-//                    //analysis_id
-//                    ReadsetModel model = ReadsetModel.getForId(readsetId, _job.getUser());
-//                    if (model != null)
-//                    {
-//                        map.put("library_id", )
-//                    }
+                    if (tokens.length >= 6)
+                    {
+                        map.put("library_id", Integer.parseInt(tokens[5]));
+                    }
+                    else if (getSequenceSupport() != null && getSequenceSupport().getReferenceGenome() != null)
+                    {
+                        map.put("library_id", getSequenceSupport().getReferenceGenome().getGenomeId());
+                    }
 
                     Integer runId = SequenceTaskHelper.getExpRunIdForJob(_job);
                     map.put("runid", runId);
@@ -773,6 +795,8 @@ public class TaskFileManagerImpl implements TaskFileManager
     @Override
     public void cleanup() throws PipelineJobException
     {
+        _job.getLogger().debug("performing file cleanup");
+
         try
         {
             // Get rid of any copied input files.

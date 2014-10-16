@@ -224,9 +224,7 @@ then
     rm -Rf qualimap_v2.0*
 
     wget http://qualimap.bioinfo.cipf.es/release/qualimap_v2.0.zip
-    unzip http://qualimap.bioinfo.cipf.es/release/qualimap_v2.0.zip
-
-    cd qualimap_v2.0
+    unzip qualimap_v2.0.zip
 else
     echo "Already installed"
 fi

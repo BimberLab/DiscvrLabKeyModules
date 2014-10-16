@@ -291,14 +291,14 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     if (siteReportPng != null && siteReportPng.exists())
                     {
                         output.addOutput(siteReportPng, "Bismark CpG Methylation Report");
-                        output.addSequenceOutput(siteReportPng, rs.getName() + " methylation report", "Bismark CpG Methylation Report", rs);
+                        output.addSequenceOutput(siteReportPng, rs.getName() + " methylation report", "Bismark CpG Methylation Report", rs.getRowId(), null, referenceGenome.getGenomeId());
                     }
                 }
 
                 if (outputGff.exists())
                 {
                     output.addOutput(outputGff, "Bismark CpG Methylation Rates");
-                    output.addSequenceOutput(outputGff, rs.getName() + " methylation", "CpG Methylation Rates", rs);
+                    output.addSequenceOutput(outputGff, rs.getName() + " methylation", "CpG Methylation Rates", rs.getRowId(), null, referenceGenome.getGenomeId());
                 }
 
 //                File siteReport2 = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".NonCpG_Site_Summary.txt");
