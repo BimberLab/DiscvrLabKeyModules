@@ -204,4 +204,4 @@ SELECT
 
 FROM onprc_billing.miscChargesFeeRateData mc
 WHERE cast(mc.billingDate as date) >= CAST(StartDate as date) AND cast(mc.billingDate as date) <= CAST(EndDate as date)
-AND mc.category IN ('Surgical Procedure', 'Clinical Procedure', 'Surgery')
+AND mc.category IN ('Surgical Procedure', 'Clinical Procedure', 'Surgery', 'Pathology')
