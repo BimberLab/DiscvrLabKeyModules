@@ -2,10 +2,7 @@ package org.labkey.laboratory.query;
 
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.json.JSONObject;
 import org.labkey.api.data.AbstractTableInfo;
-import org.labkey.api.data.ButtonBarConfig;
-import org.labkey.api.data.ButtonConfig;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
@@ -16,7 +13,6 @@ import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.UserDefinedButtonConfig;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.gwt.client.FacetingBehaviorType;
 import org.labkey.api.laboratory.LaboratoryService;
@@ -32,21 +28,16 @@ import org.labkey.api.query.QueryException;
 import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
-import org.labkey.api.security.User;
-import org.labkey.api.view.NavTree;
-import org.labkey.api.view.template.ClientDependency;
 import org.labkey.laboratory.DemographicsSource;
 import org.labkey.laboratory.LaboratoryModule;
 import org.labkey.laboratory.LaboratorySchema;
 import org.labkey.laboratory.LaboratoryServiceImpl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -57,7 +48,6 @@ import java.util.Set;
 public class LaboratoryTableCustomizer implements TableCustomizer
 {
     private static final Logger _log = Logger.getLogger(LaboratoryTableCustomizer.class);
-    private static final String MORE_ACTIONS = "More Actions";
 
     public void customize(TableInfo ti)
     {
@@ -75,7 +65,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
             if (ti instanceof AbstractTableInfo)
                 ensureWorkbookCol((AbstractTableInfo)ti);
 
-            customizeButtonBar((AbstractTableInfo)ti);
+            customizeButtonBar((AbstractTableInfo) ti);
 
             if (LaboratorySchema.TABLE_SAMPLES.equalsIgnoreCase(ti.getName()) && LaboratoryModule.SCHEMA_NAME.equalsIgnoreCase(ti.getPublicSchemaName()))
             {
@@ -813,114 +803,22 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         }
     }
 
-    public static void customizeButtonBar(AbstractTableInfo ti, List<ButtonConfigFactory> buttons)
-    {
-        UserSchema us = ti.getUserSchema();
-        if (us == null)
-            return;
-
-        ButtonBarConfig cfg = ti.getButtonBarConfig();
-        if (cfg == null)
-        {
-            cfg = new ButtonBarConfig(new JSONObject());
-            cfg.setIncludeStandardButtons(true);
-        }
-
-        //ensure client dependencies
-        Set<String> scripts = new LinkedHashSet<String>();
-        scripts.add("laboratory.context");
-        String[] existingScripts = cfg.getScriptIncludes();
-        if (existingScripts != null)
-        {
-            for (String s : existingScripts)
-            {
-                scripts.add(s);
-            }
-        }
-
-        configureMoreActionsBtn(ti, buttons, cfg, scripts);
-
-        cfg.setScriptIncludes(scripts.toArray(new String[scripts.size()]));
-        cfg.setAlwaysShowRecordSelectors(true);
-
-        ti.setButtonBarConfig(cfg);
-    }
-
-    private static void configureMoreActionsBtn(TableInfo ti, List<ButtonConfigFactory> buttons, ButtonBarConfig cfg, Set<String> scripts)
-    {
-        if (buttons == null || buttons.isEmpty())
-        {
-            return;
-        }
-
-        List<ButtonConfig> existingBtns = cfg.getItems();
-        UserDefinedButtonConfig moreActionsBtn = null;
-        if (existingBtns != null)
-        {
-            for (ButtonConfig btn : existingBtns)
-            {
-                if (btn instanceof UserDefinedButtonConfig)
-                {
-                    UserDefinedButtonConfig ub = (UserDefinedButtonConfig)btn;
-                    if (MORE_ACTIONS.equals(ub.getText()))
-                    {
-                        moreActionsBtn = ub;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (moreActionsBtn == null)
-        {
-            //abort if there are no custom buttons
-            if (buttons.size() == 0)
-                return;
-
-            moreActionsBtn = new UserDefinedButtonConfig();
-            moreActionsBtn.setText(MORE_ACTIONS);
-            moreActionsBtn.setInsertPosition(-1);
-            existingBtns.add(moreActionsBtn);
-            cfg.setItems(existingBtns);
-        }
-
-        List<NavTree> menuItems = new ArrayList<NavTree>();
-        if (moreActionsBtn.getMenuItems() != null)
-            menuItems.addAll(moreActionsBtn.getMenuItems());
-
-        //create map of existing item names
-        Map<String, NavTree> btnNameMap = new HashMap<String, NavTree>();
-        for (NavTree item : menuItems)
-        {
-            btnNameMap.put(item.getText(), item);
-        }
-
-        for (ButtonConfigFactory fact : buttons)
-        {
-            NavTree newButton = fact.create(ti);
-            if (!btnNameMap.containsKey(newButton.getText()))
-            {
-                btnNameMap.put(newButton.getText(), newButton);
-                menuItems.add(newButton);
-
-                for (ClientDependency cd : fact.getClientDependencies(ti.getUserSchema().getContainer(), ti.getUserSchema().getUser()))
-                {
-                    scripts.add(cd.getScriptString());
-                }
-            }
-        }
-
-        moreActionsBtn.setMenuItems(menuItems);
-    }
-
     public void customizeButtonBar(AbstractTableInfo ti)
     {
-        UserSchema us = ti.getUserSchema();
-        if (us == null)
-            return;
+        List<ButtonConfigFactory> buttons = LDKService.get().getQueryButtons(ti);
+        LDKService.get().customizeButtonBar(ti, buttons);
+        if (ti.getButtonBarConfig() != null)
+        {
+            String[] includes = ti.getButtonBarConfig().getScriptIncludes();
+            LinkedHashSet<String> newIncludes = new LinkedHashSet<>();
+            newIncludes.add("laboratory.context");
+            if (includes != null)
+            {
+                newIncludes.addAll(Arrays.asList(includes));
+            }
 
-        List<ButtonConfigFactory> buttons = LaboratoryService.get().getQueryButtons(ti);
-        LaboratoryTableCustomizer.customizeButtonBar(ti, buttons);
+            ti.getButtonBarConfig().setScriptIncludes(newIncludes.toArray(new String[newIncludes.size()]));
+        }
     }
 
     private void customzieSamplesTable(AbstractTableInfo ti)

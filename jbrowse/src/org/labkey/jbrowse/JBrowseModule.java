@@ -21,6 +21,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DetailsURL;
@@ -82,11 +83,11 @@ public class JBrowseModule extends ExtendedSimpleModule
         details.setContainerContext(ContainerManager.getRoot());
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "jbrowse admin", details.getActionURL());
 
-        LaboratoryService.get().registerQueryButton(new AddTrackButton(), "sequenceanalysis", "reference_library_tracks");
-        LaboratoryService.get().registerQueryButton(new AddLibraryButton(), "sequenceanalysis", "reference_libraries");
+        LDKService.get().registerQueryButton(new AddTrackButton(), "sequenceanalysis", "reference_library_tracks");
+        LDKService.get().registerQueryButton(new AddLibraryButton(), "sequenceanalysis", "reference_libraries");
 
-        LaboratoryService.get().registerQueryButton(new ReprocessResourcesButton(), JBrowseSchema.NAME, JBrowseSchema.TABLE_JSONFILES);
-        LaboratoryService.get().registerQueryButton(new ReprocessSessionsButton(), JBrowseSchema.NAME, JBrowseSchema.TABLE_DATABASES);
+        LDKService.get().registerQueryButton(new ReprocessResourcesButton(), JBrowseSchema.NAME, JBrowseSchema.TABLE_JSONFILES);
+        LDKService.get().registerQueryButton(new ReprocessSessionsButton(), JBrowseSchema.NAME, JBrowseSchema.TABLE_DATABASES);
 
         LaboratoryService.get().registerDataProvider(new JBrowseDataProvider(this));
         SystemMaintenance.addTask(new JBrowseMaintenanceTask());

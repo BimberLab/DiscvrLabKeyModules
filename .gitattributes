@@ -21,6 +21,7 @@ DISCVR/blast/resources/web/blast/docs/createDatabase.jpg -text
 DISCVR/blast/resources/web/blast/docs/referenceLibrary1.jpg -text
 DISCVR/blast/resources/web/blast/docs/referenceLibrary2.jpg -text
 DISCVR/blast/resources/web/blast/docs/runBlast.jpg -text
+DISCVR/blast/resources/web/blast/window/BlastOligosWindow.js -text
 DISCVR/blast/resources/web/blast/window/DatabaseWindow.js -text
 DISCVR/blast/resources/web/blast/window/ReprocessDatabaseWindow.js -text
 DISCVR/blast/src/org/labkey/blast/BLASTController.java -text
@@ -31,6 +32,7 @@ DISCVR/blast/src/org/labkey/blast/BLASTModule.java -text
 DISCVR/blast/src/org/labkey/blast/BLASTSchema.java -text
 DISCVR/blast/src/org/labkey/blast/BLASTWrapper.java -text
 DISCVR/blast/src/org/labkey/blast/BlastGenomeTrigger.java -text
+DISCVR/blast/src/org/labkey/blast/button/BlastOligosButton.java -text
 DISCVR/blast/src/org/labkey/blast/button/CreateDatabaseButton.java -text
 DISCVR/blast/src/org/labkey/blast/button/ReprocessDatabaseButton.java -text
 DISCVR/blast/src/org/labkey/blast/model/BlastJob.java -text
@@ -41,7 +43,6 @@ DISCVR/blast/src/org/labkey/blast/pipeline/BlastPipelineJob.java -text
 DISCVR/blast/src/org/labkey/blast/pipeline/BlastPipelineProvider.java -text
 DISCVR/blast/src/org/labkey/blast/pipeline/BlastTask.java -text
 DISCVR/blast/src/org/labkey/blast/query/BlastUserSchema.java -text
-DISCVR/blast/src/org/labkey/blast/view/hello.jsp -text
 DISCVR/blast/tools/install_blast.sh -text
 DISCVR/blast/webapp/WEB-INF/blast/blastContext.xml -text
 DISCVR/jbrowse/JBrowse.iml -text

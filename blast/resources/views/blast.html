@@ -3,6 +3,7 @@
     Ext4.onReady(function(){
         var webpart = <%=webpartContext%>;
 
+        Ext4.QuickTips.init();
         Ext4.create('Ext.panel.Panel', {
             border: false,
             width: 900,
@@ -66,7 +67,8 @@
                         labelAlign: 'top',
                         width: 800,
                         height: 150,
-                        name: 'query'
+                        name: 'query',
+                        value: LABKEY.ActionURL.getParameter('querySequence')
                     },{
                         xtype: 'filefield',
                         name: 'file',
@@ -158,7 +160,46 @@
                     },
                     style: 'margin: 2px;margin-top: 5px;padding: 10px;',
                     items: [{
-
+                        xtype: 'combo',
+                        fieldLabel: 'Output Format',
+                        allowBlank: false,
+                        name: 'outputFmt',
+                        queryMode: 'local',
+                        displayField: 'label',
+                        valueField: 'id',
+                        labelWidth: 120,
+                        width: 600,
+                        value: '0',
+                        store: {
+                            type: 'array',
+                            fields: ['label', 'id'],
+                            reader: {
+                                type: 'array',
+                                idProperty: 'id'
+                            },
+                            idProperty: 'id',
+                            data: [
+                                ['Pairwise', '0'],
+                                ['Query-anchored showing identities', '1'],
+                                ['Query-anchored no identities', '2'],
+                                ['Flat query-anchored, show identities', '3'],
+                                ['Flat query-anchored, no identities', '4'],
+                                ['XML Blast output', '5'],
+                                ['Tabular', '6']
+                            ]
+                        }
+                    },{
+                        xtype: 'ldk-numberfield',
+                        name: 'evalue',
+                        labelWidth: 120,
+                        helpPopup: 'If provided, only hits with an evalue below this threshold will be saved.  Default value: 10',
+                        fieldLabel: 'Expect value'
+                    },{
+                        xtype: 'ldk-numberfield',
+                        name: 'pctIdentity',
+                        labelWidth: 120,
+                        helpPopup: 'If provided, only hits with a percent idenfity above this cutoff will be included.  Default value: 0 (all hits)',
+                        fieldLabel: 'Percent Identity Cutoff'
                     }]
                 }]
             }],

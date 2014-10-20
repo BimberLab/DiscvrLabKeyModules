@@ -72,7 +72,6 @@ public class LaboratoryServiceImpl extends LaboratoryService
 {
     private Set<Module> _registeredModules = new HashSet<Module>();
     private Map<Module, List<ClientDependency>> _clientDependencies = new HashMap<Module, List<ClientDependency>>();
-    private Map<String, Map<String, List<ButtonConfigFactory>>> _queryButtons = new CaseInsensitiveHashMap<Map<String, List<ButtonConfigFactory>>>();
     private Map<String, Map<String, List<ButtonConfigFactory>>> _assayButtons = new CaseInsensitiveHashMap<Map<String, List<ButtonConfigFactory>>>();
     private Map<String, DataProvider> _dataProviders = new HashMap<String, DataProvider>();
     private final Logger _log = Logger.getLogger(LaboratoryServiceImpl.class);
@@ -315,48 +314,11 @@ public class LaboratoryServiceImpl extends LaboratoryService
         return Collections.unmodifiableSet(set);
     }
 
-    public void registerQueryButton(ButtonConfigFactory btn, String schema, String query)
-    {
-        Map<String, List<ButtonConfigFactory>> schemaMap = _queryButtons.get(schema);
-        if (schemaMap == null)
-            schemaMap = new CaseInsensitiveHashMap<>();
-
-        List<ButtonConfigFactory> list = schemaMap.get(query);
-        if (list == null)
-            list = new ArrayList<>();
-
-        list.add(btn);
-
-        schemaMap.put(query, list);
-        _queryButtons.put(schema, schemaMap);
-    }
-
     public String getDefaultWorkbookFolderType(Container c)
     {
         Module labModule = ModuleLoader.getInstance().getModule(LaboratoryModule.class);
         ModuleProperty mp = labModule.getModuleProperties().get(LaboratoryManager.DEFAULT_WORKBOOK_FOLDERTYPE_PROPNAME);
         return mp.getEffectiveValue(c);
-    }
-
-    public List<ButtonConfigFactory> getQueryButtons(TableInfo ti)
-    {
-        List<ButtonConfigFactory> buttons = new ArrayList<ButtonConfigFactory>();
-
-        Map<String, List<ButtonConfigFactory>> factories = _queryButtons.get(ti.getPublicSchemaName());
-        if (factories == null)
-            return buttons;
-
-        List<ButtonConfigFactory> list = factories.get(ti.getPublicName());
-        if (list == null)
-            return  buttons;
-
-        for (ButtonConfigFactory fact : list)
-        {
-            if (fact.isAvailable(ti))
-                buttons.add(fact);
-        }
-
-        return Collections.unmodifiableList(buttons);
     }
 
     public void registerAssayButton(ButtonConfigFactory btn, String providerName, String domain)

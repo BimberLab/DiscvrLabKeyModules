@@ -16,23 +16,19 @@
 
 package org.labkey.GeneticsCore;
 
-import org.json.JSONObject;
-import org.labkey.GeneticsCore.notification.GeneticsCoreNotification;
 import org.jetbrains.annotations.NotNull;
+import org.labkey.GeneticsCore.notification.GeneticsCoreNotification;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
-import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.notification.NotificationService;
 import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleContext;
-import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 public class GeneticsCoreModule extends ExtendedSimpleModule
@@ -63,11 +59,11 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
     {
         SimpleButtonConfigFactory btn1 = new SimpleButtonConfigFactory(this, "Add Genetics Blood Draw Flags", "GeneticsCore.buttons.editGeneticsFlagsForSamples(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'add')");
         btn1.setClientDependencies(ClientDependency.fromModuleName("laboratory"), ClientDependency.fromModuleName("ehr"), ClientDependency.fromFilePath("geneticscore/window/ManageFlagsWindow.js"), ClientDependency.fromFilePath("geneticscore/buttons.js"));
-        LaboratoryService.get().registerQueryButton(btn1, "laboratory", "samples");
+        LDKService.get().registerQueryButton(btn1, "laboratory", "samples");
 
         SimpleButtonConfigFactory btn2 = new SimpleButtonConfigFactory(this, "Remove Genetics Blood Draw Flags", "GeneticsCore.buttons.editGeneticsFlagsForSamples(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'remove')");
         btn2.setClientDependencies(ClientDependency.fromModuleName("laboratory"), ClientDependency.fromModuleName("ehr"), ClientDependency.fromFilePath("geneticscore/window/ManageFlagsWindow.js"), ClientDependency.fromFilePath("geneticscore/buttons.js"));
-        LaboratoryService.get().registerQueryButton(btn2, "laboratory", "samples");
+        LDKService.get().registerQueryButton(btn2, "laboratory", "samples");
 
         NotificationService.get().registerNotification(new GeneticsCoreNotification());
     }

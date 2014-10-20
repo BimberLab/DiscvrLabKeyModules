@@ -20,7 +20,7 @@ function beforeInsert(row, errors){
 function beforeUpdate(row, oldRow, errors){
     //NOTE: this is designed to merge the old row into the new one.
     for (var prop in oldRow){
-        if(!row.hasOwnProperty(prop) && Ext4.isDefined(oldRow[prop])){
+        if(!row.hasOwnProperty(prop) && LABKEY.ExtAdapter.isDefined(oldRow[prop])){
             row[prop] = oldRow[prop];
         }
     }
@@ -33,10 +33,10 @@ function beforeUpsert(row, errors){
     for (var i=0;i<lookupFields.length;i++){
         var f = lookupFields[i];
         var val = row[f];
-        if (!Ext4.isEmpty(val)){
+        if (!LABKEY.ExtAdapter.isEmpty(val)){
             var normalizedVal = helper.getLookupValue(val, f);
 
-            if (Ext4.isEmpty(normalizedVal))
+            if (LABKEY.ExtAdapter.isEmpty(normalizedVal))
                 errors[f] = 'Unknown value for field: ' + f + '. Value was: ' + val;
             else
                 row[f] = normalizedVal;  //cache value for purpose of normalizing case

@@ -2,19 +2,15 @@ package org.labkey.laboratory.query;
 
 import org.labkey.api.data.AbstractTableInfo;
 import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.Container;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.table.ButtonConfigFactory;
 import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.UserSchema;
-import org.labkey.api.security.User;
 import org.labkey.api.study.assay.AssayProtocolSchema;
 import org.labkey.api.study.assay.AssayProvider;
-import org.labkey.api.study.assay.AssayResultTable;
 
 import java.util.List;
 
@@ -97,7 +93,7 @@ public class DefaultAssayCustomizer implements TableCustomizer
         String providerName = ap.getName();
 
         List<ButtonConfigFactory> buttons = LaboratoryService.get().getAssayButtons(ti, providerName, domain);
-        LaboratoryTableCustomizer.customizeButtonBar(ti, buttons);
+        LDKService.get().customizeButtonBar(ti, buttons);
     }
 
     public void customizeDataTable(AbstractTableInfo ti)

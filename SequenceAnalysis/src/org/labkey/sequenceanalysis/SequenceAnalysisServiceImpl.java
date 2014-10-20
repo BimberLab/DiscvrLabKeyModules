@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis;
 
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.laboratory.LaboratoryService;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
@@ -60,7 +60,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     {
         _fileHandlers.add(handler);
 
-        LaboratoryService.get().registerQueryButton(handler.getButtonConfig(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+        LDKService.get().registerQueryButton(handler.getButtonConfig(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES);
     }
 
     @Override

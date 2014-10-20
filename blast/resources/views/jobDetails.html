@@ -86,6 +86,20 @@
                         }
                         else {
                             target.add({
+                                xtype: 'ldk-linkbutton',
+                                text: '[Download Raw Output]',
+                                style: 'margin-bottom: 10px',
+                                results: results,
+                                handler: function(btn){
+                                    var newForm = Ext4.DomHelper.append(document.getElementsByTagName('body')[0],
+                                                    '<form method="POST" action="' + LABKEY.ActionURL.buildURL("sequenceanalysis", "convertTextToFile") + '">' +
+                                                    '<input type="hidden" name="fileName" value="' + Ext4.htmlEncode('blastResults.txt') + '" />' +
+                                                    '<input type="hidden" name="text" value="' + Ext4.htmlEncode(btn.results.html) + '" />' +
+                                                    '</form>');
+                                    newForm.submit();
+                                }
+                            })
+                            target.add({
                                 html: results.html
                             });
                         }

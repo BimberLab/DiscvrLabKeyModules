@@ -241,6 +241,21 @@ public class BLASTController extends SpringActionController
                 params.put("query_loc", form.getQueryFrom() + "-" + form.getQueryTo());
             }
 
+            if (form.getOutputFmt() != null)
+            {
+                params.put("outfmt", form.getOutputFmt());
+            }
+
+            if (form.getEvalue() != null)
+            {
+                params.put("evalue", form.getEvalue());
+            }
+
+            if (form.getPctIdentity() != null)
+            {
+                params.put("perc_identity", form.getPctIdentity());
+            }
+
             List<File> inputFiles = new ArrayList<>();
             try
             {
@@ -303,6 +318,9 @@ public class BLASTController extends SpringActionController
         private String _queryFrom;
         private String _queryTo;
         private String _task;
+        private String _outputFmt;
+        private String _evalue;
+        private String _pctIdentity;
 
         public String getQuery()
         {
@@ -372,6 +390,41 @@ public class BLASTController extends SpringActionController
         public void setTask(String task)
         {
             _task = task;
+        }
+
+        public boolean isSaveResults()
+        {
+            return _saveResults;
+        }
+
+        public String getOutputFmt()
+        {
+            return _outputFmt;
+        }
+
+        public void setOutputFmt(String outputFmt)
+        {
+            _outputFmt = outputFmt;
+        }
+
+        public String getEvalue()
+        {
+            return _evalue;
+        }
+
+        public void setEvalue(String evalue)
+        {
+            _evalue = evalue;
+        }
+
+        public String getPctIdentity()
+        {
+            return _pctIdentity;
+        }
+
+        public void setPctIdentity(String pctIdentity)
+        {
+            _pctIdentity = pctIdentity;
         }
     }
 

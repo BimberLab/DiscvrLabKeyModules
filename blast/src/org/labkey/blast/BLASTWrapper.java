@@ -3,10 +3,6 @@ package org.labkey.blast;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
-import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.Table;
-import org.labkey.api.data.TableInfo;
 import org.labkey.api.util.FileType;
 
 import java.io.BufferedReader;
@@ -69,9 +65,13 @@ public class BLASTWrapper
         args.add("-query");
         args.add(input.getPath());
 
-        args.add("-outfmt");
-        args.add("0");
+        if (params != null && !params.containsKey("outfmt"))
+        {
+            args.add("-outfmt");
+            args.add("0");
+        }
 
+        //TODO: conditional based on output type
         args.add("-html");
 
         args.add("-out");

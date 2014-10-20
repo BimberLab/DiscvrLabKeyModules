@@ -2,7 +2,7 @@ SELECT
   m.Id,
   m.allele,
   GROUP_CONCAT(distinct m.result) as result,
-  CASE WHEN (count((SELECT a.subjectId FROM assay.GenotypeAssay.Genotype.Data a WHERE a.run.assayType = 'SBT' AND a.subjectId = m.Id)) > 0) THEN 'Y' ELSE 'N' END as hasSBTData
+  --CASE WHEN ((SELECT count(a.subjectId) FROM assay.GenotypeAssay.Genotype.Data a WHERE a.run.assayType = 'SBT' AND a.subjectId = m.Id) > 0) THEN 'Y' ELSE 'N' END as hasSBTData
 
 FROM (
 

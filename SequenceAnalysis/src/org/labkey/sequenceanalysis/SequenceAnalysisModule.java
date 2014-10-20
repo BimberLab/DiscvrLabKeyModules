@@ -25,7 +25,7 @@ import org.labkey.api.exp.ExperimentRunTypeSource;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
-import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DetailsURL;
@@ -34,7 +34,6 @@ import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
-import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.analysis.CompareVariantsHandler;
 import org.labkey.sequenceanalysis.analysis.VariantSearchHandler;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
@@ -76,7 +75,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -224,8 +222,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         PipelineService.get().registerPipelineProvider(new ReferenceLibraryPipelineProvider(this));
 
-        LaboratoryService.get().registerQueryButton(new QualiMapButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES);
-        LaboratoryService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
+        LDKService.get().registerQueryButton(new QualiMapButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES);
+        LDKService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
 
         SequenceAnalysisService.get().registerFileHandler(new VariantSearchHandler());
         SequenceAnalysisService.get().registerFileHandler(new CompareVariantsHandler());
