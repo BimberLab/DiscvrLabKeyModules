@@ -41,6 +41,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -135,6 +136,8 @@ public class MergeSyncRunner implements Job
             pullResults(u, c, mergeSchema, lastRun);
 
             MergeSyncManager.get().setLastRun(syncStart);
+
+            validateRuns(c, u, mergeSchema, 30);
         }
         finally
         {
@@ -195,6 +198,49 @@ public class MergeSyncRunner implements Job
                 processSingleRun(c, u, mergeResultTable, runRs, false);
             }
         });
+    }
+
+    private void validateRuns(final Container c, final User u, DbSchema mergeSchema, int offset)
+    {
+        TableInfo runsTable = MergeSyncUserSchema.getMergeRunsTable(mergeSchema);
+
+        Calendar minDate = Calendar.getInstance();
+        minDate.setTime(new Date());
+        minDate.add(Calendar.DATE, -1 * offset);
+
+        SimpleFilter runFilter = new SimpleFilter(FieldKey.fromString("dateVerified"), minDate, CompareType.GTE);
+        runFilter.addCondition(FieldKey.fromString("status"), "V");
+        runFilter.addCondition(FieldKey.fromString("numericLastName"), true, CompareType.EQUAL);
+
+        final TableSelector runTs = new TableSelector(runsTable, runFilter, null);
+        if (runTs.exists())
+        {
+            _log.info("verifying previous " + offset + " days of merge runs are present");
+            runTs.forEach(new Selector.ForEachBlock<ResultSet>()
+            {
+                @Override
+                public void exec(ResultSet mergeRunRs) throws SQLException
+                {
+                    Integer accession = mergeRunRs.getInt("accession");
+                    Integer panelId = mergeRunRs.getInt("panelid");
+
+                    Map<String, Object> existingRequest = getExistingRequest(c, u, accession, panelId, true);
+                    if (existingRequest == null || existingRequest.get("runLsid") == null)  //proxy for whether this record existing in clinpath runs
+                    {
+                        if (existingRequest == null || existingRequest.get("objectid") == null)  //proxy for whether a record existing in orders synced.  this might
+                        {
+                            _log.error("merge run missing: " + accession + " / " + panelId + ".  No record of previous sync.  Date verified: " + _dateTimeFormat.format(mergeRunRs.getDate("dateVerified")));
+                            //processSingleRun(c, u, mergeResultTable, mergeRunRs, false);
+                        }
+                        else if (existingRequest.get("runLsid") == null)
+                        {
+                            _log.error("merge run missing: " + accession + " / " + panelId + ".  Record of previous sync, but no clinpathRun record.  Date verified: " + _dateTimeFormat.format(mergeRunRs.getDate("dateVerified")));
+                            //processSingleRun(c, u, mergeResultTable, mergeRunRs, false);
+                        }
+                    }
+                }
+            });
+        }
     }
 
     public void syncSingleRun(final Container c, final User u, final Integer mergeAccession, final Integer mergeTestId) throws SQLException

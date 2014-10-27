@@ -1,0 +1,12 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="surgeriesNotInEncounters" tableDbType="TABLE">
+                <tableTitle>Scheduled Surgeries Without a Corresponding Procedure Entered</tableTitle>
+                <columns>
+
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

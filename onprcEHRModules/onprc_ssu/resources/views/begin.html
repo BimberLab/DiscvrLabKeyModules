@@ -43,6 +43,9 @@
                         name: 'Housing On Surgery Case Open (Cases Closed Today)',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'study', 'query.queryName': 'cases', 'query.viewName': 'With Initial Housing', 'query.category~eq': 'Surgery', 'query.enddate~dateeq': (new Date).format('Y-m-d')})
                     },{
+                        name: 'Procedures In SSU Schedule That Do Not Have A Corresponding Procedure Entered',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'onprc_ssu', 'query.queryName': 'surgeriesNotInEncounters', 'query.date~dateeq': (new Date).format('Y-m-d')})
+                    },{
                         name: 'Surgery Rates',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery', ctx['EHRStudyContainer'], {schemaName: 'onprc_billing_public', 'query.queryName': 'chargeableItems', 'query.active~eq': true, 'query.category~eq': 'Surgery'})
                     },{

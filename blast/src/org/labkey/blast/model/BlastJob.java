@@ -16,10 +16,10 @@ import org.labkey.api.security.UserManager;
 import org.labkey.blast.BLASTManager;
 import org.labkey.blast.BLASTSchema;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -318,21 +318,9 @@ public class BlastJob
         return ret;
     }
 
+    //TODO: consider streaming
     private String readFile(File file) throws IOException
     {
-        try (BufferedReader reader = new BufferedReader( new FileReader(file)))
-        {
-            String line = null;
-            StringBuilder stringBuilder = new StringBuilder();
-            String ls = System.getProperty("line.separator");
-
-            while ((line = reader.readLine()) != null)
-            {
-                stringBuilder.append(line);
-                stringBuilder.append(ls);
-            }
-
-            return stringBuilder.toString();
-        }
+        return new String(Files.readAllBytes(Paths.get(file.toURI())));
     }
 }
