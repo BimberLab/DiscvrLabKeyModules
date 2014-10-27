@@ -15,6 +15,7 @@
 
 package org.labkey.sequenceanalysis;
 
+import com.drew.lang.annotations.Nullable;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -206,13 +207,14 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         ExperimentService.get().registerExperimentRunTypeSource(new ExperimentRunTypeSource()
         {
-            public Set<ExperimentRunType> getExperimentRunTypes(Container container)
+            @NotNull
+            public Set<ExperimentRunType> getExperimentRunTypes(@Nullable Container container)
             {
-            if (container.getActiveModules().contains(SequenceAnalysisModule.this))
-            {
-                return Collections.singleton(EXP_RUN_TYPE);
-            }
-            return Collections.emptySet();
+                if (container == null || container.getActiveModules().contains(SequenceAnalysisModule.this))
+                {
+                    return Collections.singleton(EXP_RUN_TYPE);
+                }
+                return Collections.emptySet();
             }
         });
 
