@@ -73,6 +73,9 @@
             <ns:column columnName="merge_dateposted">
                 <ns:columnTitle>Merge Date Posted</ns:columnTitle>
             </ns:column>
+            <ns:column columnName="deletedate">
+                <ns:columnTitle>Date Deleted In LabKey</ns:columnTitle>
+            </ns:column>
             <ns:column columnName="container">
                 <ns:columnTitle>Folder</ns:columnTitle>
             </ns:column>

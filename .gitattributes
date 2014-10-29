@@ -3640,6 +3640,7 @@ onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.05-
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.06-0.07.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.07-0.08.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.08-0.09.sql -text
+onprcEHRModules/mergesync/resources/schemas/dbscripts/postgresql/mergesync-0.09-0.10.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.00-0.01.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.01-0.02.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.02-0.03.sql -text
@@ -3649,6 +3650,7 @@ onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.05-0
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.06-0.07.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.07-0.08.sql -text
 onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.08-0.09.sql -text
+onprcEHRModules/mergesync/resources/schemas/dbscripts/sqlserver/mergesync-0.09-0.10.sql -text
 onprcEHRModules/mergesync/resources/schemas/mergesync.xml -text
 onprcEHRModules/mergesync/resources/scripts/mergesync/mergesync.js -text
 onprcEHRModules/mergesync/resources/views/begin.html -text

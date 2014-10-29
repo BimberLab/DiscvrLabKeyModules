@@ -224,13 +224,17 @@ public class MergeSyncRunner implements Job
                     Integer accession = mergeRunRs.getInt("accession");
                     Integer panelId = mergeRunRs.getInt("panelid");
 
-                    Map<String, Object> existingRequest = getExistingRequest(c, u, accession, panelId, true);
+                    Map<String, Object> existingRequest = getExistingRequest(c, u, accession, panelId, false);
                     if (existingRequest == null || existingRequest.get("runLsid") == null)  //proxy for whether this record existing in clinpath runs
                     {
                         if (existingRequest == null || existingRequest.get("objectid") == null)  //proxy for whether a record existing in orders synced.  this might
                         {
                             _log.error("merge run missing: " + accession + " / " + panelId + ".  No record of previous sync.  Date verified: " + _dateTimeFormat.format(mergeRunRs.getDate("dateVerified")));
                             //processSingleRun(c, u, mergeResultTable, mergeRunRs, false);
+                        }
+                        else if (existingRequest.get("deletedate") != null)
+                        {
+                            //run was deleted from LabKey, ignore
                         }
                         else if (existingRequest.get("runLsid") == null)
                         {
@@ -665,7 +669,7 @@ public class MergeSyncRunner implements Job
                 new CompareType.CompareClause(FieldKey.fromString("test_accession"), CompareType.ISBLANK, null)
         ));
 
-        TableSelector ts = new TableSelector(tableOrdersSynced, PageFlowUtil.set("objectid", "resultsreceived", "runid", "taskid"), filter, new Sort("-created"));
+        TableSelector ts = new TableSelector(tableOrdersSynced, PageFlowUtil.set("objectid", "resultsreceived", "runid", "taskid", "deletedate"), filter, new Sort("-created"));
         List<Map> ret = ts.getArrayList(Map.class);
         if (ret.isEmpty())
             return null;
@@ -679,7 +683,7 @@ public class MergeSyncRunner implements Job
             TableInfo ti = getClinpathRuns(c, u);
             TableSelector ts2 = new TableSelector(ti, PageFlowUtil.set("lsid", "qcstate", "taskid"), new SimpleFilter(FieldKey.fromString("objectid"), runId), null);
             Map<String, Object> row = ts2.getObject(Map.class);
-            if (map != null)
+            if (row != null)
             {
                 map.put("runLsid", row.get("lsid"));
                 map.put("qcstate", row.get("qcstate"));
@@ -698,7 +702,7 @@ public class MergeSyncRunner implements Job
             }
         }
 
-        return null;
+        return validateRunId ? null : map;
     }
 
     private Map<String, Object> processResultSet(Container c, User u, ResultSet rs, @Nullable String runId) throws SQLException

@@ -39,7 +39,7 @@ UNION ALL
 SELECT
   e.Id,
   e.dateOnly as date,
-  e.datefinalized as billingDate,
+  CAST(e.datefinalized as date) as billingDate,
   e.project,
   e.chargetype,
   null as assistingstaff,
@@ -54,7 +54,7 @@ and e.chargetype != 'No Charge' and e.chargetype != 'Research Staff'
 and (e.reason IS NULL or e.reason != 'Clinical')
 and (e.sampletype IS NULL or e.sampletype != 'Bone Marrow')
 AND e.qcstate.publicdata = true
-GROUP BY e.Id, e.dateOnly, e.dateFinalized, e.project, e.chargetype, e.taskid
+GROUP BY e.Id, e.dateOnly, CAST(e.datefinalized as date), e.project, e.chargetype, e.taskid
 
 -- UNION ALL
 --
