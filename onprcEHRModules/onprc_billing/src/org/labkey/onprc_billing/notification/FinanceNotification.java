@@ -181,6 +181,7 @@ public class FinanceNotification extends AbstractNotification
         }
 
         //added first due to importance
+        simpleAlert(c, u , msg, "onprc_billing", "duplicateAliases", " duplicate aliases in the OGA data.  This is a potentially serious problem that could result in improper or duplicate charges.  These should be corrected ASAP, which probably requires contacting OGA to fix the data on their side.");
         simpleAlert(c, u , msg, "onprc_billing", "invalidProjectAccountEntries", " project/alias records with invalid or overlapping intervals.  This is a potentially serious problem that could result in improper or duplicate charges.  These should be corrected ASAP.");
 
         writeResultTable(msg, lastInvoiceDate, start, endDate, dataMap, totalsByCategory, categoryToQuery, containerMap);

@@ -3713,6 +3713,8 @@ onprcEHRModules/onprc_billing/resources/queries/onprc_billing/creditAccount.js -
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/creditAccount/.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/creditAccount/Active[!!-~]Items.qview.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/dataAccess/.qview.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/duplicateAliases.query.xml -text
+onprcEHRModules/onprc_billing/resources/queries/onprc_billing/duplicateAliases.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/duplicateChargeableItems.query.xml -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/duplicateChargeableItems.sql -text
 onprcEHRModules/onprc_billing/resources/queries/onprc_billing/fiscalAuthorities/.qview.xml -text
