@@ -450,7 +450,6 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             else
             {
                 output = input;
-                getHelper().getFileManager().addFinalOutputFile(input);
             }
         }
         else if (type.equals(SequenceUtil.FILETYPE.fasta))

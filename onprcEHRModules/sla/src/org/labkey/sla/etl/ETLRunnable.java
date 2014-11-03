@@ -215,10 +215,11 @@ public class ETLRunnable implements Runnable
 
     public Container getContainer() throws BadConfigException
     {
-        Container container = ContainerManager.getForPath(getConfigProperty("labkeyContainer"));
+        String path = getConfigProperty("labkeyContainer");
+        Container container = ContainerManager.getForPath(path);
         if (null == container)
         {
-            throw new BadConfigException("bad configuration: invalid labkey container: " + getConfigProperty("labkeyContainer"));
+            throw new BadConfigException("bad configuration: invalid labkey container: [" + path + "]");
         }
 
         return container;

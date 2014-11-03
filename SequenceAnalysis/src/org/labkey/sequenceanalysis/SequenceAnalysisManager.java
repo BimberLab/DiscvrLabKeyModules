@@ -44,6 +44,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.DataLoader;
 import org.labkey.api.reader.FastaDataLoader;
+import org.labkey.api.reader.FastaLoader;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.MergedDirectoryResource;
 import org.labkey.api.resource.Resource;
@@ -439,8 +440,17 @@ public class SequenceAnalysisManager
 
         TableInfo dnaTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
         List<Integer> sequenceIds = new ArrayList<>();
-        try (DataLoader loader = new FastaDataLoader.Factory().createLoader(file, false))
+        try (FastaDataLoader loader = new FastaDataLoader(file, false))
         {
+            loader.setCharacterFilter(new FastaLoader.CharacterFilter()
+            {
+                @Override
+                public boolean accept(char c)
+                {
+                    return ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'));
+                }
+            });
+
             try (CloseableIterator<Map<String, Object>> i = loader.iterator())
             {
                 while (i.hasNext())

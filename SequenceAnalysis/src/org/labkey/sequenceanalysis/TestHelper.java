@@ -2495,7 +2495,7 @@ public class TestHelper
             verifyFileOutputs(basedir, expectedOutputs);
             //validateAlignment(bam1, 0, 0);
             validateAlignment(bam2, 31, 0);
-            validateAlignment(bam3, 13, 0);
+            validateAlignment(bam3, 31, 0);
 
             //repeat, which will use the index cached above
             testBismarkWithSavedLibraryAdaptersAndDelete();
