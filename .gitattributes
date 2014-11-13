@@ -2855,6 +2855,7 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/adapter_sets.sql 
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/alignment_summary.js -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/alignment_summary_by_lineage.query.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/alignment_summary_by_lineage.sql -text
+labModules/SequenceAnalysis/resources/queries/sequenceanalysis/alignment_summary_by_lineage/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/alignment_summary_by_lineage_pivoted.query.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/alignment_summary_by_lineage_pivoted.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/alignment_summary_grouped.query.xml -text
@@ -2909,6 +2910,7 @@ labModules/SequenceAnalysis/resources/sampleData/readsetJob.json -text
 labModules/SequenceAnalysis/resources/sampleData/sample454_SIV.sff -text
 labModules/SequenceAnalysis/resources/sampleData/test.bam -text
 labModules/SequenceAnalysis/resources/sampleData/test.bam.bai -text
+labModules/SequenceAnalysis/resources/sampleData/unpaired1.fastq.gz -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-0.00-11.20.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-11.20-11.30.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-11.30-12.10.sql -text
@@ -2950,6 +2952,8 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.282-12.283.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.283-12.284.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.284-12.285.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.285-12.286.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.286-12.287.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -3011,6 +3015,8 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.282-12.283.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.283-12.284.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.284-12.285.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.285-12.286.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.286-12.287.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -3294,12 +3300,14 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/DownsampleS
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FastaIndexer.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FastqToSamWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FastqcRunner.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FixBAMWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FixMateInformationWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FlagStatRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/GenotypeGVCFsWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/HaplotypeCallerWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/IndelRealignerWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MarkDuplicatesWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MergeBamAlignmentWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MergeSamFilesWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/NTSnp.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/PicardWrapper.java -text
@@ -3615,11 +3623,14 @@ onprcEHRModules/GeneticsCore/resources/views/begin.webpart.xml -text
 onprcEHRModules/GeneticsCore/resources/views/geneticsMenu.html -text
 onprcEHRModules/GeneticsCore/resources/views/geneticsMenu.view.xml -text
 onprcEHRModules/GeneticsCore/resources/views/geneticsMenu.webpart.xml -text
+onprcEHRModules/GeneticsCore/resources/views/sbtReview.html -text
+onprcEHRModules/GeneticsCore/resources/views/sbtReview.view.xml -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/buttons.js -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/window/ManageFlagsWindow.js -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreController.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreManager.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreModule.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/SBTReviewButton.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/notification/GeneticsCoreNotification.java -text
 onprcEHRModules/README.txt -text
 onprcEHRModules/mergesync/MergeSync.iml -text

@@ -104,6 +104,12 @@ public class BowtieWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean doSortCleanBam()
+        {
+            return true;
+        }
+
+        @Override
         public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             getPipelineCtx().getLogger().info("Creating Bowtie index");

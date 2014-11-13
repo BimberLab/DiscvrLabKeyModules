@@ -53,6 +53,12 @@ public class TophatWrapper extends AbstractCommandWrapper
             //return new AlignmentOutputImpl();
             throw new NotImplementedException("tophat support has not yet been fully added.  if interested, please contact your administrator");
         }
+
+        @Override
+        public boolean doSortCleanBam()
+        {
+            return true;
+        }
     }
 
     public static class Provider extends AbstractAlignmentStepProvider<AlignmentStep>

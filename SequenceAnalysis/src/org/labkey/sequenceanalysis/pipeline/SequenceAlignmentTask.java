@@ -43,7 +43,9 @@ import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
+import org.labkey.sequenceanalysis.run.util.FixBAMWrapper;
 import org.labkey.sequenceanalysis.run.util.FlagStatRunner;
+import org.labkey.sequenceanalysis.run.util.MergeBamAlignmentWrapper;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
@@ -517,6 +519,21 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         SequenceUtil.logFastqBamDifferences(getJob().getLogger(), alignmentOutput.getBAM(), count1, count2);
 
+        if (alignmentStep.doSortCleanBam())
+        {
+            getJob().getLogger().info("performing cleanup and sort on BAM");
+
+            //merge unaligned reads and clean file
+            new MergeBamAlignmentWrapper(getJob().getLogger()).executeCommand(referenceGenome.getWorkingFastaFile(), alignmentOutput.getBAM(), inputFiles.first, inputFiles.second, null);
+
+            //NOTE: not ready for use.  need classpath set properly
+            //new FixBAMWrapper(getJob().getLogger()).executeCommand(alignmentOutput.getBAM(), null);
+        }
+        else
+        {
+            getJob().getLogger().info("skipping cleanup and sort on BAM");
+        }
+
         //generate stats
         new FlagStatRunner(getJob().getLogger()).execute(alignmentOutput.getBAM());
 
@@ -590,6 +607,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             getJob().getLogger().info("\tcreating BAM index");
             reader.setValidationStringency(ValidationStringency.SILENT);
             File bai = new File(finalBam.getPath() + ".bai");
+            if (bai.exists())
+            {
+                getJob().getLogger().debug("deleting existing BAM index: " + bai.getName());
+                bai.delete();
+            }
             getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_INDEX_ROLE, bai);
             BAMIndexer.createIndex(reader, bai);
         }

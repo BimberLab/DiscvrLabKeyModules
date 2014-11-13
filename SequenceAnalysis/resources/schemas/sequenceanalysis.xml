@@ -1069,6 +1069,12 @@
                 <ns:columnTitle>Comments</ns:columnTitle>
             </ns:column>
             <ns:column columnName="status">
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>readset_status</ns:fkTable>
+                    <ns:fkColumnName>status</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>status</ns:fkDisplayColumnName>
+                </ns:fk>
             </ns:column>
             <ns:column columnName="container">
             </ns:column>
@@ -2265,5 +2271,19 @@
                 <ns:originalText>Charts</ns:originalText>
             </ns:item>
         </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="readset_status" tableDbType="TABLE" useColumnOrder="true">
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableTitle>Readset Status</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
+        <ns:columns>
+            <ns:column columnName="rowid"/>
+            <ns:column columnName="status"/>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdby"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedby"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
     </ns:table>
 </ns:tables>

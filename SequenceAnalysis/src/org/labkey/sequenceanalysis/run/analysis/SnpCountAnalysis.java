@@ -152,7 +152,8 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
             IntervalList il = new IntervalList(sam.getFileHeader());
             il.add(new Interval(refName, start, stop));
 
-            try (SamLocusIterator sli = new SamLocusIterator(sam, il, true))
+            //NOTE: when useIndex=true, something in htsjdk seems to be holding onto the BAM, giving errors in the junit tests
+            try (SamLocusIterator sli = new SamLocusIterator(sam, il, false))
             {
                 sli.setEmitUncoveredLoci(false);
 

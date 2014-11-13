@@ -37,13 +37,14 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
     private ReferenceGenome _referenceGenome;
 
     public SequenceAnalysisJob(AbstractFileAnalysisProtocol<AbstractFileAnalysisJob> protocol,
+                               String protocolName,
                                ViewBackgroundInfo info,
                                PipeRoot root,
                                TaskId taskPipelineId,
                                File fileParameters,
                                List<File> filesInput) throws IOException
     {
-        super(protocol, "File Analysis", info, root, protocol.getName(), fileParameters, filesInput, true, true);
+        super(protocol, "File Analysis", info, root, protocolName, fileParameters, filesInput, true, true);
 
         _taskPipelineId = taskPipelineId;
     }

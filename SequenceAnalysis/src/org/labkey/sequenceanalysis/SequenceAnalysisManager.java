@@ -288,18 +288,20 @@ public class SequenceAnalysisManager
 
     public static File getHtsJdkJar()
     {
-        File samJar = new File(ModuleLoader.getInstance().getWebappDir(), "WEB-INF/lib");
+        File webappDir = ModuleLoader.getInstance().getWebappDir();
+
+        //NOTE: webappdir is null on remote servers
+        if (webappDir == null)
+        {
+            webappDir = new File(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class).getExplodedPath(), "../../labkeywebapp");
+            if (!webappDir.exists())
+            {
+                throw new RuntimeException("Unable to find JAR root.");
+            }
+        }
+
+        File samJar = new File(webappDir, "WEB-INF/lib");
         samJar = new File(samJar, "htsjdk-1.118.jar");
-        if (!samJar.exists())
-            throw new RuntimeException("Not found: " + samJar.getPath());
-
-        return samJar;
-    }
-
-    public static File getSamJar()
-    {
-        File samJar = new File(ModuleLoader.getInstance().getWebappDir(), "WEB-INF/lib");
-        samJar = new File(samJar, "sam-1.96.jar");
         if (!samJar.exists())
             throw new RuntimeException("Not found: " + samJar.getPath());
 

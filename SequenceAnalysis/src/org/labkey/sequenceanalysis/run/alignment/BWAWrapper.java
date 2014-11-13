@@ -118,6 +118,12 @@ public class BWAWrapper extends AbstractCommandWrapper
             return _performAlignment(output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename);
         }
 
+        @Override
+        public boolean doSortCleanBam()
+        {
+            return true;
+        }
+
         protected AlignmentOutput _performAlignment(AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             getWrapper().setOutputDir(outputDirectory);

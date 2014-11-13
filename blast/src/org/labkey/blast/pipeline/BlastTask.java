@@ -22,6 +22,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.util.FileType;
+import org.labkey.blast.BLASTManager;
 import org.labkey.blast.BLASTWrapper;
 
 import java.io.IOException;
@@ -84,6 +85,11 @@ public class BlastTask extends PipelineJob.Task<BlastTask.Factory>
             if (!getPipelineJob().getBlastJob().getExpectedInputFile().exists())
             {
                 throw new PipelineJobException("Unable to find input file: " + getPipelineJob().getBlastJob().getExpectedInputFile().getPath());
+            }
+
+            if (BLASTManager.get().getBinDir() == null || BLASTManager.get().getDatabaseDir() == null)
+            {
+                throw new PipelineJobException("Either the BLAST bin or BLAST database directories have not been set.  Please have you site administrator configure these through the admin console.");
             }
 
             BLASTWrapper wrapper = new BLASTWrapper();

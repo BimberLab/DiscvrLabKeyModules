@@ -24,6 +24,11 @@
        </column>
        <column name="created" />
        <column name="workbook" />
+       <column name="readset/status">
+           <properties>
+               <property name="columnTitle" value="Readset Status"/>
+           </properties>
+       </column>
        <column name="makePublic"/>
    </columns>
    <sorts>

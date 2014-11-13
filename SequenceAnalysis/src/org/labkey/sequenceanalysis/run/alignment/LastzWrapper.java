@@ -68,6 +68,12 @@ public class LastzWrapper extends AbstractCommandWrapper
 
             return output;
         }
+
+        @Override
+        public boolean doSortCleanBam()
+        {
+            return false;
+        }
     }
 
     public static class Provider extends AbstractAlignmentStepProvider<AlignmentStep>

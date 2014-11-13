@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.ldk.table.ContainerScopedTable;
 import org.labkey.api.ldk.table.SharedDataTable;
 import org.labkey.api.module.Module;
 import org.labkey.api.query.DefaultSchema;
@@ -58,6 +59,8 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             return new SharedDataTable(this, sourceTable, true).init();
         else if (SequenceAnalysisSchema.TABLE_SAVED_ANALYSES.equalsIgnoreCase(name))
             return new SharedDataTable(this, sourceTable, true).init();
+        else if (SequenceAnalysisSchema.TABLE_READSET_STATUS.equalsIgnoreCase(name))
+            return new ContainerScopedTable<>(this, sourceTable, "status").init();
         else
             return super.createWrappedTable(name, sourceTable);
     }

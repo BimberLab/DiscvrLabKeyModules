@@ -17,6 +17,7 @@
 package org.labkey.GeneticsCore;
 
 import org.jetbrains.annotations.NotNull;
+import org.labkey.GeneticsCore.button.SBTReviewButton;
 import org.labkey.GeneticsCore.notification.GeneticsCoreNotification;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
@@ -66,6 +67,8 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(btn2, "laboratory", "samples");
 
         NotificationService.get().registerNotification(new GeneticsCoreNotification());
+
+        LDKService.get().registerQueryButton(new SBTReviewButton(), "sequenceanalysis", "sequence_analyses");
     }
 
     @Override

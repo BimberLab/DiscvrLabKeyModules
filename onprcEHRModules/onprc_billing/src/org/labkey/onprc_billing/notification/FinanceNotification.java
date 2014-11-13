@@ -181,21 +181,21 @@ public class FinanceNotification extends AbstractNotification
         }
 
         //added first due to importance
-        simpleAlert(c, u , msg, "onprc_billing", "duplicateAliases", " duplicate aliases in the OGA data.  This is a potentially serious problem that could result in improper or duplicate charges.  These should be corrected ASAP, which probably requires contacting OGA to fix the data on their side.");
-        simpleAlert(c, u , msg, "onprc_billing", "invalidProjectAccountEntries", " project/alias records with invalid or overlapping intervals.  This is a potentially serious problem that could result in improper or duplicate charges.  These should be corrected ASAP.");
+        simpleAlert(financeContainer, u , msg, "onprc_billing", "duplicateAliases", " duplicate aliases in the OGA data.  This is a potentially serious problem that could result in improper or duplicate charges.  These should be corrected ASAP, which probably requires contacting OGA to fix the data on their side.");
+        simpleAlert(ehrContainer, u , msg, "onprc_billing", "invalidProjectAccountEntries", " project/alias records with invalid or overlapping intervals.  This is a potentially serious problem that could result in improper or duplicate charges.  These should be corrected ASAP.");
 
         writeResultTable(msg, lastInvoiceDate, start, endDate, dataMap, totalsByCategory, categoryToQuery, containerMap);
 
-        getInvalidProjectAliases(c, u , msg);
-        getExpiredAliases(c, u , msg);
-        getAliasesDisabled(c, u, msg);
-        getProjectsWithoutAliases(c, u, msg);
+        getInvalidProjectAliases(ehrContainer, u , msg);
+        getExpiredAliases(ehrContainer, u , msg);
+        getAliasesDisabled(ehrContainer, u, msg);
+        getProjectsWithoutAliases(ehrContainer, u, msg);
         projectAliasesExpiringSoon(ehrContainer, u, msg);
-        getProjectsNotActive(c, u, msg);
-        getExpiredCreditAliases(c, u, msg);
-        getCreditAliasesDisabled(c, u, msg);
+        getProjectsNotActive(ehrContainer, u, msg);
+        getExpiredCreditAliases(ehrContainer, u, msg);
+        getCreditAliasesDisabled(ehrContainer, u, msg);
         chargesMissingRates(financeContainer, u, msg);
-        surgeriesNotBilled(c, u, start, endDate, msg);
+        surgeriesNotBilled(ehrContainer, u, start, endDate, msg);
         simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidChargeRateEntries", " charge rate records with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
         simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidChargeRateExemptionEntries", " charge rate exemptions with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");
         simpleAlert(financeContainer, u , msg, "onprc_billing", "invalidProjectMultiplierEntries", " project multipliers with invalid or overlapping intervals.  This indicates a problem with how the records are setup in the system and may cause problems with the billing calculation.");

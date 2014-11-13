@@ -21,7 +21,7 @@ import java.util.List;
  */
 abstract public class PicardWrapper extends AbstractCommandWrapper
 {
-    private ValidationStringency _stringency = ValidationStringency.STRICT;
+    private ValidationStringency _stringency = ValidationStringency.LENIENT;
 
     public PicardWrapper(@Nullable Logger logger)
     {
@@ -36,9 +36,14 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         params.add(getJar().getPath());
         params.add("--version");
 
+        boolean origWarn = isWarnNonZeroExits();
+        boolean origThrow = isThrowNonZeroExits();
         setWarnNonZeroExits(false);
+        setThrowNonZeroExits(false);
+
         String ret = StringUtils.trim(execute(params));
-        setWarnNonZeroExits(true);
+        setWarnNonZeroExits(origWarn);
+        setThrowNonZeroExits(origThrow);
 
         return ret;
     }

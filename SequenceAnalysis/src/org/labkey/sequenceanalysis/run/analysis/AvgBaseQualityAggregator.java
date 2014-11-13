@@ -19,11 +19,8 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.reference.FastaSequenceIndex;
-import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
-
 import htsjdk.samtools.util.SamLocusIterator;
 import org.apache.log4j.Logger;
 
@@ -45,7 +42,6 @@ public class AvgBaseQualityAggregator
     private File _bam;
     private File _bai;
     private File _ref;
-    private IndexedFastaSequenceFile _refFastq;
     private Map<Integer, Map<String, Double>> _quals = null;
 
     public AvgBaseQualityAggregator(Logger log, File bam, File refFasta) throws FileNotFoundException
@@ -61,17 +57,12 @@ public class AvgBaseQualityAggregator
         File fai = new File(_ref.getPath() + ".fai");
         if(!fai.exists())
             throw new FileNotFoundException("Missing index for FASTA, expected: " + fai.getPath());
-
-        _refFastq = new IndexedFastaSequenceFile(_ref, new FastaSequenceIndex(fai));
     }
 
     public void calculateAvgQuals(String refName, int start, int stop)
     {
-        SAMFileReader sam = null;
-
-        try
+        try (SAMFileReader sam = new SAMFileReader(_bam, _bai))
         {
-            sam = new SAMFileReader(_bam, _bai);
             sam.setValidationStringency(ValidationStringency.SILENT);
 
             SAMFileHeader header = sam.getFileHeader();
@@ -90,27 +81,19 @@ public class AvgBaseQualityAggregator
             if (sr == null)
                 throw new IllegalArgumentException("Unknown reference: " + refName);
 
-            Map<Integer, Map<String, Double>> quals = new HashMap<Integer, Map<String, Double>>();
+            Map<Integer, Map<String, Double>> quals = new HashMap<>();
             IntervalList il = new IntervalList(header);
             il.add(new Interval(refName, start, stop));
             quals.put(sr.getSequenceIndex(), calculateAvgQualsForInterval(sam, il));
 
             _quals = quals;
         }
-        finally
-        {
-            if (sam != null)
-                sam.close();
-        }
     }
 
     public void calculateAvgQuals()
     {
-        SAMFileReader sam = null;
-
-        try
+        try (SAMFileReader sam = new SAMFileReader(_bam, _bai))
         {
-            sam = new SAMFileReader(_bam, _bai);
             sam.setValidationStringency(ValidationStringency.SILENT);
 
             SAMFileHeader header = sam.getFileHeader();
@@ -125,11 +108,6 @@ public class AvgBaseQualityAggregator
             }
 
             _quals = quals;
-        }
-        finally
-        {
-            if (sam != null)
-                sam.close();
         }
     }
 
@@ -219,5 +197,4 @@ public class AvgBaseQualityAggregator
 
         return ret;
     }
-
 }

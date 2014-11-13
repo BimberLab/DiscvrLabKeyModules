@@ -14,7 +14,7 @@ console.log("** evaluating: " + this['javax.script.filename']);
 function beforeInsert(row, errors){
     beforeUpsert(row, errors);
 
-    row.objectid = row.objectid || LABKEY.Utils.generateUUID();
+    row.objectid = row.objectid || LABKEY.Utils.generateUUID().toUpperCase();
 }
 
 function beforeUpdate(row, oldRow, errors){

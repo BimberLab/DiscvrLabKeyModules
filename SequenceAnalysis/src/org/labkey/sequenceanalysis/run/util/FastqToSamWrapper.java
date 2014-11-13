@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.util.FastqQualityFormat;
 import htsjdk.samtools.util.QualityEncodingDetector;
 import org.apache.log4j.Logger;
@@ -28,10 +29,15 @@ public class FastqToSamWrapper extends PicardWrapper
 
     public File execute(File file, @Nullable File file2) throws PipelineJobException
     {
+        return execute(file, file2, null, null);
+    }
+
+    public File execute(File file, @Nullable File file2, @Nullable SAMFileHeader.SortOrder sortOrder, @Nullable String readGroupName) throws PipelineJobException
+    {
         getLogger().info("Converting FASTQ to SAM: " + file.getPath());
         getLogger().info("\tFastqToSam version: " + getVersion());
 
-        execute(getParams(file, file2));
+        execute(getParams(file, file2, sortOrder, readGroupName));
         File output = new File(getOutputDir(file), getOutputFilename(file));
         if (!output.exists())
         {
@@ -46,7 +52,7 @@ public class FastqToSamWrapper extends PicardWrapper
         return getPicardJar("FastqToSam.jar");
     }
 
-    private List<String> getParams(File file, File file2) throws PipelineJobException
+    private List<String> getParams(File file, File file2, SAMFileHeader.SortOrder sortOrder, String readGroupName) throws PipelineJobException
     {
         List<String> params = new LinkedList<>();
         params.add("java");
@@ -56,6 +62,16 @@ public class FastqToSamWrapper extends PicardWrapper
         params.add("FASTQ=" + file.getPath());
         if (file2 != null)
             params.add("FASTQ2=" + file2.getPath());
+
+        if (sortOrder != null)
+        {
+            params.add("SORT_ORDER=" + sortOrder.name());
+        }
+
+        if (readGroupName != null)
+        {
+            params.add("READ_GROUP_NAME=" + readGroupName);
+        }
 
         FastqQualityFormat encoding = _fastqEncoding;
         if (encoding == null)
@@ -83,9 +99,4 @@ public class FastqToSamWrapper extends PicardWrapper
     {
         return FileUtil.getBaseName(file) + ".sam";
     }
-
-//    public void setFastqEncoding(FastqUtils.FASTQ_ENCODING fastqEncoding)
-//    {
-//        _fastqEncoding = fastqEncoding;
-//    }
 }

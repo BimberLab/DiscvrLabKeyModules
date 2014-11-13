@@ -55,7 +55,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
                 {
                     indexDir.mkdirs();
                 }
-                getWrapper().executeMosaikBuild(referenceGenome.getWorkingFastaFile(), null, outputFile, "-oa", getClientCommandArgs());
+                getWrapper().executeMosaikBuild(referenceGenome.getWorkingFastaFile(), null, outputFile, "-oa", null);
                 if (!outputFile.exists())
                     throw new PipelineJobException("Unable to find file: " + outputFile.getPath());
             }
@@ -91,6 +91,12 @@ public class MosaikWrapper extends AbstractCommandWrapper
             output.addIntermediateFile(new File(outputDirectory, basename + ".stat"));
 
             return output;
+        }
+
+        @Override
+        public boolean doSortCleanBam()
+        {
+            return true;
         }
     }
 
@@ -209,11 +215,15 @@ public class MosaikWrapper extends AbstractCommandWrapper
         return new File(outputDirectory, basename + ".bam");
     }
 
-    public void executeMosaikBuild(File input1, @Nullable File input2, File output, String outParam, List<String> options) throws PipelineJobException
+    public void executeMosaikBuild(File input1, @Nullable File input2, File output, String outParam, @Nullable List<String> options) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
         args.add(getBuildExe().getPath());
-        args.addAll(options);
+        if (options != null)
+        {
+            args.addAll(options);
+        }
+
         args.add("-quiet");
 
         SequenceUtil.FILETYPE type = SequenceUtil.inferType(input1);

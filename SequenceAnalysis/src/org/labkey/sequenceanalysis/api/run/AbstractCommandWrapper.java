@@ -25,6 +25,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     private Logger _log = null;
     private Level _logLevel = Level.DEBUG;
     private boolean _warnNonZeroExits = true;
+    private boolean _throwNonZeroExits = true;
 
     public AbstractCommandWrapper(@Nullable Logger logger)
     {
@@ -84,6 +85,11 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
             if (returnCode != 0 && _warnNonZeroExits)
             {
                 getLogger().warn("\tprocess exited with non-zero value: " + returnCode);
+            }
+
+            if (returnCode != 0 && _throwNonZeroExits)
+            {
+                throw new PipelineJobException("process exited with non-zero value: " + returnCode);
             }
         }
         catch (IOException | InterruptedException e)
@@ -172,5 +178,20 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     public void setWarnNonZeroExits(boolean warnNonZeroExits)
     {
         _warnNonZeroExits = warnNonZeroExits;
+    }
+
+    public void setThrowNonZeroExits(boolean throwNonZeroExits)
+    {
+        _throwNonZeroExits = throwNonZeroExits;
+    }
+
+    public boolean isWarnNonZeroExits()
+    {
+        return _warnNonZeroExits;
+    }
+
+    public boolean isThrowNonZeroExits()
+    {
+        return _throwNonZeroExits;
     }
 }

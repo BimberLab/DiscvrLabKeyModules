@@ -1,0 +1,67 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function (){
+        var analysisId = LABKEY.ActionURL.getParameter('analysisId');
+
+        if (!analysisId){
+            alert('Must Provide Analysis Id');
+            return;
+        }
+
+        var webpart = <%=webpartContext%>;
+
+        Ext4.get(webpart.wrapperDivId).update(
+            '<div id="analysisDetails_'+webpart.wrapperDivId+'"></div>' +
+            '<br>' +
+            '<div id="alignmentSummaryGrouped_'+webpart.wrapperDivId+'"></div>' +
+            '<br>' +
+            '<div id="alignmentSummaryByLineage_'+webpart.wrapperDivId+'"></div>' +
+            '<br>' +
+            '<div id="haplotypeMatches_'+webpart.wrapperDivId+'"></div>' +
+            '<br>' +
+            '<div id="publishedResults_'+webpart.wrapperDivId+'"></div>'
+        );
+
+        LDK.Utils.getReadOnlyQWP({
+            title: 'Analysis Details',
+            schemaName: 'sequenceanalysis',
+            queryName: 'sequence_analyses',
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)]
+        }).render('analysisDetails_'+webpart.wrapperDivId);
+
+        LDK.Utils.getReadOnlyQWP({
+            title: 'Alignments, By Lineage',
+            schemaName: 'sequenceanalysis',
+            queryName: 'alignment_summary_by_lineage',
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)]
+        }).render('alignmentSummaryByLineage_'+webpart.wrapperDivId);
+
+        LDK.Utils.getReadOnlyQWP({
+            title: 'Matching Haplotypes',
+            schemaName: 'sequenceanalysis',
+            queryName: 'haplotypeMatches',
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)]
+        }).render('haplotypeMatches_'+webpart.wrapperDivId);
+
+        LDK.Utils.getReadOnlyQWP({
+            title: 'Alignments, By Allele',
+            schemaName: 'sequenceanalysis',
+            queryName: 'alignment_summary_grouped',
+            maxRows: 30,
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)]
+        }).render('alignmentSummaryGrouped_'+webpart.wrapperDivId);
+
+        LDK.Utils.getReadOnlyQWP({
+            title: 'Published Results',
+            schemaName: 'assay.GenotypeAssay.Genotype',
+            queryName: 'Data',
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            filterArray: [LABKEY.Filter.create('analysisId', analysisId, LABKEY.Filter.Types.EQUAL)]
+        }).render('publishedResults_'+webpart.wrapperDivId);
+    });
+
+</script>

@@ -93,7 +93,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.285;
+        return 12.287;
     }
 
     public boolean hasScripts()

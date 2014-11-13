@@ -84,6 +84,9 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
         if (settings.get("minPctForRef") != null)
             _minPctForRef = Double.parseDouble(settings.get("minPctForRef"));
+
+        if (settings.get("onlyImportValidPairs") != null)
+            _onlyImportValidPairs = Boolean.parseBoolean(settings.get("onlyImportValidPairs"));
     }
 
     @Override
@@ -91,7 +94,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     {
         _uniqueReads.add(record.getReadName());
 
-        if (record.getReferenceName().equals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME))
+        if (record.getReferenceName().equals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME) || record.getReadUnmappedFlag())
         {
             _unaligned.add(record.getReadName());
         }

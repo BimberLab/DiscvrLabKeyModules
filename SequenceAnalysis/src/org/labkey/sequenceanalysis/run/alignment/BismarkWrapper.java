@@ -130,6 +130,12 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean doSortCleanBam()
+        {
+            return false;
+        }
+
+        @Override
         public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             getPipelineCtx().getLogger().info("Preparing reference for bismark");

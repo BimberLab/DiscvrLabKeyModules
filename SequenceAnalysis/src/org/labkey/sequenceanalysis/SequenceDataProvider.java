@@ -81,10 +81,10 @@ public class SequenceDataProvider extends AbstractDataProvider
 
     public List<NavItem> getSettingsItems(Container c, User u)
     {
+        String categoryName = "Sequence";
         List<NavItem> items = new ArrayList<>();
         if (ContainerManager.getSharedContainer().equals(c))
         {
-            String categoryName = "Sequence";
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "Barcodes", categoryName, "Allowable Barcodes"));
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "DNA_Adapters", categoryName, "DNA Adapter Sequences"));
 
@@ -109,6 +109,10 @@ public class SequenceDataProvider extends AbstractDataProvider
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "illumina_applications", categoryName, "Illumina Applications"));
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "illumina_genome_folders", categoryName, "Illumina Genome Folders"));
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "illumina_sample_kits", categoryName, "Illumina Sample Kits"));
+        }
+        else
+        {
+            items.add(new SimpleSettingsItem(this, "sequenceanalysis", "readset_status", categoryName, "Readset Status Values"));
         }
 
         return items;

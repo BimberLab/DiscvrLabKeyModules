@@ -102,6 +102,39 @@ public class SequenceUtil
         }
     }
 
+    public static void logAlignmentCount(File bam, Logger log)
+    {
+        try (SAMFileReader reader = new SAMFileReader(bam))
+        {
+            reader.setValidationStringency(ValidationStringency.SILENT);
+
+            try (SAMRecordIterator it = reader.iterator())
+            {
+                long total = 0;
+                long primary = 0;
+                long unaligned = 0;
+                while (it.hasNext())
+                {
+                    SAMRecord r = it.next();
+                    total++;
+
+                    if (r.getReadUnmappedFlag())
+                    {
+                        unaligned++;
+                    }
+                    else if (!r.isSecondaryOrSupplementary())
+                    {
+                        primary++;
+                    }
+                }
+
+                log.info("total alignments: " + total);
+                log.info("primary alignments: " + primary);
+                log.info("unaligned: " + unaligned);
+            }
+        }
+    }
+
     public static void writeFastaRecord(Writer writer, String header, String sequence, int lineLength) throws IOException
     {
         writer.write(">" + header + "\n");

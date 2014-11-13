@@ -39,7 +39,7 @@ public class BLASTWrapper
         File binDir = BLASTManager.get().getBinDir();
         if (binDir == null || !binDir.exists())
         {
-            throw new IllegalArgumentException("BLAST bin dir does not exist");
+            throw new IllegalArgumentException("BLAST bin dir does not exist: " + binDir);
         }
 
         File exe = new File(binDir, "blastn" + getExtension());
@@ -103,7 +103,7 @@ public class BLASTWrapper
         File binDir = BLASTManager.get().getBinDir();
         if (binDir == null || !binDir.exists())
         {
-            throw new IllegalArgumentException("BLAST bin dir does not exist");
+            throw new IllegalArgumentException("BLAST bin dir does not exist: " + binDir);
         }
 
         File exe = new File(binDir, "makeblastdb" + getExtension());

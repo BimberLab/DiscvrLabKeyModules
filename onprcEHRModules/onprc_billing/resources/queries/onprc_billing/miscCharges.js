@@ -67,7 +67,7 @@ EHR.Server.TriggerManager.registerHandlerForQuery(EHR.Server.TriggerManager.Even
             EHR.Server.Utils.addError(scriptErrors, 'Id', 'This item has already been invoiced and should not be edited through this form unless you are certain about this change.', severity);
         }
 
-        row.objectid = row.objectid || LABKEY.Utils.generateUUID();
+        row.objectid = row.objectid || LABKEY.Utils.generateUUID().toUpperCase();
     }
 });
 

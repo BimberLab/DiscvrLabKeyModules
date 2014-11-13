@@ -93,6 +93,22 @@ GeneticsCore.buttons = new function(){
                 subjectIds: checked,
                 dataRegion: dataRegion
             }).show(el);
+        },
+
+        sbtReviewHandler: function(dataRegionName){
+            var dataRegion = LABKEY.DataRegions[dataRegionName];
+            var checked = dataRegion.getChecked();
+            if (!checked || !checked.length){
+                alert('No records selected');
+                return;
+            }
+
+            if (checked.length != 1){
+                alert('Can only select one row at a time');
+                return;
+            }
+
+            window.location = LABKEY.ActionURL.buildURL('geneticscore', 'sbtReview', null, {analysisId: checked[0]});
         }
     }
 };

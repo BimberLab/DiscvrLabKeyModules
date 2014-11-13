@@ -546,9 +546,9 @@ Ext4.define('ONPRC_Billing.window.ReverseChargeWindow', {
         this.close();
         if (miscChargesInserts.length){
             Ext4.Msg.wait('Saving...');
-            var taskId = LABKEY.Utils.generateUUID();
+            var taskId = LABKEY.Utils.generateUUID().toUpperCase();
             Ext4.Array.forEach(miscChargesInserts, function(obj, idx){
-                obj.objectid = LABKEY.Utils.generateUUID();
+                obj.objectid = LABKEY.Utils.generateUUID().toUpperCase();
                 obj.taskid = taskId;
                 obj.formSort = (idx + 1);
             }, this);

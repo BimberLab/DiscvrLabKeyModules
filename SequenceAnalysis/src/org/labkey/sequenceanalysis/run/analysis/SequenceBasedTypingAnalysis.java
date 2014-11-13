@@ -52,15 +52,15 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                     {{
                             put("minValue", 0);
                         }}, 17),
-//                    ToolParameterDescriptor.create("onlyImportPairs", "Only Import Valid Pairs", "If selected, only alignments consisting of valid forward/reverse pairs will be imported.  Do not check this unless you are using paired-end sequence.", "checkbox", new JSONObject()
-//                    {{
-//                            put("checked", true);
-//                        }}, null),
+                    ToolParameterDescriptor.create("onlyImportValidPairs", "Only Import Valid Pairs", "If selected, only alignments consisting of valid forward/reverse pairs will be imported.  Do not check this unless you are using paired-end sequence.", "checkbox", new JSONObject()
+                    {{
+                            put("checked", true);
+                        }}, null),
                     ToolParameterDescriptor.create("minCountForRef", "Min Read # Per Reference", "If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this many reads across each sample.  This can be a way to reduce ambiguity among allele calls.", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
                         }}, null),
-                    ToolParameterDescriptor.create("minPctForRef", "Min Read Pct Per Reference", "If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this percent of total from each sample.  This can be a way to reduce ambiguity among allele calls.", "ldk-integerfield", new JSONObject()
+                    ToolParameterDescriptor.create("minPctForRef", "Min Read Pct Per Reference", "If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this percent of total from each sample.  This can be a way to reduce ambiguity among allele calls.  Value should between 0-100.", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
                             put("maxValue", 100);

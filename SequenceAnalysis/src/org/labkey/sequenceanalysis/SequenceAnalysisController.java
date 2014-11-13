@@ -1665,60 +1665,6 @@ public class SequenceAnalysisController extends SpringActionController
                     params.put(entry.getKey(), entry.getValue() == null ? null : entry.getValue().toString());
                 }
 
-                AbstractFileAnalysisProtocol protocol = getProtocol(root, dirData, factory, form.getProtocolName());
-                if (protocol == null)
-                {
-                    String xml;
-                    if (form.getConfigureXml() != null)
-                    {
-                        if (form.getConfigureJson() != null)
-                        {
-                            throw new IllegalArgumentException("The parameters should be defined as XML or JSON, not both");
-                        }
-                        xml = form.getConfigureXml();
-                    }
-                    else
-                    {
-                        if (form.getConfigureJson() == null)
-                        {
-                            throw new IllegalArgumentException("Parameters must be defined, either as XML or JSON");
-                        }
-                        ParamParser parser = PipelineJobService.get().createParamParser();
-                        xml = parser.getXMLFromMap(params);
-                    }
-
-                    protocol = getProtocolFactory(taskPipeline).createProtocolInstance(
-                            form.getProtocolName(),
-                            form.getProtocolDescription(),
-                            xml);
-
-                    protocol.setEmail(getUser().getEmail());
-                    protocol.validateToSave(root);
-                    if (form.isSaveProtocol())
-                    {
-                        protocol.saveDefinition(root);
-                        PipelineService.get().rememberLastProtocolSetting(protocol.getFactory(), getContainer(), getUser(), protocol.getName());
-                    }
-                }
-                else
-                {
-                    if (form.getConfigureXml() != null || form.getConfigureJson() != null)
-                    {
-                        throw new IllegalArgumentException("Cannot redefine an existing protocol");
-                    }
-                    PipelineService.get().rememberLastProtocolSetting(protocol.getFactory(), getContainer(), getUser(), protocol.getName());
-                }
-
-                protocol.getFactory().ensureDefaultParameters(root);
-
-                File fileParameters = protocol.getParametersFile(dirData, root);
-                // Make sure configure.xml file exists for the job when it runs.
-                if (fileParameters != null && !fileParameters.exists())
-                {
-                    protocol.setEmail(getUser().getEmail());
-                    protocol.saveInstance(fileParameters, getContainer());
-                }
-
                 Boolean allowNonExistentFiles = form.isAllowNonExistentFiles() != null ? form.isAllowNonExistentFiles() : false;
                 List<File> filesInputList = form.getValidatedFiles(getContainer(), allowNonExistentFiles);
 
@@ -1733,6 +1679,7 @@ public class SequenceAnalysisController extends SpringActionController
                     List<String> jobGUIDs = new ArrayList<>();
                     Map<ReadsetModel, Pair<File, File>> toRun = SequenceAlignmentTask.getAlignmentFiles(params, filesInputList, false);
                     _log.info("creating split sequence jobs for " + filesInputList.size() + " files.  These divided into: " + toRun.size() + " jobs.");
+                    int idx = 1;
                     for (Pair<File, File> files : toRun.values())
                     {
                         List<File> fileList = new ArrayList<>();
@@ -1742,17 +1689,42 @@ public class SequenceAnalysisController extends SpringActionController
                             fileList.add(files.second);
                         }
 
-                        AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, fileList);
+                        String protocolName = form.getProtocolName() + "_" + idx;
+                        AbstractFileAnalysisProtocol protocol = getFileAnalysisProtocol(form, taskPipeline, params, root, dirData, factory, protocolName);
+                        protocol.getFactory().ensureDefaultParameters(root);
+
+                        File fileParameters = factory.getParametersFile(dirData, protocolName, root);
+                        // Make sure configure.xml file exists for the job when it runs.
+                        if (fileParameters != null && !fileParameters.exists())
+                        {
+                            protocol.setEmail(getUser().getEmail());
+                            protocol.saveInstance(fileParameters, getContainer());
+                        }
+
+                        _log.info("starting for file(s): " + fileList.get(0).getName() + (files.second != null ? " and " + fileList.get(1).getName() : ""));
+                        AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, protocolName, getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, fileList);
                         PipelineService.get().queueJob(job);
                         jobGUIDs.add(job.getJobGUID());
+                        idx++;
                     }
 
                     resultProperties.put("jobGUIDs", jobGUIDs);
                 }
                 else
                 {
+                    AbstractFileAnalysisProtocol protocol = getFileAnalysisProtocol(form, taskPipeline, params, root, dirData, factory, form.getProtocolName());
+                    protocol.getFactory().ensureDefaultParameters(root);
+
+                    File fileParameters = protocol.getParametersFile(dirData, root);
+                    // Make sure configure.xml file exists for the job when it runs.
+                    if (fileParameters != null && !fileParameters.exists())
+                    {
+                        protocol.setEmail(getUser().getEmail());
+                        protocol.saveInstance(fileParameters, getContainer());
+                    }
+
                     _log.info("creating single sequence job for " + filesInputList.size() + " files.");
-                    AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, filesInputList);
+                    AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, protocol.getName(), getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, filesInputList);
                     PipelineService.get().queueJob(job);
 
                     resultProperties.put("jobGUIDs", Arrays.asList(job.getJobGUID()));
@@ -1766,6 +1738,55 @@ public class SequenceAnalysisController extends SpringActionController
             {
                 throw new ApiUsageException(e);
             }
+        }
+
+        private AbstractFileAnalysisProtocol getFileAnalysisProtocol(AnalyzeForm form, TaskPipeline taskPipeline, Map<String, String> params, PipeRoot root, File dirData, AbstractFileAnalysisProtocolFactory factory, String protocolName) throws PipelineValidationException, IOException
+        {
+            AbstractFileAnalysisProtocol protocol = getProtocol(root, dirData, factory, protocolName);
+            if (protocol == null)
+            {
+                String xml;
+                if (form.getConfigureXml() != null)
+                {
+                    if (form.getConfigureJson() != null)
+                    {
+                        throw new IllegalArgumentException("The parameters should be defined as XML or JSON, not both");
+                    }
+                    xml = form.getConfigureXml();
+                }
+                else
+                {
+                    if (form.getConfigureJson() == null)
+                    {
+                        throw new IllegalArgumentException("Parameters must be defined, either as XML or JSON");
+                    }
+                    ParamParser parser = PipelineJobService.get().createParamParser();
+                    xml = parser.getXMLFromMap(params);
+                }
+
+                protocol = getProtocolFactory(taskPipeline).createProtocolInstance(
+                        protocolName,
+                        form.getProtocolDescription(),
+                        xml);
+
+                protocol.setEmail(getUser().getEmail());
+                protocol.validateToSave(root);
+                if (form.isSaveProtocol())
+                {
+                    protocol.saveDefinition(root);
+                    PipelineService.get().rememberLastProtocolSetting(protocol.getFactory(), getContainer(), getUser(), protocol.getName());
+                }
+            }
+            else
+            {
+                if (form.getConfigureXml() != null || form.getConfigureJson() != null)
+                {
+                    throw new IllegalArgumentException("Cannot redefine an existing protocol");
+                }
+                PipelineService.get().rememberLastProtocolSetting(protocol.getFactory(), getContainer(), getUser(), protocol.getName());
+            }
+
+            return protocol;
         }
     }
 
