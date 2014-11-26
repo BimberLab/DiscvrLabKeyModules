@@ -444,14 +444,7 @@ public class SequenceAnalysisManager
         List<Integer> sequenceIds = new ArrayList<>();
         try (FastaDataLoader loader = new FastaDataLoader(file, false))
         {
-            loader.setCharacterFilter(new FastaLoader.CharacterFilter()
-            {
-                @Override
-                public boolean accept(char c)
-                {
-                    return ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'));
-                }
-            });
+            loader.setCharacterFilter(new FastaLoader.UpperAndLowercaseCharacterFilter());
 
             try (CloseableIterator<Map<String, Object>> i = loader.iterator())
             {
