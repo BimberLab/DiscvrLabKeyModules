@@ -1171,7 +1171,13 @@
                 <ns:isUserEditable>false</ns:isUserEditable>
                 <ns:columnTitle>Row Id</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="haplotype"/>
+            <ns:column columnName="haplotype">
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>haplotypes</ns:fkTable>
+                    <ns:fkColumnName>name</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="lineage"/>
             <ns:column columnName="present"/>
             <ns:column columnName="required"/>
@@ -1209,8 +1215,9 @@
     </ns:table>
     <ns:table tableName="haplotypes" tableDbType="TABLE" useColumnOrder="true">
         <ns:auditLogging>DETAILED</ns:auditLogging>
-        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
+        <ns:javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</ns:javaCustomizer>
         <ns:tableTitle>Haplotypes</ns:tableTitle>
+        <ns:tableUrl>/sequenceanalysis/haplotypeDetails.view?haplotypeId=${name}</ns:tableUrl>
         <ns:pkColumnName>name</ns:pkColumnName>
         <ns:columns>
             <ns:column columnName="name">
@@ -2285,5 +2292,92 @@
             <ns:column columnName="modifiedby"/>
             <ns:column columnName="modified"/>
         </ns:columns>
+    </ns:table>
+    <ns:table tableName="chain_files" tableDbType="TABLE" useColumnOrder="true">
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableTitle>Chain Files</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
+        <ns:tableUrl></ns:tableUrl>
+        <!--<ns:updateUrl></ns:updateUrl>-->
+        <ns:insertUrl></ns:insertUrl>
+        <ns:importUrl></ns:importUrl>
+        <!--<ns:deleteUrl></ns:deleteUrl>-->
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="genomeId1">
+                <ns:columnTitle>Source Genome</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>reference_libraries</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="genomeId2">
+                <ns:columnTitle>Target Genome</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>reference_libraries</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="chainFile">
+                <ns:columnTitle>Chain File</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                    <ns:fkTable>data</ns:fkTable>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="version">
+
+            </ns:column>
+            <ns:column columnName="dateDisabled">
+
+            </ns:column>
+            <ns:column columnName="container">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="createdby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:includeScript>laboratory.context</ns:includeScript>
+            <ns:includeScript>/sequenceanalysis/window/ImportChainFileWindow.js</ns:includeScript>
+            <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
+            <ns:item permission="INSERT" text="Add File" insertPosition="beginning">
+                <ns:onClick>SequenceAnalysis.window.ImportChainFileWindow.buttonHandler(dataRegionName)</ns:onClick>
+            </ns:item>
+            <ns:item hidden="true">
+                <ns:originalText>Insert New</ns:originalText>
+            </ns:item>
+            <ns:item hidden="true">
+                <ns:originalText>Import Data</ns:originalText>
+            </ns:item>
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>
     </ns:table>
 </ns:tables>

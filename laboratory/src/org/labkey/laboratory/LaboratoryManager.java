@@ -258,14 +258,14 @@ public class LaboratoryManager
 
             for (String pageId : Portal.getPages(c).keySet())
             {
-                List<Portal.WebPart> parts = new ArrayList<Portal.WebPart>();
+                List<Portal.WebPart> parts = new ArrayList<>();
                 parts.addAll(c.getFolderType().getRequiredWebParts());
                 parts.addAll(c.getFolderType().getPreferredWebParts());
 
                 Portal.saveParts(c, pageId, parts);
             }
 
-            Portal.resetPages(c, c.getFolderType().getDefaultTabs(), true);
+            Portal.resetPages(c, new ArrayList<>(c.getFolderType().getDefaultTabs()), true);
         }
 
         if (includeChildren)

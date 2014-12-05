@@ -476,6 +476,55 @@ public class SequenceAnalysisManager
         return sequenceIds;
     }
 
+    public void addChainFile(Container c, User u, File file, int genomeId1, int genomeId2, Double version) throws Exception
+    {
+        TableInfo libraryTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
+        TableInfo chainTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_CHAIN_FILES);
+
+        Integer fastaId = new TableSelector(libraryTable, Collections.singleton("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), genomeId1), null).getObject(Integer.class);
+        if (fastaId == null)
+        {
+            throw new IllegalArgumentException("Unable to find FASTA for library: " + genomeId1);
+        }
+
+        ExpData data = ExperimentService.get().getExpData(fastaId);
+        if (data == null)
+        {
+            throw new IllegalArgumentException("Unable to find FASTA for library: " + genomeId1);
+        }
+
+        File targetDir = data.getFile().getParentFile();
+        if (!targetDir.exists())
+        {
+            throw new IllegalArgumentException("Unable to find expected FASTA location: " + targetDir.getPath());
+        }
+
+        //create file
+        String expectedName = "chain-" + genomeId1 + "to" + genomeId2 + ".chain";
+        AssayFileWriter writer = new AssayFileWriter();
+        File outputFile = writer.findUniqueFileName(expectedName, targetDir);
+
+        FileUtils.moveFile(file, outputFile);
+        ExpData chainFile = ExperimentService.get().createData(c, new DataType("Sequence Track"));
+        chainFile.setName(outputFile.getName());
+        chainFile.setDataFileURI(outputFile.toURI());
+        chainFile.save(u);
+
+        //create row
+        CaseInsensitiveHashMap map = new CaseInsensitiveHashMap();
+        map.put("genomeId1", genomeId1);
+        map.put("genomeId2", genomeId2);
+        map.put("version", version);
+        map.put("chainFile", chainFile.getRowId());
+
+        map.put("container", c.getId());
+        map.put("created", new Date());
+        map.put("createdby", u.getUserId());
+        map.put("modified", new Date());
+        map.put("modifiedby", u.getUserId());
+        Table.insert(u, chainTable, map);
+    }
+
     public void addTrackForLibrary(Container c, User u, File file, int libraryId, String trackName, String trackDescription, String type) throws Exception
     {
         TableInfo libraryTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);

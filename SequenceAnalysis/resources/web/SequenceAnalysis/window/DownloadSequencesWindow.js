@@ -28,13 +28,15 @@ Ext4.define('SequenceAnalysis.window.DownloadSequencesWindow', {
     },
 
     initComponent: function(){
+        Ext4.QuickTips.init();
         Ext4.apply(this, {
             modal: true,
             title: 'Download Sequences',
             width: 500,
             bodyStyle: 'padding: 5px;',
             defaults: {
-                border: false
+                border: false,
+                labelWidth: 180
             },
             items: [{
                 xtype: 'textfield',
@@ -94,6 +96,81 @@ Ext4.define('SequenceAnalysis.window.DownloadSequencesWindow', {
             },{
                 itemId: 'fieldExpression',
                 border: false
+            },{
+                xtype: 'checkbox',
+                itemId: 'customIntervals',
+                fieldLabel: 'Download Specific Regions',
+                helpPopup: 'If checked, you will be asked to provide specific sub-regions of the reference to download, as opposed to the entire sequence',
+                listeners: {
+                    scope: this,
+                    change: function(field, val){
+                        var target = field.up('panel').down('#intervalRegion');
+                        target.removeAll();
+                        if (val){
+                            Ext4.Msg.wait('Loading...');
+
+                            LABKEY.Query.selectRows({
+                                containerPath: Laboratory.Utils.getQueryContainerPath(),
+                                schemaName: 'sequenceanalysis',
+                                queryName: 'ref_nt_sequences',
+                                columns: 'rowid,name',
+                                filterArray: [LABKEY.Filter.create('rowid', this.rowIds.join(';'), LABKEY.Filter.Types.IN)],
+                                scope: this,
+                                failure: LDK.Utils.getErrorCallback(),
+                                success: function(results) {
+                                    Ext4.Msg.hide();
+
+                                    if (!results || !results.rows || !results.rows.length) {
+                                        Ext4.Msg.alert('Error', 'Error, no matching rows found');
+                                        return;
+                                    }
+
+                                    var toAdd = [{
+                                        html: 'Enter desired intervals below in the format start-stop (ie. 300-400).  To specify multiple intervals, separate with commas (ie. 300-400,500-600).',
+                                        style: 'padding-bottom: 10px;',
+                                        border: false
+                                    }];
+
+                                    Ext4.Array.forEach(results.rows, function (row) {
+                                        toAdd.push({
+                                            xtype: 'textfield',
+                                            name: 'interval',
+                                            width: 350,
+                                            labelWidth: 180,
+                                            refId: row.rowid,
+                                            fieldLabel: row.name,
+                                            validator: function(val){
+                                                if (val === null || val === ''){
+                                                    return true;
+                                                }
+
+                                                if (val.match(/ /g)){
+                                                    return 'The value cannot contain spaces';
+                                                }
+
+                                                var tokens = val.split(',');
+                                                var ret = true;
+                                                Ext4.Array.forEach(tokens, function(t){
+                                                    if (!t.match(/^[0-9]+-[0-9]+$/)){
+                                                        ret =  'Invalid interval: [' + t + ']';
+                                                        return false;
+                                                    }
+                                                }, this);
+
+                                                return ret;
+                                            }
+                                        });
+                                    }, this);
+
+                                    target.add(toAdd);
+                                }
+                            });
+                        }
+                    }
+                }
+            },{
+                itemId: 'intervalRegion',
+                border: false
             }],
             buttons: [{
                 text: 'Download',
@@ -139,8 +216,31 @@ Ext4.define('SequenceAnalysis.window.DownloadSequencesWindow', {
             formatString = this.down('radiogroup').getValue().format;
         }
 
+        var intervalMap = {};
+        if (this.down('#customIntervals').getValue()){
+            var error = false;
+            Ext4.Array.forEach(this.query('field[name=interval]'), function(field){
+                if (!field.isValid()){
+                    error = true;
+                    return false;
+                }
+
+                intervalMap[field.refId] = field.getValue();
+            }, this);
+
+            if (error){
+                Ext4.Msg.alert('Error', 'One or more intervals in not valid.  Hover over the red fields for more detail.');
+                return;
+            }
+        }
+
+        var params = {rowIds: this.rowIds, headerFormat: formatString, fileName: fileName, lineLength: lineLength};
+        if (!Ext4.isEmpty(intervalMap)){
+            params.intervals = Ext4.encode(intervalMap);
+        }
+
         var form = Ext4.create('Ext.form.Panel', {
-            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'downloadReferences', null, {rowIds: this.rowIds, headerFormat: formatString, fileName: fileName, lineLength: lineLength}),
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'downloadReferences', null, params),
             standardSubmit: true
         });
         form.submit();

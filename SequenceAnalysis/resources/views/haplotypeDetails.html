@@ -1,0 +1,41 @@
+<script type="text/javascript">
+
+Ext4.onReady(function (){
+    var name = LABKEY.ActionURL.getParameter('haplotypeId');
+
+    if (!name){
+        alert('Must Provide The Haplotype Name');
+        return;
+    }
+
+    var webpart = <%=webpartContext%>;
+
+    Ext4.get(webpart.wrapperDivId).update(
+        '<div id="details_'+webpart.wrapperDivId+'"></div>' +
+        '<br>' +
+        '<div id="sequences_'+webpart.wrapperDivId+'"></div>'
+    );
+
+    Ext4.create('LDK.panel.DetailsPanel', {
+        title: 'Haplotype Details',
+        renderTo: 'details_'+webpart.wrapperDivId,
+        showBackBtn: false,
+        store: {
+            schemaName: 'sequenceanalysis',
+            queryName: 'haplotypes',
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            filterArray: [LABKEY.Filter.create('name', name, LABKEY.Filter.Types.EQUAL)]
+        }
+    });
+
+    LDK.Utils.getBasicQWP({
+        title: 'Haplotype Sequences',
+        schemaName: 'sequenceanalysis',
+        queryName: 'haplotype_sequences',
+        containerPath: Laboratory.Utils.getQueryContainerPath(),
+        filterArray: [LABKEY.Filter.create('haplotype', name, LABKEY.Filter.Types.EQUAL)]
+    }).render('sequences_'+webpart.wrapperDivId);
+
+});
+
+</script>

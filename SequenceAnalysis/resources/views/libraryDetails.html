@@ -15,6 +15,8 @@ Ext4.onReady(function (){
         '<br>' +
         '<div id="tracks_'+webpart.wrapperDivId+'"></div>' +
         '<br>' +
+        '<div id="chainFiles_'+webpart.wrapperDivId+'"></div>' +
+        '<br>' +
         '<div id="sequences_'+webpart.wrapperDivId+'"></div>'
     );
 
@@ -30,7 +32,7 @@ Ext4.onReady(function (){
         }
     });
 
-    LDK.Utils.getReadOnlyQWP({
+    LDK.Utils.getBasicQWP({
         title: 'Annotations/Tracks',
         schemaName: 'sequenceanalysis',
         queryName: 'reference_library_tracks',
@@ -38,13 +40,21 @@ Ext4.onReady(function (){
         filterArray: [LABKEY.Filter.create('library_id', rowid, LABKEY.Filter.Types.EQUAL)]
     }).render('tracks_'+webpart.wrapperDivId);
 
-    LDK.Utils.getReadOnlyQWP({
+    LDK.Utils.getBasicQWP({
         title: 'Sequences',
         schemaName: 'sequenceanalysis',
         queryName: 'reference_library_members',
         containerPath: Laboratory.Utils.getQueryContainerPath(),
         filterArray: [LABKEY.Filter.create('library_id', rowid, LABKEY.Filter.Types.EQUAL)]
     }).render('sequences_'+webpart.wrapperDivId);
+
+    LDK.Utils.getBasicQWP({
+        title: 'Chain Files (For Liftovers)',
+        schemaName: 'sequenceanalysis',
+        queryName: 'chain_files',
+        containerPath: Laboratory.Utils.getQueryContainerPath(),
+        filterArray: [LABKEY.Filter.create('genomeid1', rowid, LABKEY.Filter.Types.EQUAL)]
+    }).render('chainFiles_'+webpart.wrapperDivId);
 });
 
 </script>

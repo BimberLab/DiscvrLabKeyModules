@@ -73,9 +73,10 @@ GROUP BY e.Id, e.dateOnly, CAST(e.datefinalized as date), e.project, e.chargetyp
 --
 -- FROM study.drug e
 -- JOIN onprc_billing.medicationFeeDefinition mfd ON (
---   mfd.route = e.route AND
+--   (mfd.route = e.route OR mfp.route IS NULL) AND
+--   (mfd.code = e.code OR mfp.code IS NULL) AND
 --   mfd.active = true
 -- )
 -- WHERE CAST(e.datefinalized as date) >= CAST(StartDate as date) AND CAST(e.datefinalized as date) <= CAST(EndDate as date)
--- and e.chargetype IS NOT NULL
+-- and e.chargetype IS NOT NULL and e.chargetype NOT IN ('Not Billable', 'No Charge')
 -- GROUP BY e.Id, e.dateOnly, CAST(e.dateFinalized as date), e.project, e.chargetype, e.taskid, mfd.chargeId

@@ -1689,7 +1689,7 @@ public class SequenceAnalysisController extends SpringActionController
                             fileList.add(files.second);
                         }
 
-                        String protocolName = form.getProtocolName() + "_" + idx;
+                        String protocolName = form.getProtocolName() + (toRun.size() == 1 ? "" : "_" + idx);
                         AbstractFileAnalysisProtocol protocol = getFileAnalysisProtocol(form, taskPipeline, params, root, dirData, factory, protocolName);
                         protocol.getFactory().ensureDefaultParameters(root);
 
@@ -2502,11 +2502,108 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
+    @RequiresPermissionClass(InsertPermission.class)
+    public class ImportChainFileAction extends AbstractFileUploadAction<ImportChainFileForm>
+    {
+        @Override
+        public void export(ImportChainFileForm form, HttpServletResponse response, BindException errors) throws Exception
+        {
+            response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
+
+            super.export(form, response, errors);
+        }
+
+        protected File getTargetFile(String filename) throws IOException
+        {
+            if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
+                throw new UploadException("Pipeline root must be configured before uploading files", HttpServletResponse.SC_NOT_FOUND);
+
+            AssayFileWriter writer = new AssayFileWriter();
+            try
+            {
+                File targetDirectory = writer.ensureUploadDirectory(getContainer());
+                return writer.findUniqueFileName(filename, targetDirectory);
+            }
+            catch (ExperimentException e)
+            {
+                throw new UploadException(e.getMessage(), HttpServletResponse.SC_NOT_FOUND);
+            }
+        }
+
+        protected String getResponse(Map<String, Pair<File, String>> files, ImportChainFileForm form) throws UploadException
+        {
+            JSONObject resp = new JSONObject();
+            try
+            {
+                for (Map.Entry<String, Pair<File, String>> entry : files.entrySet())
+                {
+                    File file = entry.getValue().getKey();
+
+                    if (form.getGenomeId1() == null || form.getGenomeId2() == null)
+                    {
+                        throw new UploadException("Must provide the source and target genomes", HttpServletResponse.SC_BAD_REQUEST);
+                    }
+
+                    SequenceAnalysisManager.get().addChainFile(getContainer(), getUser(), file, form.getGenomeId1(), form.getGenomeId2(), form.getVersion());
+
+                    resp.put("success", true);
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.logExceptionToMothership(getViewContext().getRequest(), e);
+                getViewContext().getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                logger.error(e.getMessage(), e);
+                resp.put("success", false);
+                resp.put("exception", e.getMessage());
+            }
+
+            return resp.toString();
+        }
+    }
+
+    public static class ImportChainFileForm extends AbstractFileUploadAction.FileUploadForm
+    {
+        private Integer _genomeId1;
+        private Integer _genomeId2;
+        private Double _version;
+
+        public Integer getGenomeId1()
+        {
+            return _genomeId1;
+        }
+
+        public void setGenomeId1(Integer genomeId1)
+        {
+            _genomeId1 = genomeId1;
+        }
+
+        public Integer getGenomeId2()
+        {
+            return _genomeId2;
+        }
+
+        public void setGenomeId2(Integer genomeId2)
+        {
+            _genomeId2 = genomeId2;
+        }
+
+        public Double getVersion()
+        {
+            return _version;
+        }
+
+        public void setVersion(Double version)
+        {
+            _version = version;
+        }
+    }
+
     @RequiresPermissionClass(ReadPermission.class)
     @IgnoresTermsOfUse
     public class DownloadReferencesAction extends ExportAction<DownloadReferencesForm>
     {
-        public void export(DownloadReferencesForm form, final HttpServletResponse response, BindException errors) throws Exception
+        public void export(DownloadReferencesForm form, final HttpServletResponse response, final BindException errors) throws Exception
         {
             if (form.getRowIds() == null || form.getRowIds().length == 0)
             {
@@ -2533,6 +2630,7 @@ public class SequenceAnalysisController extends SpringActionController
             Set<FieldKey> keys = new HashSet<>(se.getFieldKeys());
             keys.add(FieldKey.fromString("sequenceFile"));
             keys.add(FieldKey.fromString("container"));
+            keys.add(FieldKey.fromString("rowid"));
             TableInfo ti = QueryService.get().getUserSchema(getUser(), getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
             if (ti == null)
             {
@@ -2540,7 +2638,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
 
             final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, keys);
-
+            final JSONObject intervalMap = StringUtils.trimToNull(form.getIntervals()) == null ? new JSONObject() : new JSONObject(form.getIntervals());
             PageFlowUtil.prepareResponseForFile(response, Collections.<String, String>emptyMap(), filename, true);
             TableSelector ts = new TableSelector(ti, cols.values(), new SimpleFilter(FieldKey.fromString("rowid"), Arrays.asList(form.getRowIds()), CompareType.IN), null);
             ts.forEach(new Selector.ForEachBlock<ResultSet>()
@@ -2549,6 +2647,7 @@ public class SequenceAnalysisController extends SpringActionController
                 public void exec(ResultSet object) throws SQLException
                 {
                     Results rs = new ResultsImpl(object, cols);
+                    Integer rowId = rs.getInt(FieldKey.fromString("rowid"));
                     String header = se.eval(rs.getFieldKeyRowMap());
                     RefNtSequenceModel model = new RefNtSequenceModel();
                     if (rs.getObject(FieldKey.fromString("sequenceFile")) != null)
@@ -2558,20 +2657,31 @@ public class SequenceAnalysisController extends SpringActionController
 
                     try
                     {
-
-                        response.getWriter().write(">" + header + "\n");
-                        String seq = model.getSequence();
-                        if (seq != null)
+                        if (intervalMap.containsKey(rowId.toString()))
                         {
-                            int len = seq.length();
-                            for (int i = 0; i < len; i += lineLength)
+                            String wholeSequence = model.getSequence();
+                            for (String t : intervalMap.getString(rowId.toString()).split(","))
                             {
-                                response.getWriter().write(seq.substring(i, Math.min(len, i + lineLength)) + "\n");
+                                String[] coordinates = t.split("-");
+                                if (coordinates.length != 2)
+                                {
+                                    errors.reject("Inproper interval: [" + t + "]");
+                                    return;
+                                }
+
+                                Integer start = StringUtils.trimToNull(coordinates[0]) == null ? null : ConvertHelper.convert(coordinates[0], Integer.class);
+                                Integer stop = StringUtils.trimToNull(coordinates[1]) == null ? null : ConvertHelper.convert(coordinates[1], Integer.class);
+
+                                response.getWriter().write(">" + header + "_" + start + "-" + stop + "\n");
+
+                                //convert start to 0-based
+                                writeSequence(wholeSequence.substring(start == null || start == 0 ? null : start - 1, stop), lineLength, response);
                             }
                         }
                         else
                         {
-                            response.getWriter().write("\n");
+                            response.getWriter().write(">" + header + "\n");
+                            writeSequence(model.getSequence(), lineLength, response);
                         }
                     }
                     catch (IOException e)
@@ -2581,6 +2691,22 @@ public class SequenceAnalysisController extends SpringActionController
                 }
             });
         }
+
+        private void writeSequence(String seq, int lineLength, HttpServletResponse response) throws IOException
+        {
+            if (seq != null)
+            {
+                int len = seq.length();
+                for (int i = 0; i < len; i += lineLength)
+                {
+                    response.getWriter().write(seq.substring(i, Math.min(len, i + lineLength)) + "\n");
+                }
+            }
+            else
+            {
+                response.getWriter().write("\n");
+            }
+        }
     }
 
     public static class DownloadReferencesForm
@@ -2589,6 +2715,7 @@ public class SequenceAnalysisController extends SpringActionController
         private Integer[] _rowIds;
         private String _fileName;
         private int _lineLength = 60;
+        private String _intervals;
 
         public String getHeaderFormat()
         {
@@ -2628,6 +2755,16 @@ public class SequenceAnalysisController extends SpringActionController
         public void setLineLength(int lineLength)
         {
             _lineLength = lineLength;
+        }
+
+        public String getIntervals()
+        {
+            return _intervals;
+        }
+
+        public void setIntervals(String intervals)
+        {
+            _intervals = intervals;
         }
     }
 

@@ -399,12 +399,12 @@ public class TaskFileManagerImpl implements TaskFileManager
                         map.put("readset", readsetId);
                     }
 
-                    if (tokens.length >= 5)
+                    if (tokens.length >= 5 && StringUtils.trimToNull(tokens[4]) != null)
                     {
                         map.put("analysis_id", Integer.parseInt(tokens[4]));
                     }
 
-                    if (tokens.length >= 6)
+                    if (tokens.length >= 6 && StringUtils.trimToNull(tokens[5]) != null)
                     {
                         map.put("library_id", Integer.parseInt(tokens[5]));
                     }

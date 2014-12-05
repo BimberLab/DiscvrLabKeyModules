@@ -11,8 +11,6 @@ DISCVR/blast/resources/views/blast.html -text
 DISCVR/blast/resources/views/blast.view.xml -text
 DISCVR/blast/resources/views/instructions.html -text
 DISCVR/blast/resources/views/instructions.view.xml -text
-DISCVR/blast/resources/views/jobDetails.html -text
-DISCVR/blast/resources/views/jobDetails.view.xml -text
 DISCVR/blast/resources/views/settings.html -text
 DISCVR/blast/resources/views/settings.view.xml -text
 DISCVR/blast/resources/web/blast/docs/blast.jpg -text
@@ -43,6 +41,7 @@ DISCVR/blast/src/org/labkey/blast/pipeline/BlastPipelineJob.java -text
 DISCVR/blast/src/org/labkey/blast/pipeline/BlastPipelineProvider.java -text
 DISCVR/blast/src/org/labkey/blast/pipeline/BlastTask.java -text
 DISCVR/blast/src/org/labkey/blast/query/BlastUserSchema.java -text
+DISCVR/blast/src/org/labkey/blast/view/jobDetails.jsp -text
 DISCVR/blast/tools/install_blast.sh -text
 DISCVR/blast/webapp/WEB-INF/blast/blastContext.xml -text
 DISCVR/jbrowse/JBrowse.iml -text
@@ -2954,6 +2953,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.284-12.285.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.285-12.286.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.286-12.287.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.287-12.288.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -3017,6 +3017,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.284-12.285.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.285-12.286.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.286-12.287.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.287-12.288.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -3043,6 +3044,8 @@ labModules/SequenceAnalysis/resources/views/dataImportInstructions.html -text
 labModules/SequenceAnalysis/resources/views/dataImportInstructions.view.xml -text
 labModules/SequenceAnalysis/resources/views/generateSequenceGraph.html -text
 labModules/SequenceAnalysis/resources/views/generateSequenceGraph.view.xml -text
+labModules/SequenceAnalysis/resources/views/haplotypeDetails.html -text
+labModules/SequenceAnalysis/resources/views/haplotypeDetails.view.xml -text
 labModules/SequenceAnalysis/resources/views/illuminaSampleSheetExport.html -text
 labModules/SequenceAnalysis/resources/views/illuminaSampleSheetExport.view.xml -text
 labModules/SequenceAnalysis/resources/views/importReadset.html -text
@@ -3148,6 +3151,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CreateReferenc
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/DownloadSequencesWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/IlluminaApplicationWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/IlluminaSampleKitWindow.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportChainFileWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportOutputFileWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportSequencesFromFastaWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportTrackWindow.js -text
@@ -3909,6 +3913,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billi
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.367-12.368.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.368-12.369.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.369-12.370.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/postgresql/onprc_billing-12.370-12.371.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.30-12.301.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.301-12.302.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.302-12.303.sql -text
@@ -3972,6 +3977,7 @@ onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billin
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.367-12.368.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.368-12.369.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.369-12.370.sql -text
+onprcEHRModules/onprc_billing/resources/schemas/dbscripts/sqlserver/onprc_billing-12.370-12.371.sql -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing.xml -text
 onprcEHRModules/onprc_billing/resources/schemas/onprc_billing_public.template.xml -text
 onprcEHRModules/onprc_billing/resources/scripts/onprc_billing/billing_triggers.js -text

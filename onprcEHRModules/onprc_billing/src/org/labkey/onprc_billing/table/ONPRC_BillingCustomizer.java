@@ -91,6 +91,10 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             {
                 addTotalCost((AbstractTableInfo) table);
             }
+            else if(matches(table, "onprc_billing", "medicationFeeDefinition"))
+            {
+                customizeMedicationFeeDefinition((AbstractTableInfo) table);
+            }
             else if(matches(table, "onprc_billing", "perDiemRates"))
             {
                 addTotalCost((AbstractTableInfo) table);
@@ -137,6 +141,22 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             if (us != null)
             {
                 table.getColumn(FieldKey.fromString("assistingstaff")).setFk(new QueryForeignKey(us, us.getContainer(), "chargeUnits", "chargetype", null, true));
+            }
+        }
+    }
+
+    private void customizeMedicationFeeDefinition(AbstractTableInfo ti)
+    {
+        if (ti.getColumn("code") != null)
+        {
+            Container ehrContainer = EHRService.get().getEHRStudyContainer(ti.getUserSchema().getContainer());
+            if (ehrContainer != null)
+            {
+                UserSchema us = getUserSchema(ti, "ehr_lookups", ehrContainer);
+                if (us != null)
+                {
+                    ti.getColumn(FieldKey.fromString("code")).setFk(new QueryForeignKey(us, us.getContainer(), "snomed", "code", "meaning", false));
+                }
             }
         }
     }

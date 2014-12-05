@@ -1,9 +1,9 @@
-Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
+Ext4.define('SequenceAnalysis.window.ImportChainFileWindow', {
     extend: 'Ext.window.Window',
 
     statics: {
         buttonHandler: function(dataRegionName){
-            Ext4.create('SequenceAnalysis.window.ImportTrackWindow', {
+            Ext4.create('SequenceAnalysis.window.ImportChainFileWindow', {
                 dataRegionName: dataRegionName
             }).show();
         }
@@ -12,7 +12,7 @@ Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
     initComponent: function(){
         Ext4.apply(this, {
             modal: true,
-            title: 'Import Annotations/Tracks',
+            title: 'Import Chain File',
             width: 600,
             bodyStyle: 'padding: 5px;',
             defaults: {
@@ -20,12 +20,12 @@ Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
                 width: 450
             },
             items: [{
-                html: 'This will import annotations or feature tracks for the selected library. Note: the names used in the track must match those in the library itself.',
+                html: 'This will import a chain file, which is used to liftover variants or annotations from one reference genome to another.',
                 style: 'padding-bottom: 10px;',
                 width: null
             },{
                 xtype: 'form',
-                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'importTrack', null, null),
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'importChainFile', null, null),
                 fileUpload: true,
                 defaults: {
                     border: false,
@@ -34,8 +34,8 @@ Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
                 },
                 items: [{
                     xtype: 'ldk-simplelabkeycombo',
-                    fieldLabel: 'Reference Genome',
-                    name: 'libraryId',
+                    fieldLabel: 'Source Genome',
+                    name: 'genomeId1',
                     containerPath: Laboratory.Utils.getQueryContainerPath(),
                     schemaName: 'sequenceanalysis',
                     queryName: 'reference_libraries',
@@ -43,22 +43,24 @@ Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
                     valueField: 'rowid',
                     value: LABKEY.ActionURL.getParameter('libraryId') ? parseInt(LABKEY.ActionURL.getParameter('libraryId')) : null
                 },{
+                    xtype: 'ldk-simplelabkeycombo',
+                    fieldLabel: 'Target Genome',
+                    name: 'genomeId2',
+                    containerPath: Laboratory.Utils.getQueryContainerPath(),
+                    schemaName: 'sequenceanalysis',
+                    queryName: 'reference_libraries',
+                    displayField: 'name',
+                    valueField: 'rowid'
+                },{
                     xtype: 'filefield',
                     fieldLabel: 'File',
-                    name: 'track',
-                    allowBlank: false,
-                    validator: function(){
-                        var matcher = /^.*\.(bed|gff|gff3|gtf|vcf|bigwig|bw)$/i;
-                        return matcher.test(this.getValue()) ? true : 'File must be either: .bed, .gff, .gff3, .gtf, .vcf, .bigwig, or .bw';
-                    }
+                    name: 'chainFile',
+                    allowBlank: false
                 },{
-                    xtype: 'textfield',
-                    fieldLabel: 'Track Name',
-                    name: 'trackName'
-                },{
-                    xtype: 'textarea',
-                    fieldLabel: 'Description',
-                    name: 'trackDescription'
+                    xtype: 'ldk-numberfield',
+                    fieldLabel: 'Version (optional)',
+                    name: 'version',
+                    allowBlank: false
                 }]
             }],
             buttons: [{
@@ -77,14 +79,14 @@ Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
     },
 
     onSubmit: function(btn){
-        var fasta = this.down('filefield[name=track]').getValue();
+        var fasta = this.down('filefield[name=chainFile]').getValue();
         if (!fasta){
             Ext4.Msg.alert('Error', 'Must provide a file');
             return;
         }
 
-        if (!this.down('field[name=libraryId]').getValue() || !this.down('field[name=trackName]').getValue()){
-            Ext4.Msg.alert('Error', 'Must provide the library and track name');
+        if (!this.down('field[name=genomeId1]').getValue() || !this.down('field[name=genomeId1]').getValue()){
+            Ext4.Msg.alert('Error', 'Must provide the source and target genomes');
             return;
         }
 
@@ -102,7 +104,7 @@ Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
 
                 this.close();
 
-                Ext4.Msg.alert('Success', 'Track Imported!', function(){
+                Ext4.Msg.alert('Success', 'Chain File Imported!', function(){
                     var dataRegion = LABKEY.DataRegions[this.dataRegionName];
                     dataRegion.refresh();
                 }, this);

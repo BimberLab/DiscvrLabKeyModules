@@ -59,6 +59,8 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             return new SharedDataTable(this, sourceTable, true).init();
         else if (SequenceAnalysisSchema.TABLE_SAVED_ANALYSES.equalsIgnoreCase(name))
             return new SharedDataTable(this, sourceTable, true).init();
+        else if (SequenceAnalysisSchema.TABLE_CHAIN_FILES.equalsIgnoreCase(name))
+            return new SharedDataTable(this, sourceTable, true).init();
         else if (SequenceAnalysisSchema.TABLE_READSET_STATUS.equalsIgnoreCase(name))
             return new ContainerScopedTable<>(this, sourceTable, "status").init();
         else

@@ -45,6 +45,7 @@ public class SequenceAnalysisSchema
     public static final String TABLE_SAVED_ANALYSES = "saved_analyses";
     public static final String TABLE_LIBRARY_TRACKS = "reference_library_tracks";
     public static final String TABLE_READSET_STATUS = "readset_status";
+    public static final String TABLE_CHAIN_FILES = "chain_files";
 
     public static SequenceAnalysisSchema getInstance()
     {

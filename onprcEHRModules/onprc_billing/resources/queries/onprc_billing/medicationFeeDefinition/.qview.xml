@@ -1,9 +1,10 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView">
     <columns>
         <column name="rowId"/>
-        <column name="route"/>
         <column name="chargeId"/>
         <column name="chargeId/itemcode"/>
+        <column name="code"/>
+        <column name="route"/>
         <column name="active"/>
     </columns>
     <sorts>

@@ -16,6 +16,7 @@
 
 package org.labkey.blast;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
@@ -24,6 +25,9 @@ import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiJsonWriter;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
+import org.labkey.api.action.ExportAction;
+import org.labkey.api.action.SimpleErrorView;
+import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -38,6 +42,7 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.CSRF;
+import org.labkey.api.security.IgnoresTermsOfUse;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
@@ -48,15 +53,21 @@ import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.api.view.JspView;
+import org.labkey.api.view.NavTree;
+import org.labkey.api.view.Portal;
 import org.labkey.blast.model.BlastJob;
 import org.labkey.blast.pipeline.BlastDatabasePipelineJob;
 import org.springframework.validation.BindException;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -475,41 +486,6 @@ public class BLASTController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class) @CSRF
-    public class GetBlastResultAction extends ApiAction<BlastResultForm>
-    {
-        public ApiResponse execute(BlastResultForm form, BindException errors)
-        {
-            Map<String, Object> resultProperties = new HashMap<>();
-
-            BlastJob j = BLASTManager.get().getBlastResults(getContainer(), getUser(), form.getJobId());
-            if (j == null)
-            {
-                errors.reject(ERROR_MSG, "Unable to find job: " + form.getJobId());
-                return null;
-            }
-
-            resultProperties.putAll(j.toJSON(getUser(), true));
-
-            return new ApiSimpleResponse(resultProperties);
-        }
-    }
-
-    public static class BlastResultForm
-    {
-        private String _jobId;
-
-        public String getJobId()
-        {
-            return _jobId;
-        }
-
-        public void setJobId(String jobId)
-        {
-            _jobId = jobId;
-        }
-    }
-
     @RequiresPermissionClass(AdminPermission.class) @CSRF
     public class RecreateDatabaseAction extends ApiAction<RecreateDatabaseForm>
     {
@@ -569,6 +545,110 @@ public class BLASTController extends SpringActionController
         public void setDatabaseIds(String[] databaseIds)
         {
             _databaseIds = databaseIds;
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    public class JobDetailsAction extends SimpleViewAction<BlastResultForm>
+    {
+        @Override
+        public ModelAndView getView(BlastResultForm form, BindException errors) throws Exception
+        {
+            BlastJob j = BLASTManager.get().getBlastResults(getContainer(), getUser(), form.getJobId());
+            if (j == null)
+            {
+                errors.reject(ERROR_MSG, "Unable to find job: " + form.getJobId());
+                return new SimpleErrorView(errors);
+            }
+
+            JspView<BlastJob> view = new JspView<>("/org/labkey/blast/view/jobDetails.jsp", j);
+            view.setTitle("BLAST Job Details");
+            getPageConfig().setTitle("BLAST Job Details");
+            return view;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
+    public static class BlastResultForm
+    {
+        private String _jobId;
+
+        public String getJobId()
+        {
+            return _jobId;
+        }
+
+        public void setJobId(String jobId)
+        {
+            _jobId = jobId;
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    @IgnoresTermsOfUse
+    public class DownloadBlastResultsAction extends ExportAction<DownloadBlastResultsForm>
+    {
+        public void export(DownloadBlastResultsForm form, HttpServletResponse response, BindException errors) throws Exception
+        {
+            String jobId = form.getJobId();
+
+            if (jobId == null)
+            {
+                errors.reject(ERROR_MSG, "Need to provide the Job Id");
+                return;
+            }
+
+            if (form.getFileName() == null)
+            {
+                errors.reject(ERROR_MSG, "Need to provide a filename");
+                return;
+            }
+
+            Map<String, String> headers = new HashMap<>();
+
+            BlastJob j = BLASTManager.get().getBlastResults(getContainer(), getUser(), form.getJobId());
+            if (j == null)
+            {
+                errors.reject(ERROR_MSG, "Unable to find job: " + form.getJobId());
+                return;
+            }
+
+            PageFlowUtil.prepareResponseForFile(response, headers, form.getFileName(), true);
+            try (BufferedReader reader = new BufferedReader(new FileReader(j.getExpectedOutputFile())))
+            {
+                IOUtils.copy(reader, response.getOutputStream());
+            }
+        }
+    }
+
+    public static class DownloadBlastResultsForm
+    {
+        private String _jobId;
+        private String _fileName;
+
+        public String getJobId()
+        {
+            return _jobId;
+        }
+
+        public void setJobId(String jobId)
+        {
+            _jobId = jobId;
+        }
+
+        public String getFileName()
+        {
+            return _fileName;
+        }
+
+        public void setFileName(String fileName)
+        {
+            _fileName = fileName;
         }
     }
 }

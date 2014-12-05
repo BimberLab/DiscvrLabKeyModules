@@ -908,18 +908,28 @@
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
             </ns:column>
+            <ns:column columnName="chargeId">
+                <ns:columnTitle>Charge Id</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="code">
+                <ns:columnTitle>SNOMED Code</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+                <ns:fk>
+                    <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
+                    <ns:fkTable>snomed</ns:fkTable>
+                    <ns:fkColumnName>code</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="route">
                 <ns:columnTitle>Route</ns:columnTitle>
+                <ns:description>If provided, only medications using this route will be billed.  Can be left blank for all routes.</ns:description>
                 <ns:nullable>false</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>ehr_lookups</ns:fkDbSchema>
                     <ns:fkTable>routes</ns:fkTable>
                     <ns:fkColumnName>route</ns:fkColumnName>
                 </ns:fk>
-            </ns:column>
-            <ns:column columnName="chargeId">
-                <ns:columnTitle>Charge Id</ns:columnTitle>
-                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="active">
                 <ns:columnTitle>Is Active?</ns:columnTitle>
@@ -959,6 +969,7 @@
                 <ns:nullable>true</ns:nullable>
                 <ns:formatString>yyyy-MM-dd</ns:formatString>
             </ns:column>
+            <!--TODO: add container-->
             <ns:column columnName="objectid"/>
             <ns:column columnName="createdby"/>
             <ns:column columnName="created"/>
