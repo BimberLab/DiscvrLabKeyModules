@@ -18,11 +18,9 @@ package org.labkey.laboratory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.cache.CacheManager;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Aggregate;
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -37,13 +35,9 @@ import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.exp.ChangePropertyDescriptorException;
-import org.labkey.api.exp.OntologyManager;
-import org.labkey.api.exp.PropertyDescriptor;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.exp.property.Domain;
-import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.module.FolderType;
 import org.labkey.api.module.ModuleLoader;
@@ -55,11 +49,6 @@ import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.security.UserManager;
-import org.labkey.api.study.DataSet;
-import org.labkey.api.study.Study;
-import org.labkey.api.study.StudyService;
-import org.labkey.api.study.assay.AssayProtocolSchema;
 import org.labkey.api.study.assay.AssayProvider;
 import org.labkey.api.study.assay.AssayService;
 import org.labkey.api.util.PageFlowUtil;
@@ -69,7 +58,6 @@ import org.labkey.laboratory.query.ContainerIncrementingTable;
 import org.labkey.laboratory.query.LaboratoryWorkbooksTable;
 import org.labkey.laboratory.query.WorkbookModel;
 
-import java.beans.Introspector;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -143,7 +131,7 @@ public class LaboratoryManager
 
                 TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString(LaboratoryWorkbooksTable.WORKBOOK_COL), c.getId()), null);
                 if (ts.getRowCount() == 0)
-                    ti.getUpdateService().insertRows(u, c, rows, errors, new HashMap<String, Object>());
+                    ti.getUpdateService().insertRows(u, c, rows, errors, null, new HashMap<String, Object>());
             }
         }
     }
@@ -396,7 +384,7 @@ public class LaboratoryManager
 
         try
         {
-            qus.insertRows(u, c, rows, errors, new HashMap<String, Object>());
+            qus.insertRows(u, c, rows, errors, null, new HashMap<String, Object>());
         }
         catch (QueryUpdateServiceException e)
         {

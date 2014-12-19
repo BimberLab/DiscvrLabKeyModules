@@ -316,7 +316,7 @@ public class MergeSyncRunner implements Job
                             {
                                 Map<String, Object> keys = new CaseInsensitiveHashMap<>();
                                 keys.put("lsid", runRow.get("lsid"));
-                                getClinpathRuns(c, u).getUpdateService().updateRows(u, c, Collections.singletonList(runRow), Collections.singletonList(keys), getExtraContext());
+                                getClinpathRuns(c, u).getUpdateService().updateRows(u, c, Collections.singletonList(runRow), Collections.singletonList(keys), null, getExtraContext());
                             }
                         }
                     }
@@ -373,7 +373,7 @@ public class MergeSyncRunner implements Job
                     toDelete.add(row);
                 }
 
-                List deleted = resultTable.getUpdateService().deleteRows(u, c, toDelete, getExtraContext());
+                List deleted = resultTable.getUpdateService().deleteRows(u, c, toDelete, null, getExtraContext());
                 _log.info("pre-deleted " + deleted.size() + " rows from table: " + resultTable.getName());
             }
             else
@@ -516,7 +516,7 @@ public class MergeSyncRunner implements Job
                     _log.info("creating " + datasetName + " results: " + resultsToCreate.get(datasetName).size());
 
                     BatchValidationException errors = new BatchValidationException();
-                    ds.getUpdateService().insertRows(u, c, resultsToCreate.get(datasetName), errors, getExtraContext());
+                    ds.getUpdateService().insertRows(u, c, resultsToCreate.get(datasetName), errors, null, getExtraContext());
                 }
 
                 //if successful, we need to mark the run as completed
@@ -528,7 +528,7 @@ public class MergeSyncRunner implements Job
                 Map<String, Object> toUpdateKeys = new CaseInsensitiveHashMap<>();
                 toUpdateKeys.put("lsid", runLsid);
 
-                getClinpathRuns(c, u).getUpdateService().updateRows(u, c, Collections.singletonList(toUpdate), Collections.singletonList(toUpdateKeys), getExtraContext());
+                getClinpathRuns(c, u).getUpdateService().updateRows(u, c, Collections.singletonList(toUpdate), Collections.singletonList(toUpdateKeys), null, getExtraContext());
                 completedTasks.add(taskId);
             }
             else
@@ -554,7 +554,7 @@ public class MergeSyncRunner implements Job
                         toUpdateKeys.put("lsid", runLsid);
 
                         _log.info("marking clinpath run as delivered: " + runId);
-                        getClinpathRuns(c, u).getUpdateService().updateRows(u, c, Collections.singletonList(toUpdate), Collections.singletonList(toUpdateKeys), getExtraContext());
+                        getClinpathRuns(c, u).getUpdateService().updateRows(u, c, Collections.singletonList(toUpdate), Collections.singletonList(toUpdateKeys), null, getExtraContext());
                     }
                     else
                     {
@@ -874,7 +874,7 @@ public class MergeSyncRunner implements Job
         {
             _log.info("creating clinpath run for merge data: " + key);
             BatchValidationException errors = new BatchValidationException();
-            List<Map<String, Object>> createdRunRows = clinpathRuns.getUpdateService().insertRows(u, c, Arrays.asList(runRow), errors, getExtraContext());
+            List<Map<String, Object>> createdRunRows = clinpathRuns.getUpdateService().insertRows(u, c, Arrays.asList(runRow), errors, null, getExtraContext());
             if (errors.hasErrors())
             {
                 throw errors;

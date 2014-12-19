@@ -17,7 +17,6 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
-import org.labkey.api.data.CompareType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -29,7 +28,6 @@ import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.query.BatchValidationException;
@@ -39,7 +37,6 @@ import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -61,7 +58,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * User: bbimber
@@ -159,7 +155,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 libraryRow.put("description", getPipelineJob().getLibraryDescription());
 
                 BatchValidationException errors = new BatchValidationException();
-                List<Map<String, Object>> inserted = libraryTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), Arrays.asList(libraryRow), errors, new HashMap<String, Object>());
+                List<Map<String, Object>> inserted = libraryTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), Arrays.asList(libraryRow), errors, null, new HashMap<String, Object>());
                 if (errors.hasErrors())
                 {
                     throw errors;
@@ -248,7 +244,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             toUpdate.put("fasta_file", d.getRowId());
             Map<String, Object> existingKeys = new CaseInsensitiveHashMap<>();
             existingKeys.put("rowid", rowId);
-            libraryTable.getUpdateService().updateRows(getJob().getUser(), getJob().getContainer(), Arrays.asList(toUpdate), Arrays.asList(existingKeys), new HashMap<String, Object>());
+            libraryTable.getUpdateService().updateRows(getJob().getUser(), getJob().getContainer(), Arrays.asList(toUpdate), Arrays.asList(existingKeys), null, new HashMap<String, Object>());
 
             //then insert children, only if not already present
             List<Map<String, Object>> toInsert = new ArrayList<>();
@@ -270,7 +266,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 getJob().getLogger().info("updating database");
                 BatchValidationException errors = new BatchValidationException();
                 TableInfo libraryMembersTable = QueryService.get().getUserSchema(getJob().getUser(), getJob().getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS);
-                libraryMembersTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), toInsert, errors, new HashMap<String, Object>());
+                libraryMembersTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), toInsert, errors, null, new HashMap<String, Object>());
                 if (errors.hasErrors())
                 {
                     throw errors;

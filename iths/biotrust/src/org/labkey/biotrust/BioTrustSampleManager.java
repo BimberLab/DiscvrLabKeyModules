@@ -160,7 +160,7 @@ public class BioTrustSampleManager
                 ColumnInfo samplePk = sampleTable.getColumn(FieldKey.fromParts("RowId"));
                 keys.add(Collections.<String, Object>singletonMap(samplePk.getName(), sampleId));
                 QueryUpdateService qus = sampleTable.getUpdateService();
-                qus.deleteRows(user, c, keys, null);
+                qus.deleteRows(user, c, keys, null, null);
             }
             transaction.commit();
         }
@@ -278,7 +278,7 @@ public class BioTrustSampleManager
 
                 QueryUpdateService qus = tissueTable.getUpdateService();
                 if (null != qus)
-                    qus.deleteRows(user, c, keys, null);
+                    qus.deleteRows(user, c, keys, null, null);
             }
             transaction.commit();
         }
@@ -331,7 +331,7 @@ public class BioTrustSampleManager
                 Table.delete(BioTrustSchema.getInstance().getTableInfoParticipantEligibilityMap(), filter);
 
                 QueryUpdateService qus = eligibilityTable.getUpdateService();
-                qus.deleteRows(user, c, keys, null);
+                qus.deleteRows(user, c, keys, null, null);
             }
             transaction.commit();
         }
@@ -614,7 +614,7 @@ public class BioTrustSampleManager
 
                 QueryUpdateService qus = sampleTable.getUpdateService();
 
-                samples = qus.insertRows(user, c, rows, new BatchValidationException(), null);
+                samples = qus.insertRows(user, c, rows, new BatchValidationException(), null, null);
             }
 
             String[] tissueTypes = new String[]{"Breast", "Prostate", "Colon"};
@@ -637,7 +637,7 @@ public class BioTrustSampleManager
                 }
 
                 QueryUpdateService qus = tissueTable.getUpdateService();
-                tissues = qus.insertRows(user, c, rows, new BatchValidationException(), null);
+                tissues = qus.insertRows(user, c, rows, new BatchValidationException(), null, null);
             }
 
             // create eligibility info
@@ -662,7 +662,7 @@ public class BioTrustSampleManager
                     row.put("pathstage", type);
                 }
                 QueryUpdateService qus = eligibiltyTable.getUpdateService();
-                eligibility = qus.insertRows(user, c, rows, new BatchValidationException(), null);
+                eligibility = qus.insertRows(user, c, rows, new BatchValidationException(), null, null);
             }
 
             String status = "_TEST STATUS_";

@@ -25,7 +25,6 @@ import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SQLFragment;
@@ -615,7 +614,7 @@ public class ETLRunnable implements Runnable
                                     else
                                     {
                                         log.error("Real table not found: " + targetTableName);
-                                        List<Map<String, Object>> deleted = updater.deleteRows(user, container, Arrays.asList(rows), extraContext);
+                                        List<Map<String, Object>> deleted = updater.deleteRows(user, container, Arrays.asList(rows), null, extraContext);
                                         totalDeleted = deleted.size();
                                     }
 
@@ -635,7 +634,7 @@ public class ETLRunnable implements Runnable
 
                             long start = new Date().getTime();
                             BatchValidationException errors = new BatchValidationException();
-                            updater.insertRows(user, container, sourceRows, errors, extraContext);
+                            updater.insertRows(user, container, sourceRows, errors, null, extraContext);
                             if (errors.hasErrors())
                             {
                                 log.error("There were errors during the sync for: " + targetTableName);

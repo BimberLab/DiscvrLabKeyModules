@@ -1116,7 +1116,7 @@ public class BioTrustController extends SpringActionController
                 row.put("studyrecordid", (studyRecordId == null ? 1 : studyRecordId + 1));
 
                 QueryUpdateService tQus = tissueTable.getUpdateService();
-                List<Map<String, Object>> tissues = tQus.insertRows(user, c, Collections.singletonList(row), new BatchValidationException(), null);
+                List<Map<String, Object>> tissues = tQus.insertRows(user, c, Collections.singletonList(row), new BatchValidationException(), null, null);
                 int tissueId = Integer.parseInt(tissues.get(0).get("rowid").toString());
                 response.put("tissueId", tissueId);
 
@@ -1692,9 +1692,9 @@ public class BioTrustController extends SpringActionController
                         {
                             List<Map<String,Object>> rows;
                             if (form.getRowId() > 0)
-                                rows = qus.updateRows(getUser(), getContainer(), Collections.singletonList(values), Collections.singletonList(keys), null);
+                                rows = qus.updateRows(getUser(), getContainer(), Collections.singletonList(values), Collections.singletonList(keys), null, null);
                             else
-                                rows = qus.insertRows(getUser(), getContainer(), Collections.singletonList(values), new BatchValidationException(), null);
+                                rows = qus.insertRows(getUser(), getContainer(), Collections.singletonList(values), new BatchValidationException(), null, null);
 
                             if (rows.size() > 0)
                             {
@@ -1742,7 +1742,7 @@ public class BioTrustController extends SpringActionController
             keys.put("UserId", user.getUserId());
 
             QueryUpdateService qus = usersTable.getUpdateService();
-            qus.updateRows(getUser(), getContainer(), Collections.singletonList(values), Collections.singletonList(keys), null);
+            qus.updateRows(getUser(), getContainer(), Collections.singletonList(values), Collections.singletonList(keys), null, null);
         }
     }
 
@@ -1962,7 +1962,7 @@ public class BioTrustController extends SpringActionController
                         QueryUpdateService qus = surveyTable.getUpdateService();
                         if (qus != null)
                         {
-                            qus.updateRows(getUser(), surveyContainer, Collections.singletonList(values), Collections.singletonList(keys), null);
+                            qus.updateRows(getUser(), surveyContainer, Collections.singletonList(values), Collections.singletonList(keys), null, null);
 
                             if (form.isStudy())
                             {
@@ -2196,7 +2196,7 @@ public class BioTrustController extends SpringActionController
                         QueryUpdateService qus = surveyTable.getUpdateService();
                         if (qus != null)
                         {
-                            qus.updateRows(getUser(), surveyContainer, Collections.singletonList(values), Collections.singletonList(keys), null);
+                            qus.updateRows(getUser(), surveyContainer, Collections.singletonList(values), Collections.singletonList(keys), null, null);
                             response.put("success", true);
                         }
                     }
@@ -2397,7 +2397,7 @@ public class BioTrustController extends SpringActionController
                         keys.put("UserId", _user.getUserId());
 
                         QueryUpdateService qus = usersTable.getUpdateService();
-                        qus.updateRows(elevatedUser, getContainer(), Collections.singletonList(values), Collections.singletonList(keys), null);
+                        qus.updateRows(elevatedUser, getContainer(), Collections.singletonList(values), Collections.singletonList(keys), null, null);
 
                         // send the email notification
                         BioTrustNotificationManager.get().sendInvestigatorAccountCreatedEmail(newFolder, elevatedUser, _user);
@@ -2582,7 +2582,7 @@ public class BioTrustController extends SpringActionController
                         keys.put("rowid", form.getRowId());
                     else
                         keys.put("RowId", form.getRowId());
-                    qus.deleteRows(getUser(), getContainer(), Collections.singletonList(keys), null);
+                    qus.deleteRows(getUser(), getContainer(), Collections.singletonList(keys), null, null);
                 }
 
                 transaction.commit();
