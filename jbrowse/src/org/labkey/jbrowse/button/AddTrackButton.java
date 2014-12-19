@@ -17,6 +17,6 @@ public class AddTrackButton extends SimpleButtonConfigFactory
 {
     public AddTrackButton()
     {
-        super(ModuleLoader.getInstance().getModule(JBrowseModule.class), "Add To JBrowse Session", "JBrowse.window.DatabaseWindow.trackHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromFilePath("jbrowse/window/DatabaseWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(JBrowseModule.class), "Add To JBrowse Session", "JBrowse.window.DatabaseWindow.trackHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("jbrowse/window/DatabaseWindow.js"))));
     }
 }

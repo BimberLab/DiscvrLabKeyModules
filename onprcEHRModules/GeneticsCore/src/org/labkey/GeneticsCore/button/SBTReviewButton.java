@@ -17,6 +17,6 @@ public class SBTReviewButton extends SimpleButtonConfigFactory
 {
     public SBTReviewButton()
     {
-        super(ModuleLoader.getInstance().getModule(GeneticsCoreModule.class), "SBT Review", "GeneticsCore.buttons.sbtReviewHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromFilePath("geneticscore/buttons.js"))));
+        super(ModuleLoader.getInstance().getModule(GeneticsCoreModule.class), "SBT Review", "GeneticsCore.buttons.sbtReviewHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("geneticscore/buttons.js"))));
     }
 }

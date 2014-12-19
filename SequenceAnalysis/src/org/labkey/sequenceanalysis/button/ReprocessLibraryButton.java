@@ -17,6 +17,6 @@ public class ReprocessLibraryButton extends SimpleButtonConfigFactory
 {
     public ReprocessLibraryButton()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Re-process Selected", "SequenceAnalysis.window.ReprocessLibraryWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromFilePath("sequenceanalysis/window/ReprocessLibraryWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Re-process Selected", "SequenceAnalysis.window.ReprocessLibraryWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("sequenceanalysis/window/ReprocessLibraryWindow.js"))));
     }
 }

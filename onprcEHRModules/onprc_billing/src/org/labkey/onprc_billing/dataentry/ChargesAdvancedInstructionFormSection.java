@@ -1,10 +1,8 @@
 package org.labkey.onprc_billing.dataentry;
 
-import org.labkey.api.data.Container;
 import org.labkey.api.ehr.dataentry.AbstractFormSection;
 import org.labkey.api.ehr.dataentry.DataEntryFormContext;
 import org.labkey.api.ehr.dataentry.FormElement;
-import org.labkey.api.security.User;
 import org.labkey.api.view.template.ClientDependency;
 
 import java.util.Collections;
@@ -21,7 +19,7 @@ public class ChargesAdvancedInstructionFormSection extends AbstractFormSection
     {
         super("ChargesInstruction", "Instructions", "onprc-chargesadvancedinstructionpanel");
 
-        addClientDependency(ClientDependency.fromFilePath("onprc_billing/panel/ChargesAdvancedInstructionPanel.js"));
+        addClientDependency(ClientDependency.fromPath("onprc_billing/panel/ChargesAdvancedInstructionPanel.js"));
     }
 
     @Override

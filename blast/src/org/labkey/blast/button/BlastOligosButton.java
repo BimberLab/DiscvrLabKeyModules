@@ -17,6 +17,6 @@ public class BlastOligosButton extends SimpleButtonConfigFactory
 {
     public BlastOligosButton()
     {
-        super(ModuleLoader.getInstance().getModule(BLASTModule.class), "BLAST Oligos", "BLAST.window.BlastOligosWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromFilePath("laboratory.context"), ClientDependency.fromFilePath("blast/window/BlastOligosWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(BLASTModule.class), "BLAST Oligos", "BLAST.window.BlastOligosWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("laboratory.context"), ClientDependency.fromPath("blast/window/BlastOligosWindow.js"))));
     }
 }

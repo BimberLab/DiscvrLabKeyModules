@@ -17,6 +17,6 @@ public class ReprocessSessionsButton extends SimpleButtonConfigFactory
 {
     public ReprocessSessionsButton()
     {
-        super(ModuleLoader.getInstance().getModule(JBrowseModule.class), "Re-process Selected", "JBrowse.window.ReprocessResourcesWindow.sessionHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromFilePath("jbrowse/window/ReprocessResourcesWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(JBrowseModule.class), "Re-process Selected", "JBrowse.window.ReprocessResourcesWindow.sessionHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("jbrowse/window/ReprocessResourcesWindow.js"))));
     }
 }

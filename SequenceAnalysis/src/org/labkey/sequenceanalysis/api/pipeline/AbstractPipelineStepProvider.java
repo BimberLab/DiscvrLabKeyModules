@@ -85,7 +85,7 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
         LinkedHashSet<ClientDependency> clientDependencies = new LinkedHashSet<>();
         for (String path : _clientDependencyPaths)
         {
-            clientDependencies.add(ClientDependency.fromFilePath(path));
+            clientDependencies.add(ClientDependency.fromPath(path));
         }
 
         return clientDependencies;

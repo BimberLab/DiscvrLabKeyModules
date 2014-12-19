@@ -15,7 +15,7 @@ public class CensusFormSection extends SimpleFormSection
         super("sla", "census", "Census", "ehr-gridpanel");
         setTemplateMode(TEMPLATE_MODE.NONE);
 
-        addClientDependency(ClientDependency.fromFilePath("sla/window/AddCensusWindow.js"));
+        addClientDependency(ClientDependency.fromPath("sla/window/AddCensusWindow.js"));
     }
 
     @Override

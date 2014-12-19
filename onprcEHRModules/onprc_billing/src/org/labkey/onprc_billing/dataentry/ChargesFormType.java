@@ -28,7 +28,7 @@ public class ChargesFormType extends TaskForm
                 new ChargesFormSection()
         ));
 
-        addClientDependency(ClientDependency.fromFilePath("onprc_billing/panel/ChargesInstructionPanel.js"));
-        addClientDependency(ClientDependency.fromFilePath("onprc_billing/buttons/financeButtons.js"));
+        addClientDependency(ClientDependency.fromPath("onprc_billing/panel/ChargesInstructionPanel.js"));
+        addClientDependency(ClientDependency.fromPath("onprc_billing/buttons/financeButtons.js"));
     }
 }

@@ -32,8 +32,8 @@ public class ChargesAdvancedFormType extends TaskForm
                 new ChargesFormSection()
         ));
 
-        addClientDependency(ClientDependency.fromFilePath("onprc_billing/model/sources/ChargesAdvanced.js"));
-        addClientDependency(ClientDependency.fromFilePath("onprc_billing/buttons/financeButtons.js"));
+        addClientDependency(ClientDependency.fromPath("onprc_billing/model/sources/ChargesAdvanced.js"));
+        addClientDependency(ClientDependency.fromPath("onprc_billing/buttons/financeButtons.js"));
 
         for (FormSection s : getFormSections())
         {

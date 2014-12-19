@@ -40,7 +40,7 @@ public class VariantSearchHandler implements SequenceFileHandler
     @Override
     public ButtonConfigFactory getButtonConfig()
     {
-        return new SimpleButtonConfigFactory(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Variant Search", "SequenceAnalysis.Buttons.sequenceOutputHandler(dataRegionName, " + PageFlowUtil.jsString(VariantSearchHandler.class.getName()) + ");", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromFilePath("sequenceanalysis/sequenceAnalysisButtons.js"))));
+        return new SimpleButtonConfigFactory(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Variant Search", "SequenceAnalysis.Buttons.sequenceOutputHandler(dataRegionName, " + PageFlowUtil.jsString(VariantSearchHandler.class.getName()) + ");", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("sequenceanalysis/sequenceAnalysisButtons.js"))));
     }
 
     @Override

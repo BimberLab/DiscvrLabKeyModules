@@ -24,7 +24,7 @@ public class CensusFormType extends TaskForm
                         new CensusFormSection())
         );
 
-        addClientDependency(ClientDependency.fromFilePath("sla/model/sources/SLA.js"));
+        addClientDependency(ClientDependency.fromPath("sla/model/sources/SLA.js"));
 
         for (FormSection s : this.getFormSections())
         {

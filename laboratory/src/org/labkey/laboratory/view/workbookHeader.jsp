@@ -28,10 +28,10 @@
     public LinkedHashSet<ClientDependency> getClientDependencies()
     {
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<ClientDependency>();
-        resources.add(ClientDependency.fromFilePath("laboratory.context"));
-        resources.add(ClientDependency.fromFilePath("laboratory/panel/WorkbookHeaderPanel.js"));
-        resources.add(ClientDependency.fromFilePath("editInPlaceElement.css"));
-        resources.add(ClientDependency.fromFilePath("editInPlaceElement.js"));
+        resources.add(ClientDependency.fromPath("laboratory.context"));
+        resources.add(ClientDependency.fromPath("laboratory/panel/WorkbookHeaderPanel.js"));
+        resources.add(ClientDependency.fromPath("editInPlaceElement.css"));
+        resources.add(ClientDependency.fromPath("editInPlaceElement.js"));
         return resources;
     }
 %>

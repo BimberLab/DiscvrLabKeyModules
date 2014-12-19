@@ -28,9 +28,9 @@
   public LinkedHashSet<ClientDependency> getClientDependencies()
   {
       LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-      resources.add(ClientDependency.fromFilePath("Ext4ClientApi"));
-      resources.add(ClientDependency.fromFilePath("dataview/DataViewsPanel.css"));
-      resources.add(ClientDependency.fromFilePath("biotrust/DashboardPanel.js"));
+      resources.add(ClientDependency.fromPath("Ext4ClientApi"));
+      resources.add(ClientDependency.fromPath("dataview/DataViewsPanel.css"));
+      resources.add(ClientDependency.fromPath("biotrust/DashboardPanel.js"));
       return resources;
   }
 %>

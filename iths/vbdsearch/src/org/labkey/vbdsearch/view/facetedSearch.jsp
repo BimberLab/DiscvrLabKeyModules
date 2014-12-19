@@ -23,13 +23,13 @@
     {
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
 
-        resources.add(ClientDependency.fromFilePath("Ext4ClientAPI"));
-        resources.add(ClientDependency.fromFilePath("clientapi/ext4/Util.js"));
-        resources.add(ClientDependency.fromFilePath("clientapi/ext4/data/Reader.js"));
-        resources.add(ClientDependency.fromFilePath("clientapi/ext4/data/Proxy.js"));
-        resources.add(ClientDependency.fromFilePath("clientapi/ext4/data/Store.js"));
-        resources.add(ClientDependency.fromFilePath("ux/CheckCombo/CheckCombo.js"));
-        resources.add(ClientDependency.fromFilePath("ux/CheckCombo/CheckCombo.css"));
+        resources.add(ClientDependency.fromPath("Ext4ClientAPI"));
+        resources.add(ClientDependency.fromPath("clientapi/ext4/Util.js"));
+        resources.add(ClientDependency.fromPath("clientapi/ext4/data/Reader.js"));
+        resources.add(ClientDependency.fromPath("clientapi/ext4/data/Proxy.js"));
+        resources.add(ClientDependency.fromPath("clientapi/ext4/data/Store.js"));
+        resources.add(ClientDependency.fromPath("ux/CheckCombo/CheckCombo.js"));
+        resources.add(ClientDependency.fromPath("ux/CheckCombo/CheckCombo.css"));
 
         return resources;
     }

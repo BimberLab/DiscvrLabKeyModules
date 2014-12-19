@@ -20,7 +20,7 @@ public class QualiMapButton extends SimpleButtonConfigFactory
 {
     public QualiMapButton()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "QualiMap Report", "SequenceAnalysis.Buttons.generateQualiMapReport(dataRegionName, 'analysisIds');", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromFilePath("sequenceanalysis/sequenceanalysisButtons.js"))));
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "QualiMap Report", "SequenceAnalysis.Buttons.generateQualiMapReport(dataRegionName, 'analysisIds');", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("sequenceanalysis/sequenceanalysisButtons.js"))));
     }
 
     @Override

@@ -40,16 +40,16 @@
     public LinkedHashSet<ClientDependency> getClientDependencies()
     {
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-        resources.add(ClientDependency.fromFilePath("Ext4ClientApi"));
-        resources.add(ClientDependency.fromFilePath("/survey/Survey.css"));
-        resources.add(ClientDependency.fromFilePath("/survey/BaseSurveyPanel.js"));
-        resources.add(ClientDependency.fromFilePath("/survey/UsersCombo.js"));
-        resources.add(ClientDependency.fromFilePath("/biotrust/SampleRequestWizard.js"));
-        resources.add(ClientDependency.fromFilePath("/biotrust/AssociatedStudyQuestion.js"));
-        resources.add(ClientDependency.fromFilePath("/biotrust/ContactCombo.js"));
-        resources.add(ClientDependency.fromFilePath("/biotrust/ContactsPanel.js"));
-        resources.add(ClientDependency.fromFilePath("/biotrust/DocumentUploadQuestion.js"));
-        resources.add(ClientDependency.fromFilePath("/biotrust/TissueRecordPanel.js"));
+        resources.add(ClientDependency.fromPath("Ext4ClientApi"));
+        resources.add(ClientDependency.fromPath("/survey/Survey.css"));
+        resources.add(ClientDependency.fromPath("/survey/BaseSurveyPanel.js"));
+        resources.add(ClientDependency.fromPath("/survey/UsersCombo.js"));
+        resources.add(ClientDependency.fromPath("/biotrust/SampleRequestWizard.js"));
+        resources.add(ClientDependency.fromPath("/biotrust/AssociatedStudyQuestion.js"));
+        resources.add(ClientDependency.fromPath("/biotrust/ContactCombo.js"));
+        resources.add(ClientDependency.fromPath("/biotrust/ContactsPanel.js"));
+        resources.add(ClientDependency.fromPath("/biotrust/DocumentUploadQuestion.js"));
+        resources.add(ClientDependency.fromPath("/biotrust/TissueRecordPanel.js"));
         return resources;
     }
 %>

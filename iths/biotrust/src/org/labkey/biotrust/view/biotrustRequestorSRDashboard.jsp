@@ -27,12 +27,12 @@
   public LinkedHashSet<ClientDependency> getClientDependencies()
   {
       LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-      resources.add(ClientDependency.fromFilePath("Ext4ClientApi"));
-      resources.add(ClientDependency.fromFilePath("dataview/DataViewsPanel.css"));
-      resources.add(ClientDependency.fromFilePath("biotrust/NWBioTrust.css"));
-      resources.add(ClientDependency.fromFilePath("biotrust/DashboardPanel.js"));
-      resources.add(ClientDependency.fromFilePath("biotrust/DocumentSetPanel.js"));
-      resources.add(ClientDependency.fromFilePath("biotrust/CreateNewRequestPanel.js"));
+      resources.add(ClientDependency.fromPath("Ext4ClientApi"));
+      resources.add(ClientDependency.fromPath("dataview/DataViewsPanel.css"));
+      resources.add(ClientDependency.fromPath("biotrust/NWBioTrust.css"));
+      resources.add(ClientDependency.fromPath("biotrust/DashboardPanel.js"));
+      resources.add(ClientDependency.fromPath("biotrust/DocumentSetPanel.js"));
+      resources.add(ClientDependency.fromPath("biotrust/CreateNewRequestPanel.js"));
       return resources;
   }
 %>

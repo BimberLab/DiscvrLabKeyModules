@@ -19,9 +19,7 @@ import org.labkey.api.ehr.EHRService;
 import org.labkey.api.ehr.dataentry.SimpleFormSection;
 import org.labkey.api.view.template.ClientDependency;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * User: bimber
@@ -40,6 +38,6 @@ public class ChargesFormSection extends SimpleFormSection
         super("onprc_billing", "miscCharges", "Misc. Charges", "ehr-gridpanel", location);
         setConfigSources(Collections.singletonList("Task"));
         setClientStoreClass("EHR.data.MiscChargesClientStore");
-        addClientDependency(ClientDependency.fromFilePath("ehr/data/MiscChargesClientStore.js"));
+        addClientDependency(ClientDependency.fromPath("ehr/data/MiscChargesClientStore.js"));
     }
 }

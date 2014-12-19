@@ -29,8 +29,8 @@ public class ReversalFormType extends TaskForm
                 new AdjustmentFormSection()
         ));
 
-        addClientDependency(ClientDependency.fromFilePath("onprc_billing/model/sources/Reversals.js"));
-        addClientDependency(ClientDependency.fromFilePath("onprc_billing/buttons/financeButtons.js"));
+        addClientDependency(ClientDependency.fromPath("onprc_billing/model/sources/Reversals.js"));
+        addClientDependency(ClientDependency.fromPath("onprc_billing/buttons/financeButtons.js"));
 
         for (FormSection s : getFormSections())
         {

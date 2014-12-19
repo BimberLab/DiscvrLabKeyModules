@@ -17,6 +17,6 @@ public class CreateDatabaseButton extends SimpleButtonConfigFactory
 {
     public CreateDatabaseButton()
     {
-        super(ModuleLoader.getInstance().getModule(BLASTModule.class), "Create BLAST Database", "BLAST.window.DatabaseWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromFilePath("blast/window/DatabaseWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(BLASTModule.class), "Create BLAST Database", "BLAST.window.DatabaseWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("blast/window/DatabaseWindow.js"))));
     }
 }
