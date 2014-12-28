@@ -98,9 +98,8 @@ public class AssayHelper
             headers.add(dp.getName());
         }
 
-        try
+        try (TSVMapWriter tsv = new TSVMapWriter(headers, results))
         {
-            TSVMapWriter tsv = new TSVMapWriter(headers, results);
             tsv.write(newFile);
         }
         catch (IOException e)
