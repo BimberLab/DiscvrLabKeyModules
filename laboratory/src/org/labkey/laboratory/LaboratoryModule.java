@@ -77,7 +77,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
         return new ArrayList<WebPartFactory>(Arrays.asList(
             new BaseWebPartFactory("Workbook Header")
             {
-                public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart) throws Exception
+                public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
                 {
                     WorkbookModel model = LaboratoryManager.get().getWorkbookModel(portalCtx.getContainer());
                     if (model == null)
