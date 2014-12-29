@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.PropertyStorageSpec;
 import org.labkey.api.data.SQLFragment;
@@ -127,6 +128,12 @@ public abstract class BioTrustDomainKind extends DomainKind
         {
             return null;
         }
+    }
+
+    @Override
+    public DbSchemaType getSchemaType()
+    {
+        return DbSchemaType.Provisioned;
     }
 
     private static String generatePropertyURI(String schemaName, String tableName, String namespacePrefix, Container c, User u)
