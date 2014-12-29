@@ -713,7 +713,7 @@ public class NWBioTrustTest extends SurveyTest
         goToSurveysTable("create definition");
         waitForText("Extensible Table 'Surveys'");
         waitForText("No fields have been defined.");
-        _listHelper.addField("Field Properties", 0, "Category", "Category", ListHelper.ListColumnType.Integer);
+        _listHelper.addField("Field Properties", "Category", "Category", ListHelper.ListColumnType.Integer);
         _listHelper.setColumnType(0, new ListHelper.LookupInfo("", "biotrust", "RequestCategory"));
         clickButton("Save");
 

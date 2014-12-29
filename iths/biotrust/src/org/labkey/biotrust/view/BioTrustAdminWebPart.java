@@ -34,7 +34,7 @@ public class BioTrustAdminWebPart extends BaseWebPartFactory
 
     public BioTrustAdminWebPart()
     {
-        super(NAME, WebPartFactory.LOCATION_BODY, false, false);
+        super(NAME, false, false);
     }
 
     @Override
