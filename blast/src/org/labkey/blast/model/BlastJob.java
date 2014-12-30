@@ -1,5 +1,6 @@
 package org.labkey.blast.model;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
@@ -11,18 +12,24 @@ import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.security.User;
-import org.labkey.api.security.UserManager;
 import org.labkey.blast.BLASTManager;
 import org.labkey.blast.BLASTSchema;
+import org.labkey.blast.BLASTWrapper;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -83,7 +90,7 @@ public class BlastJob
 
     public Map<String, Object> getParams()
     {
-        return _params;
+        return Collections.unmodifiableMap(_params);
     }
 
     public void setParams(String params)
@@ -104,7 +111,13 @@ public class BlastJob
 
     public Map<String, Object> getParamMap()
     {
-        return _params;
+        Map<String, Object> ret = new HashMap<>(_params);
+        if (ret.containsKey("outputFmt"))
+        {
+            ret.remove("outputFmt");
+        }
+
+        return ret;
     }
 
     public boolean isSaveResults()
@@ -231,7 +244,7 @@ public class BlastJob
 
     public File getExpectedOutputFile()
     {
-        return new File(getOutputDir(), "blast-" + _objectid + ".html");
+        return new File(getOutputDir(), "blast-" + _objectid + ".asn");
     }
 
     public File getExpectedInputFile()
@@ -269,58 +282,193 @@ public class BlastJob
         Table.update(u, jobs, this, getObjectid());
     }
 
-    public JSONObject toJSON(User u, boolean includeHTML)
+    public void getResults(BLAST_OUTPUT_FORMAT outputFormat, Writer out) throws IOException
     {
-        JSONObject ret = new JSONObject();
-        ret.put("databaseId", _databaseId);
-        ret.put("title", _title);
-        ret.put("container", _container);
-        ret.put("params", getParamMap());
-        ret.put("jobId", _jobId);
-        ret.put("htmlFile", _htmlFile);
-        ret.put("created", _created);
-        ret.put("createdBy", _createdBy);
-        User createdUser = UserManager.getUser(_createdBy);
-        if (createdUser != null)
+        File output = getExpectedOutputFile();
+        if (!output.exists())
         {
-            ret.put("createdByDisplayName", createdUser.getDisplayName(u));
+            return;
         }
 
-        ret.put("hasRun", _hasRun);
+        outputFormat.processResults(output, out);
+    }
 
-        File expectedOutput = getExpectedOutputFile();
-        ret.put("hasResults", expectedOutput.exists());
-
-        if (includeHTML)
+    public boolean hasError(User u)
+    {
+        if (getJobId() == null)
         {
-            if (!getHasRun())
+            return false;
+        }
+
+        Integer jobId = PipelineService.get().getJobId(u, ContainerManager.getForId(getContainer()), getJobId());
+        PipelineStatusFile statusFile = PipelineService.get().getStatusFile(jobId);
+        return "ERROR".equalsIgnoreCase(statusFile.getStatus());
+    }
+
+    public static enum BLAST_OUTPUT_FORMAT
+    {
+        pairwise("Pairwise", "0", false, null),
+        queryAnchoredWithIdentities("Query-anchored showing identities", "1", false, null),
+        queryAnchoredNoIdentities("Query-anchored no identities", "2", false, null),
+        flatQueryAnchoredWithIdentities("Flat query-anchored, show identities", "3", false, null),
+        flatQueryAnchoredNoIdentities("Flat query-anchored, no identities", "4", false, null),
+        xml("XML Blast output", "5", false, null),
+        tabular("Tabular", "7", false, null),
+        alignmentSummary("Summary of perfect matches", "6 qseqid qlen sseqid slen qstart qend sstart send qseq sseq length mismatch ", true, new BlastResultProcessor()
+        {
+            private Map<String, Set<String>> _perfectHitSummary;
+
+            @Override
+            public void processResults(File results, Writer out) throws IOException
             {
-                ret.put("html", "The job has not yet finished.  The page will refresh every 5 seconds until the job is complete.");
+                //summary of perfect hits by query seq
+                try (StringWriter writer = new StringWriter())
+                {
+                    _perfectHitSummary = new HashMap<>();
+
+                    new BLASTWrapper().runBlastFormatter(results, BLAST_OUTPUT_FORMAT.alignmentSummary, writer);
+
+                    Scanner scan = new Scanner(writer.getBuffer().toString());
+                    while (scan.hasNextLine())
+                    {
+                        String line = scan.nextLine();
+                        if (StringUtils.trimToNull(line) == null)
+                        {
+                            continue;
+                        }
+
+                        String[] tokens = line.split("\t");
+                        if (tokens.length < 11)
+                        {
+                            continue;
+                        }
+
+                        int mismatch = Integer.parseInt(tokens[11]);
+                        String qname = tokens[0];
+                        String sname = tokens[2];
+                        if (mismatch == 0)
+                        {
+                            appendHit(qname, sname);
+
+                        }
+                        else
+                        {
+                            String qseq = tokens[8];
+                            String sseq = tokens[9];
+
+                            int i=0;
+                            int qmatch = 0;
+                            int qmismatch = 0;
+                            while (i < qseq.length())
+                            {
+                                String qbase = qseq.substring(i, i + 1);
+                                if (qbase.equalsIgnoreCase(sseq.substring(i, i + 1)) || "N".equalsIgnoreCase(qbase))
+                                {
+                                    qmatch++;
+                                }
+                                else
+                                {
+                                    qmismatch++;
+                                }
+
+                                i++;
+                            }
+
+                            if (qmismatch == 0)
+                            {
+                                appendHit(qname, sname);
+                            }
+                            else
+                            {
+                                appendHit(qname, null);
+                            }
+                        }
+                    }
+                }
+
+                out.write("<br><br><b>Summary of Perfect Hits:</b><br>");
+                out.write("<table border=1 cellpadding=\"3\" style=\"border-collapse: collapse;\"><tr><td>Query</td><td># Perfect Hits</td><td>Perfect Hits</td></tr>");
+                for (String qname : _perfectHitSummary.keySet())
+                {
+                    out.write("<tr>");
+                    out.write("<td>" + qname + "</td>");
+                    out.write("<td>" + _perfectHitSummary.get(qname).size() + "</td>");
+                    out.write("<td>" + StringUtils.join(_perfectHitSummary.get(qname), "<br>") + "</td>");
+
+                    out.write("</tr>");
+                }
+
+                out.write("</table><br><br>");
+                out.write("<hr>");
+
+                out.write("<b>BLAST Output:</b>");
+                out.write("<pre>");
+                new BLASTWrapper().runBlastFormatter(results, BLAST_OUTPUT_FORMAT.flatQueryAnchoredWithIdentities, out);
+                out.write("</pre>");
             }
-            else if (!expectedOutput.exists())
+
+            private void appendHit(String qname, String sname)
             {
-                ret.put("html", "Output file not found");
+                Set<String> hits = _perfectHitSummary.get(qname);
+                if (hits == null)
+                {
+                    hits = new HashSet<>();
+                }
+
+                if (sname != null)
+                {
+                    hits.add(sname);
+                }
+
+                _perfectHitSummary.put(qname, hits);
+            }
+        });
+
+        private String _label;
+        private String _cmd;
+        private boolean _supportsHTML;
+        private BlastResultProcessor _processor;
+
+        BLAST_OUTPUT_FORMAT(String label, String cmd, boolean supportsHtml, @Nullable BlastResultProcessor processor)
+        {
+            _label = label;
+            _cmd = cmd;
+            _supportsHTML = supportsHtml;
+            _processor = processor;
+        }
+
+        public String getLabel()
+        {
+            return _label;
+        }
+
+        public String getCmd()
+        {
+            return _cmd;
+        }
+
+        public boolean supportsHTML()
+        {
+            return _supportsHTML;
+        }
+
+        public void processResults(File results, Writer out) throws IOException
+        {
+            if (_processor == null)
+            {
+                new BLASTWrapper().runBlastFormatter(results, this, out);
             }
             else
             {
-                try
-                {
-                    String html = readFile(expectedOutput);
-                    ret.put("html", html == null || html.isEmpty() ? "BLAST did not produce any output, see the log file for more information" : html);
-                }
-                catch (IOException e)
-                {
-                    //ignore
-                }
+                _processor.processResults(results, out);
             }
         }
 
-        return ret;
     }
 
-    //TODO: consider streaming
-    private String readFile(File file) throws IOException
+    public static interface BlastResultProcessor
     {
-        return new String(Files.readAllBytes(Paths.get(file.toURI())));
+        public void processResults(File results, Writer out) throws IOException;
     }
 }
+

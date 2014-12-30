@@ -780,6 +780,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                 if (form.getFileNames() != null)
                 {
+                    //TODO: consider proper container??
                     File base = PipelineService.get().getPipelineRootSetting(getContainer()).getRootPath();
                     if (form.getPath() != null)
                         base = new File(base, form.getPath());

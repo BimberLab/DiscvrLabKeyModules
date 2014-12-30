@@ -5,6 +5,7 @@
  */
 
 Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
+    alias: 'widget.sequenceanalysis-basesequencepanel',
     extend: 'Ext.form.Panel',
     analysisController: 'pipeline-analysis',
     splitJobs: true,
@@ -91,7 +92,26 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
             scope: this
         });
 
+        this.on('afterrender', this.onAfterRender);
         this.on('afterrender', this.checkProtocol, this);
+    },
+
+    onAfterRender: function(panel){
+        this.originalWidth = this.getWidth();
+    },
+
+    doResize: function(itemWidth){
+        var width2 = this.getWidth();
+        if (itemWidth > width2){
+            this.setWidth(itemWidth);
+            this.doLayout();
+        }
+        else if (itemWidth < width2) {
+            if (this.originalWidth && width2 != this.originalWidth){
+                this.setWidth(Math.max(this.originalWidth, itemWidth));
+                this.doLayout();
+            }
+        }
     },
 
     checkProtocol: function(){

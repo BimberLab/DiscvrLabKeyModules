@@ -6,6 +6,8 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
@@ -78,6 +80,21 @@ public class SequenceTriggerHelper
             RefNtSequenceModel model = new TableSelector(getRefNts(), new SimpleFilter(FieldKey.fromString("rowid"), rowId), null).getObject(RefNtSequenceModel.class);
             model.createFileForSequence(getUser(), sequence);
 
+        }
+    }
+
+    public void deleteData(Integer dataId)
+    {
+        if (dataId == null)
+        {
+            return;
+        }
+
+        ExpData d = ExperimentService.get().getExpData(dataId);
+        if (d != null && d.getFile() != null && d.getFile().exists())
+        {
+            _log.info("deleting ExpData: " + d.getFile().getPath());
+            d.getFile().delete();
         }
     }
 }

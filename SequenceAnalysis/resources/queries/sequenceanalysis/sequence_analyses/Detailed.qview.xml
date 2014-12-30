@@ -26,7 +26,6 @@
        </column>
        <column name="created" />
        <column name="workbook" />
-       <column name="makePublic"/>
    </columns>
    <sorts>
        <sort column="rowid" descending="true"/>

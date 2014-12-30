@@ -70,9 +70,15 @@ public class LastzWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public boolean doSortCleanBam()
+        public boolean doMergeUnalignedReads()
         {
             return false;
+        }
+
+        @Override
+        public boolean doSortIndexBam()
+        {
+            return true;
         }
     }
 

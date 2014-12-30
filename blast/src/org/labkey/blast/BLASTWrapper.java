@@ -1,14 +1,18 @@
 package org.labkey.blast;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.util.FileType;
+import org.labkey.blast.model.BlastJob;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,14 +69,9 @@ public class BLASTWrapper
         args.add("-query");
         args.add(input.getPath());
 
-        if (params != null && !params.containsKey("outfmt"))
-        {
-            args.add("-outfmt");
-            args.add("0");
-        }
-
-        //TODO: conditional based on output type
-        args.add("-html");
+        //always produce ASN.  will convert later
+        args.add("-outfmt");
+        args.add("11");
 
         args.add("-out");
         args.add(outputFile.getPath());
@@ -89,13 +88,39 @@ public class BLASTWrapper
             }
         }
 
-        execute(args);
+        execute(args, null);
         if (!outputFile.exists())
         {
             throw new IOException("Expected file not created: " + outputFile.getPath());
         }
 
         return outputFile;
+    }
+
+    public void runBlastFormatter(File inputFile, BlastJob.BLAST_OUTPUT_FORMAT outputFormat, Writer out) throws IllegalArgumentException, IOException
+    {
+        File binDir = BLASTManager.get().getBinDir();
+        if (binDir == null || !binDir.exists())
+        {
+            throw new IllegalArgumentException("BLAST bin dir does not exist: " + binDir);
+        }
+
+        File exe = new File(binDir, "blast_formatter" + getExtension());
+        if (!exe.exists())
+        {
+            throw new IllegalArgumentException("Unable to find blast_formatter executable");
+        }
+
+        List<String> args = new ArrayList<>();
+        args.add(exe.getPath());
+
+        args.add("-archive");
+        args.add(inputFile.getPath());
+
+        args.add("-outfmt");
+        args.add(outputFormat.getCmd());
+
+        execute(args, out);
     }
 
     public File createDatabase(String dbName, String title, File fastaFile) throws IllegalArgumentException, IOException
@@ -143,7 +168,7 @@ public class BLASTWrapper
         args.add("-out");
         args.add(outFile.getPath());
 
-        execute(args);
+        execute(args, null);
 
         File dbFile = new File(outFile.getParentFile(), outFile.getName() + ".nhr");
         if (!dbFile.exists())
@@ -154,9 +179,9 @@ public class BLASTWrapper
         return outFile;
     }
 
-    private void execute(List<String> args) throws IOException
+    private void execute(List<String> args, @Nullable Writer out) throws IOException
     {
-        StringBuffer output = new StringBuffer();
+        StringBuilder output = new StringBuilder();
 
         if (_log != null)
         {
@@ -165,7 +190,11 @@ public class BLASTWrapper
         }
 
         ProcessBuilder pb = new ProcessBuilder(args);
-        pb.redirectErrorStream(true);
+        if (out != null)
+        {
+            pb.redirectErrorStream(true);
+        }
+
         //Map<String, String> env = pb.environment();
         //env.put("BLASTDB", BLASTManager.get().getDatabaseDir().getPath());
 
@@ -173,14 +202,21 @@ public class BLASTWrapper
         try
         {
             p = pb.start();
-            try (BufferedReader procReader = new BufferedReader(new InputStreamReader(p.getInputStream())))
+            if (out == null)
             {
-                String line;
-                while ((line = procReader.readLine()) != null)
+                try (BufferedReader procReader = new BufferedReader(new InputStreamReader(p.getInputStream())))
                 {
-                    output.append(line);
-                    output.append(System.getProperty("line.separator"));
+                    String line;
+                    while ((line = procReader.readLine()) != null)
+                    {
+                        output.append(line);
+                        output.append(System.getProperty("line.separator"));
+                    }
                 }
+            }
+            else
+            {
+                IOUtils.copy(p.getInputStream(), out);
             }
 
             p.waitFor();
@@ -207,69 +243,4 @@ public class BLASTWrapper
     {
         return SystemUtils.IS_OS_WINDOWS ? ".exe" : "";
     }
-
-//    public static class Parameter
-//    {
-//        private String _name;
-//        private String _label;
-//        private String _description;
-//        private String _category;
-//        private String _defaultValue;
-//        private String _xtype;
-//
-//        public Parameter(String name, String label, String description, String category)
-//        {
-//            this(name, label, description, category, "textfield");
-//        }
-//
-//        public Parameter(String name, String label, String description, String category, String xtype)
-//        {
-//            _name = name;
-//            _label = label;
-//            _category = category;
-//            _description = description;
-//            _xtype = xtype;
-//        }
-//
-//        public String getName()
-//        {
-//            return _name;
-//        }
-//
-//        public String getLabel()
-//        {
-//            return _label;
-//        }
-//
-//        public String getCategory()
-//        {
-//            return _category;
-//        }
-//
-//        public String getDescription()
-//        {
-//            return _description;
-//        }
-//
-//        public String getDefaultValue()
-//        {
-//            return _defaultValue;
-//        }
-//
-//        public String getXtype()
-//        {
-//            return _xtype;
-//        }
-//
-//        public JSONObject toJSON()
-//        {
-//            JSONObject json = new JSONObject();
-//            json.put("name", _name);
-//            json.put("label", _label);
-//            json.put("description", _description);
-//            json.put("xtype", _xtype);
-//
-//            return json;
-//        }
-//    }
 }

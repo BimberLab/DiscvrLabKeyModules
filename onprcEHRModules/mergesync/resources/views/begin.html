@@ -73,6 +73,15 @@ Ext4.onReady(function (){
                 });
 
                 toAdd.push({
+                    xtype: 'checkbox',
+                    fieldLabel: 'Sync Animals and Projects',
+                    labelWidth: labelWidth,
+                    width: width,
+                    itemId: 'syncAnimalsAndProjects',
+                    checked: json.syncAnimalsAndProjects
+                });
+
+                toAdd.push({
                     xtype: 'datefield',
                     fieldLabel: 'Min Date',
                     labelWidth: labelWidth,

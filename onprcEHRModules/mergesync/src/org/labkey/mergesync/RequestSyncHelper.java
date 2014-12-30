@@ -1,6 +1,7 @@
 package org.labkey.mergesync;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
@@ -293,6 +294,13 @@ public class RequestSyncHelper
             return existing.get(0);
         }
 
+        return createPatient(mergeSchema, c, u, animalId);
+    }
+
+    public static String createPatient(DbSchema mergeSchema, Container c, User u, String animalId) throws SQLException
+    {
+        TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_PATIENTS);
+
         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
         toInsert.put("PT_LNAME", animalId);
         toInsert.put("PT_NUM", animalId);
@@ -330,7 +338,7 @@ public class RequestSyncHelper
         return (String)inserted.get("PT_NUM");
     }
 
-    private String getSpeciesCode(String species)
+    public static String getSpeciesCode(String species)
     {
         if (species == null)
             return null;
@@ -356,7 +364,7 @@ public class RequestSyncHelper
             return null;
         }
 
-        Set<FieldKey> fks = PageFlowUtil.set(FieldKey.fromString("displayName"), FieldKey.fromString("investigatorId/lastName"), FieldKey.fromString("investigatorId/firstName"));
+        Set<FieldKey> fks = PageFlowUtil.set(FieldKey.fromString("displayName"), FieldKey.fromString("investigatorId/lastName"), FieldKey.fromString("investigatorId/firstName"), FieldKey.fromString("enddate"));
         final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(projectTable, fks);
 
         TableSelector projectTs = new TableSelector(projectTable, cols.values(), new SimpleFilter(FieldKey.fromString("project"), project), null);
@@ -371,6 +379,7 @@ public class RequestSyncHelper
             rs.next();
             String projectName = rs.getString(FieldKey.fromString("displayName"));
             String lastName = rs.getString(FieldKey.fromString("investigatorId/lastName"));
+            Date enddate = rs.getDate(FieldKey.fromString("enddate"));
 
             TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_INSURANCE);
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("INS_NAME"), projectName);
@@ -386,21 +395,29 @@ public class RequestSyncHelper
                 return existing.get(0);
             }
 
-            Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
-            toInsert.put("INS_NAME", projectName); //TODO: conditionalize based on expiration
-            toInsert.put("INS_ADDR1", lastName);
-            toInsert.put("INS_INDEX", getAndIncrementIndex("INS_INDEX", ti));
-            toInsert.put("INS_PRINT_IP", "N");
-            toInsert.put("INS_PRINT_OP", "N");
-            toInsert.put("INS_TYPE", ""); //TODO: based on expiration?
-
-            Map<String, Object> inserted = Table.insert(u, ti, toInsert);
-
-            return (Integer)inserted.get("INS_INDEX");
+            return createInsurance(mergeSchema, c, u, projectName, lastName, enddate);
         }
     }
 
-    private int getAndIncrementIndex(String colName, TableInfo ti)
+    public static Integer createInsurance(DbSchema mergeSchema, Container c, User u, String projectName, String lastName, Date enddate) throws SQLException
+    {
+        TableInfo ti = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_INSURANCE);
+        boolean isExpired = enddate == null ? false : DateUtils.truncate(enddate, Calendar.DATE).getTime() < DateUtils.truncate(new Date(), Calendar.DATE).getTime();
+
+        Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
+        toInsert.put("INS_NAME", projectName + (isExpired ? " (Expired)" : ""));
+        toInsert.put("INS_ADDR1", lastName);
+        toInsert.put("INS_INDEX", getAndIncrementIndex("INS_INDEX", ti));
+        toInsert.put("INS_PRINT_IP", "N");
+        toInsert.put("INS_PRINT_OP", "N");
+        toInsert.put("INS_TYPE", (isExpired ? "C" : "I"));
+
+        Map<String, Object> inserted = Table.insert(u, ti, toInsert);
+
+        return (Integer)inserted.get("INS_INDEX");
+    }
+
+    private static int getAndIncrementIndex(String colName, TableInfo ti)
     {
         SqlSelector ss = new SqlSelector(ti.getSchema(), new SQLFragment("SELECT COALESCE(NX_NUM, NX_MIN) as expr FROM Nextnum WHERE nx_Fldnm = ?", colName));
         List<Integer> ret = ss.getArrayList(Integer.class);
@@ -572,10 +589,6 @@ public class RequestSyncHelper
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
         TimeZone zone = Calendar.getInstance().getTimeZone();
         cal.setTimeInMillis(d.getTime() - zone.getOffset(d.getTime()));
-
-        //TODO: remove after debugging
-        _log.info("timezone: " + zone.getDisplayName() + ", " + zone.getRawOffset() + " / " + zone.inDaylightTime(d) + " / " + zone.getDSTSavings());
-        _log.info("orig: " + d + ", new: " + cal.getTime());
 
         return cal.getTime();
     }

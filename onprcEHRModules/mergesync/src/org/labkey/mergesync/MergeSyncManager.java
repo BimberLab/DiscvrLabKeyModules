@@ -82,6 +82,7 @@ public class MergeSyncManager
 
     public static final String PULL_ENABLED_PROP_NAME = "pullEnabled";
     public static final String PUSH_ENABLED_PROP_NAME = "pushEnabled";
+    public static final String SYNC_ANIMALS_PROP_NAME = "syncAnimalsAndProjects";
     public static final String LAST_RUN_PROP_NAME = "lastRun";
     public static final String MERGE_USER_PROP_NAME = "mergeUserName";
 
@@ -190,7 +191,7 @@ public class MergeSyncManager
         if (_trigger == null)
             return null;
 
-        return _trigger.getNextFireTime();
+        return _trigger.getFireTimeAfter(new Date());
     }
 
     public Date getLastRun()
@@ -306,6 +307,21 @@ public class MergeSyncManager
         return value;
     }
 
+    public boolean doSyncAnimalsAndProjects()
+    {
+        String prop = PropertyManager.getProperties(CONFIG_PROPERTY_DOMAIN).get(SYNC_ANIMALS_PROP_NAME);
+        if (prop == null)
+            return false;
+
+        Boolean value = Boolean.parseBoolean(prop);
+        if (value == null)
+        {
+            return false;
+        }
+
+        return value;
+    }
+
     public boolean isPushEnabled()
     {
         String prop = PropertyManager.getProperties(CONFIG_PROPERTY_DOMAIN).get(PUSH_ENABLED_PROP_NAME);
@@ -356,7 +372,7 @@ public class MergeSyncManager
                 throw new IllegalArgumentException("No LabKey container set");
         }
 
-        if (isPushEnabled())
+        if (isPushEnabled() || doSyncAnimalsAndProjects())
         {
             if (getMergeUserName() == null)
                 throw new IllegalArgumentException("Must provide the name of the merge user to use for sync");

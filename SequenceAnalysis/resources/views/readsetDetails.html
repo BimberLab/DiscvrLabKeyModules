@@ -31,6 +31,15 @@ Ext4.onReady(function (){
             queryName: 'sequence_readsets',
             containerPath: Laboratory.Utils.getQueryContainerPath(),
             filterArray: [LABKEY.Filter.create('rowid', readsetId, LABKEY.Filter.Types.EQUAL)]
+        },
+        detailsConfig: {
+            buttons: [{
+                text: 'More Actions',
+                menu: [{
+                    text: 'Edit Analysis Details',
+                    href: LABKEY.ActionURL.buildURL('ldk', 'manageRecord', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', keyField: 'rowid', key: readsetId}) + '&returnUrl=' + LDK.Utils.getSrcURL()
+                }]
+            }]
         }
     });
 

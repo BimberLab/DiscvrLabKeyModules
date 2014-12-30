@@ -2873,6 +2873,7 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/haplotypeMatches/
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/nt_snps_by_pos/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/nt_snps_by_pos/Greater[!!-~]Than[!!-~]1[!!-~]Pct.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfile_categories.sql -text
+labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfiles.js -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfiles/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/peptide_positions.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/quality_metrics/.qview.xml -text
@@ -2954,6 +2955,8 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.285-12.286.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.286-12.287.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.287-12.288.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.288-12.289.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.289-12.290.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -3018,6 +3021,8 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.285-12.286.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.286-12.287.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.287-12.288.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.288-12.289.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.289-12.290.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -3158,6 +3163,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportTrackWin
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ReprocessLibraryWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/RunExportWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/SequenceFileOrderWindow.js -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/AnalysesTableCustomizer.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/PipelineStartup.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisContainerListener.java -text
@@ -3615,6 +3621,7 @@ onprcEHRModules/GeneticsCore/GeneticsCore.iml -text
 onprcEHRModules/GeneticsCore/build.xml -text
 onprcEHRModules/GeneticsCore/module.properties -text
 onprcEHRModules/GeneticsCore/resources/module.xml -text
+onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/sequence_analyses/SBT[!!-~]Information.qview.xml -text
 onprcEHRModules/GeneticsCore/resources/queries/study/dnaFlagSummary.query.xml -text
 onprcEHRModules/GeneticsCore/resources/queries/study/dnaFlagSummary.sql -text
 onprcEHRModules/GeneticsCore/resources/queries/study/mhcFlagSummary.query.xml -text
@@ -3630,10 +3637,15 @@ onprcEHRModules/GeneticsCore/resources/views/geneticsMenu.webpart.xml -text
 onprcEHRModules/GeneticsCore/resources/views/sbtReview.html -text
 onprcEHRModules/GeneticsCore/resources/views/sbtReview.view.xml -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/buttons.js -text
+onprcEHRModules/GeneticsCore/resources/web/geneticscore/window/ChangeReadsetStatusWindow.js -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/window/ManageFlagsWindow.js -text
+onprcEHRModules/GeneticsCore/resources/web/geneticscore/window/PublishResultsWindow.js -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreController.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreManager.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreModule.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsTableCustomizer.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/ChangeReadsetStatusButton.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/PublishSBTResultsButton.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/SBTReviewButton.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/notification/GeneticsCoreNotification.java -text
 onprcEHRModules/README.txt -text

@@ -11,10 +11,15 @@ import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
+import org.labkey.api.data.Results;
+import org.labkey.api.data.ResultsImpl;
+import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
+import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -136,6 +141,12 @@ public class MergeSyncRunner implements Job
             pullResults(u, c, mergeSchema, lastRun);
 
             MergeSyncManager.get().setLastRun(syncStart);
+
+            if (MergeSyncManager.get().doSyncAnimalsAndProjects())
+            {
+                syncAnimalsToMerge(c, u, mergeSchema);
+                syncProjectsToMerge(c, u, mergeSchema);
+            }
 
             validateRuns(c, u, mergeSchema, 30);
         }
@@ -632,7 +643,7 @@ public class MergeSyncRunner implements Job
             return _cachedTasks.get(key);
         }
 
-        String taskId = new GUID().toString();
+        String taskId = new GUID().toString().toUpperCase();
         Map<String, Object> taskRecord = new CaseInsensitiveHashMap<>();
         taskRecord.put("taskid", taskId);
         taskRecord.put("title", key);
@@ -848,7 +859,7 @@ public class MergeSyncRunner implements Job
         Integer project = resolveProject(c, u, mergeRunRs.getString("projectName"));
         String servicename = resolveServiceName(c, u, mergeRunRs.getString("servicename_abbr"), null);
 
-        String runId = new GUID().toString();
+        String runId = new GUID().toString().toUpperCase();
         Map<String, Object> runRow = new CaseInsensitiveHashMap<>();
         runRow.put("Id", animalId);
         runRow.put("date", date);
@@ -926,7 +937,7 @@ public class MergeSyncRunner implements Job
 
     private String createOrderRecord(Container c, User u, String taskId, String runId, Integer accession, Integer panelId, Date date) throws SQLException
     {
-        String objectId = new GUID().toString();
+        String objectId = new GUID().toString().toUpperCase();
         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
         toInsert.put("resultsreceived", false);
         toInsert.put("taskid", taskId);
@@ -1071,6 +1082,155 @@ public class MergeSyncRunner implements Job
 
         _cachedResultTables.put(servicename, ret);
         return ret;
+    }
+
+    private void syncAnimalsToMerge(Container c, User u, DbSchema mergeSchema)
+    {
+        try
+        {
+            int datasetId = StudyService.get().getDatasetIdByName(c, "demographics");
+            if (datasetId > -1)
+            {
+                DataSet ds = StudyService.get().getDataset(c, datasetId);
+                String realTableName = ds.getDomain().getStorageTableName();
+                TableInfo realTable = DbSchema.get("studydataset", DbSchemaType.Provisioned).getTable(realTableName);
+
+                TableInfo patients = mergeSchema.getTable(MergeSyncManager.TABLE_MERGE_PATIENTS);
+
+
+                //first find IDs we need to add.  even though the 2 DBs are on the same server instance for us, dont make that assumption and compare lists in java
+                List<String> livingAnimals = new TableSelector(realTable, PageFlowUtil.set("participantid"), new SimpleFilter(FieldKey.fromString("calculated_status"), "Alive"), null).getArrayList(String.class);
+                int start = 0;
+                int batchSize = 500;
+                while (start < livingAnimals.size())
+                {
+                    List<String> sublist = livingAnimals.subList(start, Math.min(livingAnimals.size(), start + batchSize));
+                    start = start + batchSize;
+
+                    List<String> idsPresent = new TableSelector(patients, PageFlowUtil.set("PT_LNAME"), new SimpleFilter(FieldKey.fromString("PT_LNAME"), sublist, CompareType.IN), null).getArrayList(String.class);
+                    sublist.removeAll(idsPresent);
+                    if (!sublist.isEmpty())
+                    {
+                        _log.info("creating " + sublist.size() + " animals in merge");
+                        for (String id : sublist)
+                        {
+                            RequestSyncHelper.createPatient(mergeSchema, c, u, id);
+                        }
+                    }
+                }
+
+                //then find any IDs we need to mark as dead in merge
+                List<String> deadAnimals = new TableSelector(realTable, PageFlowUtil.set("participantid"), new SimpleFilter(FieldKey.fromString("calculated_status"), "Dead", CompareType.EQUAL), null).getArrayList(String.class);
+                start = 0;
+                while (start < deadAnimals.size())
+                {
+                    List<String> sublist = deadAnimals.subList(start, Math.min(deadAnimals.size(), start + batchSize));
+                    start = start + batchSize;
+
+                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("PT_LNAME"), sublist, CompareType.IN);
+                    filter.addCondition(FieldKey.fromString("PT_FNAME"), "Deceased", CompareType.DOES_NOT_CONTAIN);
+                    List<String> idsToChange = new TableSelector(patients, PageFlowUtil.set("PT_NUM"), filter, null).getArrayList(String.class);
+                    if (!idsToChange.isEmpty())
+                    {
+                        _log.info("marking " + idsToChange.size() + " animals as deceased in merge");
+                        for (String ptNum : idsToChange)
+                        {
+                            SQLFragment sql = new SQLFragment("UPDATE dbo.patients SET pt_fname = left(rtrim(pt_fname), 5) + ' ' + '*Deceased*' WHERE PT_NUM = ?", ptNum);
+                            new SqlExecutor(mergeSchema).execute(sql);
+                        }
+                    }
+                }
+
+                //then shipped
+                List<String> shippedAnimals = new TableSelector(realTable, PageFlowUtil.set("participantid"), new SimpleFilter(FieldKey.fromString("calculated_status"), "Shipped", CompareType.EQUAL), null).getArrayList(String.class);
+                start = 0;
+                while (start < shippedAnimals.size())
+                {
+                    List<String> sublist = shippedAnimals.subList(start, Math.min(shippedAnimals.size(), start + batchSize));
+                    start = start + batchSize;
+
+                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("PT_LNAME"), sublist, CompareType.IN);
+                    filter.addCondition(FieldKey.fromString("PT_FNAME"), "Sold", CompareType.DOES_NOT_CONTAIN);
+                    List<String> idsToChange = new TableSelector(patients, PageFlowUtil.set("PT_NUM"), filter, null).getArrayList(String.class);
+                    if (!idsToChange.isEmpty())
+                    {
+                        _log.info("marking " + idsToChange.size() + " animals as shipped in merge");
+                        for (String ptNum : idsToChange)
+                        {
+                            SQLFragment sql = new SQLFragment("UPDATE dbo.patients SET pt_fname = left(rtrim(pt_fname), 5) + ' ' + '*Sold*' WHERE PT_NUM = ?", ptNum);
+                            new SqlExecutor(mergeSchema).execute(sql);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            _log.error(e.getMessage(), e);
+        }
+    }
+
+    private void syncProjectsToMerge(final Container c, final User u, final DbSchema mergeSchema)
+    {
+        TableInfo projects = QueryService.get().getUserSchema(u, c, "ehr").getTable("project");
+        TableInfo insurance = mergeSchema.getTable("insurance");
+
+        //first create any project missing in merge
+        List<String> activeProjects = new TableSelector(projects, PageFlowUtil.set("displayName"), new SimpleFilter(FieldKey.fromString("enddateCoalesced"), new Date(), CompareType.DATE_GTE), null).getArrayList(String.class);
+        int start = 0;
+        int batchSize = 500;
+        while (start < activeProjects.size())
+        {
+            List<String> sublist = activeProjects.subList(start, Math.min(activeProjects.size(), start + batchSize));
+            start = start + batchSize;
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("INS_NAME"), sublist, CompareType.IN);
+            filter.addCondition(FieldKey.fromString("INS_TYPE"), "I"); //this will return only those active in merge
+
+            List<String> projectsPresent = new TableSelector(insurance, PageFlowUtil.set("INS_NAME"), filter, null).getArrayList(String.class);
+            sublist.removeAll(projectsPresent);
+            if (!sublist.isEmpty())
+            {
+                _log.info("creating " + sublist.size() + " projects in merge");
+                Set<FieldKey> fks = PageFlowUtil.set(FieldKey.fromString("displayName"), FieldKey.fromString("investigatorId/lastName"), FieldKey.fromString("investigatorId/firstName"), FieldKey.fromString("enddate"));
+                final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(projects, fks);
+
+                TableSelector projectTs = new TableSelector(projects, cols.values(), new SimpleFilter(FieldKey.fromString("displayName"), sublist, CompareType.IN), null);
+                projectTs.forEach(new Selector.ForEachBlock<ResultSet>()
+                {
+                    @Override
+                    public void exec(ResultSet object) throws SQLException
+                    {
+                        Results rs = new ResultsImpl(object, cols);
+                        String projectName = rs.getString(FieldKey.fromString("displayName"));
+                        String lastName = rs.getString(FieldKey.fromString("investigatorId/lastName"));
+                        Date enddate = rs.getDate(FieldKey.fromString("enddate"));
+
+                        RequestSyncHelper.createInsurance(mergeSchema, c, u, projectName, lastName, enddate);
+                    }
+                });
+            }
+        }
+
+        //then find expired projects and update if needed
+        List<String> expiredProjectNames = new TableSelector(projects, PageFlowUtil.set("displayName"), new SimpleFilter(FieldKey.fromString("enddateCoalesced"), new Date(), CompareType.DATE_LT), null).getArrayList(String.class);
+        start = 0;
+        while (start < expiredProjectNames.size())
+        {
+            List<String> sublist = expiredProjectNames.subList(start, Math.min(expiredProjectNames.size(), start + batchSize));
+            start = start + batchSize;
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("INS_NAME"), sublist, CompareType.IN);
+            filter.addCondition(FieldKey.fromString("INS_TYPE"), "C", CompareType.NEQ_OR_NULL);
+            List<Integer> insuranceToUpdate = new TableSelector(insurance, PageFlowUtil.set("INS_INDEX"), filter, null).getArrayList(Integer.class);
+            if (!insuranceToUpdate.isEmpty())
+            {
+                _log.info("marking " + insuranceToUpdate.size() + " projects inactive in merge");
+                for (Integer index : insuranceToUpdate)
+                {
+                    SQLFragment sql = new SQLFragment("UPDATE dbo.insurance SET INS_TYPE = 'C', INS_ADDR1 = (INS_ADDR1 + ' ' + '(Expired)') WHERE INS_INDEX = ?", index);
+                    new SqlExecutor(mergeSchema).execute(sql);
+                }
+            }
+        }
     }
 
     private Integer resolveProject(Container c, User u, String projectName)

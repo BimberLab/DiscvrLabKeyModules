@@ -8,15 +8,16 @@ import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.SamRecordIntervalIteratorFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
 import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
@@ -26,9 +27,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by bimber on 9/8/2014.
@@ -78,7 +77,7 @@ public class AlignmentMetricsAnalysis extends AbstractPipelineStep implements An
     }
 
     @Override
-    public Output performAnalysisPerSampleRemote(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome) throws PipelineJobException
     {
         return null;
     }

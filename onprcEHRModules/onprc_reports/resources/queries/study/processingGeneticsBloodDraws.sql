@@ -37,7 +37,7 @@ SELECT
   CASE
     WHEN (f.flags LIKE '%MHC Blood Draw Needed%') THEN 1
     WHEN (f.flags LIKE '%MHC Blood Draw Collected%') THEN 0
-    WHEN (d.species = 'RHESUS MACAQUE' AND d.geographic_origin = 'India' AND m.Id IS NULL AND (a.Id IS NOT NULL OR d.gender = 'm')) THEN 1
+    WHEN (d.species = 'RHESUS MACAQUE' AND d.Id.age.ageInYears <= 5.0 AND d.geographic_origin = 'India' AND m.Id IS NULL AND (a.Id IS NOT NULL OR d.gender = 'm')) THEN 1
     ELSE 0
   END as mhcBloodDrawVol,
   CASE

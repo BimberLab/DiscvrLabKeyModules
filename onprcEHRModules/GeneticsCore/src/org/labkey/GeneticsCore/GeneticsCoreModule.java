@@ -17,10 +17,13 @@
 package org.labkey.GeneticsCore;
 
 import org.jetbrains.annotations.NotNull;
+import org.labkey.GeneticsCore.button.ChangeReadsetStatusButton;
+import org.labkey.GeneticsCore.button.PublishSBTResultsButton;
 import org.labkey.GeneticsCore.button.SBTReviewButton;
 import org.labkey.GeneticsCore.notification.GeneticsCoreNotification;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.notification.NotificationService;
@@ -69,6 +72,9 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
         NotificationService.get().registerNotification(new GeneticsCoreNotification());
 
         LDKService.get().registerQueryButton(new SBTReviewButton(), "sequenceanalysis", "sequence_analyses");
+        LDKService.get().registerQueryButton(new ChangeReadsetStatusButton(), "sequenceanalysis", "sequence_analyses");
+        LDKService.get().registerQueryButton(new PublishSBTResultsButton(), "sequenceanalysis", "alignment_summary_by_lineage");
+        LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "sequence_analyses");
     }
 
     @Override

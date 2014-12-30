@@ -9,6 +9,8 @@ var LABKEY = require("labkey");
 console.log("** evaluating: " + this['javax.script.filename']);
 
 function afterDelete(row, errors){
-    console.log('cascade deleting children of jbrowse database: ' + row.objectid);
-    org.labkey.jbrowse.model.Database.onDatabaseDelete(LABKEY.Security.currentContainer.id, row.objectid);
+    if (row.objectid) {
+        console.log('cascade deleting children of jbrowse database: ' + row.objectid);
+        org.labkey.jbrowse.model.Database.onDatabaseDelete(LABKEY.Security.currentContainer.id, row.objectid, true);
+    }
 }

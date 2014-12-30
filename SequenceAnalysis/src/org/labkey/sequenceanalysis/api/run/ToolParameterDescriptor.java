@@ -124,6 +124,11 @@ public class ToolParameterDescriptor
 
     public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider provider, Class<ParamType> clazz)
     {
+        return this.extractValue(job, provider, clazz, null);
+    }
+
+    public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider provider, Class<ParamType> clazz, @Nullable ParamType defaultValue)
+    {
         String key = getJsonParamName(provider);
         if (job.getParameters().containsKey(key))
         {
@@ -132,6 +137,6 @@ public class ToolParameterDescriptor
             return ConvertHelper.convert(val, clazz);
         }
 
-        return null;
+        return defaultValue;
     }
 }

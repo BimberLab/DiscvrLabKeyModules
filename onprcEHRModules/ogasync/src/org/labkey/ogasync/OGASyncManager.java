@@ -192,7 +192,7 @@ public class OGASyncManager
         if (_trigger == null)
             return null;
 
-        return _trigger.getNextFireTime();
+        return _trigger.getFireTimeAfter(new Date());
     }
 
     public int getHourOfDay()

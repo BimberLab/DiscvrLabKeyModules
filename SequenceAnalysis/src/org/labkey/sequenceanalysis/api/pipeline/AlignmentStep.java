@@ -27,7 +27,9 @@ public interface AlignmentStep extends PipelineStep
      */
     public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException;
 
-    public boolean doSortCleanBam();
+    public boolean doMergeUnalignedReads();
+
+    public boolean doSortIndexBam();
 
     public static interface AlignmentOutput extends PipelineStepOutput
     {

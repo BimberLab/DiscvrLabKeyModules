@@ -203,8 +203,13 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
         var mode = this.down('radiogroup').getValue().mode;
         var vals = form.getValues();
 
-        if (!vals.libraryId){
+        if (mode == 'createNew' && !vals.libraryId){
             Ext4.Msg.alert('Error', 'Must provide the reference genome');
+            return;
+        }
+
+        if (mode == 'addToExisting' && !vals.databaseId){
+            Ext4.Msg.alert('Error', 'Must choose a session');
             return;
         }
 

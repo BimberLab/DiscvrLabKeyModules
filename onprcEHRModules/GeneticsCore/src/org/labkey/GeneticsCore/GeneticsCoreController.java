@@ -8,10 +8,13 @@ import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.exp.api.ExpProtocol;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
+import org.labkey.api.util.Pair;
 import org.labkey.api.view.ActionURL;
 import org.springframework.validation.BindException;
 
@@ -119,6 +122,74 @@ public class GeneticsCoreController extends SpringActionController
             }
 
             return ret;
+        }
+    }
+
+    @RequiresPermissionClass(UpdatePermission.class)
+    @CSRF
+    public class CacheAnalysesAction extends ApiAction<CacheAnalysesForm>
+    {
+        public ApiResponse execute(CacheAnalysesForm form, BindException errors)
+        {
+            Map<String, Object> resultProperties = new HashMap<>();
+
+            //first verify permission to delete
+            if (form.getAlleleNames() != null)
+            {
+                try
+                {
+                    ExpProtocol protocol = ExperimentService.get().getExpProtocol(form.getProtocolId());
+                    if (protocol == null)
+                    {
+                        errors.reject(ERROR_MSG, "Unknown protocol: " + form.getProtocolId());
+                        return null;
+                    }
+
+                    Pair<List<Integer>, List<Integer>> ret = GeneticsCoreManager.get().cacheAnalyses(getViewContext(), protocol, form.getAlleleNames());
+                    resultProperties.put("runsCreated", ret.first);
+                    resultProperties.put("runsDeleted", ret.second);
+                }
+                catch (IllegalArgumentException e)
+                {
+                    errors.reject(ERROR_MSG, e.getMessage());
+                    return null;
+                }
+            }
+            else
+            {
+                errors.reject(ERROR_MSG, "No alleles provided");
+                return null;
+            }
+
+            resultProperties.put("success", true);
+
+            return new ApiSimpleResponse(resultProperties);
+        }
+    }
+
+    public static class CacheAnalysesForm
+    {
+        private String[] _alleleNames;
+        private int _protocolId;
+
+        public String[] getAlleleNames()
+        {
+            return _alleleNames;
+        }
+
+        public void setAlleleNames(String[] alleleNames)
+        {
+            _alleleNames = alleleNames;
+        }
+
+        public int getProtocolId()
+        {
+            return _protocolId;
+        }
+
+        public void setProtocolId(int protocolId)
+        {
+            _protocolId = protocolId;
         }
     }
 }

@@ -6,6 +6,7 @@
 
 Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     extend: 'SequenceAnalysis.panel.BaseSequencePanel',
+    alias: 'widget.sequenceanalysis-sequenceimportpanel',
 
     initComponent: function(){
         this.taskId = 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceImportPipeline';
@@ -67,74 +68,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 checked: true,
                 helpPopup: 'If selected, all intermediate sequence files will be deleted.  These files are usually only needed for debugging purposes, and it is selected by default to save space.'
             },{
-                fieldLabel: 'Merge Files',
-                disabled: !(this.fileNames.length > 1 || this.fileIds.length > 1),
-                name: 'inputfile.merge',
-                helpPopup: 'If selected, all input files will be merged into a single FASTQ file.  The original files will not be altered.',
-                itemId: 'mergeCheckbox',
-                xtype: 'checkbox',
-                scope: this,
-                hideMode: 'offsets',
-                enabled: this.fileNameStore ? this.fileNameStore.getCount()>1 : false,
-                originalState: this.fileNameStore ? this.fileNameStore.getCount()>1 : false,
-                handler: function(c, val){
-                    var form = c.up('form');
-                    var treatmentField = form.down('#originalFileTreatment');
-                    treatmentField.setValue(val ? 'compress' : 'delete');
-
-                    var o = form.down('#mergeContainer');
-                    o.setVisible(c.checked);
-
-                    var pairedCheckbox = c.up('#inputFileFieldset').down('#usePairedEnd');
-                    pairedCheckbox.setDisabled(c.checked);
-
-                    var grid = form.down('#sampleGrid');
-                    if (c.checked){
-                        Ext4.each(grid.store.getRange(), function(rec, idx){
-                            if (idx > 0)
-                                grid.store.remove(rec);
-                        }, this);
-                    }
-
-                    if (!c.checked){
-                        c.up('form').down('#mergeName').reset();
-                        pairedCheckbox.setValue(false);
-                    }
-                    else {
-                        c.up('form').down('#mergeName').setValue("MergedFile");
-                    }
-                }
-            },{
-                xtype: 'fieldset',
-                style: 'padding:5px;',
-                hidden: true,
-                hideMode: 'offsets',
-                width: 'auto',
-                itemId: 'mergeContainer',
-                name: 'inputfile.mergeContainer',
-                defaults: {
-                    width: 350
-                },
-                items: [{
-                    fieldLabel: 'Name For Merged File',
-                    xtype: 'textfield',
-                    width: 450,
-                    name: 'inputfile.merge.basename',
-                    itemId: 'mergeName',
-                    listeners: {
-                        change: function(field, val){
-                            var grid = field.up('form').down('#sampleGrid');
-                            grid.store.each(function(rec){
-                                if (rec){
-                                    rec.set('fileName', val);
-                                    rec.set('fileId', null);
-                                    rec.set('fileId2', null);
-                                }
-                            }, this);
-                        }
-                    }
-                }]
-            },{
                 fieldLabel: 'Data Is Paired End',
                 name: 'inputfile.pairedend',
                 helpPopup: 'Check this if the input data is paired end.  At the moment, the pipeline expects 2 FASTQ input files per readset.',
@@ -145,14 +78,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 hideMode: 'offsets',
                 handler: function(btn, val){
                     this.fireEvent('pairedendchange', btn, val);
-
-                    //only toggle the merge checkbox if merge would be allowed
-                    var mergeCheckbox = btn.up('#inputFileFieldset').down('#mergeCheckbox');
-                    if (mergeCheckbox.originalState){
-                        mergeCheckbox.setDisabled(val);
-                        if (!val)
-                            mergeCheckbox.setValue(false);
-                    }
                 }
             },{
                 fieldLabel: 'Use Barcodes',
@@ -187,7 +112,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     displayField: 'group_name',
                     valueField: 'group_name',
                     multiSelect: true,
-                    fieldLabel: 'Additional Barcodes',
+                    fieldLabel: 'Additional Barcodes To Test',
                     name: 'inputfile.barcodeGroups',
                     itemId: 'scanAllBarcodes',
                     helpPopup: 'Samples will be checked for all barcodes in the selected groups, at both 5\' and 3\' ends.  A summary report will be created, but no FASTQ files will be made for combinations not associated with a sample.  This is sometimes useful to be sure no contaminants are in your sample.'
@@ -262,31 +187,37 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     },
 
     populateSamples: function(){
-        var merge = this.down('#mergeCheckbox').getValue();
-        var paired = this.down('#usePairedEnd').getValue();
-
+        var records = this.getExpectedReadsetRecords();
         var sampleGrid = this.down('#sampleGrid');
         sampleGrid.store.removeAll();
 
+        if (records.length){
+            sampleGrid.store.add(records);
+        }
+
+        this.fireEvent('dataready');
+    },
+
+    getExpectedReadsetRecords: function(){
+        var paired = this.down('#usePairedEnd').getValue();
+
+        var sampleGrid = this.down('#sampleGrid');
+
         //find file names
         var filenames = [];
-        if (merge){
-            filenames.push([this.down('#mergeName').getValue()]);
-        }
-        else {
-            for (var i=0;i<this.fileNameStore.getCount();i++){
-                var rec = this.fileNameStore.getAt(i);
-                if (paired){
-                    var rec2 = this.fileNameStore.getAt(i + 1);
-                    filenames.push([rec.get('fileName'), rec2 ? rec2.get('fileName') : null]);
-                    i++;
-                }
-                else {
-                    filenames.push([rec.get('fileName')]);
-                }
+        for (var i=0;i<this.fileNameStore.getCount();i++){
+            var rec = this.fileNameStore.getAt(i);
+            if (paired){
+                var rec2 = this.fileNameStore.getAt(i + 1);
+                filenames.push([rec.get('fileName'), rec2 ? rec2.get('fileName') : null]);
+                i++;
+            }
+            else {
+                filenames.push([rec.get('fileName')]);
             }
         }
 
+        var records = [];
         Ext4.each(filenames, function(fnArray){
             var info1 = this.fileNameMap[fnArray[0]];
             var info2 = fnArray[1] ? this.fileNameMap[fnArray[1]] : {};
@@ -298,24 +229,27 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 if (info1.error)
                     error = true;
             }
+
             if (info2){
                 obj.fileId2 = info2.dataId;
                 if (info2.error)
                     error = true;
             }
 
-            if (!error)
-                sampleGrid.store.add(sampleGrid.store.createModel(obj));
+            if (!error){
+                records.push(sampleGrid.store.createModel(obj));
+            }
         }, this);
 
-        this.fireEvent('dataready');
+        return records;
     },
 
     getJsonParams: function(btn){
         var fields = this.callParent(arguments);
 
-        if (!fields)
+        if (!fields) {
             return;
+        }
 
         var error;
 
@@ -325,7 +259,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         var barcodeUsage;
         var useBarcode = this.down('#useBarcode').getValue();
         var usePairedEnd = this.down('#usePairedEnd').getValue();
-        var doMerge = this.down('#mergeCheckbox').getValue();
 
         var cols = this.down('#sampleGrid').columns;
         var sampleInfo = this.down('#sampleGrid').getStore();
@@ -446,20 +379,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         if (!total){
             Ext4.Msg.alert('Error', 'All input files had errors and cannot be used.  Please hover over the red cells near the top of the page to see more detail on these errors');
             return;
-        }
-
-        if (doMerge){
-            inputFiles = [];
-            this.fileNameStore.each(function(rec){
-                //skip files flagged w/ errors
-                if (rec.get('error'))
-                    return;
-
-                inputFiles.push({
-                    name: rec.get('fileName'),
-                    id: rec.get('dataId')
-                });
-            }, this);
         }
 
         var distinctIds = [];

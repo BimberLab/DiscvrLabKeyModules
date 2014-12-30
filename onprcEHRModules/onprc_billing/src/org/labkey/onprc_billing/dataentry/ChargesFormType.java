@@ -9,6 +9,7 @@ import org.labkey.api.module.Module;
 import org.labkey.api.view.template.ClientDependency;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * User: bimber
@@ -30,5 +31,14 @@ public class ChargesFormType extends TaskForm
 
         addClientDependency(ClientDependency.fromPath("onprc_billing/panel/ChargesInstructionPanel.js"));
         addClientDependency(ClientDependency.fromPath("onprc_billing/buttons/financeButtons.js"));
+    }
+
+    @Override
+    protected List<String> getMoreActionButtonConfigs()
+    {
+        List<String> defaultButtons = super.getMoreActionButtonConfigs();
+        defaultButtons.add("COPY_TASK");
+
+        return defaultButtons;
     }
 }

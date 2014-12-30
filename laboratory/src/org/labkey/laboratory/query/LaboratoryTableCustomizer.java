@@ -71,6 +71,18 @@ public class LaboratoryTableCustomizer implements TableCustomizer
             {
                 customzieSamplesTable((AbstractTableInfo) ti);
             }
+
+            //this should execute after any default code
+            if (ti.getUserSchema() != null)
+            {
+                Container c = ti.getUserSchema().getContainer();
+
+                List<TableCustomizer> customizers = LaboratoryService.get().getCustomizers(c, ti.getSchema().getName(), ti.getName());
+                for (TableCustomizer customizer : customizers)
+                {
+                    customizer.customize(ti);
+                }
+            }
         }
     }
 

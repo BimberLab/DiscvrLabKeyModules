@@ -13,6 +13,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.files.FileContentService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.services.ServiceRegistry;
+import org.labkey.api.util.JobRunner;
 import org.labkey.jbrowse.JBrowseSchema;
 
 import java.io.File;
@@ -122,7 +123,7 @@ public class Database
         return _members;
     }
 
-    public static void onDatabaseDelete(String containerId, String databaseId) throws IOException
+    public static void onDatabaseDelete(String containerId, final String databaseId, boolean asyncDelete) throws IOException
     {
         Container c = ContainerManager.getForId(containerId);
         if (c == null)
@@ -154,11 +155,30 @@ public class Database
             return;
         }
 
-        File databaseDir2 = new File(databaseDir, databaseId);
+        final File databaseDir2 = new File(databaseDir, databaseId);
         if (databaseDir2.exists())
         {
             _log.info("deleting jbrowse database dir: " + databaseDir2.getPath());
-            FileUtils.deleteDirectory(databaseDir2);
+            if (!asyncDelete)
+            {
+                FileUtils.deleteDirectory(databaseDir2);
+            }
+            else
+            {
+                JobRunner.getDefault().execute(new Runnable(){
+                    public void run()
+                    {
+                        try
+                        {
+                            FileUtils.deleteDirectory(databaseDir2);
+                        }
+                        catch (IOException e)
+                        {
+                            _log.error("Error background deleting JBrowse database dir for: " + databaseId, e);
+                        }
+                    }
+                });
+            }
         }
     }
 

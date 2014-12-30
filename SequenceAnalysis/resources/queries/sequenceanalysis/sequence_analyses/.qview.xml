@@ -29,7 +29,6 @@
                <property name="columnTitle" value="Readset Status"/>
            </properties>
        </column>
-       <column name="makePublic"/>
    </columns>
    <sorts>
        <sort column="rowid" descending="true"/>

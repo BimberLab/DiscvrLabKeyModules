@@ -169,7 +169,7 @@
                         valueField: 'id',
                         labelWidth: 120,
                         width: 600,
-                        value: '0',
+                        value: 'flatQueryAnchoredWithIdentities',
                         store: {
                             type: 'array',
                             fields: ['label', 'id'],
@@ -179,13 +179,14 @@
                             },
                             idProperty: 'id',
                             data: [
-                                ['Pairwise', '0'],
-                                ['Query-anchored showing identities', '1'],
-                                ['Query-anchored no identities', '2'],
-                                ['Flat query-anchored, show identities', '3'],
-                                ['Flat query-anchored, no identities', '4'],
-                                ['XML Blast output', '5'],
-                                ['Tabular', '6']
+                                ['Pairwise', 'pairwise'],
+                                ['Query-anchored showing identities', 'queryAnchoredWithIdentities'],
+                                ['Query-anchored no identities', 'queryAnchoredNoIdentities'],
+                                ['Flat query-anchored, show identities', 'flatQueryAnchoredWithIdentities'],
+                                ['Flat query-anchored, no identities', 'flatQueryAnchoredNoIdentities'],
+                                ['XML Blast output', 'xml'],
+                                ['Tabular', 'tabular'],
+                                ['Summary of Perfect Matches', 'alignmentSummary']
                             ]
                         }
                     },{
@@ -236,7 +237,7 @@
 
                         Ext4.Msg.hide();
                         if (jobId) {
-                            window.location = LABKEY.ActionURL.buildURL('blast', 'jobDetails', null, {jobId: jobId});
+                            window.location = LABKEY.ActionURL.buildURL('blast', 'jobDetails', null, {jobId: jobId, outputFmt: values.outputFmt});
                         }
                         else {
                             Ext4.Msg.alert('Error', 'Error, Job Not Started');

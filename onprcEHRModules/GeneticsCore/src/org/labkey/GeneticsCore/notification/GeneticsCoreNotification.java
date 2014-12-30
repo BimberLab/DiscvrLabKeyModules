@@ -183,7 +183,7 @@ public class GeneticsCoreNotification implements Notification
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
-        cal.add(Calendar.DATE, -180);
+        cal.add(Calendar.DATE, -90);
 
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromString("hasMhcDrawnFlag"), true, CompareType.EQUAL);
@@ -197,7 +197,7 @@ public class GeneticsCoreNotification implements Notification
         {
             ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, "study", queryName);
             url.addParameter("query.hasMhcDrawnFlag~eq", true);
-            url.addParameter("query.drawnFlagDateAdded~datelte", "-180d");
+            url.addParameter("query.drawnFlagDateAdded~datelte", "-90d");
             url.addParameter("query.hasMHCData~eq", false);
 
             msg.append("<b>WARNING: There are " + count + " animals that have been flagged as drawn for MHC typing more than 6 months ago that lack MHC data.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view these animals</a><hr>");

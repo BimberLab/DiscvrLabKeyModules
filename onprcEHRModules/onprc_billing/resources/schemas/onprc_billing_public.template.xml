@@ -15,6 +15,7 @@
         <tableName>chargeUnits</tableName>
         <tableName>chargeUnitAccounts</tableName>
         <tableName>projectAccountHistory</tableName>
+        <tableName>procedureFeeDefinition</tableName>
     </tables>
     <metadata>
         <ns:tables xmlns:ns="http://labkey.org/data/xml">

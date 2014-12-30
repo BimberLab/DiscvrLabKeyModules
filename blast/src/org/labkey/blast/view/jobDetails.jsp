@@ -20,10 +20,7 @@
 <%@ page import="org.labkey.blast.model.BlastJob" %>
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
-<%@ page import="org.labkey.api.util.PageFlowUtil" %>
-<%@ page import="org.apache.commons.io.IOUtils" %>
-<%@ page import="java.io.BufferedReader" %>
-<%@ page import="java.io.FileReader" %>
+<%@ page import="org.apache.commons.lang3.StringUtils" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
 
@@ -38,28 +35,32 @@
 <%
     JspView<BlastJob> me = (JspView) HttpView.currentView();
     BlastJob job = me.getModelBean();
-    String renderTarget = "blast-" + ""; //TODO
+    String renderTarget = "blast-"; //TODO: make unique?
 
+    String outputFmtName = getViewContext().getRequest().getParameter("outputFmt");
+    if (StringUtils.trimToNull(outputFmtName) == null)
+    {
+        outputFmtName = "flatQueryAnchoredWithIdentities";
+    }
+
+    BlastJob.BLAST_OUTPUT_FORMAT outputFormat = null;
+    try
+    {
+        outputFormat = BlastJob.BLAST_OUTPUT_FORMAT.valueOf(outputFmtName);
+    }
+    catch (IllegalArgumentException e)
+    {
+        //will handle below
+    }
+
+    boolean hasRun = job.isHasRun();
 %>
 
-<div id=<%=q(renderTarget)%>></div>
 <script type="text/javascript">
 
     Ext4.onReady(function(){
         Ext4.define('BLAST.panel.BlastDetailsPanel', {
             extend: 'Ext.panel.Panel',
-
-            statics: {
-                downloadRawData: function(jobId){
-                    console.log(jobId);
-                    var newForm = Ext4.DomHelper.append(document.getElementsByTagName('body')[0],
-                                    '<form method="POST" action="' + LABKEY.ActionURL.buildURL("blast", "downloadBlastResults") + '">' +
-                                    '<input type="hidden" name="fileName" value="' + Ext4.htmlEncode('blastResults.txt') + '" />' +
-                                    '<input type="hidden" name="jobId" value="' + jobId + '" />' +
-                                    '</form>');
-                    newForm.submit();
-                }
-            },
 
             initComponent: function(){
                 Ext4.apply(this, {
@@ -82,6 +83,73 @@
                     },{
                         html: '<hr>'
                     },{
+                        layout: 'hbox',
+                        border: false,
+                        hidden: !<%=hasRun%>,
+                        items: [{
+                            xtype: 'combo',
+                            fieldLabel: 'Choose Output Format',
+                            name: 'outputFmt',
+                            queryMode: 'local',
+                            displayField: 'label',
+                            valueField: 'id',
+                            labelWidth: 150,
+                            width: 600,
+                            value: '<%=text(outputFormat.name())%>',
+                            store: {
+                                type: 'array',
+                                fields: ['label', 'id'],
+                                reader: {
+                                    type: 'array',
+                                    idProperty: 'id'
+                                },
+                                idProperty: 'id',
+                                data: [
+                                    ['Pairwise', 'pairwise'],
+                                    ['Query-anchored showing identities', 'queryAnchoredWithIdentities'],
+                                    ['Query-anchored no identities', 'queryAnchoredNoIdentities'],
+                                    ['Flat query-anchored, show identities', 'flatQueryAnchoredWithIdentities'],
+                                    ['Flat query-anchored, no identities', 'flatQueryAnchoredNoIdentities'],
+                                    ['XML Blast output', 'xml'],
+                                    ['Tabular', 'tabular'],
+                                    ['Summary of Perfect Matches', 'alignmentSummary']
+                                ]
+                            }
+                        },{
+                            xtype: 'button',
+                            text: 'Reload',
+                            style: 'margin-left: 10px;',
+                            handler: function(btn){
+                                var fmt = btn.up('panel').down('combo').getValue();
+                                if (!fmt){
+                                    Ext4.Msg.alert('Error', 'Must choose an output format');
+                                    return;
+                                }
+
+                                window.location = LABKEY.ActionURL.buildURL('blast', 'jobDetails', null, {outputFmt: fmt, jobId: <%=q(job.getObjectid())%>});
+                            }
+                        },{
+                            xtype: 'button',
+                            text: 'Download Results',
+                            style: 'margin-left: 10px;',
+                            handler: function(btn){
+                                var fmt = btn.up('panel').down('combo').getValue();
+                                if (!fmt){
+                                    Ext4.Msg.alert('Error', 'Must choose an output format');
+                                    return;
+                                }
+
+                                var newForm = Ext4.DomHelper.append(document.getElementsByTagName('body')[0],
+                                                '<form method="POST" action="' + LABKEY.ActionURL.buildURL("blast", "downloadBlastResults") + '">' +
+                                                '<input type="hidden" name="fileName" value="' + Ext4.htmlEncode('blastResults.txt') + '" />' +
+                                                '<input type="hidden" name="jobId" value="' + <%=q(job.getObjectid())%> + '" />' +
+                                                '<input type="hidden" name="outputFormat" value="' + fmt + '" />' +
+                                                '</form>');
+                                newForm.submit();
+
+                            }
+                        }]
+                    },{
                         itemId: 'htmlArea',
                         defaults: {
                             border: false
@@ -99,7 +167,7 @@
 
             getResultItems: function(){
                 var ret = [];
-                if (!<%=job.isHasRun()%>){
+                if (!<%=hasRun%>){
                     ret.push({
                         xtype: 'panel',
                         minHeight: 200,
@@ -131,16 +199,32 @@
 
 </script>
 
-
+<div id=<%=q(renderTarget)%>></div>
 <div id=<%=q(renderTarget + "_results")%>>
     <%
         if (job.isHasRun())
         {
-            out.write("<a href='javascript:void(0);' onclick='BLAST.panel.BlastDetailsPanel.downloadRawData(\"" + job.getObjectid() + "\")'>[Download Raw Output]</a><p>");
-            try (BufferedReader reader = new BufferedReader(new FileReader(job.getExpectedOutputFile())))
+            if (outputFormat != null)
             {
-                IOUtils.copy(reader, out);
+                if (!outputFormat.supportsHTML())
+                {
+                    out.write("<pre>");
+                }
+                job.getResults(outputFormat, out);
+
+                if (!outputFormat.supportsHTML())
+                {
+                    out.write("</pre>");
+                }
             }
+            else
+            {
+                out.write("Either no output format specified, or an invalid option was provided.");
+            }
+        }
+        else if (job.hasError(getUser()))
+        {
+            out.write("There was an error running this job.");
         }
     %>
 </div>

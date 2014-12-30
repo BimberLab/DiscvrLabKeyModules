@@ -151,9 +151,9 @@ public class JBrowseController extends SpringActionController
     {
         public ApiResponse execute(DatabaseForm form, BindException errors)
         {
-            if (form.getName() == null)
+            if (form.getDatabaseId() == null)
             {
-                errors.reject(ERROR_MSG, "Must provide the database name");
+                errors.reject(ERROR_MSG, "Must provide the database Id");
                 return null;
             }
 

@@ -1,6 +1,7 @@
 Ext4.define('ONPRC_Billing.panel.ChargesInstructionPanel', {
     extend: 'Ext.panel.Panel',
     alias: 'widget.onprc-chargesinstructionpanel',
+    supportsTemplates: false,
 
     initComponent: function(){
         Ext4.apply(this, {

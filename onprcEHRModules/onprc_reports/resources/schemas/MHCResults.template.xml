@@ -3,9 +3,6 @@
         <tableName>MHC_Data_Unified</tableName>
         <tableName>MHC_Data_Pivoted</tableName>
         <tableName>MHC_Data_Animals</tableName>
-        <tableName>alignment_summary_by_lineage</tableName>
-        <tableName>alignment_summary_grouped</tableName>
-        <tableName>alignment_summary</tableName>
         <tableName>mhcSamples</tableName>
     </tables>
     <metadata>
@@ -32,22 +29,22 @@
                     </ns:column>
                 </ns:columns>
             </ns:table>
-            <ns:table tableName="alignment_summary_by_lineage" tableDbType="NOT_IN_DB">
-                <ns:filters>
-                    <cv:filter column="analysis_id/makePublic" operator="eq" value="true"/>
-                </ns:filters>
-                <ns:columns>
+            <!--<ns:table tableName="alignment_summary_by_lineage" tableDbType="NOT_IN_DB">-->
+                <!--<ns:filters>-->
+                    <!--<cv:filter column="analysis_id/makePublic" operator="eq" value="true"/>-->
+                <!--</ns:filters>-->
+                <!--<ns:columns>-->
 
-                </ns:columns>
-            </ns:table>
-            <ns:table tableName="alignment_summary_grouped" tableDbType="NOT_IN_DB">
-                <ns:filters>
-                    <cv:filter column="analysis_id/makePublic" operator="eq" value="true"/>
-                </ns:filters>
-                <ns:columns>
+                <!--</ns:columns>-->
+            <!--</ns:table>-->
+            <!--<ns:table tableName="alignment_summary_grouped" tableDbType="NOT_IN_DB">-->
+                <!--<ns:filters>-->
+                    <!--<cv:filter column="analysis_id/makePublic" operator="eq" value="true"/>-->
+                <!--</ns:filters>-->
+                <!--<ns:columns>-->
 
-                </ns:columns>
-            </ns:table>
+                <!--</ns:columns>-->
+            <!--</ns:table>-->
         </ns:tables>
     </metadata>
 </templateSchema>

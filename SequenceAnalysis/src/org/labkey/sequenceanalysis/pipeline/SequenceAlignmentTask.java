@@ -35,15 +35,14 @@ import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
+import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
 import org.labkey.sequenceanalysis.api.pipeline.BamProcessingStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.PreprocessingStep;
 import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
-import org.labkey.sequenceanalysis.run.util.FixBAMWrapper;
 import org.labkey.sequenceanalysis.run.util.FlagStatRunner;
 import org.labkey.sequenceanalysis.run.util.MergeBamAlignmentWrapper;
 import org.labkey.sequenceanalysis.util.FastqUtils;
@@ -78,6 +77,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
     public static final String ALIGNMENT_ACTIONNAME = "Performing Alignment";
     public static final String SORT_BAM_ACTION = "Sorting BAM";
     public static final String INDEX_ACTION = "Indexing BAM";
+    public static final String RENAME_BAM_ACTION = "Renaming BAM";
     public static final String NORMALIZE_FILENAMES_ACTION = "Normalizing File Names";
 
     //public static final String MERGE_ALIGNMENT_ACTIONNAME = "Merging Alignments";
@@ -130,6 +130,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             allowableNames.add(ALIGNMENT_ACTIONNAME);
             allowableNames.add(SORT_BAM_ACTION);
             allowableNames.add(INDEX_ACTION);
+            allowableNames.add(RENAME_BAM_ACTION);
             allowableNames.add(COPY_REFERENCE_LIBRARY_ACTIONNAME);
             allowableNames.add(NORMALIZE_FILENAMES_ACTION);
 
@@ -519,9 +520,9 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         SequenceUtil.logFastqBamDifferences(getJob().getLogger(), alignmentOutput.getBAM(), count1, count2);
 
-        if (alignmentStep.doSortCleanBam())
+        if (alignmentStep.doMergeUnalignedReads())
         {
-            getJob().getLogger().info("performing cleanup and sort on BAM");
+            getJob().getLogger().info("merging unaligned reads into BAM");
 
             //merge unaligned reads and clean file
             new MergeBamAlignmentWrapper(getJob().getLogger()).executeCommand(referenceGenome.getWorkingFastaFile(), alignmentOutput.getBAM(), inputFiles.first, inputFiles.second, null);
@@ -531,7 +532,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
         else
         {
-            getJob().getLogger().info("skipping cleanup and sort on BAM");
+            getJob().getLogger().info("skipping merge of unaligned reads on BAM");
         }
 
         //generate stats
@@ -572,56 +573,105 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
 
         //always end with coordinate sorted
-        if (SequenceUtil.getBamSortOrder(bam) != SAMFileHeader.SortOrder.coordinate)
+        File finalBam;
+        if (alignmentStep.doSortIndexBam())
         {
-            getJob().getLogger().info("***Sorting BAM: " + bam.getPath());
-            RecordedAction sortAction = new RecordedAction(SORT_BAM_ACTION);
-            sortAction.setStartTime(new Date());
-            getHelper().getFileManager().addInput(sortAction, "Input BAM", bam);
+            if (SequenceUtil.getBamSortOrder(bam) != SAMFileHeader.SortOrder.coordinate)
+            {
+                getJob().getLogger().info("***Sorting BAM: " + bam.getPath());
+                RecordedAction sortAction = new RecordedAction(SORT_BAM_ACTION);
+                sortAction.setStartTime(new Date());
+                getHelper().getFileManager().addInput(sortAction, "Input BAM", bam);
 
-            SortSamStep sortStep = new SortSamStep.Provider().create(getHelper());
-            BamProcessingStep.Output sortOutput = sortStep.processBam(rs, bam, referenceGenome, bam.getParentFile());
-            getHelper().getFileManager().addStepOutputs(sortAction, sortOutput);
-            getHelper().getFileManager().addIntermediateFile(bam);
-            bam = sortOutput.getBAM();
-            getHelper().getFileManager().addOutput(sortAction, "Sorted BAM", bam);
+                SortSamStep sortStep = new SortSamStep.Provider().create(getHelper());
+                BamProcessingStep.Output sortOutput = sortStep.processBam(rs, bam, referenceGenome, bam.getParentFile());
+                getHelper().getFileManager().addStepOutputs(sortAction, sortOutput);
+                getHelper().getFileManager().addIntermediateFile(bam);
+                bam = sortOutput.getBAM();
+                getHelper().getFileManager().addOutput(sortAction, "Sorted BAM", bam);
 
-            sortAction.setEndTime(new Date());
-            actions.add(sortAction);
-        }
+                sortAction.setEndTime(new Date());
+                actions.add(sortAction);
+            }
 
-        //finally index
-        RecordedAction indexAction = new RecordedAction(INDEX_ACTION);
-        indexAction.setStartTime(new Date());
-        getHelper().getFileManager().addInput(indexAction, "Input BAM", bam);
-        File finalBam = new File(bam.getParentFile(), outputBaseName + ".bam");
-        if (!finalBam.getPath().equals(bam.getPath()))
-        {
-            getJob().getLogger().info("\tnormalizing BAM name to: " + finalBam.getPath());
-            FileUtils.moveFile(bam, finalBam);
-        }
-        getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_ROLE, finalBam);
+            //finally index
+            RecordedAction indexAction = new RecordedAction(INDEX_ACTION);
+            indexAction.setStartTime(new Date());
+            getHelper().getFileManager().addInput(indexAction, "Input BAM", bam);
+            finalBam = new File(bam.getParentFile(), outputBaseName + ".bam");
+            if (!finalBam.getPath().equals(bam.getPath()))
+            {
+                getJob().getLogger().info("\tnormalizing BAM name to: " + finalBam.getPath());
+                FileUtils.moveFile(bam, finalBam);
+            }
+            getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_ROLE, finalBam);
 
-        try (SAMFileReader reader = new SAMFileReader(finalBam))
-        {
-            getJob().getLogger().info("\tcreating BAM index");
-            reader.setValidationStringency(ValidationStringency.SILENT);
             File bai = new File(finalBam.getPath() + ".bai");
             if (bai.exists())
             {
                 getJob().getLogger().debug("deleting existing BAM index: " + bai.getName());
                 bai.delete();
             }
-            getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_INDEX_ROLE, bai);
-            BAMIndexer.createIndex(reader, bai);
-        }
-        getJob().getLogger().info("\ttotal alignments in final BAM: " + SequenceUtil.getAlignmentCount(finalBam));
 
-        indexAction.setEndTime(new Date());
-        actions.add(indexAction);
+            try (SAMFileReader reader = new SAMFileReader(finalBam))
+            {
+                getJob().getLogger().info("\tcreating BAM index");
+                reader.setValidationStringency(ValidationStringency.SILENT);
+                BAMIndexer.createIndex(reader, bai);
+                getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_INDEX_ROLE, bai);
+            }
+            getJob().getLogger().info("\ttotal alignments in final BAM: " + SequenceUtil.getAlignmentCount(finalBam));
+
+            indexAction.setEndTime(new Date());
+            actions.add(indexAction);
+        }
+        else
+        {
+            RecordedAction renameAction = new RecordedAction(RENAME_BAM_ACTION);
+            renameAction.setStartTime(new Date());
+            getHelper().getFileManager().addInput(renameAction, "Input BAM", bam);
+            finalBam = new File(bam.getParentFile(), outputBaseName + ".bam");
+            if (!finalBam.getPath().equals(bam.getPath()))
+            {
+                getJob().getLogger().info("\tnormalizing BAM name to: " + finalBam.getPath());
+                FileUtils.moveFile(bam, finalBam);
+            }
+            getHelper().getFileManager().addOutput(renameAction, FINAL_BAM_ROLE, finalBam);
+
+            renameAction.setEndTime(new Date());
+            actions.add(renameAction);
+        }
 
         //add as output
         getHelper().getFileManager().addSequenceOutput(finalBam, finalBam.getName(), "Alignment", rs.getRowId(), null, referenceGenome.getGenomeId());
+
+        //perform remote analyses, if necessary
+        List<PipelineStepProvider<AnalysisStep>> analysisProviders = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
+        if (analysisProviders.isEmpty())
+        {
+            getJob().getLogger().debug("no analyses were selected");
+        }
+        else
+        {
+            for (PipelineStepProvider<AnalysisStep> provider : analysisProviders)
+            {
+                getHelper().getJob().getLogger().info("Running " + provider.getLabel() + " for readset: " + rs.getRowId());
+                getHelper().getJob().getLogger().info("\tUsing alignment: " + finalBam.getPath());
+
+                RecordedAction action = new RecordedAction(provider.getLabel());
+                getHelper().getFileManager().addInput(action, "Input BAM File", finalBam);
+                getHelper().getFileManager().addInput(action, "Reference DB FASTA", referenceGenome.getWorkingFastaFile());
+
+                AnalysisStep step = provider.create(getHelper());
+                AnalysisStep.Output o = step.performAnalysisPerSampleRemote(rs, finalBam, referenceGenome);
+                if (o != null)
+                {
+                    getHelper().getFileManager().addStepOutputs(action, o);
+                }
+
+                actions.add(action);
+            }
+        }
     }
 }
 

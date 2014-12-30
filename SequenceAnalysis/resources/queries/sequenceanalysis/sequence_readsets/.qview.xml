@@ -5,9 +5,11 @@
        <column name="subjectid" />
        <column name="sampledate"/>
        <column name="platform" />
+       <column name="librarytype" />
        <column name="application" />
        <column name="inputMaterial" />
        <column name="sampletype" />
+       <column name="comments" />
        <column name="fileid" />
        <!--<column name="qc_file" />-->
        <column name="fileid2" />

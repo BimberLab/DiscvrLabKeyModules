@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 select
+  (CAST(a.analysis_id as varchar) || '<>' || a.lineages) as key,
   a.analysis_id,
   a.lineages,
   max(a.totalLineages) as totalLineages,

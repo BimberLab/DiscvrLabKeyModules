@@ -104,7 +104,13 @@ public class BowtieWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public boolean doSortCleanBam()
+        public boolean doMergeUnalignedReads()
+        {
+            return true;
+        }
+
+        @Override
+        public boolean doSortIndexBam()
         {
             return true;
         }

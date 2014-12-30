@@ -2,16 +2,17 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
 import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -121,7 +122,7 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
     }
 
     @Override
-    public Output performAnalysisPerSampleRemote(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome) throws PipelineJobException
     {
         return null;
     }

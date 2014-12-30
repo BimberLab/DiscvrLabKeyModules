@@ -111,6 +111,9 @@ public class MergeSyncController extends SpringActionController
             if (form.getPushEnabled() != null)
                 configMap.put(MergeSyncManager.PUSH_ENABLED_PROP_NAME, form.getPushEnabled().toString());
 
+            if (form.getSyncAnimalsAndProjects() != null)
+                configMap.put(MergeSyncManager.SYNC_ANIMALS_PROP_NAME, form.getSyncAnimalsAndProjects().toString());
+
             PropertyManager.saveProperties(configMap);
 
             //if config was changed and the ETL is current scheduled to run, we need to restart it
@@ -126,6 +129,7 @@ public class MergeSyncController extends SpringActionController
     {
         private Boolean _pullEnabled;
         private Boolean _pushEnabled;
+        private Boolean _syncAnimalsAndProjects;
         private String _dataSourceName;
         private String _schemaName;
         private String _labkeyUser;
@@ -172,6 +176,16 @@ public class MergeSyncController extends SpringActionController
         public void setPushEnabled(Boolean pushEnabled)
         {
             _pushEnabled = pushEnabled;
+        }
+
+        public Boolean getSyncAnimalsAndProjects()
+        {
+            return _syncAnimalsAndProjects;
+        }
+
+        public void setSyncAnimalsAndProjects(Boolean syncAnimalsAndProjects)
+        {
+            _syncAnimalsAndProjects = syncAnimalsAndProjects;
         }
 
         public String getLabkeyUser()
@@ -236,6 +250,7 @@ public class MergeSyncController extends SpringActionController
             resultProperties.put("pushEnabled", MergeSyncManager.get().isPushEnabled());
             resultProperties.put("lastRun", MergeSyncManager.get().getLastRun());
             resultProperties.put("nextRun", MergeSyncManager.get().getNextRun());
+            resultProperties.put("syncAnimalsAndProjects", MergeSyncManager.get().doSyncAnimalsAndProjects());
 
             String[] etlConfigKeys = {MergeSyncManager.DATA_SOURCE_PROP_NAME, MergeSyncManager.SCHEMA_PROP_NAME, MergeSyncManager.LABKEY_CONTAINER_PROP_NAME, MergeSyncManager.LABKEY_USER_PROP_NAME, MergeSyncManager.SYNC_INTERVAL_PROP_NAME, MergeSyncManager.MERGE_USER_PROP_NAME};
 

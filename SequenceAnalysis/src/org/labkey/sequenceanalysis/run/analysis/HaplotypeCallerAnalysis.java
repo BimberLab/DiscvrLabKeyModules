@@ -3,10 +3,12 @@ package org.labkey.sequenceanalysis.run.analysis;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.api.run.CommandLineParam;
 import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
@@ -59,12 +61,12 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
     }
 
     @Override
-    public Output performAnalysisPerSampleRemote(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome) throws PipelineJobException
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
 
         File outputFile = new File(getWrapper().getOutputDir(inputBam), FileUtil.getBaseName(inputBam) + ".gvcf");
-        getWrapper().execute(inputBam, referenceFasta, outputFile, getClientCommandArgs());
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, getClientCommandArgs());
 
         //output.addSequenceOutput(outputFile, "Haplotype Caller Output", "Haplotype Caller Output", null);
 

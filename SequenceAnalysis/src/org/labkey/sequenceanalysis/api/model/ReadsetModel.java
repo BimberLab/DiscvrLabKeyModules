@@ -30,6 +30,7 @@ public class ReadsetModel
     private String _mid5;
     private String _mid3;
     private Integer _runId;
+    private String _comments;
 
     private Integer _sampleId;
     private String _subjectId;
@@ -38,6 +39,7 @@ public class ReadsetModel
     private String _application;
     private String _inputMaterial;
     private String _sampleType;
+    private String _libraryType;
     private String _name;
     private Integer _instrumentRunId;
     private String _container;
@@ -137,6 +139,16 @@ public class ReadsetModel
     public void setSampleType(String sampleType)
     {
         _sampleType = sampleType;
+    }
+
+    public String getLibraryType()
+    {
+        return _libraryType;
+    }
+
+    public void setLibraryType(String libraryType)
+    {
+        _libraryType = libraryType;
     }
 
     public String getName()
@@ -287,6 +299,16 @@ public class ReadsetModel
     public void setModifiedBy(Integer modifiedBy)
     {
         _modifiedBy = modifiedBy;
+    }
+
+    public String getComments()
+    {
+        return _comments;
+    }
+
+    public void setComments(String comments)
+    {
+        _comments = comments;
     }
 
     public Integer getRunId()

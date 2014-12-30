@@ -361,7 +361,7 @@
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
         <ns:deleteUrl></ns:deleteUrl>
-        <!--<ns:updateUrl></ns:updateUrl>-->
+        <ns:updateUrl>/ldk/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=Sequence_Analyses&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:isAutoInc>true</ns:isAutoInc>
@@ -441,7 +441,7 @@
                 </ns:fk>
             </ns:column>
             <ns:column columnName="makePublic">
-                <ns:isHidden>false</ns:isHidden>
+                <ns:isHidden>true</ns:isHidden>
                 <ns:columnTitle>Is Cached?</ns:columnTitle>
             </ns:column>
             <ns:column columnName="container">
@@ -985,6 +985,16 @@
                     <ns:fkColumnName>tag_name</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
+            <ns:column columnName="librarytype">
+                <ns:columnTitle>Library Type</ns:columnTitle>
+                <ns:description>This column describes the construction of this library, such as whole genome sequencing, targeted capture, amplicon, etc.</ns:description>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>library_types</ns:fkTable>
+                    <ns:fkColumnName>type</ns:fkColumnName>
+                    <ns:fkDisplayColumnName useRawValue="true"/>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="sampletype">
                 <ns:nullable>true</ns:nullable>
                 <ns:scale>50</ns:scale>
@@ -1034,6 +1044,7 @@
                 </ns:fk>
             </ns:column>
             <ns:column columnName="platform">
+                <ns:columnTitle>Sequencing Platform</ns:columnTitle>
                 <ns:nullable>true</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
@@ -1051,6 +1062,11 @@
                     <ns:fkDisplayColumnName useRawValue="true"/>
                 </ns:fk>
             </ns:column>
+            <!--<ns:column columnName="platform_unit">-->
+                <!--<ns:columnTitle>Platform Unit</ns:columnTitle>-->
+                <!--<ns:description>This identifies this group of reads within a run.  For Illumina this is the flowcell-barcode-lane</ns:description>-->
+                <!--<ns:nullable>true</ns:nullable>-->
+            <!--</ns:column>-->
             <ns:column columnName="runid">
                 <ns:nullable>true</ns:nullable>
                 <ns:shownInInsertView>false</ns:shownInInsertView>
@@ -1066,7 +1082,7 @@
                 <ns:url>/experiment/showRunGraphDetail.view?rowId=${runid}</ns:url>
             </ns:column>
             <ns:column columnName="comments">
-                <ns:columnTitle>Comments</ns:columnTitle>
+                <ns:columnTitle>Description/Comments</ns:columnTitle>
             </ns:column>
             <ns:column columnName="status">
                 <ns:fk>
@@ -2170,7 +2186,7 @@
         <ns:tableUrl></ns:tableUrl>
         <ns:insertUrl></ns:insertUrl>
         <ns:importUrl></ns:importUrl>
-        <ns:deleteUrl></ns:deleteUrl>
+        <!--<ns:deleteUrl></ns:deleteUrl>-->
         <ns:tableTitle>Outputs</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowid">
@@ -2379,5 +2395,19 @@
                 <ns:originalText>Charts</ns:originalText>
             </ns:item>
         </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="library_types" tableDbType="TABLE" useColumnOrder="true">
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableTitle>Library Types</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
+        <ns:columns>
+            <ns:column columnName="rowid"/>
+            <ns:column columnName="type"/>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdby"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedby"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
     </ns:table>
 </ns:tables>

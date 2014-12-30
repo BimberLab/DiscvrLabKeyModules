@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.api.pipeline;
 
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 
 import java.io.File;
 import java.util.List;
@@ -24,7 +25,7 @@ public interface AnalysisStep extends PipelineStep
     /**
      * Will perform analysis steps on the remote pipeline server
      */
-    public Output performAnalysisPerSampleRemote(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException;
+    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome) throws PipelineJobException;
 
     /**
      * Will perform analysis steps on the local webserver

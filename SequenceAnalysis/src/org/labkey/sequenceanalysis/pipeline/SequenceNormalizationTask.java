@@ -465,6 +465,11 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             output = new File(workingDir, SequenceTaskHelper.getMinimalBaseName(input) + ".fastq");
             sff.convert(input, output);
         }
+        else
+        {
+            getJob().getLogger().error("Unknown file type: " + type);
+            return null;
+        }
 
         getHelper().getFileManager().addOutput(action, SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, output);
 

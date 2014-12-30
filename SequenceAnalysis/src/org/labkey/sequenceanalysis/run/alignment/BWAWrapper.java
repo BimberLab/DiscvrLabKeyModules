@@ -88,6 +88,11 @@ public class BWAWrapper extends AbstractCommandWrapper
                 args.add(getWrapper().getExe().getPath());
 
                 args.add("index");
+
+                //necessary for DBs larger than 2gb
+                args.add("-a");
+                args.add("bwtsw");
+
                 args.add("-p");
 
                 String outPrefix = FileUtil.getBaseName(referenceGenome.getSourceFastaFile()) + ".bwa.index";
@@ -119,10 +124,17 @@ public class BWAWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public boolean doSortCleanBam()
+        public boolean doMergeUnalignedReads()
         {
             return true;
         }
+
+        @Override
+        public boolean doSortIndexBam()
+        {
+            return true;
+        }
+
 
         protected AlignmentOutput _performAlignment(AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {

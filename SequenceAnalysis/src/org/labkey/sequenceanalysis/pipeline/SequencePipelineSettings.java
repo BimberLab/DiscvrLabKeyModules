@@ -103,6 +103,7 @@ public class SequencePipelineSettings
         //_rawInputFile2 = getInt(o.getString("fileId2"));
         model.setSampleId(getInt(o.getString("sampleid")));
         model.setSubjectId(o.getString("subjectid"));
+        model.setComments(o.getString("comments"));
         if (o.containsKey("sampledate") && o.get("sampledate") != null && StringUtils.trimToNull(o.getString("sampledate")) != null)
         {
             try
@@ -120,6 +121,7 @@ public class SequencePipelineSettings
         model.setApplication(o.getString("application"));
         model.setInputMaterial(o.getString("inputmaterial"));
         model.setSampleType(o.getString("sampletype"));
+        model.setLibraryType(o.getString("librarytype"));
         model.setName(o.getString("readsetname"));
         model.setReadsetId(getInt(o.getString("readset")));
         model.setInstrumentRunId(getInt(o.getString("instrument_run_id")));

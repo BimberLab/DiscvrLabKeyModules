@@ -16,7 +16,6 @@
 
 package org.labkey.blast;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
@@ -55,7 +54,6 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
-import org.labkey.api.view.Portal;
 import org.labkey.blast.model.BlastJob;
 import org.labkey.blast.pipeline.BlastDatabasePipelineJob;
 import org.springframework.validation.BindException;
@@ -64,12 +62,11 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -254,7 +251,7 @@ public class BLASTController extends SpringActionController
 
             if (form.getOutputFmt() != null)
             {
-                params.put("outfmt", form.getOutputFmt());
+                params.put("outputFmt", form.getOutputFmt());
             }
 
             if (form.getEvalue() != null)
@@ -609,19 +606,36 @@ public class BLASTController extends SpringActionController
                 return;
             }
 
-            Map<String, String> headers = new HashMap<>();
-
-            BlastJob j = BLASTManager.get().getBlastResults(getContainer(), getUser(), form.getJobId());
-            if (j == null)
+            if (StringUtils.trimToNull(form.getOutputFormat()) == null)
             {
-                errors.reject(ERROR_MSG, "Unable to find job: " + form.getJobId());
+                errors.reject(ERROR_MSG, "Need to provide the output format");
                 return;
             }
 
-            PageFlowUtil.prepareResponseForFile(response, headers, form.getFileName(), true);
-            try (BufferedReader reader = new BufferedReader(new FileReader(j.getExpectedOutputFile())))
+            BlastJob.BLAST_OUTPUT_FORMAT outputFormat;
+            try
             {
-                IOUtils.copy(reader, response.getOutputStream());
+                outputFormat = BlastJob.BLAST_OUTPUT_FORMAT.valueOf(form.getOutputFormat());
+            }
+            catch (IllegalArgumentException e)
+            {
+                errors.reject(ERROR_MSG, "Unknown output format: " + form.getOutputFormat());
+                return;
+            }
+
+            try (OutputStreamWriter out = new OutputStreamWriter(response.getOutputStream()))
+            {
+                Map<String, String> headers = new HashMap<>();
+
+                BlastJob j = BLASTManager.get().getBlastResults(getContainer(), getUser(), form.getJobId());
+                if (j == null)
+                {
+                    errors.reject(ERROR_MSG, "Unable to find job: " + form.getJobId());
+                    return;
+                }
+
+                PageFlowUtil.prepareResponseForFile(response, headers, form.getFileName(), true);
+                j.getResults(outputFormat, out);
             }
         }
     }
@@ -630,6 +644,7 @@ public class BLASTController extends SpringActionController
     {
         private String _jobId;
         private String _fileName;
+        private String _outputFormat;
 
         public String getJobId()
         {
@@ -649,6 +664,16 @@ public class BLASTController extends SpringActionController
         public void setFileName(String fileName)
         {
             _fileName = fileName;
+        }
+
+        public String getOutputFormat()
+        {
+            return _outputFormat;
+        }
+
+        public void setOutputFormat(String outputFormat)
+        {
+            _outputFormat = outputFormat;
         }
     }
 }

@@ -26,6 +26,7 @@
             title: 'Analysis Details',
             schemaName: 'sequenceanalysis',
             queryName: 'sequence_analyses',
+            viewName: 'SBT Information',
             containerPath: Laboratory.Utils.getQueryContainerPath(),
             filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)]
         }).render('analysisDetails_'+webpart.wrapperDivId);
@@ -55,7 +56,7 @@
             filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)]
         }).render('alignmentSummaryGrouped_'+webpart.wrapperDivId);
 
-        LDK.Utils.getReadOnlyQWP({
+        LDK.Utils.getBasicQWP({
             title: 'Published Results',
             schemaName: 'assay.GenotypeAssay.Genotype',
             queryName: 'Data',

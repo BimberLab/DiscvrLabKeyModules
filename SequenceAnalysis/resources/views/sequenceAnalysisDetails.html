@@ -33,6 +33,15 @@ Ext4.onReady(function (){
             queryName: 'sequence_analyses',
             viewName: 'Detailed',
             filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)]
+        },
+        detailsConfig: {
+            buttons: [{
+                text: 'More Actions',
+                menu: [{
+                    text: 'Edit Analysis Details',
+                    href: LABKEY.ActionURL.buildURL('ldk', 'manageRecord', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_analyses', keyField: 'rowid', key: analysisId}) + '&returnUrl=' + LDK.Utils.getSrcURL()
+                }]
+            }]
         }
     });
 

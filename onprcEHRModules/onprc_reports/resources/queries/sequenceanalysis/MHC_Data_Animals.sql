@@ -6,15 +6,6 @@ SELECT
 FROM assay.SSP_assay.SSP.Data s
 WHERE s.subjectId is not null AND s.result != 'FAIL' and s.result != 'IND'
 
---NOTE: redundant w/ the check for sequence readsets
--- UNION ALL
---
--- SELECT
---   a.subjectId as Id,
---
--- FROM assay.GenotypeAssay.Genotype.Data a
--- WHERE a.run.assayType = 'SBT'
-
 UNION ALL
 
 SELECT
@@ -23,13 +14,13 @@ SELECT
 
 FROM sequenceanalysis.sequence_readsets a
 WHERE a.subjectId is not null
+AND (a.status IS NULL OR a.status != 'Fail')
 
 UNION ALL
 
 SELECT
-  a1.readset.subjectId as Id,
+  a.subjectId as Id,
   true as hasSBTData
-  --'Y' as hasSBTData
 
-FROM sequenceanalysis.sequence_analyses a1
-WHERE a1.readset.subjectId is not null AND a1.makePublic = true
+FROM assay.GenotypeAssay.Genotype.Data a
+WHERE a.run.assayType = 'SBT'

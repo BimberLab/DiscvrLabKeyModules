@@ -35,6 +35,7 @@ import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.TabbedReportItem;
 import org.labkey.api.laboratory.assay.AssayDataProvider;
 import org.labkey.api.laboratory.assay.SimpleAssayDataProvider;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.ldk.table.ButtonConfigFactory;
 import org.labkey.api.module.Module;
@@ -72,8 +73,9 @@ public class LaboratoryServiceImpl extends LaboratoryService
 {
     private Set<Module> _registeredModules = new HashSet<Module>();
     private Map<Module, List<ClientDependency>> _clientDependencies = new HashMap<Module, List<ClientDependency>>();
-    private Map<String, Map<String, List<ButtonConfigFactory>>> _assayButtons = new CaseInsensitiveHashMap<Map<String, List<ButtonConfigFactory>>>();
+    private Map<String, Map<String, List<ButtonConfigFactory>>> _assayButtons = new CaseInsensitiveHashMap<>();
     private Map<String, DataProvider> _dataProviders = new HashMap<String, DataProvider>();
+    private Map<String, Map<String, List<Pair<Module, Class<? extends TableCustomizer>>>>> _tableCustomizers = new CaseInsensitiveHashMap<>();
     private final Logger _log = Logger.getLogger(LaboratoryServiceImpl.class);
 
     public static final String DEMOGRAPHICS_PROPERTY_CATEGORY = "laboratory.demographicsSource";
@@ -583,5 +585,61 @@ public class LaboratoryServiceImpl extends LaboratoryService
     public Map<String, Map<String, List<List<String>>>> getTableIndexes()
     {
         return Collections.unmodifiableMap(_tableIndexes);
+    }
+
+    @Override
+    public void registerTableCustomizer(Module owner, Class<? extends TableCustomizer> customizerClass, String schemaName, String queryName)
+    {
+        Map<String, List<Pair<Module, Class<? extends TableCustomizer>>>> schemaMap = _tableCustomizers.get(schemaName);
+        if (schemaMap == null)
+            schemaMap = new CaseInsensitiveHashMap<>();
+
+        List<Pair<Module, Class<? extends TableCustomizer>>> list = schemaMap.get(queryName);
+        if (list == null)
+            list = new ArrayList<>();
+
+        list.add(Pair.<Module, Class<? extends TableCustomizer>>of(owner, customizerClass));
+
+        schemaMap.put(queryName, list);
+        _tableCustomizers.put(schemaName, schemaMap);
+    }
+
+    @Override
+    public List<TableCustomizer> getCustomizers(Container c, String schemaName, String queryName)
+    {
+        List<TableCustomizer> list = new ArrayList<>();
+        Set<Module> modules = c.getActiveModules();
+
+        if (_tableCustomizers.containsKey(schemaName))
+        {
+            if (_tableCustomizers.get(schemaName).containsKey(queryName))
+            {
+                for (Pair<Module, Class<? extends TableCustomizer>> pair : _tableCustomizers.get(schemaName).get(queryName))
+                {
+                    if (modules.contains(pair.first))
+                    {
+                        TableCustomizer tc = instantiateCustomizer(pair.second);
+                        if (tc != null)
+                            list.add(tc);
+                    }
+                }
+            }
+        }
+
+        return Collections.unmodifiableList(list);
+    }
+
+    private TableCustomizer instantiateCustomizer(Class<? extends TableCustomizer> customizerClass)
+    {
+        try
+        {
+            return customizerClass.newInstance();
+        }
+        catch (InstantiationException | IllegalAccessException e)
+        {
+            _log.error("Unable to create instance of class '" + customizerClass.getName() + "'", e);
+        }
+
+        return null;
     }
 }

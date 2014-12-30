@@ -12,6 +12,7 @@
        <column name="geographic_origin" />
        <column name="comments" />
        <column name="aliases" />
+       <column name="genomes"/>
        <column name="container"/>
        <column name="downloadSequence"/>
    </columns>

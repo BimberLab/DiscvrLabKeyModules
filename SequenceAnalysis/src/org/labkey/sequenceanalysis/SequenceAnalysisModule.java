@@ -93,7 +93,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.288;
+        return 12.290;
     }
 
     public boolean hasScripts()
@@ -170,7 +170,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new MarkDuplicatesStep.Provider());
         //SequencePipelineService.get().registerPipelineStep(new RecalibrateBamStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SortSamStep.Provider());
-        SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.MethylationExtractorProvider());
 
         //analysis
         SequencePipelineService.get().registerPipelineStep(new SequenceBasedTypingAnalysis.Provider());
@@ -178,6 +177,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new HaplotypeCallerAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new AlignmentMetricsAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new SnpCountAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.MethylationExtractorProvider());
     }
 
     @Override
@@ -229,6 +229,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         SequenceAnalysisService.get().registerFileHandler(new VariantSearchHandler());
         SequenceAnalysisService.get().registerFileHandler(new CompareVariantsHandler());
+        //SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
 
         SystemMaintenance.addTask(new SequenceAnalyssiMaintenanceTask());
     }

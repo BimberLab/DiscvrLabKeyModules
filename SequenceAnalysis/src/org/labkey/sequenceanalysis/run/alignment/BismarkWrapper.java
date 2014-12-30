@@ -12,16 +12,17 @@ import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.reports.ExternalScriptEngineDefinition;
 import org.labkey.api.reports.LabkeyScriptEngineManager;
 import org.labkey.api.reports.RScriptEngineFactory;
-import org.labkey.api.reports.ReportService;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.api.model.AnalysisModel;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
+import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
 import org.labkey.sequenceanalysis.api.pipeline.BamProcessingStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
@@ -31,7 +32,7 @@ import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
 import org.labkey.sequenceanalysis.api.run.CommandLineParam;
 import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
-import org.labkey.sequenceanalysis.run.bampostprocessing.BamProcessingOutputImpl;
+import org.labkey.sequenceanalysis.run.analysis.AnalysisOutputImpl;
 import org.labkey.sequenceanalysis.run.util.SamtoolsRunner;
 
 import java.io.BufferedReader;
@@ -130,7 +131,13 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public boolean doSortCleanBam()
+        public boolean doMergeUnalignedReads()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean doSortIndexBam()
         {
             return false;
         }
@@ -200,7 +207,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
     }
 
-    public static class BismarkExtractorStep extends AbstractCommandPipelineStep<BismarkWrapper> implements BamProcessingStep
+    public static class BismarkExtractorStep extends AbstractCommandPipelineStep<BismarkWrapper> implements AnalysisStep
     {
         public BismarkExtractorStep(PipelineStepProvider provider, PipelineContext ctx)
         {
@@ -208,11 +215,18 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public Output processBam(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException
+        public void init(List<AnalysisModel> models) throws PipelineJobException
         {
-            BamProcessingOutputImpl output = new BamProcessingOutputImpl();
+
+        }
+
+        @Override
+        public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome) throws PipelineJobException
+        {
+            AnalysisOutputImpl output = new AnalysisOutputImpl();
             BismarkWrapper wrapper = getWrapper();
 
+            File outputDirectory = inputBam.getParentFile();
             List<String> args = new ArrayList<>();
             args.add(wrapper.getMethylationExtractorExe().getPath());
             args.add(inputBam.getPath());
@@ -275,11 +289,11 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     Pair.of(new File(outputDirectory, "NonCpG_CTOB_" + outputBasename + ".txt.gz"), -1)
             );
 
-            if (getProvider().getParameterByName("mbias_only").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class))
+            if (getProvider().getParameterByName("mbias_only") != null && getProvider().getParameterByName("mbias_only").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
             {
                 getPipelineCtx().getJob().getLogger().info("mbias only was selected, no report will be created");
             }
-            else if (getProvider().getParameterByName("siteReport").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class))
+            else if (getProvider().getParameterByName("siteReport") != null && getProvider().getParameterByName("siteReport").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
             {
                 getPipelineCtx().getLogger().info("creating per-site summary report");
 
@@ -359,6 +373,18 @@ public class BismarkWrapper extends AbstractCommandWrapper
             }
 
             return output;
+        }
+
+        @Override
+        public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+        {
+            return null;
+        }
+
+        @Override
+        public void performAnalysisOnAll(List<AnalysisModel> analysisModels) throws PipelineJobException
+        {
+
         }
 
         private File createSummaryReport(Logger log, File siteReport, Integer minCoverageDepth)
@@ -643,7 +669,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
     }
 
-    public static class MethylationExtractorProvider extends AbstractPipelineStepProvider<BamProcessingStep>
+    public static class MethylationExtractorProvider extends AbstractPipelineStepProvider<AnalysisStep>
     {
         public MethylationExtractorProvider()
         {
