@@ -446,8 +446,8 @@ public class LaboratoryManager
         Map<String, Object>[] rows = ts2.getMapArray();
         Integer incValue = max == null ? 0 : max;
 
-        ExperimentService.get().ensureTransaction();
-        try
+
+        try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
         {
             for (Map<String, Object> row : rows)
             {
@@ -456,12 +456,8 @@ public class LaboratoryManager
                 Table.update(u, ct.getRealTable(), row, row.get(pkCol));
             }
 
-            ExperimentService.get().commitTransaction();
+            transaction.commit();
             ct.saveId(c, incValue);
-        }
-        finally
-        {
-            ExperimentService.get().closeTransaction();
         }
     }
 

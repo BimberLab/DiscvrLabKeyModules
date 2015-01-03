@@ -123,9 +123,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
 
         getJob().getLogger().info("Beginning process to save monthly billing data");
 
-        ExperimentService.get().ensureTransaction();
-
-        try
+        try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
         {
             getOrCreateInvoiceRunRecord();
 
@@ -137,11 +135,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
             labworkProcessing(ehrContainer);
             miscChargesProcessing(ehrContainer);
 
-            ExperimentService.get().commitTransaction();
-        }
-        finally
-        {
-            ExperimentService.get().closeTransaction();
+            transaction.commit();
         }
 
         return new RecordedActionSet(Collections.singleton(action));

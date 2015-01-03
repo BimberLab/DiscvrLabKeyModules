@@ -69,7 +69,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,8 +89,6 @@ public class ETLRunnable implements Runnable
     public final static String ROWVERSION_PROPERTY_DOMAIN = "org.labkey.sla.etl.rowversion";
     public final static String CONFIG_PROPERTY_DOMAIN = "org.labkey.sla.etl.config";
     public final static byte[] DEFAULT_VERSION = new byte[0];
-
-    private final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
 
     private final static Logger log = Logger.getLogger(ETLRunnable.class);
     private static final int UPSERT_BATCH_SIZE = 500;
@@ -139,17 +136,7 @@ public class ETLRunnable implements Runnable
                     throw new BadConfigException("bad configuration: invalid labkey user");
                 }
             }
-            catch (ValidEmail.InvalidEmailException e)
-            {
-                log.error(e.getMessage(), e);
-                return;
-            }
-            catch (BadConfigException e)
-            {
-               log.error(e.getMessage(), e);
-               return;
-            }
-            catch (IOException e)
+            catch (ValidEmail.InvalidEmailException | BadConfigException | IOException e)
             {
                 log.error(e.getMessage(), e);
                 return;
@@ -442,9 +429,8 @@ public class ETLRunnable implements Runnable
                     filterColumn = pkColumn;
                 }
 
-                try
+                try (DbScope.Transaction transaction = scope.ensureTransaction())
                 {
-                    scope.ensureTransaction();
                     // perform any deletes
                     if (!deletedIds.isEmpty())
                     {
@@ -655,7 +641,7 @@ public class ETLRunnable implements Runnable
                             if (currentBatch >= 40000)
                             {
                                 log.info("committing transaction: " + targetTableName);
-                                scope.commitTransaction();
+                                transaction.commitAndKeepConnection();
 
 //                                if (realTable != null)
 //                                {
@@ -668,14 +654,12 @@ public class ETLRunnable implements Runnable
 //                                {
 //                                    log.warn("realTable is null, wont analyze");
 //                                }
-
-                                scope.ensureTransaction();
                                 currentBatch = 0;
                             }
                         }
 
                     } // each record
-
+                    transaction.commit();
                 } // all records in a target
                 catch (Throwable e) // comm errors and timeouts with remote, labkey exceptions
                 {
@@ -687,8 +671,6 @@ public class ETLRunnable implements Runnable
                 {
                     if (rollback)
                     {
-                        scope.closeConnection();
-
                         if (originConnection != null && !originConnection.isClosed())
                             originConnection.close();
 
@@ -696,7 +678,6 @@ public class ETLRunnable implements Runnable
                     }
                     else
                     {
-                        scope.commitTransaction();
                         setLastVersion(targetTableName, newBaselineVersion);
                         setLastTimestamp(targetTableName, newBaselineTimestamp);
 
@@ -731,7 +712,6 @@ public class ETLRunnable implements Runnable
                 close(rs);
                 close(ps);
                 close(originConnection);
-                scope.closeConnection();
             }
 
         } // each target collection

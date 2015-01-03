@@ -324,14 +324,13 @@ public class OGASyncRunner implements Job
     public void doMerge(final User u, final Container c, final TableInfo targetTable, Selector selector, final String selectionKey, final Map<String, String> fieldMap, final String category, final Collection<String> existingAliases, @Nullable final Map<String, Integer> faMap, @Nullable final Map<String, Integer> investigatorMap) throws SQLException
     {
         _log.info("starting to merge table: " + targetTable.getName());
-        ExperimentService.get().ensureTransaction();
 
-        _log.info("truncating table");
-        SqlExecutor ex = new SqlExecutor(targetTable.getSchema().getScope());
-        ex.execute(new SQLFragment("DELETE FROM " + targetTable.getSelectName() + " WHERE container = ?" + (category != null ? " AND (category IS NULL OR category = '" + category + "')" : ""), c.getId()));
-
-        try
+        try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
         {
+            _log.info("truncating table");
+            SqlExecutor ex = new SqlExecutor(targetTable.getSchema().getScope());
+            ex.execute(new SQLFragment("DELETE FROM " + targetTable.getSelectName() + " WHERE container = ?" + (category != null ? " AND (category IS NULL OR category = '" + category + "')" : ""), c.getId()));
+
             final Map<String, Integer> totals = new HashMap<>();
             totals.put("insert", 0);
             totals.put("update", 0);
@@ -464,12 +463,8 @@ public class OGASyncRunner implements Job
                 }
             });
 
-            ExperimentService.get().commitTransaction();
+            transaction.commit();
             _log.info("finished merging table: " + targetTable.getName() + ".  total inserts: " + totals.get("insert") + ".  total updates: " + totals.get("update"));
-        }
-        finally
-        {
-            ExperimentService.get().closeTransaction();
         }
     }
 

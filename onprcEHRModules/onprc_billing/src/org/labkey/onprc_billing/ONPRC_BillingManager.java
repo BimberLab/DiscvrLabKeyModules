@@ -19,6 +19,7 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
@@ -95,8 +96,7 @@ public class ONPRC_BillingManager
         }
         else
         {
-            ExperimentService.get().ensureTransaction();
-            try
+            try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
             {
                 long deleted1 = Table.delete(invoicedItems, invoiceRunFilter);
 
@@ -111,11 +111,7 @@ public class ONPRC_BillingManager
 
                 long deleted3 = Table.delete(invoiceRuns, new SimpleFilter(FieldKey.fromString("objectid"), pks, CompareType.IN));
 
-                ExperimentService.get().commitTransaction();
-            }
-            finally
-            {
-                ExperimentService.get().closeTransaction();
+                transaction.commit();
             }
         }
 
