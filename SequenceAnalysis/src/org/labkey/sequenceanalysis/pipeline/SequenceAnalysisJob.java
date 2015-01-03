@@ -1,6 +1,9 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.exp.api.ExperimentUrls;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.TaskId;
@@ -10,6 +13,7 @@ import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocol;
 import org.labkey.api.pipeline.file.FileAnalysisTaskPipeline;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.NetworkDrive;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
@@ -260,12 +264,12 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
     @Override
     public ActionURL getStatusHref()
     {
-        ActionURL ret = super.getStatusHref();
-        if (ret != null)
+        if (_experimentRunRowId != null)
         {
-            ret.setAction("ShowRunGraphDetail");
+            ExpRun run = ExperimentService.get().getExpRun(_experimentRunRowId.intValue());
+            if (run != null)
+                return PageFlowUtil.urlProvider(ExperimentUrls.class).getRunGraphDetailURL(run, null);
         }
-
-        return ret;
+        return null;
     }
 }
