@@ -1,5 +1,0 @@
-<view xmlns="http://labkey.org/data/xml/view" title="Search for Samples">
-    <permissions>
-        <permission name="read"/>
-    </permissions>
-</view>
