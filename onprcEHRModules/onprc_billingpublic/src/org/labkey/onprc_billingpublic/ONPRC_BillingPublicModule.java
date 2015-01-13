@@ -52,6 +52,7 @@ public class ONPRC_BillingPublicModule extends DefaultModule
     }
 
     @Override
+    @NotNull
     protected Collection<WebPartFactory> createWebPartFactories()
     {
         return Collections.emptyList();
@@ -70,6 +71,7 @@ public class ONPRC_BillingPublicModule extends DefaultModule
     }
 
     @Override
+    @NotNull
     public Collection<String> getSummary(Container c)
     {
         return Collections.emptyList();
