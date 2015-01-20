@@ -148,7 +148,7 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
     {
         File dirAnalysis = getAnalysisDirectory();
 
-        for (Map.Entry<FileType, FileType[]> entry : getTaskPipeline().getTypeHierarchy().entrySet())
+        for (Map.Entry<FileType, List<FileType>> entry : getTaskPipeline().getTypeHierarchy().entrySet())
         {
             if (entry.getKey().isType(name))
             {
@@ -162,8 +162,8 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
                     dir = dir.getParentFile();
                 }
 
-                FileType[] derivedTypes = entry.getValue();
-                for (int i = derivedTypes.length - 1; i >= 0; i--)
+                List<FileType> derivedTypes = entry.getValue();
+                for (int i = derivedTypes.size() - 1; i >= 0; i--)
                 {
                     // Go two directories up for each level of derivation
                     if (dir != null)
