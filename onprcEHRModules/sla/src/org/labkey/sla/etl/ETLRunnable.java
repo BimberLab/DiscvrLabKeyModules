@@ -830,7 +830,7 @@ public class ETLRunnable implements Runnable
         log.info(String.format("setting new baseline timestamp of %s on collection %s", new Date(ts.longValue()).toString(), tableName));
         PropertyManager.PropertyMap pm = PropertyManager.getWritableProperties(TIMESTAMP_PROPERTY_DOMAIN, true);
         pm.put(tableName, ts.toString());
-        PropertyManager.saveProperties(pm);
+        pm.save();
     }
 
     /**
@@ -872,7 +872,7 @@ public class ETLRunnable implements Runnable
         {
             String toStore = new String(encoded, "US-ASCII");
             pm.put(tableName, toStore);
-            PropertyManager.saveProperties(pm);
+            pm.save();
         }
         catch (UnsupportedEncodingException e)
         {

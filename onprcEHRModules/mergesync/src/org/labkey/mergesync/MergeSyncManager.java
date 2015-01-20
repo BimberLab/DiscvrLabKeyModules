@@ -214,7 +214,7 @@ public class MergeSyncManager
         PropertyManager.PropertyMap pm = PropertyManager.getWritableProperties(CONFIG_PROPERTY_DOMAIN, true);
         date = DateUtils.truncate(date, Calendar.MINUTE);  //always round to nearest minute
         pm.put(LAST_RUN_PROP_NAME, String.valueOf(date.getTime()));
-        PropertyManager.saveProperties(pm);
+        pm.save();
     }
 
     public void init()

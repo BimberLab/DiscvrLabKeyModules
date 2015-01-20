@@ -3187,7 +3187,7 @@ public class SequenceAnalysisController extends SpringActionController
             String path = StringUtils.trimToNull(form.getPath());
             configMap.put(QualiMapRunner.QUALIMAP_DIR, path);
 
-            PropertyManager.saveProperties(configMap);
+            configMap.save();
 
             return new ApiSimpleResponse("success", true);
         }

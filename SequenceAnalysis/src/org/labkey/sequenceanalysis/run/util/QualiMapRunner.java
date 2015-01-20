@@ -58,7 +58,7 @@ public class QualiMapRunner
         String binDir = StringUtils.trimToNull(dir);
         configMap.put(QUALIMAP_DIR, binDir);
 
-        PropertyManager.saveProperties(configMap);
+        configMap.save();
     }
 
     public static void isQualiMapDirValid() throws ConfigurationException

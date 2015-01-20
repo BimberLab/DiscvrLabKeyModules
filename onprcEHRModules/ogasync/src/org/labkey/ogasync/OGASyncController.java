@@ -156,7 +156,7 @@ public class OGASyncController extends SpringActionController
             if (form.getEtlStatus() != null)
                 configMap.put(OGASyncManager.ENABLED_PROP_NAME, form.getEtlStatus().toString());
 
-            PropertyManager.saveProperties(configMap);
+            configMap.save();
 
             //if config was changed and the ETL is current scheduled to run, we need to restart it
             OGASyncManager.get().onSettingsChange();

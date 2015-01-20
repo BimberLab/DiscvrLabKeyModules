@@ -406,7 +406,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
             props.put(qd.getPropertyManagerKey(), qd.getPropertyManagerValue());
         }
-        PropertyManager.saveProperties(props);
+        props.save();
     }
 
     //enforce read permission silently.  expect the action to limit this to admins
@@ -517,7 +517,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
         {
             props.put(qd.getPropertyManagerKey(), qd.getPropertyManagerValue());
         }
-        PropertyManager.saveProperties(props);
+        props.save();
     }
 
     public void setAdditionalDataSources(Container c, User u, Set<AdditionalDataSource> sources)
@@ -530,7 +530,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
         {
             props.put(qd.getPropertyManagerKey(), qd.getPropertyManagerValue());
         }
-        PropertyManager.saveProperties(props);
+        props.save();
     }
 
     public List<TabbedReportItem> getTabbedReportItems(Container c, User u)

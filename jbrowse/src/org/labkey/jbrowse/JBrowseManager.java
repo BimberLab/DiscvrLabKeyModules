@@ -88,7 +88,7 @@ public class JBrowseManager
         }
         configMap.put(JBROWSE_BIN, binDir);
 
-        PropertyManager.saveProperties(configMap);
+        configMap.save();
     }
 
     public File getJBrowseBinDir()

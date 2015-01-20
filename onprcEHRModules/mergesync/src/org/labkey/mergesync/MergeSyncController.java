@@ -114,7 +114,7 @@ public class MergeSyncController extends SpringActionController
             if (form.getSyncAnimalsAndProjects() != null)
                 configMap.put(MergeSyncManager.SYNC_ANIMALS_PROP_NAME, form.getSyncAnimalsAndProjects().toString());
 
-            PropertyManager.saveProperties(configMap);
+            configMap.save();
 
             //if config was changed and the ETL is current scheduled to run, we need to restart it
             MergeSyncManager.get().onSettingsChange();

@@ -112,7 +112,7 @@ public class LabSummaryNotification implements Notification
         newValues.put(lastSave, String.valueOf(new Date().getTime()));
         map.putAll(newValues);
 
-        PropertyManager.saveProperties(map);
+        map.save();
     }
 
     private String getPctChange(Long oldVal, Long newVal, double threshold)

@@ -164,6 +164,6 @@ public class ETL
     {
         PropertyManager.PropertyMap pm = PropertyManager.getWritableProperties(ETLRunnable.CONFIG_PROPERTY_DOMAIN, true);
         pm.put(ENABLED_PROP_NAME, enabled.toString());
-        PropertyManager.saveProperties(pm);
+        pm.save();
     }
 }

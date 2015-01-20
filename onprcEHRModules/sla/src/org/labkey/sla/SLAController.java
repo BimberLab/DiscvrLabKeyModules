@@ -177,7 +177,7 @@ public class SLAController extends SpringActionController
             if (form.getEtlStatus() != null)
                 configMap.put("etlStatus", form.getEtlStatus().toString());
 
-            PropertyManager.saveProperties(configMap);
+            configMap.save();
 
             PropertyManager.PropertyMap rowVersionMap = PropertyManager.getWritableProperties(ETLRunnable.ROWVERSION_PROPERTY_DOMAIN, true);
             PropertyManager.PropertyMap timestampMap = PropertyManager.getWritableProperties(ETLRunnable.TIMESTAMP_PROPERTY_DOMAIN, true);
@@ -210,8 +210,8 @@ public class SLAController extends SpringActionController
                         }
                     }
                 }
-                PropertyManager.saveProperties(rowVersionMap);
-                PropertyManager.saveProperties(timestampMap);
+                rowVersionMap.save();
+                timestampMap.save();
             }
 
             //if config was changed and the ETL is current scheduled to run, we need to restart it

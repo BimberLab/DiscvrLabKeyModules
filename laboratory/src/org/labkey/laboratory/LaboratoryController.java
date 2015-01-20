@@ -1541,7 +1541,7 @@ public class LaboratoryController extends SpringActionController
                 getContainer().setActiveModules(toActivate);
             }
 
-            PropertyManager.saveProperties(map);
+            map.save();
 
             results.put("success", true);
             return new ApiSimpleResponse(results);
@@ -1575,7 +1575,7 @@ public class LaboratoryController extends SpringActionController
                 map.put(key, json.getString(key));
             }
 
-            PropertyManager.saveProperties(map);
+            map.save();
 
             results.put("success", true);
             return new ApiSimpleResponse(results);
@@ -1636,7 +1636,7 @@ public class LaboratoryController extends SpringActionController
                     propMap.remove(key);
             }
 
-            PropertyManager.saveProperties(propMap);
+            propMap.save();
 
             results.put("success", true);
             return new ApiSimpleResponse(results);
@@ -1670,7 +1670,7 @@ public class LaboratoryController extends SpringActionController
                 map.put(key, json.getString(key));
             }
 
-            PropertyManager.saveProperties(map);
+            map.save();
 
             results.put("success", true);
             return new ApiSimpleResponse(results);

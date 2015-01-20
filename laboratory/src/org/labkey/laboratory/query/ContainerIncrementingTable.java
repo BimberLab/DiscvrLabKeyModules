@@ -188,7 +188,7 @@ public class ContainerIncrementingTable extends SimpleUserSchema.SimpleTable
         Container target = c.isWorkbook() ? c.getParent() : c;
         PropertyManager.PropertyMap map = PropertyManager.getWritableProperties(target, PROPERT_CATEGORY_BASE, true);
         map.put(getPropertyKey(), value.toString());
-        PropertyManager.saveProperties(map);
+        map.save();
     }
 
     private String getPropertyKey()

@@ -101,7 +101,7 @@ public class BLASTManager
         }
         configMap.put(BLAST_DB_DIR, dbDir);
 
-        PropertyManager.saveProperties(configMap);
+        configMap.save();
     }
 
     public File getBinDir()

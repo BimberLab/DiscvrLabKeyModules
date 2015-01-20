@@ -356,6 +356,6 @@ public class OGASyncManager
     {
         PropertyManager.PropertyMap pm = PropertyManager.getWritableProperties(CONFIG_PROPERTY_DOMAIN, true);
         pm.put(LAST_RUN_PROP_NAME, String.valueOf(date.getTime()));
-        PropertyManager.saveProperties(pm);
+        pm.save();
     }
 }
