@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
 import org.labkey.blast.model.BlastJob;
 
@@ -126,7 +127,11 @@ public class BLASTWrapper
     public File createDatabase(String dbName, String title, File fastaFile) throws IllegalArgumentException, IOException
     {
         File binDir = BLASTManager.get().getBinDir();
-        if (binDir == null || !binDir.exists())
+        if (binDir == null)
+        {
+            throw new IllegalArgumentException("BLAST bin dir has not been set, aborting.");
+        }
+        else if (!binDir.exists())
         {
             throw new IllegalArgumentException("BLAST bin dir does not exist: " + binDir);
         }

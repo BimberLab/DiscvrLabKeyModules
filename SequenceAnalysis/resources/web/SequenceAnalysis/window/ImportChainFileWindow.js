@@ -58,7 +58,7 @@ Ext4.define('SequenceAnalysis.window.ImportChainFileWindow', {
                     allowBlank: false
                 },{
                     xtype: 'ldk-numberfield',
-                    fieldLabel: 'Version (optional)',
+                    fieldLabel: 'Version',
                     name: 'version',
                     allowBlank: false
                 }]

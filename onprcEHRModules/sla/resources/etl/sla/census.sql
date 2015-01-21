@@ -16,7 +16,7 @@ afs.DLAMInventory,
 cast(afs.objectid as varchar(36)) as objectid
 
 From Af_SmallLabAnimals afs
-LEFT JOIN Ref_ProjectsIacuc rf ON (rf.ProjectID = afs.IACUCID )
+LEFT JOIN vw_SLAProjects rf ON (rf.ProjectID = afs.IACUCID )
 LEFT JOIN Ref_Investigator ri on (ri.InvestigatorID = afs.investigatorid)
 LEFT JOIN Ref_RowCage rc on  (rc.CageID = afs.CageID)
 LEFT JOIN Ref_Location rl on (rc.LocationID = rl.LocationId)

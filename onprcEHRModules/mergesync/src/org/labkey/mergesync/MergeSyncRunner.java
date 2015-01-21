@@ -142,13 +142,13 @@ public class MergeSyncRunner implements Job
 
             MergeSyncManager.get().setLastRun(syncStart);
 
+            validateRuns(c, u, mergeSchema, 30, syncStart);
+
             if (MergeSyncManager.get().doSyncAnimalsAndProjects())
             {
                 syncAnimalsToMerge(c, u, mergeSchema);
                 syncProjectsToMerge(c, u, mergeSchema);
             }
-
-            validateRuns(c, u, mergeSchema, 30);
         }
         finally
         {
@@ -211,7 +211,7 @@ public class MergeSyncRunner implements Job
         });
     }
 
-    private void validateRuns(final Container c, final User u, DbSchema mergeSchema, int offset)
+    private void validateRuns(final Container c, final User u, DbSchema mergeSchema, int offset, final Date syncStart)
     {
         TableInfo runsTable = MergeSyncUserSchema.getMergeRunsTable(mergeSchema);
 
@@ -220,6 +220,7 @@ public class MergeSyncRunner implements Job
         minDate.add(Calendar.DATE, -1 * offset);
 
         SimpleFilter runFilter = new SimpleFilter(FieldKey.fromString("dateVerified"), minDate, CompareType.GTE);
+        runFilter.addCondition(FieldKey.fromString("dateVerified"), null, CompareType.NONBLANK);
         runFilter.addCondition(FieldKey.fromString("status"), "V");
         runFilter.addCondition(FieldKey.fromString("numericLastName"), true, CompareType.EQUAL);
 
@@ -240,7 +241,16 @@ public class MergeSyncRunner implements Job
                     {
                         if (existingRequest == null || existingRequest.get("objectid") == null)  //proxy for whether a record existing in orders synced.  this might
                         {
-                            _log.error("merge run missing: " + accession + " / " + panelId + ".  No record of previous sync.  Date verified: " + _dateTimeFormat.format(mergeRunRs.getDate("dateVerified")));
+                            //NOTE: if the dateVerified is greater than the sync start, it was most likely verified during this sync operation and we'll pick it up during the next sync anyway
+                            String msg = "merge run missing: " + accession + " / " + panelId + ".  No record of previous sync.  Date verified: " + _dateTimeFormat.format(mergeRunRs.getDate("dateVerified"));
+                            if (mergeRunRs.getDate("dateVerified").getTime() <= syncStart.getTime())
+                            {
+                                _log.error(msg);
+                            }
+                            else
+                            {
+                                _log.warn(msg);
+                            }
                             //processSingleRun(c, u, mergeResultTable, mergeRunRs, false);
                         }
                         else if (existingRequest.get("deletedate") != null)

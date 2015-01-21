@@ -15,14 +15,16 @@
 
 package org.labkey.sequenceanalysis;
 
+import htsjdk.samtools.SAMException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.ReaderInputStream;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 import org.jfree.chart.JFreeChart;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.labkey.api.action.AbstractFileUploadAction;
 import org.labkey.api.action.ApiAction;
@@ -32,7 +34,6 @@ import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.ExportAction;
-import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
@@ -61,6 +62,8 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.ldk.NavItem;
+import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleHtmlView;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.ParamParser;
@@ -93,7 +96,10 @@ import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
-import org.labkey.api.sequenceanalysis.SequenceFileHandler;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.SequenceDataProvider;
+import org.labkey.api.sequenceanalysis.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.ExceptionUtil;
@@ -105,6 +111,7 @@ import org.labkey.api.util.Pair;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.StringExpressionFactory;
 import org.labkey.api.util.URLHelper;
+import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
@@ -119,9 +126,12 @@ import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
+import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineJob;
+import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByCodonAggregator;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByReadAggregator;
@@ -132,6 +142,7 @@ import org.labkey.sequenceanalysis.run.analysis.NtCoverageAggregator;
 import org.labkey.sequenceanalysis.run.analysis.NtSnpByPosAggregator;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.run.util.QualiMapRunner;
+import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.visualization.VariationChart;
 import org.springframework.validation.BindException;
@@ -144,7 +155,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -2544,9 +2557,22 @@ public class SequenceAnalysisController extends SpringActionController
                         throw new UploadException("Must provide the source and target genomes", HttpServletResponse.SC_BAD_REQUEST);
                     }
 
-                    SequenceAnalysisManager.get().addChainFile(getContainer(), getUser(), file, form.getGenomeId1(), form.getGenomeId2(), form.getVersion());
+                    try
+                    {
+                        File chainFile = new ChainFileValidator().validateChainFile(file, form.getGenomeId1(), form.getGenomeId2());
+                        SequenceAnalysisManager.get().addChainFile(getContainer(), getUser(), chainFile, form.getGenomeId1(), form.getGenomeId2(), form.getVersion());
+                        if (file.exists())
+                        {
+                            file.delete();
+                        }
 
-                    resp.put("success", true);
+                        resp.put("success", true);
+                    }
+                    catch (SAMException e)
+                    {
+                        throw new UploadException(e.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
+                    }
+
                 }
             }
             catch (Exception e)
@@ -2845,14 +2871,19 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            SequenceFileHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass());
+            SequenceOutputHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass());
+            if (handler == null)
+            {
+                errors.reject(ERROR_MSG, "Unknown handler type: " + form.getHandlerClass());
+                return null;
+            }
 
             JSONArray arr = new JSONArray();
-            if (form.getDataIds() != null)
+            if (form.getOutputFileIds() != null)
             {
-                for (int dataId : form.getDataIds())
+                for (int outputFileId : form.getOutputFileIds())
                 {
-                    arr.put(getDataJson(handler, dataId, null));
+                    arr.put(getDataJson(handler, outputFileId));
                 }
             }
 
@@ -2866,6 +2897,7 @@ public class SequenceAnalysisController extends SpringActionController
                     {
                         JSONObject o = new JSONObject();
                         o.put("outputFileId", outputFileId);
+                        o.put("fileName", (String)null);
                         o.put("fileExists", false);
                         o.put("error", true);
                         arr.put(o);
@@ -2885,7 +2917,7 @@ public class SequenceAnalysisController extends SpringActionController
                         continue;
                     }
 
-                    JSONObject o = getDataJson(handler, d.getRowId(), outputFileId);
+                    JSONObject o = getDataJson(handler, outputFileId);
                     o.put("libraryId", libraryId);
                     arr.put(o);
                 }
@@ -2893,17 +2925,26 @@ public class SequenceAnalysisController extends SpringActionController
 
             ret.put("files", arr);
 
+            ActionURL url = handler.getButtonSuccessUrl(getContainer(), getUser(), Arrays.asList(ArrayUtils.toObject(form.getOutputFileIds())));
+            if (url != null)
+            {
+                ret.put("successUrl", url.toString());
+            }
+            ret.put("jsHandler", handler.getButtonJSHandler());
+
             return new ApiSimpleResponse(ret);
         }
 
-        private JSONObject getDataJson(SequenceFileHandler handler, int dataId, @Nullable Integer outputFileId)
+        private JSONObject getDataJson(SequenceOutputHandler handler, Integer outputFileId)
         {
             JSONObject o = new JSONObject();
-            o.put("dataId", dataId);
+            SequenceOutputFile outputFile = SequenceOutputFile.getForId(outputFileId);
+
+            o.put("dataId", outputFile.getDataId());
             o.put("outputFileId", outputFileId);
 
-            ExpData d = ExperimentService.get().getExpData(dataId);
-            if (d.getFile() == null || !d.getFile().exists())
+            ExpData d = outputFile.getDataId() == 0 ? null : ExperimentService.get().getExpData(outputFile.getDataId());
+            if (d == null || d.getFile() == null || !d.getFile().exists())
             {
                 o.put("fileExists", false);
                 o.put("error", true);
@@ -2914,7 +2955,7 @@ public class SequenceAnalysisController extends SpringActionController
             o.put("fileExists", true);
             o.put("extension", FileUtil.getExtension(d.getFile()));
 
-            boolean canProcess = handler.canProcess(d.getFile());
+            boolean canProcess = handler.canProcess(outputFile);
             o.put("canProcess", canProcess);
 
             return o;
@@ -2925,7 +2966,6 @@ public class SequenceAnalysisController extends SpringActionController
     {
         private String _handlerClass;
         private int[] _outputFileIds;
-        private int[] _dataIds;
 
         public String getHandlerClass()
         {
@@ -2943,84 +2983,6 @@ public class SequenceAnalysisController extends SpringActionController
         }
 
         public void setOutputFileIds(int[] outputFileIds)
-        {
-            _outputFileIds = outputFileIds;
-        }
-
-        public int[] getDataIds()
-        {
-            return _dataIds;
-        }
-
-        public void setDataIds(int[] dataIds)
-        {
-            _dataIds = dataIds;
-        }
-    }
-
-    @RequiresPermissionClass(InsertPermission.class)
-    public class OutputFileHandler extends RedirectAction<OutputFileHandlerForm>
-    {
-        private URLHelper _url;
-
-        public void validateCommand(OutputFileHandlerForm form, Errors errors)
-        {
-            if (form.getHandlerClass() == null || form.getOutputFileIds() == null)
-            {
-                errors.reject(ERROR_MSG, "Must provide the name of the file handler and list of files to process");
-            }
-
-            SequenceFileHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass());
-            if (handler == null)
-            {
-                errors.reject(ERROR_MSG, "Unable to find handler matching: " + form.getHandlerClass());
-            }
-
-            List<Integer> idList = new ArrayList<>();
-            for (String token : StringUtils.split(form.getOutputFileIds()))
-            {
-                idList.add(ConvertHelper.convert(token, Integer.class));
-            }
-
-            _url = handler.getSuccessURL(getContainer(), getUser(), idList);
-            if (_url == null)
-            {
-                errors.reject(ERROR_MSG, "This handler is not supported through this action.  This is probably an error by the software developer.");
-            }
-        }
-
-        public URLHelper getSuccessURL(OutputFileHandlerForm form)
-        {
-            return _url;
-        }
-
-        public boolean doAction(OutputFileHandlerForm form, BindException errors) throws Exception
-        {
-            return true;
-        }
-    }
-
-    public static class OutputFileHandlerForm
-    {
-        private String _handlerClass;
-        private String _outputFileIds;
-
-        public String getHandlerClass()
-        {
-            return _handlerClass;
-        }
-
-        public void setHandlerClass(String handlerClass)
-        {
-            _handlerClass = handlerClass;
-        }
-
-        public String getOutputFileIds()
-        {
-            return _outputFileIds;
-        }
-
-        public void setOutputFileIds(String outputFileIds)
         {
             _outputFileIds = outputFileIds;
         }
@@ -3205,6 +3167,245 @@ public class SequenceAnalysisController extends SpringActionController
         public void setPath(String path)
         {
             _path = path;
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    @CSRF
+    public class GetDataItemsAction extends ApiAction<GetDataItemsForm>
+    {
+        public ApiResponse execute(GetDataItemsForm form, BindException errors)
+        {
+            Map<String, List<JSONObject>> results = new HashMap<>();
+
+            for (SequenceDataProvider.SequenceNavItemCategory category : SequenceDataProvider.SequenceNavItemCategory.values())
+            {
+                List<JSONObject> json = results.get(category.name());
+                if (json == null)
+                {
+                    json = new ArrayList<>();
+                }
+
+                for (NavItem item : SequenceAnalysisService.get().getNavItems(getContainer(), getUser(), category))
+                {
+                    ensureModuleActive(item);
+
+                    if (form.isIncludeAll() || item.isVisible(getContainer(), getUser()))
+                    {
+                        json.add(item.toJSON(getContainer(), getUser()));
+                    }
+                }
+
+                results.put(category.name(), json);
+            }
+
+            Map<String, Object> ret = new HashMap<>();
+            ret.put("success", true);
+            ret.put("results", results);
+
+            return new ApiSimpleResponse(ret);
+        }
+
+        private void ensureModuleActive(NavItem item)
+        {
+            if (getContainer().equals(ContainerManager.getSharedContainer()))
+            {
+                Module m = item.getDataProvider().getOwningModule();
+                if (m != null)
+                {
+                    Set<Module> active = getContainer().getActiveModules();
+                    if (!active.contains(m))
+                    {
+                        Set<Module> newActive = new HashSet<Module>();
+                        newActive.addAll(active);
+                        newActive.add(m);
+
+                        _log.info("Enabling module " + m.getName() + " in shared container since getDataItems was called");
+
+                        getContainer().setActiveModules(newActive);
+                    }
+                }
+
+            }
+        }
+    }
+
+    public static class GetDataItemsForm
+    {
+        private boolean _includeAll = false;
+
+        public boolean isIncludeAll()
+        {
+            return _includeAll;
+        }
+
+        public void setIncludeAll(boolean includeAll)
+        {
+            _includeAll = includeAll;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    @CSRF
+    public class LoadNcbiGenomeAction extends ApiAction<LoadNcbiGenomeForm>
+    {
+        public ApiResponse execute(LoadNcbiGenomeForm form, BindException errors) throws Exception
+        {
+            PipeRoot pr = PipelineService.get().findPipelineRoot(getContainer());
+            if (pr == null || !pr.isValid())
+                throw new NotFoundException();
+
+            if (StringUtils.trimToNull(form.getFolder()) == null)
+            {
+                errors.reject(ERROR_MSG, "Must provide the name of the remote directory");
+                return null;
+            }
+
+            if (StringUtils.trimToNull(form.getGenomeName()) == null)
+            {
+                errors.reject(ERROR_MSG, "Must provide the name for this genome");
+                return null;
+            }
+
+            URL url = new URL(NcbiGenomeImportPipelineProvider.URL_BASE + "/" + form.getFolder() + "/") ;
+            try (InputStream inputStream = url.openConnection().getInputStream())
+            {
+                //just open to test if file exists
+            }
+            catch (IOException e)
+            {
+                throw new NotFoundException("Unable to find remote file: " + form.getFolder());
+            }
+
+            NcbiGenomeImportPipelineJob job = new NcbiGenomeImportPipelineJob(getContainer(), getUser(), getViewContext().getActionURL(), pr, form.getFolder(), form.getGenomeName(), form.getGenomePrefix(), form.getSpecies());
+            PipelineService.get().queueJob(job);
+
+            return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    public static class LoadNcbiGenomeForm
+    {
+        private String _folder;
+        private String _genomeName;
+        private String _genomePrefix;
+        private String _species;
+
+        public String getFolder()
+        {
+            return _folder;
+        }
+
+        public void setFolder(String folder)
+        {
+            _folder = folder;
+        }
+
+        public String getGenomeName()
+        {
+            return _genomeName;
+        }
+
+        public void setGenomeName(String genomeName)
+        {
+            _genomeName = genomeName;
+        }
+
+        public String getGenomePrefix()
+        {
+            return _genomePrefix;
+        }
+
+        public void setGenomePrefix(String genomePrefix)
+        {
+            _genomePrefix = genomePrefix;
+        }
+
+        public String getSpecies()
+        {
+            return _species;
+        }
+
+        public void setSpecies(String species)
+        {
+            _species = species;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    @CSRF
+    public class RunSequenceHandlerAction extends ApiAction<RunSequenceHandlerForm>
+    {
+        public ApiResponse execute(RunSequenceHandlerForm form, BindException errors) throws Exception
+        {
+            PipeRoot pr = PipelineService.get().findPipelineRoot(getContainer());
+            if (pr == null || !pr.isValid())
+                throw new NotFoundException();
+
+            if (StringUtils.isEmpty(form.getHandlerClass()))
+            {
+                errors.reject(ERROR_MSG, "Must provide the file handler");
+                return null;
+            }
+
+            SequenceOutputHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass());
+            if (handler == null)
+            {
+                errors.reject(ERROR_MSG, "Unknown handler: " + form.getHandlerClass());
+                return null;
+            }
+
+            List<SequenceOutputFile> files = new ArrayList<>();
+            if (form.getOutputFileIds() != null)
+            {
+                for (int outputFileId : form.getOutputFileIds())
+                {
+                    SequenceOutputFile o = SequenceOutputFile.getForId(outputFileId);
+                    if (o == null)
+                    {
+                        errors.reject(ERROR_MSG, "Unable to find file: " + outputFileId);
+                        return null;
+                    }
+
+                    files.add(o);
+                }
+            }
+
+            if (files.isEmpty())
+            {
+                errors.reject(ERROR_MSG, "No output files provided");
+                return null;
+            }
+
+            try
+            {
+                JSONObject json = new JSONObject(form.getParams());
+
+                SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(getContainer(), getUser(), getViewContext().getActionURL(), pr, handler, files, json);
+                PipelineService.get().queueJob(job);
+
+                return new ApiSimpleResponse("success", true);
+            }
+            catch (JSONException e)
+            {
+                errors.reject(ERROR_MSG, "Unable to parse JSON params: " + e.getMessage());
+                return null;
+            }
+        }
+    }
+
+    public static class RunSequenceHandlerForm extends CheckFileStatusForm
+    {
+        private String _params;
+
+        public String getParams()
+        {
+            return _params;
+        }
+
+        public void setParams(String params)
+        {
+            _params = params;
         }
     }
 }

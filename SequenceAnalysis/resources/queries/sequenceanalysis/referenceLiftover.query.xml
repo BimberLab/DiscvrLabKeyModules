@@ -1,0 +1,9 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="referenceLiftover" tableDbType="TABLE">
+                <tableTitle>Liftovers Available to Each Reference Sequence</tableTitle>
+            </table>
+        </tables>
+    </metadata>
+</query>

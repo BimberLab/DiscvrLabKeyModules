@@ -352,7 +352,7 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="sequence_analyses" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.sequenceanalysis.AnalysesTableCustomizer</ns:javaCustomizer>
+        <ns:javaCustomizer>org.labkey.sequenceanalysis.query.AnalysesTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Sequence Analyses</ns:tableTitle>
         <ns:pkColumnName>rowid</ns:pkColumnName>
@@ -439,10 +439,6 @@
                     <ns:fkTable>reference_libraries</ns:fkTable>
                     <ns:fkColumnName>rowid</ns:fkColumnName>
                 </ns:fk>
-            </ns:column>
-            <ns:column columnName="makePublic">
-                <ns:isHidden>true</ns:isHidden>
-                <ns:columnTitle>Is Cached?</ns:columnTitle>
             </ns:column>
             <ns:column columnName="container">
             </ns:column>
@@ -688,7 +684,7 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="ref_nt_sequences" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:javaCustomizer>org.labkey.sequenceanalysis.query.SequenceAnalysisCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableTitle>Reference NT Sequences</ns:tableTitle>
         <ns:pkColumnName>rowid</ns:pkColumnName>
@@ -1933,14 +1929,6 @@
                     <ns:fkColumnName>RowId</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="snps_file">
-                <ns:columnTitle>SNPs File</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>exp</ns:fkDbSchema>
-                    <ns:fkTable>data</ns:fkTable>
-                    <ns:fkColumnName>RowId</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
             <ns:column columnName="container">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
@@ -2403,6 +2391,28 @@
         <ns:columns>
             <ns:column columnName="rowid"/>
             <ns:column columnName="type"/>
+            <ns:column columnName="container"/>
+            <ns:column columnName="createdby"/>
+            <ns:column columnName="created"/>
+            <ns:column columnName="modifiedby"/>
+            <ns:column columnName="modified"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="genomeAliases" tableDbType="TABLE" useColumnOrder="true">
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableTitle>Aliases in External Datasources</ns:tableTitle>
+        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
+        <ns:columns>
+            <ns:column columnName="rowId"/>
+            <ns:column columnName="genomeId">
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>reference_libraries</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="externalDb"/>
+            <ns:column columnName="externalName"/>
             <ns:column columnName="container"/>
             <ns:column columnName="createdby"/>
             <ns:column columnName="created"/>

@@ -15,6 +15,38 @@ SequenceAnalysis.Utils = new function(){
             return true;
         },
 
+        /**
+         * The purpose of this helper is to provide a listing of all items to display in the sequence module navigation pages.  It draws from
+         * any items registered with SequenceAnalysisService.
+         * @param [config.includeHidden] Optional. If true, non-visible items will be included.
+         * @param config.success Success callback.  Will be passed a single object as an argument with the following properties
+         * @param config.failure Error callback
+         * @param config.scope Scope of callbacks
+         * @private
+         */
+        getDataItems: function(config){
+            config = config || {};
+
+            var params = {};
+            if (config.includeHidden)
+                params.includeAll = config.includeHidden;
+
+            var requestConfig = {
+                url : LABKEY.ActionURL.buildURL('sequenceanalysis', 'getDataItems', config.containerPath, params),
+                method : 'GET',
+                failure: LDK.Utils.getErrorCallback({
+                    callback: config.failure
+                }),
+                success: function(response){
+                    var json = Ext4.decode(response.responseText);
+                    if (config.success)
+                        config.success.call((config.scope || this), json);
+                }
+            };
+
+            return LABKEY.Ajax.request(requestConfig);
+        },
+
         //adapted from: http://werxltd.com/wp/2011/03/08/calculate-a-color-gradient-in-javascript/
         ColorGradient: {
             hexdec: function(hex_string) {

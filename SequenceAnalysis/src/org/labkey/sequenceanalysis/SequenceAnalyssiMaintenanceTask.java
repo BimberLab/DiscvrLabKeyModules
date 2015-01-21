@@ -156,6 +156,11 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
                 }
             }
         }
+
+        for (Container child : c.getChildren())
+        {
+            processContainer(child);
+        }
     }
 
     private void deleteFile(File f) throws IOException

@@ -10,6 +10,7 @@
        <column name="readset/sampletype" />
        <column name="analysis_id" />
        <column name="runid" />
+       <column name="runid/jobid" />
        <column name="workbook" />
        <column name="dataid/DownloadLink">
            <properties>

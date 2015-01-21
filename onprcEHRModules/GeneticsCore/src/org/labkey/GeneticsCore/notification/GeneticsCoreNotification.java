@@ -89,15 +89,15 @@ public class GeneticsCoreNotification implements Notification
 
         getMHCDiscrepancies(c, u, msg);
         getMHCConflictingFlags(c, u, msg);
-        getActiveExclusions(c, u, msg, GeneticsCoreManager.MHC_DRAW_NEEDED);
+        getActiveExclusions(c, u, msg, GeneticsCoreManager.MHC_DRAW_NEEDED, 90);
 
         getDNADiscrepancies(c, u, msg);
         getDNAConflictingFlags(c, u, msg);
-        getActiveExclusions(c, u, msg, GeneticsCoreManager.DNA_DRAW_NEEDED);
+        getActiveExclusions(c, u, msg, GeneticsCoreManager.DNA_DRAW_NEEDED, 180);
 
         getParentageDiscrepancies(c, u, msg);
         getParentageConflictingFlags(c, u, msg);
-        getActiveExclusions(c, u, msg, GeneticsCoreManager.PARENTAGE_DRAW_NEEDED);
+        getActiveExclusions(c, u, msg, GeneticsCoreManager.PARENTAGE_DRAW_NEEDED, 180);
 
         getMHCFreezerSamplesNotFlagged(c, u, msg);
         getParentageFreezerSamplesNotFlagged(c, u, msg);
@@ -154,7 +154,7 @@ public class GeneticsCoreNotification implements Notification
         }
     }
 
-    public void getActiveExclusions(Container c, User u, StringBuilder msg, String flag)
+    public void getActiveExclusions(Container c, User u, StringBuilder msg, String flag, int interval)
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromString("isActive"), true, CompareType.EQUAL);
@@ -162,7 +162,7 @@ public class GeneticsCoreNotification implements Notification
         filter.addCondition(FieldKey.fromString("value"), flag, CompareType.EQUAL);
 
         Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.MONTH, -6);
+        cal.add(Calendar.DATE, -1 * interval);
         filter.addCondition(FieldKey.fromString("date"), cal.getTime(), CompareType.DATE_LTE);
 
         TableInfo ti = QueryService.get().getUserSchema(u, c, "study").getTable("Animal Record Flags");
@@ -173,7 +173,7 @@ public class GeneticsCoreNotification implements Notification
             ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, "study", "processingGeneticsBloodDraws");
             url.addParameter("query.flags~contains", flag);
 
-            msg.append("<b>WARNING: There are " + count + " animals actively flagged as '" + flag + "', which have been flagged for more than 6 months.  If these animals have been drawn, this flag should be removed to avoid confusion.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view all animals with this flag</a><hr>");
+            msg.append("<b>WARNING: There are " + count + " animals actively flagged as '" + flag + "', which have been flagged for more than " + interval + " days.  If these animals have been drawn, this flag should be removed to avoid confusion.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view all animals with this flag</a><hr>");
         }
     }
 
@@ -200,7 +200,7 @@ public class GeneticsCoreNotification implements Notification
             url.addParameter("query.drawnFlagDateAdded~datelte", "-90d");
             url.addParameter("query.hasMHCData~eq", false);
 
-            msg.append("<b>WARNING: There are " + count + " animals that have been flagged as drawn for MHC typing more than 6 months ago that lack MHC data.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view these animals</a><hr>");
+            msg.append("<b>WARNING: There are " + count + " animals that have been flagged as drawn for MHC typing more than 90 days ago that lack MHC data.</b><p>  <a href='" + AppProps.getInstance().getBaseServerUrl() + url.toString() + "'>Click here to view these animals</a><hr>");
         }
     }
 

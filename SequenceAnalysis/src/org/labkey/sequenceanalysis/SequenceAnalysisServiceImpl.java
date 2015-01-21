@@ -2,18 +2,26 @@ package org.labkey.sequenceanalysis;
 
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.Container;
 import org.labkey.api.ldk.LDKService;
+import org.labkey.api.ldk.NavItem;
+import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.GenomeTrigger;
-import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
-import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
-import org.labkey.api.sequenceanalysis.SequenceFileHandler;
+import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.*;
+import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -25,8 +33,10 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
 {
     private static SequenceAnalysisServiceImpl _instance = new SequenceAnalysisServiceImpl();
 
+    private final Logger _log = Logger.getLogger(SequenceAnalysisServiceImpl.class);
     private Set<GenomeTrigger> _genomeTriggers = new HashSet<>();
-    private Set<SequenceFileHandler> _fileHandlers = new HashSet<>();
+    private Set<SequenceOutputHandler> _fileHandlers = new HashSet<>();
+    private Map<String, SequenceDataProvider> _dataProviders = new HashMap<>();
 
     private SequenceAnalysisServiceImpl()
     {
@@ -56,11 +66,18 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public void registerFileHandler(SequenceFileHandler handler)
+    public void registerFileHandler(SequenceOutputHandler handler)
     {
         _fileHandlers.add(handler);
 
-        LDKService.get().registerQueryButton(handler.getButtonConfig(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+        LinkedHashSet cds = new LinkedHashSet<>(PageFlowUtil.set(ClientDependency.fromPath("sequenceanalysis/sequenceanalysisButtons.js")));
+        if (handler.getClientDependencies() != null)
+        {
+            cds.addAll(handler.getClientDependencies());
+        }
+        SimpleButtonConfigFactory fact = new SimpleButtonConfigFactory(handler.getOwningModule(), handler.getName(), "SequenceAnalysis.Buttons.sequenceOutputHandler(dataRegionName, '" + handler.getClass().getCanonicalName() + "')", cds);
+
+        LDKService.get().registerQueryButton(fact, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES);
     }
 
     @Override
@@ -69,73 +86,30 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         return new TabixRunner(log).execute(input);
     }
 
-    public Set<SequenceFileHandler> getFileHandlers()
+    public Set<SequenceOutputHandler> getFileHandlers()
     {
         return _fileHandlers;
     }
 
-//    private MessageDigest _md5 = null;
-//
-//    @Override
-//    public SAMSequenceDictionary makeSequenceDictionary(File referenceFile)
-//    {
-//        if (_md5 == null)
-//        {
-//            try
-//            {
-//                _md5 = MessageDigest.getInstance("MD5");
-//            }
-//            catch (NoSuchAlgorithmException e)
-//            {
-//                throw new PicardException("MD5 algorithm not found", e);
-//            }
-//        }
-//
-//        final ReferenceSequenceFile refSeqFile = ReferenceSequenceFileFactory.getReferenceSequenceFile(referenceFile, false);
-//        ReferenceSequence refSeq;
-//        final List<SAMSequenceRecord> ret = new ArrayList<>();
-//        final Set<String> sequenceNames = new HashSet<>();
-//        while ((refSeq = refSeqFile.nextSequence()) != null)
-//        {
-//            if (sequenceNames.contains(refSeq.getName()))
-//            {
-//                throw new PicardException("Sequence name appears more than once in reference: " + refSeq.getName());
-//            }
-//
-//            sequenceNames.add(refSeq.getName());
-//            ret.add(makeSequenceRecord(refSeq));
-//        }
-//        return new SAMSequenceDictionary(ret);
-//    }
-//
-//    /**
-//     * Create one SAMSequenceRecord from a single fasta sequence
-//     */
-//    private SAMSequenceRecord makeSequenceRecord(final ReferenceSequence refSeq)
-//    {
-//        SAMSequenceRecord ret = new SAMSequenceRecord(refSeq.getName(), refSeq.length());
-//
-//        // Compute MD5 of upcased bases
-//        final byte[] bases = refSeq.getBases();
-//        for (int i = 0; i < bases.length; ++i) {
-//            bases[i] = StringUtil.toUpperCase(bases[i]);
-//        }
-//
-//        ret.setAttribute(SAMSequenceRecord.MD5_TAG, md5Hash(bases));
-//
-//        return ret;
-//    }
-//
-//    private String md5Hash(final byte[] bytes)
-//    {
-//        _md5.reset();
-//        _md5.update(bytes);
-//        String s = new BigInteger(1, _md5.digest()).toString(16);
-//        if (s.length() != 32) {
-//            final String zeros = "00000000000000000000000000000000";
-//            s = zeros.substring(0, 32 - s.length()) + s;
-//        }
-//
-//        return s;
-//    }
+    @Override
+    public void registerDataProvider(SequenceDataProvider p)
+    {
+        if (_dataProviders.containsKey(p.getKey()))
+        {
+            _log.error("A SequenceDataProvider with the name: " + p.getName() + " has already been registered");
+        }
+
+        _dataProviders.put(p.getName(), p);
+    }
+
+    public List<NavItem> getNavItems(Container c, User u, SequenceDataProvider.SequenceNavItemCategory category)
+    {
+        List<NavItem> ret = new ArrayList<>();
+        for (SequenceDataProvider p : _dataProviders.values())
+        {
+            ret.addAll(p.getSequenceNavItems(c, u, category));
+        }
+
+        return ret;
+    }
 }

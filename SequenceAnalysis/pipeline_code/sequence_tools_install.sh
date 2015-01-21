@@ -125,6 +125,11 @@ else
 fi
 
 
+for l in $(find ${LKTOOLS_DIR} -type l -exec test ! -e {} \; -print); do
+    echo "removing broken symlink: $l";
+    rm -Rf $l
+done
+
 #
 # bwa
 #
@@ -187,22 +192,50 @@ echo "Install GSNAP"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/gsnap || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/gmap_build || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf gmap-gsnap-2014-05-15*
-    rm -Rf gmap-2014-05-15*
+    rm -Rf gmap-gsnap-2014-12-16*
+    rm -Rf gmap-2014-12-16*
     rm -Rf $LKTOOLS_DIR/gsnap
+    rm -Rf $LKTOOLS_DIR/gmap
+    rm -Rf $LKTOOLS_DIR/gmap_build
 
-    wget http://research-pub.gene.com/gmap/src/gmap-gsnap-2014-05-15.v3.tar.gz
-    gunzip gmap-gsnap-2014-05-15.v3.tar.gz
-    tar -xf gmap-gsnap-2014-05-15.v3.tar
-    gzip gmap-gsnap-2014-05-15.v3.tar
-    cd gmap-2014-05-15
-    ./configure
+    wget http://research-pub.gene.com/gmap/src/gmap-gsnap-2014-12-16.v2.tar.gz
+    gunzip gmap-gsnap-2014-12-16.v2.tar.gz
+    tar -xf gmap-gsnap-2014-12-16.v2.tar
+    gzip gmap-gsnap-2014-12-16.v2.tar
+    cd gmap-2014-12-16
+    ./configure --prefix=${LK_HOME}
     make
-    ln -s $LKSRC_DIR/gmap-2014-05-15/src/gmap $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/gmap-2014-05-15/src/gsnap $LKTOOLS_DIR
+    make install
+else
+    echo "Already installed"
+fi
+
+
+#
+# STAR
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install STAR"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/STAR || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf STAR_2.4.0h*
+    rm -Rf $LKTOOLS_DIR/STAR
+
+    wget https://github.com/alexdobin/STAR/archive/STAR_2.4.0h.tar.gz
+    gunzip STAR_2.4.0h.tar.gz
+    tar -xf STAR_2.4.0h.tar
+    gzip STAR_2.4.0h.tar
+
+    ln -s $LKSRC_DIR/STAR-STAR_2.4.0h/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -474,7 +507,7 @@ then
     gzip bedtools-2.20.1.tar
     cd bedtools2-2.20.1
     make
-    ln -s $LKSRC_DIR/bedtools2-2.20.1/bin $LKTOOLS_DIR/bedtools
+    ln -s $LKSRC_DIR/bedtools2-2.20.1/bin/bedtools $LKTOOLS_DIR/bedtools
 else
     echo "Already installed"
 fi
@@ -996,6 +1029,31 @@ then
 else
     echo "Already installed"
 fi
+
+
+#
+#liftOver
+#
+
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing liftOver"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/liftOver || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf liftOver
+    rm -Rf $LKTOOLS_DIR/liftOver
+
+    wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/liftOver
+    chmod +x liftOver
+    ln -s $LKSRC_DIR/liftOver $LKTOOLS_DIR/liftOver
+else
+    echo "Already installed"
+fi
+
 
 #
 #varscan2

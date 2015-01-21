@@ -17,6 +17,8 @@ Ext4.onReady(function (){
         '<br>' +
         '<div id="chainFiles_'+webpart.wrapperDivId+'"></div>' +
         '<br>' +
+        '<div id="aliases_'+webpart.wrapperDivId+'"></div>' +
+        '<br>' +
         '<div id="sequences_'+webpart.wrapperDivId+'"></div>'
     );
 
@@ -47,6 +49,14 @@ Ext4.onReady(function (){
         containerPath: Laboratory.Utils.getQueryContainerPath(),
         filterArray: [LABKEY.Filter.create('library_id', rowid, LABKEY.Filter.Types.EQUAL)]
     }).render('sequences_'+webpart.wrapperDivId);
+
+    LDK.Utils.getBasicQWP({
+        title: 'Aliases for External Browsers or Databases',
+        schemaName: 'sequenceanalysis',
+        queryName: 'genomeAliases',
+        containerPath: Laboratory.Utils.getQueryContainerPath(),
+        filterArray: [LABKEY.Filter.create('genomeId', rowid, LABKEY.Filter.Types.EQUAL)]
+    }).render('aliases_'+webpart.wrapperDivId);
 
     LDK.Utils.getBasicQWP({
         title: 'Chain Files (For Liftovers)',

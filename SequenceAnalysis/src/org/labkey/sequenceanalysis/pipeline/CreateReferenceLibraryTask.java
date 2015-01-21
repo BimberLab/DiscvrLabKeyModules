@@ -216,6 +216,12 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             try
             {
                 FastaIndexer indexer = new FastaIndexer(getJob().getLogger());
+
+                File index = indexer.getExpectedIndexName(fasta);
+                if (index.exists())
+                {
+                    index.delete();
+                }
                 indexer.execute(fasta);
             }
             catch (PipelineJobException e)
@@ -226,7 +232,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             try
             {
                 CreateSequenceDictionaryWrapper wrapper = new CreateSequenceDictionaryWrapper(getJob().getLogger());
-                wrapper.execute(fasta, false);
+                wrapper.execute(fasta, true);
             }
             catch (PipelineJobException e)
             {

@@ -24,7 +24,8 @@ public class JBrowseGenomeTrigger implements GenomeTrigger
     @Override
     public void onCreate(Container c, User u, Logger log, int genomeId)
     {
-        prepareResourcesForLibrary(c, u, log, genomeId);
+        //NOTE: do not auto-create genome resources
+        //prepareResourcesForLibrary(c, u, log, genomeId);
     }
 
     @Override
@@ -41,6 +42,6 @@ public class JBrowseGenomeTrigger implements GenomeTrigger
 
     private void prepareResourcesForLibrary(Container c, User u, Logger log, int genomeId)
     {
-
+        //TODO: consider updating existing sessions that are based on this genome?
     }
 }

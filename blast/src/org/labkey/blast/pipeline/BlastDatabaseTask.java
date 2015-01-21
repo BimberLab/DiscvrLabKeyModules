@@ -107,6 +107,16 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
     {
         getJob().getLogger().info("creating BLAST database for library: " + getPipelineJob().getLibraryId());
 
+        File binDir = BLASTManager.get().getBinDir();
+        if (binDir == null)
+        {
+            throw new PipelineJobException("BLAST bin dir has not been set, aborting.");
+        }
+        else if (!binDir.exists())
+        {
+            throw new PipelineJobException("BLAST bin dir does not exist: " + binDir);
+        }
+
         TableInfo referenceLibraries = DbSchema.get(BLASTManager.SEQUENCE_ANALYSIS).getTable("reference_libraries");
         TableSelector ts = new TableSelector(referenceLibraries, PageFlowUtil.set("name", "description", "fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), getPipelineJob().getLibraryId()), null);
         Map<String, Object> libraryMap = ts.getObject(Map.class);

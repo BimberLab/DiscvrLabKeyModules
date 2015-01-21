@@ -90,11 +90,12 @@ public class JBrowseModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(new ReprocessSessionsButton(), JBrowseSchema.NAME, JBrowseSchema.TABLE_DATABASES);
 
         LaboratoryService.get().registerDataProvider(new JBrowseDataProvider(this));
+        SequenceAnalysisService.get().registerDataProvider(new JBrowseDataProvider(this));
         SystemMaintenance.addTask(new JBrowseMaintenanceTask());
         PipelineService.get().registerPipelineProvider(new JBrowseSessionPipelineProvider(this));
 
         SequenceAnalysisService.get().registerGenomeTrigger(new JBrowseGenomeTrigger());
-        SequenceAnalysisService.get().registerFileHandler(new JBrowseSequenceFileHandler());
+        SequenceAnalysisService.get().registerFileHandler(new JBrowseSequenceOutputHandler());
 
         WebdavService.get().registerPreGzippedExtensions("jsonz");
         WebdavService.get().registerPreGzippedExtensions("txtz");

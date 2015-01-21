@@ -13,9 +13,10 @@
             }],
             listeners: {
                 render: function(panel){
-                    Laboratory.Utils.getQueryCounts({
-                        success: function(queries){
-                            var summaryQueries = queries;
+                    SequenceAnalysis.Utils.getDataItems({
+                        success: function(resp){
+                            var items = resp.results || {};
+console.log(items.data)
                             var config = {
                                 xtype: 'ldk-navpanel',
                                 width: 550,
@@ -68,31 +69,36 @@
                                         {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL('pipeline-status', 'showList.view'), renderer: 'linkWithoutLabel'},
                                         {name: 'Instrument Runs', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'instrument_runs'}), renderer: 'linkWithoutLabel'}
                                     ]
-                                },{
-                                    header: 'Summary',
-                                    renderer: 'summaryCountRenderer',
-                                    items: [
-
-                                    ]
-                                },{
-                                    header: 'Browse Results',
-                                    items: [
-                                        {name: 'View Sequence Alignment Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'alignment_summary_grouped'}), renderer: 'linkWithoutLabel'},
-                                        {name: 'View NT SNP Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'nt_snps_by_pos'}), renderer: 'linkWithoutLabel'},
-                                        {name: 'View AA SNP Summary', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'aa_snps_by_codon'}), renderer: 'linkWithoutLabel'}
-                                    ]
-                                },{
-                                    header: 'References',
-                                    items: [
-                                        {name: 'Reference Sequences', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'ref_nt_sequences'}), renderer: 'linkWithoutLabel'},
-                                        {name: 'Reference Genomes', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'reference_libraries'}), renderer: 'linkWithoutLabel'}
-                                    ]
                                 }]
                             };
 
-                            Ext4.each(summaryQueries, function(q){
-                                config.sections[2].items.push(q)
-                            }, this);
+                            if (items.summary.length){
+                                config.sections.push({
+                                    header: 'Summary',
+                                    items: items.summary
+                                });
+                            }
+
+                            if (items.data.length){
+                                config.sections.push({
+                                    header: 'Browse Results',
+                                    items: items.data
+                                });
+                            }
+
+                            if (items.references.length){
+                                config.sections.push({
+                                    header: 'References',
+                                    items: items.references
+                                });
+                            }
+
+                            if (items.misc.length){
+                                config.sections.push({
+                                    header: 'Misc',
+                                    items: items.misc
+                                });
+                            }
 
                             Ext4.create('LDK.panel.NavPanel', config);
 
@@ -103,22 +109,7 @@
                             }, config]);
                         },
                         failure: LDK.Utils.getErrorCallback(),
-                        scope: this,
-                        queries: [{
-                            schemaName: 'sequenceanalysis',
-                            queryName: 'sequence_readsets',
-                            sql: 'SELECT count(*) as total from sequenceanalysis.sequence_readsets s WHERE s.fileid IS NOT NULL',
-                            viewName: 'Data Imported',
-                            name: 'Readsets Imported'
-                        },{
-                            schemaName: 'sequenceanalysis',
-                            queryName: 'sequence_analyses',
-                            name: 'Alignments Created'
-                        },{
-                            schemaName: 'sequenceanalysis',
-                            queryName: 'outputfiles',
-                            name: 'Output Files'
-                        }]
+                        scope: this
                     });
                 }
             }

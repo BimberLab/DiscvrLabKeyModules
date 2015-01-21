@@ -76,6 +76,7 @@ public class BLASTModule extends ExtendedSimpleModule
     public void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
         LaboratoryService.get().registerDataProvider(new BLASTDataProvider(this));
+        SequenceAnalysisService.get().registerDataProvider(new BLASTDataProvider(this));
         LDKService.get().registerQueryButton(new CreateDatabaseButton(), "sequenceanalysis", "reference_libraries");
         LDKService.get().registerQueryButton(new BlastOligosButton(), "laboratory", "dna_oligos");
         LDKService.get().registerQueryButton(new ReprocessDatabaseButton(), BLASTSchema.NAME, BLASTSchema.TABLE_DATABASES);

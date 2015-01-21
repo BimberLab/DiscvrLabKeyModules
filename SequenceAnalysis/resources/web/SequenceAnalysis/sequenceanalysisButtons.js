@@ -809,7 +809,7 @@ SequenceAnalysis.Buttons = new function(){
                 return;
             }
 
-            Ext4.Msg.wait('Loading file info...');
+            Ext4.Msg.wait('Checking files...');
             LABKEY.Ajax.request({
                 method: 'POST',
                 url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatus'),
@@ -840,10 +840,20 @@ SequenceAnalysis.Buttons = new function(){
                         return;
                     }
 
-                    window.location = LABKEY.ActionURL.buildURL('sequenceanalysis', 'outputFileHandler', null, {
-                        handlerClass: handlerClass,
-                        outputFileIds: checked.join(';')
-                    });
+                    if (results.successUrl) {
+                        window.location = results.successUrl;
+                    }
+                    else if (results.jsHandler){
+                        var handler = eval(results.jsHandler);
+                        LDK.Assert.assertTrue('Unable to find JS handler: ' + results.jsHandler, Ext4.isFunction(handler));
+
+                        handler(dataRegionName, checked);
+                    }
+                    else {
+                        LDK.Utils.logError('Handler did not provide successUrl or jsHandler: ' + handlerClass);
+
+                        Ext4.Msg.alert('Error', 'There was an error with this handler.  Please contact your site administrator');
+                    }
                 }, this)
             });
         }

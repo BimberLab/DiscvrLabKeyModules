@@ -122,6 +122,16 @@ public class ToolParameterDescriptor
         return extractValue(job, provider, String.class);
     }
 
+    /**
+     * Returns the value that will actually be added to the command line.  Can be overridden in subclasses
+     * to perform last minute transforms, such as converted a boolean (which is better in the UI as a checkbox)
+     * to 1 or 0
+     */
+    public String extractValueForCommandLine(PipelineJob job, PipelineStepProvider provider) throws PipelineJobException
+    {
+        return extractValue(job, provider);
+    }
+
     public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider provider, Class<ParamType> clazz)
     {
         return this.extractValue(job, provider, clazz, null);

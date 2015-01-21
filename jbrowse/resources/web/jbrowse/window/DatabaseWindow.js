@@ -35,7 +35,7 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
                 method: 'POST',
                 url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatus'),
                 params: {
-                    handlerClass: 'org.labkey.jbrowse.JBrowseSequenceFileHandler',
+                    handlerClass: 'org.labkey.jbrowse.JBrowseSequenceOutputHandler',
                     outputFileIds: checked
                 },
                 scope: this,

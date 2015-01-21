@@ -43,6 +43,7 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
                 queryMode: 'local',
                 store: {
                     type: 'labkey-store',
+                    containerPath: Laboratory.Utils.getQueryContainerPath(),
                     schemaName: 'sequenceanalysis',
                     queryName: 'readset_status',
                     autoLoad: true

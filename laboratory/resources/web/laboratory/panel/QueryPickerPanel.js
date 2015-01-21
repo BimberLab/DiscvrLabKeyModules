@@ -116,6 +116,10 @@ Ext4.define('Laboratory.panel.QueryPickerPanel', {
                     containerPath: containerId,
                     scope: this,
                     success: function(results){
+                        if (this.isDestroyed){
+                            return;
+                        }
+
                         var toAdd = [];
                         Ext4.each(results.schemas, function(name){
                             toAdd.push(LDK.StoreUtils.createModelInstance(this.store, {name: name}));
@@ -180,6 +184,10 @@ Ext4.define('Laboratory.panel.QueryPickerPanel', {
                     timeout: 0,
                     scope: this,
                     success: function(results){
+                        if (this.isDestroyed){
+                            return;
+                        }
+
                         var toAdd = [];
                         Ext4.each(results.queries, function(qd){
                             toAdd.push(LDK.StoreUtils.createModelInstance(this.store, {name: qd.name, queryDef: qd}));

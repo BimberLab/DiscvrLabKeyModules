@@ -42,7 +42,6 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
-import org.labkey.api.reader.DataLoader;
 import org.labkey.api.reader.FastaDataLoader;
 import org.labkey.api.reader.FastaLoader;
 import org.labkey.api.resource.FileResource;
@@ -52,7 +51,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
-import org.labkey.api.sequenceanalysis.SequenceFileHandler;
+import org.labkey.api.sequenceanalysis.SequenceOutputHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
@@ -68,7 +67,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -455,7 +453,10 @@ public class SequenceAnalysisManager
                     if (params != null)
                         map.putAll(params);
 
-                    map.put("name", fastaRecord.get("header"));
+                    if (!map.containsKey("name"))
+                    {
+                        map.put("name", fastaRecord.get("header"));
+                    }
                     map.put("container", c.getId());
                     map.put("created", new Date());
                     map.put("createdby", u.getUserId());
@@ -573,14 +574,14 @@ public class SequenceAnalysisManager
         Table.insert(u, trackTable, map);
     }
 
-    public SequenceFileHandler getFileHandler(String handlerClass)
+    public SequenceOutputHandler getFileHandler(String handlerClass)
     {
         if (StringUtils.isEmpty(handlerClass))
         {
             return null;
         }
 
-        for (SequenceFileHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers())
+        for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers())
         {
             if (handler.getClass().getName().equals(handlerClass))
             {

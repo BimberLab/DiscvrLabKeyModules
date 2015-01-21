@@ -82,6 +82,25 @@ public class SequenceUtil
         }
     }
 
+    public static boolean hasLineCount(File f) throws PipelineJobException
+    {
+        try (BufferedReader reader = new BufferedReader(new FileReader(f)))
+        {
+            boolean hasLine = false;
+            while (reader.readLine() != null)
+            {
+                hasLine = true;
+                break;
+            }
+
+            return hasLine;
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+    }
+
     public static long getAlignmentCount(File bam)
     {
         try (SAMFileReader reader = new SAMFileReader(bam))

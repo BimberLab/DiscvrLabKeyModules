@@ -15,6 +15,7 @@ import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.AbstractSequenceDataProvider;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
@@ -30,7 +31,7 @@ import java.util.Set;
  * Date: 7/20/2014
  * Time: 11:56 AM
  */
-public class BLASTDataProvider extends AbstractDataProvider
+public class BLASTDataProvider extends AbstractSequenceDataProvider
 {
     public static final String NAME = "BLAST";
     private Module _module;
@@ -140,5 +141,24 @@ public class BLASTDataProvider extends AbstractDataProvider
     public List<TabbedReportItem> getTabbedReportItems(Container c, User u)
     {
         return Collections.emptyList();
+    }
+
+    @Override
+    public List<NavItem> getSequenceNavItems(Container c, User u, SequenceNavItemCategory category)
+    {
+        List<NavItem> ret = new ArrayList<>();
+        if (c.getActiveModules().contains(ModuleLoader.getInstance().getModule(BLASTModule.class)))
+        {
+            if (category == SequenceNavItemCategory.misc)
+            {
+                ret.add(new DetailsUrlWithoutLabelNavItem(this, "Run BLAST", DetailsURL.fromString("/blast/blast.view"), LaboratoryService.NavItemCategory.misc, NAME));
+            }
+            else if (category == SequenceNavItemCategory.references)
+            {
+                ret.add(DetailsUrlWithoutLabelNavItem.createForQuery(this, u, c, BLASTSchema.NAME, BLASTSchema.TABLE_DATABASES, "BLAST Databases", LaboratoryService.NavItemCategory.misc, NAME));
+            }
+        }
+
+        return Collections.unmodifiableList(ret);
     }
 }

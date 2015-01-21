@@ -7,6 +7,7 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.laboratory.AbstractDataProvider;
 import org.labkey.api.laboratory.DetailsUrlWithoutLabelNavItem;
 import org.labkey.api.laboratory.LaboratoryService;
+import org.labkey.api.laboratory.QueryCountNavItem;
 import org.labkey.api.laboratory.SimpleSettingsItem;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
@@ -15,6 +16,7 @@ import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.AbstractSequenceDataProvider;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
@@ -29,7 +31,7 @@ import java.util.Set;
  * Date: 7/18/2014
  * Time: 3:45 PM
  */
-public class JBrowseDataProvider extends AbstractDataProvider
+public class JBrowseDataProvider extends AbstractSequenceDataProvider
 {
     public static final String NAME = "JBrowse";
     private Module _module;
@@ -140,5 +142,18 @@ public class JBrowseDataProvider extends AbstractDataProvider
     public List<TabbedReportItem> getTabbedReportItems(Container c, User u)
     {
         return Collections.emptyList();
+    }
+
+    @Override
+    public List<NavItem> getSequenceNavItems(Container c, User u, SequenceNavItemCategory category)
+    {
+        List<NavItem> ret = new ArrayList<>();
+
+        if (category == SequenceNavItemCategory.summary)
+        {
+            ret.add(new QueryCountNavItem(this, JBrowseSchema.NAME, JBrowseSchema.TABLE_DATABASES, LaboratoryService.NavItemCategory.data, "JBrowse", "JBrowse Sessions"));
+        }
+
+        return Collections.unmodifiableList(ret);
     }
 }

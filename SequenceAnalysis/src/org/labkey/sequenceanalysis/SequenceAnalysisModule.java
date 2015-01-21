@@ -35,26 +35,30 @@ import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
-import org.labkey.sequenceanalysis.analysis.CompareVariantsHandler;
-import org.labkey.sequenceanalysis.analysis.VariantSearchHandler;
+import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.button.GenomeLoadButton;
 import org.labkey.sequenceanalysis.button.QualiMapButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
+import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
+import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerPipelineProvider;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
 import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BismarkWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
+import org.labkey.sequenceanalysis.run.alignment.GSnapWrapper;
 import org.labkey.sequenceanalysis.run.alignment.LastzWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
-import org.labkey.sequenceanalysis.run.alignment.TophatWrapper;
+import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
 import org.labkey.sequenceanalysis.run.analysis.AlignmentMetricsAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.UnmappedReadExportAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.ViralAnalysis;
 import org.labkey.sequenceanalysis.run.bampostprocessing.AddOrReplaceReadGroupsStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.CallMdTagsStep;
@@ -93,7 +97,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.290;
+        return 12.292;
     }
 
     public boolean hasScripts()
@@ -158,8 +162,9 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new BWASWWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new LastzWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new MosaikWrapper.Provider());
-        SequencePipelineService.get().registerPipelineStep(new TophatWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new GSnapWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new StarWrapper.Provider());
 
         //bam postprocessing
         SequencePipelineService.get().registerPipelineStep(new AddOrReplaceReadGroupsStep.Provider());
@@ -178,6 +183,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new AlignmentMetricsAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new SnpCountAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.MethylationExtractorProvider());
+        SequencePipelineService.get().registerPipelineStep(new UnmappedReadExportAnalysis.Provider());
     }
 
     @Override
@@ -203,7 +209,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     @Override
     public void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
-        LaboratoryService.get().registerDataProvider(new SequenceDataProvider(this));
+        LaboratoryService.get().registerDataProvider(new SequenceProvider(this));
+        SequenceAnalysisService.get().registerDataProvider(new SequenceProvider(this));
 
         ExperimentService.get().registerExperimentRunTypeSource(new ExperimentRunTypeSource()
         {
@@ -223,13 +230,14 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "sequence analysis module admin", details.getActionURL());
 
         PipelineService.get().registerPipelineProvider(new ReferenceLibraryPipelineProvider(this));
+        PipelineService.get().registerPipelineProvider(new NcbiGenomeImportPipelineProvider(this));
+        PipelineService.get().registerPipelineProvider(new SequenceOutputHandlerPipelineProvider(this));
 
         LDKService.get().registerQueryButton(new QualiMapButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES);
         LDKService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
+        LDKService.get().registerQueryButton(new GenomeLoadButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
 
-        SequenceAnalysisService.get().registerFileHandler(new VariantSearchHandler());
-        SequenceAnalysisService.get().registerFileHandler(new CompareVariantsHandler());
-        //SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
+        SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
 
         SystemMaintenance.addTask(new SequenceAnalyssiMaintenanceTask());
     }

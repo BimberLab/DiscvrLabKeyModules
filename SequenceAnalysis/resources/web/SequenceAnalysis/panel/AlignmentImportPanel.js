@@ -186,14 +186,13 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
             },{
                 text: 'Remove',
                 itemId: 'sampleRemoveBtn',
-                scope: this,
                 handler : function(c){
                     Ext4.Msg.wait("Loading...");
                     var grid = c.up('#sampleGrid');
                     grid.getPlugin('cellediting').completeEdit();
-                    var s = this.getSelectionModel().getSelection();
+                    var s = grid.getSelectionModel().getSelection();
                     for (var i = 0, r; r = s[i]; i++){
-                        this.getStore().remove(r);
+                        grid.getStore().remove(r);
                     }
                     Ext4.Msg.hide();
                 }
@@ -601,17 +600,6 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
 
             if (!r.get('fileName') || !r.get('library_id') || (!r.get('readset') && !(r.get('platform') && r.get('readsetname')))){
                 Ext4.Msg.alert('Error', 'For each file, you must provide the reference library name, and either the Id of an existing, unused readset or a name/platform to create a new one');
-                error = 1;
-            }
-
-            if (r.get('readset')){
-                var msg = 'A readset has already been created for the file: ' + r.get('fileName');
-                if (r.get('fileName2'))
-                    msg += ' and paired file: ' + r.get('fileName2');
-
-                msg += ' and you cannot import a file twice.';
-
-                Ext4.Msg.alert('Error', msg);
                 error = 1;
             }
 

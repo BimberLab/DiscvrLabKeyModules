@@ -16,6 +16,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
@@ -108,6 +109,7 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
             //ensure readsets exist
             TableInfo rs = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
             TableInfo analyses = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
+            TableInfo outputFiles = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
 
             List<AnalysisModel> ret = new ArrayList<>();
             Map<String, String> params = getJob().getParameters();
@@ -163,6 +165,22 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
                     a = Table.insert(getJob().getUser(), analyses, a);
                     getJob().getLogger().info("Created analysis: " + a.getRowId());
                     ret.add(a);
+
+                    SequenceOutputFile outputFile = new SequenceOutputFile();
+                    outputFile.setName(o.getString("fileName"));
+                    outputFile.setCategory("BAM");
+                    outputFile.setDataId(movedDataId.getRowId());
+                    outputFile.setLibrary_id(o.getInt("library_id"));
+                    outputFile.setAnalysis_id(a.getRowId());
+                    outputFile.setReadset(a.getReadset());
+                    outputFile.setContainer(getJob().getContainer().getId());
+                    outputFile.setCreated(new Date());
+                    outputFile.setCreatedby(getJob().getUser().getUserId());
+                    outputFile.setModified(new Date());
+                    outputFile.setModifiedby(getJob().getUser().getUserId());
+                    outputFile.setRunId(runId);
+                    outputFile = Table.insert(getJob().getUser(), outputFiles, outputFile);
+                    getJob().getLogger().info("Created output file: " + outputFile.getRowid());
                 }
             }
 

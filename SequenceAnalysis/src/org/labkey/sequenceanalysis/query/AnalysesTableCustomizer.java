@@ -1,4 +1,4 @@
-package org.labkey.sequenceanalysis;
+package org.labkey.sequenceanalysis.query;
 
 import org.labkey.api.data.AbstractTableInfo;
 import org.labkey.api.data.Container;
