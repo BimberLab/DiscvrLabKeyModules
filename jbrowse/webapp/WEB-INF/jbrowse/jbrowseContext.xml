@@ -3,7 +3,7 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
-    <bean id="blastPipelineRegistry" class="org.labkey.api.pipeline.TaskPipelineRegistrar">
+    <bean id="jbrowsePipelineRegistry" class="org.labkey.api.pipeline.TaskPipelineRegistrar">
         <property name="factoryImpls">
             <list>
                 <bean class="org.labkey.jbrowse.pipeline.JBrowseSessionTask$Factory"/>

@@ -5,6 +5,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
@@ -111,5 +112,11 @@ public class BlastGenomeTrigger implements GenomeTrigger
                 }
             }
         }
+    }
+
+    @Override
+    public boolean isAvailable(Container c)
+    {
+        return c.getActiveModules().contains(ModuleLoader.getInstance().getModule(BLASTModule.class));
     }
 }

@@ -549,8 +549,20 @@ public class SequenceAnalysisManager
             throw new IllegalArgumentException("Unable to find expected FASTA location: " + targetDir.getPath());
         }
 
+        //create row
+        CaseInsensitiveHashMap map = new CaseInsensitiveHashMap();
+        map.put("name", trackName);
+        map.put("description", trackDescription);
+        map.put("library_id", libraryId);
+        map.put("container", c.getId());
+        map.put("created", new Date());
+        map.put("createdby", u.getUserId());
+        map.put("modified", new Date());
+        map.put("modifiedby", u.getUserId());
+        map = Table.insert(u, trackTable, map);
+
         //create file
-        String expectedName = trackName + "." + FileUtil.getExtension(file);
+        String expectedName = map.get("rowid") + "_" + trackName + "." + FileUtil.getExtension(file);
         AssayFileWriter writer = new AssayFileWriter();
         File outputFile = writer.findUniqueFileName(expectedName, targetDir);
 
@@ -560,18 +572,9 @@ public class SequenceAnalysisManager
         trackData.setDataFileURI(outputFile.toURI());
         trackData.save(u);
 
-        //create row
-        CaseInsensitiveHashMap map = new CaseInsensitiveHashMap();
-        map.put("name", trackName);
-        map.put("description", trackDescription);
-        map.put("library_id", libraryId);
+        //update row
         map.put("fileid", trackData.getRowId());
-        map.put("container", c.getId());
-        map.put("created", new Date());
-        map.put("createdby", u.getUserId());
-        map.put("modified", new Date());
-        map.put("modifiedby", u.getUserId());
-        Table.insert(u, trackTable, map);
+        Table.update(u, trackTable, map, map.get("rowid"));
     }
 
     public SequenceOutputHandler getFileHandler(String handlerClass)

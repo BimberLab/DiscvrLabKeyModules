@@ -5,30 +5,21 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.exp.api.ExpRun;
-import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.exp.api.ExperimentUrls;
-import org.labkey.api.files.FileUrls;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
+import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.QueryAction;
-import org.labkey.api.query.QueryService;
-import org.labkey.api.query.QueryUrls;
 import org.labkey.api.security.User;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.GUID;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
-import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseRoot;
 import org.labkey.jbrowse.JBrowseSchema;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -117,11 +108,9 @@ public class JBrowseSessionPipelineJob extends PipelineJob
     {
         if (getDatabaseGuid() != null)
         {
-            ActionURL ret = QueryService.get().urlFor(getUser(), getContainer(), QueryAction.executeQuery, JBrowseSchema.NAME, JBrowseSchema.TABLE_DATABASES);
-            ret.addParameter("query.objectid~eq", getDatabaseGuid());
-
-            return ret;
+            return DetailsURL.fromString("jbrowse/browser.view?database=" + getDatabaseGuid(), getContainer()).getActionURL();
         }
+
         return null;
     }
 

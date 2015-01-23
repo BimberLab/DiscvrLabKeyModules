@@ -6,6 +6,7 @@ import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.BlockCompressedOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -259,7 +260,7 @@ public class JBrowseRoot
         File outDir = new File(getReferenceDir(ContainerManager.getForId(model.getContainer())), ntId.toString());
         if (outDir.exists())
         {
-            FileUtils.deleteDirectory(outDir);
+            safeDeleteDiretory(outDir);
         }
         outDir.mkdirs();
 
@@ -344,7 +345,7 @@ public class JBrowseRoot
         if (outDir.exists())
         {
             getLogger().info("deleting existing directory");
-            FileUtils.deleteDirectory(outDir);
+            safeDeleteDiretory(outDir);
         }
 
         outDir.mkdirs();
@@ -556,13 +557,6 @@ public class JBrowseRoot
                     continue;
                 }
 
-                File outputDir = new File(getTracksDir(f.getContainerObj()), "data-" + f.getOutputFile().toString());
-                if (outputDir.exists())
-                {
-                    FileUtils.deleteDirectory(outputDir);
-                }
-                outputDir.mkdirs();
-
                 Map<String, Object> metadata = new HashMap<>();
                 if (outputFileTs.exists())
                 {
@@ -582,12 +576,33 @@ public class JBrowseRoot
                     }
                 }
 
-                List<JSONObject> objList = processFile(d, outputDir, "data-" + f.getOutputFile(), f.getLabel(), metadata, f.getCategory(), f.getRefLibraryData());
-                if (objList != null && !objList.isEmpty())
+                //try to recreate if it does not exist
+                if (getTrackListForOutputFile(f) == null)
                 {
-                    for (JSONObject o : objList)
+                    getLogger().info("existing trackList not found, creating");
+                    File outputDir = new File(getTracksDir(f.getContainerObj()), "data-" + f.getOutputFile().toString());
+                    if (outputDir.exists())
                     {
-                        JSONArray existingTracks = trackList.containsKey("tracks") ? trackList.getJSONArray("tracks") : new JSONArray();
+                        getLogger().info("deleting existing json directory");
+                        safeDeleteDiretory(outputDir);
+                    }
+                    outputDir.mkdirs();
+
+                    processFile(d, outputDir, "data-" + f.getOutputFile(), f.getLabel(), metadata, f.getCategory(), f.getRefLibraryData());
+                    if (getTrackListForOutputFile(f) == null)
+                    {
+                        getLogger().error("this track lacks a trackList.conf file.  this probably indicates a problem when this resource was originally processed.  you should try to re-process it." + (f.getTrackRootDir() == null ? "" : "  expected to find file in: " + f.getTrackRootDir()));
+                        continue;
+                    }
+                }
+
+                JSONArray existingTracks = trackList.containsKey("tracks") ? trackList.getJSONArray("tracks") : new JSONArray();
+                JSONObject json = readFileToJson(getTrackListForOutputFile(f));
+                if (json != null && !json.isEmpty())
+                {
+                    JSONArray outputFileTracks = json.containsKey("tracks") ? json.getJSONArray("tracks") : new JSONArray();
+                    for (JSONObject o : outputFileTracks.toJSONObjectArray())
+                    {
                         if (f.getExtraTrackConfig() != null)
                         {
                             o.putAll(f.getExtraTrackConfig());
@@ -696,6 +711,25 @@ public class JBrowseRoot
         runScript("generate-names.pl", args);
     }
 
+    private File getTrackListForOutputFile(JsonFile json)
+    {
+        //first try at the top-level
+        File ret = new File(json.getTrackRootDir(), "trackList.json");
+        if (ret.exists())
+        {
+            return ret;
+        }
+
+        ret = new File(ret.getParentFile(), "data");
+        ret = new File(ret, "trackList.json");
+        if (ret.exists())
+        {
+            return ret;
+        }
+
+        return null;
+    }
+
     private JSONObject createCodingRegionTrack(Container c, Set<Integer> referenceIds, File databaseTrackDir) throws IOException
     {
         //first add coding regions
@@ -765,7 +799,7 @@ public class JBrowseRoot
         File outDir = new File(databaseTrackDir, "tmpTrackDir");
         if (outDir.exists())
         {
-            FileUtils.deleteDirectory(outDir);
+            safeDeleteDiretory(outDir);
         }
 
         outDir.mkdirs();
@@ -776,7 +810,7 @@ public class JBrowseRoot
         File source = new File(databaseTrackDir, "tmpTrackDir/data/tracks/" + featureName);
         File dest = new File(databaseTrackDir, featureName);
         FileUtils.moveDirectory(source, dest);
-        FileUtils.deleteDirectory(outDir);
+        safeDeleteDiretory(outDir);
 
         //update urlTemplate
         String relPath = FileUtil.relativePath(getBaseDir(c).getPath(), databaseTrackDir.getPath());
@@ -829,7 +863,7 @@ public class JBrowseRoot
         File outDir = new File(databaseTrackDir, "tmpTrackDir");
         if (outDir.exists())
         {
-            FileUtils.deleteDirectory(outDir);
+            safeDeleteDiretory(outDir);
         }
 
         outDir.mkdirs();
@@ -840,7 +874,7 @@ public class JBrowseRoot
         File source = new File(databaseTrackDir, "tmpTrackDir/data/tracks/" + featureName);
         File dest = new File(databaseTrackDir, featureName);
         FileUtils.moveDirectory(source, dest);
-        FileUtils.deleteDirectory(outDir);
+        safeDeleteDiretory(outDir);
 
         //update urlTemplate
         String relPath = FileUtil.relativePath(getBaseDir(c).getPath(), databaseTrackDir.getPath());
@@ -983,7 +1017,7 @@ public class JBrowseRoot
         File outDir = new File(getTracksDir(data.getContainer()), "track-" + trackId.toString());
         if (outDir.exists())
         {
-            FileUtils.deleteDirectory(outDir);
+            safeDeleteDiretory(outDir);
         }
         outDir.mkdirs();
 
@@ -1024,32 +1058,39 @@ public class JBrowseRoot
         if ("gff3".equalsIgnoreCase(ext) || "gff".equalsIgnoreCase(ext) || "gtf".equalsIgnoreCase(ext))
         {
             JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--gff", featureName, featureLabel, metadata, category);
+            writeTrackList(outDir, ret);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("bed".equalsIgnoreCase(ext) || "bedgraph".equalsIgnoreCase(ext))
         {
             JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--bed", featureName, featureLabel, metadata, category);
+            writeTrackList(outDir, ret);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("gbk".equalsIgnoreCase(ext))
         {
             JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--gbk", featureName, featureLabel, metadata, category);
+            writeTrackList(outDir, ret);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("bigwig".equalsIgnoreCase(ext) || "bw".equalsIgnoreCase(ext))
         {
             JSONObject ret = processBigWig(data, outDir, featureName, featureLabel, metadata, category);
+            writeTrackList(outDir, ret);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if (bamType.isType(input))
         {
             List<JSONObject> ret = processBam(data, outDir, featureName, featureLabel, metadata, category);
+            writeTrackList(outDir, ret);
 
-            return ret.isEmpty() ? null : ret;
+            return ret != null && !ret.isEmpty() ? ret :  null;
         }
         else if (vcfType.isType(input))
         {
             JSONObject ret = processVCF(data, outDir, featureName, featureLabel, metadata, category, refGenomeData);
+            writeTrackList(outDir, ret);
+
             return ret == null ? null : Arrays.asList(ret);
         }
         else
@@ -1057,6 +1098,30 @@ public class JBrowseRoot
             getLogger().error("Unknown extension, skipping: " + ext);
             return null;
         }
+    }
+
+    private void writeTrackList(File outDir, JSONObject trackJson) throws IOException
+    {
+        if (trackJson == null)
+        {
+            return;
+        }
+
+        writeTrackList(outDir, Arrays.asList(trackJson));
+    }
+
+    private void writeTrackList(File outDir, List<JSONObject> tracks) throws IOException
+    {
+        if (tracks == null || tracks.isEmpty())
+        {
+            return;
+        }
+
+        JSONObject ret = new JSONObject();
+        ret.put("formatVersion", 1);
+        ret.put("tracks", tracks);
+
+        writeJsonToFile(new File(outDir, "trackList.json"), ret.toString(1));
     }
 
     private List<JSONObject> processBam(ExpData data, File outDir, String featureName, String featureLabel, Map<String, Object> metadata, String category) throws IOException
@@ -1405,6 +1470,19 @@ public class JBrowseRoot
         catch (IOException e)
         {
             throw new RuntimeException(e);
+        }
+    }
+
+    // NOTE: there is abug in FileUtils causing it to delete the contents of directories that are symlinks, instead of just deleting the symlink on windows machines
+    private void safeDeleteDiretory(File directory) throws IOException
+    {
+        if (SystemUtils.IS_OS_WINDOWS)
+        {
+            FileUtil.deleteDir(directory);
+        }
+        else
+        {
+            FileUtils.deleteDirectory(directory);
         }
     }
 }

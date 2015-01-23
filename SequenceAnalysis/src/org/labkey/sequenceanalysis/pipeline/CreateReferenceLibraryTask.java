@@ -286,14 +286,17 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             {
                 for (GenomeTrigger t : triggers)
                 {
-                    getJob().getLogger().info("running genome trigger: " + t.getName());
-                    if (getPipelineJob().isCreateNew())
+                    if (t.isAvailable(getJob().getContainer()))
                     {
-                        t.onCreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), rowId);
-                    }
-                    else
-                    {
-                        t.onRecreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), rowId);
+                        getJob().getLogger().info("running genome trigger: " + t.getName());
+                        if (getPipelineJob().isCreateNew())
+                        {
+                            t.onCreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), rowId);
+                        }
+                        else
+                        {
+                            t.onRecreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), rowId);
+                        }
                     }
                 }
             }

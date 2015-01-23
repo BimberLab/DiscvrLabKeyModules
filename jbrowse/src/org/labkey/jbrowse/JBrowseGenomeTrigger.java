@@ -2,6 +2,7 @@ package org.labkey.jbrowse;
 
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.GenomeTrigger;
 
@@ -43,5 +44,11 @@ public class JBrowseGenomeTrigger implements GenomeTrigger
     private void prepareResourcesForLibrary(Container c, User u, Logger log, int genomeId)
     {
         //TODO: consider updating existing sessions that are based on this genome?
+    }
+
+    @Override
+    public boolean isAvailable(Container c)
+    {
+        return c.getActiveModules().contains(ModuleLoader.getInstance().getModule(JBrowseModule.class));
     }
 }

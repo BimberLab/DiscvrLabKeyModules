@@ -237,12 +237,14 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
                 this.close();
 
                 if (mode == 'createNew'){
-                    Ext4.Msg.alert('Success', 'Pipeline job started!', function(){
+                    Ext4.Msg.alert('Success', 'The session is being created.  The time it takes to process the files will depend on their size.  The next screen will show the active pipeline job, which is preparing the files in the background.  Once it completes, click the description to load it.', function(){
                         window.location = LABKEY.ActionURL.buildURL('pipeline-status', 'showList');
                     }, this);
                 }
                 else {
-                    Ext4.Msg.alert('Success', 'Session updated');
+                    Ext4.Msg.alert('Success', 'The session is being updated.  The time it takes to process the new files will depend on their size.  The next screen will show the active pipeline job, which is preparing the files in the background.  Once it completes, click the description to load it.', function(){
+                        window.location = LABKEY.ActionURL.buildURL('pipeline-status', 'showList');
+                    }, this);
                 }
             },
             failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback())
