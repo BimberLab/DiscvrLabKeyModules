@@ -25,4 +25,4 @@ LEFT JOIN Sys_Parameters s2 on (afs.CageType  = s2.Flag And s2.Field = 'SmallCag
 LEFT JOIN Sys_Parameters s3 on (afs.CageSize  = s3.Flag And s3.Field = 'SmallCageSize')
 
 Where  rl.Location != 'No Location'
-and (afs.ts > ? OR rf.ts > ? OR rc.ts > ? OR rl.ts > ?)
+and (afs.ts > ? OR rc.ts > ? OR rl.ts > ?)
