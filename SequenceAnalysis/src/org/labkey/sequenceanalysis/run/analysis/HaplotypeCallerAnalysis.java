@@ -12,9 +12,11 @@ import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.api.run.CommandLineParam;
 import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.HaplotypeCallerWrapper;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -66,9 +68,20 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         AnalysisOutputImpl output = new AnalysisOutputImpl();
 
         File outputFile = new File(getWrapper().getOutputDir(inputBam), FileUtil.getBaseName(inputBam) + ".gvcf");
-        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, getClientCommandArgs());
 
-        //output.addSequenceOutput(outputFile, "Haplotype Caller Output", "Haplotype Caller Output", null);
+        List<String> args = new ArrayList<>();
+        Integer threads = SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob());
+        if (threads != null)
+        {
+            args.add("-nct");
+            args.add(threads.toString());
+        }
+
+        args.addAll(getClientCommandArgs());
+
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, args);
+
+        output.addSequenceOutput(outputFile, rs.getName() + ": HaplotypeCaller Variants", "GVCF File", rs.getRowId(), null, referenceGenome.getGenomeId());
 
         return output;
     }

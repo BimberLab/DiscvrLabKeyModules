@@ -48,7 +48,7 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
         _jsonParams = jsonParams;
         _files = files;
 
-        _outDir = new File(pipeRoot.getRootPath(), "sequenceOutputs");
+        _outDir = new File(pipeRoot.getRootPath(), "sequenceOutputPipeline");
         if (!_outDir.exists())
         {
             _outDir.mkdir();
@@ -69,7 +69,7 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
     @Override
     public String getDescription()
     {
-        return _handler.getDescription() == null ? _handler.getName() : _handler.getDescription();
+        return _handler.getName();
     }
 
     @Override

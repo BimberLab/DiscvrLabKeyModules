@@ -8,6 +8,7 @@ import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class helps manage the inputs and outputs created during a pipeline job.  It will gather inputs, outputs and intermediate files.
@@ -51,7 +52,7 @@ public interface TaskFileManager
 
     public void addFinalOutputFiles(Collection<File> files);
 
-    public List<File> getFinalOutputFiles();
+    public Set<File> getFinalOutputFiles();
 
     /**
      * These are output files that are unaltered versions of an input file

@@ -17,6 +17,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -76,7 +77,7 @@ public class CompareVariantsHandler implements SequenceOutputHandler
     }
 
     @Override
-    public void processFiles(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+    public void processFiles(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
     {
         throw new UnsupportedOperationException("JBrowse output handle should not be called through this path");
     }

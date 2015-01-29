@@ -18,6 +18,8 @@ package org.labkey.sequenceanalysis.pipeline;
 import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -613,6 +615,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 bai.delete();
             }
 
+            //TODO: SamReaderFactory fact = SamReaderFactory.make();
+            //fact.validationStringency(ValidationStringency.SILENT);
             try (SAMFileReader reader = new SAMFileReader(finalBam))
             {
                 getJob().getLogger().info("\tcreating BAM index");

@@ -4,6 +4,8 @@ import com.drew.lang.annotations.Nullable;
 import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -38,24 +40,32 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
         List<File> tempFiles = new ArrayList<>();
 
         //ensure BAM sorted
-        SAMFileHeader.SortOrder order = SequenceUtil.getBamSortOrder(inputBam);
-        if (SAMFileHeader.SortOrder.coordinate != order)
+        try
         {
-            getLogger().info("coordinate sorting BAM, order was: " + (order == null ? "not provided" : order.name()));
-            File sorted = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + ".sorted.bam");
-            new SortSamWrapper(getLogger()).execute(inputBam, sorted, SAMFileHeader.SortOrder.coordinate);
+            SAMFileHeader.SortOrder order = SequenceUtil.getBamSortOrder(inputBam);
 
-            //this indicates we expect to replace the original in place, in which case we should delete the unsorted BAM
-            if (outputBam == null)
+            if (SAMFileHeader.SortOrder.coordinate != order)
             {
-                tempFiles.add(inputBam);
-            }
+                getLogger().info("coordinate sorting BAM, order was: " + (order == null ? "not provided" : order.name()));
+                File sorted = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + ".sorted.bam");
+                new SortSamWrapper(getLogger()).execute(inputBam, sorted, SAMFileHeader.SortOrder.coordinate);
 
-            inputBam = sorted;
+                //this indicates we expect to replace the original in place, in which case we should delete the unsorted BAM
+                if (outputBam == null)
+                {
+                    tempFiles.add(inputBam);
+                }
+
+                inputBam = sorted;
+            }
+            else
+            {
+                getLogger().info("bam is already in coordinate sort order");
+            }
         }
-        else
+        catch (IOException e)
         {
-            getLogger().info("bam is already in coordinate sort order");
+            throw new PipelineJobException(e);
         }
 
         ensureDictionary(referenceFasta);
@@ -64,11 +74,14 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
         if (!expectedIndex.exists())
         {
             getLogger().debug("\tcreating temp index for BAM: " + inputBam.getName());
+            //TODO: SamReaderFactory fact = SamReaderFactory.make();
+            //fact.validationStringency(ValidationStringency.SILENT);
             try (SAMFileReader reader = new SAMFileReader(inputBam))
             {
                 reader.setValidationStringency(ValidationStringency.SILENT);
                 BAMIndexer.createIndex(reader, expectedIndex);
             }
+
             tempFiles.add(expectedIndex);
         }
 

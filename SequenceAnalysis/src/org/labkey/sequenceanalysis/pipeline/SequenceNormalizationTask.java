@@ -370,7 +370,14 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 if (!inputPaths.contains(f.getPath()))
                 {
                     getJob().getLogger().info("\tDeleting uncompressed file: " + f.getName());
-                    f.delete();
+                    if (f.exists())
+                    {
+                        f.delete();
+                    }
+                    else
+                    {
+                        getJob().getLogger().error("unable to find file: " + f.getPath());
+                    }
                 }
                 getHelper().getFileManager().addOutput(finalAction, SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, output);
             }

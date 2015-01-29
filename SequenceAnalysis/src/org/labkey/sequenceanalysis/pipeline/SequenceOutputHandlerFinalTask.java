@@ -69,12 +69,12 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
 
     public RecordedActionSet run() throws PipelineJobException
     {
+        Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
+        getPipelineJob().setExperimentRunRowId(runId);
+
         if (!getPipelineJob().getOutputsCreated().isEmpty())
         {
             TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
-            Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
-            getPipelineJob().setExperimentRunRowId(runId);
-
             for (SequenceOutputFile o : getPipelineJob().getOutputsCreated())
             {
                 Map<String, Object> toUpdate = new CaseInsensitiveHashMap<>();
@@ -88,7 +88,6 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         {
             getJob().getLogger().info("no outputs created, nothing to do");
         }
-
 
         return new RecordedActionSet();
     }

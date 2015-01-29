@@ -12,9 +12,9 @@
        <column name="runid" />
        <column name="runid/jobid" />
        <column name="workbook" />
-       <column name="dataid/DownloadLink">
+       <column name="dataid/ViewFileLink">
            <properties>
-               <property name="columnTitle" value="File"/>
+               <property name="columnTitle" value="View/Download"/>
            </properties>
        </column>
    </columns>

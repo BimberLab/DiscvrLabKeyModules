@@ -117,10 +117,12 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 else
                 {
                     getJob().getLogger().info("creating BAM index");
+                    //TODO: SamReaderFactory fact = SamReaderFactory.make();
                     try (SAMFileReader reader = new SAMFileReader(movedFile))
                     {
-                        getJob().getLogger().info("\tcreating BAM index");
                         reader.setValidationStringency(ValidationStringency.SILENT);
+
+                        getJob().getLogger().info("\tcreating BAM index");
                         BAMIndexer.createIndex(reader, movedIndexFile);
                     }
                 }

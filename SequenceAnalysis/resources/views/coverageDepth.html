@@ -1,0 +1,291 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    var outputFileIds = LABKEY.ActionURL.getParameter('outputFileIds') || '';
+    outputFileIds = outputFileIds.split(';');
+    if (!outputFileIds.length){
+        Ext4.Msg.alert('Error', 'Must Provide Outfile Files Ids');
+        return;
+    }
+
+    Ext4.define('SequenceAnalysis.panel.CoverageDepthPanel', {
+        extend: 'Ext.form.Panel',
+        alias: 'widget.sequenceanalysis-coveragedepthpanel',
+        LABEL_WIDTH: 125,
+
+        initComponent: function(){
+            Ext4.QuickTips.init();
+
+            Ext4.apply(this, {
+                border: false,
+                defaults: {
+                    border: true,
+                    bodyStyle: 'padding: 5px;',
+                    style: 'padding-bottom: 10px;',
+                    defaults: {
+                        border: false,
+                        bodyStyle: 'padding: 5px;'
+                    }
+                },
+                items: [{
+                    title: 'Instructions',
+                    items: [{
+                        html: 'This tool can be used for several applications.  In the simplest form, it will generate a plot showing coverage across your sample.  This gives general QC information.  It can also be used to calculate copy # variation between two samples.  Please choose from the options below:'
+                    }]
+                },{
+                    title: 'Sample Information',
+                    itemId: 'sampleInfo',
+                    items: [{
+                        xtype: 'dataview',
+                        store: {
+                            type: 'labkey-store',
+                            autoLoad: true,
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'outputfiles',
+                            columns: 'rowid,name,dataid,dataid/name,dataid/fileexists,container/path,container/displayName',
+                            filterArray: [LABKEY.Filter.create('rowid', this.outputFileIds.join(';'), LABKEY.Filter.Types.IN)],
+
+                            sort: 'name'
+                        },
+                        itemSelector: 'tr.file_list',
+                        tpl: [
+                            '<table class="fileNames"><tr class="fileNames"><td>File Id</td><td>Name</td><td>File</td><td>Folder</td></tr>',
+                            '<tpl for=".">',
+                            '<tr class="file_list">',
+                            '<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "sequenceanalysis", "query.queryName":"outputfiles", "query.rowId~eq": values.rowid})]}" target="_blank">{rowid:htmlEncode}</a></td>',
+                            '<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "sequenceanalysis", "query.queryName":"outputfiles", "query.rowId~eq": values.rowid})]}" target="_blank">{name:htmlEncode}</a></td>',
+                            '<td',
+                            '<tpl if="values.dataid && !values[\'dataid/fileexists\']"> style="background: red;" data-qtip="File does not exist"</tpl>',
+                            '><a href="{[LABKEY.ActionURL.buildURL("experiment", "showData", values.queryContainerPath, {rowId: values.dataid})]}" target="_blank">{[Ext4.htmlEncode(values["dataid/name"])]}</a></td>',
+                            '<td><a href="{[LABKEY.ActionURL.buildURL("project", "start", values["container/path"], {})]}" target="_blank">{[Ext4.htmlEncode(values["container/displayName"])]}</a></td>',
+                            '</tr>',
+                            '</tpl>',
+                            '</table>'
+                        ]
+                    }]
+                },{
+                    title: 'Step 1: Window Creation',
+                    items: [{
+                        html: 'This tool works by diving your genome into a series of windows.  Per window, we calculate coverage depth or read count.',
+                        style: 'padding-bottom: 10px;'
+                    },{
+                        xtype: 'radiogroup',
+                        fieldLabel: 'Window Type',
+                        labelWidth: this.LABEL_WIDTH,
+                        columns: 1,
+                        defaults: {
+                            xtype: 'radio',
+                            name: 'windowStrategy'
+                        },
+                        items: [{
+                            boxLabel: 'Fixed Width',
+                            inputValue: 'fixedWidth',
+                            checked: true,
+                            getOptionItems: function (){
+                                return [{
+                                    xtype: 'ldk-integerfield',
+                                    name: 'basesPerWindow',
+                                    labelWidth: 150,
+                                    fieldLabel: 'Window Width (bases)',
+                                    value: 1000,
+                                    allowBlank: false
+                                }];
+                            }
+                        },{
+                            boxLabel: 'Variable, Based on Read #',
+                            inputValue: 'fixedReadNumber',
+                            getOptionItems: function () {
+                                return [{
+                                    xtype: 'ldk-integerfield',
+                                    name: 'readNumberPerWindow',
+                                    labelWidth: 150,
+                                    fieldLabel: 'Read # Per Window',
+                                    value: 1000,
+                                    allowBlank: false
+                                }];
+                            }
+                        }],
+                        listeners: {
+                            change: function (field, val) {
+                                Ext4.Array.forEach(this.getChecked(), function(cb){
+                                    var target = field.up('panel').down('#windowOptions');
+                                    target.removeAll();
+                                    if (cb.getOptionItems){
+                                        var toAdd = cb.getOptionItems();
+                                        if (toAdd && toAdd.length) {
+                                            target.add(toAdd);
+                                        }
+                                    }
+                                }, this);
+                            },
+                            afterrender: function (field) {
+                                field.fireEvent('change', field, field.getValue())
+                            }
+                        }
+                    },{
+                        xtype: 'container',
+                        itemId: 'windowOptions',
+                        style: 'margin-left: ' + (this.LABEL_WIDTH + 10) + 'px;',
+                        defaults: {
+                            border: false
+                        }
+                    },{
+                        xtype: 'radiogroup',
+                        fieldLabel: 'Sample Handling',
+                        itemId: 'sampleHandling',
+                        labelWidth: this.LABEL_WIDTH,
+                        columns: 1,
+                        defaults: {
+                            xtype: 'radio',
+                            name: 'sampleHandling'
+                        },
+                        items: [{
+                            boxLabel: 'Calculate Window Borders Independently Per Sample',
+                            inputValue: 'independent',
+                            checked: true
+                        },{
+                            boxLabel: 'Calculate Window Borders Based On One Sample, Then Apply To All',
+                            inputValue: 'relative',
+                            getOptionItems: function (){
+                                var outputFileIds = this.up('sequenceanalysis-coveragedepthpanel').outputFileIds;
+                                LDK.Assert.assertNotEmpty('outputFileIds is null', outputFileIds);
+
+                                return [{
+                                    xtype: 'combo',
+                                    name: 'referenceSample',
+                                    labelWidth: 150,
+                                    fieldLabel: 'Choose Sample',
+                                    allowBlank: false,
+                                    store: {
+                                        type: 'labkey-store',
+                                        autoLoad: true,
+                                        schemaName: 'sequenceanalysis',
+                                        queryName: 'outputfiles',
+                                        columns: 'rowid,name',
+                                        filterArray: [LABKEY.Filter.create('rowid', outputFileIds.join(';'), LABKEY.Filter.Types.IN)],
+                                        sort: 'name'
+                                    },
+                                    displayField: 'name',
+                                    valueField: 'rowid'
+                                }];
+                            }
+                        }],
+                        listeners: {
+                            change: function (field, val) {
+                                Ext4.Array.forEach(this.getChecked(), function(cb){
+                                    var target = field.up('panel').down('#sampleHandlingOptions');
+                                    target.removeAll();
+                                    if (cb.getOptionItems){
+                                        var toAdd = cb.getOptionItems();
+                                        if (toAdd && toAdd.length) {
+                                            target.add(toAdd);
+                                        }
+                                    }
+                                }, this);
+                            },
+                            afterrender: function (field) {
+                                field.fireEvent('change', field, field.getValue())
+                            }
+                        }
+                    },{
+                        xtype: 'container',
+                        itemId: 'sampleHandlingOptions',
+                        style: 'margin-left: ' + (this.LABEL_WIDTH + 10) + 'px;',
+                        defaults: {
+                            border: false
+                        }
+                    }]
+                },{
+                    title: 'Step 2: Plotting Options',
+                    items: [{
+                        html: 'You will need to choose what value(s) to plot for each sample.  In addition to graphs, this tool will write out the raw data in a table, which can be opened in excel or similar programs.',
+                        style: 'padding-bottom: 10px;'
+                    },{
+                        xtype: 'checkboxgroup',
+                        fieldLabel: 'Metrics',
+                        labelWidth: this.LABEL_WIDTH,
+                        columns: 1,
+                        defaults: {
+                            xtype: 'checkbox',
+                            name: 'metric',
+                            checked: true
+                        },
+                        items: [{
+                            boxLabel: 'Total Reads / Window',
+                            inputValue: 'totalReads'
+                        },{
+                            boxLabel: 'Avg Depth / Position (Ignore Positions w/ Zero Coverage)',
+                            inputValue: 'avgDepthIgnoreZero',
+                            checked: true
+                        },{
+                            boxLabel: 'Positions of Zero Depth',
+                            inputValue: 'positionsOfZeroDepth'
+                        },{
+                            boxLabel: 'Positions of Non-Zero Depth',
+                            inputValue: 'positionsOfNonZeroDepth'
+                        }]
+                    },{
+                        xtype: 'radiogroup',
+                        fieldLabel: 'Plot Type',
+                        itemId: 'plotType',
+                        labelWidth: this.LABEL_WIDTH,
+                        columns: 1,
+                        defaults: {
+                            xtype: 'radio',
+                            name: 'modifier'
+                        },
+                        items: [{
+                            boxLabel: 'Plot One Chromosome / Line',
+                            inputValue: 'chromosomePerLine',
+                            checked: true
+                        },{
+                            boxLabel: 'Plot All Chromosomes on Same Line',
+                            inputValue: 'oneLine'
+                        }]
+                    }]
+                }],
+                buttonAlign: 'left',
+                buttons: [{
+                    text: 'Submit',
+                    scope: this,
+                    handler: this.onSubmit
+                }]
+            });
+
+            this.callParent(arguments);
+        },
+
+        onSubmit: function(){
+            if (!this.getForm().isValid()){
+                Ext4.Msg.alert('Error', 'One or more fields is invalid.  Please fill in any missing or invalid values (marked in red)');
+                return;
+            }
+
+            var values = this.getForm().getValues();
+            console.log(values);
+
+            Ext4.Msg.wait('Saving...');
+            LABKEY.Ajax.request({
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler'),
+                jsonData: {
+                    handlerClass: 'org.labkey.sequenceanalysis.analysis.CoverageDepthHandler',
+                    outputFileIds: this.outputFileIds,
+                    params: Ext4.encode(values)
+                },
+                scope: this,
+                success: function(){
+                    Ext4.Msg.hide();
+                    this.close();
+
+                    window.location = LABKEY.ActionURL.buildURL('pipeline-status', 'showList');
+                },
+                failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback())
+            });
+        }
+    });
+
+    Ext4.create('SequenceAnalysis.panel.CoverageDepthPanel', {
+        outputFileIds: outputFileIds
+    }).render(<%=webpartContext%>.wrapperDivId);
+});
+</script>

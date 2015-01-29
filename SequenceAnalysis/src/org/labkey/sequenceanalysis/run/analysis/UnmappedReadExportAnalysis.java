@@ -1,9 +1,10 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
 import com.drew.lang.annotations.Nullable;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
@@ -23,6 +24,7 @@ import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -76,7 +78,8 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
         FastqWriterFactory fact = new FastqWriterFactory();
         try (FastqWriter paired1Writer = fact.newWriter(paired1);FastqWriter paired2Writer = fact.newWriter(paired2);FastqWriter singletonsWriter = fact.newWriter(singletons))
         {
-            try (SAMFileReader reader = new SAMFileReader(inputBam))
+            SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault();
+            try (SamReader reader = samReaderFactory.open(inputBam))
             {
                 try (SAMRecordIterator it = reader.iterator())
                 {
@@ -121,6 +124,10 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
                         }
                     }
                 }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
 
             if (SequenceUtil.getLineCount(paired1) == 0)

@@ -2,6 +2,8 @@ package org.labkey.jbrowse;
 
 import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.BlockCompressedOutputStream;
 import org.apache.commons.io.FileUtils;
@@ -1142,10 +1144,10 @@ public class JBrowseRoot
         if (!indexFile.exists())
         {
             getLogger().info("unable to find index file for BAM, creating");
+            //TODO: SamReaderFactory fact = SamReaderFactory.make();
             try (SAMFileReader reader = new SAMFileReader(data.getFile()))
             {
                 reader.setValidationStringency(ValidationStringency.SILENT);
-
                 BAMIndexer.createIndex(reader, indexFile);
             }
         }

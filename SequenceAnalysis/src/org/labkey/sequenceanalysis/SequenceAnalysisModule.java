@@ -35,6 +35,7 @@ import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.sequenceanalysis.analysis.CoverageDepthHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.button.GenomeLoadButton;
@@ -238,6 +239,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(new GenomeLoadButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
 
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CoverageDepthHandler());
 
         SystemMaintenance.addTask(new SequenceAnalyssiMaintenanceTask());
     }

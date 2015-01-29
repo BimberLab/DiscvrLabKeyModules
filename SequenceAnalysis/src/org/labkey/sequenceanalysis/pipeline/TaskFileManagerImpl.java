@@ -54,7 +54,7 @@ public class TaskFileManagerImpl implements TaskFileManager
 
     private HashMap<String, List<Object[]>> _outputFiles = new HashMap<>();
     private HashMap<String, List<Object[]>> _inputFiles = new HashMap<>();
-    private List<File> _finalOutputs = new ArrayList<>();
+    private Set<File> _finalOutputs = new HashSet<>();
     private Set<File> _unalteredOutputs = new HashSet<>();
     Map<File, File> _unzippedMap = new HashMap<>();
 
@@ -397,20 +397,24 @@ public class TaskFileManagerImpl implements TaskFileManager
                     {
                         Integer readsetId = Integer.parseInt(tokens[3]);
                         map.put("readset", readsetId);
+                        _job.getLogger().debug("readset: " + map.get("readset"));
                     }
 
                     if (tokens.length >= 5 && StringUtils.trimToNull(tokens[4]) != null)
                     {
                         map.put("analysis_id", Integer.parseInt(tokens[4]));
+                        _job.getLogger().debug("analysis id: " + map.get("analysis_id"));
                     }
 
                     if (tokens.length >= 6 && StringUtils.trimToNull(tokens[5]) != null)
                     {
                         map.put("library_id", Integer.parseInt(tokens[5]));
+                        _job.getLogger().debug("library_id found in log: " + map.get("library_id"));
                     }
                     else if (getSequenceSupport() != null && getSequenceSupport().getReferenceGenome() != null)
                     {
                         map.put("library_id", getSequenceSupport().getReferenceGenome().getGenomeId());
+                        _job.getLogger().debug("library_id taken from reference genome: " + map.get("library_id"));
                     }
 
                     Integer runId = SequenceTaskHelper.getExpRunIdForJob(_job);
@@ -902,7 +906,7 @@ public class TaskFileManagerImpl implements TaskFileManager
     }
 
     @Override
-    public List<File> getFinalOutputFiles()
+    public Set<File> getFinalOutputFiles()
     {
         return _finalOutputs;
     }

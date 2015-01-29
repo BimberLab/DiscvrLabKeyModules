@@ -2,11 +2,14 @@ package org.labkey.sequenceanalysis.run.util;
 
 import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,11 +34,13 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
         if (!expectedIndex.exists())
         {
             getLogger().debug("\tcreating temp index for BAM: " + inputBam.getName());
+            //TODO: SamReaderFactory fact = SamReaderFactory.make();
             try (SAMFileReader reader = new SAMFileReader(inputBam))
             {
                 reader.setValidationStringency(ValidationStringency.SILENT);
                 BAMIndexer.createIndex(reader, expectedIndex);
             }
+
             doDeleteIndex = true;
         }
 

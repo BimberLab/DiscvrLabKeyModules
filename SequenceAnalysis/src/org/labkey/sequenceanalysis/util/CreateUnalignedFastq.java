@@ -1,16 +1,19 @@
 package org.labkey.sequenceanalysis.util;
 
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
 import org.apache.log4j.Logger;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -30,15 +33,14 @@ public class CreateUnalignedFastq
         _logger = logger;
     }
 
-    public File execute(File bam, List<Pair<File, File>> inputFastqs)
+    public File execute(File bam, List<Pair<File, File>> inputFastqs) throws PipelineJobException
     {
-        SAMFileReader reader = null;
         FastqWriter fqWriter = null;
         FastqWriterFactory fact = new FastqWriterFactory();
 
-        try
+        SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault();
+        try (SamReader reader = samReaderFactory.open(bam))
         {
-            reader = new SAMFileReader(bam);
             File unalignedFastq = new File(bam.getParentFile(), FileUtil.getBaseName(bam) + ".unaligned.fastq");
             fqWriter = fact.newWriter(unalignedFastq);
 
@@ -58,17 +60,18 @@ public class CreateUnalignedFastq
 
             return unalignedFastq;
         }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
         finally
         {
-            if (reader != null)
-                reader.close();
-
             if (fqWriter != null)
                 fqWriter.close();
         }
     }
 
-    private void buildSequenceSet(SAMFileReader reader, Set<String> forward, Set<String> reverse)
+    private void buildSequenceSet(SamReader reader, Set<String> forward, Set<String> reverse)
     {
         Iterator<SAMRecord> iterator = reader.iterator();
         while (iterator.hasNext())

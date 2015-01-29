@@ -1,22 +1,16 @@
 package org.labkey.sequenceanalysis.run.util;
 
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SAMFormatException;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.FastaSequenceIndex;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.log4j.Logger;
-import org.labkey.api.data.Table;
-import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.sequenceanalysis.SequenceAnalysisManager;
-import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import picard.analysis.AlignmentSummaryMetrics;
 import picard.analysis.AlignmentSummaryMetricsCollector;
 import picard.analysis.MetricAccumulationLevel;
 
@@ -26,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,9 +52,10 @@ public class BamMetricsRunner
     public MetricsFile addMetricsForFile(File inputBam, File refFasta) throws PipelineJobException
     {
         File fai = new File(refFasta.getPath() + ".fai");
-        try (SAMFileReader sam = new SAMFileReader(inputBam);IndexedFastaSequenceFile indexedRef = new IndexedFastaSequenceFile(refFasta, new FastaSequenceIndex(fai)))
+        SamReaderFactory fact = SamReaderFactory.make();
+        fact.validationStringency(ValidationStringency.SILENT);
+        try (SamReader sam = fact.open(inputBam);IndexedFastaSequenceFile indexedRef = new IndexedFastaSequenceFile(refFasta, new FastaSequenceIndex(fai)))
         {
-            sam.setValidationStringency(ValidationStringency.SILENT);
             AlignmentSummaryMetricsCollector collector = new AlignmentSummaryMetricsCollector(Collections.singleton(MetricAccumulationLevel.ALL_READS), sam.getFileHeader().getReadGroups(), true, new ArrayList<String>(), 5000, false);
 
             try (SAMRecordIterator it = sam.iterator())

@@ -2498,6 +2498,7 @@ labModules/SequenceAnalysis/pipeline_code/sequence_tools_install.sh -text
 labModules/SequenceAnalysis/resources/credits/executables.txt -text
 labModules/SequenceAnalysis/resources/credits/jars.txt -text
 labModules/SequenceAnalysis/resources/external/R/methylationBasicStats.R -text
+labModules/SequenceAnalysis/resources/external/coverageGraph.r -text
 labModules/SequenceAnalysis/resources/external/fastqc/Configuration/adapter_list.txt -text
 labModules/SequenceAnalysis/resources/external/fastqc/Configuration/contaminant_list.txt -text
 labModules/SequenceAnalysis/resources/external/fastqc/Configuration/limits.txt -text
@@ -2809,6 +2810,8 @@ labModules/SequenceAnalysis/resources/views/alignmentImport.view.xml -text
 labModules/SequenceAnalysis/resources/views/begin.html -text
 labModules/SequenceAnalysis/resources/views/begin.view.xml -text
 labModules/SequenceAnalysis/resources/views/begin.webpart.xml -text
+labModules/SequenceAnalysis/resources/views/coverageDepth.html -text
+labModules/SequenceAnalysis/resources/views/coverageDepth.view.xml -text
 labModules/SequenceAnalysis/resources/views/dataAnalysisInstructions.html -text
 labModules/SequenceAnalysis/resources/views/dataAnalysisInstructions.view.xml -text
 labModules/SequenceAnalysis/resources/views/dataImportInstructions.html -text
@@ -2947,6 +2950,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceProvider.jav
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceReadset.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/TestHelper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CompareVariantsHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CoverageDepthHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/LiftoverHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/model/AnalysisModel.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/model/ReadsetModel.java -text

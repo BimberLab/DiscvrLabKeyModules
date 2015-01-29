@@ -88,6 +88,14 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                 displayField: 'genomeId2/name',
                 valueField: 'rowid',
                 allowBlank: false
+            },{
+                xtype: 'ldk-numberfield',
+                minValue: 0,
+                maxValue: 1.0,
+                value: 0.95,
+                fieldLabel: 'Min Percent Match',
+                helpPopup: 'In order to lift to the target genome, the feature must have at least this percent match.  Lower this value to be more permissive; however, this risks incorrect liftovers',
+                itemId: 'pctField'
             }],
             buttons: [{
                 text: 'Submit',
@@ -111,15 +119,21 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
             return;
         }
 
+        var params = {
+            chainRowId: chainFile.getValue()
+        };
+
+        if (this.down('#pctField').getValue()){
+            params.pct = this.down('#pctField').getValue();
+        }
+
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler'),
             jsonData: {
                 handlerClass: 'org.labkey.sequenceanalysis.analysis.LiftoverHandler',
                 outputFileIds: this.outputFileIds,
-                params: Ext4.encode({
-                    chainRowId: chainFile.getValue()
-                })
+                params: Ext4.encode(params)
             },
             scope: this,
             success: function(){

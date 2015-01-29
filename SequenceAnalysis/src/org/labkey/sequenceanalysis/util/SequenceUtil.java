@@ -1,11 +1,18 @@
 package org.labkey.sequenceanalysis.util;
 
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.BlockCompressedOutputStream;
+import htsjdk.samtools.util.Interval;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.CloseableTribbleIterator;
+import htsjdk.tribble.FeatureReader;
+import htsjdk.tribble.bed.BEDCodec;
+import htsjdk.tribble.bed.BEDFeature;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -19,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -101,12 +109,12 @@ public class SequenceUtil
         }
     }
 
-    public static long getAlignmentCount(File bam)
+    public static long getAlignmentCount(File bam) throws IOException
     {
-        try (SAMFileReader reader = new SAMFileReader(bam))
+        SamReaderFactory fact = SamReaderFactory.makeDefault();
+        fact.validationStringency(ValidationStringency.SILENT);
+        try (SamReader reader = fact.open(bam))
         {
-            reader.setValidationStringency(ValidationStringency.SILENT);
-
             try (SAMRecordIterator it = reader.iterator())
             {
                 long count = 0;
@@ -121,12 +129,13 @@ public class SequenceUtil
         }
     }
 
-    public static void logAlignmentCount(File bam, Logger log)
+    public static void logAlignmentCount(File bam, Logger log) throws IOException
     {
-        try (SAMFileReader reader = new SAMFileReader(bam))
-        {
-            reader.setValidationStringency(ValidationStringency.SILENT);
+        SamReaderFactory fact = SamReaderFactory.makeDefault();
+        fact.validationStringency(ValidationStringency.SILENT);
 
+        try (SamReader reader = fact.open(bam))
+        {
             try (SAMRecordIterator it = reader.iterator())
             {
                 long total = 0;
@@ -179,15 +188,16 @@ public class SequenceUtil
         }
     }
 
-    public static SAMFileHeader.SortOrder getBamSortOrder(File bam)
+    public static SAMFileHeader.SortOrder getBamSortOrder(File bam) throws IOException
     {
-        try (SAMFileReader reader = new SAMFileReader(bam))
+        SamReaderFactory fact = SamReaderFactory.makeDefault();
+        try (SamReader reader = fact.open(bam))
         {
             return reader.getFileHeader().getSortOrder();
         }
     }
 
-    public static void logFastqBamDifferences(Logger log, File bam, Integer fastqReadCount, @Nullable Integer fastq2ReadCount)
+    public static void logFastqBamDifferences(Logger log, File bam, Integer fastqReadCount, @Nullable Integer fastq2ReadCount) throws IOException
     {
         int totalFirstMateAlignments = 0;
         int totalFirstMatePrimaryAlignments = 0;
@@ -195,10 +205,10 @@ public class SequenceUtil
         int totalSecondMateAlignments = 0;
         int totalSecondMatePrimaryAlignments = 0;
 
-        try (SAMFileReader reader = new SAMFileReader(bam))
+        SamReaderFactory fact = SamReaderFactory.makeDefault();
+        fact.validationStringency(ValidationStringency.SILENT);
+        try (SamReader reader = fact.open(bam))
         {
-            reader.setValidationStringency(ValidationStringency.SILENT);
-
             try (SAMRecordIterator it = reader.iterator())
             {
                 while (it.hasNext())
@@ -249,5 +259,24 @@ public class SequenceUtil
                 }
             }
         }
+    }
+
+    public static List<Interval> bedToIntervalList(File input) throws IOException
+    {
+        List<Interval> ret = new ArrayList<>();
+
+        try (FeatureReader<BEDFeature> reader = AbstractFeatureReader.getFeatureReader(input.getAbsolutePath(), new BEDCodec(), false))
+        {
+            try (CloseableTribbleIterator<BEDFeature> i = reader.iterator())
+            {
+                while (i.hasNext())
+                {
+                    BEDFeature f = i.next();
+                    ret.add(new Interval(f.getChr(), f.getStart(), f.getEnd()));
+                }
+            }
+        }
+
+        return ret;
     }
 }
