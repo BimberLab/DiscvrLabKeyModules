@@ -70,16 +70,9 @@ then
     exit 1;
 fi
 
-if [ ! -d $LK_HOME ];
-then
-    echo "The install directory does not exist or is not a directory: ${LK_HOME}"
-    exit 1;
-fi
-
 LKTOOLS_DIR=${LK_HOME}/bin
 LKSRC_DIR=${LKTOOLS_DIR}/src
 mkdir -p $LKSRC_DIR
-mkdir -p $LKTOOLS_DIR
 
 echo ""
 echo ""
