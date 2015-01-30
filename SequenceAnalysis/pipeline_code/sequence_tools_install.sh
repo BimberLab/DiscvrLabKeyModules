@@ -35,9 +35,10 @@
 set -e
 set -u
 FORCE_REINSTALL=
+SKIP_PACKAGE_MANAGER=
 LK_HOME=
 
-while getopts "d:f" arg;
+while getopts "d:fp" arg;
 do
   case $arg in
     d)
@@ -48,10 +49,14 @@ do
     f)
        FORCE_REINSTALL=1
        ;;
+    p)
+       SKIP_PACKAGE_MANAGER=1
+       ;;
     *)
        echo "The following arguments are supported:"
        echo "-d: the path to the labkey install, such as /usr/local/labkey.  If only this parameter is provided, tools will be installed in bin/ and src/ under this location."
        echo "-f: optional.  If provided, all tools will be reinstalled, even if already present"
+       echo "-p: optional. "
        echo "Example command:"
        echo "./sequence_tools_install.sh -d /usr/local/labkey"
        exit 1;
@@ -107,7 +112,9 @@ echo ""
 #    fi
 #fi
 
-if [ $(which yum) ]; then
+if [ -n $SKIP_PACKAGE_MANAGER ]; then
+    echo "Skipping package install"
+elif [ $(which yum) ]; then
     echo "Using Yum"
     yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion cpan git cmake liblzf-devel
 elif [ $(which apt-get) ]; then
