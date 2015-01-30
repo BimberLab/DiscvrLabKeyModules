@@ -389,7 +389,9 @@ then
     ln -s $LKSRC_DIR/bismark_v0.12.5/coverage2cytosine $LKTOOLS_DIR
     ln -s $LKSRC_DIR/bismark_v0.12.5/deduplicate_bismark $LKTOOLS_DIR
 
-    if [ $(which apt-get) ]; then
+    if [ -n $SKIP_PACKAGE_MANAGER ]; then
+        echo "Skipping package install"
+    elif [ $(which apt-get) ]; then
         apt-get -q -y install libgd-graph-perl
     elif [ $(which yum) ]; then
         yum -y install perl-GD perl-GDGraph
@@ -818,7 +820,9 @@ echo "Install biopython"
 echo ""
 cd $LKSRC_DIR
 
-if [ $(which apt-get) ]; then
+if [ -n $SKIP_PACKAGE_MANAGER ]; then
+    echo "Skipping package install"
+elif [ $(which apt-get) ]; then
     echo "Installing biopython using apt-get"
     apt-get -q -y install python-biopython
 #TODO: this is not available from standard yum repositories
