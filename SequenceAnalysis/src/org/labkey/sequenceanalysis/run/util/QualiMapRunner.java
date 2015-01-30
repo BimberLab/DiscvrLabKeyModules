@@ -10,6 +10,7 @@ import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
+import org.labkey.api.util.StringUtilsLabKey;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

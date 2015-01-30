@@ -28,6 +28,7 @@ import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
+import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.io.BufferedReader;

@@ -17,8 +17,8 @@ package org.labkey.sequenceanalysis.model;
 
 import org.labkey.api.util.MemTracker;
 import org.labkey.api.util.Pair;
+import org.labkey.api.util.StringUtilsLabKey;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

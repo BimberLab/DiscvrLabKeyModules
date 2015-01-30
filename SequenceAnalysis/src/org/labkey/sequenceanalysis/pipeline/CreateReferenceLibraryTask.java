@@ -37,6 +37,7 @@ import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -95,9 +96,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
 
         public PipelineJob.Task createTask(PipelineJob job)
         {
-            CreateReferenceLibraryTask task = new CreateReferenceLibraryTask(this, job);
-
-            return task;
+            return new CreateReferenceLibraryTask(this, job);
         }
 
         public boolean isJobComplete(PipelineJob job)
