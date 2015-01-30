@@ -86,15 +86,8 @@ public class SequenceModel
         if (sequenceBases != null)
             return sequenceBases;
 
-        try
-        {
-            sequenceBases = sequence.getBytes("UTF-8");
-            return sequenceBases;
-        }
-        catch (UnsupportedEncodingException e)
-        {
-            throw new RuntimeException(e);
-        }
+        sequenceBases = sequence.getBytes(StringUtilsLabKey.DEFAULT_CHARSET);
+        return sequenceBases;
     }
 
     public void setSequence(String sequence)

@@ -231,7 +231,7 @@ public class FastqcRunner
         StringWriter writer = new StringWriter();
         try (FileInputStream is = new FileInputStream(htmlFile))
         {
-            IOUtils.copy(is, writer, "UTF-8");
+            IOUtils.copy(is, writer, StringUtilsLabKey.DEFAULT_CHARSET);
         }
 
         return writer.toString();

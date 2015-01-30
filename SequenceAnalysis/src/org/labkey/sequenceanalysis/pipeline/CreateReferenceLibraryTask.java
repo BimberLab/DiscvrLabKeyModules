@@ -193,7 +193,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             idFile = FileUtil.getAbsoluteCaseSensitiveFile(idFile);
 
             //then gather sequences and create the FASTA
-            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fasta), "UTF-8")); BufferedWriter idWriter = new BufferedWriter(new FileWriter(idFile)))
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fasta), StringUtilsLabKey.DEFAULT_CHARSET)); BufferedWriter idWriter = new BufferedWriter(new FileWriter(idFile)))
             {
                 idWriter.write("RowId\tName\tAccession\tStart\tStop\n");
 
