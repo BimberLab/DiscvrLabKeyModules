@@ -730,7 +730,7 @@ echo "Install cutadapt"
 echo ""
 cd $LKSRC_DIR
 
-if [[ -z $(which cutadapt) || ! -z $FORCE_REINSTALL ]];
+if [[ (-z $(which cutadapt) || ! -z $FORCE_REINSTALL) && -z $SKIP_PACKAGE_MANAGER ]];
 then
     echo "Cleaning up previous installs"
 
