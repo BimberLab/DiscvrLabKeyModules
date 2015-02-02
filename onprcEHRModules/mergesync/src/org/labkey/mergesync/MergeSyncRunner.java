@@ -31,7 +31,7 @@ import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.security.User;
-import org.labkey.api.study.DataSet;
+import org.labkey.api.study.Dataset;
 import org.labkey.api.study.StudyService;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
@@ -441,10 +441,10 @@ public class MergeSyncRunner implements Job
                     return;  //this could occur if the result is simply a placeholder like 'RECEIVED'
                 }
 
-                TableInfo dataset = getResultDataSet(c, u, rs.getString("servicename_abbr"), existingRunId);
+                TableInfo dataset = getResultDataset(c, u, rs.getString("servicename_abbr"), existingRunId);
                 if (dataset == null)
                 {
-                    return; //count on getResultDataSet() for error reporting
+                    return; //count on getResultDataset() for error reporting
                 }
 
                 resultDatasets.put(dataset.getName(), dataset);
@@ -781,7 +781,7 @@ public class MergeSyncRunner implements Job
         return resultRow;
     }
 
-    private TableInfo getResultDataSet(Container c, User u, String serviceName, @Nullable String runId) throws SQLException
+    private TableInfo getResultDataset(Container c, User u, String serviceName, @Nullable String runId) throws SQLException
     {
         String servicename = resolveServiceName(c, u, serviceName, runId);
         if (servicename == null)
@@ -1086,7 +1086,7 @@ public class MergeSyncRunner implements Job
         int datasetId = StudyService.get().getDatasetIdByName(c, datasetName);
         if (datasetId > -1)
         {
-            DataSet ds = StudyService.get().getDataset(c, datasetId);
+            Dataset ds = StudyService.get().getDataset(c, datasetId);
             ret = QueryService.get().getUserSchema(u, c, "study").getTable(ds.getName());
         }
 
@@ -1101,7 +1101,7 @@ public class MergeSyncRunner implements Job
             int datasetId = StudyService.get().getDatasetIdByName(c, "demographics");
             if (datasetId > -1)
             {
-                DataSet ds = StudyService.get().getDataset(c, datasetId);
+                Dataset ds = StudyService.get().getDataset(c, datasetId);
                 String realTableName = ds.getDomain().getStorageTableName();
                 TableInfo realTable = DbSchema.get("studydataset", DbSchemaType.Provisioned).getTable(realTableName);
 

@@ -52,7 +52,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.ValidEmail;
 import org.labkey.api.settings.AppProps;
-import org.labkey.api.study.DataSetTable;
+import org.labkey.api.study.DatasetTable;
 import org.labkey.api.study.StudyService;
 import org.labkey.api.util.ResultSetUtil;
 import org.labkey.api.view.ActionURL;
@@ -271,7 +271,7 @@ public class ETLRunnable implements Runnable
         if (targetTable instanceof FilteredTable)
         {
             DbSchema dbSchema;
-            if (targetTable instanceof DataSetTable)
+            if (targetTable instanceof DatasetTable)
             {
                 Domain domain = ((FilteredTable)targetTable).getDomain();
                 if (domain != null)
@@ -515,9 +515,9 @@ public class ETLRunnable implements Runnable
                     boolean isDone = false;
                     boolean isDemographics = false;
                     List<Object> searchParams = new ArrayList<>();
-                    if (targetTable instanceof DataSetTable)
+                    if (targetTable instanceof DatasetTable)
                     {
-                        if(((DataSetTable)targetTable).getDataset().isDemographicData())
+                        if(((DatasetTable)targetTable).getDataset().isDemographicData())
                         {
                             log.info("table is demographics, filtering on Id");
                             isDemographics = true;
