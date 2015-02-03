@@ -1002,37 +1002,37 @@ fi
 #
 #AMOS
 #
-
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Installing AMOS"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/bank-transact || ! -z $FORCE_REINSTALL ]];
-then
-    rm -Rf amos-3.1.0.tar.gz
-    rm -Rf amos-3.1.0.tar
-    rm -Rf amos-3.1.0
-    rm -Rf $LKTOOLS_DIR/bank2fasta
-    rm -Rf $LKTOOLS_DIR/bank2contig
-    rm -Rf $LKTOOLS_DIR/bank-transact
-
-    wget http://downloads.sourceforge.net/project/amos/amos/3.1.0/amos-3.1.0.tar.gz
-    gunzip amos-3.1.0.tar.gz
-    tar -xf amos-3.1.0.tar
-    cd amos-3.1.0
-    ./configure
-    make
-    make install
-
-    ln -s $LKSRC_DIR/amos-3.1.0/bin/bank2fasta $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/amos-3.1.0/bin/bank2contig $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/amos-3.1.0/bin/bank-transact $LKTOOLS_DIR
-else
-    echo "Already installed"
-fi
+#
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Installing AMOS"
+#echo ""
+#cd $LKSRC_DIR
+#
+#if [[ ! -e ${LKTOOLS_DIR}/bank-transact || ! -z $FORCE_REINSTALL ]];
+#then
+#    rm -Rf amos-3.1.0.tar.gz
+#    rm -Rf amos-3.1.0.tar
+#    rm -Rf amos-3.1.0
+#    rm -Rf $LKTOOLS_DIR/bank2fasta
+#    rm -Rf $LKTOOLS_DIR/bank2contig
+#    rm -Rf $LKTOOLS_DIR/bank-transact
+#
+#    wget http://downloads.sourceforge.net/project/amos/amos/3.1.0/amos-3.1.0.tar.gz
+#    gunzip amos-3.1.0.tar.gz
+#    tar -xf amos-3.1.0.tar
+#    cd amos-3.1.0
+#    ./configure
+#    make
+#    make install
+#
+#    ln -s $LKSRC_DIR/amos-3.1.0/bin/bank2fasta $LKTOOLS_DIR
+#    ln -s $LKSRC_DIR/amos-3.1.0/bin/bank2contig $LKTOOLS_DIR
+#    ln -s $LKSRC_DIR/amos-3.1.0/bin/bank-transact $LKTOOLS_DIR
+#else
+#    echo "Already installed"
+#fi
 
 
 #
