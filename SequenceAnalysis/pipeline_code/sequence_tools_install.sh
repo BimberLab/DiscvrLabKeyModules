@@ -1051,7 +1051,7 @@ then
     rm -Rf liftOver
     rm -Rf $LKTOOLS_DIR/liftOver
 
-    wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/liftOver
+    wget --read-timeout=10 http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/liftOver
     chmod +x liftOver
     ln -s $LKSRC_DIR/liftOver $LKTOOLS_DIR/liftOver
 else
