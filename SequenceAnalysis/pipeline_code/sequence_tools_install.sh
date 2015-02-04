@@ -1098,17 +1098,19 @@ echo "Installing BLAST+"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/ncbi-blast-2.2.29 || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/blastn || ! -z $FORCE_REINSTALL ]];
 then
     rm -Rf ncbi-blast-*
     rm -Rf $LKTOOLS_DIR/ncbi-blast-*
 
-    wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.2.29+-x64-linux.tar.gz
-    gunzip ncbi-blast-2.2.29+-x64-linux.tar.gz
-    tar -xf ncbi-blast-2.2.29+-x64-linux.tar
-    gzip ncbi-blast-2.2.29+-x64-linux.tar
+    wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.30/ncbi-blast-2.2.30+-x64-linux.tar.gz
+    gunzip ncbi-blast-2.2.30+-x64-linux.tar.gz
+    tar -xf ncbi-blast-2.2.30+-x64-linux.tar
+    gzip ncbi-blast-2.2.30+-x64-linux.tar
 
-    ln -s $LKSRC_DIR/ncbi-blast-2.2.29+-x64-linux $LKTOOLS_DIR/ncbi-blast-2.2.29
+    ln -s $LKSRC_DIR/ncbi-blast-2.2.30+/bin/blastn $LKTOOLS_DIR/blastn
+    ln -s $LKSRC_DIR/ncbi-blast-2.2.30+/bin/blast_formatter $LKTOOLS_DIR/blast_formatter
+    ln -s $LKSRC_DIR/ncbi-blast-2.2.30+/bin/makeblastdb $LKTOOLS_DIR/makeblastdb
 else
     echo "Already installed"
 fi

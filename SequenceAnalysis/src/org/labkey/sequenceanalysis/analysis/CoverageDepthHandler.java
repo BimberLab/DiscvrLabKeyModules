@@ -338,23 +338,23 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                 htmlOut.setReadset(outputFile.getReadset());
                 outputsToCreate.add(htmlOut);
 
-                if (settings.deleteRawData())
-                {
-                    for (File f : rawDataFiles)
-                    {
-                        f.delete();
-                    }
-                }
-                else
-                {
-                    for (File f : rawDataFiles)
-                    {
-                        Compress.compressGzip(f);
-                        f.delete();
-                    }
-                }
-
                 actionMap.get(outputFile).addOutput(html, "Coverage Data Summary", false);
+            }
+
+            if (settings.deleteRawData())
+            {
+                for (File f : rawDataFiles)
+                {
+                    f.delete();
+                }
+            }
+            else
+            {
+                for (File f : rawDataFiles)
+                {
+                    Compress.compressGzip(f);
+                    f.delete();
+                }
             }
 
             for (RecordedAction action : actionMap.values())

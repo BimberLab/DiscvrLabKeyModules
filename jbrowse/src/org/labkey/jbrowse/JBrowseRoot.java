@@ -204,6 +204,18 @@ public class JBrowseRoot
             }
         }
 
+        //in case we have a cached version, re-create
+        if (forceRecreateJson && jsonFile != null)
+        {
+            File outDir = new File(getTracksDir(jsonFile.getContainerObj()), "data-" + jsonFile.getOutputFile().toString());
+            if (outDir.exists())
+            {
+                getLogger().debug("deleting existing directory: " + outDir.getPath());
+                safeDeleteDiretory(outDir);
+            }
+            outDir.mkdirs();
+        }
+
         //else create
         if (jsonFile == null)
         {
