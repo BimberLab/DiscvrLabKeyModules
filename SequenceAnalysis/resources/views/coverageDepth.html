@@ -208,7 +208,9 @@ Ext4.onReady(function(){
                         defaults: {
                             xtype: 'checkbox',
                             name: 'metric',
-                            checked: true
+                            checked: true,
+                            //TODO: enable once we respect these options on the server
+                            disabled: true
                         },
                         items: [{
                             boxLabel: 'Total Reads / Window',
@@ -232,15 +234,23 @@ Ext4.onReady(function(){
                         columns: 1,
                         defaults: {
                             xtype: 'radio',
-                            name: 'modifier'
+                            name: 'orientation'
                         },
                         items: [{
                             boxLabel: 'Plot One Chromosome / Line',
-                            inputValue: 'chromosomePerLine',
+                            inputValue: 'vertical',
                             checked: true
                         },{
                             boxLabel: 'Plot All Chromosomes on Same Line',
-                            inputValue: 'oneLine'
+                            inputValue: 'horizontal'
+                        }]
+                    },{
+                        title: 'Step 3: Other Settings',
+                        items: [{
+                            xtype: 'checkbox',
+                            fieldLabel: 'Delete Raw Data',
+                            name: 'deleteRawData',
+                            checked: true
                         }]
                     }]
                 }],

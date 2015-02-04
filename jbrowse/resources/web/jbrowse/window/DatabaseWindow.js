@@ -144,6 +144,14 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
                                 allowBlank: false,
                                 value: win.libraryId
                             });
+
+                            toAdd.push({
+                                xtype: 'checkbox',
+                                fieldLabel: 'Temporary Session?',
+                                helpPopup: 'By default, custom sessions are deleted after 24H.  It is usually very quick to re-created them.  Uncheck this if you want to keep this session for a longer period of time',
+                                checked: true,
+                                name: 'isTemporary'
+                            });
                         }
                         else {
                             toAdd.push({

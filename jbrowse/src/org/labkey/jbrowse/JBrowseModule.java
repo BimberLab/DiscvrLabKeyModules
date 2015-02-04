@@ -54,7 +54,7 @@ public class JBrowseModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 13.37;
+        return 13.38;
     }
 
     @Override

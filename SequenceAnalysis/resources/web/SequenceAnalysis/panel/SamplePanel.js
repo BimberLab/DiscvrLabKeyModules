@@ -182,7 +182,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                 editor: {
                     xtype: 'labkey-combo',
                     allowBlank: true,
-                    editable: false,
+                    editable: true,
                     queryMode: 'local',
                     triggerAction: 'all',
                     forceSelection: true,
@@ -212,7 +212,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                 editor: {
                     xtype: 'combo',
                     allowBlank: true,
-                    editable: false,
+                    editable: true,
                     triggerAction: 'all',
                     forceSelection: true,
                     typeAhead: true,
@@ -268,7 +268,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     forceSelection: true,
                     displayField: 'platform',
                     valueField: 'platform',
-                    editable: false,
+                    editable: true,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
@@ -290,7 +290,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     displayField: 'application',
                     valueField: 'application',
                     plugins: ['ldk-usereditablecombo'],
-                    editable: false,
+                    editable: true,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
@@ -312,7 +312,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     displayField: 'type',
                     valueField: 'type',
                     plugins: ['ldk-usereditablecombo'],
-                    editable: false,
+                    editable: true,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
@@ -333,7 +333,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     displayField: 'type',
                     valueField: 'type',
                     plugins: ['ldk-usereditablecombo'],
-                    editable: false,
+                    editable: true,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'laboratory',
@@ -354,7 +354,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     displayField: 'material',
                     valueField: 'material',
                     plugins: ['ldk-usereditablecombo'],
-                    editable: false,
+                    editable: true,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',

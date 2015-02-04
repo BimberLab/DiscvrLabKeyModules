@@ -33,9 +33,9 @@ public class MarkDuplicatesWrapper extends PicardWrapper
         File outputBam = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".markduplicates.bam") : outputFile;
         List<String> params = new LinkedList<>();
         params.add("java");
+        params.add("-Xmx4g");
         params.add("-jar");
         params.add(getJar().getPath());
-
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
         params.add("INPUT=" + inputFile.getPath());
         params.add("OUTPUT=" + outputBam.getPath());

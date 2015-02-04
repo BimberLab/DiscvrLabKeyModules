@@ -72,7 +72,7 @@ public class TaskFileManagerImpl implements TaskFileManager
     {
         String path = FilenameUtils.normalize(file.getPath());
         String relPath = FileUtil.relativePath(_workLocation.getPath(), path);
-        _job.getLogger().debug("Adding sequence output file: " + relPath + " || " + path);
+        _job.getLogger().debug("Adding sequence output file: " + relPath + " || " + path + "||" + readsetId + "||" + analysisId + "||" + genomeId);
         if (relPath == null)
         {
             relPath = file.getPath();
@@ -365,6 +365,7 @@ public class TaskFileManagerImpl implements TaskFileManager
                 String line;
                 while ((line = reader.readLine()) != null)
                 {
+                    _job.getLogger().debug("line: [" + line + "]");
                     String[] tokens = StringUtils.split(line, '\t');
                     File f = new File(((FileAnalysisJobSupport)_job).getAnalysisDirectory(), tokens[0]);
                     if (!f.exists())
@@ -890,12 +891,19 @@ public class TaskFileManagerImpl implements TaskFileManager
     @Override
     public void addFinalOutputFile(File f)
     {
+        _job.getLogger().debug("adding final output: " + f.getPath());
+
         _finalOutputs.add(f);
     }
 
     @Override
     public void addFinalOutputFiles(Collection<File> files)
     {
+        for (File f : files)
+        {
+            _job.getLogger().debug("adding final output: " + f.getPath());
+        }
+
         _finalOutputs.addAll(files);
     }
 

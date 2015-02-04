@@ -15,6 +15,7 @@
 
 package org.labkey.sequenceanalysis;
 
+import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.SAMException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -53,6 +54,7 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.TSVWriter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -62,6 +64,7 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleHtmlView;
@@ -85,6 +88,8 @@ import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QueryService;
+import org.labkey.api.reader.FastaDataLoader;
+import org.labkey.api.reader.FastaLoader;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.IgnoresTermsOfUse;
@@ -154,6 +159,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -170,6 +176,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -813,7 +821,7 @@ public class SequenceAnalysisController extends SpringActionController
                             map.put("filePath", f.getPath());
                             map.put("container", getContainer().getId());
                             map.put("containerPath", getContainer().getPath());
-                            String basename = SequenceTaskHelper.getMinimalBaseName(fileName);
+                            String basename = SequenceTaskHelper.getUnzippedBaseName(fileName);
                             map.put("basename", basename);
 
                             if (distinctBasenames.contains(basename))
@@ -847,7 +855,7 @@ public class SequenceAnalysisController extends SpringActionController
                         map.put("container", getContainer().getId());
                         map.put("containerPath", getContainer().getPath());
 
-                        String basename = SequenceTaskHelper.getMinimalBaseName(d.getFile());
+                        String basename = SequenceTaskHelper.getUnzippedBaseName(d.getFile().getName());
                         map.put("basename", basename);
                         if (distinctBasenames.contains(basename))
                         {
@@ -3408,4 +3416,55 @@ public class SequenceAnalysisController extends SpringActionController
             _params = params;
         }
     }
+
+//    @RequiresPermissionClass(InsertPermission.class)
+//    @CSRF
+//    public class RestrictionSiteAction extends ApiAction<Object>
+//    {
+//        public ApiResponse execute(Object form, BindException errors) throws Exception
+//        {
+//            Map<String, Object> ret = new HashMap<>();
+//
+//            File refSeq = new File("/labkey_data/18_MacaM.fasta");
+//            try (FastaDataLoader loader = new FastaDataLoader(refSeq, false))
+//            {
+//                loader.setCharacterFilter(new FastaLoader.CharacterFilter()
+//                {
+//                    @Override
+//                    public boolean accept(char c)
+//                    {
+//                        return ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'));
+//                    }
+//                });
+//
+//                File pstOutput = new File("/labkey_data/PstI-sites-150.bed");
+//                File bglOutput = new File("/labkey_data/BglII-sites-150.bed");
+//                try (CSVWriter pstWriter = new CSVWriter(new FileWriter(pstOutput), '\t', CSVWriter.NO_QUOTE_CHARACTER);CSVWriter bglWriter = new CSVWriter(new FileWriter(bglOutput), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+//                {
+//                    try (CloseableIterator<Map<String, Object>> i = loader.iterator())
+//                    {
+//                        while (i.hasNext())
+//                        {
+//                            Map<String, Object> fastaRecord = i.next();
+//                            String name = (String) fastaRecord.get("header");
+//
+//                            Matcher m = Pattern.compile("CTGCAG", Pattern.CASE_INSENSITIVE).matcher((String) fastaRecord.get("sequence"));
+//                            while (m.find())
+//                            {
+//                                bglWriter.writeNext(new String[]{name, String.valueOf(Math.max(0, m.start() - 150)), String.valueOf(m.start() + 151)});
+//                            }
+//
+//                            Matcher m2 = Pattern.compile("AGATCT", Pattern.CASE_INSENSITIVE).matcher((String) fastaRecord.get("sequence"));
+//                            while (m2.find())
+//                            {
+//                                pstWriter.writeNext(new String[]{name, String.valueOf(Math.max(0, m2.start() - 150)), String.valueOf(m2.start() + 151)});
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//            return new ApiSimpleResponse(ret);
+//        }
+//    }
 }

@@ -36,6 +36,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.sequenceanalysis.analysis.CoverageDepthHandler;
+import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.button.GenomeLoadButton;
@@ -54,8 +55,8 @@ import org.labkey.sequenceanalysis.run.alignment.GSnapWrapper;
 import org.labkey.sequenceanalysis.run.alignment.LastzWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
 import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
-import org.labkey.sequenceanalysis.run.analysis.AlignmentMetricsAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
+import org.labkey.sequenceanalysis.run.analysis.BlastUnmappedReadAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
@@ -181,10 +182,12 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new SequenceBasedTypingAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new ViralAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new HaplotypeCallerAnalysis.Provider());
-        SequencePipelineService.get().registerPipelineStep(new AlignmentMetricsAnalysis.Provider());
+        //TODO
+        //SequencePipelineService.get().registerPipelineStep(new AlignmentMetricsAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new SnpCountAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.MethylationExtractorProvider());
         SequencePipelineService.get().registerPipelineStep(new UnmappedReadExportAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
     }
 
     @Override
@@ -240,6 +243,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
         SequenceAnalysisService.get().registerFileHandler(new CoverageDepthHandler());
+        SequenceAnalysisService.get().registerFileHandler(new GenotypeGVCFHandler());
 
         SystemMaintenance.addTask(new SequenceAnalyssiMaintenanceTask());
     }

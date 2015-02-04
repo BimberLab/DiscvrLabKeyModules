@@ -134,19 +134,6 @@ public class SequencePipelineSettings
         return ConvertHelper.convert(v, Integer.class);
     }
 
-    public String getBasename(String filename)
-    {
-        String basename;
-        if (isDoMerge()){
-            basename = _params.get("inputfile.merge.basename");
-        }
-        else {
-            basename = SequenceTaskHelper.getMinimalBaseName(filename);
-        }
-
-        return basename;
-    }
-
     public boolean doAutoCreateReadsets()
     {
         return "true".equals(_params.get("autoCreateReadsets"));
@@ -183,16 +170,6 @@ public class SequencePipelineSettings
         return barcodes;
     }
 
-    public boolean isDoMerge()
-    {
-        return ("true".equals(_params.get("inputfile.merge")));
-    }
-
-    public String getMergeFilename()
-    {
-        return _params.get("inputfile.merge.basename") + ".fastq";
-    }
-
     public boolean isDoBarcode()
     {
         return ("true".equals(_params.get("inputfile.barcode")));
@@ -203,36 +180,9 @@ public class SequencePipelineSettings
         return ("true".equals(_params.get("inputfile.runFastqc")));
     }
 
-    @NotNull
-    public List<String> getBarcodeGroupsToScan()
-    {
-        String json = _params.get("inputfile.barcodeGroups");
-        if (json == null)
-            return Collections.emptyList();
-
-        JSONArray array = new JSONArray(json);
-        List<String> ret = new ArrayList<>();
-        for (Object o : array.toArray())
-        {
-            ret.add((String)o);
-        }
-
-        return ret;
-    }
-
-    public BarcodeModel[] getAdditionalBarcodes()
-    {
-        if (!getBarcodeGroupsToScan().isEmpty())
-        {
-            return BarcodeModel.getByGroups(getBarcodeGroupsToScan());
-        }
-
-        return null;
-    }
-
     public Map<String, String> getParams()
     {
-        return _params;
+        return Collections.unmodifiableMap(_params);
     }
 
     public boolean isDebugMode()

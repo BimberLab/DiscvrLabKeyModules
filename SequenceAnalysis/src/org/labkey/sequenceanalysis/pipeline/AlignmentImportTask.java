@@ -18,6 +18,7 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
@@ -155,6 +156,10 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
 
                     a.setAlignmentFile(movedDataId.getRowId());
                     a.setLibrary_id(o.getInt("library_id"));
+
+                    TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
+                    Integer refFastaId = new TableSelector(ti, PageFlowUtil.set("fasta_file")).getObject(o.getInt("library_id"), Integer.class);
+                    a.setReferenceLibrary(refFastaId);
                     a.setContainer(getJob().getContainer().getId());
                     a.setCreated(new Date());
                     a.setCreatedby(getJob().getUser().getUserId());

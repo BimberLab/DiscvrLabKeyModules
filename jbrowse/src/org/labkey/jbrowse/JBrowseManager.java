@@ -108,12 +108,12 @@ public class JBrowseManager
         return true;
     }
 
-    public void createDatabase(Container c, User u, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds) throws IOException
+    public void createDatabase(Container c, User u, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, boolean isPrimaryDb, boolean shouldCreateOwnIndex, boolean isTemporary) throws IOException
     {
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            PipelineService.get().queueJob(JBrowseSessionPipelineJob.createNewDatabase(c, u, root, name, description, libraryId, trackIds, outputFileIds));
+            PipelineService.get().queueJob(JBrowseSessionPipelineJob.createNewDatabase(c, u, root, name, description, libraryId, trackIds, outputFileIds, isPrimaryDb, shouldCreateOwnIndex, isTemporary));
         }
         catch (PipelineValidationException e)
         {

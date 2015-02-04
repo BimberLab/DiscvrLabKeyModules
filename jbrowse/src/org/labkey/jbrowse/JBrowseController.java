@@ -133,7 +133,7 @@ public class JBrowseController extends SpringActionController
 
             try
             {
-                JBrowseManager.get().createDatabase(getContainer(), getUser(), form.getName(), form.getDescription(), form.getLibraryId(), form.getTrackIdList(), form.getOutputFileIdList());
+                JBrowseManager.get().createDatabase(getContainer(), getUser(), form.getName(), form.getDescription(), form.getLibraryId(), form.getTrackIdList(), form.getOutputFileIdList(), form.getIsPrimaryDb(), form.getShouldCreateOwnIndex(), form.getIsTemporary());
             }
             catch (IOException e)
             {
@@ -185,6 +185,9 @@ public class JBrowseController extends SpringActionController
         Integer[] _trackIds;
         Integer _libraryId;
         Integer[] _outputFileIds;
+        Boolean _isPrimaryDb;
+        Boolean _shouldCreateOwnIndex;
+        Boolean _isTemporary;
 
         public String getDatabaseId()
         {
@@ -264,6 +267,36 @@ public class JBrowseController extends SpringActionController
         public void setOutputFileIds(Integer[] outputFileIds)
         {
             _outputFileIds = outputFileIds;
+        }
+
+        public Boolean getIsPrimaryDb()
+        {
+            return _isPrimaryDb == null ? false : _isPrimaryDb;
+        }
+
+        public void setIsPrimaryDb(Boolean isPrimaryDb)
+        {
+            _isPrimaryDb = isPrimaryDb;
+        }
+
+        public Boolean getShouldCreateOwnIndex()
+        {
+            return _shouldCreateOwnIndex == null ? false : _shouldCreateOwnIndex;
+        }
+
+        public void setShouldCreateOwnIndex(Boolean shouldCreateOwnIndex)
+        {
+            _shouldCreateOwnIndex = shouldCreateOwnIndex;
+        }
+
+        public Boolean getIsTemporary()
+        {
+            return _isTemporary == null ? false : _isTemporary;
+        }
+
+        public void setIsTemporary(Boolean isTemporary)
+        {
+            _isTemporary = isTemporary;
         }
     }
 

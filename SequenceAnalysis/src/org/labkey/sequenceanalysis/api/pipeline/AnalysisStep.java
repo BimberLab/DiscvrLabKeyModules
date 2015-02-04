@@ -25,14 +25,12 @@ public interface AnalysisStep extends PipelineStep
     /**
      * Will perform analysis steps on the remote pipeline server
      */
-    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome) throws PipelineJobException;
+    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException;
 
     /**
      * Will perform analysis steps on the local webserver
      */
     public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException;
-
-    public void performAnalysisOnAll(List<AnalysisModel> analysisModels) throws PipelineJobException;
 
     public interface Output extends PipelineStepOutput
     {

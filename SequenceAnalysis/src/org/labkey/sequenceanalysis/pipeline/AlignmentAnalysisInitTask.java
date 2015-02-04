@@ -1,24 +1,38 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by bimber on 8/8/2014.
  */
 public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalysisInitTask.Factory>
 {
+    private SequenceTaskHelper _taskHelper;
+
     protected AlignmentAnalysisInitTask(Factory factory, PipelineJob job)
     {
         super(factory, job);
@@ -64,13 +78,16 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
         }
     }
 
+    public SequenceTaskHelper getTaskHelper()
+    {
+        return _taskHelper;
+    }
+
     public RecordedActionSet run() throws PipelineJobException
     {
-        SequenceTaskHelper taskHelper = new SequenceTaskHelper(getJob(), _wd);
-        AlignmentAnalysisWorkTask.Helper analysisHelper = new AlignmentAnalysisWorkTask.Helper(taskHelper);
-        analysisHelper.cacheAnalysisModels();
+        _taskHelper = new SequenceTaskHelper(getJob(), _wd);
+        List<AnalysisModel> models = cacheAnalysisModels();
 
-        List<AnalysisModel> models = new ArrayList<>(analysisHelper.getAnalysisMap().values());
         List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
         if (providers.isEmpty())
         {
@@ -80,10 +97,49 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
         getJob().getLogger().info("Preparing for analysis");
         for (PipelineStepProvider<AnalysisStep> provider : providers)
         {
-            AnalysisStep step = provider.create(taskHelper);
+            AnalysisStep step = provider.create(getTaskHelper());
             step.init(models);
         }
 
         return new RecordedActionSet();
+    }
+
+    public List<AnalysisModel> cacheAnalysisModels() throws PipelineJobException
+    {
+        List<AnalysisModel> ret = new ArrayList<>();
+        for (String key : getTaskHelper().getJob().getParameters().keySet())
+        {
+            if (key.startsWith("sample_"))
+            {
+                JSONObject o = new JSONObject(getTaskHelper().getJob().getParameters().get(key));
+                Integer analysisId = o.getInt("analysisid");
+                AnalysisModel m = AnalysisModelImpl.getFromDb(analysisId, getTaskHelper().getJob().getUser());
+                ExpData d = m.getAlignmentData();
+                if (d == null)
+                {
+                    getTaskHelper().getLogger().error("Analysis lacks an alignment file: " + m.getRowId());
+                    continue;
+                }
+
+                ret.add(m);
+            }
+        }
+
+        getTaskHelper().getLogger().debug("caching " + ret.size() + " analyses for use on remote server");
+        for (AnalysisModel m : ret)
+        {
+            getTaskHelper().getSequenceSupport().cacheExpData(m.getAlignmentData());
+            getTaskHelper().getSequenceSupport().cacheExpData(m.getReferenceLibraryData());
+            ((SequenceAnalysisJob)getTaskHelper().getSequenceSupport()).cacheAnalysis(m);
+
+            ReadsetModel rs = ReadsetModel.getForId(m.getReadset(), getJob().getUser());
+            ((SequenceAnalysisJob)getTaskHelper().getSequenceSupport()).cacheReadset(rs);
+
+            ReferenceGenome rg = ReferenceGenomeImpl.getForId(m.getLibraryId(), getJob().getUser());
+            ((SequenceAnalysisJob)getTaskHelper().getSequenceSupport()).cacheGenome(rg);
+            (getTaskHelper().getSequenceSupport()).cacheExpData(ExperimentService.get().getExpData(rg.getFastaExpDataId()));
+        }
+
+        return ret;
     }
 }

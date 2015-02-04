@@ -46,6 +46,9 @@
                     <property name="location" value="webserver" />
                     <property name="join" value="true" />
                 </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisRemoteWorkTask$Factory">
+                    <property name="join" value="false" />
+                </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisCleanupTask$Factory">
                     <property name="location" value="webserver" />
                     <property name="join" value="true" />
@@ -160,6 +163,7 @@
                         <list>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisInitTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisWorkTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisRemoteWorkTask</value>
                             <ref bean="xarGeneratorJoin"/>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisCleanupTask</value>
                         </list>
@@ -191,6 +195,20 @@
                         </list>
                     </property>
                 </bean>
+                <bean class="org.labkey.api.pipeline.file.FileAnalysisTaskPipelineSettings">
+                    <constructor-arg value="sequenceOutputImportPipeline"/>
+                    <property name="analyzeURL" value="/sequenceAnalysis/sequenceOutputImport.view" />
+                    <property name="description" value="Import selected files as sequence outputs."/>
+                    <property name="protocolName" value="Sequence Output Import" />
+                    <property name="protocolFactoryName" value="sequenceOutputImportPipeline"/>
+                    <property name="defaultDisplayState" value="enabled"/>
+                    <property name="initialInputExt" ref="sequenceOutputFileType" />
+                    <property name="taskProgressionSpec">
+                        <list>
+
+                        </list>
+                    </property>
+                </bean>
             </list>
         </property>
     </bean>
@@ -214,6 +232,8 @@
     <bean id="nucleotideInputFileType" class="org.labkey.sequenceanalysis.util.NucleotideSequenceFileType" />
 
     <bean id="fastqFileType" class="org.labkey.sequenceanalysis.util.FastqFileType" />
+
+    <bean id="sequenceOutputFileType" class="org.labkey.sequenceanalysis.util.SequenceOutputFileType" />
 
     <bean id="csvFileType" class="org.labkey.api.util.FileType">
         <constructor-arg value=".csv"/>

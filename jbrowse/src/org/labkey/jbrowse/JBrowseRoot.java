@@ -694,23 +694,79 @@ public class JBrowseRoot
         writeJsonToFile(new File(outDir, "tracks.conf"), "");
 
         File namesDir = new File(outDir, "names");
-        if (!namesDir.exists())
-            namesDir.mkdirs();
-
-        List<String> args = new ArrayList<>(Arrays.asList("--out", outDir.getPath()));
-        if (JBrowseManager.get().compressJSON())
+        File existingNamesDir = getExistingNamesDir(databaseId);
+        if (existingNamesDir != null)
         {
-            args.add("--compress");
+            getLogger().info("reusing existing search index: " + existingNamesDir.getPath());
+            if (namesDir.exists())
+            {
+                safeDeleteDiretory(namesDir);
+            }
+
+            createSymlink(namesDir, existingNamesDir);
+        }
+        else
+        {
+            if (!namesDir.exists())
+            {
+                namesDir.mkdirs();
+            }
+
+            List<String> args = new ArrayList<>(Arrays.asList("--out", outDir.getPath()));
+            if (JBrowseManager.get().compressJSON())
+            {
+                args.add("--compress");
+            }
+
+            args.add("--verbose");
+            args.add("--mem");
+            args.add("512000000");
+
+            args.add("--completionLimit");
+            args.add("100");
+
+            runScript("generate-names.pl", args);
+        }
+    }
+
+    private File getExistingNamesDir(String databaseId)
+    {
+        TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("libraryId", "createOwnIndex", "primaryDb"), new SimpleFilter(FieldKey.fromString("objectid"), databaseId), null);
+        Map<String, Object> map = ts.getMap();
+        if (map == null)
+        {
+            return null;
         }
 
-        args.add("--verbose");
-        args.add("--mem");
-        args.add("512000000");
+        if (map.get("createOwnIndex") == true || map.get("primaryDb") == true)
+        {
+            return null;
+        }
 
-        args.add("--completionLimit");
-        args.add("100");
+        SimpleFilter referenceFilter = new SimpleFilter(FieldKey.fromString("libraryId"), map.get("libraryId"));
+        referenceFilter.addCondition(FieldKey.fromString("primarydb"), true);
+        TableSelector referenceTs = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("objectid", "container"), referenceFilter, null);
+        Map<String, Object> refMap = referenceTs.getObject(Map.class);
+        if (refMap == null)
+        {
+            return null;
+        }
 
-        runScript("generate-names.pl", args);
+        Container refContainer = ContainerManager.getForId((String)refMap.get("container"));
+        if (refContainer == null)
+        {
+            _log.error("unable to find container matching: " + refMap.get("container"));
+            return null;
+        }
+
+        File ret = new File(getDatabaseDir(refContainer), refMap.get("objectid") + "/names");
+        if (!ret.exists())
+        {
+            _log.error("expected directory does not exist: " + ret.getPath());
+            return null;
+        }
+
+        return ret;
     }
 
     private File getTrackListForOutputFile(JsonFile json)

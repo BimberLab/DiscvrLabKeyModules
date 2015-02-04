@@ -101,7 +101,7 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
             File libraryDir = SequenceAnalysisManager.get().getReferenceLibraryDir(c);
             if (libraryDir != null && libraryDir.exists())
             {
-                TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
+                TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
                 TableSelector ts = new TableSelector(ti, Collections.singleton("rowid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
                 Set<String> expectedLibraries = new HashSet<>();
                 for (Integer rowId : ts.getArrayList(Integer.class))

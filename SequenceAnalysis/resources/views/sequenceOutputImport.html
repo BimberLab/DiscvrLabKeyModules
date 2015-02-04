@@ -1,0 +1,200 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+
+        Ext4.define('SequenceAnalysis.panel.OutputfileImportPanel', {
+            extend: 'Ext.grid.Panel',
+
+            initComponent: function(){
+                Ext4.apply(this, {
+                    width: '100%',
+                    minHeight: 200,
+                    cls: 'ldk-grid',
+                    editingPluginId: 'cellediting',
+                    plugins: [Ext4.create('LDK.grid.plugin.CellEditing', {
+                        pluginId: 'cellediting',
+                        clicksToEdit: 1
+                    })],
+                    multiSelect: true,
+                    border: true,
+                    stripeRows: true,
+                    enableHdMenu: false,
+                    selType: 'rowmodel',
+                    store: Ext4.create('Ext.data.ArrayStore', {
+                        fields: [
+                            {name: 'outputFile', allowBlank: false},
+                            {name: 'name', allowBlank: false},
+                            {name: 'description'},
+                            {name: 'category'},
+                            {name: 'libraryId', allowBlank: false},
+                            {name: 'readset'}
+                        ],
+                        validations: [
+                            {type: 'presence', field: 'outputFile'},
+                            {type: 'presence', field: 'name'},
+                            {type: 'presence', field: 'libraryId'}
+                        ],
+                        storeId: 'metadata'
+                    }),
+                    tbar: [{
+                        text: 'Bulk Edit',
+                        tooltip: 'Click this to change values on all checked rows in bulk',
+                        scope: this,
+                        handler : function(btn){
+                            var grid = btn.up('grid');
+                            var s = grid.getSelectionModel().getSelection();
+                            if (!s.length){
+                                Ext4.Msg.alert('Error', 'No rows selected');
+                                return;
+                            }
+
+                            Ext4.create('LDK.window.GridBulkEditWindow', {
+                                targetGrid: this
+                            }).show(btn);
+                        }
+                    }],
+                    columns: [{
+                        name: 'outputFile',
+                        text: 'File',
+                        tdCls: 'ldk-wrap-text',
+                        width: 275,
+                        dataIndex: 'outputFile',
+                        editor: false
+                    },{
+                        name: 'name',
+                        text: 'Name',
+                        tdCls: 'ldk-wrap-text',
+                        width: 275,
+                        dataIndex: 'name',
+                        editor: {
+                            xtype: 'textfield',
+                            allowBlank: false
+                        }
+                    },{
+                        name: 'description',
+                        text: 'Description',
+                        tdCls: 'ldk-wrap-text',
+                        width: 275,
+                        dataIndex: 'description',
+                        editor: {
+                            xtype: 'textarea',
+                            allowBlank: false
+                        }
+                    },{
+                        name: 'category',
+                        text: 'Category',
+                        tdCls: 'ldk-wrap-text',
+                        width: 275,
+                        dataIndex: 'category',
+                        editor: {
+                            xtype: 'ldk-simplelabkeycombo',
+                            name: 'category',
+                            containerPath: Laboratory.Utils.getQueryContainerPath(),
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'outputfile_categories',
+                            plugins: ['ldk-usereditablecombo'],
+                            displayField: 'category',
+                            valueField: 'category'
+                        }
+                    },{
+                        name: 'libraryId',
+                        text: 'Reference Genome',
+                        tdCls: 'ldk-wrap-text',
+                        width: 275,
+                        dataIndex: 'libraryId',
+                        editor: {
+                            xtype: 'ldk-simplelabkeycombo',
+                            name: 'libraryId',
+                            containerPath: Laboratory.Utils.getQueryContainerPath(),
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'reference_libraries',
+                            displayField: 'name',
+                            valueField: 'rowid',
+                            value: LABKEY.ActionURL.getParameter('libraryId') ? parseInt(LABKEY.ActionURL.getParameter('libraryId')) : null,
+                            allowBlank: false
+                        }
+                    },{
+                        text: 'Readset',
+                        tdCls: 'ldk-wrap-text',
+                        name: 'readset',
+                        queryMode: 'local',
+                        dataIndex: 'readset',
+                        width: 200,
+                        editable: true,
+                        renderer: function(value, cellMetaData, record, rowIndex, colIndex, store){
+
+
+                            return value;
+                        },
+                        editor: {
+                            xtype: 'sequenceanalysis-readsetfield',
+                            fieldLabel: null,
+
+                            allowBlank: true
+                        }
+                    }],
+                    buttonAlign: 'left',
+                    buttons: [{
+                        text: 'Submit',
+                        scope: this,
+                        handler: this.onSubmit
+                    }]
+                });
+
+                this.callParent(arguments);
+
+                Ext4.Array.forEach(this.fileNames, function(fn){
+                    this.store.add(this.store.createModel({
+                        outputFile: fn
+                    }));
+                }, this);
+
+                this.on('afterrender', this.updateColWidth, this, {single: true});
+                this.on('columnresize', this.updateColWidth, this);
+            },
+
+            updateColWidth: function(){
+                var width = 20;
+                Ext4.Array.forEach(this.columns, function(c){
+                    if (c.isVisible()){
+                        width += c.getWidth();
+                    }
+                }, this);
+
+                this.updateWidth(width);
+            },
+
+            updateWidth: function(){
+                this.reconfigure();
+
+                var width = 20;
+                Ext4.Array.forEach(this.columns, function(col){
+                    if (col.width){
+                        if (!col.hidden)
+                            width += col.width;
+                    }
+                    else {
+                        console.log('no width');
+                    }
+                }, this);
+
+                this.minWidth = width;
+            },
+
+            onSubmit: function(){
+                var errors;
+                this.store.each(function(r){
+                    errors = r.validate();
+                    console.log(errors);
+                }, this);
+            }
+        });
+
+    Ext4.create('SequenceAnalysis.panel.OutputfileImportPanel', {
+        path : LABKEY.ActionURL.getParameter("path"),
+        fileNames : LABKEY.ActionURL.getParameterArray("file") || []
+    }).render(<%=webpartContext%>.wrapperDivId);
+});
+
+
+</script>

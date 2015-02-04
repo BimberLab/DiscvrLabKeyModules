@@ -126,14 +126,8 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
     }
 
     @Override
-    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome) throws PipelineJobException
+    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         return null;
-    }
-
-    @Override
-    public void performAnalysisOnAll(List<AnalysisModel> analysisModels) throws PipelineJobException
-    {
-
     }
 }

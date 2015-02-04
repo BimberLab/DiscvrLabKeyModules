@@ -9,7 +9,7 @@ Ext4.define('SequenceAnalysis.field.ReadsetField', {
             schemaName: 'sequenceanalysis',
             queryName: 'sequence_readsets',
             displayField: 'name',
-            valueField: 'rowid',
+            valueField: 'rowid'
         });
 
         this.listConfig = this.listConfig || {};

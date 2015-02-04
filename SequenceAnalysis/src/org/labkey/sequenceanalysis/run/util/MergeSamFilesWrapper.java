@@ -106,6 +106,7 @@ public class MergeSamFilesWrapper extends PicardWrapper
     {
         List<String> params = new LinkedList<>();
         params.add("java");
+        params.add("-Xmx4g");
         params.add("-jar");
         params.add(getJar().getPath());
 

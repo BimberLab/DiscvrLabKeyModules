@@ -1,6 +1,5 @@
 package org.labkey.sequenceanalysis;
 
-import com.google.common.collect.Sets;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
@@ -38,6 +37,7 @@ import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.MergedDirectoryResource;
 import org.labkey.api.resource.Resource;
@@ -50,12 +50,11 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.TestContext;
 import org.labkey.api.view.ViewServlet;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
-import org.labkey.sequenceanalysis.run.util.IndelRealignerWrapper;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -1221,8 +1220,8 @@ public class TestHelper
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
             config.put("alignment", "Mosaik");
             config.put("alignment.Mosaik.max_mismatch_pct", 0.20);  //this is primary here to ensure it doesnt get copied into the build command.  20% should include everything
-            config.put("analysis", "SBT;ViralAnalysis;AlignmentMetricsAnalysis;SnpCountAnalysis");
-            config.put("analysis.AlignmentMetricsAnalysis.windowSize", 1000);
+            config.put("analysis", "SBT;ViralAnalysis;SnpCountAnalysis"); //AlignmentMetricsAnalysis;
+            //config.put("analysis.AlignmentMetricsAnalysis.windowSize", 1000);
             config.put("analysis.SnpCountAnalysis.intervals", "SIVmac239:5500-5600\nSIVmac239:9700-9900\nSIVmac239:10000-10020");
 
             appendSamples(config, _readsetModels);
@@ -2221,7 +2220,7 @@ public class TestHelper
             //otherwise create saved library
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
             filter.addCondition(FieldKey.fromString("container"), ContainerManager.getSharedContainer().getId());
-            Integer mac239Id = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("rowid"), filter, null).getObject(Integer.class);
+            Integer mac239Id = new TableSelector(QueryService.get().getUserSchema(_context.getUser(), _project, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("rowid"), filter, null).getObject(Integer.class);
             ReferenceLibraryPipelineJob libraryJob = SequenceAnalysisManager.get().createReferenceLibrary(Arrays.asList(mac239Id), _project, _context.getUser(), libraryName, null);
             waitForJob(libraryJob);
 
@@ -2604,6 +2603,165 @@ public class TestHelper
             //validateAlignment(bam1, 18, 0);  //has also been 40??
             //validateAlignment(bam2, 151, 0);  //sometimes is 72?
             //validateAlignment(bam3, 150, 0); //sometimes 77?
+        }
+
+        ////@Test
+        public void testGSnap() throws Exception
+        {
+            if (!isExternalPipelineEnabled())
+                return;
+
+            String protocolName = "TestGSnap_" + System.currentTimeMillis();
+            String[] fileNames = getFilenamesForReadsets();
+            JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
+            config.put("alignment", "GSnap");
+            appendSamples(config, _readsetModels);
+
+            PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
+            waitForJob(job);
+
+            Set<File> expectedOutputs = new HashSet<>();
+            File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
+            expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
+
+            expectedOutputs.add(new File(basedir, "Shared"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
+
+            expectedOutputs.add(new File(basedir, "Shared/GSnap"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.maps"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.chromosome"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.chromosome.iit"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.chrsubset"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.contig"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.contig.iit"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.genomebits128"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.genomecomp"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.ref123offsets64meta"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.ref123offsets64strm"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.ref123positions"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.sachildexc"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.sachildguide1024"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.saindex64meta"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.saindex64strm"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.salcpchilddc"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.salcpexc"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.salcpguide1024"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.sarray"));
+            expectedOutputs.add(new File(basedir, "Shared/GSnap/GSnap.version"));
+
+            expectedOutputs.add(new File(basedir, "paired1"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
+            expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
+            //expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.gsnap.concordant_mult.bam"));
+            //expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.gsnap.halfmapping_mult.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.gsnap.halfmapping_uniq.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.gsnap.nomapping.bam"));
+            //expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.gsnap.paired_mult.bam"));
+            //expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.gsnap.unpaired_mult.bam"));
+            //expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.gsnap.unpaired_uniq.bam"));
+
+            expectedOutputs.add(new File(basedir, "paired3"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
+            expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.gsnap.nomapping.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.gsnap.unpaired_mult.bam"));
+
+            expectedOutputs.add(new File(basedir, "paired4"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
+            expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.gsnap.nomapping.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.gsnap.unpaired_mult.bam"));
+
+            validateInputs();
+
+            //this is probably due to adapters
+            verifyFileOutputs(basedir, expectedOutputs);
+            validateAlignment(bam1, 316, 106);
+            validateAlignment(bam2, 152, 59);
+            validateAlignment(bam3, 152, 59);
+        }
+
+        ////@Test
+        public void testStar() throws Exception
+        {
+            if (!isExternalPipelineEnabled())
+                return;
+
+            String protocolName = "TestStar_" + System.currentTimeMillis();
+            String[] fileNames = getFilenamesForReadsets();
+            JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
+            config.put("alignment", "STAR");
+            appendSamples(config, _readsetModels);
+
+            PipelineJob job = createPipelineJob(protocolName, ANALYSIS_TASKID, config.toString(), fileNames);
+            waitForJob(job);
+
+            Set<File> expectedOutputs = new HashSet<>();
+            File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
+            expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, protocolName + ".log"));
+            expectedOutputs.add(new File(basedir, "paired1.log"));
+            expectedOutputs.add(new File(basedir, "paired3.log"));
+            expectedOutputs.add(new File(basedir, "paired4.log"));
+
+            expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
+
+            expectedOutputs.add(new File(basedir, "Shared"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
+            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
+
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie"));
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie/SIVmac239.bowtie.index.1.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie/SIVmac239.bowtie.index.2.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie/SIVmac239.bowtie.index.3.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie/SIVmac239.bowtie.index.4.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie/SIVmac239.bowtie.index.rev.1.ebwt"));
+            expectedOutputs.add(new File(basedir, "Shared/Bowtie/SIVmac239.bowtie.index.rev.2.ebwt"));
+
+            expectedOutputs.add(new File(basedir, "paired1"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment"));
+            File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
+            expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned_1.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned_2.fastq"));
+
+            expectedOutputs.add(new File(basedir, "paired3"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment"));
+            File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
+            expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bowtie.unaligned.fastq"));
+
+            expectedOutputs.add(new File(basedir, "paired4"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment"));
+            File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
+            expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bowtie.unaligned.fastq"));
+
+            validateInputs();
+
+            //this is probably due to adapters
+            verifyFileOutputs(basedir, expectedOutputs);
+            validateAlignment(bam1, 0, 422);
+            validateAlignment(bam2, 155, 56);
+            validateAlignment(bam3, 154, 57);
         }
 
         // this was added because bismark isnt deterministic in the number of outputs it creates.  for the time being it is

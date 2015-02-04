@@ -2,15 +2,24 @@ package org.labkey.sequenceanalysis.analysis;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.filter.AggregateFilter;
 import htsjdk.samtools.filter.AlignedFilter;
+import htsjdk.samtools.filter.DuplicateReadFilter;
+import htsjdk.samtools.filter.FilteringIterator;
 import htsjdk.samtools.filter.NotPrimaryAlignmentFilter;
+import htsjdk.samtools.filter.SamRecordFilter;
+import htsjdk.samtools.filter.SecondaryOrSupplementaryFilter;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
+import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
@@ -21,6 +30,7 @@ import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -35,6 +45,8 @@ import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.SequenceOutputHandler;
+import org.labkey.api.settings.AppProps;
+import org.labkey.api.util.Compress;
 import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -120,6 +132,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
     public void processFiles(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
     {
         CoverageSettings settings = new CoverageSettings(params);
+        Set<File> rawDataFiles = new HashSet<>();
         try
         {
             Map<SequenceOutputFile, RecordedAction> actionMap = new HashMap<>();
@@ -149,19 +162,22 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                 File intervalsFile = windowStrategy.getWindowBedForOutput(outputFile);
 
                 action.addInput(bam, "Input BAM");
-                action.addInput(intervalsFile, "Windows File");
+                action.addInput(getFinalFilename(intervalsFile, settings), "Windows File");
+                rawDataFiles.add(intervalsFile);
 
                 List<Interval> intervalList = SequenceUtil.bedToIntervalList(intervalsFile);
 
                 job.getLogger().info("generating raw data for: " + outputFile.getName());
                 File rawDataFile = new File(outputDir, getBaseNameForFile(outputFile) + ".coverage.txt");
                 generateRawDataForOutput(bam, intervalList, rawDataFile);
-                action.addOutput(rawDataFile, "Coverage Data", false);
+                action.addOutput(getFinalFilename(rawDataFile, settings), "Coverage Data", settings.deleteRawData());
+                rawDataFiles.add(rawDataFile);
 
                 job.getLogger().info("generating coverage-normalized data for: " + outputFile.getName());
                 File normalizedDataFile = new File(outputDir, getBaseNameForFile(outputFile) + ".normalizedCoverage.txt");
                 generateNormalizedDataForOutput(rawDataFile, normalizedDataFile);
-                action.addOutput(normalizedDataFile, "Coverage Data - Normalized To Avg", false);
+                action.addOutput(getFinalFilename(normalizedDataFile, settings), "Coverage Data - Normalized To Avg", settings.deleteRawData());
+                rawDataFiles.add(normalizedDataFile);
 
                 normalizedDataMap.put(outputFile, normalizedDataFile);
                 rawDataMap.put(outputFile, rawDataFile);
@@ -177,19 +193,27 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                 job.getLogger().info("using reference sample: " + referenceSample.getName());
                 Map<String, MetricLine> referenceData = readDataToMemory(rawDataMap.get(referenceSample));
 
+                //get read count for reference
+                long refReadCount = getReadCount(referenceSample);
+                job.getLogger().info("total reads in reference sample: " + refReadCount);
+
                 //iterate original data and augment
                 for (SequenceOutputFile outputFile : inputFiles)
                 {
                     job.getLogger().info("generating reference-normalized data for: " + outputFile.getName());
                     File normalizedToReference = new File(outputDir, getBaseNameForFile(outputFile) + ".normalizedToSample.txt");
                     File rawData = rawDataMap.get(outputFile);
-                    generateNormalizedDataForSample(job, rawData, normalizedToReference, referenceData);
-                    actionMap.get(outputFile).addOutput(normalizedToReference, "Coverage Data - Normalized To Reference Sample", false);
+                    long sampleReadCount = getReadCount(outputFile);
+                    job.getLogger().info("total reads in BAM: " + sampleReadCount);
+                    generateNormalizedDataForSample(job, rawData, normalizedToReference, referenceData, refReadCount, sampleReadCount);
+                    actionMap.get(outputFile).addOutput(getFinalFilename(normalizedToReference, settings), "Coverage Data - Normalized To Reference Sample", settings.deleteRawData());
+                    rawDataFiles.add(normalizedToReference);
                     normalizedToSampleMap.put(outputFile, normalizedToReference);
                 }
             }
 
             //step 5: generate graph/html
+            boolean vertical = params.containsKey("orientation") && "vertical".equals(params.getString("orientation"));
             for (SequenceOutputFile outputFile : inputFiles)
             {
                 job.getLogger().info("generating graphs for: " + outputFile.getName());
@@ -208,18 +232,26 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                         writer.write("<tr><td><a href='#normalizedToSample'>Section 3: Data Normalized to Another Sample</a></td></tr>");
                     }
 
-                    writer.write("<tr><td><a href='" + windowStrategy.getWindowBedForOutput(outputFile).getName() +"'>Download Window Borders</a></td></tr>");
+                    String urlBase = AppProps.getInstance().getBaseServerUrl() + AppProps.getInstance().getContextPath() + "/_webdav" + job.getContainer().getPath() + "/@files/sequenceOutputPipeline/" + outputDir.getName() + "/";
+
+                    if (!settings.deleteRawData())
+                    {
+                        writer.write("<tr><td><a href='" + urlBase + windowStrategy.getWindowBedForOutput(outputFile).getName() + "'>Download Window Borders</a></td></tr>");
+                    }
                     writer.write("</table><p><hr>");
 
                     //section 1: raw data
                     writer.write("<h3 id='rawValues'>Section 1: Raw Data</h3><p>");
-                    writer.write("<a href='" + rawDataMap.get(outputFile).getName() +"'>Download Data</a><p>");
+                    if (!settings.deleteRawData())
+                    {
+                        writer.write("<a href='" + urlBase + rawDataMap.get(outputFile).getName() + "'>Download Data</a><p>");
+                    }
 
                     for (MetricDescriptor m : getMetricDescriptors().values())
                     {
                         //run R, generate graph
                         File graph = new File(outputDir, getBaseNameForFile(outputFile) + "_" + m.getColumnHeader() + ".png");
-                        runScript(job, graph, outputDir, rawDataMap.get(outputFile), m.getColumnHeader(), m.getLabel(), "Count");
+                        runScript(job, graph, outputDir, rawDataMap.get(outputFile), m.getColumnHeader(), m.getLabel(), "Count", vertical);
 
                         String encoded = Base64.encodeBase64String(FileUtils.readFileToByteArray(graph));
                         writer.write("<h3 id=\"" + m.getColumnHeader() + "\">" + m.getLabel() + "<h3>");
@@ -231,13 +263,16 @@ public class CoverageDepthHandler implements SequenceOutputHandler
 
                     //section 2: normalized
                     writer.write("<h3 id='normalizedToChromosome'>Section 2: Normalized To The Avg. Per Chromosome</h3><p>");
-                    writer.write("<a href='" + normalizedDataMap.get(outputFile).getName() +"'>Download Data</a><p>");
+                    if (!settings.deleteRawData())
+                    {
+                        writer.write("<a href='" + urlBase + normalizedDataMap.get(outputFile).getName() + "'>Download Data</a><p>");
+                    }
 
                     for (MetricDescriptor m : getMetricDescriptors().values())
                     {
                         String header = m.getColumnHeader() + "NormalizedToAvg";
                         File graph = new File(outputDir, getBaseNameForFile(outputFile) + "_" + header + ".png");
-                        runScript(job, graph, outputDir, normalizedDataMap.get(outputFile), header, m.getLabel(), "Value");
+                        runScript(job, graph, outputDir, normalizedDataMap.get(outputFile), header, m.getLabel(), "Value", vertical);
 
                         String encoded = Base64.encodeBase64String(FileUtils.readFileToByteArray(graph));
                         writer.write("<h3 id=\"" + header + "\">" + m.getLabel() + ", Normalized To Average Over Chromosome</h3>");
@@ -246,7 +281,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
 
                         header = m.getColumnHeader() + "NormalizedToAvgWithCoverage";
                         graph = new File(outputDir, getBaseNameForFile(outputFile) + "_" + header + ".png");
-                        runScript(job, graph, outputDir, normalizedDataMap.get(outputFile), header, m.getLabel(), "Value");
+                        runScript(job, graph, outputDir, normalizedDataMap.get(outputFile), header, m.getLabel(), "Value", vertical);
 
                         encoded = Base64.encodeBase64String(FileUtils.readFileToByteArray(graph));
                         writer.write("<h3 id=\"" + header + "\">" + m.getLabel() + ", Normalized To Average Over Chromosome (Only Including Windows With Coverage)</h3>");
@@ -260,13 +295,16 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                     if (referenceSample != null)
                     {
                         writer.write("<h3 id='normalizedToSample'>Normalized to: " + referenceSample.getName() + "</h3><p>");
-                        writer.write("<a href='" + normalizedToSampleMap.get(outputFile).getName() +"'>Download Data</a><p>");
+                        if (!settings.deleteRawData())
+                        {
+                            writer.write("<a href='" + urlBase + normalizedToSampleMap.get(outputFile).getName() + "'>Download Data</a><p>");
+                        }
 
                         for (MetricDescriptor m : getMetricDescriptors().values())
                         {
                             //run R, generate graph
                             File graph = new File(outputDir, getBaseNameForFile(outputFile) + "_" + m.getColumnHeader() + ".png");
-                            runScript(job, graph, outputDir, normalizedToSampleMap.get(outputFile), m.getColumnHeader(), m.getLabel(), "Value");
+                            runScript(job, graph, outputDir, normalizedToSampleMap.get(outputFile), m.getColumnHeader(), m.getLabel(), "Value", vertical);
 
                             String encoded = Base64.encodeBase64String(FileUtils.readFileToByteArray(graph));
                             writer.write("<h3 id=\"" + m.getColumnHeader() + "\">" + m.getLabel() + ", Normalized To " + referenceSample.getName() + "<h3>");
@@ -300,6 +338,22 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                 htmlOut.setReadset(outputFile.getReadset());
                 outputsToCreate.add(htmlOut);
 
+                if (settings.deleteRawData())
+                {
+                    for (File f : rawDataFiles)
+                    {
+                        f.delete();
+                    }
+                }
+                else
+                {
+                    for (File f : rawDataFiles)
+                    {
+                        Compress.compressGzip(f);
+                        f.delete();
+                    }
+                }
+
                 actionMap.get(outputFile).addOutput(html, "Coverage Data Summary", false);
             }
 
@@ -315,6 +369,45 @@ public class CoverageDepthHandler implements SequenceOutputHandler
         }
 
         //throw new PipelineJobException("complete!");
+    }
+
+    private File getFinalFilename(File f, CoverageSettings settings)
+    {
+        return settings.deleteRawData() ? f : new File(f.getPath() + ".gz");
+    }
+
+    private long getReadCount(SequenceOutputFile outputFile)
+    {
+        long ret = 0;
+        File bam = outputFile.getExpData().getFile();
+
+        List<SamRecordFilter> filters = Arrays.asList(
+                new AlignedFilter(true),
+                new NotPrimaryAlignmentFilter()
+        );
+
+        try (SAMFileReader reader = new SAMFileReader(bam))
+        {
+            try (SAMRecordIterator it = reader.iterator())
+            {
+                while (it.hasNext())
+                {
+                    SAMRecord r = it.next();
+                    for (SamRecordFilter f : filters)
+                    {
+                        if (!f.filterOut(r))
+                        {
+                            if (!r.getProperPairFlag() || !r.getSecondOfPairFlag())
+                            {
+                                ret++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return ret;
     }
 
     private SequenceOutputFile getSequenceOutputByRowId(int rowId, List<SequenceOutputFile> inputFiles)
@@ -351,7 +444,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
         return ret;
     }
 
-    private void generateNormalizedDataForSample(PipelineJob job, File rawData, File output, Map<String, MetricLine> referenceData) throws IOException
+    private void generateNormalizedDataForSample(PipelineJob job, File rawData, File output, Map<String, MetricLine> referenceData, long refReadCount, long sampleReadCount) throws IOException
     {
         try (CSVReader reader = new CSVReader(new FileReader(rawData), '\t');CSVWriter outputWriter = new CSVWriter(new FileWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
@@ -382,15 +475,15 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                         for (int idx = 3; idx < line.length; idx++)
                         {
                             Double val = ConvertHelper.convert(line[idx], Double.class);
-                            Double refVal = m._values.get(idx);
+                            Double refVal = ref._values.get(idx);
 
                             if (refVal == null || refVal == 0)
                             {
-                                newRow.add("");
+                                newRow.add("NA");
                             }
                             else
                             {
-                                newRow.add(String.valueOf(val / refVal));
+                                newRow.add(String.valueOf((val / sampleReadCount) / (refVal / refReadCount)));
                             }
                         }
 
@@ -433,7 +526,20 @@ public class CoverageDepthHandler implements SequenceOutputHandler
 
         public String getKey()
         {
-            return _values.get("SequenceName") + "||" + _values.get("Start") + "||" + _values.get("Stop");
+            return _sequenceName + "||" + _start + "||" + _stop;
+        }
+    }
+
+    private class CoverageTracker
+    {
+        Map<Integer, Double> columnSum = new TreeMap<>();
+        Map<Integer, Double> columnSumWithoutZeros = new HashMap<>();
+        int totalWindows = 0;
+        int totalWindowsWithCoverage = 0;
+
+        public CoverageTracker()
+        {
+
         }
     }
 
@@ -441,10 +547,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
     {
         //first calculate avg by column:
         Map<Integer, String> columnNameMap = new LinkedHashMap<>();
-        Map<Integer, Double> columnSum = new TreeMap<>();
-        Map<Integer, Double> columnSumWithoutZeros = new HashMap<>();
-        int totalWindows = 0;
-        int totalWindowsWithCoverage = 0;
+        Map<String, CoverageTracker> coverageTrackerMap = new HashMap<>();
 
         int lineNumber = 0;
         try (CSVReader reader = new CSVReader(new FileReader(originalRawData), '\t'))
@@ -464,31 +567,39 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                 }
                 else
                 {
+                    String refName = line[0];
+                    if (!coverageTrackerMap.containsKey(refName))
+                    {
+                        coverageTrackerMap.put(refName, new CoverageTracker());
+                    }
+
+                    CoverageTracker tracker = coverageTrackerMap.get(refName);
+
                     Double distinctReads = Double.parseDouble(line[3]);
-                    totalWindows++;
+                    tracker.totalWindows++;
                     if (distinctReads > 0)
                     {
-                        totalWindowsWithCoverage++;
+                        tracker.totalWindowsWithCoverage++;
                     }
 
                     for (int idx = 3; idx < line.length; idx++)
                     {
                         Double val = Double.parseDouble(line[idx]);
-                        if (!columnSum.containsKey(idx))
+                        if (!tracker.columnSum.containsKey(idx))
                         {
-                            columnSum.put(idx, 0.0);
+                            tracker.columnSum.put(idx, 0.0);
                         }
 
-                        columnSum.put(idx, columnSum.get(idx) + val);
+                        tracker.columnSum.put(idx, tracker.columnSum.get(idx) + val);
 
                         if (distinctReads > 0)
                         {
-                            if (!columnSumWithoutZeros.containsKey(idx))
+                            if (!tracker.columnSumWithoutZeros.containsKey(idx))
                             {
-                                columnSumWithoutZeros.put(idx, 0.0);
+                                tracker.columnSumWithoutZeros.put(idx, 0.0);
                             }
 
-                            columnSumWithoutZeros.put(idx, columnSumWithoutZeros.get(idx) + val);
+                            tracker.columnSumWithoutZeros.put(idx, tracker.columnSumWithoutZeros.get(idx) + val);
                         }
                     }
                 }
@@ -526,6 +637,9 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                 }
                 else
                 {
+                    String refName = line[0];
+                    CoverageTracker tracker = coverageTrackerMap.get(refName);
+
                     List<String> data = new ArrayList<>();
                     for (int idx = 0; idx < 3; idx++)
                     {
@@ -536,16 +650,16 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                     for (int idx = 3; idx < line.length; idx++)
                     {
                         Double val = Double.parseDouble(line[idx]);
-                        Double avg = columnSum.get(idx) / totalWindows;
+                        Double avg = tracker.columnSum.get(idx) / (double)tracker.totalWindows;
 
-                        data.add(avg > 0 ? String.valueOf(val / avg) : "");
+                        data.add(avg > 0.0 ? String.valueOf(val / avg) : "");
                     }
 
                     //normalized without zeros
                     for (int idx = 3; idx < line.length; idx++)
                     {
                         Double val = Double.parseDouble(line[idx]);
-                        Double avg = totalWindowsWithCoverage == 0 ? 0 : columnSumWithoutZeros.get(idx) / totalWindowsWithCoverage;
+                        Double avg = tracker.totalWindowsWithCoverage == 0 ? 0.0 : tracker.columnSumWithoutZeros.get(idx) / (double)tracker.totalWindowsWithCoverage;
 
                         data.add(avg > 0 ? String.valueOf(val / avg) : "");
                     }
@@ -615,8 +729,8 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                         }
                     }
 
-                    double avgReadsPerPosition = (double)sumReadsPerPosition / totalReadsByPosition.length;
-                    double avgReadsPerPositionWithoutZeros = nonZeroPositions == 0 ? 0 : (double)sumReadsPerPositionWithoutZeros / nonZeroPositions;
+                    double avgReadsPerPosition = (double)sumReadsPerPosition / (double)i.length();
+                    double avgReadsPerPositionWithoutZeros = nonZeroPositions == 0 ? 0.0 : (double)sumReadsPerPositionWithoutZeros / (double)nonZeroPositions;
 
                     outputWriter.writeNext(new String[]{
                             i.getSequence(),
@@ -635,11 +749,6 @@ public class CoverageDepthHandler implements SequenceOutputHandler
         {
             throw new PipelineJobException(e);
         }
-    }
-
-    private String getKeyForInterval(Interval interval, File bam)
-    {
-        return StringUtils.join(new String[]{bam.getName(), interval.getSequence(), String.valueOf(interval.getStart()), String.valueOf(interval.getEnd())}, "");
     }
 
     private Map<String, MetricDescriptor> getMetricDescriptors()
@@ -672,6 +781,11 @@ public class CoverageDepthHandler implements SequenceOutputHandler
         public WindowStrategy getWindowStrategy()
         {
             return new WindowStrategy(this);
+        }
+
+        public boolean deleteRawData()
+        {
+            return _json.get("deleteRawData") == null ? true : _json.getBoolean("deleteRawData");
         }
 
         public List<String> getMetricNames()
@@ -802,7 +916,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                     int readNumberPerWindow = _settings.getJson().getInt("readNumberPerWindow");
                     //zero-based
                     int windowStart = 0;
-                    int lastPosition = 0;
+                    int lastReadStart = 0;
                     String refName = null;
 
                     // We make the assumption this BAM is sorted.
@@ -810,40 +924,48 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                     //SamReaderFactory fact = SamReaderFactory.makeDefault();
                     try (SAMFileReader reader = new SAMFileReader(o.getFile()))
                     {
+                        SAMFileHeader header = reader.getFileHeader();
                         Set<String> encounteredReadNames = new HashSet<>(readNumberPerWindow);
-                        try (SamLocusIterator sli = new SamLocusIterator(reader))
+                        try (PeekableIterator<SAMRecord> i = getIterator(reader.iterator()))
                         {
-                            sli.setEmitUncoveredLoci(false);
-                            sli.setSamFilters(Arrays.asList(
-                                    new AlignedFilter(true),
-                                    new NotPrimaryAlignmentFilter()
-                            ));
-
-                            Iterator<SamLocusIterator.LocusInfo> iterator = sli.iterator();
-                            while (iterator.hasNext())
+                            while (i.hasNext())
                             {
-                                SamLocusIterator.LocusInfo l = iterator.next();
-                                List<SamLocusIterator.RecordAndOffset> records = l.getRecordAndPositions();
-                                lastPosition = l.getPosition();
-                                for (SamLocusIterator.RecordAndOffset r : records)
+                                SAMRecord r = i.next();
+
+                                //if we switch reference, restart
+                                if (refName != null && !refName.equals(r.getReferenceName()))
                                 {
-                                    encounteredReadNames.add(r.getRecord().getReadName());
-                                    if (encounteredReadNames.size() % readNumberPerWindow == 0 || (refName != null && !refName.equals(l.getSequenceName())))
+                                    writer.writeNext(new String[]{refName, String.valueOf(windowStart), String.valueOf(header.getSequence(refName).getSequenceLength())});  //end is 1-based
+                                    windowStart = 0;  //always use sequence start
+                                    encounteredReadNames.clear();
+                                }
+
+                                encounteredReadNames.add(r.getReadName());
+                                if (encounteredReadNames.size() % readNumberPerWindow == 0)
+                                {
+                                    if (windowStart != r.getAlignmentStart())
                                     {
-                                        writer.writeNext(new String[]{r.getRecord().getReferenceName(), String.valueOf(windowStart), String.valueOf(l.getPosition())});  //end is 1-based
-                                        windowStart = l.getPosition();  //start of the next window, 0-based
-                                        encounteredReadNames.clear();
+                                        writer.writeNext(new String[]{r.getReferenceName(), String.valueOf(windowStart), String.valueOf(r.getAlignmentStart())});  //end is 1-based
+                                    }
+                                    else
+                                    {
+                                        int x = 1 + 1;
+                                        x++;
                                     }
 
-                                    refName = l.getSequenceName();
+                                    windowStart = r.getAlignmentStart();  //start of the next window, 0-based
+                                    encounteredReadNames.clear();
                                 }
-                            }
 
-                            if (!encounteredReadNames.isEmpty() && refName != null)
-                            {
-                                writer.writeNext(new String[]{refName, String.valueOf(windowStart), String.valueOf(lastPosition)});  //end is 1-based
-                                encounteredReadNames.clear();
+                                refName = r.getReferenceName();
+                                lastReadStart = r.getAlignmentStart();
                             }
+                        }
+
+                        if (!encounteredReadNames.isEmpty() && refName != null)
+                        {
+                            writer.writeNext(new String[]{refName, String.valueOf(windowStart), String.valueOf(lastReadStart)});  //end is 1-based
+                            encounteredReadNames.clear();
                         }
                     }
                 }
@@ -894,7 +1016,15 @@ public class CoverageDepthHandler implements SequenceOutputHandler
         }
     }
 
-    private void runScript(PipelineJob job, File outputFile, File workDir, File rawData, String colHeader, String title, String yLabel) throws PipelineJobException
+    public PeekableIterator<SAMRecord> getIterator(SAMRecordIterator tempIterator) {
+        return new PeekableIterator<>(new FilteringIterator(tempIterator, new AggregateFilter(Arrays.asList(
+                new AlignedFilter(true),
+                new SecondaryOrSupplementaryFilter(),
+                new DuplicateReadFilter()
+        ))));
+    }
+
+    private void runScript(PipelineJob job, File outputFile, File workDir, File rawData, String colHeader, String title, String yLabel, boolean vertical) throws PipelineJobException
     {
         job.getLogger().info("Preparing to run R script");
 
@@ -914,6 +1044,11 @@ public class CoverageDepthHandler implements SequenceOutputHandler
         args.add(title);
         args.add("--yLabel");
         args.add(yLabel);
+        if (vertical)
+        {
+            args.add("-v");
+            args.add("1");
+        }
 
         ProcessBuilder pb = new ProcessBuilder(args);
         job.runSubProcess(pb, workDir);

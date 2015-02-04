@@ -9,6 +9,7 @@ import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.biojava3.core.sequence.DNASequence;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
@@ -61,7 +62,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
     }
 
     @Override
-    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome) throws PipelineJobException
+    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         return null;
     }
@@ -75,6 +76,40 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
         File paired2 = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_paired2.fastq");
         File singletons = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_singletons.fastq");
 
+        writeUnmappedReads(inputBam, paired1, paired2, singletons, getPipelineCtx().getLogger());
+
+        if (SequenceUtil.getLineCount(paired1) == 0)
+        {
+            paired1.delete();
+        }
+        else
+        {
+            output.addSequenceOutput(paired1, "Unmapped first mate reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+        }
+
+        if (SequenceUtil.getLineCount(paired2) == 0)
+        {
+            paired2.delete();
+        }
+        else
+        {
+            output.addSequenceOutput(paired1, "Unmapped second mate reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+        }
+
+        if (SequenceUtil.getLineCount(singletons) == 0)
+        {
+            singletons.delete();
+        }
+        else
+        {
+            output.addSequenceOutput(paired1, "Unmapped singleton reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+        }
+
+        return output;
+    }
+
+    public static void writeUnmappedReads(File inputBam, File paired1, File paired2, File singletons, Logger log) throws PipelineJobException
+    {
         FastqWriterFactory fact = new FastqWriterFactory();
         try (FastqWriter paired1Writer = fact.newWriter(paired1);FastqWriter paired2Writer = fact.newWriter(paired2);FastqWriter singletonsWriter = fact.newWriter(singletons))
         {
@@ -104,7 +139,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
                                     }
                                     else
                                     {
-                                        getPipelineCtx().getLogger().error("Unable to find mate for read: " + r.getReadName());
+                                        log.error("Unable to find mate for read: " + r.getReadName());
                                         FastqRecord fq = samReadToFastqRecord(r, null);
                                         singletonsWriter.write(fq);
                                     }
@@ -129,45 +164,10 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
             {
                 throw new PipelineJobException(e);
             }
-
-            if (SequenceUtil.getLineCount(paired1) == 0)
-            {
-                paired1.delete();
-            }
-            else
-            {
-                output.addSequenceOutput(paired1, "Unmapped first mate reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
-            }
-
-            if (SequenceUtil.getLineCount(paired2) == 0)
-            {
-                paired2.delete();
-            }
-            else
-            {
-                output.addSequenceOutput(paired1, "Unmapped second mate reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
-            }
-
-            if (SequenceUtil.getLineCount(singletons) == 0)
-            {
-                singletons.delete();
-            }
-            else
-            {
-                output.addSequenceOutput(paired1, "Unmapped singleton reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
-            }
         }
-
-        return output;
     }
 
-    @Override
-    public void performAnalysisOnAll(List<AnalysisModel> analysisModels) throws PipelineJobException
-    {
-
-    }
-
-    private FastqRecord samReadToFastqRecord(SAMRecord read, @Nullable String readNameSuffix)
+    private static FastqRecord samReadToFastqRecord(SAMRecord read, @Nullable String readNameSuffix)
     {
         String bases = read.getReadString();
         String qualities = read.getBaseQualityString();

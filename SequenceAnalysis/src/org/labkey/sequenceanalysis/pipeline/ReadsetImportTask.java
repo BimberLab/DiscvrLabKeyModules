@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import au.com.bytecode.opencsv.CSVWriter;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
@@ -25,11 +26,14 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
+import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.NucleotideSequenceFileType;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -182,7 +186,7 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
 
             if (getHelper().getSettings().isDoBarcode())
             {
-                getHelper().writeExtraBarcodes();
+                writeExtraBarcodes();
             }
         }
         catch (FileNotFoundException e)
@@ -193,6 +197,58 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
         getHelper().getFileManager().cleanup();
 
         return new RecordedActionSet(actions);
+    }
+
+    public void writeExtraBarcodes() throws PipelineJobException
+    {
+        BarcodeModel[] models = getAdditionalBarcodes();
+        if (models != null && models.length > 0)
+        {
+            File extraBarcodes = getExtraBarcodesFile(getHelper());
+            getJob().getLogger().debug("\tWriting additional barcodes to file: " + extraBarcodes.getPath());
+            CSVWriter writer = null;
+            try
+            {
+                writer = new CSVWriter(new FileWriter(extraBarcodes), '\t', CSVWriter.NO_QUOTE_CHARACTER);
+                for (BarcodeModel m : models)
+                {
+                    writer.writeNext(new String[]{m.getName(), m.getSequence()});
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+            finally
+            {
+                if (writer != null)
+                {
+                    try
+                    {
+                        writer.close();
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+            }
+        }
+    }
+
+    private BarcodeModel[] getAdditionalBarcodes()
+    {
+        if (!SequenceNormalizationTask.getBarcodeGroupsToScan(getHelper().getSettings()).isEmpty())
+        {
+            return BarcodeModel.getByGroups(SequenceNormalizationTask.getBarcodeGroupsToScan(getHelper().getSettings()));
+        }
+
+        return null;
+    }
+
+    public static File getExtraBarcodesFile(SequenceTaskHelper helper)
+    {
+        return new File(helper.getSupport().getAnalysisDirectory(), "extraBarcodes.txt");
     }
 }
 

@@ -18,7 +18,7 @@
                 <bean class="org.labkey.sequenceanalysis.pipeline.FileCleanupTask$Factory">
                     <property name="location" value="sequenceAnalysis" />
                 </bean>
-                <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisWorkTask$Factory">
+                <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisRemoteWorkTask$Factory">
                     <property name="location" value="sequenceAnalysis" />
                 </bean>
             </list>

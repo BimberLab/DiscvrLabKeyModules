@@ -61,7 +61,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
 
             //unaligned reads:
             args.add("--un");
-            args.add(new File(outputDirectory, SequenceTaskHelper.getMinimalBaseName(inputFastq1) + ".bowtie.unaligned.fastq").getPath());
+            args.add(new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputFastq1.getName()) + ".bowtie.unaligned.fastq").getPath());
             args.addAll(getClientCommandArgs());
 
             File indexFile = new File(referenceGenome.getWorkingFastaFile().getParentFile() + "/" + getProvider().getName(), getExpectedIndexName(referenceGenome.getWorkingFastaFile()));

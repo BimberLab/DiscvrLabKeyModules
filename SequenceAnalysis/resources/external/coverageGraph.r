@@ -1,10 +1,11 @@
-require(plyr)
-require(ggplot2)
-require(grid)
-require(perm)
-require(reshape)
-require(gridExtra)
-require(naturalsort)
+library(reshape)
+library(lattice)
+library(plyr)
+library(ggplot2)
+library(grid)
+library(perm)
+library(gridExtra)
+library(naturalsort)
 
 library(getopt);
 library(Matrix);
@@ -14,18 +15,35 @@ spec <- matrix(c(
     'outputFile', '-o', 1, "character",
     'inputFile', '-i', 1, "character",
     'plotTitle', '-t', 1, "character",
-    'yLabel', '--yLabel', 1, "character"
+    'vertical', '-v', 1, "integer",
+    'yLabel', NA, 1, "character"
 ), ncol=4, byrow=TRUE);
 opts = getopt(spec, commandArgs(trailingOnly = TRUE));
+if ( is.null(opts$vertical ) ) { opts$vertical = 0 }
 
 df <- read.table(opts$inputFile, quote="\"", header = TRUE);
-colIdx <- match(opts$colHeader, names(df))
-#df$SequenceName <- factor(df$SequenceName, levels = naturalsort(unique(df$SequenceName)))
-names(df)[colIdx] <- 'YVal'
+df$SequenceName <- factor(df$SequenceName, levels = naturalsort(unique(df$SequenceName)))
+
 #str(df)
 
+plotHeight <- 680;
+
+if (opts$vertical == 1){
+    facet1 <- 'SequenceName';
+    facet2 <- '.';
+    fac_formula <- as.formula(paste(facet1,"~",facet2))
+    facetLine <- facet_grid(fac_formula, scales="free", space="fixed")
+
+    plotHeight <- (500 * nlevels(df$SequenceName));
+} else {
+    facet1 <- '.';
+    facet2 <- 'SequenceName';
+    fac_formula <- as.formula(paste(facet1,"~",facet2))
+    facetLine <- facet_grid(fac_formula, scales="free", space="free")
+}
+
 # make all chroms plot
-P<-ggplot(df,aes(x=Start,y=YVal)) +
+P<-ggplot(df,aes_string(x="Start",y=opts$colHeader)) +
                 ggtitle(opts$plotTitle) +
                 #scale_y_continuous(limits=c(0,2),labels=c("0.0","0.5","1.0","1.5","2.0")) +
                 geom_point(stat='identity') +
@@ -37,8 +55,9 @@ P<-ggplot(df,aes(x=Start,y=YVal)) +
                                 strip.text.x = element_text(size = 12,face="bold")) +
                 xlab("Position") +
                 ylab(opts$yLabel) +
-                facet_grid(SequenceName ~ ., scales="free" ,space="free")
+                facetLine
 
-png(opts$outputFile,width=880, height=680)
-print(P)
-dev.off()
+
+png(opts$outputFile,width=880, height=plotHeight)
+print(P);
+dev.off();

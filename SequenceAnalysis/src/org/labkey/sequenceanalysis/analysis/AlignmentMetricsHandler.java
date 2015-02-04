@@ -1,4 +1,4 @@
-package org.labkey.sequenceanalysis.run.analysis;
+package org.labkey.sequenceanalysis.analysis;
 
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
@@ -32,34 +32,28 @@ import java.util.List;
 /**
  * Created by bimber on 9/8/2014.
  */
-public class AlignmentMetricsAnalysis extends AbstractPipelineStep implements AnalysisStep
+public class AlignmentMetricsHandler extends AbstractPipelineStep implements AnalysisStep
 {
-    public AlignmentMetricsAnalysis(PipelineStepProvider provider, PipelineContext ctx)
+    public AlignmentMetricsHandler(PipelineStepProvider provider, PipelineContext ctx)
     {
         super(provider, ctx);
     }
 
-    public static class Provider extends AbstractAnalysisStepProvider<AlignmentMetricsAnalysis>
+    public static class Provider extends AbstractAnalysisStepProvider<AlignmentMetricsHandler>
     {
         public Provider()
         {
+            //TODO
+
             super("AlignmentMetricsAnalysis", "Alignment Metrics", null, "This step will iterate all alignments and create one or more feature tracks summarizing the alignment.  The original purpose was to create information used for QC purposes or to better understand how data performed against the reference.", Arrays.asList(
                     ToolParameterDescriptor.create("windowSize", "Window Size", "Metrics will be gathered by iterating the genome with a window of this size", "ldk-integerfield", null, 500)
-//                    ToolParameterDescriptor.create("multipleMappedReads", "Multiple Mapped Reads", "This will count the total number of reads/window which mapped against more than 1 location.  Note: not all aligners retain this information", "checkbox", new JSONObject()
-//                    {{
-//                        put("checked", true);
-//                    }}, true),
-//                    ToolParameterDescriptor.create("avgMappingQual", "Average Mapping Quality", "This will calculate the average mapping quality of all reads spanning the window.", "checkbox", new JSONObject()
-//                    {{
-//                            put("checked", true);
-//                    }}, true)
             ), null, null);
         }
 
         @Override
-        public AlignmentMetricsAnalysis create(PipelineContext ctx)
+        public AlignmentMetricsHandler create(PipelineContext ctx)
         {
-            return new AlignmentMetricsAnalysis(this, ctx);
+            return new AlignmentMetricsHandler(this, ctx);
         }
 
     }
@@ -77,12 +71,12 @@ public class AlignmentMetricsAnalysis extends AbstractPipelineStep implements An
     }
 
     @Override
-    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome) throws PipelineJobException
+    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         return null;
     }
 
-    @Override
+    //@Override
     public void performAnalysisOnAll(List<AnalysisModel> analysisModels) throws PipelineJobException
     {
         Integer windowSize = getProvider().getParameterByName("windowSize").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class);
@@ -95,7 +89,7 @@ public class AlignmentMetricsAnalysis extends AbstractPipelineStep implements An
         List<File> bams  = new ArrayList<>();
         for (File f : getPipelineCtx().getJob().getJobSupport(FileAnalysisJobSupport.class).getInputFiles())
         {
-            String basename = SequenceTaskHelper.getMinimalBaseName(f);
+            String basename = SequenceTaskHelper.getUnzippedBaseName(f.getName());
             File expectedBam = new File(getPipelineCtx().getSourceDirectory(), basename + "/Alignment/" + basename + ".bam");
             if (expectedBam.exists())
             {

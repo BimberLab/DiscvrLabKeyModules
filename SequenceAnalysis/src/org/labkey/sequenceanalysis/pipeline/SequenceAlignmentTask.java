@@ -369,7 +369,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
         else
         {
-            String originalbaseName = SequenceTaskHelper.getMinimalBaseName(inputFile1);
+            String originalbaseName = SequenceTaskHelper.getUnzippedBaseName(inputFile1.getName());
             String originalbaseName2 = null;
 
             //log read count:
@@ -382,7 +382,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 previousCount2 = FastqUtils.getSequenceCount(inputFile2);
                 getJob().getLogger().info("\t" + inputFile2.getName() + ": " + previousCount2 + " sequences");
 
-                originalbaseName2 = SequenceTaskHelper.getMinimalBaseName(inputFile2);
+                originalbaseName2 = SequenceTaskHelper.getUnzippedBaseName(inputFile2.getName());
             }
 
             File outputDir = new File(getHelper().getWorkingDirectory(), originalbaseName);
@@ -459,6 +459,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 getHelper().getFileManager().addIntermediateFile(renamed2);
             }
             action.setEndTime(new Date());
+            actions.add(action);
 
             return pair;
         }
@@ -501,7 +502,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         getHelper().getFileManager().addInput(alignmentAction, ReferenceLibraryTask.REFERENCE_DB_FASTA, referenceGenome.getSourceFastaFile());
         getJob().getLogger().info("Beginning alignment for: " + inputFiles.first.getName() + (inputFiles.second == null ? "" : " and " + inputFiles.second.getName()));
 
-        File outputDirectory = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(inputFiles.first));
+        File outputDirectory = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getUnzippedBaseName(inputFiles.first.getName()));
         outputDirectory = new File(outputDirectory, ALIGNMENT_SUBFOLDER_NAME);
         if (!outputDirectory.exists())
         {
@@ -510,7 +511,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
 
         AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
-        AlignmentStep.AlignmentOutput alignmentOutput = alignmentStep.performAlignment(inputFiles.first, inputFiles.second, outputDirectory, referenceGenome, SequenceTaskHelper.getMinimalBaseName(inputFiles.first) + "." + alignmentStep.getProvider().getName().toLowerCase());
+        AlignmentStep.AlignmentOutput alignmentOutput = alignmentStep.performAlignment(inputFiles.first, inputFiles.second, outputDirectory, referenceGenome, SequenceTaskHelper.getUnzippedBaseName(inputFiles.first.getName()) + "." + alignmentStep.getProvider().getName().toLowerCase());
         getHelper().getFileManager().addStepOutputs(alignmentAction, alignmentOutput);
 
         if (alignmentOutput.getBAM() == null || !alignmentOutput.getBAM().exists())
@@ -667,7 +668,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 getHelper().getFileManager().addInput(action, "Reference DB FASTA", referenceGenome.getWorkingFastaFile());
 
                 AnalysisStep step = provider.create(getHelper());
-                AnalysisStep.Output o = step.performAnalysisPerSampleRemote(rs, finalBam, referenceGenome);
+                AnalysisStep.Output o = step.performAnalysisPerSampleRemote(rs, finalBam, referenceGenome, finalBam.getParentFile());
                 if (o != null)
                 {
                     getHelper().getFileManager().addStepOutputs(action, o);

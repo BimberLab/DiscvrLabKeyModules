@@ -28,8 +28,8 @@ abstract public class AbstractSequenceMatcher
     protected boolean _createSummaryLog = true;
 
     //NOTE: this assumes only 1 call of execute(), which is probably ok, but might be better to track this info elsewhere
-    protected Map<String, Integer> _sequenceMatch5Counts;
-    protected Map<String, Integer> _sequenceMatch3Counts;
+    protected TreeMap<String, Integer> _sequenceMatch5Counts;
+    protected TreeMap<String, Integer> _sequenceMatch3Counts;
     protected Map<File, FastqWriter> _fileMap;
 
     protected File _detailLog = null;
@@ -154,7 +154,7 @@ abstract public class AbstractSequenceMatcher
         _createSummaryLog = createSummaryLog;
     }
 
-    protected void scanForMatches(File fastq, FastqRecord rec, Collection<SequenceTag> barcodes5, Collection<SequenceTag> barcodes3, Map<Integer, Map<String, SequenceMatch>> matches5, Map<Integer, Map<String, SequenceMatch>> matches3)
+    protected void scanForMatches(FastqRecord rec, Collection<SequenceTag> barcodes5, Collection<SequenceTag> barcodes3, Map<Integer, Map<String, SequenceMatch>> matches5, Map<Integer, Map<String, SequenceMatch>> matches3)
     {
         //first scan 5' end
 
@@ -181,7 +181,7 @@ abstract public class AbstractSequenceMatcher
         }
 
         //then try patrial matches, only if no matches found
-        if (matches5.size() == 0 && _deletionsAllowed > 0)
+        if (matches5.isEmpty() && _deletionsAllowed > 0)
         {
             int i = 1;
             while (i <= _deletionsAllowed)
@@ -222,7 +222,7 @@ abstract public class AbstractSequenceMatcher
         }
 
         //then try patrial matches, only if no matches found
-        if (matches3.size() == 0 && _deletionsAllowed > 0)
+        if (matches3.isEmpty() && _deletionsAllowed > 0)
         {
             int i = 1;
             while (i <= _deletionsAllowed)

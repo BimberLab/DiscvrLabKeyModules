@@ -8,6 +8,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
@@ -25,44 +26,51 @@ public class FastqToFastaConverter
         _logger = logger;
     }
 
-    public File execute(File output, List<File> inputs) throws Exception
+    public File execute(File output, List<File> inputs) throws PipelineJobException
     {
-        _logger.info("Converting FASTQ(s) to FASTA");
-        _logger.info("\tOutput: " + output.getPath());
-
-        if (inputs == null || inputs.isEmpty())
+        try
         {
-            throw new PipelineJobException("No FASTQ files supplied");
-        }
+            _logger.info("Converting FASTQ(s) to FASTA");
+            _logger.info("\tOutput: " + output.getPath());
 
-        if (!output.exists())
-        {
-            if (!output.getParentFile().exists())
-                output.getParentFile().mkdirs();
-
-            output.createNewFile();
-        }
-
-        try (Writer writer = new BufferedWriter(new FileWriter(output)))
-        {
-            for (File input : inputs)
+            if (inputs == null || inputs.isEmpty())
             {
-                _logger.info("\tprocessing file: " + input.getPath());
-                try (FastqReader reader = new FastqReader(input))
+                throw new PipelineJobException("No FASTQ files supplied");
+            }
+
+            if (!output.exists())
+            {
+                if (!output.getParentFile().exists())
+                    output.getParentFile().mkdirs();
+
+                output.createNewFile();
+            }
+
+            try (Writer writer = new BufferedWriter(new FileWriter(output)))
+            {
+                for (File input : inputs)
                 {
-                    int total = 0;
-                    while ((reader.hasNext()))
+                    _logger.info("\tprocessing file: " + input.getPath());
+                    try (FastqReader reader = new FastqReader(input))
                     {
-                        FastqRecord seq = reader.next();
-                        SequenceUtil.writeFastaRecord(writer, seq.getReadHeader(), seq.getReadString(), 60);
-                        total++;
+                        int total = 0;
+                        while ((reader.hasNext()))
+                        {
+                            FastqRecord seq = reader.next();
+                            SequenceUtil.writeFastaRecord(writer, seq.getReadHeader(), seq.getReadString(), 60);
+                            total++;
+                        }
+
+                        reader.close();
+
+                        _logger.info("\t" + total + " sequences");
                     }
-
-                    reader.close();
-
-                    _logger.info("\t" + total + " sequences");
                 }
             }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
         }
 
         return output;

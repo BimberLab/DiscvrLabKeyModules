@@ -38,6 +38,9 @@ public class JBrowseSessionPipelineJob extends PipelineJob
     private String _description = null;
     private List<String> _jsonFiles = null;
     private Mode _mode;
+    private boolean _primaryDb;
+    private boolean _createOwnIndex;
+    private boolean _isTemporarySession;
 
     public static JBrowseSessionPipelineJob addMembers(Container c, User user, PipeRoot pipeRoot, String databaseGuid, List<Integer> trackIds, List<Integer> outputFileIds)
     {
@@ -49,7 +52,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
             throw new IllegalArgumentException("Unknown database: " + databaseGuid);
         }
 
-        return new JBrowseSessionPipelineJob(c, user, pipeRoot, (String)existingRow.get("name"), (String)existingRow.get("description"), null, trackIds, outputFileIds, databaseGuid);
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, (String)existingRow.get("name"), (String)existingRow.get("description"), null, trackIds, outputFileIds, databaseGuid, (existingRow.get("primarydb") == null ? false : (boolean)existingRow.get("primarydb")), (existingRow.get("createOwnIndex") == null ? false : (boolean)existingRow.get("createOwnIndex")), (existingRow.get("temporary") == null ? false : (boolean)existingRow.get("temporary")));
     }
 
     public static JBrowseSessionPipelineJob refreshResources(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles)
@@ -62,9 +65,9 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         return new JBrowseSessionPipelineJob(c, user, pipeRoot, null, databaseGuid, Mode.RecreateDatabase);
     }
 
-    public static JBrowseSessionPipelineJob createNewDatabase(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds)
+    public static JBrowseSessionPipelineJob createNewDatabase(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, boolean isPrimaryDb, boolean shouldCreateOwnIndex, boolean isTemporarySession)
     {
-        return new JBrowseSessionPipelineJob(c, user, pipeRoot, name, description, libraryId, trackIds, outputFileIds, null);
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, name, description, libraryId, trackIds, outputFileIds, null, isPrimaryDb, shouldCreateOwnIndex, isTemporarySession);
     }
 
     private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles, String databaseGuid, Mode mode)
@@ -79,7 +82,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         setLogFile(writer.findUniqueFileName("jbrowse-" + (new GUID().toString()) + ".log", root.getBaseDir(c)));
     }
 
-    private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, @Nullable String existingDatabaseGuid)
+    private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, @Nullable String existingDatabaseGuid, boolean isPrimaryDb, boolean shouldCreateOwnIndex, boolean isTemporarySession)
     {
         super(JBrowseSessionPipelineProvider.NAME, new ViewBackgroundInfo(c, user, null), pipeRoot);
         _libraryId = libraryId;
@@ -90,6 +93,9 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         _description = description;
         _mode = existingDatabaseGuid == null ? Mode.CreateNew : Mode.AddToExisting;
         _databaseGuid = existingDatabaseGuid == null ? new GUID().toString().toUpperCase() : existingDatabaseGuid;
+        _createOwnIndex = shouldCreateOwnIndex;
+        _primaryDb = isPrimaryDb;
+        _isTemporarySession = isTemporarySession;
 
         AssayFileWriter writer = new AssayFileWriter();
         JBrowseRoot root = new JBrowseRoot(getLogger());
@@ -178,5 +184,20 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         {
             return _description;
         }
+    }
+
+    public boolean isPrimaryDb()
+    {
+        return _primaryDb;
+    }
+
+    public boolean isCreateOwnIndex()
+    {
+        return _createOwnIndex;
+    }
+
+    public boolean isTemporarySession()
+    {
+        return _isTemporarySession;
     }
 }

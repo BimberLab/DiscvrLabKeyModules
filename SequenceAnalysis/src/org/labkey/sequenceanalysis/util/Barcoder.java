@@ -13,6 +13,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.TestHelper;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.api.model.ReadsetModel;
@@ -50,10 +51,15 @@ public class Barcoder extends AbstractSequenceMatcher
         _logger = logger;
     }
 
-    public Set<File> execute(File fastq, List<ReadsetModel> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir)
+    public Set<File> demultiplexFile(File fastq, List<ReadsetModel> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir)
+    {
+        return demultiplexPair(Pair.<File, File>of(fastq, null), readsets, barcodes, outputDir);
+    }
+
+    public Set<File> demultiplexPair(Pair<File, File> fastqs, List<ReadsetModel> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir)
     {
         if (outputDir == null)
-            outputDir = fastq.getParentFile();
+            outputDir = fastqs.first.getParentFile();
 
         _outputDir = outputDir;
         _outputDir.mkdirs();
@@ -63,12 +69,15 @@ public class Barcoder extends AbstractSequenceMatcher
             _barcodes.put(m.getName(), m);
         }
 
-        FastqReader reader = null;
-
         if (_createDetailedLog)
-            initDetailLog(fastq);
+        {
+            initDetailLog(fastqs.first);
+        }
+
         if (_createSummaryLog)
-            initSummaryLog(fastq);
+        {
+            initSummaryLog(fastqs.first);
+        }
 
         _sequenceMatch5Counts =  new TreeMap<>();
         _sequenceMatch3Counts =  new TreeMap<>();
@@ -77,7 +86,12 @@ public class Barcoder extends AbstractSequenceMatcher
 
         _fileMap = new HashMap<>();
 
-        _logger.info("Scanning file for barcodes: " + fastq.getPath());
+        _logger.info("Scanning file for barcodes: " + fastqs.first.getPath());
+        if (fastqs.second != null)
+        {
+            _logger.info("\tand: " + fastqs.second.getPath());
+        }
+
         _logger.info("\tMismatches tolerated: " + _editDistance);
         _logger.info("\tBarcode can be within " + _offsetDistance + " bases of the sequence end");
         _logger.info("\tDeletions tolerated (allows partial barcodes): " + _deletionsAllowed);
@@ -118,21 +132,38 @@ public class Barcoder extends AbstractSequenceMatcher
 
         _logger.info("\tWill scan for a total of " + _barcodes.size() + " barcodes");
 
-        try
+        try (FastqReader reader1 = new FastqReader(fastqs.first);FastqReader reader2 = fastqs.second == null ? null : new FastqReader(fastqs.second))
         {
-            reader = new FastqReader(fastq);
-            Iterator<FastqRecord> it = reader.iterator();
+            Iterator<FastqRecord> it = reader1.iterator();
+            Iterator<FastqRecord> it2 = null;
+            if (reader2 != null)
+            {
+                it2 = reader2.iterator();
+            }
+
             while (it.hasNext())
             {
-                FastqRecord rec = it.next();
-                processSequence(fastq, rec, readsets, barcodes5.values(), barcodes3.values());
+                if (reader2 == null)
+                {
+                    FastqRecord rec = it.next();
+                    processSequence(fastqs.first, rec, readsets, barcodes5.values(), barcodes3.values());
+                }
+                else
+                {
+                    FastqRecord rec1 = it.next();
+                    if (!it2.hasNext())
+                    {
+                        throw new IllegalArgumentException("Second FASTQ has fewer records than the primary FASTQ");
+                    }
+
+                    FastqRecord rec2 = it2.next();
+
+                    processSequencePair(fastqs.first, fastqs.second, rec1, rec2, readsets, barcodes5.values(), barcodes3.values());
+                }
             }
         }
         finally
         {
-            if (reader != null)
-                reader.close();
-
             for (FastqWriter writer : _fileMap.values())
             {
                 if (writer != null)
@@ -167,16 +198,31 @@ public class Barcoder extends AbstractSequenceMatcher
             _logger.info("\t" + key + ": " + _sequenceMatch5Counts.get(key));
         }
 
+        if (_sequenceMatch5Counts.isEmpty())
+        {
+            _logger.info("\tNo matches found");
+        }
+
         _logger.info("3' Match Summary:");
         for (String key : _sequenceMatch3Counts.keySet())
         {
             _logger.info("\t" + key + ": " + _sequenceMatch3Counts.get(key));
         }
 
+        if (_sequenceMatch3Counts.isEmpty())
+        {
+            _logger.info("\tNo matches found");
+        }
+
         _logger.info("Readset Match Summary:");
         for (String rs : _readsetCounts.keySet())
         {
             _logger.info("\t" + rs + ": " + _readsetCounts.get(rs));
+        }
+
+        if (_readsetCounts.isEmpty())
+        {
+            _logger.info("\tNo matches found");
         }
 
         if (_otherMatches.size() > 0)
@@ -240,11 +286,71 @@ public class Barcoder extends AbstractSequenceMatcher
         return new File(_outputDir, basename + ".barcode-summary.txt");
     }
 
+    private void processSequencePair(File fastq1, File fastq2, FastqRecord rec1, FastqRecord rec2, List<ReadsetModel> readsets, Collection<SequenceTag> barcodes5, Collection<SequenceTag> barcodes3)
+    {
+        Map<Integer, Map<String, SequenceMatch>> forwardMatches5 = new TreeMap<>();
+        Map<Integer, Map<String, SequenceMatch>> forwardMatches3 = new TreeMap<>();
+        Map<Integer, Map<String, SequenceMatch>> reverseMatches5 = new TreeMap<>();
+        Map<Integer, Map<String, SequenceMatch>> reverseMatches3 = new TreeMap<>();
+
+        scanForMatches(rec1, barcodes5, barcodes3, forwardMatches5, forwardMatches3);
+        scanForMatches(rec1, barcodes3, barcodes5, reverseMatches5, reverseMatches3);
+
+        //find the best match for each end:
+        SequenceMatch forwardBc5 = findBestMatch(forwardMatches5, _sequenceMatch5Counts);
+        SequenceMatch forwardBc3 = findBestMatch(forwardMatches3, _sequenceMatch3Counts);
+        SequenceMatch reverseBc5 = findBestMatch(reverseMatches5, _sequenceMatch5Counts);
+        SequenceMatch reverseBc3 = findBestMatch(reverseMatches3, _sequenceMatch3Counts);
+
+        List<ReadsetModel> readsetMatches = new ArrayList<>();
+        for (ReadsetModel model : readsets)
+        {
+            boolean forwardMatches = false;
+            boolean reverseMatches = false;
+
+            //either forward barcode is not null and matches the read's 5' barcode, or both are null
+            if (model.getMid5() != null && forwardBc5 != null && model.getMid5().equals(forwardBc5.getSequenceTag().getName()))
+            {
+                forwardMatches = true;
+            }
+            else if (model.getMid5() == null && forwardBc5 == null)
+            {
+                forwardMatches = true;
+            }
+
+            //the 3' code is optional, since if we find the bc, this is probably read-through
+            if (model.getMid3() != null && reverseBc5 != null && model.getMid3().equals(reverseBc5.getSequenceTag().getName()))
+            {
+                reverseMatches = true;
+            }
+            else if (model.getMid3() == null && reverseBc5 == null)
+            {
+                reverseMatches = true;
+            }
+
+            if (forwardMatches && reverseMatches)
+            {
+                readsetMatches.add(model);
+            }
+        }
+
+        if (readsetMatches.size() == 1)
+        {
+            addMatchingRead(fastq1, rec1, readsetMatches.get(0), forwardBc5, forwardBc3, true);
+            addMatchingRead(fastq2, rec2, readsetMatches.get(0), reverseBc5, reverseBc3, false);
+        }
+        else
+        {
+            addMatchingRead(fastq1, rec1, null, forwardBc5, forwardBc3, true);
+            addMatchingRead(fastq2, rec2, null, reverseBc5, reverseBc3, false);
+        }
+    }
+
     private void processSequence(File fastq, FastqRecord rec, List<ReadsetModel> readsets, Collection<SequenceTag> barcodes5, Collection<SequenceTag> barcodes3)
     {
         Map<Integer, Map<String, SequenceMatch>> matches5 = new TreeMap<>();
         Map<Integer, Map<String, SequenceMatch>> matches3 = new TreeMap<>();
-        scanForMatches(fastq, rec, barcodes5, barcodes3, matches5, matches3);
+        scanForMatches(rec, barcodes5, barcodes3, matches5, matches3);
 
         //find the best match for each end:
         SequenceMatch bc5 = findBestMatch(matches5, _sequenceMatch5Counts);
@@ -271,53 +377,57 @@ public class Barcoder extends AbstractSequenceMatcher
                     continue;
             }
 
-            addMatchingRead(fastq, rec, model, bc5, bc3);
+            addMatchingRead(fastq, rec, model, bc5, bc3, true);
             found = true;
         }
 
         if (!found)
         {
-            addMatchingRead(fastq, rec, null, bc5, bc3);
+            addMatchingRead(fastq, rec, null, bc5, bc3, true);
         }
     }
 
-    private void addMatchingRead(File fastq, FastqRecord rec, @Nullable ReadsetModel rs, @Nullable SequenceMatch match5, @Nullable SequenceMatch match3)
+    private void addMatchingRead(File fastq, FastqRecord rec, @Nullable ReadsetModel rs, @Nullable SequenceMatch match5, @Nullable SequenceMatch match3, boolean includeInCounts)
     {
-        if (rs != null)
+        //a read would be excluded from counts if it is the second mate and the first-mate is already being counted
+        if (includeInCounts)
         {
-            Integer count = _readsetCounts.get(rs.getName());
-            if (count == null)
-                count = 0;
-            count++;
+            if (rs != null)
+            {
+                Integer count = _readsetCounts.get(rs.getName());
+                if (count == null)
+                    count = 0;
+                count++;
 
-            _readsetCounts.put(rs.getName(), count);
-        }
-        else
-        {
-            String key;
-            if (match5 != null && match3 != null)
-            {
-                key = match5.getSequenceTag().getName() + " / " + match3.getSequenceTag().getName();
-            }
-            else if (match5 != null)
-            {
-                key = match5.getSequenceTag().getName() + " / No Tag";
-            }
-            else if (match3 != null)
-            {
-                key = "No Tag / " + match3.getSequenceTag().getName();
+                _readsetCounts.put(rs.getName(), count);
             }
             else
             {
-                key = "No Matches";
+                String key;
+                if (match5 != null && match3 != null)
+                {
+                    key = match5.getSequenceTag().getName() + " / " + match3.getSequenceTag().getName();
+                }
+                else if (match5 != null)
+                {
+                    key = match5.getSequenceTag().getName() + " / No Tag";
+                }
+                else if (match3 != null)
+                {
+                    key = "No Tag / " + match3.getSequenceTag().getName();
+                }
+                else
+                {
+                    key = "No Matches";
+                }
+
+                Integer count = _otherMatches.get(key);
+                if (count == null)
+                    count = 0;
+
+                count++;
+                _otherMatches.put(key, count);
             }
-
-            Integer count = _otherMatches.get(key);
-            if (count == null)
-                count = 0;
-
-            count++;
-            _otherMatches.put(key, count);
         }
 
         int start = (match5 == null ? 0 : match5.getStart());
@@ -444,7 +554,7 @@ public class Barcoder extends AbstractSequenceMatcher
             allBarcodes.addAll(barcodes5);
             allBarcodes.addAll(barcodes3);
 
-            Set<File> files = bc.execute(_input, readsets, allBarcodes, null);
+            Set<File> files = bc.demultiplexFile(_input, readsets, allBarcodes, null);
             File detailLog = bc.getDetailedLogFile(_input);
             File summaryLog = bc.getSummaryLogFile(_input);
             Map<String, Integer> readMap = new HashMap<>();

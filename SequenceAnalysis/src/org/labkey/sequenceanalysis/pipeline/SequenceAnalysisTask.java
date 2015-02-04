@@ -121,7 +121,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
         for (ReadsetModel rs : taskHelper.getSettings().getReadsets())
         {
-            String basename = SequenceTaskHelper.getMinimalBaseName(rs.getFileName());
+            String basename = SequenceTaskHelper.getUnzippedBaseName(rs.getFileName());
 
             AnalysisModelImpl model = new AnalysisModelImpl();
             model.setContainer(getJob().getContainer().getId());
@@ -140,7 +140,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 boolean found = false;
                 for (ExpData d : datas)
                 {
-                    if (basename.equals(SequenceTaskHelper.getMinimalBaseName(d.getFile())))
+                    if (basename.equals(SequenceTaskHelper.getUnzippedBaseName(d.getFile().getName())))
                     {
                         if (found)
                         {
@@ -261,14 +261,14 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                     continue;
                 }
 
-                getJob().getLogger().info("creating analysis model for BAM: " + bam.getName());
+                getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
                 TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
                 Table.insert(getJob().getUser(), ti, model);
                 addMetricsForAnalysis(model);
 
                 if (!providers.isEmpty())
                 {
-                    outputs.addAll(runAnalyses(actions, model, bam, refDB, providers, taskHelper));
+                    outputs.addAll(runAnalysesLocal(actions, model, bam, refDB, providers, taskHelper));
                 }
             }
             catch (SQLException e)
@@ -279,10 +279,6 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
         List<AnalysisModel> models = new ArrayList<>();
         models.addAll(analysisModels);
-        for (PipelineStepProvider<AnalysisStep> p : providers)
-        {
-            p.create(taskHelper).performAnalysisOnAll(models);
-        }
 
         taskHelper.getFileManager().createSequenceOutputRecords();
 
@@ -362,7 +358,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         }
     }
 
-    public static List<AnalysisStep.Output> runAnalyses(List<RecordedAction> actions, AnalysisModel model, File inputBam, File refFasta, List<PipelineStepProvider<AnalysisStep>> providers, SequenceTaskHelper taskHelper) throws PipelineJobException
+    public static List<AnalysisStep.Output> runAnalysesLocal(List<RecordedAction> actions, AnalysisModel model, File inputBam, File refFasta, List<PipelineStepProvider<AnalysisStep>> providers, SequenceTaskHelper taskHelper) throws PipelineJobException
     {
         List<AnalysisStep.Output> ret = new ArrayList<>();
         for (PipelineStepProvider<AnalysisStep> provider : providers)
@@ -377,6 +373,31 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
             AnalysisStep step = provider.create(taskHelper);
             AnalysisStep.Output o = step.performAnalysisPerSampleLocal(model, inputBam, refFasta);
+            if (o != null)
+            {
+                ret.add(o);
+                taskHelper.getFileManager().addStepOutputs(action, o);
+            }
+
+            actions.add(action);
+        }
+
+        return ret;
+    }
+
+    public static List<AnalysisStep.Output> runAnalysesRemote(List<RecordedAction> actions, ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, List<PipelineStepProvider<AnalysisStep>> providers, SequenceTaskHelper taskHelper) throws PipelineJobException
+    {
+        List<AnalysisStep.Output> ret = new ArrayList<>();
+        for (PipelineStepProvider<AnalysisStep> provider : providers)
+        {
+            taskHelper.getJob().getLogger().info("Running " + provider.getLabel() + " for BAM: " + inputBam.getPath());
+
+            RecordedAction action = new RecordedAction(provider.getLabel());
+            taskHelper.getFileManager().addInput(action, "Input BAM File", inputBam);
+            taskHelper.getFileManager().addInput(action, "Reference DB FASTA", referenceGenome.getSourceFastaFile());
+
+            AnalysisStep step = provider.create(taskHelper);
+            AnalysisStep.Output o = step.performAnalysisPerSampleRemote(rs, inputBam, referenceGenome, inputBam.getParentFile());
             if (o != null)
             {
                 ret.add(o);

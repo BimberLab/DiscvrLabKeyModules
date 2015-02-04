@@ -31,6 +31,7 @@ import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -38,7 +39,7 @@ import java.util.Date;
  * Date: 9/22/12
  * Time: 5:01 PM
  */
-public interface AnalysisModel
+public interface AnalysisModel extends Serializable
 {
     public Integer getAnalysisId();
 

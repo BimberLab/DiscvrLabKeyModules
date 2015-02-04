@@ -43,9 +43,9 @@ public class DownsampleSamWrapper extends PicardWrapper
     {
         List<String> params = new LinkedList<>();
         params.add("java");
+        params.add("-Xmx4g");
         params.add("-jar");
         params.add(getJar().getPath());
-
         params.add("INPUT=" + file.getPath());
         params.add("OUTPUT=" + new File(getOutputDir(file), getOutputFilename(file)).getPath());
         params.add("PROBABILITY=" + pctRetained);

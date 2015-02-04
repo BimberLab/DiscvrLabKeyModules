@@ -17,10 +17,13 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.api.model.AnalysisModel;
-import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
+import org.labkey.sequenceanalysis.api.model.ReadsetModel;
 import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
 import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
+import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
+import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -37,11 +40,11 @@ import java.util.Map;
 /**
  * Created by bimber on 8/4/2014.
  */
-public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalysisWorkTask.Factory>
+public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<AlignmentAnalysisRemoteWorkTask.Factory>
 {
     private SequenceTaskHelper _taskHelper;
 
-    protected AlignmentAnalysisWorkTask(Factory factory, PipelineJob job)
+    protected AlignmentAnalysisRemoteWorkTask(Factory factory, PipelineJob job)
     {
         super(factory, job);
     }
@@ -50,7 +53,7 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
     {
         public Factory()
         {
-            super(AlignmentAnalysisWorkTask.class);
+            super(AlignmentAnalysisRemoteWorkTask.class);
         }
 
         public String getStatusName()
@@ -71,7 +74,7 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
 
         public PipelineJob.Task createTask(PipelineJob job)
         {
-            AlignmentAnalysisWorkTask task = new AlignmentAnalysisWorkTask(this, job);
+            AlignmentAnalysisRemoteWorkTask task = new AlignmentAnalysisRemoteWorkTask(this, job);
             return task;
         }
 
@@ -90,6 +93,13 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
     {
         _taskHelper = new SequenceTaskHelper(getJob(), _wd);
 
+        Map<Integer, File> cachedFiles = getTaskHelper().getSequenceSupport().getAllCachedData();
+        getJob().getLogger().debug("total ExpDatas cached: " + cachedFiles.size());
+        for (Integer dataId : cachedFiles.keySet())
+        {
+            getJob().getLogger().debug("file was cached: " + dataId + " / " + cachedFiles.get(dataId).getPath());
+        }
+
         List<RecordedAction> actions = new ArrayList<>();
 
         List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
@@ -99,8 +109,9 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
         }
 
         getJob().getLogger().info("Processing Alignments");
-        List<AnalysisStep.Output> outputs = new ArrayList<>();
         Map<String, AnalysisModel> alignmentMap = getAnalysisMap();
+
+        List<AnalysisStep.Output> outputs = new ArrayList<>();
         for (File inputBam : getTaskHelper().getSupport().getInputFiles())
         {
             AnalysisModel m = alignmentMap.get(inputBam.getName());
@@ -109,55 +120,66 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
                 throw new PipelineJobException("Unable to find analysis details for file: " + inputBam.getName());
             }
 
-            File refFasta = m.getReferenceLibraryFile();
-            if (refFasta == null)
+            Integer refFastaId = m.getReferenceLibrary();
+            if (refFastaId == null)
             {
-                TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
-                Integer refFastaId = new TableSelector(ti, PageFlowUtil.set("fasta_file")).getObject(m.getLibraryId(), Integer.class);
-                if (refFastaId != null)
+                ReferenceGenome genome = getTaskHelper().getSequenceSupport().getCachedGenome(m.getLibraryId());
+                if (genome != null)
                 {
-                    ExpData d = ExperimentService.get().getExpData(refFastaId);
-                    refFasta = d == null ? null : d.getFile();
+                    refFastaId = genome.getFastaExpDataId();
                 }
             }
 
+            if (refFastaId == null)
+            {
+                throw new PipelineJobException("Unable to find reference FASTA for file: " + inputBam.getName());
+            }
+
+            File refFasta = getTaskHelper().getSequenceSupport().getCachedData(refFastaId);
             if (refFasta == null)
             {
                 throw new PipelineJobException("Unable to find reference FASTA for file: " + inputBam.getName());
             }
 
-            outputs.addAll(SequenceAnalysisTask.runAnalysesLocal(actions, m, inputBam, refFasta, providers, getTaskHelper()));
+            File fai = new File(refFasta.getPath() + ".fai");
+            if (!fai.exists())
+            {
+                getJob().getLogger().info("creating FASTA Index");
+                new FastaIndexer(getJob().getLogger()).execute(refFasta);
+            }
+
+            ReadsetModel rs = getTaskHelper().getSequenceSupport().getCachedReadset(m.getReadset());
+            ReferenceGenome genome = getTaskHelper().getSequenceSupport().getCachedGenome(m.getLibraryId());
+            outputs.addAll(SequenceAnalysisTask.runAnalysesRemote(actions, rs, inputBam, genome, providers, getTaskHelper()));
         }
 
         return new RecordedActionSet(actions);
     }
 
-    private Map<String, AnalysisModel> getAnalysisMap() throws PipelineJobException
+    public SequenceTaskHelper getTaskHelper()
+    {
+        return _taskHelper;
+    }
+
+    private Map<String, AnalysisModel> getAnalysisMap()
     {
         Map<String, AnalysisModel> ret = new HashMap<>();
-        for (String key : getTaskHelper().getJob().getParameters().keySet())
-        {
-            if (key.startsWith("sample_"))
-            {
-                JSONObject o = new JSONObject(getTaskHelper().getJob().getParameters().get(key));
-                Integer analysisId = o.getInt("analysisid");
-                AnalysisModel m = AnalysisModelImpl.getFromDb(analysisId, getTaskHelper().getJob().getUser());
-                ExpData d = m.getAlignmentData();
-                if (d == null)
-                {
-                    getTaskHelper().getLogger().error("Analysis lacks an alignment file: " + m.getRowId());
-                    continue;
-                }
 
-                ret.put(d.getFile().getName(), m);
+        for (AnalysisModel m : getTaskHelper().getSequenceSupport().getCachedAnalyses())
+        {
+            int bamId = m.getAlignmentFile();
+            File bam = getTaskHelper().getSequenceSupport().getCachedData(bamId);
+            if (bam != null)
+            {
+                getJob().getLogger().debug("using cached bam: " + bam.getPath());
+                ret.put(bam.getName(), m);
+            }
+            else
+            {
+                getTaskHelper().getLogger().error("Unable to find BAM for analysis: " + m.getRowId());
             }
         }
 
         return ret;
-    }
-
-    public SequenceTaskHelper getTaskHelper()
-    {
-        return _taskHelper;
     }
 }

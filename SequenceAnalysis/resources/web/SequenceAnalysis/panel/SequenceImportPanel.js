@@ -137,6 +137,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     value: 0,
                     minValue: 0,
                     helpPopup: 'If provided, the barcode can be located up to this many bases from the end of the read'
+                },{
+                    xtype: 'ldk-linkbutton',
+                    text: 'View Available Barcodes',
+                    linkTarget: '_blank',
+                    linkCls: 'labkey-text-link',
+                    style: 'margin-left: 210px;',
+                    href: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', 'query.queryName': 'barcodes'})
                 }]
             },{
                 fieldLabel: 'Run FastQC',
@@ -149,7 +156,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         },{
             xtype:'panel',
             border: true,
-            title: 'Step 2: Enter Sample/Readset Information',
+            title: 'Step 2: Enter General Information',
             itemId: 'sampleInformation',
             bodyStyle: 'padding:5px;',
             width: '100%',

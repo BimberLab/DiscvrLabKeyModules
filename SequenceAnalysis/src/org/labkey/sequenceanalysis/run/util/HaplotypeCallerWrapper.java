@@ -43,8 +43,12 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
 
             doDeleteIndex = true;
         }
+        else
+        {
+            getLogger().debug("\tusing existing index: " + expectedIndex.getPath());
+        }
 
-        getLogger().info("\tbuilding target intervals");
+        getLogger().info("\trunning HaplotypeCaller");
         List<String> args = new ArrayList<>();
         args.add("java");
         args.add("-Xmx4g");

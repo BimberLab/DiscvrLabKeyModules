@@ -1060,6 +1060,61 @@ fi
 
 
 #
+#jbrowse
+#
+
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing jbrowse"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/JBrowse-1.11.5 || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf JBrowse-*
+    rm -Rf $LKTOOLS_DIR/JBrowse-*
+
+    wget http://jbrowse.org/releases/JBrowse-1.11.5.zip
+    unzip JBrowse-1.11.5.zip
+    rm JBrowse-1.11.5.zip
+    cd JBrowse-1.11.5
+    ./setup.sh
+
+    ln -s $LKSRC_DIR/JBrowse-1.11.5 $LKTOOLS_DIR/JBrowse-1.11.5
+else
+    echo "Already installed"
+fi
+
+
+#
+#BLAST+
+#
+
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing BLAST+"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/ncbi-blast-2.2.29 || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf ncbi-blast-*
+    rm -Rf $LKTOOLS_DIR/ncbi-blast-*
+
+    wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.2.29+-x64-linux.tar.gz
+    gunzip ncbi-blast-2.2.29+-x64-linux.tar.gz
+    tar -xf ncbi-blast-2.2.29+-x64-linux.tar
+    gzip ncbi-blast-2.2.29+-x64-linux.tar
+
+    ln -s $LKSRC_DIR/ncbi-blast-2.2.29+-x64-linux $LKTOOLS_DIR/ncbi-blast-2.2.29
+else
+    echo "Already installed"
+fi
+
+
+#
 #varscan2
 #
 

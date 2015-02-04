@@ -230,28 +230,30 @@ public class SequenceTaskHelper implements PipelineContext
         return (Integer)row.get("rowid");
     }
 
-    public static String getMinimalBaseName(File file)
+//    public static String getMinimalBaseName(String filename)
+//    {
+//        String bn;
+//        int i = 0;
+//
+//        if (filename == null)
+//            return null;
+//
+//        while (i < 20){
+//            bn = FilenameUtils.getBaseName(filename);
+//            if (bn.equals(filename)){
+//                break;
+//            }
+//            filename = bn;
+//            i++;
+//        }
+//        return filename;
+//    }
+
+    //returns the basename of the file, automatically removing .gz, if present
+    public static String getUnzippedBaseName(String filename)
     {
-        return getMinimalBaseName(file.getName());
-    }
-
-    public static String getMinimalBaseName(String filename)
-    {
-        String bn;
-        int i = 0;
-
-        if (filename == null)
-            return null;
-
-        while (i < 20){
-            bn = FilenameUtils.getBaseName(filename);
-            if (bn.equals(filename)){
-                break;
-            }
-            filename = bn;
-            i++;
-        }
-        return filename;
+        filename = filename.replaceAll(".gz$", "");
+        return FilenameUtils.getBaseName(filename);
     }
 
     public FileAnalysisJobSupport getSupport()
@@ -262,101 +264,6 @@ public class SequenceTaskHelper implements PipelineContext
     public SequenceAnalysisJobSupport getSequenceSupport()
     {
         return (SequenceAnalysisJobSupport)_job;
-    }
-
-    public File getExtraBarcodesFile()
-    {
-        return new File(getSupport().getAnalysisDirectory(), "extraBarcodes.txt");
-    }
-
-    public List<BarcodeModel> getExtraBarcodesFromFile() throws PipelineJobException
-    {
-        List<BarcodeModel> models = new ArrayList<>();
-        File barcodes = getExtraBarcodesFile();
-
-        if (barcodes.exists())
-        {
-            getJob().getLogger().debug("\tReading additional barcodes from file");
-
-            CSVReader reader = null;
-
-            try
-            {
-                reader = new CSVReader(new FileReader(barcodes), '\t');
-                String[] line;
-                while ((line = reader.readNext()) != null)
-                {
-                    BarcodeModel model = new BarcodeModel();
-                    if (!StringUtils.isEmpty(line[0]))
-                    {
-                        model.setName(line[0]);
-                        model.setSequence(line[1]);
-                        models.add(model);
-                    }
-                }
-            }
-            catch (FileNotFoundException e)
-            {
-                throw new PipelineJobException(e);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-            finally
-            {
-                try
-                {
-                    if (reader != null)
-                        reader.close();
-
-                    barcodes.delete();
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-            }
-        }
-
-        return models;
-    }
-
-    public void writeExtraBarcodes() throws PipelineJobException
-    {
-        BarcodeModel[] models = getSettings().getAdditionalBarcodes();
-        if (models != null && models.length > 0)
-        {
-            File extraBarcodes = getExtraBarcodesFile();
-            getJob().getLogger().debug("\tWriting additional barcodes to file: " + extraBarcodes.getPath());
-            CSVWriter writer = null;
-            try
-            {
-                writer = new CSVWriter(new FileWriter(extraBarcodes), '\t', CSVWriter.NO_QUOTE_CHARACTER);
-                for (BarcodeModel m : models)
-                {
-                    writer.writeNext(new String[]{m.getName(), m.getSequence()});
-                }
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-            finally
-            {
-                if (writer != null)
-                {
-                    try
-                    {
-                        writer.close();
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-                }
-            }
-        }
     }
 
     public static boolean isAlignmentUsed(PipelineJob job)

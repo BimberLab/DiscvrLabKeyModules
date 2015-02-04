@@ -221,12 +221,11 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome) throws PipelineJobException
+        public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             AnalysisOutputImpl output = new AnalysisOutputImpl();
             BismarkWrapper wrapper = getWrapper();
 
-            File outputDirectory = inputBam.getParentFile();
             List<String> args = new ArrayList<>();
             args.add(wrapper.getMethylationExtractorExe().getPath());
             args.add(inputBam.getPath());
@@ -250,43 +249,43 @@ public class BismarkWrapper extends AbstractCommandWrapper
             }
 
             args.add("-o");
-            args.add(outputDirectory.getPath());
+            args.add(outputDir.getPath());
 
-            getWrapper().setWorkingDir(outputDirectory);
+            getWrapper().setWorkingDir(outputDir);
             getWrapper().execute(args);
 
             //add outputs
             String outputBasename = FileUtil.getBaseName(inputBam);
             getWrapper().getLogger().debug("using basename: " + outputBasename);
-            output.addOutput(new File(outputDirectory, outputBasename + ".M-bias.txt"), "Bismark M-Bias Report");
+            output.addOutput(new File(outputDir, outputBasename + ".M-bias.txt"), "Bismark M-Bias Report");
 
-            File graph1 = new File(outputDirectory, outputBasename + ".M-bias_R1.png");
+            File graph1 = new File(outputDir, outputBasename + ".M-bias_R1.png");
             if (graph1.exists())
             {
                 output.addOutput(graph1, "Bismark M-Bias Image");
             }
 
-            File graph2 = new File(outputDirectory, outputBasename + ".M-bias_R2.png");
+            File graph2 = new File(outputDir, outputBasename + ".M-bias_R2.png");
             if (graph2.exists())
             {
                 output.addOutput(graph2, "Bismark M-Bias Image");
             }
 
-            output.addOutput(new File(outputDirectory, outputBasename + ".bam_splitting_report.txt"), "Bismark Splitting Report");
+            output.addOutput(new File(outputDir, outputBasename + ".bam_splitting_report.txt"), "Bismark Splitting Report");
 
             //NOTE: because the data are likely directional, we will not encounter CTOB
             List<Pair<File, Integer>> CpGmethlyationData = Arrays.asList(
-                    Pair.of(new File(outputDirectory, "CpG_OT_" + outputBasename + ".txt.gz"), 0),
-                    Pair.of(new File(outputDirectory, "CpG_CTOT_" + outputBasename + ".txt.gz"), 0),
-                    Pair.of(new File(outputDirectory, "CpG_OB_" + outputBasename + ".txt.gz"), -1),
-                    Pair.of(new File(outputDirectory, "CpG_CTOB_" + outputBasename + ".txt.gz"), -1)
+                    Pair.of(new File(outputDir, "CpG_OT_" + outputBasename + ".txt.gz"), 0),
+                    Pair.of(new File(outputDir, "CpG_CTOT_" + outputBasename + ".txt.gz"), 0),
+                    Pair.of(new File(outputDir, "CpG_OB_" + outputBasename + ".txt.gz"), -1),
+                    Pair.of(new File(outputDir, "CpG_CTOB_" + outputBasename + ".txt.gz"), -1)
             );
 
             List<Pair<File, Integer>> NonCpGmethlyationData = Arrays.asList(
-                    Pair.of(new File(outputDirectory, "NonCpG_OT_" + outputBasename + ".txt.gz"), 0),
-                    Pair.of(new File(outputDirectory, "NonCpG_CTOT_" + outputBasename + ".txt.gz"), 0),
-                    Pair.of(new File(outputDirectory, "NonCpG_OB_" + outputBasename + ".txt.gz"), -1),
-                    Pair.of(new File(outputDirectory, "NonCpG_CTOB_" + outputBasename + ".txt.gz"), -1)
+                    Pair.of(new File(outputDir, "NonCpG_OT_" + outputBasename + ".txt.gz"), 0),
+                    Pair.of(new File(outputDir, "NonCpG_CTOT_" + outputBasename + ".txt.gz"), 0),
+                    Pair.of(new File(outputDir, "NonCpG_OB_" + outputBasename + ".txt.gz"), -1),
+                    Pair.of(new File(outputDir, "NonCpG_CTOB_" + outputBasename + ".txt.gz"), -1)
             );
 
             if (getProvider().getParameterByName("mbias_only") != null && getProvider().getParameterByName("mbias_only").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
@@ -298,8 +297,8 @@ public class BismarkWrapper extends AbstractCommandWrapper
                 getPipelineCtx().getLogger().info("creating per-site summary report");
 
                 Integer minCoverageDepth = getProvider().getParameterByName("minCoverageDepth").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class);
-                File siteReport = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".CpG_Site_Summary.txt");
-                File outputGff = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".CpG_Site_Summary.gff");
+                File siteReport = new File(outputDir, FileUtil.getBaseName(inputBam) + ".CpG_Site_Summary.txt");
+                File outputGff = new File(outputDir, FileUtil.getBaseName(inputBam) + ".CpG_Site_Summary.gff");
 
                 produceSiteReport(getWrapper().getLogger(), siteReport, outputGff, CpGmethlyationData, minCoverageDepth);
                 if (siteReport.exists())
@@ -321,8 +320,8 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     output.addSequenceOutput(outputGff, rs.getName() + " methylation", "CpG Methylation Rates", rs.getRowId(), null, referenceGenome.getGenomeId());
                 }
 
-//                File siteReport2 = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".NonCpG_Site_Summary.txt");
-//                File outputGff2 = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".NonCpG_Site_Summary.gff");
+//                File siteReport2 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".NonCpG_Site_Summary.txt");
+//                File outputGff2 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".NonCpG_Site_Summary.gff");
 //
 //                produceSiteReport(getWrapper().getLogger(), siteReport2, outputGff2, NonCpGmethlyationData, minCoverageDepth);
 //                if (siteReport2.exists())
@@ -379,12 +378,6 @@ public class BismarkWrapper extends AbstractCommandWrapper
         public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
         {
             return null;
-        }
-
-        @Override
-        public void performAnalysisOnAll(List<AnalysisModel> analysisModels) throws PipelineJobException
-        {
-
         }
 
         private File createSummaryReport(Logger log, File siteReport, Integer minCoverageDepth)

@@ -19,7 +19,7 @@
 <ns:tables xsi:schemaLocation="http://labkey.org/data/xml" xmlns:ns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ns:table tableName="jsonfiles" tableDbType="TABLE" useColumnOrder="true">
         <!--NOTE: required to allow modules to register buttons-->
-        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryEditingTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableUrl></ns:tableUrl>
         <ns:updateUrl></ns:updateUrl>
@@ -97,7 +97,7 @@
     </ns:table>
     <ns:table tableName="databases" tableDbType="TABLE" useColumnOrder="true">
         <!--NOTE: required to allow modules to register buttons-->
-        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryEditingTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableUrl>/jbrowse/databaseDetails.view?databaseId=${objectid}</ns:tableUrl>
         <ns:insertUrl></ns:insertUrl>
@@ -130,6 +130,17 @@
             <ns:column columnName="temporary">
                 <ns:columnTitle>Temporary?</ns:columnTitle>
                 <ns:description>If true, this session will be deleted at the end of the day, as part of the routine system maintenance.</ns:description>
+            </ns:column>
+            <ns:column columnName="primarydb">
+                <ns:columnTitle>Is Primary Database for Genome?</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:description>For each reference genome, a JBrowse session is automatically created.  This session will pre-process all reference sequences and tracks, making it faster to create customized child sessions.</ns:description>
+            </ns:column>
+            <ns:column columnName="createOwnIndex">
+                <ns:columnTitle>Should Create Own Index?</ns:columnTitle>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:description>When a JBrowse session is created, it generates an index of features.  This list is used for searches and type-ahead.  Because this takes a very long time to generate, by default only a single index is created per genome (copied from the session flagged as the primary).  This helps performance, but means that any features present in the others sessions will not be indexed.  This is usually not a problem, but individual sessions can set this to true to generate their own custom indexes.</ns:description>
             </ns:column>
             <ns:column columnName="jobid">
                 <ns:columnTitle>Pipeline Job</ns:columnTitle>

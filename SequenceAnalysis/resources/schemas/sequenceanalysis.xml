@@ -2169,7 +2169,7 @@
         </ns:buttonBarOptions>
     </ns:table>
     <ns:table tableName="outputfiles" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryEditingTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableUrl></ns:tableUrl>
         <ns:insertUrl></ns:insertUrl>

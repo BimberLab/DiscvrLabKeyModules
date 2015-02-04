@@ -74,7 +74,7 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
     }
 
     @Override
-    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome) throws PipelineJobException
+    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         return null;
     }
@@ -138,12 +138,6 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
         output.addSequenceOutput(outputFile, "SNP Count: " + rs.getName(), "SNP Count Output", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
 
         return output;
-    }
-
-    @Override
-    public void performAnalysisOnAll(List<AnalysisModel> analysisModels) throws PipelineJobException
-    {
-
     }
 
     private void calculateForInterval(BufferedWriter writer, File inputBam, File bamIndex, IndexedFastaSequenceFile indexedFastaSequenceFile, String alignmentFileName, String readsetName, String refName, int start, int stop) throws IOException
@@ -213,6 +207,7 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
                             (totalByBase.containsKey("G") ? totalByBase.get("G").toString() : "0"),
                             (totalByBase.containsKey("C") ? totalByBase.get("C").toString() : "0"),
                             (totalByBase.containsKey("N") ? totalByBase.get("N").toString() : "0"),
+                            //TODO: indel
 
                             (avgQualMap.containsKey("A") ? avgQualMap.get("A").toString() : "0"),
                             (avgQualMap.containsKey("T") ? avgQualMap.get("T").toString() : "0"),

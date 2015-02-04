@@ -219,6 +219,9 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                 databaseRecord.put("libraryid", getPipelineJob().getLibraryId());
                 databaseRecord.put("objectid", databaseGuid);
                 databaseRecord.put("jobid", getJob().getJobGUID());
+                databaseRecord.put("primarydb", getPipelineJob().isPrimaryDb());
+                databaseRecord.put("createOwnIndex", getPipelineJob().isCreateOwnIndex());
+                databaseRecord.put("temporary", getPipelineJob().isTemporarySession());
                 databaseRecord.put("container", getJob().getContainer().getId());
                 databaseRecord.put("created", new Date());
                 databaseRecord.put("createdby", getJob().getUser().getUserId());

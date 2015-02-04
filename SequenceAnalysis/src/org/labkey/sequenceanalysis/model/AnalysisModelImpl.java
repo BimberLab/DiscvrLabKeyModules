@@ -43,7 +43,6 @@ public class AnalysisModelImpl implements AnalysisModel
     private Integer _library_id;
     private String _description;
     private String _synopsis;
-    private Map<Integer, String> _cachedFilePaths = new HashMap<>();
 
     public AnalysisModelImpl()
     {
@@ -52,6 +51,11 @@ public class AnalysisModelImpl implements AnalysisModel
 
     public static AnalysisModel getFromDb(int analysisId, User u)
     {
+        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+        {
+            throw new IllegalArgumentException("This method can only be called from the webserver");
+        }
+
         TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), analysisId);
         TableSelector ts = new TableSelector(ti, filter, null);
@@ -159,6 +163,11 @@ public class AnalysisModelImpl implements AnalysisModel
 
     private ExpData getData(Integer dataId)
     {
+        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+        {
+            throw new IllegalArgumentException("This method can only be called from the webserver");
+        }
+
         if (dataId == null)
         {
             return null;
@@ -276,6 +285,11 @@ public class AnalysisModelImpl implements AnalysisModel
 
     public ReadsetModel getReadsetModel()
     {
+        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+        {
+            throw new IllegalArgumentException("This method can only be called from the webserver");
+        }
+
         if (_readset == null)
             return null;
 
@@ -326,36 +340,6 @@ public class AnalysisModelImpl implements AnalysisModel
         ret.put("library_id", _library_id);
         ret.put("description", _description);
         ret.put("synopsis", _synopsis);
-
-        return ret;
-    }
-
-    public static AnalysisModel fromJson(JSONObject o)
-    {
-        AnalysisModelImpl ret = new AnalysisModelImpl();
-        ret.setRowId(o.optInt("rowId"));
-        ret.setType(o.optString("type"));
-        ret.setRunId(o.optInt("type"));
-        ret.setCreatedby(o.optInt("createdby"));
-        ret.setCreated(ConvertHelper.convert(o.optString("created"), Date.class));
-        ret.setModifiedby(o.optInt("modifiedby"));
-        ret.setModified(ConvertHelper.convert(o.optString("modified"), Date.class));
-        ret.setContainer(o.optString("container"));
-        ret.setReadset(o.optInt("readset"));
-        ret.setAlignmentFile(o.optInt("alignmentFile"));
-        ret.setReferenceLibrary(o.optInt("referenceLibrary"));
-        ret.setLibraryId(o.optInt("library_id"));
-        ret.setDescription(o.optString("description"));
-        ret.setSynopsis(o.optString("synopsis"));
-
-        if (o.containsKey("filePaths"))
-        {
-            JSONObject paths = o.getJSONObject("filePaths");
-            for (String dataId : paths.keySet())
-            {
-                ret._cachedFilePaths.put(Integer.parseInt(dataId), paths.getString(dataId));
-            }
-        }
 
         return ret;
     }

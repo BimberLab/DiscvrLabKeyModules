@@ -58,7 +58,7 @@ public class ReadsetModel
         if(StringUtils.isEmpty(prefix))
             return null;
 
-        String name = SequenceTaskHelper.getMinimalBaseName(prefix);
+        String name = SequenceTaskHelper.getUnzippedBaseName(prefix);
         if(!StringUtils.isEmpty(getMid5()))
             name += "_" + getMid5();
         if(!StringUtils.isEmpty(getMid3()))
