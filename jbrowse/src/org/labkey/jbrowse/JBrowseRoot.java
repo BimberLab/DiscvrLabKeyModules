@@ -750,7 +750,7 @@ public class JBrowseRoot
             return null;
         }
 
-        if (map.get("createOwnIndex") == true || map.get("primaryDb") == true)
+        if (Boolean.TRUE.equals(map.get("createOwnIndex")) || Boolean.TRUE.equals(map.get("primaryDb")))
         {
             return null;
         }
