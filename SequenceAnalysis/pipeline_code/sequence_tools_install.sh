@@ -99,8 +99,8 @@ echo ""
 #    if [[ ! -e ${LKSRC_DIR}/epel-release-6-8.noarch.rpm ]];
 #    then
 #        cd $LKSRC_DIR
-#        wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-#        wget http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+#        wget --read-timeout=10 http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+#        wget --read-timeout=10 http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
 #        rpm -Uvh remi-release-6*.rpm epel-release-6*.rpm
 #    fi
 #fi
@@ -147,7 +147,7 @@ then
     rm -Rf bwa-0.7.9a*
     rm -Rf $LKTOOLS_DIR/bwa
 
-    wget http://downloads.sourceforge.net/project/bio-bwa/bwa-0.7.9a.tar.bz2
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/bio-bwa/bwa-0.7.9a.tar.bz2
     bunzip2 bwa-0.7.9a.tar.bz2
     tar -xf bwa-0.7.9a.tar
     bzip2 bwa-0.7.9a.tar
@@ -201,7 +201,7 @@ then
     rm -Rf $LKTOOLS_DIR/gmap
     rm -Rf $LKTOOLS_DIR/gmap_build
 
-    wget http://research-pub.gene.com/gmap/src/gmap-gsnap-2014-12-16.v2.tar.gz
+    wget --read-timeout=10 http://research-pub.gene.com/gmap/src/gmap-gsnap-2014-12-16.v2.tar.gz
     gunzip gmap-gsnap-2014-12-16.v2.tar.gz
     tar -xf gmap-gsnap-2014-12-16.v2.tar
     gzip gmap-gsnap-2014-12-16.v2.tar
@@ -230,7 +230,7 @@ then
     rm -Rf STAR_2.4.0h*
     rm -Rf $LKTOOLS_DIR/STAR
 
-    wget https://github.com/alexdobin/STAR/archive/STAR_2.4.0h.tar.gz
+    wget --read-timeout=10 https://github.com/alexdobin/STAR/archive/STAR_2.4.0h.tar.gz
     gunzip STAR_2.4.0h.tar.gz
     tar -xf STAR_2.4.0h.tar
     gzip STAR_2.4.0h.tar
@@ -256,7 +256,7 @@ then
     echo "Cleaning up previous installs"
     rm -Rf qualimap_v2.0*
 
-    wget http://qualimap.bioinfo.cipf.es/release/qualimap_v2.0.zip
+    wget --read-timeout=10 http://qualimap.bioinfo.cipf.es/release/qualimap_v2.0.zip
     unzip qualimap_v2.0.zip
 else
     echo "Already installed"
@@ -282,7 +282,7 @@ then
     rm -Rf $LKTOOLS_DIR/MosaikJump
     rm -Rf $LKTOOLS_DIR/MosaikText
 
-    wget http://mosaik-aligner.googlecode.com/files/MOSAIK-2.1.73-binary.tar
+    wget --read-timeout=10 http://mosaik-aligner.googlecode.com/files/MOSAIK-2.1.73-binary.tar
     tar -xf MOSAIK-2.1.73-binary.tar
     echo "Compressing TAR"
     gzip MOSAIK-2.1.73-binary.tar
@@ -305,7 +305,7 @@ then
 
     cd $LKSRC_DIR
 
-    wget http://mosaik-aligner.googlecode.com/files/MOSAIK-2.1.73-source.tar
+    wget --read-timeout=10 http://mosaik-aligner.googlecode.com/files/MOSAIK-2.1.73-source.tar
     tar -xf MOSAIK-2.1.73-source.tar
     echo "Compressing TAR"
     gzip MOSAIK-2.1.73-source.tar
@@ -332,7 +332,7 @@ then
     rm -Rf fastq_screen_v0.4.4
     rm -Rf $LKTOOLS_DIR/fastq_screen
 
-    wget http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/fastq_screen_v0.4.4.tar.gz
+    wget --read-timeout=10 http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/fastq_screen_v0.4.4.tar.gz
     gunzip fastq_screen_v0.4.4.tar.gz
     tar -xf fastq_screen_v0.4.4.tar
     echo "Compressing TAR"
@@ -367,7 +367,7 @@ then
     rm -Rf $LKTOOLS_DIR/coverage2cytosine
     rm -Rf $LKTOOLS_DIR/deduplicate_bismark
 
-    wget http://www.bioinformatics.babraham.ac.uk/projects/bismark/bismark_v0.12.5.tar.gz
+    wget --read-timeout=10 http://www.bioinformatics.babraham.ac.uk/projects/bismark/bismark_v0.12.5.tar.gz
     gunzip bismark_v0.12.5.tar.gz
     tar -xf bismark_v0.12.5.tar
     echo "Compressing TAR"
@@ -411,7 +411,7 @@ fi
 #    rm -Rf $LKTOOLS_DIR/tophat2
 #    rm -Rf $LKTOOLS_DIR/prep_reads
 #
-#    wget http://ccb.jhu.edu/software/tophat/downloads/tophat-2.0.12.Linux_x86_64.tar.gz
+#    wget --read-timeout=10 http://ccb.jhu.edu/software/tophat/downloads/tophat-2.0.12.Linux_x86_64.tar.gz
 #    gunzip tophat-2.0.12.Linux_x86_64.tar.gz
 #    tar -xf tophat-2.0.12.Linux_x86_64.tar
 #    echo "Compressing TAR"
@@ -442,7 +442,7 @@ then
     rm -Rf $LKTOOLS_DIR/samtools
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget http://downloads.sourceforge.net/project/samtools/samtools/0.1.18/samtools-0.1.18.tar.bz2
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/samtools/samtools/0.1.18/samtools-0.1.18.tar.bz2
     bunzip2 samtools-0.1.18.tar.bz2
     tar -xf samtools-0.1.18.tar
     echo "Compressing TAR"
@@ -473,7 +473,7 @@ then
     rm -Rf $LKTOOLS_DIR/tabix
     rm -Rf $LKTOOLS_DIR/bgzip
 
-    wget http://downloads.sourceforge.net/project/samtools/tabix/tabix-0.2.6.tar.bz2
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/samtools/tabix/tabix-0.2.6.tar.bz2
     bunzip2 tabix-0.2.6.tar.bz2
     tar -xf tabix-0.2.6.tar
     echo "Compressing TAR"
@@ -502,7 +502,7 @@ then
     rm -Rf tabix-0.2.6*
     rm -Rf $LKTOOLS_DIR/bedtools
 
-    wget https://github.com/arq5x/bedtools2/releases/download/v2.20.1/bedtools-2.20.1.tar.gz
+    wget --read-timeout=10 https://github.com/arq5x/bedtools2/releases/download/v2.20.1/bedtools-2.20.1.tar.gz
     gunzip bedtools-2.20.1.tar.gz
     tar -xf bedtools-2.20.1.tar
     echo "Compressing TAR"
@@ -530,7 +530,7 @@ then
     rm -Rf vcftools_0.1.12*
     rm -Rf $LKTOOLS_DIR/vcftools
 
-    wget http://downloads.sourceforge.net/project/vcftools/vcftools_0.1.12b.tar.gz
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/vcftools/vcftools_0.1.12b.tar.gz
     gunzip vcftools_0.1.12b.tar.gz
     tar -xf vcftools_0.1.12b.tar
     echo "Compressing TAR"
@@ -559,7 +559,7 @@ then
     rm -Rf snpEff*
     rm -Rf $LKTOOLS_DIR/snpEff
 
-    wget http://downloads.sourceforge.net/project/snpeff/snpEff_latest_core.zip
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/snpeff/snpEff_latest_core.zip
     unzip snpEff_latest_core.zip
     cd snpEff
 
@@ -587,7 +587,7 @@ then
 
     mkdir blat
     cd blat
-    wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/blat/blat
+    wget --read-timeout=10 http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/blat/blat
     chmod +x blat
     ln -sr $LKSRC_DIR/blat/blat $LKTOOLS_DIR
 else
@@ -614,7 +614,7 @@ then
     rm -Rf lastz-1.02.00*
     rm -Rf $LKTOOLS_DIR/lastz
 
-    wget http://www.bx.psu.edu/miller_lab/dist/lastz-1.02.00.tar.gz
+    wget --read-timeout=10 http://www.bx.psu.edu/miller_lab/dist/lastz-1.02.00.tar.gz
     gunzip lastz-1.02.00.tar.gz
     tar -xf lastz-1.02.00.tar
     echo "Compressing TAR"
@@ -644,14 +644,14 @@ then
     rm -Rf fastx_toolkit-0.0.13.2*
 
     #this should not be required with this script
-    #wget http://cancan.cshl.edu/labmembers/gordon/files/libgtextutils-0.6.tar.bz2
+    #wget --read-timeout=10 http://cancan.cshl.edu/labmembers/gordon/files/libgtextutils-0.6.tar.bz2
     #tar -xjf libgtextutils-0.6.tar.bz2
     #cd libgtextutils-0.6
     #./configure
     #make
     #make install
 
-    wget http://hannonlab.cshl.edu/fastx_toolkit/fastx_toolkit-0.0.13.2.tar.bz2
+    wget --read-timeout=10 http://hannonlab.cshl.edu/fastx_toolkit/fastx_toolkit-0.0.13.2.tar.bz2
     bunzip2 fastx_toolkit-0.0.13.2.tar.bz2
     tar -xf fastx_toolkit-0.0.13.2.tar
     echo "Compressing TAR"
@@ -683,7 +683,7 @@ then
     rm -Rf snappy-java-1.0.3-rc3.jar
     rm -Rf $LKTOOLS_DIR/picard-tools
 
-    wget http://downloads.sourceforge.net/project/picard/picard-tools/1.114/picard-tools-1.114.zip
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/picard/picard-tools/1.114/picard-tools-1.114.zip
     unzip picard-tools-1.114.zip
     ln -sr $LKSRC_DIR/picard-tools-1.114 $LKTOOLS_DIR/picard-tools
 else
@@ -710,7 +710,7 @@ then
     rm -Rf $LKTOOLS_DIR/bowtie
     rm -Rf $LKTOOLS_DIR/bowtie-build
 
-    wget http://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.0.1/bowtie-1.0.1-linux-x86_64.zip
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.0.1/bowtie-1.0.1-linux-x86_64.zip
     unzip bowtie-1.0.1-linux-x86_64.zip
     cd bowtie-1.0.1
 
@@ -763,7 +763,7 @@ then
     rm -Rf bfast-0.7.0a
     rm -Rf $LKTOOLS_DIR/bfast
 
-    wget http://downloads.sourceforge.net/project/bfast/bfast/0.7.0/bfast-0.7.0a.tar.gz
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/bfast/bfast/0.7.0/bfast-0.7.0a.tar.gz
     gunzip bfast-0.7.0a.tar.gz
     tar -xf bfast-0.7.0a.tar
     echo "Compressing TAR"
@@ -794,7 +794,7 @@ then
     rm -Rf CAP3
     rm -Rf $LKTOOLS_DIR/cap3
 
-    wget http://seq.cs.iastate.edu/CAP3/cap3.linux.opteron64.tar
+    wget --read-timeout=10 http://seq.cs.iastate.edu/CAP3/cap3.linux.opteron64.tar
     tar -xf cap3.linux.opteron64.tar
     echo "Compressing TAR"
     gzip cap3.linux.opteron64.tar
@@ -830,7 +830,7 @@ else
         rm -Rf biopython-1.60.tar
         rm -Rf biopython-1.60
 
-        wget http://biopython.org/DIST/biopython-1.60.tar.gz
+        wget --read-timeout=10 http://biopython.org/DIST/biopython-1.60.tar.gz
         gunzip biopython-1.60.tar.gz
         tar -xf biopython-1.60.tar
         echo "Compressing TAR"
@@ -862,7 +862,7 @@ then
     rm -Rf $LKTOOLS_DIR/sff_extract
     rm -Rf $LKTOOLS_DIR/convert_format
 
-    wget http://bioinf.comav.upv.es/downloads/seq_crumbs-0.1.8-x64-linux.tar.gz
+    wget --read-timeout=10 http://bioinf.comav.upv.es/downloads/seq_crumbs-0.1.8-x64-linux.tar.gz
     gunzip seq_crumbs-0.1.8-x64-linux.tar.gz
     tar -xf seq_crumbs-0.1.8-x64-linux.tar
     echo "Compressing TAR"
@@ -892,7 +892,7 @@ then
     rm -Rf FLASH-1.2.7
     rm -Rf $LKTOOLS_DIR/flash
 
-    wget http://downloads.sourceforge.net/project/flashpage/FLASH-1.2.7.tar.gz
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/flashpage/FLASH-1.2.7.tar.gz
     gunzip FLASH-1.2.7.tar.gz
     tar -xf FLASH-1.2.7.tar
     echo "Compressing TAR"
@@ -924,7 +924,7 @@ then
     rm -Rf $LKTOOLS_DIR/mira
     rm -Rf $LKTOOLS_DIR/miraconvert
 
-    wget http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira_4.0.2_linux-gnu_x86_64_static.tar.bz2
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira_4.0.2_linux-gnu_x86_64_static.tar.bz2
     bunzip2 mira_4.0.2_linux-gnu_x86_64_static.tar.bz2
     tar -xf mira_4.0.2_linux-gnu_x86_64_static.tar
     echo "Compressing TAR"
@@ -958,7 +958,7 @@ then
     rm -Rf $LKTOOLS_DIR/velvetg
     rm -Rf $LKTOOLS_DIR/velveth
 
-    wget http://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.09.tgz
+    wget --read-timeout=10 http://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.09.tgz
     gunzip velvet_1.2.09.tgz
     tar -xf velvet_1.2.09.tar
     echo "Compressing TAR"
@@ -989,7 +989,7 @@ then
     rm -Rf VelvetOptimiser-2.2.5
     rm -Rf $LKTOOLS_DIR/VelvetOptimiser.pl
 
-    wget http://www.vicbioinformatics.com/VelvetOptimiser-2.2.5.tar.gz
+    wget --read-timeout=10 http://www.vicbioinformatics.com/VelvetOptimiser-2.2.5.tar.gz
     gunzip VelvetOptimiser-2.2.5.tar.gz
     tar -xf VelvetOptimiser-2.2.5.tar
     gzip VelvetOptimiser-2.2.5.tar
@@ -1019,7 +1019,7 @@ fi
 #    rm -Rf $LKTOOLS_DIR/bank2contig
 #    rm -Rf $LKTOOLS_DIR/bank-transact
 #
-#    wget http://downloads.sourceforge.net/project/amos/amos/3.1.0/amos-3.1.0.tar.gz
+#    wget --read-timeout=10 http://downloads.sourceforge.net/project/amos/amos/3.1.0/amos-3.1.0.tar.gz
 #    gunzip amos-3.1.0.tar.gz
 #    tar -xf amos-3.1.0.tar
 #    cd amos-3.1.0
@@ -1075,7 +1075,7 @@ then
     rm -Rf JBrowse-*
     rm -Rf $LKTOOLS_DIR/JBrowse-*
 
-    wget http://jbrowse.org/releases/JBrowse-1.11.5.zip
+    wget --read-timeout=10 http://jbrowse.org/releases/JBrowse-1.11.5.zip
     unzip JBrowse-1.11.5.zip
     rm JBrowse-1.11.5.zip
     cd JBrowse-1.11.5
@@ -1103,7 +1103,7 @@ then
     rm -Rf ncbi-blast-*
     rm -Rf $LKTOOLS_DIR/ncbi-blast-*
 
-    wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.30/ncbi-blast-2.2.30+-x64-linux.tar.gz
+    wget --read-timeout=10 ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.30/ncbi-blast-2.2.30+-x64-linux.tar.gz
     gunzip ncbi-blast-2.2.30+-x64-linux.tar.gz
     tar -xf ncbi-blast-2.2.30+-x64-linux.tar
     gzip ncbi-blast-2.2.30+-x64-linux.tar
@@ -1132,7 +1132,7 @@ then
     rm -Rf VarScan.v2.3.6.jar
     rm -Rf $LKTOOLS_DIR/VarScan2.jar
 
-    wget http://downloads.sourceforge.net/project/varscan/VarScan.v2.3.6.jar
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/varscan/VarScan.v2.3.6.jar
     ln -sr $LKSRC_DIR/VarScan.v2.3.6.jar $LKTOOLS_DIR/VarScan2.jar
 else
     echo "Already installed"
@@ -1160,7 +1160,7 @@ then
     rm -Rf $LKTOOLS_DIR/variscan
 
     #NOTE: -U seems required to avoid a 403 error
-    wget -U firefox http://www.ub.es/softevol/variscan/variscan-2.0.3.tar.gz
+    wget --read-timeout=10 -U firefox http://www.ub.es/softevol/variscan/variscan-2.0.3.tar.gz
     gunzip variscan-2.0.3.tar.gz
     tar -xf variscan-2.0.3.tar
     ln -sr $LKSRC_DIR/variscan-2.0.3/bin/Linux-i386/variscan $LKTOOLS_DIR
@@ -1186,7 +1186,7 @@ then
     rm -Rf clustalw-2.1
     rm -Rf $LKTOOLS_DIR/clustalw2
 
-    wget http://www.clustal.org/download/current/clustalw-2.1.tar.gz
+    wget --read-timeout=10 http://www.clustal.org/download/current/clustalw-2.1.tar.gz
     gunzip clustalw-2.1.tar.gz
     tar -xf clustalw-2.1.tar
     gzip clustalw-2.1.tar
@@ -1219,7 +1219,7 @@ then
     rm -Rf muscle3.8.31_i86linux64
     rm -Rf $LKTOOLS_DIR/muscle
 
-    wget http://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz
+    wget --read-timeout=10 http://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz
     gunzip muscle3.8.31_i86linux64.tar.gz
     tar -xf muscle3.8.31_i86linux64.tar
     gzip muscle3.8.31_i86linux64.tar
@@ -1247,7 +1247,7 @@ then
     rm -Rf Trimmomatic-0.32*
     rm -Rf $LKTOOLS_DIR/trimmomatic.jar
 
-    wget http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.32.zip
+    wget --read-timeout=10 http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.32.zip
     unzip Trimmomatic-0.32.zip
     cd Trimmomatic-0.32
 
@@ -1287,7 +1287,7 @@ fi
 #
 #    echo "now download VPhaser2"
 #    cd ../../
-#    wget http://www.broadinstitute.org/software/viral/v_phaser_2/v_phaser_2.zip
+#    wget --read-timeout=10 http://www.broadinstitute.org/software/viral/v_phaser_2/v_phaser_2.zip
 #    unzip v_phaser_2.zip
 #    cd VPhaser-2-02112013/src
 #
@@ -1322,7 +1322,7 @@ fi
 #    rm -Rf lofreq_star-2.0.0-rc-1*
 #    rm -Rf $LKTOOLS_DIR/lofreq
 #
-#    wget http://downloads.sourceforge.net/project/lofreq/lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
+#    wget --read-timeout=10 http://downloads.sourceforge.net/project/lofreq/lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
 #    gunzip lofreq_star-2.0.0-rc-1.linux-x86-64.tar.gz
 #    tar -xf lofreq_star-2.0.0-rc-1.linux-x86-64.tar
 #    gzip lofreq_star-2.0.0-rc-1.linux-x86-64.tar
@@ -1352,7 +1352,7 @@ fi
 #    rm -Rf EMBOSS-6.6.0
 #    rm -Rf $LKTOOLS_DIR/seqret
 #
-#    wget ftp://ftp.ebi.ac.uk/pub/software/unix/EMBOSS/EMBOSS-6.6.0.tar.gz
+#    wget --read-timeout=10 ftp://ftp.ebi.ac.uk/pub/software/unix/EMBOSS/EMBOSS-6.6.0.tar.gz
 #    gunzip EMBOSS-6.6.0.tar.gz
 #    tar -xf EMBOSS-6.6.0.tar
 #    gzip EMBOSS-6.6.0.tar
