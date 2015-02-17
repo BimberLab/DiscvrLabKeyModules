@@ -153,7 +153,7 @@ then
     bzip2 bwa-0.7.9a.tar
     cd bwa-0.7.9a
     make CFLAGS=-msse2
-    ln -s $LKSRC_DIR/bwa-0.7.9a/bwa $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/bwa-0.7.9a/bwa $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -235,7 +235,7 @@ then
     tar -xf STAR_2.4.0h.tar
     gzip STAR_2.4.0h.tar
 
-    ln -s $LKSRC_DIR/STAR-STAR_2.4.0h/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/STAR-STAR_2.4.0h/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -287,10 +287,10 @@ then
     echo "Compressing TAR"
     gzip MOSAIK-2.1.73-binary.tar
 
-    ln -s $LKSRC_DIR/MOSAIK-2.1.73-binary/MosaikAligner $LKTOOLS_DIR/MosaikAligner
-    ln -s $LKSRC_DIR/MOSAIK-2.1.73-binary/MosaikBuild $LKTOOLS_DIR/MosaikBuild
-    ln -s $LKSRC_DIR/MOSAIK-2.1.73-binary/MosaikJump $LKTOOLS_DIR/MosaikJump
-    ln -s $LKSRC_DIR/MOSAIK-2.1.73-binary/MosaikText $LKTOOLS_DIR/MosaikText
+    ln -sr $LKSRC_DIR/MOSAIK-2.1.73-binary/MosaikAligner $LKTOOLS_DIR/MosaikAligner
+    ln -sr $LKSRC_DIR/MOSAIK-2.1.73-binary/MosaikBuild $LKTOOLS_DIR/MosaikBuild
+    ln -sr $LKSRC_DIR/MOSAIK-2.1.73-binary/MosaikJump $LKTOOLS_DIR/MosaikJump
+    ln -sr $LKSRC_DIR/MOSAIK-2.1.73-binary/MosaikText $LKTOOLS_DIR/MosaikText
 fi
 
 #also download src to get the networkFiles
@@ -310,7 +310,7 @@ then
     echo "Compressing TAR"
     gzip MOSAIK-2.1.73-source.tar
 
-    ln -s $LKSRC_DIR/MOSAIK-2.1.73-source/networkFile $LKTOOLS_DIR/mosaikNetworkFile
+    ln -sr $LKSRC_DIR/MOSAIK-2.1.73-source/networkFile $LKTOOLS_DIR/mosaikNetworkFile
 else
     echo "Mosaik network files already downloaded"
 fi
@@ -339,7 +339,7 @@ then
     gzip fastq_screen_v0.4.4.tar
     cd fastq_screen_v0.4.4
 
-    ln -s $LKSRC_DIR/fastq_screen_v0.4.4/fastq_screen $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/fastq_screen_v0.4.4/fastq_screen $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -374,13 +374,13 @@ then
     gzip bismark_v0.12.5.tar
     cd bismark_v0.12.5
 
-    ln -s $LKSRC_DIR/bismark_v0.12.5/bismark $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/bismark_v0.12.5/bismark2bedGraph $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/bismark_v0.12.5/bismark2report $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/bismark_v0.12.5/bismark_genome_preparation $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/bismark_v0.12.5/bismark_methylation_extractor $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/bismark_v0.12.5/coverage2cytosine $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/bismark_v0.12.5/deduplicate_bismark $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/bismark_v0.12.5/bismark $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/bismark_v0.12.5/bismark2bedGraph $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/bismark_v0.12.5/bismark2report $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/bismark_v0.12.5/bismark_genome_preparation $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/bismark_v0.12.5/bismark_methylation_extractor $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/bismark_v0.12.5/coverage2cytosine $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/bismark_v0.12.5/deduplicate_bismark $LKTOOLS_DIR
 
     if [ -n $SKIP_PACKAGE_MANAGER ]; then
         echo "Skipping package install"
@@ -418,8 +418,8 @@ fi
 #    gzip tophat-2.0.12.Linux_x86_64.tar
 #    cd tophat-2.0.12.Linux_x86_64
 #
-#    ln -s $LKSRC_DIR/tophat-2.0.12.Linux_x86_64/tophat2 $LKTOOLS_DIR
-#    ln -s $LKSRC_DIR/tophat-2.0.12.Linux_x86_64/prep_reads $LKTOOLS_DIR
+#    ln -sr $LKSRC_DIR/tophat-2.0.12.Linux_x86_64/tophat2 $LKTOOLS_DIR
+#    ln -sr $LKSRC_DIR/tophat-2.0.12.Linux_x86_64/prep_reads $LKTOOLS_DIR
 #else
 #    echo "Already installed"
 #fi
@@ -450,8 +450,8 @@ then
     cd samtools-0.1.18
     #note: this is used later by Bio::DB::Samtools
     make CXXFLAGS=-fPIC CFLAGS=-fPIC CPPFLAGS=-fPIC
-    ln -s $LKSRC_DIR/samtools-0.1.18/samtools $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/samtools-0.1.18/bcftools/bcftools $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/samtools-0.1.18/samtools $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/samtools-0.1.18/bcftools/bcftools $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -480,8 +480,8 @@ then
     bzip2 tabix-0.2.6.tar
     cd tabix-0.2.6
     make
-    ln -s $LKSRC_DIR/tabix-0.2.6/tabix $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/tabix-0.2.6/bgzip $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/tabix-0.2.6/tabix $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/tabix-0.2.6/bgzip $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -509,7 +509,7 @@ then
     gzip bedtools-2.20.1.tar
     cd bedtools2-2.20.1
     make
-    ln -s $LKSRC_DIR/bedtools2-2.20.1/bin/bedtools $LKTOOLS_DIR/bedtools
+    ln -sr $LKSRC_DIR/bedtools2-2.20.1/bin/bedtools $LKTOOLS_DIR/bedtools
 else
     echo "Already installed"
 fi
@@ -537,7 +537,7 @@ then
     gzip vcftools_0.1.12b.tar
     cd vcftools_0.1.12b
     make
-    ln -s $LKSRC_DIR/vcftools_0.1.12b/bin/vcftools $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/vcftools_0.1.12b/bin/vcftools $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -563,7 +563,7 @@ then
     unzip snpEff_latest_core.zip
     cd snpEff
 
-    ln -s $LKSRC_DIR/snpEff $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/snpEff $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -589,7 +589,7 @@ then
     cd blat
     wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/blat/blat
     chmod +x blat
-    ln -s $LKSRC_DIR/blat/blat $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/blat/blat $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -623,7 +623,7 @@ then
     mv src/Makefile src/Makefile.dist
     sed 's/-Werror //g' src/Makefile.dist > src/Makefile
     make
-    ln -s $LKSRC_DIR/lastz-distrib-1.02.00/src/lastz $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/lastz-distrib-1.02.00/src/lastz $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -685,7 +685,7 @@ then
 
     wget http://downloads.sourceforge.net/project/picard/picard-tools/1.114/picard-tools-1.114.zip
     unzip picard-tools-1.114.zip
-    ln -s $LKSRC_DIR/picard-tools-1.114 $LKTOOLS_DIR/picard-tools
+    ln -sr $LKSRC_DIR/picard-tools-1.114 $LKTOOLS_DIR/picard-tools
 else
     echo "Already installed"
 fi
@@ -714,8 +714,8 @@ then
     unzip bowtie-1.0.1-linux-x86_64.zip
     cd bowtie-1.0.1
 
-    ln -s $LKSRC_DIR/bowtie-1.0.1/bowtie $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/bowtie-1.0.1/bowtie-build $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/bowtie-1.0.1/bowtie $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/bowtie-1.0.1/bowtie-build $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -771,7 +771,7 @@ then
     cd bfast-0.7.0a
     ./configure
     make
-    ln -s $LKSRC_DIR/bfast-0.7.0a/bfast/bfast $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/bfast-0.7.0a/bfast/bfast $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -798,7 +798,7 @@ then
     tar -xf cap3.linux.opteron64.tar
     echo "Compressing TAR"
     gzip cap3.linux.opteron64.tar
-    ln -s $LKSRC_DIR/CAP3/cap3 $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/CAP3/cap3 $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -868,8 +868,8 @@ then
     echo "Compressing TAR"
     gzip seq_crumbs-0.1.8-x64-linux.tar
     cd seq_crumbs-0.1.8-x64-linux
-    ln -s $LKSRC_DIR/seq_crumbs-0.1.8-x64-linux/sff_extract $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/seq_crumbs-0.1.8-x64-linux/convert_format $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/seq_crumbs-0.1.8-x64-linux/sff_extract $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/seq_crumbs-0.1.8-x64-linux/convert_format $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -899,7 +899,7 @@ then
     gzip FLASH-1.2.7.tar
     cd FLASH-1.2.7
     make
-    ln -s $LKSRC_DIR/FLASH-1.2.7/flash $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/FLASH-1.2.7/flash $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -931,8 +931,8 @@ then
     bzip2 mira_4.0.2_linux-gnu_x86_64_static.tar
     cd mira_4.0.2_linux-gnu_x86_64_static
 
-    ln -s $LKSRC_DIR/mira_4.0.2_linux-gnu_x86_64_static/bin/mira $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/mira_4.0.2_linux-gnu_x86_64_static/bin/miraconvert $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/mira_4.0.2_linux-gnu_x86_64_static/bin/mira $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/mira_4.0.2_linux-gnu_x86_64_static/bin/miraconvert $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -965,8 +965,8 @@ then
     gzip velvet_1.2.09.tar
     cd velvet_1.2.09
     make OPENMP=1 LONGSEQUENCES=1
-    ln -s $LKSRC_DIR/velvet_1.2.09/velvetg $LKTOOLS_DIR
-    ln -s $LKSRC_DIR/velvet_1.2.09/velveth $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/velvet_1.2.09/velvetg $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/velvet_1.2.09/velveth $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -994,7 +994,7 @@ then
     tar -xf VelvetOptimiser-2.2.5.tar
     gzip VelvetOptimiser-2.2.5.tar
     cd VelvetOptimiser-2.2.5
-    ln -s $LKSRC_DIR/VelvetOptimiser-2.2.5/VelvetOptimiser.pl $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/VelvetOptimiser-2.2.5/VelvetOptimiser.pl $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -1027,9 +1027,9 @@ fi
 #    make
 #    make install
 #
-#    ln -s $LKSRC_DIR/amos-3.1.0/bin/bank2fasta $LKTOOLS_DIR
-#    ln -s $LKSRC_DIR/amos-3.1.0/bin/bank2contig $LKTOOLS_DIR
-#    ln -s $LKSRC_DIR/amos-3.1.0/bin/bank-transact $LKTOOLS_DIR
+#    ln -sr $LKSRC_DIR/amos-3.1.0/bin/bank2fasta $LKTOOLS_DIR
+#    ln -sr $LKSRC_DIR/amos-3.1.0/bin/bank2contig $LKTOOLS_DIR
+#    ln -sr $LKSRC_DIR/amos-3.1.0/bin/bank-transact $LKTOOLS_DIR
 #else
 #    echo "Already installed"
 #fi
@@ -1053,7 +1053,7 @@ then
 
     wget --read-timeout=10 http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/liftOver
     chmod +x liftOver
-    ln -s $LKSRC_DIR/liftOver $LKTOOLS_DIR/liftOver
+    ln -sr $LKSRC_DIR/liftOver $LKTOOLS_DIR/liftOver
 else
     echo "Already installed"
 fi
@@ -1081,7 +1081,7 @@ then
     cd JBrowse-1.11.5
     ./setup.sh
 
-    ln -s $LKSRC_DIR/JBrowse-1.11.5 $LKTOOLS_DIR/JBrowse-1.11.5
+    ln -sr $LKSRC_DIR/JBrowse-1.11.5 $LKTOOLS_DIR/JBrowse-1.11.5
 else
     echo "Already installed"
 fi
@@ -1108,9 +1108,9 @@ then
     tar -xf ncbi-blast-2.2.30+-x64-linux.tar
     gzip ncbi-blast-2.2.30+-x64-linux.tar
 
-    ln -s $LKSRC_DIR/ncbi-blast-2.2.30+/bin/blastn $LKTOOLS_DIR/blastn
-    ln -s $LKSRC_DIR/ncbi-blast-2.2.30+/bin/blast_formatter $LKTOOLS_DIR/blast_formatter
-    ln -s $LKSRC_DIR/ncbi-blast-2.2.30+/bin/makeblastdb $LKTOOLS_DIR/makeblastdb
+    ln -sr $LKSRC_DIR/ncbi-blast-2.2.30+/bin/blastn $LKTOOLS_DIR/blastn
+    ln -sr $LKSRC_DIR/ncbi-blast-2.2.30+/bin/blast_formatter $LKTOOLS_DIR/blast_formatter
+    ln -sr $LKSRC_DIR/ncbi-blast-2.2.30+/bin/makeblastdb $LKTOOLS_DIR/makeblastdb
 else
     echo "Already installed"
 fi
@@ -1133,7 +1133,7 @@ then
     rm -Rf $LKTOOLS_DIR/VarScan2.jar
 
     wget http://downloads.sourceforge.net/project/varscan/VarScan.v2.3.6.jar
-    ln -s $LKSRC_DIR/VarScan.v2.3.6.jar $LKTOOLS_DIR/VarScan2.jar
+    ln -sr $LKSRC_DIR/VarScan.v2.3.6.jar $LKTOOLS_DIR/VarScan2.jar
 else
     echo "Already installed"
 fi
@@ -1163,7 +1163,7 @@ then
     wget -U firefox http://www.ub.es/softevol/variscan/variscan-2.0.3.tar.gz
     gunzip variscan-2.0.3.tar.gz
     tar -xf variscan-2.0.3.tar
-    ln -s $LKSRC_DIR/variscan-2.0.3/bin/Linux-i386/variscan $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/variscan-2.0.3/bin/Linux-i386/variscan $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -1194,7 +1194,7 @@ then
     ./configure
     make
 
-    ln -s $LKSRC_DIR/clustalw-2.1/src/clustalw2 $LKTOOLS_DIR
+    ln -sr $LKSRC_DIR/clustalw-2.1/src/clustalw2 $LKTOOLS_DIR
 
 else
     echo "Already installed"
@@ -1224,7 +1224,7 @@ then
     tar -xf muscle3.8.31_i86linux64.tar
     gzip muscle3.8.31_i86linux64.tar
 
-    ln -s $LKSRC_DIR/muscle3.8.31_i86linux64 $LKTOOLS_DIR/muscle
+    ln -sr $LKSRC_DIR/muscle3.8.31_i86linux64 $LKTOOLS_DIR/muscle
 
 else
     echo "Already installed"
@@ -1251,7 +1251,7 @@ then
     unzip Trimmomatic-0.32.zip
     cd Trimmomatic-0.32
 
-    ln -s $LKSRC_DIR/Trimmomatic-0.32/trimmomatic-0.32.jar $LKTOOLS_DIR/trimmomatic.jar
+    ln -sr $LKSRC_DIR/Trimmomatic-0.32/trimmomatic-0.32.jar $LKTOOLS_DIR/trimmomatic.jar
 
 else
     echo "Already installed"
@@ -1283,7 +1283,7 @@ fi
 #    cd bamtools/src
 #    cmake ..
 #    make all -lz
-#    ln -s ${LKSRC_DIR}/bamtools/lib/libbamtools.so.2.3.0 /usr/lib/
+#    ln -sr ${LKSRC_DIR}/bamtools/lib/libbamtools.so.2.3.0 /usr/lib/
 #
 #    echo "now download VPhaser2"
 #    cd ../../
@@ -1298,7 +1298,7 @@ fi
 #
 #    make MYPATH=${LKSRC_DIR}/bamtools
 #
-#    ln -s $LKSRC_DIR/VPhaser-2-02112013/bin/variant_caller $LKTOOLS_DIR/variant_caller
+#    ln -sr $LKSRC_DIR/VPhaser-2-02112013/bin/variant_caller $LKTOOLS_DIR/variant_caller
 #
 #else
 #    echo "Already installed"
@@ -1361,7 +1361,7 @@ fi
 #    ./configure
 #    make
 #
-#    ln -s $LKSRC_DIR/seqret $LKTOOLS_DIR/EMBOSS-6.6.0/emboss/seqret
+#    ln -sr $LKSRC_DIR/seqret $LKTOOLS_DIR/EMBOSS-6.6.0/emboss/seqret
 #
 #else
 #    echo "Already installed"
