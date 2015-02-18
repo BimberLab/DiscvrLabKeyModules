@@ -16,13 +16,12 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.settings.AppProps;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -119,7 +118,6 @@ public class SequencePipelineSettings
         }
         model.setPlatform(o.getString("platform"));
         model.setApplication(o.getString("application"));
-        model.setInputMaterial(o.getString("inputmaterial"));
         model.setSampleType(o.getString("sampletype"));
         model.setLibraryType(o.getString("librarytype"));
         model.setName(o.getString("readsetname"));

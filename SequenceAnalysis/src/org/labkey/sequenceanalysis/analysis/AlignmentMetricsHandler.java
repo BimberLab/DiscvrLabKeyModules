@@ -8,17 +8,19 @@ import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.SamRecordIntervalIteratorFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
+import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractAnalysisStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
-import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
-import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileType;
+import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import java.io.BufferedWriter;
@@ -27,206 +29,217 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 /**
  * Created by bimber on 9/8/2014.
  */
-public class AlignmentMetricsHandler extends AbstractPipelineStep implements AnalysisStep
+public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler
 {
-    public AlignmentMetricsHandler(PipelineStepProvider provider, PipelineContext ctx)
+    private FileType _bamFileType = new FileType("bam", false);
+
+    public AlignmentMetricsHandler()
     {
-        super(provider, ctx);
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Alignment Metrics", "This will iterate all alignments and create one or more feature tracks summarizing the alignment.  The original purpose was to create information used for QC purposes or to better understand how data performed against the reference.", null, Arrays.asList(
+                ToolParameterDescriptor.create("windowSize", "Window Size", "Metrics will be gathered by iterating the genome with a window of this size", "ldk-integerfield", null, 500)
+        ));
     }
 
-    public static class Provider extends AbstractAnalysisStepProvider<AlignmentMetricsHandler>
+    @Override
+    public boolean canProcess(SequenceOutputFile o)
     {
-        public Provider()
-        {
-            //TODO
+        return o.getFile() != null && _bamFileType.isType(o.getFile());
+    }
 
-            super("AlignmentMetricsAnalysis", "Alignment Metrics", null, "This step will iterate all alignments and create one or more feature tracks summarizing the alignment.  The original purpose was to create information used for QC purposes or to better understand how data performed against the reference.", Arrays.asList(
-                    ToolParameterDescriptor.create("windowSize", "Window Size", "Metrics will be gathered by iterating the genome with a window of this size", "ldk-integerfield", null, 500)
-            ), null, null);
-        }
+    @Override
+    public List<String> validateParameters(JSONObject params)
+    {
+        return null;
+    }
 
+    @Override
+    public boolean doRunRemote()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean doRunLocal()
+    {
+        return true;
+    }
+
+    @Override
+    public OutputProcessor getProcessor()
+    {
+        return new Processor();
+    }
+
+    public class Processor implements OutputProcessor
+    {
         @Override
-        public AlignmentMetricsHandler create(PipelineContext ctx)
+        public void processFilesOnWebserver(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            return new AlignmentMetricsHandler(this, ctx);
-        }
+            RecordedAction action = new RecordedAction(getName());
+            action.setStartTime(new Date());
 
-    }
-
-    @Override
-    public void init(List<AnalysisModel> models) throws PipelineJobException
-    {
-
-    }
-
-    @Override
-    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
-    {
-        return null;
-    }
-
-    @Override
-    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
-    {
-        return null;
-    }
-
-    //@Override
-    public void performAnalysisOnAll(List<AnalysisModel> analysisModels) throws PipelineJobException
-    {
-        Integer windowSize = getProvider().getParameterByName("windowSize").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class);
-        if (windowSize == null)
-        {
-            getPipelineCtx().getJob().error("No window size provided, aborting");
-            return;
-        }
-
-        List<File> bams  = new ArrayList<>();
-        for (File f : getPipelineCtx().getJob().getJobSupport(FileAnalysisJobSupport.class).getInputFiles())
-        {
-            String basename = SequenceTaskHelper.getUnzippedBaseName(f.getName());
-            File expectedBam = new File(getPipelineCtx().getSourceDirectory(), basename + "/Alignment/" + basename + ".bam");
-            if (expectedBam.exists())
+            Integer windowSize = params.containsKey("windowSize") && params.get("windowSize") != null ? params.getInt("windowSize") : null;
+            if (windowSize == null)
             {
-                bams.add(expectedBam);
+                job.error("No window size provided, aborting");
+                return;
             }
-        }
 
-        if (bams.isEmpty())
-        {
-            getPipelineCtx().getJob().error("No BAMS found, aborting");
-            return;
-        }
-
-        List<SAMSequenceRecord> distinctReferences = new ArrayList<>();
-        for (File bam : bams)
-        {
-            File bai = new File(bam.getPath() + ".bai");
-            try (SAMFileReader reader = new SAMFileReader(bam, bai))
+            List<File> bams = new ArrayList<>();
+            bams.addAll(job.getJobSupport(FileAnalysisJobSupport.class).getInputFiles());
+            if (bams.isEmpty())
             {
-                SAMSequenceDictionary dict = reader.getFileHeader().getSequenceDictionary();
-                for (SAMSequenceRecord s : dict.getSequences())
-                {
-                    distinctReferences.add(s);
-                }
+                job.error("No BAMS found, aborting");
+                return;
             }
-        }
 
-        File totalAlignmentsFile = new File(getPipelineCtx().getSourceDirectory(), "totalAlignments.bed");
-        File totalReadsFile = new File(getPipelineCtx().getSourceDirectory(), "totalReads.bed");
-        File duplicateReadsFile = new File(getPipelineCtx().getSourceDirectory(), "duplicateReads.bed");
-        File notPrimaryAlignmentsFile = new File(getPipelineCtx().getSourceDirectory(), "notPrimaryAlignments.bed");
-        File avgMappingQualFile = new File(getPipelineCtx().getSourceDirectory(), "avgMappingQual.bed");
-
-        try (
-            BufferedWriter totalAlignmentsWriter = new BufferedWriter(new FileWriter(totalAlignmentsFile, true));
-            BufferedWriter totalReadsWriter = new BufferedWriter(new FileWriter(totalReadsFile, true));
-            BufferedWriter duplicateReadsWriter = new BufferedWriter(new FileWriter(duplicateReadsFile, true));
-            BufferedWriter notPrimaryAlignmentsWriter = new BufferedWriter(new FileWriter(notPrimaryAlignmentsFile, true));
-            BufferedWriter avgMappingQualWriter = new BufferedWriter(new FileWriter(avgMappingQualFile, true))
-        )
-        {
-            //add headers
-            totalAlignmentsWriter.write("track name=\"TotalAlignments\" description=\"Contains the total # of alignments that span this region, which may be larger than the total # of distinct reads if there are multiple mappings\" useScore=1" + System.getProperty("line.separator"));
-            totalReadsWriter.write("track name=\"TotalReads\" description=\"Contains the total # of reads that span this region\" useScore=1" + System.getProperty("line.separator"));
-            duplicateReadsWriter.write("track name=\"DuplicateReads\" description=\"Contains the total # of reads that are marked as duplicates\" useScore=1" + System.getProperty("line.separator"));
-            notPrimaryAlignmentsWriter.write("track name=\"NotPrimaryAlignments\" description=\"Contains the total # of reads that are tagged not being the primary alignment, which would indicate there is ambiguity in this region\" useScore=1" + System.getProperty("line.separator"));
-            avgMappingQualWriter.write("track name=\"AvgMappingQuality\" description=\"Contains the average mapping quality of all reads spanning this region\" useScore=1" + System.getProperty("line.separator"));
-
-            for (SAMSequenceRecord sr : distinctReferences)
+            List<SAMSequenceRecord> distinctReferences = new ArrayList<>();
+            for (File bam : bams)
             {
-                getPipelineCtx().getLogger().info("starting reference sequence " + sr.getSequenceName());
+                action.addInput(bam, "BAM File");
 
-                List<File> bamsWithReference = new ArrayList<>();
-                for (File bam : bams)
+                File bai = new File(bam.getPath() + ".bai");
+                try (SAMFileReader reader = new SAMFileReader(bam, bai))
                 {
-                    File bai = new File(bam.getPath() + ".bai");
-                    try (SAMFileReader reader = new SAMFileReader(bam, bai))
+                    SAMSequenceDictionary dict = reader.getFileHeader().getSequenceDictionary();
+                    for (SAMSequenceRecord s : dict.getSequences())
                     {
-                        SAMSequenceDictionary dict = reader.getFileHeader().getSequenceDictionary();
-                        if (dict == null || dict.getSequence(sr.getSequenceName()) == null)
-                        {
-                            getPipelineCtx().getLogger().info("sequence " + sr.getSequenceName() + " not found in BAM, skipping: " + bam.getName());
-                            continue;
-                        }
-
-                        bamsWithReference.add(bam);
+                        distinctReferences.add(s);
                     }
                 }
+            }
 
-                int refLength = sr.getSequenceLength();
-                //1-based
-                int windowStart = 1;
-                int windowEnd;
+            File totalAlignmentsFile = new File(outputDir, "totalAlignments.bed");
+            action.addOutput(totalAlignmentsFile, "Total Alignments BED", false);
+            File totalReadsFile = new File(outputDir, "totalReads.bed");
+            action.addOutput(totalReadsFile, "Total Reads BED", false);
+            File duplicateReadsFile = new File(outputDir, "duplicateReads.bed");
+            action.addOutput(duplicateReadsFile, "Duplicate Reads BED", false);
+            File notPrimaryAlignmentsFile = new File(outputDir, "notPrimaryAlignments.bed");
+            action.addOutput(notPrimaryAlignmentsFile, "Not Primary Alignments BED", false);
+            File avgMappingQualFile = new File(outputDir, "avgMappingQual.bed");
+            action.addOutput(avgMappingQualFile, "Avg Mapping Quality BED", false);
 
-                while (windowStart <= refLength)
+            try (
+                    BufferedWriter totalAlignmentsWriter = new BufferedWriter(new FileWriter(totalAlignmentsFile, true));
+                    BufferedWriter totalReadsWriter = new BufferedWriter(new FileWriter(totalReadsFile, true));
+                    BufferedWriter duplicateReadsWriter = new BufferedWriter(new FileWriter(duplicateReadsFile, true));
+                    BufferedWriter notPrimaryAlignmentsWriter = new BufferedWriter(new FileWriter(notPrimaryAlignmentsFile, true));
+                    BufferedWriter avgMappingQualWriter = new BufferedWriter(new FileWriter(avgMappingQualFile, true))
+            )
+            {
+                //add headers
+                totalAlignmentsWriter.write("track name=\"TotalAlignments\" description=\"Contains the total # of alignments that span this region, which may be larger than the total # of distinct reads if there are multiple mappings\" useScore=1" + System.getProperty("line.separator"));
+                totalReadsWriter.write("track name=\"TotalReads\" description=\"Contains the total # of reads that span this region\" useScore=1" + System.getProperty("line.separator"));
+                duplicateReadsWriter.write("track name=\"DuplicateReads\" description=\"Contains the total # of reads that are marked as duplicates\" useScore=1" + System.getProperty("line.separator"));
+                notPrimaryAlignmentsWriter.write("track name=\"NotPrimaryAlignments\" description=\"Contains the total # of reads that are tagged not being the primary alignment, which would indicate there is ambiguity in this region\" useScore=1" + System.getProperty("line.separator"));
+                avgMappingQualWriter.write("track name=\"AvgMappingQuality\" description=\"Contains the average mapping quality of all reads spanning this region\" useScore=1" + System.getProperty("line.separator"));
+
+                for (SAMSequenceRecord sr : distinctReferences)
                 {
-                    //track as 1-based
-                    windowEnd = Math.min(windowStart + windowSize, refLength);
-                    getPipelineCtx().getLogger().info("window: " + windowStart + "/" + windowEnd);
+                    job.getLogger().info("starting reference sequence " + sr.getSequenceName());
 
-                    int totalNotPrimaryAlignments = 0;
-                    double totalMappingQuality = 0.0;
-                    int totalAlignments = 0;
-                    int totalReads = 0;
-                    int totalDuplicateReads = 0;
-
-                    for (File bam : bamsWithReference)
+                    List<File> bamsWithReference = new ArrayList<>();
+                    for (File bam : bams)
                     {
                         File bai = new File(bam.getPath() + ".bai");
                         try (SAMFileReader reader = new SAMFileReader(bam, bai))
                         {
-                            SamRecordIntervalIteratorFactory fact = new SamRecordIntervalIteratorFactory();
-                            try (CloseableIterator<SAMRecord> it = fact.makeSamRecordIntervalIterator(reader, Arrays.asList(new Interval(sr.getSequenceName(), windowStart, windowEnd)), true))
+                            SAMSequenceDictionary dict = reader.getFileHeader().getSequenceDictionary();
+                            if (dict == null || dict.getSequence(sr.getSequenceName()) == null)
                             {
-                                while (it.hasNext())
+                                job.getLogger().info("sequence " + sr.getSequenceName() + " not found in BAM, skipping: " + bam.getName());
+                                continue;
+                            }
+
+                            bamsWithReference.add(bam);
+                        }
+                    }
+
+                    int refLength = sr.getSequenceLength();
+                    //1-based
+                    int windowStart = 1;
+                    int windowEnd;
+
+                    while (windowStart <= refLength)
+                    {
+                        //track as 1-based
+                        windowEnd = Math.min(windowStart + windowSize, refLength);
+                        job.getLogger().info("window: " + windowStart + "/" + windowEnd);
+
+                        int totalNotPrimaryAlignments = 0;
+                        double totalMappingQuality = 0.0;
+                        int totalAlignments = 0;
+                        int totalReads = 0;
+                        int totalDuplicateReads = 0;
+
+                        for (File bam : bamsWithReference)
+                        {
+                            File bai = new File(bam.getPath() + ".bai");
+                            try (SAMFileReader reader = new SAMFileReader(bam, bai))
+                            {
+                                SamRecordIntervalIteratorFactory fact = new SamRecordIntervalIteratorFactory();
+                                try (CloseableIterator<SAMRecord> it = fact.makeSamRecordIntervalIterator(reader, Arrays.asList(new Interval(sr.getSequenceName(), windowStart, windowEnd)), true))
                                 {
-                                    totalAlignments++;
-
-                                    SAMRecord rec = it.next();
-                                    if (rec.isSecondaryOrSupplementary())
+                                    while (it.hasNext())
                                     {
-                                        totalNotPrimaryAlignments++;
-                                    }
-                                    else
-                                    {
-                                        totalReads++;
+                                        totalAlignments++;
 
-                                        totalMappingQuality += rec.getMappingQuality();
-                                        if (rec.getDuplicateReadFlag())
+                                        SAMRecord rec = it.next();
+                                        if (rec.isSecondaryOrSupplementary())
                                         {
-                                            totalDuplicateReads++;
+                                            totalNotPrimaryAlignments++;
+                                        }
+                                        else
+                                        {
+                                            totalReads++;
+
+                                            totalMappingQuality += rec.getMappingQuality();
+                                            if (rec.getDuplicateReadFlag())
+                                            {
+                                                totalDuplicateReads++;
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
+
+                        //0-based start, open end coordinate
+                        if (totalAlignments > 0)
+                            totalAlignmentsWriter.write(StringUtils.join(new String[]{sr.getSequenceName(), Integer.toString(windowStart - 1), Integer.toString(windowEnd), Integer.toString(totalAlignments)}, '\t') + System.getProperty("line.separator"));
+                        if (totalReads > 0)
+                            totalReadsWriter.write(StringUtils.join(new String[]{sr.getSequenceName(), Integer.toString(windowStart - 1), Integer.toString(windowEnd), Integer.toString(totalReads)}, '\t') + System.getProperty("line.separator"));
+                        if (totalDuplicateReads > 0)
+                            duplicateReadsWriter.write(StringUtils.join(new String[]{sr.getSequenceName(), Integer.toString(windowStart - 1), Integer.toString(windowEnd), Integer.toString(totalDuplicateReads)}, '\t') + System.getProperty("line.separator"));
+                        if (totalNotPrimaryAlignments > 0)
+                            notPrimaryAlignmentsWriter.write(StringUtils.join(new String[]{sr.getSequenceName(), Integer.toString(windowStart - 1), Integer.toString(windowEnd), Integer.toString(totalNotPrimaryAlignments)}, '\t') + System.getProperty("line.separator"));
+                        if (totalMappingQuality > 0)
+                            avgMappingQualWriter.write(StringUtils.join(new String[]{sr.getSequenceName(), Integer.toString(windowStart - 1), Integer.toString(windowEnd), Double.toString(totalMappingQuality / totalReads)}, '\t') + System.getProperty("line.separator"));
+
+                        windowStart += windowSize;
                     }
-
-                    //0-based start, open end coordinate
-                    if (totalAlignments > 0)
-                        totalAlignmentsWriter.write(StringUtils.join(new String[]{sr.getSequenceName(), Integer.toString(windowStart - 1), Integer.toString(windowEnd), Integer.toString(totalAlignments)}, '\t') + System.getProperty("line.separator"));
-                    if (totalReads > 0)
-                        totalReadsWriter.write(StringUtils.join(new String[]{sr.getSequenceName(), Integer.toString(windowStart - 1), Integer.toString(windowEnd), Integer.toString(totalReads)}, '\t') + System.getProperty("line.separator"));
-                    if (totalDuplicateReads > 0)
-                        duplicateReadsWriter.write(StringUtils.join(new String[]{sr.getSequenceName(), Integer.toString(windowStart - 1), Integer.toString(windowEnd), Integer.toString(totalDuplicateReads)}, '\t') + System.getProperty("line.separator"));
-                    if (totalNotPrimaryAlignments > 0)
-                        notPrimaryAlignmentsWriter.write(StringUtils.join(new String[]{sr.getSequenceName(), Integer.toString(windowStart - 1), Integer.toString(windowEnd), Integer.toString(totalNotPrimaryAlignments)}, '\t') + System.getProperty("line.separator"));
-                    if (totalMappingQuality > 0)
-                        avgMappingQualWriter.write(StringUtils.join(new String[]{sr.getSequenceName(), Integer.toString(windowStart - 1), Integer.toString(windowEnd), Double.toString(totalMappingQuality / totalReads)}, '\t') + System.getProperty("line.separator"));
-
-                    windowStart += windowSize;
                 }
+
+                action.setEndTime(new Date());
+                actions.add(action);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
         }
-        catch (IOException e)
+
+        @Override
+        public void processFilesRemote(SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            throw new PipelineJobException(e);
+
         }
     }
 }

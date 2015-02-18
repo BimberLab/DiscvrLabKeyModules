@@ -213,6 +213,8 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
             //first create the database record
             if (getPipelineJob().getMode() == JBrowseSessionPipelineJob.Mode.CreateNew)
             {
+                //TODO: if you restart a failed job, this record might already exist
+
                 CaseInsensitiveHashMap databaseRecord = new CaseInsensitiveHashMap();
                 databaseRecord.put("name", getPipelineJob().getName());
                 databaseRecord.put("description", getPipelineJob().getDatabaseDescription());
@@ -228,6 +230,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                 databaseRecord.put("modified", new Date());
                 databaseRecord.put("modifiedby", getJob().getUser().getUserId());
 
+                getJob().getLogger().debug("creating database record");
                 Table.insert(getJob().getUser(), databases, databaseRecord);
             }
 

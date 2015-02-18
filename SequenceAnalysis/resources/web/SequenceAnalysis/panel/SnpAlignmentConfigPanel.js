@@ -92,7 +92,19 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentConfigPanel', {
                         queryName: 'ref_aa_sequences',
                         columns: 'rowid,name,ref_nt_id',
                         autoLoad: false,
-                        sort: 'exons'
+                        sort: 'exons',
+                        listeners: {
+                            scope: this,
+                            load: function(s){
+                                var field = this.down('#proteinField');
+                                var names = [];
+                                s.each(function(r){
+                                    names.push(r.get('rowid'));
+                                }, this);
+
+                                field.setValue(names);
+                            }
+                        }
                     })
                 }]
             },{

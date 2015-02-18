@@ -5,9 +5,9 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.util.FileType;
-import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 
 import java.util.ArrayList;
 import java.util.Collections;

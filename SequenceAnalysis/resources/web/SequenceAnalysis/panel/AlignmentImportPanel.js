@@ -153,7 +153,6 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                     {name: 'readsetname'},
                     {name: 'platform', allowBlank: false},
                     {name: 'application', allowBlank: false},
-                    {name: 'inputmaterial'},
                     {name: 'sampletype'},
                     {name: 'subjectid'},
                     {name: 'sampledate'},
@@ -342,26 +341,6 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                     })
                 }
             },{
-                text: 'Input Material',
-                name: 'inputmaterial',
-                width: 80,
-                dataIndex: 'inputmaterial',
-                editor: {
-                    xtype: 'labkey-combo',
-                    allowBlank: true,
-                    forceSelection: true,
-                    displayField: 'material',
-                    valueField: 'material',
-                    plugins: ['ldk-usereditablecombo'],
-                    editable: false,
-                    store: Ext4.create('LABKEY.ext4.data.Store', {
-                        containerPath: Laboratory.Utils.getQueryContainerPath(),
-                        schemaName: 'sequenceanalysis',
-                        queryName: 'input_material',
-                        autoLoad: true
-                    })
-                }
-            },{
                 text: 'Subject Id',
                 name: 'subjectid',
                 dataIndex: 'subjectid',
@@ -431,7 +410,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
         }
 
         var sql = 'select  ' +
-                'r.rowid,r.name,r.platform,r.application,r.inputmaterial,r.sampletype,r.subjectid,r.sampledate,r.sampleid,r.barcode5,r.barcode3,r.fileid,r.fileid2,r.instrument_run_id,r.fileid2.name as fileName,r.fileid.name as fileName2 \n' +
+                'r.rowid,r.name,r.platform,r.application,r.sampletype,r.subjectid,r.sampledate,r.sampleid,r.barcode5,r.barcode3,r.fileid,r.fileid2,r.instrument_run_id,r.fileid2.name as fileName,r.fileid.name as fileName2 \n' +
                 'from sequenceanalysis.sequence_readsets r \n';
 
         sql += 'WHERE rowid IN (' + readsets.join(',') + ')';
@@ -468,7 +447,6 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                         sampleid: row.sampleid,
                         subjectid: row.subjectid,
                         sampledate: row.sampledate,
-                        inputmaterial: row.inputmaterial,
                         sampletype: row.sampletype,
                         instrument_run_id: row.instrument_run_id,
                         isValid: true

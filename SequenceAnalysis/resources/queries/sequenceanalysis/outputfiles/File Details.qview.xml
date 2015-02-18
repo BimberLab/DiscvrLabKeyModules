@@ -12,6 +12,9 @@
        <column name="runid" />
        <column name="runid/jobid" />
        <column name="workbook" />
+       <column name="dataid"/>
+       <column name="dataid/FileExists"/>
+       <column name="dataid/FileSize"/>
        <column name="dataid/ViewOrDownload"/>
    </columns>
    <sorts>

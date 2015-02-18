@@ -2,15 +2,15 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractAnalysisStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
-import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
-import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 
 import java.io.File;
 import java.io.IOException;

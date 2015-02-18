@@ -3,7 +3,7 @@ package org.labkey.sequenceanalysis.run.util;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
 
 import java.io.File;
@@ -20,7 +20,7 @@ public class BlastNWrapper extends AbstractCommandWrapper
         super(logger);
     }
 
-    public void doRemoteBlast(File fasta, File output) throws PipelineJobException
+    public void doRemoteBlast(File fasta, File output, @Nullable List<String> extraParams, @Nullable File blastdbDir) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
         args.add(getExe().getPath());
@@ -31,6 +31,16 @@ public class BlastNWrapper extends AbstractCommandWrapper
         args.add("-remote");
         args.add("-out");
         args.add(output.getPath());
+
+        if (extraParams != null)
+        {
+            args.addAll(extraParams);
+        }
+
+        if (blastdbDir != null)
+        {
+            addToEnvironment("BLASTDB", blastdbDir.getPath());
+        }
 
         execute(args);
     }

@@ -2,15 +2,13 @@ package org.labkey.sequenceanalysis.run.bampostprocessing;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.BamProcessingStep;
-import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepOutput;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 
 import java.io.File;
 

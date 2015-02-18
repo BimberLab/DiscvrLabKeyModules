@@ -1,6 +1,5 @@
 package org.labkey.sequenceanalysis.run.preprocessing;
 
-import com.sun.xml.internal.ws.api.server.Adapter;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -8,16 +7,15 @@ import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
-import org.labkey.remoteapi.Command;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.PreprocessingStep;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
-import org.labkey.sequenceanalysis.api.run.CommandLineParam;
-import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.model.AdapterModel;
 
 import java.io.File;

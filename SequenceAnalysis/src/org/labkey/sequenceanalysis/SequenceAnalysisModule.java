@@ -35,10 +35,11 @@ import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.sequenceanalysis.analysis.AlignmentMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.CoverageDepthHandler;
 import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.button.GenomeLoadButton;
 import org.labkey.sequenceanalysis.button.QualiMapButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
@@ -182,12 +183,16 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new SequenceBasedTypingAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new ViralAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new HaplotypeCallerAnalysis.Provider());
-        //TODO
-        //SequencePipelineService.get().registerPipelineStep(new AlignmentMetricsAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new SnpCountAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.MethylationExtractorProvider());
         SequencePipelineService.get().registerPipelineStep(new UnmappedReadExportAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
+
+        //handlers
+        SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CoverageDepthHandler());
+        SequenceAnalysisService.get().registerFileHandler(new GenotypeGVCFHandler());
+        SequenceAnalysisService.get().registerFileHandler(new AlignmentMetricsHandler());
     }
 
     @Override
@@ -240,10 +245,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(new QualiMapButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES);
         LDKService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         LDKService.get().registerQueryButton(new GenomeLoadButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
-
-        SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
-        SequenceAnalysisService.get().registerFileHandler(new CoverageDepthHandler());
-        SequenceAnalysisService.get().registerFileHandler(new GenotypeGVCFHandler());
 
         SystemMaintenance.addTask(new SequenceAnalyssiMaintenanceTask());
     }

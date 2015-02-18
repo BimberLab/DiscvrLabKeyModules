@@ -15,7 +15,6 @@
 
 package org.labkey.sequenceanalysis;
 
-import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.SAMException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -54,7 +53,6 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
-import org.labkey.api.data.TSVWriter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -64,7 +62,6 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleHtmlView;
@@ -88,8 +85,6 @@ import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QueryService;
-import org.labkey.api.reader.FastaDataLoader;
-import org.labkey.api.reader.FastaLoader;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.IgnoresTermsOfUse;
@@ -103,8 +98,10 @@ import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceDataProvider;
-import org.labkey.api.sequenceanalysis.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.ParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.ExceptionUtil;
@@ -124,11 +121,11 @@ import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.webdav.WebdavResource;
 import org.labkey.api.webdav.WebdavService;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineJob;
@@ -159,7 +156,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -176,8 +172,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -2334,7 +2328,8 @@ public class SequenceAnalysisController extends SpringActionController
                     params.put("name", form.getName());
                     params.put("description", form.getDescription());
 
-                    ExpData data = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"), file.getName());
+                    ExpData data = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
+                    data.setName(file.getName());
                     data.setDataFileURI(file.toURI());
                     data.save(getUser());
                     params.put("dataid", data.getRowId());
@@ -2886,6 +2881,19 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
+            if (handler instanceof ParameterizedOutputHandler)
+            {
+                JSONArray toolArr = new JSONArray();
+                for (ToolParameterDescriptor pd : ((ParameterizedOutputHandler)handler).getParameters())
+                {
+                    toolArr.put(pd.toJSON());
+                }
+                ret.put("toolParameters", toolArr);
+            }
+
+            ret.put("description", handler.getDescription());
+            ret.put("name", handler.getName());
+
             JSONArray arr = new JSONArray();
             if (form.getOutputFileIds() != null)
             {
@@ -3416,6 +3424,140 @@ public class SequenceAnalysisController extends SpringActionController
             _params = params;
         }
     }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    @CSRF
+    public class ImportOutputFilesAction extends ApiAction<ImportOutputFilesForm>
+    {
+        public ApiResponse execute(ImportOutputFilesForm form, BindException errors) throws Exception
+        {
+            PipeRoot pr = PipelineService.get().findPipelineRoot(getContainer());
+            if (pr == null || !pr.isValid())
+                throw new NotFoundException();
+
+            File dirData = null;
+            if (form.getPath() != null)
+            {
+                dirData = pr.resolvePath(form.getPath());
+                if (dirData == null || !NetworkDrive.exists(dirData))
+                    throw new NotFoundException("Could not resolve path: " + form.getPath());
+            }
+
+            if (form.getRecords() == null)
+            {
+                errors.reject(ERROR_MSG, "No files to save");
+                return null;
+            }
+
+            AssayFileWriter writer = new AssayFileWriter();
+            File targetDirectory = writer.ensureUploadDirectory(getContainer(), "sequenceOutputs");
+            if (!targetDirectory.exists())
+            {
+                targetDirectory.mkdirs();
+            }
+
+            if (form.getRecords() != null)
+            {
+                JSONArray arr = new JSONArray(form.getRecords());
+
+                Map<File, Map<String, Object>> toCreate = new HashMap<>();
+                for (JSONObject o : arr.toJSONObjectArray())
+                {
+                    File file = new File(dirData, o.getString("fileName"));
+                    if (!file.exists())
+                    {
+                        errors.reject(ERROR_MSG, "Unknown file: " + o.getString("fileName"));
+                        return null;
+                    }
+
+                    Map<String, Object> params = new CaseInsensitiveHashMap<>();
+                    if (o.get("name") == null)
+                    {
+                        errors.reject(ERROR_MSG, "Missing name for file: " + file.getName());
+                        return null;
+                    }
+
+                    if (o.get("libraryId") == null)
+                    {
+                        errors.reject(ERROR_MSG, "Missing genome Id for file: " + file.getName());
+                        return null;
+                    }
+
+                    params.put("name", o.getString("name"));
+                    params.put("description", o.getString("description"));
+
+                    params.put("library_id", o.getInt("libraryId"));
+                    if (StringUtils.trimToNull(o.getString("readset")) != null)
+                        params.put("readset", o.getInt("readset"));
+                    params.put("category", o.getString("category"));
+
+                    params.put("container", getContainer().getId());
+                    params.put("created", new Date());
+                    params.put("createdby", getUser().getUserId());
+                    params.put("modified", new Date());
+                    params.put("modifiedby", getUser().getUserId());
+
+                    toCreate.put(file, params);
+                }
+
+                for (File file : toCreate.keySet())
+                {
+                    File target = writer.findUniqueFileName(file.getName(), targetDirectory);
+                    FileUtils.moveFile(file, target);
+
+                    ExpData data = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
+                    data.setName(file.getName());
+                    data.setDataFileURI(file.toURI());
+                    data.save(getUser());
+
+                    Map<String, Object> params = toCreate.get(file);
+                    params.put("dataid", data.getRowId());
+
+                    Table.insert(getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), params);
+                }
+            }
+
+            return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    public static class ImportOutputFilesForm
+    {
+        private String[] _fileNames;
+        private String _path;
+        private String _records;
+
+        public String[] getFileNames()
+        {
+            return _fileNames;
+        }
+
+        public void setFileNames(String[] fileNames)
+        {
+            _fileNames = fileNames;
+        }
+
+        public String getPath()
+        {
+            return _path;
+        }
+
+        public void setPath(String path)
+        {
+            _path = path;
+        }
+
+        public String getRecords()
+        {
+            return _records;
+        }
+
+        public void setRecords(String records)
+        {
+            _records = records;
+        }
+    }
+
 
 //    @RequiresPermissionClass(InsertPermission.class)
 //    @CSRF

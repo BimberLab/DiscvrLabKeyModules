@@ -76,7 +76,10 @@
                 <bean class="org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportTask$Factory">
 
                 </bean>
-                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerTask$Factory">
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerWebserverTask$Factory">
+
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerRemoteTask$Factory">
 
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerFinalTask$Factory">
@@ -189,7 +192,8 @@
                     <constructor-arg type="java.lang.Class" value="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob" />
                     <property name="taskProgressionSpec">
                         <list>
-                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerRemoteTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerWebserverTask</value>
                             <ref bean="xarGeneratorJoin"/>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerFinalTask</value>
                         </list>

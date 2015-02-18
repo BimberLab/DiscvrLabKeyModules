@@ -17,15 +17,14 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
-import org.labkey.sequenceanalysis.api.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,11 +39,7 @@ import java.util.Map;
 public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements SequenceAnalysisJobSupport
 {
     private TaskId _taskPipelineId;
-    private Map<Integer, File> _cachedFilePaths = new HashMap<>();
-    private ReferenceGenome _referenceGenome;
-    private Map<Integer, ReadsetModel> _cachedReadsets = new HashMap<>();
-    private Map<Integer, AnalysisModel> _cachedAnalyses = new HashMap<>();
-    private Map<Integer, ReferenceGenome> _cachedGenomes = new HashMap<>();
+    private SequenceJobSupportImpl _support;
 
     public SequenceAnalysisJob(AbstractFileAnalysisProtocol<AbstractFileAnalysisJob> protocol,
                                String protocolName,
@@ -55,7 +50,7 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
                                List<File> filesInput) throws IOException
     {
         super(protocol, "File Analysis", info, root, protocolName, fileParameters, filesInput, true, true);
-
+        _support = new SequenceJobSupportImpl();
         _taskPipelineId = taskPipelineId;
     }
 
@@ -65,11 +60,7 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
 
         //NOTE: must copy any relevant properties from parent->child
         _taskPipelineId = job._taskPipelineId;
-        _cachedFilePaths.putAll(job._cachedFilePaths);
-        setReferenceGenome(job.getReferenceGenome());
-        _cachedAnalyses.putAll(job._cachedAnalyses);
-        _cachedReadsets.putAll(job._cachedReadsets);
-        _cachedGenomes.putAll(job._cachedGenomes);
+        _support = new SequenceJobSupportImpl(job._support);
     }
 
     @Override
@@ -240,34 +231,30 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
     @Override
     public void cacheExpData(ExpData data)
     {
-        if (data != null)
-        {
-            getLogger().debug("caching ExpData: " + data.getRowId() + " / " + data.getFile().getPath());
-            _cachedFilePaths.put(data.getRowId(), data.getFile());
-        }
+        _support.cacheExpData(data);
     }
 
     @Override
     public File getCachedData(int dataId)
     {
-        return _cachedFilePaths.get(dataId);
+        return _support.getCachedData(dataId);
     }
 
     @Override
     public Map<Integer, File> getAllCachedData()
     {
-        return Collections.unmodifiableMap(_cachedFilePaths);
+        return _support.getAllCachedData();
     }
 
     @Override
     public ReferenceGenome getReferenceGenome()
     {
-        return _referenceGenome;
+        return _support.getReferenceGenome();
     }
 
     public void setReferenceGenome(ReferenceGenome referenceGenome)
     {
-        _referenceGenome = referenceGenome;
+        _support.setReferenceGenome(referenceGenome);
     }
 
     @Override
@@ -285,42 +272,48 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
     @Override
     public ReadsetModel getCachedReadset(int rowId)
     {
-        return _cachedReadsets.get(rowId);
+        return _support.getCachedReadset(rowId);
     }
 
     @Override
     public AnalysisModel getCachedAnalysis(int rowId)
     {
-        return _cachedAnalyses.get(rowId);
+        return _support.getCachedAnalysis(rowId);
     }
 
     public void cacheReadset(ReadsetModel m)
     {
-        _cachedReadsets.put(m.getRowId(), m);
+        _support.cacheReadset(m);
     }
 
     public void cacheAnalysis(AnalysisModel m)
     {
-        _cachedAnalyses.put(m.getRowId(), m);
+        _support.cacheAnalysis(m);
     }
 
     public void cacheGenome(ReferenceGenome m)
     {
-        _cachedGenomes.put(m.getGenomeId(), m);
+        _support.cacheGenome(m);
     }
 
     public List<ReadsetModel> getCachedReadsets()
     {
-        return Collections.unmodifiableList(new ArrayList<>(_cachedReadsets.values()));
+        return _support.getCachedReadsets();
     }
 
     public List<AnalysisModel> getCachedAnalyses()
     {
-        return Collections.unmodifiableList(new ArrayList<>(_cachedAnalyses.values()));
+        return _support.getCachedAnalyses();
     }
 
     public ReferenceGenome getCachedGenome(int genomeId)
     {
-        return _cachedGenomes.get(genomeId);
+        return _support.getCachedGenome(genomeId);
+    }
+
+    @Override
+    public PipelineJob getJob()
+    {
+        return this;
     }
 }

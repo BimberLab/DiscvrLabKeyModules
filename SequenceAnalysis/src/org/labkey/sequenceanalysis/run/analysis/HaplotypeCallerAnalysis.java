@@ -2,16 +2,16 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractAnalysisStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
-import org.labkey.sequenceanalysis.api.run.CommandLineParam;
-import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.HaplotypeCallerWrapper;
 
@@ -66,8 +66,10 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
     public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
+        output.addInput(inputBam, "Input BAM File");
 
-        File outputFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".gvcf");
+        File outputFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".vcf.gz");
+        File idxFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".vcf.gz.idx");
 
         List<String> args = new ArrayList<>();
         Integer threads = SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob());
@@ -81,7 +83,12 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
 
         getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, args);
 
-        output.addSequenceOutput(outputFile, rs.getName() + ": HaplotypeCaller Variants", "GVCF File", rs.getRowId(), null, referenceGenome.getGenomeId());
+        output.addOutput(outputFile, "gVCF File");
+        output.addSequenceOutput(outputFile, rs.getName() + ": HaplotypeCaller Variants", "gVCF File", rs.getRowId(), null, referenceGenome.getGenomeId());
+        if (idxFile.exists())
+        {
+            output.addOutput(idxFile, "VCF Index");
+        }
 
         return output;
     }

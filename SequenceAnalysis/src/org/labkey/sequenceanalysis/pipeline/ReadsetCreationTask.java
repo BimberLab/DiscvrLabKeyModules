@@ -33,12 +33,11 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 
 import java.io.FileNotFoundException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -146,7 +145,6 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setSubjectId(r.getSubjectId());
                 row.setSampleDate(r.getSampleDate());
                 row.setPlatform(r.getPlatform());
-                row.setInputMaterial(r.getInputMaterial());
                 row.setSampleType(r.getSampleType());
                 row.setLibraryType(r.getLibraryType());
                 row.setName(r.getName());

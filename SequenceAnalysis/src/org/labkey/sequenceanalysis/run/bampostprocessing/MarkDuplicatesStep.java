@@ -2,15 +2,15 @@ package org.labkey.sequenceanalysis.run.bampostprocessing;
 
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.BamProcessingStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
-import org.labkey.sequenceanalysis.api.run.CommandLineParam;
-import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.run.util.MarkDuplicatesWrapper;
 
 import java.io.File;

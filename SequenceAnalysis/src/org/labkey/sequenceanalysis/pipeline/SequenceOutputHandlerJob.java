@@ -4,6 +4,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.exp.api.ExperimentUrls;
@@ -16,13 +18,16 @@ import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.sequenceanalysis.SequenceAnalysisManager;
+import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -33,18 +38,21 @@ import java.util.List;
  */
 public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysisJobSupport
 {
-    private SequenceOutputHandler _handler;
+    private String _handlerClassName;
+    private String _name;
     private JSONObject _jsonParams;
     private List<SequenceOutputFile> _files;
-    private List<SequenceOutputFile> _outputsCreated = new ArrayList<>();
+    private List<SequenceOutputFile> _outputsToCreate = new ArrayList<>();
     private File _outDir;
     private Integer _experimentRunRowId;
+    private SequenceJobSupportImpl _support;
 
     public SequenceOutputHandlerJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, SequenceOutputHandler handler, List<SequenceOutputFile> files, JSONObject jsonParams)
     {
         super(SequenceOutputHandlerPipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
-
-        _handler = handler;
+        _support = new SequenceJobSupportImpl();
+        _name = handler.getName();
+        _handlerClassName = handler.getClass().getName();
         _jsonParams = jsonParams;
         _files = files;
 
@@ -63,13 +71,19 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
             _outDir.mkdir();
         }
 
+        //for the purpose of caching files:
+        for (SequenceOutputFile o : _files)
+        {
+            o.getFile();
+        }
+
         setLogFile(new File(_outDir, "output.log"));
     }
 
     @Override
     public String getDescription()
     {
-        return _handler.getName();
+        return _name;
     }
 
     @Override
@@ -92,7 +106,13 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
 
     public SequenceOutputHandler getHandler()
     {
-        return _handler;
+        SequenceOutputHandler handler = SequenceAnalysisManager.get().getFileHandler(_handlerClassName);
+        if (handler == null)
+        {
+            throw new IllegalArgumentException("Unable to find handler: " + _handlerClassName);
+        }
+
+        return handler;
     }
 
     public JSONObject getJsonParams()
@@ -105,14 +125,14 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
         return _files;
     }
 
-    public void addOutputCreated(SequenceOutputFile o)
+    public void addOutputToCreate(SequenceOutputFile o)
     {
-        _outputsCreated.add(o);
+        _outputsToCreate.add(o);
     }
 
-    public List<SequenceOutputFile> getOutputsCreated()
+    public List<SequenceOutputFile> getOutputsToCreate()
     {
-        return _outputsCreated;
+        return _outputsToCreate;
     }
 
     @Override
@@ -191,7 +211,13 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
     @Override
     public List<File> getInputFiles()
     {
-        return null;
+        List<File> ret = new ArrayList<>();
+        for (SequenceOutputFile o : _files)
+        {
+            ret.add(o.getFile());
+        }
+
+        return ret;
     }
 
     @Override
@@ -208,5 +234,10 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
     public void setExperimentRunRowId(Integer experimentRunRowId)
     {
         _experimentRunRowId = experimentRunRowId;
+    }
+
+    public SequenceAnalysisJobSupport getSequenceSupport()
+    {
+        return _support;
     }
 }

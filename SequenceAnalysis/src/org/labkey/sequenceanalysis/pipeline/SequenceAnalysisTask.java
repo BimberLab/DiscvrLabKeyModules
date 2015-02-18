@@ -19,6 +19,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
@@ -28,16 +29,16 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.run.util.BamMetricsRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
@@ -264,6 +265,28 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
                 TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
                 Table.insert(getJob().getUser(), ti, model);
+
+                SequenceOutputFile so = new SequenceOutputFile();
+                so.setName(bam.getName());
+                so.setCategory("Alignment");
+                so.setAnalysis_id(model.getAnalysisId());
+                so.setReadset(model.getReadset());
+                so.setLibrary_id(model.getLibrary_Id());
+                ExpData d = ExperimentService.get().getExpDataByURL(bam, getJob().getContainer());
+                if (d == null)
+                {
+                    getJob().getLogger().info("creating ExpData for file: " + bam.getPath());
+
+                    d = ExperimentService.get().createData(getJob().getContainer(), new DataType("Alignment"));
+                    d.setDataFileURI(bam.toURI());
+                    d.setName(bam.getName());
+                    d.save(getJob().getUser());
+                }
+                so.setDataId(d.getRowId());
+                so.setContainer(getJob().getContainerId());
+
+                Table.insert(getJob().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), so);
+
                 addMetricsForAnalysis(model);
 
                 if (!providers.isEmpty())

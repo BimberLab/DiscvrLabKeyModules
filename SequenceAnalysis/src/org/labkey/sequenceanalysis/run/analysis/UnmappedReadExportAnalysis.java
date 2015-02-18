@@ -8,25 +8,30 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
+import htsjdk.samtools.util.CloserUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.biojava3.core.sequence.DNASequence;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractAnalysisStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
-import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
-import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collections;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -45,7 +50,9 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
     {
         public Provider()
         {
-            super("UnalignedReadExport", "Export Unmapped Reads", null, "This will export unmapped reads from each BAM to create FASTQ files.", Collections.<ToolParameterDescriptor>emptyList(), null, null);
+            super("UnalignedReadExport", "Export Unmapped Reads", null, "This will export unmapped reads from each BAM to create FASTQ files.", Arrays.asList(
+                    ToolParameterDescriptor.create("fastaExport", "Export As FASTA", "If selected, the unmapped reads will be exported as a FASTA file, rather than the default FASTQ.", "checkbox", null, null)
+            ), null, null);
         }
 
         @Override
@@ -72,43 +79,68 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
 
-        File paired1 = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_paired1.fastq");
-        File paired2 = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_paired2.fastq");
-        File singletons = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_singletons.fastq");
+        boolean fastaExport= getProvider().getParameterByName("fastaExport").extractValue(getPipelineCtx().getJob(), this.getProvider(), Boolean.class, false);
+        String extension = fastaExport ? "fasta" : "fastq";
 
-        writeUnmappedReads(inputBam, paired1, paired2, singletons, getPipelineCtx().getLogger());
-
-        if (SequenceUtil.getLineCount(paired1) == 0)
+        if (fastaExport)
         {
-            paired1.delete();
+            File fasta = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_unmapped." + extension);
+
+            writeUnmappedReadsAsFasta(inputBam, fasta, getPipelineCtx().getLogger(), null);
+            if (SequenceUtil.getLineCount(fasta) == 0)
+            {
+                fasta.delete();
+            }
+            else
+            {
+                output.addSequenceOutput(fasta, "Unmapped reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+            }
         }
         else
         {
-            output.addSequenceOutput(paired1, "Unmapped first mate reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
-        }
+            File paired1 = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_unmapped_paired1." + extension);
+            File paired2 = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_unmapped_paired2." + extension);
+            File singletons = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_unmapped_singletons." + extension);
 
-        if (SequenceUtil.getLineCount(paired2) == 0)
-        {
-            paired2.delete();
-        }
-        else
-        {
-            output.addSequenceOutput(paired1, "Unmapped second mate reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
-        }
+            writeUnmappedReadsAsFastq(inputBam, paired1, paired2, singletons, getPipelineCtx().getLogger());
+            long paired1Count = SequenceUtil.getLineCount(paired1);
+            getPipelineCtx().getLogger().info("total first mate unmapped reads: " + (paired1Count / 4));
+            if (paired1Count == 0)
+            {
+                paired1.delete();
+            }
+            else
+            {
+                output.addSequenceOutput(paired1, "Unmapped first mate reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+            }
 
-        if (SequenceUtil.getLineCount(singletons) == 0)
-        {
-            singletons.delete();
-        }
-        else
-        {
-            output.addSequenceOutput(paired1, "Unmapped singleton reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+            long paired2Count = SequenceUtil.getLineCount(paired2);
+            getPipelineCtx().getLogger().info("total second mate unmapped reads: " + (paired2Count / 4));
+            if (paired2Count == 0)
+            {
+                paired2.delete();
+            }
+            else
+            {
+                output.addSequenceOutput(paired2, "Unmapped second mate reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+            }
+
+            long singletonsCount = SequenceUtil.getLineCount(singletons);
+            getPipelineCtx().getLogger().info("total unpaired, unmapped reads: " + (singletonsCount / 4));
+            if (singletonsCount == 0)
+            {
+                singletons.delete();
+            }
+            else
+            {
+                output.addSequenceOutput(singletons, "Unmapped singleton reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+            }
         }
 
         return output;
     }
 
-    public static void writeUnmappedReads(File inputBam, File paired1, File paired2, File singletons, Logger log) throws PipelineJobException
+    public static void writeUnmappedReadsAsFastq(File inputBam, File paired1, File paired2, File singletons, Logger log) throws PipelineJobException
     {
         FastqWriterFactory fact = new FastqWriterFactory();
         try (FastqWriter paired1Writer = fact.newWriter(paired1);FastqWriter paired2Writer = fact.newWriter(paired2);FastqWriter singletonsWriter = fact.newWriter(singletons))
@@ -187,5 +219,70 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
         }
 
         return new FastqRecord(readName, bases, null, qualities);
+    }
+
+    public static List<File> writeUnmappedReadsAsFasta(File inputBam, File fasta, Logger log, @Nullable Long maxReads) throws PipelineJobException
+    {
+        List<File> ret = new ArrayList<>();
+        ret.add(fasta);
+
+        List<BufferedWriter> writers = new ArrayList<>();
+        try
+        {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(fasta));
+            writers.add(writer);
+
+            long readsEncountered = 0;
+            SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault();
+            try (SamReader reader = samReaderFactory.open(inputBam))
+            {
+                try (SAMRecordIterator it = reader.iterator())
+                {
+                    while (it.hasNext())
+                    {
+                        SAMRecord r = it.next();
+                        if (r.getReadUnmappedFlag())
+                        {
+                            readsEncountered++;
+
+                            if (maxReads != null)
+                            {
+                                if (readsEncountered % maxReads == 0)
+                                {
+                                    File newFile = new File(fasta.getParentFile(), FileUtil.getBaseName(fasta) + "-" + ret.size());
+                                    log.debug("splitting into new file after " + readsEncountered + " reads: " + newFile.getName());
+
+                                    ret.add(newFile);
+
+                                    writer = new BufferedWriter(new FileWriter(newFile));
+                                    writers.add(writer);
+                                }
+                            }
+
+                            String name = r.getReadName();
+                            if (r.getReadPairedFlag())
+                            {
+                                name = name + (r.getFirstOfPairFlag() ? "/1" : "/2");
+                            }
+
+                            SequenceUtil.writeFastaRecord(writer, name, r.getReadString(), 100);
+                        }
+                    }
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+        finally
+        {
+            for (Writer w : writers)
+            {
+                CloserUtil.close(w);
+            }
+        }
+
+        return ret;
     }
 }

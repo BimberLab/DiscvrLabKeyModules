@@ -15,7 +15,7 @@ import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 
 import java.io.File;
 import java.util.Map;

@@ -2640,6 +2640,7 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/nt_snps_by_pos/Gr
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfile_categories.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfiles.js -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfiles/.qview.xml -text
+labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfiles/File[!!-~]Details.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/peptide_positions.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/quality_metrics/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_aa_sequences.js -text
@@ -2662,10 +2663,6 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/virus_strains.que
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/virus_strains.sql -text
 labModules/SequenceAnalysis/resources/reports/schemas/sequenceanalysis/alignment_summary_grouped/barChart.r -text
 labModules/SequenceAnalysis/resources/reports/schemas/sequenceanalysis/alignment_summary_grouped/barChart.report.xml -text
-labModules/SequenceAnalysis/resources/reports/schemas/sequenceanalysis/sequence_analyses/Coverage[!!-~]Graph.r -text
-labModules/SequenceAnalysis/resources/reports/schemas/sequenceanalysis/sequence_analyses/Coverage[!!-~]Graph.report.xml -text
-labModules/SequenceAnalysis/resources/reports/schemas/sequenceanalysis/sequence_analyses/NT[!!-~]SNP[!!-~]Summary.r -text
-labModules/SequenceAnalysis/resources/reports/schemas/sequenceanalysis/sequence_analyses/NT[!!-~]SNP[!!-~]Summary.report.xml -text
 labModules/SequenceAnalysis/resources/sampleData/README.txt -text
 labModules/SequenceAnalysis/resources/sampleData/Ref_DB.fasta -text
 labModules/SequenceAnalysis/resources/sampleData/Ref_DB.fasta.fai -text
@@ -2936,6 +2933,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportOutputFi
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportSequencesFromFastaWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportTrackWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/LiftoverWindow.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/OutputHandlerWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ReprocessLibraryWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/RunExportWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js -text
@@ -2960,8 +2958,6 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CompareVari
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CoverageDepthHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/GenotypeGVCFHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/LiftoverHandler.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/model/AnalysisModel.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/model/ReadsetModel.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/picard/CigarPositionIterable.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/pipeline/AbstractAlignmentStepProvider.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/pipeline/AbstractAnalysisStepProvider.java -text
@@ -2988,10 +2984,8 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/pipeline/Variant
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/pipeline/VariantPostProcessingStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/AbstractCommandPipelineStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/AbstractCommandWrapper.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/CommandLineParam.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/CommandWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/InputStreamHandler.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/ToolParameterDescriptor.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/ToolPreferences.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/GenomeLoadButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/QualiMapButton.java -text
@@ -3029,11 +3023,13 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ReferenceLi
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceAlignmentTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceAnalysisJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceAnalysisTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceJobSupportImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceNormalizationTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOutputHandlerFinalTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOutputHandlerJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOutputHandlerPipelineProvider.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOutputHandlerTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOutputHandlerRemoteTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOutputHandlerWebserverTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequencePipelineSettings.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceTaskHelper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/TaskFileManagerImpl.java -text

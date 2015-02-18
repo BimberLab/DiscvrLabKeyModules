@@ -40,7 +40,6 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     {name: 'platform', allowBlank: false},
                     {name: 'application', allowBlank: false},
                     {name: 'librarytype'},
-                    {name: 'inputmaterial'},
                     {name: 'sampletype'},
                     {name: 'subjectid'},
                     {name: 'sampledate'},
@@ -330,6 +329,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                     xtype: 'labkey-combo',
                     allowBlank: true,
                     forceSelection: true,
+                    queryMode: 'local',
                     displayField: 'type',
                     valueField: 'type',
                     plugins: ['ldk-usereditablecombo'],
@@ -338,27 +338,6 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'laboratory',
                         queryName: 'sample_type',
-                        autoLoad: true
-                    })
-                }
-            },{
-                text: 'Input Material',
-                tdCls: 'ldk-wrap-text',
-                name: 'inputmaterial',
-                width: 120,
-                dataIndex: 'inputmaterial',
-                editor: {
-                    xtype: 'labkey-combo',
-                    allowBlank: true,
-                    forceSelection: true,
-                    displayField: 'material',
-                    valueField: 'material',
-                    plugins: ['ldk-usereditablecombo'],
-                    editable: true,
-                    store: Ext4.create('LABKEY.ext4.data.Store', {
-                        containerPath: Laboratory.Utils.getQueryContainerPath(),
-                        schemaName: 'sequenceanalysis',
-                        queryName: 'input_material',
                         autoLoad: true
                     })
                 }
@@ -696,7 +675,7 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
         }
 
         var sql = 'select  ' +
-                'r.rowid,r.name,r.platform,r.application,r.librarytype,r.inputMaterial,r.sampletype,r.subjectid,r.sampledate,r.sampleid,r.comments,r.barcode5,r.barcode3,r.fileid,r.fileid2,r.instrument_run_id,r.fileid2.name as fileName,r.fileid.name as fileName2 \n' +
+                'r.rowid,r.name,r.platform,r.application,r.librarytype,r.sampletype,r.subjectid,r.sampledate,r.sampleid,r.comments,r.barcode5,r.barcode3,r.fileid,r.fileid2,r.instrument_run_id,r.fileid2.name as fileName,r.fileid.name as fileName2 \n' +
                 'from sequenceanalysis.sequence_readsets r \n';
 
         sql += 'WHERE rowid IN (' + readsets.join(',') + ')';
@@ -755,7 +734,6 @@ Ext4.define('SequenceAnalysis.panel.SamplePanel', {
                         subjectid: row.subjectid,
                         sampledate: row.sampledate,
                         comments: row.comments,
-                        inputmaterial: row.inputmaterial,
                         sampletype: row.sampletype,
                         instrument_run_id: row.instrument_run_id,
                         isValid: true

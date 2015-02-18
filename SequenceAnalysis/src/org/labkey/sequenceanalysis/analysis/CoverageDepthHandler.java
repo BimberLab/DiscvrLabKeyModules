@@ -30,7 +30,6 @@ import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -44,7 +43,8 @@ import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.ConfigurationException;
@@ -129,246 +129,279 @@ public class CoverageDepthHandler implements SequenceOutputHandler
     }
 
     @Override
-    public void processFiles(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+    public List<String> validateParameters(JSONObject params)
     {
-        CoverageSettings settings = new CoverageSettings(params);
-        Set<File> rawDataFiles = new HashSet<>();
-        try
+        return null;
+    }
+
+    @Override
+    public boolean doRunRemote()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean doRunLocal()
+    {
+        return true;
+    }
+
+    @Override
+    public OutputProcessor getProcessor()
+    {
+        return new Processor();
+    }
+
+    public class Processor implements OutputProcessor
+    {
+        @Override
+        public void processFilesOnWebserver(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            Map<SequenceOutputFile, RecordedAction> actionMap = new HashMap<>();
-
-            //step 1: define windows
-            job.getLogger().info("generating windows");
-            WindowStrategy windowStrategy = settings.getWindowStrategy();
-            windowStrategy.generateWindows(inputFiles, outputDir);
-
-            //step 3: using windows, iterate BAMs to generate raw data
-            Map<SequenceOutputFile, File> rawDataMap = new HashMap<>();
-            Map<SequenceOutputFile, File> normalizedDataMap = new HashMap<>();
-
-            for (SequenceOutputFile outputFile : inputFiles)
+            CoverageSettings settings = new CoverageSettings(params);
+            Set<File> rawDataFiles = new HashSet<>();
+            try
             {
-                RecordedAction action = new RecordedAction(getName());
-                action.setStartTime(new Date());
-                actionMap.put(outputFile, action);
+                Map<SequenceOutputFile, RecordedAction> actionMap = new HashMap<>();
 
-                File bam = outputFile.getFile();
-                if (bam == null || !bam.exists())
-                {
-                    job.getLogger().error("Unable to find BAM for output file: " + outputFile.getName());
-                    continue;
-                }
+                //step 1: define windows
+                job.getLogger().info("generating windows");
+                WindowStrategy windowStrategy = settings.getWindowStrategy();
+                windowStrategy.generateWindows(inputFiles, outputDir);
 
-                File intervalsFile = windowStrategy.getWindowBedForOutput(outputFile);
+                //step 3: using windows, iterate BAMs to generate raw data
+                Map<SequenceOutputFile, File> rawDataMap = new HashMap<>();
+                Map<SequenceOutputFile, File> normalizedDataMap = new HashMap<>();
 
-                action.addInput(bam, "Input BAM");
-                action.addInput(getFinalFilename(intervalsFile, settings), "Windows File");
-                rawDataFiles.add(intervalsFile);
-
-                List<Interval> intervalList = SequenceUtil.bedToIntervalList(intervalsFile);
-
-                job.getLogger().info("generating raw data for: " + outputFile.getName());
-                File rawDataFile = new File(outputDir, getBaseNameForFile(outputFile) + ".coverage.txt");
-                generateRawDataForOutput(bam, intervalList, rawDataFile);
-                action.addOutput(getFinalFilename(rawDataFile, settings), "Coverage Data", settings.deleteRawData());
-                rawDataFiles.add(rawDataFile);
-
-                job.getLogger().info("generating coverage-normalized data for: " + outputFile.getName());
-                File normalizedDataFile = new File(outputDir, getBaseNameForFile(outputFile) + ".normalizedCoverage.txt");
-                generateNormalizedDataForOutput(rawDataFile, normalizedDataFile);
-                action.addOutput(getFinalFilename(normalizedDataFile, settings), "Coverage Data - Normalized To Avg", settings.deleteRawData());
-                rawDataFiles.add(normalizedDataFile);
-
-                normalizedDataMap.put(outputFile, normalizedDataFile);
-                rawDataMap.put(outputFile, rawDataFile);
-            }
-
-            //step 4: calculate values relative to another sample, if needed
-            Integer referenceSampleId = windowStrategy.getReferenceSampleForWindows();
-            SequenceOutputFile referenceSample = referenceSampleId == null ? null : getSequenceOutputByRowId(referenceSampleId, inputFiles);
-            Map<SequenceOutputFile, File> normalizedToSampleMap = new HashMap<>();
-            if (referenceSample != null)
-            {
-                //read intervals into memory
-                job.getLogger().info("using reference sample: " + referenceSample.getName());
-                Map<String, MetricLine> referenceData = readDataToMemory(rawDataMap.get(referenceSample));
-
-                //get read count for reference
-                long refReadCount = getReadCount(referenceSample);
-                job.getLogger().info("total reads in reference sample: " + refReadCount);
-
-                //iterate original data and augment
                 for (SequenceOutputFile outputFile : inputFiles)
                 {
-                    job.getLogger().info("generating reference-normalized data for: " + outputFile.getName());
-                    File normalizedToReference = new File(outputDir, getBaseNameForFile(outputFile) + ".normalizedToSample.txt");
-                    File rawData = rawDataMap.get(outputFile);
-                    long sampleReadCount = getReadCount(outputFile);
-                    job.getLogger().info("total reads in BAM: " + sampleReadCount);
-                    generateNormalizedDataForSample(job, rawData, normalizedToReference, referenceData, refReadCount, sampleReadCount);
-                    actionMap.get(outputFile).addOutput(getFinalFilename(normalizedToReference, settings), "Coverage Data - Normalized To Reference Sample", settings.deleteRawData());
-                    rawDataFiles.add(normalizedToReference);
-                    normalizedToSampleMap.put(outputFile, normalizedToReference);
+                    RecordedAction action = new RecordedAction(getName());
+                    action.setStartTime(new Date());
+                    actionMap.put(outputFile, action);
+
+                    File bam = outputFile.getFile();
+                    if (bam == null || !bam.exists())
+                    {
+                        job.getLogger().error("Unable to find BAM for output file: " + outputFile.getName());
+                        continue;
+                    }
+
+                    File intervalsFile = windowStrategy.getWindowBedForOutput(outputFile);
+
+                    action.addInput(bam, "Input BAM");
+                    action.addInput(getFinalFilename(intervalsFile, settings), "Windows File");
+                    rawDataFiles.add(intervalsFile);
+
+                    List<Interval> intervalList = SequenceUtil.bedToIntervalList(intervalsFile);
+
+                    job.getLogger().info("generating raw data for: " + outputFile.getName());
+                    File rawDataFile = new File(outputDir, getBaseNameForFile(outputFile) + ".coverage.txt");
+                    generateRawDataForOutput(bam, intervalList, rawDataFile);
+                    action.addOutput(getFinalFilename(rawDataFile, settings), "Coverage Data", settings.deleteRawData());
+                    rawDataFiles.add(rawDataFile);
+
+                    job.getLogger().info("generating coverage-normalized data for: " + outputFile.getName());
+                    File normalizedDataFile = new File(outputDir, getBaseNameForFile(outputFile) + ".normalizedCoverage.txt");
+                    generateNormalizedDataForOutput(rawDataFile, normalizedDataFile);
+                    action.addOutput(getFinalFilename(normalizedDataFile, settings), "Coverage Data - Normalized To Avg", settings.deleteRawData());
+                    rawDataFiles.add(normalizedDataFile);
+
+                    normalizedDataMap.put(outputFile, normalizedDataFile);
+                    rawDataMap.put(outputFile, rawDataFile);
                 }
-            }
 
-            //step 5: generate graph/html
-            boolean vertical = params.containsKey("orientation") && "vertical".equals(params.getString("orientation"));
-            for (SequenceOutputFile outputFile : inputFiles)
-            {
-                job.getLogger().info("generating graphs for: " + outputFile.getName());
-
-                File html = new File(outputDir, getBaseNameForFile(outputFile) + ".summary.html");
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(html)))
+                //step 4: calculate values relative to another sample, if needed
+                Integer referenceSampleId = windowStrategy.getReferenceSampleForWindows();
+                SequenceOutputFile referenceSample = referenceSampleId == null ? null : getSequenceOutputByRowId(referenceSampleId, inputFiles);
+                Map<SequenceOutputFile, File> normalizedToSampleMap = new HashMap<>();
+                if (referenceSample != null)
                 {
-                    writer.write("<html><body><h2>" + outputFile.getName() + ":</h2>");
-                    writer.write("This report contains multiple graphs showing coverage within your sample.  You can either scroll through the page or use the links below to jump to a given section.<p>");
-                    writer.write("<table>");
-                    writer.write("<tr><td><a href='#rawValues'>Section 1: Raw Data</a></td></tr>");
-                    writer.write("<tr><td><a href='#normalizedToChromosome'>Section 2: Normalized To The Avg. Per Chromosome</a></td></tr>");
+                    //read intervals into memory
+                    job.getLogger().info("using reference sample: " + referenceSample.getName());
+                    Map<String, MetricLine> referenceData = readDataToMemory(rawDataMap.get(referenceSample));
 
-                    if (normalizedToSampleMap.containsKey(outputFile))
+                    //get read count for reference
+                    long refReadCount = getReadCount(referenceSample);
+                    job.getLogger().info("total reads in reference sample: " + refReadCount);
+
+                    //iterate original data and augment
+                    for (SequenceOutputFile outputFile : inputFiles)
                     {
-                        writer.write("<tr><td><a href='#normalizedToSample'>Section 3: Data Normalized to Another Sample</a></td></tr>");
+                        job.getLogger().info("generating reference-normalized data for: " + outputFile.getName());
+                        File normalizedToReference = new File(outputDir, getBaseNameForFile(outputFile) + ".normalizedToSample.txt");
+                        File rawData = rawDataMap.get(outputFile);
+                        long sampleReadCount = getReadCount(outputFile);
+                        job.getLogger().info("total reads in BAM: " + sampleReadCount);
+                        generateNormalizedDataForSample(job, rawData, normalizedToReference, referenceData, refReadCount, sampleReadCount);
+                        actionMap.get(outputFile).addOutput(getFinalFilename(normalizedToReference, settings), "Coverage Data - Normalized To Reference Sample", settings.deleteRawData());
+                        rawDataFiles.add(normalizedToReference);
+                        normalizedToSampleMap.put(outputFile, normalizedToReference);
                     }
+                }
 
-                    String urlBase = AppProps.getInstance().getBaseServerUrl() + AppProps.getInstance().getContextPath() + "/_webdav" + job.getContainer().getPath() + "/@files/sequenceOutputPipeline/" + outputDir.getName() + "/";
+                //step 5: generate graph/html
+                boolean vertical = params.containsKey("orientation") && "vertical".equals(params.getString("orientation"));
+                for (SequenceOutputFile outputFile : inputFiles)
+                {
+                    job.getLogger().info("generating graphs for: " + outputFile.getName());
 
-                    if (!settings.deleteRawData())
+                    File html = new File(outputDir, getBaseNameForFile(outputFile) + ".summary.html");
+                    try (BufferedWriter writer = new BufferedWriter(new FileWriter(html)))
                     {
-                        writer.write("<tr><td><a href='" + urlBase + windowStrategy.getWindowBedForOutput(outputFile).getName() + "'>Download Window Borders</a></td></tr>");
-                    }
-                    writer.write("</table><p><hr>");
+                        writer.write("<html><body><h2>" + outputFile.getName() + ":</h2>");
+                        writer.write("This report contains multiple graphs showing coverage within your sample.  You can either scroll through the page or use the links below to jump to a given section.<p>");
+                        writer.write("<table>");
+                        writer.write("<tr><td><a href='#rawValues'>Section 1: Raw Data</a></td></tr>");
+                        writer.write("<tr><td><a href='#normalizedToChromosome'>Section 2: Normalized To The Avg. Per Chromosome</a></td></tr>");
 
-                    //section 1: raw data
-                    writer.write("<h3 id='rawValues'>Section 1: Raw Data</h3><p>");
-                    if (!settings.deleteRawData())
-                    {
-                        writer.write("<a href='" + urlBase + rawDataMap.get(outputFile).getName() + "'>Download Data</a><p>");
-                    }
+                        if (normalizedToSampleMap.containsKey(outputFile))
+                        {
+                            writer.write("<tr><td><a href='#normalizedToSample'>Section 3: Data Normalized to Another Sample</a></td></tr>");
+                        }
 
-                    for (MetricDescriptor m : getMetricDescriptors().values())
-                    {
-                        //run R, generate graph
-                        File graph = new File(outputDir, getBaseNameForFile(outputFile) + "_" + m.getColumnHeader() + ".png");
-                        runScript(job, graph, outputDir, rawDataMap.get(outputFile), m.getColumnHeader(), m.getLabel(), "Count", vertical);
+                        String urlBase = AppProps.getInstance().getBaseServerUrl() + AppProps.getInstance().getContextPath() + "/_webdav" + job.getContainer().getPath() + "/@files/sequenceOutputPipeline/" + outputDir.getName() + "/";
 
-                        String encoded = Base64.encodeBase64String(FileUtils.readFileToByteArray(graph));
-                        writer.write("<h3 id=\"" + m.getColumnHeader() + "\">" + m.getLabel() + "<h3>");
-                        writer.write("<img src=\"data:image/png;base64," + encoded + "\"/>");
-                        writer.write("<br>");
-                        graph.delete();
-                    }
-                    writer.write("<hr>");
-
-                    //section 2: normalized
-                    writer.write("<h3 id='normalizedToChromosome'>Section 2: Normalized To The Avg. Per Chromosome</h3><p>");
-                    if (!settings.deleteRawData())
-                    {
-                        writer.write("<a href='" + urlBase + normalizedDataMap.get(outputFile).getName() + "'>Download Data</a><p>");
-                    }
-
-                    for (MetricDescriptor m : getMetricDescriptors().values())
-                    {
-                        String header = m.getColumnHeader() + "NormalizedToAvg";
-                        File graph = new File(outputDir, getBaseNameForFile(outputFile) + "_" + header + ".png");
-                        runScript(job, graph, outputDir, normalizedDataMap.get(outputFile), header, m.getLabel(), "Value", vertical);
-
-                        String encoded = Base64.encodeBase64String(FileUtils.readFileToByteArray(graph));
-                        writer.write("<h3 id=\"" + header + "\">" + m.getLabel() + ", Normalized To Average Over Chromosome</h3>");
-                        writer.write("<img src=\"data:image/png;base64," + encoded + "\"/>");
-                        graph.delete();
-
-                        header = m.getColumnHeader() + "NormalizedToAvgWithCoverage";
-                        graph = new File(outputDir, getBaseNameForFile(outputFile) + "_" + header + ".png");
-                        runScript(job, graph, outputDir, normalizedDataMap.get(outputFile), header, m.getLabel(), "Value", vertical);
-
-                        encoded = Base64.encodeBase64String(FileUtils.readFileToByteArray(graph));
-                        writer.write("<h3 id=\"" + header + "\">" + m.getLabel() + ", Normalized To Average Over Chromosome (Only Including Windows With Coverage)</h3>");
-                        writer.write("<img src=\"data:image/png;base64," + encoded + "\"/>");
-                        graph.delete();
-                    }
-
-                    writer.write("<hr>");
-
-                    //section 3: normlaized by sample
-                    if (referenceSample != null)
-                    {
-                        writer.write("<h3 id='normalizedToSample'>Normalized to: " + referenceSample.getName() + "</h3><p>");
                         if (!settings.deleteRawData())
                         {
-                            writer.write("<a href='" + urlBase + normalizedToSampleMap.get(outputFile).getName() + "'>Download Data</a><p>");
+                            writer.write("<tr><td><a href='" + urlBase + windowStrategy.getWindowBedForOutput(outputFile).getName() + ".gz'>Download Window Borders</a></td></tr>");
+                        }
+                        writer.write("</table><p><hr>");
+
+                        //section 1: raw data
+                        writer.write("<h3 id='rawValues'>Section 1: Raw Data</h3><p>");
+                        if (!settings.deleteRawData())
+                        {
+                            writer.write("<a href='" + urlBase + rawDataMap.get(outputFile).getName() + ".gz'>Download Data</a><p>");
                         }
 
                         for (MetricDescriptor m : getMetricDescriptors().values())
                         {
                             //run R, generate graph
                             File graph = new File(outputDir, getBaseNameForFile(outputFile) + "_" + m.getColumnHeader() + ".png");
-                            runScript(job, graph, outputDir, normalizedToSampleMap.get(outputFile), m.getColumnHeader(), m.getLabel(), "Value", vertical);
+                            runScript(job, graph, outputDir, rawDataMap.get(outputFile), m.getColumnHeader(), m.getLabel(), "Count", vertical);
 
                             String encoded = Base64.encodeBase64String(FileUtils.readFileToByteArray(graph));
-                            writer.write("<h3 id=\"" + m.getColumnHeader() + "\">" + m.getLabel() + ", Normalized To " + referenceSample.getName() + "<h3>");
+                            writer.write("<h3 id=\"" + m.getColumnHeader() + "\">" + m.getLabel() + "<h3>");
+                            writer.write("<img src=\"data:image/png;base64," + encoded + "\"/>");
+                            writer.write("<br>");
+                            graph.delete();
+                        }
+                        writer.write("<hr>");
+
+                        //section 2: normalized
+                        writer.write("<h3 id='normalizedToChromosome'>Section 2: Normalized To The Avg. Per Chromosome</h3><p>");
+                        if (!settings.deleteRawData())
+                        {
+                            writer.write("<a href='" + urlBase + normalizedDataMap.get(outputFile).getName() + ".gz'>Download Data</a><p>");
+                        }
+
+                        for (MetricDescriptor m : getMetricDescriptors().values())
+                        {
+                            String header = m.getColumnHeader() + "NormalizedToAvg";
+                            File graph = new File(outputDir, getBaseNameForFile(outputFile) + "_" + header + ".png");
+                            runScript(job, graph, outputDir, normalizedDataMap.get(outputFile), header, m.getLabel(), "Value", vertical);
+
+                            String encoded = Base64.encodeBase64String(FileUtils.readFileToByteArray(graph));
+                            writer.write("<h3 id=\"" + header + "\">" + m.getLabel() + ", Normalized To Average Over Chromosome</h3>");
+                            writer.write("<img src=\"data:image/png;base64," + encoded + "\"/>");
+                            graph.delete();
+
+                            header = m.getColumnHeader() + "NormalizedToAvgWithCoverage";
+                            graph = new File(outputDir, getBaseNameForFile(outputFile) + "_" + header + ".png");
+                            runScript(job, graph, outputDir, normalizedDataMap.get(outputFile), header, m.getLabel(), "Value", vertical);
+
+                            encoded = Base64.encodeBase64String(FileUtils.readFileToByteArray(graph));
+                            writer.write("<h3 id=\"" + header + "\">" + m.getLabel() + ", Normalized To Average Over Chromosome (Only Including Windows With Coverage)</h3>");
                             writer.write("<img src=\"data:image/png;base64," + encoded + "\"/>");
                             graph.delete();
                         }
 
                         writer.write("<hr>");
+
+                        //section 3: normlaized by sample
+                        if (referenceSample != null)
+                        {
+                            writer.write("<h3 id='normalizedToSample'>Normalized to: " + referenceSample.getName() + "</h3><p>");
+                            if (!settings.deleteRawData())
+                            {
+                                writer.write("<a href='" + urlBase + normalizedToSampleMap.get(outputFile).getName() + ".gz'>Download Data</a><p>");
+                            }
+
+                            for (MetricDescriptor m : getMetricDescriptors().values())
+                            {
+                                //run R, generate graph
+                                File graph = new File(outputDir, getBaseNameForFile(outputFile) + "_" + m.getColumnHeader() + ".png");
+                                runScript(job, graph, outputDir, normalizedToSampleMap.get(outputFile), m.getColumnHeader(), m.getLabel(), "Value", vertical);
+
+                                String encoded = Base64.encodeBase64String(FileUtils.readFileToByteArray(graph));
+                                writer.write("<h3 id=\"" + m.getColumnHeader() + "\">" + m.getLabel() + ", Normalized To " + referenceSample.getName() + "<h3>");
+                                writer.write("<img src=\"data:image/png;base64," + encoded + "\"/>");
+                                graph.delete();
+                            }
+
+                            writer.write("<hr>");
+                        }
+
+                        writer.write("</body</html>");
                     }
 
-                    writer.write("</body</html>");
+                    SequenceOutputFile htmlOut = new SequenceOutputFile();
+                    htmlOut.setContainer(job.getContainerId());
+                    htmlOut.setCreated(new Date());
+                    htmlOut.setCreatedby(job.getUser().getUserId());
+                    htmlOut.setModified(new Date());
+                    htmlOut.setModifiedby(job.getUser().getUserId());
+
+                    ExpData htmlData = ExperimentService.get().createData(job.getContainer(), new DataType("Coverage Report"));
+                    htmlData.setDataFileURI(html.toURI());
+                    htmlData.setName(html.getName());
+                    htmlData.save(job.getUser());
+
+                    htmlOut.setName(html.getName());
+                    htmlOut.setDataId(htmlData.getRowId());
+                    htmlOut.setDescription("Summary report of coverage for the BAM: " + outputFile.getFile().getName());
+                    htmlOut.setCategory("Coverage Summary");
+                    htmlOut.setLibrary_id(outputFile.getLibrary_id());
+                    htmlOut.setReadset(outputFile.getReadset());
+                    outputsToCreate.add(htmlOut);
+
+                    actionMap.get(outputFile).addOutput(html, "Coverage Data Summary", false);
                 }
 
-                SequenceOutputFile htmlOut = new SequenceOutputFile();
-                htmlOut.setContainer(job.getContainerId());
-                htmlOut.setCreated(new Date());
-                htmlOut.setCreatedby(job.getUser().getUserId());
-                htmlOut.setModified(new Date());
-                htmlOut.setModifiedby(job.getUser().getUserId());
-
-                ExpData htmlData = ExperimentService.get().createData(job.getContainer(), new DataType("Coverage Report"));
-                htmlData.setDataFileURI(html.toURI());
-                htmlData.setName(html.getName());
-                htmlData.save(job.getUser());
-
-                htmlOut.setName(html.getName());
-                htmlOut.setDataId(htmlData.getRowId());
-                htmlOut.setDescription("Summary report of coverage for the BAM: " + outputFile.getFile().getName());
-                htmlOut.setCategory("Coverage");
-                htmlOut.setLibrary_id(outputFile.getLibrary_id());
-                htmlOut.setReadset(outputFile.getReadset());
-                outputsToCreate.add(htmlOut);
-
-                actionMap.get(outputFile).addOutput(html, "Coverage Data Summary", false);
-            }
-
-            if (settings.deleteRawData())
-            {
-                for (File f : rawDataFiles)
+                if (settings.deleteRawData())
                 {
-                    f.delete();
+                    for (File f : rawDataFiles)
+                    {
+                        job.getLogger().info("deleting raw data");
+                        f.delete();
+                    }
                 }
-            }
-            else
-            {
-                for (File f : rawDataFiles)
+                else
                 {
-                    Compress.compressGzip(f);
-                    f.delete();
+                    for (File f : rawDataFiles)
+                    {
+                        job.getLogger().info("compressing raw data");
+                        Compress.compressGzip(f);
+                        f.delete();
+                    }
+                }
+
+                for (RecordedAction action : actionMap.values())
+                {
+                    action.setEndTime(new Date());
+                    actions.add(action);
                 }
             }
-
-            for (RecordedAction action : actionMap.values())
+            catch (IOException e)
             {
-                action.setEndTime(new Date());
-                actions.add(action);
+                throw new PipelineJobException(e);
             }
         }
-        catch (IOException e)
+
+        @Override
+        public void processFilesRemote(SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            throw new PipelineJobException(e);
-        }
 
-        //throw new PipelineJobException("complete!");
+        }
     }
 
     private File getFinalFilename(File f, CoverageSettings settings)
@@ -785,7 +818,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
 
         public boolean deleteRawData()
         {
-            return _json.get("deleteRawData") == null ? true : _json.getBoolean("deleteRawData");
+            return _json.get("deleteRawData") == null ? true : ConvertHelper.convert(_json.get("deleteRawData"), Boolean.class);
         }
 
         public List<String> getMetricNames()

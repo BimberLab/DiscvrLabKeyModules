@@ -31,13 +31,12 @@ import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.run.preprocessing.SeqCrumbsRunner;
 import org.labkey.sequenceanalysis.run.util.SFFExtractRunner;
 import org.labkey.sequenceanalysis.util.Barcoder;
 import org.labkey.sequenceanalysis.util.FastaToFastqConverter;
-import org.labkey.sequenceanalysis.util.FastqMerger;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.NucleotideSequenceFileType;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -263,7 +262,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             _actions.add(action);
 
             Map<String, File> fileMap = new HashMap<>();
-            for (File f : getHelper().getSupport().getInputFiles())
+            for (File f : inputFiles)
             {
                 fileMap.put(f.getName(), f);
             }

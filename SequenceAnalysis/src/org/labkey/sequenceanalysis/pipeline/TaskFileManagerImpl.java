@@ -9,7 +9,6 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -21,10 +20,9 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepOutput;
-import org.labkey.sequenceanalysis.api.pipeline.SequenceAnalysisJobSupport;
-import org.labkey.sequenceanalysis.api.pipeline.TaskFileManager;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -81,7 +79,7 @@ public class TaskFileManagerImpl implements TaskFileManager
         File log = getSequenceOutputLog(true);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(log, true)))
         {
-            writer.write(StringUtils.join(new String[]{relPath, label, category, (readsetId == null ? "" : readsetId.toString()), (analysisId == null ? "" : analysisId.toString()), (genomeId == null ? "" : genomeId.toString())}, '\t') + '\n');
+            writer.write(StringUtils.join(new String[]{relPath, label, category, (readsetId == null ? "0" : readsetId.toString()), (analysisId == null ? "0" : analysisId.toString()), (genomeId == null ? "0" : genomeId.toString())}, '\t') + '\n');
         }
         catch (IOException e)
         {
@@ -365,7 +363,6 @@ public class TaskFileManagerImpl implements TaskFileManager
                 String line;
                 while ((line = reader.readLine()) != null)
                 {
-                    _job.getLogger().debug("line: [" + line + "]");
                     String[] tokens = StringUtils.split(line, '\t');
                     File f = new File(((FileAnalysisJobSupport)_job).getAnalysisDirectory(), tokens[0]);
                     if (!f.exists())
@@ -397,17 +394,20 @@ public class TaskFileManagerImpl implements TaskFileManager
                     if (tokens.length >= 4)
                     {
                         Integer readsetId = Integer.parseInt(tokens[3]);
-                        map.put("readset", readsetId);
-                        _job.getLogger().debug("readset: " + map.get("readset"));
+                        if (readsetId > 0)
+                        {
+                            map.put("readset", readsetId);
+                            _job.getLogger().debug("readset: " + map.get("readset"));
+                        }
                     }
 
-                    if (tokens.length >= 5 && StringUtils.trimToNull(tokens[4]) != null)
+                    if (tokens.length >= 5 && StringUtils.trimToNull(tokens[4]) != null && Integer.parseInt(tokens[4]) > 0)
                     {
                         map.put("analysis_id", Integer.parseInt(tokens[4]));
                         _job.getLogger().debug("analysis id: " + map.get("analysis_id"));
                     }
 
-                    if (tokens.length >= 6 && StringUtils.trimToNull(tokens[5]) != null)
+                    if (tokens.length >= 6 && StringUtils.trimToNull(tokens[5]) != null && Integer.parseInt(tokens[5]) > 0)
                     {
                         map.put("library_id", Integer.parseInt(tokens[5]));
                         _job.getLogger().debug("library_id found in log: " + map.get("library_id"));

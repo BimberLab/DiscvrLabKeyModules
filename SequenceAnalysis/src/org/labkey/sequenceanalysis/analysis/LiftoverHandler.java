@@ -36,7 +36,8 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -108,6 +109,18 @@ public class LiftoverHandler implements SequenceOutputHandler
     }
 
     @Override
+    public boolean doRunRemote()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean doRunLocal()
+    {
+        return true;
+    }
+
+    @Override
     public boolean canProcess(SequenceOutputFile f)
     {
         return f.getFile() != null && (
@@ -117,127 +130,148 @@ public class LiftoverHandler implements SequenceOutputHandler
     }
 
     @Override
-    public void processFiles(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+    public List<String> validateParameters(JSONObject params)
     {
-        for (SequenceOutputFile f : inputFiles)
+        return null;
+    }
+
+    @Override
+    public OutputProcessor getProcessor()
+    {
+        return new Processor();
+    }
+
+    public class Processor implements OutputProcessor
+    {
+        @Override
+        public void processFilesOnWebserver(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            job.getLogger().info("processing output: " + f.getFile().getName());
-
-            RecordedAction action = new RecordedAction(getName());
-            action.setStartTime(new Date());
-
-            boolean isGzip = f.getFile().getPath().toLowerCase().endsWith(".gz");
-            int dots = isGzip ? 2 : 1;
-            String extension = isGzip ? FileUtil.getExtension(f.getFile().getName().replace(".gz$", "")) : FileUtil.getExtension(f.getFile());
-            String baseName = FileUtil.getBaseName(f.getFile(), dots);
-
-            Integer chainRowId = params.getInt("chainRowId");
-            Map<String, Object> chainRow = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_CHAIN_FILES), PageFlowUtil.set("chainFile", "genomeId1", "genomeId2")).getObject(chainRowId, Map.class);
-            ExpData chainData = ExperimentService.get().getExpData((Integer)chainRow.get("chainFile"));
-            if (chainData == null || !chainData.getFile().exists())
+            for (SequenceOutputFile f : inputFiles)
             {
-                throw new PipelineJobException("Unable to find chain file: " + chainRowId);
-            }
+                job.getLogger().info("processing output: " + f.getFile().getName());
 
-            int sourceGenomeId = (Integer)chainRow.get("genomeId1");
-            int targetGenomeId = (Integer)chainRow.get("genomeId2");
-            double pct = params.containsKey("pct") ? params.getDouble("pct") : 0.95;
-            job.getLogger().info("using minimum percent match: " + pct);
+                RecordedAction action = new RecordedAction(getName());
+                action.setStartTime(new Date());
 
-            action.addInput(f.getFile(), "Input File");
-            action.addInput(chainData.getFile(), "Chain File");
+                boolean isGzip = f.getFile().getPath().toLowerCase().endsWith(".gz");
+                int dots = isGzip ? 2 : 1;
+                String extension = isGzip ? FileUtil.getExtension(f.getFile().getName().replace(".gz$", "")) : FileUtil.getExtension(f.getFile());
+                String baseName = FileUtil.getBaseName(f.getFile(), dots);
 
-            File outDir = ((FileAnalysisJobSupport)job).getAnalysisDirectory();
-            File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + "." + extension);
-            File unmappedOutput = new File(outDir, baseName + ".unmapped-" + targetGenomeId + "." + extension);
-
-            try
-            {
-                if (_bedFileType.isType(f.getFile()))
+                Integer chainRowId = params.getInt("chainRowId");
+                Map<String, Object> chainRow = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_CHAIN_FILES), PageFlowUtil.set("chainFile", "genomeId1", "genomeId2")).getObject(chainRowId, Map.class);
+                ExpData chainData = ExperimentService.get().getExpData((Integer) chainRow.get("chainFile"));
+                if (chainData == null || !chainData.getFile().exists())
                 {
-                    liftOverBed(chainData.getFile(), f.getFile(), lifted, unmappedOutput, job, pct);
+                    throw new PipelineJobException("Unable to find chain file: " + chainRowId);
                 }
-//                else if (_gffFileType.isType(f.getFile()))
-//                {
-//                    //liftOverGFF(chainData.getFile(), f.getFile(), lifted, unmappedOutput, job);
-//                }
-                else if (_vcfFileType.isType(f.getFile()))
+
+                int sourceGenomeId = (Integer) chainRow.get("genomeId1");
+                int targetGenomeId = (Integer) chainRow.get("genomeId2");
+                double pct = params.containsKey("pct") ? params.getDouble("pct") : 0.95;
+                job.getLogger().info("using minimum percent match: " + pct);
+
+                action.addInput(f.getFile(), "Input File");
+                action.addInput(chainData.getFile(), "Chain File");
+
+                File outDir = ((FileAnalysisJobSupport) job).getAnalysisDirectory();
+                File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + "." + extension);
+                File unmappedOutput = new File(outDir, baseName + ".unmapped-" + targetGenomeId + "." + extension);
+
+                try
                 {
-                    liftOverVcf(chainData.getFile(), f.getFile(), lifted, unmappedOutput, job, f.getLibrary_id(), pct);
+                    if (_bedFileType.isType(f.getFile()))
+                    {
+                        liftOverBed(chainData.getFile(), f.getFile(), lifted, unmappedOutput, job, pct);
+                    }
+                    //                else if (_gffFileType.isType(f.getFile()))
+                    //                {
+                    //                    //liftOverGFF(chainData.getFile(), f.getFile(), lifted, unmappedOutput, job);
+                    //                }
+                    else if (_vcfFileType.isType(f.getFile()))
+                    {
+                        liftOverVcf(chainData.getFile(), f.getFile(), lifted, unmappedOutput, job, f.getLibrary_id(), pct);
+                    }
+                    else
+                    {
+                        throw new UnsupportedOperationException("Unsupported file type: " + f.getFile().getName());
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+                action.addOutput(lifted, "Lifted Features", lifted.exists());
+                if (lifted.exists())
+                {
+                    SequenceOutputFile so1 = new SequenceOutputFile();
+                    so1.setName(f.getName() + " (lifted)");
+                    so1.setDescription("Contains features from " + f.getName() + " after liftover");
+                    ExpData liftedData = ExperimentService.get().createData(job.getContainer(), new DataType("Liftover Output"));
+                    liftedData.setDataFileURI(lifted.toURI());
+                    liftedData.setName(lifted.getName());
+                    liftedData.save(job.getUser());
+
+                    so1.setDataId(liftedData.getRowId());
+                    so1.setLibrary_id(targetGenomeId);
+                    so1.setReadset(f.getReadset());
+                    so1.setAnalysis_id(f.getAnalysis_id());
+                    so1.setCategory(f.getCategory());
+                    so1.setContainer(job.getContainerId());
+                    so1.setCreated(new Date());
+                    so1.setCreatedby(job.getUser().getUserId());
+                    so1.setModified(new Date());
+                    so1.setModifiedby(job.getUser().getUserId());
+
+                    outputsToCreate.add(so1);
+                }
+
+                if (!unmappedOutput.exists())
+                {
+                    job.getLogger().info("no unmapped intervals");
+                }
+                else if (SequenceUtil.getLineCount(unmappedOutput) == 0)
+                {
+                    job.getLogger().info("no unmapped intervals");
+                    unmappedOutput.delete();
                 }
                 else
                 {
-                    throw new UnsupportedOperationException("Unsupported file type: " + f.getFile().getName());
+                    action.addOutput(unmappedOutput, "Unmapped features", false);
+
+                    SequenceOutputFile so2 = new SequenceOutputFile();
+                    so2.setName(f.getName() + " (lifted/unmapped)");
+                    so2.setDescription("Contains the unmapped features after attempted liftover of " + f.getName());
+
+                    ExpData unmappedData = ExperimentService.get().createData(job.getContainer(), new DataType("Liftover Output"));
+                    unmappedData.setName(unmappedOutput.getName());
+                    unmappedData.setDataFileURI(unmappedOutput.toURI());
+                    unmappedData.save(job.getUser());
+
+                    so2.setDataId(unmappedData.getRowId());
+                    so2.setLibrary_id(f.getLibrary_id());
+                    so2.setReadset(f.getReadset());
+                    so2.setAnalysis_id(f.getAnalysis_id());
+                    so2.setCategory(f.getCategory());
+                    so2.setContainer(job.getContainerId());
+                    so2.setCreated(new Date());
+                    so2.setCreatedby(job.getUser().getUserId());
+                    so2.setModified(new Date());
+                    so2.setModifiedby(job.getUser().getUserId());
+
+                    outputsToCreate.add(so2);
                 }
+
+                action.setEndTime(new Date());
+                actions.add(action);
             }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
+        }
 
-            action.addOutput(lifted, "Lifted Features", lifted.exists());
-            if (lifted.exists())
-            {
-                SequenceOutputFile so1 = new SequenceOutputFile();
-                so1.setName(f.getName() + " (lifted)");
-                so1.setDescription("Contains features from " + f.getName() + " after liftover");
-                ExpData liftedData = ExperimentService.get().createData(job.getContainer(), new DataType("Liftover Output"));
-                liftedData.setDataFileURI(lifted.toURI());
-                liftedData.setName(lifted.getName());
-                liftedData.save(job.getUser());
+        @Override
+        public void processFilesRemote(SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        {
 
-                so1.setDataId(liftedData.getRowId());
-                so1.setLibrary_id(targetGenomeId);
-                so1.setReadset(f.getReadset());
-                so1.setAnalysis_id(f.getAnalysis_id());
-                so1.setCategory(f.getCategory());
-                so1.setContainer(job.getContainerId());
-                so1.setCreated(new Date());
-                so1.setCreatedby(job.getUser().getUserId());
-                so1.setModified(new Date());
-                so1.setModifiedby(job.getUser().getUserId());
-
-                outputsToCreate.add(so1);
-            }
-
-            if (!unmappedOutput.exists())
-            {
-                job.getLogger().info("no unmapped intervals");
-            }
-            else if (SequenceUtil.getLineCount(unmappedOutput) == 0)
-            {
-                job.getLogger().info("no unmapped intervals");
-                unmappedOutput.delete();
-            }
-            else
-            {
-                action.addOutput(unmappedOutput, "Unmapped features", false);
-
-                SequenceOutputFile so2 = new SequenceOutputFile();
-                so2.setName(f.getName() + " (lifted/unmapped)");
-                so2.setDescription("Contains the unmapped features after attempted liftover of " + f.getName());
-
-                ExpData unmappedData = ExperimentService.get().createData(job.getContainer(), new DataType("Liftover Output"));
-                unmappedData.setName(unmappedOutput.getName());
-                unmappedData.setDataFileURI(unmappedOutput.toURI());
-                unmappedData.save(job.getUser());
-
-                so2.setDataId(unmappedData.getRowId());
-                so2.setLibrary_id(f.getLibrary_id());
-                so2.setReadset(f.getReadset());
-                so2.setAnalysis_id(f.getAnalysis_id());
-                so2.setCategory(f.getCategory());
-                so2.setContainer(job.getContainerId());
-                so2.setCreated(new Date());
-                so2.setCreatedby(job.getUser().getUserId());
-                so2.setModified(new Date());
-                so2.setModifiedby(job.getUser().getUserId());
-
-                outputsToCreate.add(so2);
-            }
-
-            action.setEndTime(new Date());
-            actions.add(action);
         }
     }
 
@@ -312,6 +346,7 @@ public class LiftoverHandler implements SequenceOutputHandler
             }
         }
 
+        //TODO: sort resulting file
         job.getLogger().info("liftover complete.  successful variants: " + successfulIntervals + ", unsuccessful: " + failedIntervals);
     }
 
@@ -406,5 +441,12 @@ public class LiftoverHandler implements SequenceOutputHandler
                 }
             }
         }
+
+        //TODO: append to header:
+//        ##INFO=<ID=OriginalChr,Number=1,Type=String,Description="OriginalChr">
+//        ##INFO=<ID=OriginalGenome,Number=1,Type=String,Description="OriginalGenome">
+//        ##INFO=<ID=OriginalStart,Number=1,Type=String,Description="OriginalStart">
+
+        //TODO: sort resulting file
     }
 }

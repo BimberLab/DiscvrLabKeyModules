@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis;
 
 import org.apache.log4j.Logger;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 
 /**
  * User: bimber

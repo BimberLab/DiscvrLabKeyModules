@@ -9,11 +9,12 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,11 +22,9 @@ import java.util.List;
 /**
  * Created by bimber on 1/16/2015.
  */
-public class SequenceOutputHandlerTask extends PipelineJob.Task<SequenceOutputHandlerTask.Factory>
+public class SequenceOutputHandlerWebserverTask extends PipelineJob.Task<SequenceOutputHandlerWebserverTask.Factory>
 {
-    private static final String ACTION_NAME = "Processing Files";
-
-    protected SequenceOutputHandlerTask(Factory factory, PipelineJob job)
+    protected SequenceOutputHandlerWebserverTask(Factory factory, PipelineJob job)
     {
         super(factory, job);
     }
@@ -34,7 +33,7 @@ public class SequenceOutputHandlerTask extends PipelineJob.Task<SequenceOutputHa
     {
         public Factory()
         {
-            super(SequenceOutputHandlerTask.class);
+            super(SequenceOutputHandlerWebserverTask.class);
             setLocation("webserver-high-priority");
         }
 
@@ -59,9 +58,24 @@ public class SequenceOutputHandlerTask extends PipelineJob.Task<SequenceOutputHa
             return allowableNames;
         }
 
+        @Override
+        public boolean isParticipant(PipelineJob job) throws IOException
+        {
+            if (job instanceof SequenceOutputHandlerJob)
+            {
+                if (!((SequenceOutputHandlerJob)job).getHandler().doRunLocal())
+                {
+                    job.getLogger().info("skipping local task");
+                    return false;
+                }
+            }
+
+            return super.isParticipant(job);
+        }
+
         public PipelineJob.Task createTask(PipelineJob job)
         {
-            return new SequenceOutputHandlerTask(this, job);
+            return new SequenceOutputHandlerWebserverTask(this, job);
         }
 
         public boolean isJobComplete(PipelineJob job)
@@ -82,16 +96,14 @@ public class SequenceOutputHandlerTask extends PipelineJob.Task<SequenceOutputHa
         SequenceOutputHandler handler = getPipelineJob().getHandler();
         List<SequenceOutputFile> outputsToCreate = new ArrayList<>();
 
-        handler.processFiles(getJob(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
+        handler.getProcessor().processFilesOnWebserver(getJob(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
 
         if (!outputsToCreate.isEmpty())
         {
-            getJob().getLogger().info("creating " + outputsToCreate.size() + " new output files");
-            TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+            getJob().getLogger().info(outputsToCreate.size() + " to create");
             for (SequenceOutputFile o : outputsToCreate)
             {
-                o = Table.insert(getJob().getUser(), ti, o);
-                getPipelineJob().addOutputCreated(o);
+                getPipelineJob().addOutputToCreate(o);
             }
         }
 

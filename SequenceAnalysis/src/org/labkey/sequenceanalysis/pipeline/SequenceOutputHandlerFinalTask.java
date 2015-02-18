@@ -3,6 +3,9 @@ package org.labkey.sequenceanalysis.pipeline;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.exp.api.DataType;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
@@ -72,16 +75,27 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         getPipelineJob().setExperimentRunRowId(runId);
 
-        if (!getPipelineJob().getOutputsCreated().isEmpty())
+        if (!getPipelineJob().getOutputsToCreate().isEmpty())
         {
-            TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
-            for (SequenceOutputFile o : getPipelineJob().getOutputsCreated())
-            {
-                Map<String, Object> toUpdate = new CaseInsensitiveHashMap<>();
-                toUpdate.put("rowid", o.getRowid());
-                toUpdate.put("runid", runId);
+            getJob().getLogger().info("creating " + getPipelineJob().getOutputsToCreate().size() + " new output files");
 
-                Table.update(getJob().getUser(), ti, toUpdate, o.getRowid());
+            TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+            for (SequenceOutputFile o : getPipelineJob().getOutputsToCreate())
+            {
+                o.setRunId(runId);
+
+                if (o.getDataId() == null && o.getFile() != null)
+                {
+                    getJob().getLogger().debug("creating ExpData for file: " + o.getFile().getName());
+                    ExpData d = ExperimentService.get().createData(getJob().getContainer(), new DataType(o.getCategory()));
+
+                    d.setDataFileURI(o.getFile().toURI());
+                    d.setName(o.getFile().getName());
+                    d.save(getJob().getUser());
+                    o.setDataId(d.getRowId());
+                }
+
+                Table.insert(getJob().getUser(), ti, o);
             }
         }
         else

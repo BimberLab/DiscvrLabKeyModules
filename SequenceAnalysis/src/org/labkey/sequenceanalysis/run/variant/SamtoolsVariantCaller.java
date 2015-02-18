@@ -1,11 +1,11 @@
 package org.labkey.sequenceanalysis.run.variant;
 
-import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractVariantCallingStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepOutput;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.VariantCallingStep;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantCallingStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.VariantCallingStep;
 
 import java.io.File;
 

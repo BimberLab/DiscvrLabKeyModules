@@ -12,7 +12,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This is the basic wrapper around command line tools.  It should manage the available arguments and
@@ -26,6 +28,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     private Level _logLevel = Level.DEBUG;
     private boolean _warnNonZeroExits = true;
     private boolean _throwNonZeroExits = true;
+    private Map<String, String> _environment = new HashMap<>();
 
     public AbstractCommandWrapper(@Nullable Logger logger)
     {
@@ -38,6 +41,11 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         return execute(params, null);
     }
 
+    protected void addToEnvironment(String key, String value)
+    {
+        _environment.put(key, value);
+    }
+
     @Override
     public String execute(List<String> params, File stdout) throws PipelineJobException
     {
@@ -46,6 +54,11 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
 
         ProcessBuilder pb = new ProcessBuilder(params);
         setPath(pb);
+
+        if (!_environment.isEmpty())
+        {
+            pb.environment().putAll(_environment);
+        }
 
         if (getWorkingDir() != null)
         {

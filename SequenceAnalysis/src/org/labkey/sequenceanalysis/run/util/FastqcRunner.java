@@ -25,6 +25,7 @@ import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.MergedDirectoryResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
@@ -36,11 +37,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 /**
  * User: bbimber
@@ -153,7 +156,18 @@ public class FastqcRunner
 
     private File getExpectedHtmlFile(File f)
     {
-        return new File(f.getParentFile().getAbsolutePath(), getExpectedBasename(f) + "_fastqc.html");
+        File uncompressed = new File(f.getParentFile().getAbsolutePath(), getExpectedBasename(f) + "_fastqc.html");
+
+        //to handle legacy installs with existing uncompressed files
+        File compressed = new File(uncompressed.getPath() + ".gz");
+        if (uncompressed.exists())
+        {
+            _logger.info("compressing existing file: " + uncompressed.getPath());
+            Compress.compressGzip(uncompressed, compressed);
+            uncompressed.delete();
+        }
+
+        return compressed;
     }
 
     private String processOutput(List<File> inputFiles)
@@ -175,7 +189,7 @@ public class FastqcRunner
                     continue;
                 }
 
-                String html = readHtmlReport(htmlFile);
+                String html = readCompressedHtmlReport(htmlFile);
 
                 //add an outer DIV so we can apply styles only to the report
                 html = html.replaceAll("<body>", "<div class=\"fastqc\">");
@@ -227,10 +241,10 @@ public class FastqcRunner
         return output;
     }
 
-    private String readHtmlReport(File htmlFile) throws IOException
+    private String readCompressedHtmlReport(File htmlFile) throws IOException
     {
         StringWriter writer = new StringWriter();
-        try (FileInputStream is = new FileInputStream(htmlFile))
+        try (InputStream is = new GZIPInputStream(new FileInputStream(htmlFile)))
         {
             IOUtils.copy(is, writer, StringUtilsLabKey.DEFAULT_CHARSET);
         }

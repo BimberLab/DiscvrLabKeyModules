@@ -7,7 +7,6 @@
        <column name="platform" />
        <column name="librarytype" />
        <column name="application" />
-       <column name="inputMaterial" />
        <column name="sampletype" />
        <column name="comments" />
        <column name="fileid" />

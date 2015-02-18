@@ -847,7 +847,7 @@ SequenceAnalysis.Buttons = new function(){
                         var handler = eval(results.jsHandler);
                         LDK.Assert.assertTrue('Unable to find JS handler: ' + results.jsHandler, Ext4.isFunction(handler));
 
-                        handler(dataRegionName, checked);
+                        handler(dataRegionName, checked, handlerClass);
                     }
                     else {
                         LDK.Utils.logError('Handler did not provide successUrl or jsHandler: ' + handlerClass);

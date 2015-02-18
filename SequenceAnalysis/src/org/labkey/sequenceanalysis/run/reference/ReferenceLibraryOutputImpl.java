@@ -1,13 +1,8 @@
 package org.labkey.sequenceanalysis.run.reference;
 
-import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceLibraryStep;
-import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask;
-
-import java.io.File;
-import java.util.List;
+import org.labkey.api.sequenceanalysis.pipeline.DefaultPipelineStepOutput;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 
 /**
  * User: bimber

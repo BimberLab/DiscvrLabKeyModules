@@ -51,7 +51,7 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
         getLogger().info("\trunning HaplotypeCaller");
         List<String> args = new ArrayList<>();
         args.add("java");
-        args.add("-Xmx4g");
+        //args.add("-Xmx4g");
         args.add("-jar");
         args.add(getJAR().getPath());
         args.add("-T");

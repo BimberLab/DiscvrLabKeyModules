@@ -1,110 +1,48 @@
 package org.labkey.sequenceanalysis.analysis;
 
-import au.com.bytecode.opencsv.CSVWriter;
-import htsjdk.samtools.liftover.LiftOver;
-import htsjdk.samtools.util.Interval;
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.CloseableTribbleIterator;
-import htsjdk.tribble.FeatureReader;
-import htsjdk.tribble.annotation.Strand;
-import htsjdk.tribble.bed.BEDCodec;
-import htsjdk.tribble.bed.BEDFeature;
-import htsjdk.tribble.bed.FullBEDFeature;
-import htsjdk.variant.variantcontext.Allele;
-import htsjdk.variant.variantcontext.Genotype;
-import htsjdk.variant.variantcontext.GenotypeBuilder;
-import htsjdk.variant.variantcontext.GenotypesContext;
-import htsjdk.variant.variantcontext.VariantContext;
-import htsjdk.variant.variantcontext.VariantContextBuilder;
-import htsjdk.variant.variantcontext.writer.Options;
-import htsjdk.variant.variantcontext.writer.VariantContextWriter;
-import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFHeader;
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
-import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
-import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
+import org.labkey.sequenceanalysis.run.util.GenotypeGVCFsWrapper;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by bimber on 8/26/2014.
  */
-public class GenotypeGVCFHandler implements SequenceOutputHandler
+public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
 {
     private FileType _vcfFileType = new FileType(Arrays.asList("vcf", "bcf"), "vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
 
     public GenotypeGVCFHandler()
     {
-
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "GATK Genotype GVCFs", "This will run GATK\'s GenotypeGVCF on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK\'s HaplotypeCaller.  ", null, null);
     }
 
     @Override
-    public String getName()
-    {
-        return "Run GATK JointGenotyper";
-    }
-
-    @Override
-    public String getDescription()
+    public List<String> validateParameters(JSONObject params)
     {
         return null;
-    }
-
-    @Override
-    public String getButtonJSHandler()
-    {
-        //TODO
-        return "SequenceAnalysis.window.LiftoverWindow.buttonHandler";
-    }
-
-    @Override
-    public ActionURL getButtonSuccessUrl(Container c, User u, List<Integer> outputFileIds)
-    {
-        return null;
-    }
-
-    @Override
-    public Module getOwningModule()
-    {
-        return ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
-    }
-
-    @Override
-    public LinkedHashSet<ClientDependency> getClientDependencies()
-    {
-        //TODO
-        return new LinkedHashSet<>(Arrays.asList(ClientDependency.fromFilePath("sequenceanalysis/window/LiftoverWindow.js")));
     }
 
     @Override
@@ -114,104 +52,81 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler
     }
 
     @Override
-    public void processFiles(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+    public boolean doRunRemote()
     {
-        for (SequenceOutputFile f : inputFiles)
-        {
-            job.getLogger().info("processing output: " + f.getFile().getName());
+        return true;
+    }
 
+    @Override
+    public boolean doRunLocal()
+    {
+        return false;
+    }
+
+    @Override
+    public OutputProcessor getProcessor()
+    {
+        return new Processor();
+    }
+
+    public class Processor implements OutputProcessor
+    {
+        @Override
+        public void processFilesRemote(SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        {
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
-            boolean isGzip = f.getFile().getPath().toLowerCase().endsWith(".gz");
-            int dots = isGzip ? 2 : 1;
-            String extension = isGzip ? FileUtil.getExtension(f.getFile().getName().replace(".gz$", "")) : FileUtil.getExtension(f.getFile());
-            String baseName = FileUtil.getBaseName(f.getFile(), dots);
+            GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(support.getJob().getLogger());
 
-            Integer chainRowId = params.getInt("chainRowId");
-            Map<String, Object> chainRow = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_CHAIN_FILES), PageFlowUtil.set("chainFile", "genomeId1", "genomeId2")).getObject(chainRowId, Map.class);
-            ExpData chainData = ExperimentService.get().getExpData((Integer)chainRow.get("chainFile"));
-            if (chainData == null || !chainData.getFile().exists())
+            Set<Integer> genomeIds = new HashSet<>();
+            List<File> inputVcfs = new ArrayList<>();
+            for (SequenceOutputFile so : inputFiles)
             {
-                throw new PipelineJobException("Unable to find chain file: " + chainRowId);
+                genomeIds.add(so.getLibrary_id());
+                inputVcfs.add(so.getFile());
             }
 
-            int sourceGenomeId = (Integer)chainRow.get("genomeId1");
-            int targetGenomeId = (Integer)chainRow.get("genomeId2");
-            double pct = params.containsKey("pct") ? params.getDouble("pct") : 0.95;
-            job.getLogger().info("using minimum percent match: " + pct);
+            if (genomeIds.size() > 1)
+            {
+                throw new PipelineJobException("The selected files use more than one genome");
+            }
 
-            action.addInput(f.getFile(), "Input File");
-            action.addInput(chainData.getFile(), "Chain File");
+            int genomeId = genomeIds.iterator().next();
+            ReferenceGenome genome = support.getCachedGenome(genomeId);
 
-            File outDir = ((FileAnalysisJobSupport)job).getAnalysisDirectory();
-            File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + "." + extension);
-            File unmappedOutput = new File(outDir, baseName + ".unmapped-" + targetGenomeId + "." + extension);
+            File outDir = ((FileAnalysisJobSupport) support.getJob()).getAnalysisDirectory();
+            File outputVcf = new File(outDir, "CombinedGenotypes.vcf.gz");
+            List<String> toolParams = new ArrayList<>();
 
+            wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcfs.toArray(new File[inputVcfs.size()]));
+            action.addOutput(outputVcf, "Combined VCF", outputVcf.exists());
 
-            action.addOutput(lifted, "Lifted Features", lifted.exists());
-            if (lifted.exists())
+            if (outputVcf.exists())
             {
                 SequenceOutputFile so1 = new SequenceOutputFile();
-                so1.setName(f.getName() + " (lifted)");
-                so1.setDescription("Contains features from " + f.getName() + " after liftover");
-                ExpData liftedData = ExperimentService.get().createData(job.getContainer(), new DataType("Liftover Output"));
-                liftedData.setDataFileURI(lifted.toURI());
-                liftedData.setName(lifted.getName());
-                liftedData.save(job.getUser());
-
-                so1.setDataId(liftedData.getRowId());
-                so1.setLibrary_id(targetGenomeId);
-                so1.setReadset(f.getReadset());
-                so1.setAnalysis_id(f.getAnalysis_id());
-                so1.setCategory(f.getCategory());
-                so1.setContainer(job.getContainerId());
+                so1.setName(outputVcf.getName());
+                so1.setDescription("GATK GenotypeGVCF output");
+                so1.setFile(outputVcf);
+                so1.setLibrary_id(genomeId);
+                so1.setCategory("Combined VCF");
+                so1.setContainer(support.getJob().getContainerId());
                 so1.setCreated(new Date());
-                so1.setCreatedby(job.getUser().getUserId());
+                so1.setCreatedby(support.getJob().getUser().getUserId());
                 so1.setModified(new Date());
-                so1.setModifiedby(job.getUser().getUserId());
+                so1.setModifiedby(support.getJob().getUser().getUserId());
 
                 outputsToCreate.add(so1);
             }
 
-            if (!unmappedOutput.exists())
-            {
-                job.getLogger().info("no unmapped intervals");
-            }
-            else if (SequenceUtil.getLineCount(unmappedOutput) == 0)
-            {
-                job.getLogger().info("no unmapped intervals");
-                unmappedOutput.delete();
-            }
-            else
-            {
-                action.addOutput(unmappedOutput, "Unmapped features", false);
-
-                SequenceOutputFile so2 = new SequenceOutputFile();
-                so2.setName(f.getName() + " (lifted/unmapped)");
-                so2.setDescription("Contains the unmapped features after attempted liftover of " + f.getName());
-
-                ExpData unmappedData = ExperimentService.get().createData(job.getContainer(), new DataType("Liftover Output"));
-                unmappedData.setName(unmappedOutput.getName());
-                unmappedData.setDataFileURI(unmappedOutput.toURI());
-                unmappedData.save(job.getUser());
-
-                so2.setDataId(unmappedData.getRowId());
-                so2.setLibrary_id(f.getLibrary_id());
-                so2.setReadset(f.getReadset());
-                so2.setAnalysis_id(f.getAnalysis_id());
-                so2.setCategory(f.getCategory());
-                so2.setContainer(job.getContainerId());
-                so2.setCreated(new Date());
-                so2.setCreatedby(job.getUser().getUserId());
-                so2.setModified(new Date());
-                so2.setModifiedby(job.getUser().getUserId());
-
-                outputsToCreate.add(so2);
-            }
-
             action.setEndTime(new Date());
             actions.add(action);
+        }
+
+        @Override
+        public void processFilesOnWebserver(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        {
+
         }
     }
 }

@@ -29,7 +29,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
 
 import java.io.File;

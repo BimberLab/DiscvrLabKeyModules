@@ -7,7 +7,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
     extend: 'Ext.panel.Panel',
     alias: 'widget.alignmentpanel',
 
-    MAX_ROWS: 150000,
+    MAX_ROWS: 200000,
     FEATURE_COLOR_MAP: {
         'CTL Epitope': 'yellow',
         'Protein Domain': 'cyan'
@@ -133,7 +133,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             schemaName: 'sequenceanalysis',
             queryName: 'sequence_analyses',
             includeTotalCount: false,
-            columns: 'rowid,readset,readset/name,ref_nt_id,sampleid,readset/sampleid/samplename,readset/sampledate,readset/subjectid,type',
+            columns: 'rowid,readset,readset/name,ref_nt_id,sampleid,readset/sampleid/samplename,readset/sampledate,readset/subjectid,readset/comment,type',
             sort: 'readset/name',
             filterArray: [LABKEY.Filter.create('rowid', this.analysisIds.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)],
             scope: this,
@@ -785,12 +785,12 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             'Readset: ' + this.analysesRecords[analysisId]['readset/name'] + ' (' + this.analysesRecords[analysisId]['readset'] + ')'
         ];
 
-        if(this.analysesRecords[analysisId]['readset/sampleid/samplename'])
-            qtip.push('Sample Name: ' + this.analysesRecords[analysisId]['readset/sampleid/samplename']);
-        if(this.analysesRecords[analysisId]['readset/subjectid/samplename'])
-            qtip.push('Subject Id: ' + this.analysesRecords[analysisId]['readset/subjectid/samplename']);
+        if(this.analysesRecords[analysisId]['readset/subjectid'])
+            qtip.push('Subject Id: ' + this.analysesRecords[analysisId]['readset/subjectid']);
         if(this.analysesRecords[analysisId]['readset/sampledate'])
             qtip.push('Sample Date: ' + this.analysesRecords[analysisId]['readset/sampledate']);
+        if(this.analysesRecords[analysisId]['readset/comment'])
+            qtip.push('Readset Comments: ' + this.analysesRecords[analysisId]['readset/comment']);
 
         qtip = qtip.join('<br>');
 

@@ -50,11 +50,12 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.TestContext;
 import org.labkey.api.view.ViewServlet;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
+import org.labkey.sequenceanalysis.run.alignment.AlignerIndexUtil;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -1146,7 +1147,6 @@ public class TestHelper
                 json.put("fileName2", m.getFileName2());
                 json.put("platform", m.getPlatform());
                 json.put("application", m.getApplication());
-                json.put("inputMaterial", m.getInputMaterial());
                 json.put("sampletype", m.getSampleType());
                 json.put("comments", m.getComments());
                 json.put("sampleid", m.getSampleId());
@@ -1220,8 +1220,7 @@ public class TestHelper
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), protocolName, fileNames);
             config.put("alignment", "Mosaik");
             config.put("alignment.Mosaik.max_mismatch_pct", 0.20);  //this is primary here to ensure it doesnt get copied into the build command.  20% should include everything
-            config.put("analysis", "SBT;ViralAnalysis;SnpCountAnalysis"); //AlignmentMetricsAnalysis;
-            //config.put("analysis.AlignmentMetricsAnalysis.windowSize", 1000);
+            config.put("analysis", "SBT;ViralAnalysis;SnpCountAnalysis");
             config.put("analysis.SnpCountAnalysis.intervals", "SIVmac239:5500-5600\nSIVmac239:9700-9900\nSIVmac239:10000-10020");
 
             appendSamples(config, _readsetModels);
@@ -1272,12 +1271,6 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaikreads"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.stat"));
             expectedOutputs.add(new File(basedir, "paired4.snps.txt"));
-
-            expectedOutputs.add(new File(basedir, "totalAlignments.bed"));
-            expectedOutputs.add(new File(basedir, "totalReads.bed"));
-            expectedOutputs.add(new File(basedir, "duplicateReads.bed"));
-            expectedOutputs.add(new File(basedir, "notPrimaryAlignments.bed"));
-            expectedOutputs.add(new File(basedir, "avgMappingQual.bed"));
 
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
@@ -1666,7 +1659,7 @@ public class TestHelper
 
             expectedOutputs.add(new File(basedir, "paired1"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.lastz.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.lastz.bam"));
             File bam1 = new File(basedir, "paired1/Alignment/paired1.bam");
             expectedOutputs.add(bam1);
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bam.bai"));
@@ -1674,7 +1667,7 @@ public class TestHelper
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.lastz.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.lastz.bam"));
             File bam2 = new File(basedir, "paired3/Alignment/paired3.bam");
             expectedOutputs.add(bam2);
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bam.bai"));
@@ -1682,7 +1675,7 @@ public class TestHelper
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.lastz.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.lastz.bam"));
             File bam3 = new File(basedir, "paired4/Alignment/paired4.bam");
             expectedOutputs.add(bam3);
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bam.bai"));
@@ -2237,7 +2230,7 @@ public class TestHelper
             Integer libraryId = createSavedLibrary();
             Integer dataId = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(Integer.class);
             ExpData data = ExperimentService.get().getExpData(dataId);
-            File alignmentIndexDir = new File(data.getFile().getParentFile(), "bwa");
+            File alignmentIndexDir = new File(data.getFile().getParentFile(), AlignerIndexUtil.INDEX_DIR + "/bwa");
             if (alignmentIndexDir.exists())
             {
                 FileUtils.deleteDirectory(alignmentIndexDir);

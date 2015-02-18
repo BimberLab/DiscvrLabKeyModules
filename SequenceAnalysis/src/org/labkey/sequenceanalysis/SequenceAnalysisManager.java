@@ -51,7 +51,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
-import org.labkey.api.sequenceanalysis.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
@@ -500,6 +500,12 @@ public class SequenceAnalysisManager
             throw new IllegalArgumentException("Unable to find expected FASTA location: " + targetDir.getPath());
         }
 
+        targetDir = new File(targetDir, "chainFiles");
+        if (!targetDir.exists())
+        {
+            targetDir.mkdirs();
+        }
+
         //create file
         String expectedName = "chain-" + genomeId1 + "to" + genomeId2 + ".chain";
         AssayFileWriter writer = new AssayFileWriter();
@@ -547,6 +553,12 @@ public class SequenceAnalysisManager
         if (!targetDir.exists())
         {
             throw new IllegalArgumentException("Unable to find expected FASTA location: " + targetDir.getPath());
+        }
+
+        targetDir = new File(targetDir, "tracks");
+        if (!targetDir.exists())
+        {
+            targetDir.mkdirs();
         }
 
         //create row

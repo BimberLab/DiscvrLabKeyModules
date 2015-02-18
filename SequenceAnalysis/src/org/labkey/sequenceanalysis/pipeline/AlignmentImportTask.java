@@ -20,9 +20,9 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 
 import java.util.ArrayList;
 import java.util.Arrays;

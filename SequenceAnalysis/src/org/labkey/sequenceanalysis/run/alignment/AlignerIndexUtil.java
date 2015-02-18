@@ -4,8 +4,8 @@ import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.WorkDirectory;
-import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +15,8 @@ import java.io.IOException;
  */
 public class AlignerIndexUtil
 {
+    public static final String INDEX_DIR = "alignerIndexes";
+
     public static boolean hasCachedIndex(PipelineContext ctx, String name) throws PipelineJobException
     {
         ctx.getLogger().debug("checking whether cached index exists: " + name);
@@ -41,7 +43,8 @@ public class AlignerIndexUtil
         boolean hasCachedIndex = false;
         if (ctx.getSequenceSupport().getReferenceGenome() != null)
         {
-            File webserverIndexDir = new File(ctx.getSequenceSupport().getReferenceGenome().getSourceFastaFile().getParentFile(), name);
+            //NOTE: when we cache the indexes with the source FASTA genome, we store all aligners under the folder /alignerIndexes.  When these are temporary genomes, they're top-level
+            File webserverIndexDir = new File(ctx.getSequenceSupport().getReferenceGenome().getSourceFastaFile().getParentFile(), (ctx.getSequenceSupport().getReferenceGenome().getGenomeId() == null ? "" : INDEX_DIR + "/") + name);
             if (webserverIndexDir.exists())
             {
                 ctx.getLogger().info("previously created index found, no need to recreate");
@@ -94,12 +97,17 @@ public class AlignerIndexUtil
     {
         if (!hasCachedIndex && ctx.getSequenceSupport().getReferenceGenome() != null && ctx.getSequenceSupport().getReferenceGenome().getGenomeId() != null)
         {
-            File cachingDir = new File(ctx.getSequenceSupport().getReferenceGenome().getSourceFastaFile().getParentFile(), name);
+            File cachingDir = new File(ctx.getSequenceSupport().getReferenceGenome().getSourceFastaFile().getParentFile(), (ctx.getSequenceSupport().getReferenceGenome().getGenomeId() == null ? "" : INDEX_DIR + "/") + name);
             ctx.getLogger().info("caching index files for future use");
             ctx.getLogger().debug(cachingDir.getPath());
 
             try
             {
+                if (!cachingDir.exists())
+                {
+                    cachingDir.mkdirs();
+                }
+
                 File[] files = indexDir.listFiles();
                 for (File f : files)
                 {

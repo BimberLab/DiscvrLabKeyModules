@@ -117,7 +117,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         else
         {
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "readset_status", categoryName, "Readset Status Values"));
-            items.add(new SimpleSettingsItem(this, "sequenceanalysis", "library_type", categoryName, "Library Types"));
+            items.add(new SimpleSettingsItem(this, "sequenceanalysis", "library_types", categoryName, "Library Types"));
         }
 
         return items;

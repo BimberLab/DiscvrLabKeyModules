@@ -88,7 +88,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
         getLogger().info("\tbuilding target intervals");
         List<String> args = new ArrayList<>();
         args.add("java");
-        args.add("-Xmx4g");
+        //args.add("-Xmx4g");
         args.add("-jar");
         args.add(getJAR().getPath());
         args.add("-T");
@@ -128,7 +128,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
         getLogger().info("\trunning IndelRealigner");
         List<String> realignerArgs = new ArrayList<>();
         realignerArgs.add("java");
-        realignerArgs.add("-Xmx4g");
+        //realignerArgs.add("-Xmx4g");
         realignerArgs.add("-jar");
         realignerArgs.add(getJAR().getPath());
         realignerArgs.add("-T");

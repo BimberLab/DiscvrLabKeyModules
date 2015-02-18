@@ -21,19 +21,22 @@ Ext4.onReady(function(){
                     enableHdMenu: false,
                     selType: 'rowmodel',
                     store: Ext4.create('Ext.data.ArrayStore', {
-                        fields: [
-                            {name: 'outputFile', allowBlank: false},
-                            {name: 'name', allowBlank: false},
-                            {name: 'description'},
-                            {name: 'category'},
-                            {name: 'libraryId', allowBlank: false},
-                            {name: 'readset'}
-                        ],
-                        validations: [
-                            {type: 'presence', field: 'outputFile'},
-                            {type: 'presence', field: 'name'},
-                            {type: 'presence', field: 'libraryId'}
-                        ],
+                        model: Ext4.define('Ext.data.Store.ImplicitModel-' + Ext4.id(), {
+                            extend: 'Ext.data.Model',
+                            fields: [
+                                {name: 'outputFile', allowBlank: false},
+                                {name: 'name', allowBlank: false},
+                                {name: 'description'},
+                                {name: 'category'},
+                                {name: 'libraryId', allowBlank: false},
+                                {name: 'readset'}
+                            ],
+                            validations: [
+                                {type: 'presence', field: 'outputFile'},
+                                {type: 'presence', field: 'name'},
+                                {type: 'presence', field: 'libraryId'}
+                            ]
+                        }),
                         storeId: 'metadata'
                     }),
                     tbar: [{
@@ -78,7 +81,7 @@ Ext4.onReady(function(){
                         dataIndex: 'description',
                         editor: {
                             xtype: 'textarea',
-                            allowBlank: false
+                            height: 80
                         }
                     },{
                         name: 'category',
@@ -121,11 +124,6 @@ Ext4.onReady(function(){
                         dataIndex: 'readset',
                         width: 200,
                         editable: true,
-                        renderer: function(value, cellMetaData, record, rowIndex, colIndex, store){
-
-
-                            return value;
-                        },
                         editor: {
                             xtype: 'sequenceanalysis-readsetfield',
                             fieldLabel: null,
@@ -141,16 +139,55 @@ Ext4.onReady(function(){
                     }]
                 });
 
+                Ext4.Array.forEach(this.columns, function(col) {
+                    col.renderer = this.getRenderer(this, col.name);
+                }, this);
+
                 this.callParent(arguments);
 
                 Ext4.Array.forEach(this.fileNames, function(fn){
                     this.store.add(this.store.createModel({
-                        outputFile: fn
+                        outputFile: fn,
+                        name: fn
                     }));
                 }, this);
 
                 this.on('afterrender', this.updateColWidth, this, {single: true});
                 this.on('columnresize', this.updateColWidth, this);
+            },
+
+            getRenderer: function(grid, colName){
+                var column;
+                return function(value, cellMetaData, record, rowIndex, colIndex, store){
+                    var errors = record.validate();
+                    if (!errors.isValid()){
+                        var msgs = errors.getByField(colName);
+                        if (msgs.length) {
+                            cellMetaData.tdCls = cellMetaData.tdCls ? cellMetaData.tdCls + ' ' : '';
+                            cellMetaData.tdCls += 'labkey-grid-cell-invalid';
+                        }
+                    }
+
+                    if (!column){
+                        Ext4.Array.forEach(this.columns, function(c){
+                            if (c.name == colName){
+                                column = c;
+                            }
+                        }, this);
+                    }
+
+                    if (column && column.getEditor && column.getEditor()){
+                        var ed = column.getEditor();
+                        if (!Ext4.isEmpty(value) && ed.store && ed.displayField != ed.valueField){
+                            var recIdx = ed.store.findExact(ed.valueField, value);
+                            if (recIdx != -1){
+                                return ed.store.getAt(recIdx).get(ed.displayField);
+                            }
+                        }
+                    }
+
+                    return value;
+                }
             },
 
             updateColWidth: function(){
@@ -182,11 +219,47 @@ Ext4.onReady(function(){
             },
 
             onSubmit: function(){
-                var errors;
+                var hasError = false;
+                var records = [];
                 this.store.each(function(r){
-                    errors = r.validate();
-                    console.log(errors);
+                    var errors = r.validate();
+                    if (errors.getCount()){
+                        Ext4.Msg.alert('Error', 'Missing one or more required fields');
+                        hasError = true;
+                        return false;
+                    }
+
+                    records.push({
+                        fileName: r.get('outputFile'),
+                        description: r.get('description'),
+                        category: r.get('category'),
+                        name: r.get('name'),
+                        libraryId: r.get('libraryId'),
+                        readset: r.get('readset') || null
+                    });
                 }, this);
+
+                if (hasError){
+                    return;
+                }
+
+                Ext4.Msg.wait('Saving...');
+                LABKEY.Ajax.request({
+                    url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'importOutputFiles', null),
+                    failure: LDK.Utils.getErrorCallback(),
+                    success: LABKEY.Utils.getCallbackWrapper(function(){
+                        Ext4.Msg.hide();
+
+                        Ext4.Msg.alert('Success', 'Files uploaded!', function(){
+                            window.location = LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', 'query.queryName': 'outputfiles'})
+                        }, this);
+                    }, this),
+                    params: {
+                        path: this.path,
+                        fileNames: this.fileNames,
+                        records: Ext4.encode(records)
+                    }
+                });
             }
         });
 

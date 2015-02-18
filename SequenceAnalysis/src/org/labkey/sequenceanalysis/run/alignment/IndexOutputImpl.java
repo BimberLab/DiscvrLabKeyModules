@@ -1,14 +1,12 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
-import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
-import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.DefaultPipelineStepOutput;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask;
 
 import java.io.File;
-import java.util.List;
 
 /**
  * User: bimber

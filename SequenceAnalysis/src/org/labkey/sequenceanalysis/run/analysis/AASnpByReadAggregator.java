@@ -7,7 +7,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.run.util.AASnp;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
 

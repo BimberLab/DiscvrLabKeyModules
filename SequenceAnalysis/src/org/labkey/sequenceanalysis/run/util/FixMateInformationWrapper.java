@@ -31,7 +31,7 @@ public class FixMateInformationWrapper extends PicardWrapper
 
         List<String> params = new LinkedList<>();
         params.add("java");
-        params.add("-Xmx4g");
+        //params.add("-Xmx4g");
         params.add("-jar");
         params.add(getJar().getPath());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());

@@ -7,8 +7,10 @@ import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.*;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
@@ -70,14 +72,17 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     {
         _fileHandlers.add(handler);
 
-        LinkedHashSet cds = new LinkedHashSet<>(PageFlowUtil.set(ClientDependency.fromPath("sequenceanalysis/sequenceanalysisButtons.js")));
-        if (handler.getClientDependencies() != null)
+        if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
-            cds.addAll(handler.getClientDependencies());
-        }
-        SimpleButtonConfigFactory fact = new SimpleButtonConfigFactory(handler.getOwningModule(), handler.getName(), "SequenceAnalysis.Buttons.sequenceOutputHandler(dataRegionName, '" + handler.getClass().getCanonicalName() + "')", cds);
+            LinkedHashSet cds = new LinkedHashSet<>(PageFlowUtil.set(ClientDependency.fromPath("sequenceanalysis/sequenceanalysisButtons.js")));
+            if (handler.getClientDependencies() != null)
+            {
+                cds.addAll(handler.getClientDependencies());
+            }
+            SimpleButtonConfigFactory fact = new SimpleButtonConfigFactory(handler.getOwningModule(), handler.getName(), "SequenceAnalysis.Buttons.sequenceOutputHandler(dataRegionName, '" + handler.getClass().getCanonicalName() + "')", cds);
 
-        LDKService.get().registerQueryButton(fact, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+            LDKService.get().registerQueryButton(fact, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+        }
     }
 
     @Override

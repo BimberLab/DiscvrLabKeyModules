@@ -1,7 +1,7 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
-import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
-import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
+import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.DefaultPipelineStepOutput;
 
 import java.io.File;
 import java.util.List;

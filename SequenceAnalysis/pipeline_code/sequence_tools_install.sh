@@ -496,10 +496,10 @@ echo "Install bedtools"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/bedtools/bedtools || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/bedtools || ! -f ${LKTOOLS_DIR}/bedtools || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf tabix-0.2.6*
+    rm -Rf bedtools-2.20.1*
     rm -Rf $LKTOOLS_DIR/bedtools
 
     wget --read-timeout=10 https://github.com/arq5x/bedtools2/releases/download/v2.20.1/bedtools-2.20.1.tar.gz
@@ -677,9 +677,7 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/picard-tools || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf picard-tools-1.77*
-    rm -Rf picard-tools-1.96*
-    rm -Rf picard-tools-1.114*
+    rm -Rf picard-tools-*
     rm -Rf snappy-java-1.0.3-rc3.jar
     rm -Rf $LKTOOLS_DIR/picard-tools
 

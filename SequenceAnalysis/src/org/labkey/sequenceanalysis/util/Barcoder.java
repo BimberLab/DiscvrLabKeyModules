@@ -16,7 +16,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.TestHelper;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 import org.labkey.sequenceanalysis.model.SequenceTag;
 
 import java.io.File;

@@ -34,7 +34,7 @@ public class AddOrReplaceReadGroupsWrapper extends PicardWrapper
         File outputBam = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".readgroups.bam") : outputFile;
         List<String> params = new ArrayList<>();
         params.add("java");
-        params.add("-Xmx4g");
+        //params.add("-Xmx4g");
         params.add("-jar");
         params.add(getJar().getPath());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());

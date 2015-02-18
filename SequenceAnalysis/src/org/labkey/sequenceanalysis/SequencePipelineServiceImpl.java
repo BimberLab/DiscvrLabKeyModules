@@ -4,11 +4,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
-import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 
 import java.io.File;
 import java.lang.reflect.ParameterizedType;

@@ -1,8 +1,7 @@
 package org.labkey.sequenceanalysis.run.bampostprocessing;
 
-import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.sequenceanalysis.api.pipeline.BamProcessingStep;
-import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
+import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.DefaultPipelineStepOutput;
 
 import java.io.File;
 import java.util.List;

@@ -1,33 +1,41 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
-import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPReply;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.api.model.AnalysisModel;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractAnalysisStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.AbstractPipelineStep;
-import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
 import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
-import org.labkey.sequenceanalysis.api.run.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.run.util.BlastNWrapper;
-import org.labkey.sequenceanalysis.util.FastqToFastaConverter;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.zip.GZIPInputStream;
 
 /**
  * User: bimber
@@ -66,43 +74,194 @@ public class BlastUnmappedReadAnalysis extends AbstractCommandPipelineStep<Blast
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
 
-        List<File> fastqs = new ArrayList<>();
-
-        File paired1 = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_paired1.fastq");
-        fastqs.add(paired1);
-
-        File paired2 = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_paired2.fastq");
-        fastqs.add(paired2);
-
-        File singletons = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_singletons.fastq");
-        fastqs.add(singletons);
-
-        UnmappedReadExportAnalysis.writeUnmappedReads(inputBam, paired1, paired2, singletons, getPipelineCtx().getLogger());
-
-        for (File f : fastqs)
+        //if necessary, download taxdb:
+        File taxDbDir = new File(getPipelineCtx().getWorkingDirectory(), "taxdb");
+        if (!(new File(taxDbDir, "taxdb.btd")).exists())
         {
-            output.addIntermediateFile(f);
+            try
+            {
+                downloadTaxDb(taxDbDir);
+                output.addIntermediateFile(taxDbDir);
 
-            getPipelineCtx().getLogger().info("converting to FASTA: " + f.getName());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
 
-            output.addInput(f, "Unmapped Reads FASTQ");
-            FastqToFastaConverter converter = new FastqToFastaConverter(getPipelineCtx().getLogger());
 
-            File outputFasta = new File(outputDir, FileUtil.getBaseName(f) + ".fasta");
-            converter.execute(outputFasta, Arrays.asList(f));
-            output.addIntermediateFile(outputFasta);
+        File fasta = new File(outputDir, FileUtil.getBaseName(inputBam) + "_unmapped.fasta");
+        output.addIntermediateFile(fasta);
+        output.addInput(fasta, "Unmapped Reads FASTA");
 
-            File blastResults = new File(outputDir, FileUtil.getBaseName(f) + ".bls");
-            getWrapper().doRemoteBlast(outputFasta, blastResults);
-            output.addInput(blastResults, "BLAST Results");
+        getPipelineCtx().getLogger().info("writing unmapped reads to FASTA");
+        List<File> fastas = UnmappedReadExportAnalysis.writeUnmappedReadsAsFasta(inputBam, fasta, getPipelineCtx().getLogger(), 1000L);
+        if (fastas.size() > 1)
+        {
+            getPipelineCtx().getLogger().info("The unmapped reads have been split into " + fastas.size() + " smaller files to BLAST.  This may still take some time to run.");
+        }
+
+        Map<String, Integer> hitCount = new TreeMap<>();
+        Map<String, Integer> taxaCount = new TreeMap<>();
+
+        for (File f : fastas)
+        {
+            getPipelineCtx().getLogger().info("processing file: " + f.getName());
+            output.addIntermediateFile(f, "Unmapped Reads FASTA");
+            long lineCount = SequenceUtil.getLineCount(f);
+            if (lineCount == 0)
+            {
+                f.delete();
+
+                getPipelineCtx().getLogger().info("There are no unmapped reads, skipping");
+            }
+            else
+            {
+                File blastResults = new File(outputDir, FileUtil.getBaseName(f) + ".bls");
+
+                List<String> args = new ArrayList<>();
+                args.add("-outfmt");
+                args.add("6 qseqid qlen slen length sseqid sgi sacc evalue bitscore pident mismatch staxids sscinames scomnames sblastnames stitle");
+                args.add("-perc_identity");
+                args.add("90");
+
+                args.add("-evalue");
+                args.add("1e-10");
+                args.add("-best_hit_score_edge");
+                args.add("0.05");
+                args.add("-best_hit_overhang");
+                args.add("0.25");
+                args.add("-max_target_seqs");
+                args.add("1");
+
+                getWrapper().doRemoteBlast(f, blastResults, args, taxDbDir);
+                if (blastResults.exists())
+                {
+                    try (BufferedReader lr = new BufferedReader(new FileReader(blastResults)))
+                    {
+                        String line;
+                        while ((line = lr.readLine()) != null)
+                        {
+                            //qseqid qlen slen length sseqid sgi sacc evalue bitscore pident mismatch staxids sscinames scomnames sblastnames stitle
+                            String[] tokens = line.split("\t");
+                            appendColumn(tokens, 12, hitCount);
+                            appendColumn(tokens, 11, taxaCount);
+                        }
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+
+                    Compress.compressGzip(blastResults);
+                    output.addInput(new File(blastResults.getPath() + ".gz"), "BLAST Results");
+                }
+            }
+        }
+
+        getPipelineCtx().getLogger().info("hits: ");
+        for (String key : hitCount.keySet())
+        {
+            getPipelineCtx().getLogger().info(key + ": " + hitCount.get(key));
+        }
+
+        getPipelineCtx().getLogger().info("taxa: ");
+        for (String key : taxaCount.keySet())
+        {
+            getPipelineCtx().getLogger().info(key + ": " + taxaCount.get(key));
         }
 
         return output;
+    }
+
+    private void appendColumn(String[] tokens, int colIdx, Map<String, Integer> map)
+    {
+        int total = map.containsKey(tokens[colIdx]) ? map.get(tokens[colIdx]) : 0;
+        total++;
+
+        map.put(tokens[colIdx], total);
     }
 
     @Override
     public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
     {
         return null;
+    }
+
+    private void downloadTaxDb(File outDir) throws IOException
+    {
+        getPipelineCtx().getJob().getLogger().info("downloading NCBI taxdb");
+        if (!outDir.exists())
+        {
+            outDir.mkdirs();
+        }
+
+        FTPClient ftpClient = new FTPClient();
+        try
+        {
+            ftpClient.connect("ftp.ncbi.nlm.nih.gov");
+
+            if (!FTPReply.isPositiveCompletion(ftpClient.getReplyCode()))
+            {
+                ftpClient.disconnect();
+                throw new IOException("FTP server refused connection.");
+            }
+            getPipelineCtx().getJob().getLogger().debug("connected");
+
+            ftpClient.login("anonymous", "anonymous");
+            ftpClient.enterLocalPassiveMode();
+            getPipelineCtx().getJob().getLogger().debug("authenticated as anonymous: " + ftpClient.getReplyString());
+
+            ftpClient.changeWorkingDirectory("/blast/db");
+            FTPFile f = ftpClient.mlistFile("taxdb.tar.gz");
+            getPipelineCtx().getJob().getLogger().debug("file size: " + f.getSize());
+
+            File compressed = new File(outDir, "taxdb.tar.gz");
+            try (OutputStream outputStream = new FileOutputStream(compressed))
+            {
+                ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+
+                ftpClient.retrieveFile("taxdb.tar.gz", outputStream);
+                if (f.getSize() != compressed.length())
+                {
+                    getPipelineCtx().getLogger().warn("file size did not match original file from FTP site");
+                }
+
+                getPipelineCtx().getLogger().info("copy complete");
+            }
+
+            ftpClient.logout();
+
+            //extract TAR
+            getPipelineCtx().getLogger().debug("extracting TAR");
+            try (TarArchiveInputStream tais = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(compressed))))
+            {
+                TarArchiveEntry te = tais.getNextTarEntry();
+                while (te != null)
+                {
+                    try (OutputStream out = new FileOutputStream(new File(outDir, te.getName())))
+                    {
+                        IOUtils.copy(tais, out);
+                    }
+
+                    te = tais.getNextTarEntry();
+                }
+            }
+        }
+        finally
+        {
+            if (ftpClient.isConnected())
+            {
+                try
+                {
+                    ftpClient.disconnect();
+                }
+                catch (IOException e)
+                {
+                    //ignore
+                }
+            }
+        }
     }
 }

@@ -2,8 +2,8 @@ package org.labkey.sequenceanalysis.run.preprocessing;
 
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.Pair;
-import org.labkey.sequenceanalysis.api.pipeline.DefaultPipelineStepOutput;
-import org.labkey.sequenceanalysis.api.pipeline.PreprocessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.DefaultPipelineStepOutput;
+import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 
 import java.io.File;
 

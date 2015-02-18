@@ -18,8 +18,6 @@ package org.labkey.sequenceanalysis.pipeline;
 import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -35,14 +33,14 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
-import org.labkey.sequenceanalysis.api.pipeline.AlignmentStep;
-import org.labkey.sequenceanalysis.api.pipeline.AnalysisStep;
-import org.labkey.sequenceanalysis.api.pipeline.BamProcessingStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.PreprocessingStep;
-import org.labkey.sequenceanalysis.api.pipeline.ReferenceGenome;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.FlagStatRunner;
@@ -369,7 +367,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
         else
         {
-            String originalbaseName = SequenceTaskHelper.getUnzippedBaseName(inputFile1.getName());
+            String originalbaseName = SequenceTaskHelper.getMinimalBaseName(inputFile1.getName());
             String originalbaseName2 = null;
 
             //log read count:
@@ -382,7 +380,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 previousCount2 = FastqUtils.getSequenceCount(inputFile2);
                 getJob().getLogger().info("\t" + inputFile2.getName() + ": " + previousCount2 + " sequences");
 
-                originalbaseName2 = SequenceTaskHelper.getUnzippedBaseName(inputFile2.getName());
+                originalbaseName2 = SequenceTaskHelper.getMinimalBaseName(inputFile2.getName());
             }
 
             File outputDir = new File(getHelper().getWorkingDirectory(), originalbaseName);
@@ -502,7 +500,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         getHelper().getFileManager().addInput(alignmentAction, ReferenceLibraryTask.REFERENCE_DB_FASTA, referenceGenome.getSourceFastaFile());
         getJob().getLogger().info("Beginning alignment for: " + inputFiles.first.getName() + (inputFiles.second == null ? "" : " and " + inputFiles.second.getName()));
 
-        File outputDirectory = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getUnzippedBaseName(inputFiles.first.getName()));
+        File outputDirectory = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(inputFiles.first.getName()));
         outputDirectory = new File(outputDirectory, ALIGNMENT_SUBFOLDER_NAME);
         if (!outputDirectory.exists())
         {
@@ -646,9 +644,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             renameAction.setEndTime(new Date());
             actions.add(renameAction);
         }
-
-        //add as output
-        getHelper().getFileManager().addSequenceOutput(finalBam, finalBam.getName(), "Alignment", rs.getRowId(), null, referenceGenome.getGenomeId());
 
         //perform remote analyses, if necessary
         List<PipelineStepProvider<AnalysisStep>> analysisProviders = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);

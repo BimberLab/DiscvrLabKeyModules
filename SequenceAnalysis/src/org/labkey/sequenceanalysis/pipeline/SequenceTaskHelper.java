@@ -15,8 +15,6 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
-import au.com.bytecode.opencsv.CSVReader;
-import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -38,21 +36,15 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineContext;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStep;
-import org.labkey.sequenceanalysis.api.pipeline.PipelineStepProvider;
-import org.labkey.sequenceanalysis.api.pipeline.SequenceAnalysisJobSupport;
-import org.labkey.sequenceanalysis.api.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.api.pipeline.TaskFileManager;
-import org.labkey.sequenceanalysis.model.BarcodeModel;
-import org.labkey.sequenceanalysis.api.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
+import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -254,6 +246,16 @@ public class SequenceTaskHelper implements PipelineContext
     {
         filename = filename.replaceAll(".gz$", "");
         return FilenameUtils.getBaseName(filename);
+    }
+
+    public static String getMinimalBaseName(String filename)
+    {
+        while (filename.contains("."))
+        {
+            filename = FilenameUtils.getBaseName(filename);
+        }
+
+        return filename;
     }
 
     public FileAnalysisJobSupport getSupport()
