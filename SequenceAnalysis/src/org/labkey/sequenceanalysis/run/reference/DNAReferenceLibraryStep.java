@@ -126,7 +126,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
         {
             Object[] vals = fc.getParamVals();
             StringBuilder sb = new StringBuilder();
-            String comparison = ((CompareType.CompareClause) fc).getComparison().getDisplayValue();
+            String comparison = ((CompareType.CompareClause) fc).getCompareType().getDisplayValue();
             String delim = "";
             int i = 0;
             for (FieldKey fk : fc.getFieldKeys())
