@@ -16,4 +16,4 @@ WHERE m.allele NOT LIKE ('%' || chr(10) || '%')  --exclude multi-lineage hits
 
 GROUP BY m.Id, m.allele
 PIVOT result by allele IN
-(SELECT lineage FROM sequenceanalysis.ref_nt_sequences r WHERE r.subset = 'MHC' and r.locus IN ('MHC-A', 'MHC-B') and r.species = 'Rhesus macaque' and r.lineage is not null UNION ALL SELECT primername FROM genotypeassays.primer_pairs UNION ALL SELECT 'Has SBT Data')
+(SELECT ref_nt_name FROM genotypeassays.primer_pairs WHERE (ref_nt_name LIKE '%-A%' OR ref_nt_name LIKE '%-B%'))

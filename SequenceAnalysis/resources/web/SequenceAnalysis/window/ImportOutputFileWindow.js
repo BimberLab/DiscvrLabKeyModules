@@ -3,8 +3,16 @@ Ext4.define('SequenceAnalysis.window.ImportOutputFileWindow', {
 
     statics: {
         buttonHandler: function(dataRegionName){
-            Ext4.create('SequenceAnalysis.window.ImportOutputFileWindow', {
-                dataRegionName: dataRegionName
+            Ext4.create('Laboratory.window.WorkbookCreationWindow', {
+                title: 'Import Sequence Output File',
+                workbookPanelCfg: {
+                    doLoad: function (containerPath) {
+                        Ext4.create('SequenceAnalysis.window.ImportOutputFileWindow', {
+                            containerPath: containerPath,
+                            dataRegionName: dataRegionName
+                        }).show();
+                    }
+                }
             }).show();
         }
     },
@@ -25,7 +33,7 @@ Ext4.define('SequenceAnalysis.window.ImportOutputFileWindow', {
                 width: null
             },{
                 xtype: 'form',
-                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'importOutputFile', null, null),
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'importOutputFile', this.containerPath, null),
                 fileUpload: true,
                 defaults: {
                     border: false,

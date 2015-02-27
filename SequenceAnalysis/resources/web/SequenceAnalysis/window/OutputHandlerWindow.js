@@ -9,12 +9,12 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                 Ext4.Msg.alert('Error', 'No records selected');
                 return;
             }
-
+console.log(handlerClass)
             //first validate
             Ext4.Msg.wait('Validating files...');
             LABKEY.Ajax.request({
                 method: 'POST',
-                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatus'),
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatusForHandler'),
                 params: {
                     handlerClass: handlerClass,
                     outputFileIds: checked

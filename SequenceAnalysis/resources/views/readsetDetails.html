@@ -13,9 +13,9 @@ Ext4.onReady(function (){
     Ext4.get(webpart.wrapperDivId).update(
         '<div id="readsetDetails_'+webpart.wrapperDivId+'"></div>' +
         '<br>' +
-        '<div id="analyses_'+webpart.wrapperDivId+'"></div>' +
+        '<div id="files_'+webpart.wrapperDivId+'"></div>' +
         '<br>' +
-        '<div id="fileSummary_'+webpart.wrapperDivId+'"></div>' +
+        '<div id="analyses_'+webpart.wrapperDivId+'"></div>' +
         '<br>' +
         '<div id="metricsSummary_'+webpart.wrapperDivId+'"></div>' +
         '<br>' +
@@ -36,22 +36,21 @@ Ext4.onReady(function (){
             buttons: [{
                 text: 'More Actions',
                 menu: [{
-                    text: 'Edit Analysis Details',
+                    text: 'Edit Details',
                     href: LABKEY.ActionURL.buildURL('ldk', 'manageRecord', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', keyField: 'rowid', key: readsetId}) + '&returnUrl=' + LDK.Utils.getSrcURL()
                 }]
             }]
         }
     });
 
-    LABKEY.Query.selectRows({
+    LDK.Utils.getBasicQWP({
+        title: 'Read Data',
         schemaName: 'sequenceanalysis',
-        queryName: 'sequence_readsets',
+        queryName: 'readData',
         containerPath: Laboratory.Utils.getQueryContainerPath(),
-        columns: 'rowid,name,readset,runid,runid/name',
-        filterArray: [LABKEY.Filter.create('rowid', readsetId, LABKEY.Filter.Types.EQUAL)],
-        scope: this,
-        successCallback: onSuccess
-    });
+        //columns: 'rowid,data,role,data/downloadlink',
+        filterArray: [LABKEY.Filter.create('readset', readsetId, LABKEY.Filter.Types.EQUAL)]
+    }).render('files_'+webpart.wrapperDivId);
 
     LDK.Utils.getReadOnlyQWP({
         title: 'Analyses Using This Readset',
@@ -72,24 +71,6 @@ Ext4.onReady(function (){
         columns: 'fileid,metricname,metricvalue,qualvalue,comment,workbook,readset,runid',
         filterArray: [LABKEY.Filter.create('readset', readsetId, LABKEY.Filter.Types.EQUAL)]
      }).render('metricsSummary_'+webpart.wrapperDivId);
-
-    function onSuccess(data){
-        if(!data.rows.length) return;
-
-        var row = data.rows[0];
-
-        if(row.runid){
-            LDK.Utils.getReadOnlyQWP({
-                title: 'Files Created',
-                schemaName: 'exp',
-                queryName: 'datainputs',
-                maxRows: 10,
-                containerPath: Laboratory.Utils.getQueryContainerPath(),
-                columns: 'rowid,data,role,data/downloadlink',
-                filterArray: [LABKEY.Filter.create('TargetProtocolApplication/Run', row.runid, LABKEY.Filter.Types.EQUAL)]
-             }).render('fileSummary_'+webpart.wrapperDivId);
-        }
-    }
 });
 
 </script>

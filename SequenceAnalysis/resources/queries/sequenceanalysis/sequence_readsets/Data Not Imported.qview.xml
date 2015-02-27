@@ -3,6 +3,6 @@
        <sort column="rowid" descending="true"/>
    </sorts>
     <filters>
-        <filter column="fileid" operator="isblank"/>
+        <filter column="totalFiles" operator="gt" value="0"/>
     </filters>
 </customView>

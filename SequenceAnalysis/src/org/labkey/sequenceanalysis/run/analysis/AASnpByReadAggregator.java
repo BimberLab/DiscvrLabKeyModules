@@ -41,8 +41,11 @@ public class AASnpByReadAggregator extends AASnpByCodonAggregator
     {
         super.inspectAlignment(record, ref, snps, cpi);
 
-        if (record.getReadUnmappedFlag())
+        //NOTE: in order to match the behavior of SamLocusIterator, skip over Duplicate or Secondary/Supplemental reads
+        if (record.getReadUnmappedFlag() || record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary())
+        {
             return;
+        }
 
         assert ref != null;
 

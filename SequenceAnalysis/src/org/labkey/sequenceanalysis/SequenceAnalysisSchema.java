@@ -26,6 +26,7 @@ public class SequenceAnalysisSchema
     public static final String TABLE_ANALYSES = "sequence_analyses";
     public static final String TABLE_COVERAGE = "sequence_coverage";
     public static final String TABLE_READSETS = "sequence_readsets";
+    public static final String TABLE_ALIGNMENTS = "alignments";
     public static final String TABLE_REF_NT_SEQUENCES = "ref_nt_sequences";
     public static final String TABLE_REF_AA_SEQUENCES = "ref_aa_sequences";
     public static final String TABLE_SEQUENCE_PLATFORMS = "sequence_platforms";
@@ -47,6 +48,9 @@ public class SequenceAnalysisSchema
     public static final String TABLE_READSET_STATUS = "readset_status";
     public static final String TABLE_CHAIN_FILES = "chain_files";
     public static final String TABLE_LIBRARY_TYPES = "library_types";
+    public static final String TABLE_ANALYSIS_SETS = "analysisSets";
+    public static final String TABLE_ANALYSIS_SET_MEMBERS = "analysisSetMembers";
+    public static final String TABLE_READ_DATA = "readData";
 
     public static SequenceAnalysisSchema getInstance()
     {

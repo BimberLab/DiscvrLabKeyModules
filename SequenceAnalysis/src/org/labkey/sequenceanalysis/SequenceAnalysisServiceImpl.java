@@ -3,15 +3,23 @@ package org.labkey.sequenceanalysis;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.*;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
@@ -71,18 +79,6 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     public void registerFileHandler(SequenceOutputHandler handler)
     {
         _fileHandlers.add(handler);
-
-        if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
-        {
-            LinkedHashSet cds = new LinkedHashSet<>(PageFlowUtil.set(ClientDependency.fromPath("sequenceanalysis/sequenceanalysisButtons.js")));
-            if (handler.getClientDependencies() != null)
-            {
-                cds.addAll(handler.getClientDependencies());
-            }
-            SimpleButtonConfigFactory fact = new SimpleButtonConfigFactory(handler.getOwningModule(), handler.getName(), "SequenceAnalysis.Buttons.sequenceOutputHandler(dataRegionName, '" + handler.getClass().getCanonicalName() + "')", cds);
-
-            LDKService.get().registerQueryButton(fact, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES);
-        }
     }
 
     @Override
@@ -93,7 +89,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
 
     public Set<SequenceOutputHandler> getFileHandlers()
     {
-        return _fileHandlers;
+        return Collections.unmodifiableSet(_fileHandlers);
     }
 
     @Override
@@ -117,4 +113,46 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
 
         return ret;
     }
+
+    public ReadDataImpl getReadData(int rowId, User u)
+    {
+        TableInfo ti = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), rowId);
+
+        ReadDataImpl model = new TableSelector(ti, filter, null).getObject(ReadDataImpl.class);
+        if (model == null)
+        {
+            return null;
+        }
+
+        Container c = ContainerManager.getForId(model.getContainer());
+        if (!c.hasPermission(u, ReadPermission.class))
+        {
+            throw new UnauthorizedException("Cannot read data in container: " + c.getPath());
+        }
+
+        return model;
+    }
+
+    public SequenceReadsetImpl getReadset(int readsetId, User u)
+    {
+        TableInfo ti = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), readsetId);
+
+        SequenceReadsetImpl model = new TableSelector(ti, filter, null).getObject(SequenceReadsetImpl.class);
+        if (model == null)
+        {
+            return null;
+        }
+
+        Container c = ContainerManager.getForId(model.getContainer());
+        if (!c.hasPermission(u, ReadPermission.class))
+        {
+            throw new UnauthorizedException("Cannot read data in container: " + c.getPath());
+        }
+
+        return model;
+    }
+
+
 }

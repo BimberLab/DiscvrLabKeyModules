@@ -1,9 +1,11 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import htsjdk.samtools.filter.DuplicateReadFilter;
+import htsjdk.samtools.filter.SamRecordFilter;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
@@ -96,7 +98,9 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
 
             //first calculate avg qualities at each position
             getPipelineCtx().getLogger().info("Calculating avg quality scores");
-            AvgBaseQualityAggregator avgBaseQualityAggregator = new AvgBaseQualityAggregator(getPipelineCtx().getLogger(), inputBam, referenceFasta);
+            AvgBaseQualityAggregator avgBaseQualityAggregator = new AvgBaseQualityAggregator(getPipelineCtx().getLogger(), inputBam, referenceFasta, Arrays.<SamRecordFilter>asList(
+                    new DuplicateReadFilter()
+            ));
             avgBaseQualityAggregator.calculateAvgQuals();
             getPipelineCtx().getLogger().info("\tCalculation complete");
 
@@ -126,7 +130,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
     }
 
     @Override
-    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
+    public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         return null;
     }

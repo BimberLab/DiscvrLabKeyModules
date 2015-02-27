@@ -1,15 +1,15 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
-import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -63,7 +63,7 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
     }
 
     @Override
-    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
+    public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
         output.addInput(inputBam, "Input BAM File");
@@ -84,7 +84,7 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, args);
 
         output.addOutput(outputFile, "gVCF File");
-        output.addSequenceOutput(outputFile, rs.getName() + ": HaplotypeCaller Variants", "gVCF File", rs.getRowId(), null, referenceGenome.getGenomeId());
+        output.addSequenceOutput(outputFile, rs.getName() + ": HaplotypeCaller Variants", "gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId());
         if (idxFile.exists())
         {
             output.addOutput(idxFile, "VCF Index");

@@ -5,9 +5,9 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileType;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -132,7 +132,7 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
                 new FastaIndexer(getJob().getLogger()).execute(refFasta);
             }
 
-            ReadsetModel rs = getTaskHelper().getSequenceSupport().getCachedReadset(m.getReadset());
+            Readset rs = getTaskHelper().getSequenceSupport().getCachedReadset(m.getReadset());
             ReferenceGenome genome = getTaskHelper().getSequenceSupport().getCachedGenome(m.getLibraryId());
             outputs.addAll(SequenceAnalysisTask.runAnalysesRemote(actions, rs, inputBam, genome, providers, getTaskHelper()));
         }

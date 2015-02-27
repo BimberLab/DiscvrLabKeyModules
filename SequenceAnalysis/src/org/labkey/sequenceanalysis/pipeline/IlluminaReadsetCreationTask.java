@@ -88,6 +88,7 @@ public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReads
         try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
         {
             TableInfo rs = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
+            TableInfo readData = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
             ExpRun run = ExperimentService.get().getExpRun(runId);
             List<Integer> dataIds = new ArrayList<>();
@@ -97,7 +98,7 @@ public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReads
                 dataIds.add(d.getRowId());
             }
 
-            TableSelector ts = new TableSelector(rs, Collections.singleton("rowid"), new SimpleFilter(FieldKey.fromString("fileid"), dataIds, CompareType.IN), null);
+            TableSelector ts = new TableSelector(readData, Collections.singleton("readset"), new SimpleFilter(FieldKey.fromString("fileid1"), dataIds, CompareType.IN), null);
             Integer[] readsets = ts.getArray(Integer.class);
             Map<String, Object> row = new HashMap<>();
             row.put("runId", runId);

@@ -7,7 +7,6 @@
         <dependency path="SequenceAnalysis/panel/AdapterPanel.js"/>
         <dependency path="SequenceAnalysis/panel/AlignmentPanel.js"/>
 
-        <dependency path="SequenceAnalysis/panel/SamplePanel.js"/>
         <dependency path="SequenceAnalysis/panel/SnpCallPanel.js"/>
         <dependency path="SequenceAnalysis/panel/BaseSequencePanel.js"/>
         <dependency path="SequenceAnalysis/panel/SequenceAnalysisPanel.js"/>

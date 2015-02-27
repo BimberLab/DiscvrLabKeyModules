@@ -13,12 +13,15 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -120,6 +123,78 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
                     {
                         deleteFile(child);
                     }
+                    else
+                    {
+                        //inspect within library
+                        List<String> expectedChildren = new ArrayList<>();
+                        Integer fastaId = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file")).getObject(Integer.parseInt(child.getName()), Integer.class);
+                        ExpData d = ExperimentService.get().getExpData(fastaId);
+                        File fasta = d.getFile();
+
+                        expectedChildren.add(fasta.getName());
+                        expectedChildren.add(fasta.getName() + ".fai");
+                        expectedChildren.add(FileUtil.getBaseName(fasta.getName()) + ".idKey.txt");
+                        expectedChildren.add(FileUtil.getBaseName(fasta.getName()) + ".dict");
+                        expectedChildren.add("alignerIndexes");
+                        expectedChildren.add("tracks");
+                        expectedChildren.add("chainFiles");
+
+                        for (String fileName : child.list())
+                        {
+                            if (!expectedChildren.contains(fileName))
+                            {
+                                deleteFile(new File(child, fileName));
+                            }
+                        }
+
+                        Integer libraryId = Integer.parseInt(child.getName());
+
+                        //check/verify tracks
+                        File trackDir = new File(child, "tracks");
+                        if (trackDir.exists())
+                        {
+                            Set<String> expectedTracks = new HashSet<>();
+                            TableInfo tracksTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS);
+                            TableSelector tracksTs = new TableSelector(tracksTable, Collections.singleton("fileid"), new SimpleFilter(FieldKey.fromString("library_id"), libraryId), null);
+                            for (Integer dataId : tracksTs.getArrayList(Integer.class))
+                            {
+                                ExpData trackData = ExperimentService.get().getExpData(dataId);
+                                if (trackData != null && trackData.getFile() != null)
+                                    expectedTracks.add(d.getFile().getName());
+                            }
+
+                            for (File f : trackDir.listFiles())
+                            {
+                                if (!expectedTracks.contains(f.getName()))
+                                {
+                                    deleteFile(f);
+                                }
+                            }
+                        }
+
+                        //check/verify chainFiles
+                        File chainDir = new File(child, "chainFiles");
+                        if (chainDir.exists())
+                        {
+                            Set<String> expectedChains = new HashSet<>();
+                            TableInfo chainTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_CHAIN_FILES);
+                            TableSelector chainTs = new TableSelector(chainTable, Collections.singleton("chainFile"), new SimpleFilter(FieldKey.fromString("genomeId1"), libraryId), null);
+                            for (Integer dataId : chainTs.getArrayList(Integer.class))
+                            {
+                                ExpData chainData = ExperimentService.get().getExpData(dataId);
+                                if (chainData != null && chainData.getFile() != null)
+                                    expectedChains.add(chainData.getFile().getName());
+                            }
+
+                            for (File f : chainDir.listFiles())
+                            {
+                                if (!expectedChains.contains(f.getName()))
+                                {
+                                    deleteFile(f);
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -144,6 +219,7 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
 
                         expectedFileNames.add(d.getFile().getName() + ".gz");
                         expectedFileNames.add(d.getFile().getName() + ".gz.tbi");
+                        expectedFileNames.add(d.getFile().getName() + ".gz.idx");
                     }
                 }
 
@@ -166,13 +242,13 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
     private void deleteFile(File f) throws IOException
     {
         _log.info("deleting sequence file: " + f.getPath());
-        if (f.isDirectory())
-        {
-            FileUtils.deleteDirectory(f);
-        }
-        else
-        {
-            f.delete();
-        }
+//        if (f.isDirectory())
+//        {
+//            FileUtils.deleteDirectory(f);
+//        }
+//        else
+//        {
+//            f.delete();
+//        }
     }
 }

@@ -17,12 +17,13 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -116,15 +117,13 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
             Map<String, String> params = getJob().getParameters();
             for (String key : params.keySet())
             {
-                if (key.startsWith("sample_"))
+                if (key.startsWith("readset_"))
                 {
                     JSONObject o = new JSONObject(params.get(key));
 
-                    ReadsetModel r = settings.createReadsetModel(o);
+                    SequenceReadsetImpl r = settings.createReadsetModel(o);
                     if (r.getReadsetId() == null || r.getReadsetId() == 0)
                     {
-                        r.setFileId(null);
-                        r.setFileId2(null);
                         r.setContainer(getJob().getContainer().getId());
                         r.setCreated(new Date());
                         r.setCreatedBy(getJob().getUser().getUserId());
@@ -133,20 +132,20 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
                         r.setRunId(runId);
 
                         r = Table.insert(getJob().getUser(), rs, r);
-                        getJob().getLogger().info("Created readset: " + r.getRowId());
+                        getJob().getLogger().info("Created readset: " + r.getReadsetId());
                     }
                     else
                     {
                         //verify this readset exists:
-                        r = new TableSelector(rs, new SimpleFilter(FieldKey.fromString("rowid"), r.getRowId()), null).getObject(ReadsetModel.class);
+                        r = new TableSelector(rs, new SimpleFilter(FieldKey.fromString("rowid"), r.getReadsetId()), null).getObject(SequenceReadsetImpl.class);
                         if (r == null)
                         {
-                            throw new PipelineJobException("Readset with RowId: " + r.getRowId() + " does not exist, aborting");
+                            throw new PipelineJobException("Readset with RowId: " + r.getReadsetId() + " does not exist, aborting");
                         }
                     }
 
                     AnalysisModelImpl a = new AnalysisModelImpl();
-                    a.setReadset(r.getRowId());
+                    a.setReadset(r.getReadsetId());
 
                     ExpData movedDataId = bamMap.get(o.getString("fileName"));
                     if (movedDataId == null)

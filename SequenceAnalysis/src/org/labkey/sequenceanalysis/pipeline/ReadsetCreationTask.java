@@ -30,13 +30,18 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
+import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.model.ReadData;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileType;
+import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -125,21 +130,26 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         ExpRun run = ExperimentService.get().getExpRun(runId);
-        List<? extends ExpData> datas = run.getInputDatas(SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, ExpProtocol.ApplicationType.ExperimentRunOutput);
+        List<ExpData> datas = new ArrayList<>();
+        datas.addAll(run.getInputDatas(SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, ExpProtocol.ApplicationType.ExperimentRunOutput));
+        datas.addAll(run.getInputDatas(SequenceTaskHelper.BARCODED_FASTQ_OUTPUTNAME, ExpProtocol.ApplicationType.ExperimentRunOutput));
+
         getJob().getLogger().debug("Total normalized sequence files created: " + datas.size());
 
-        ReadsetModel row;
-        List<ReadsetModel> newReadsets = new ArrayList<>();
+        List<SequenceReadsetImpl> newReadsets = new ArrayList<>();
 
         try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
         {
-            TableInfo rs = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
+            TableInfo readsetTable = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
+            TableInfo readDataTable = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
-            List<ReadsetModel> readsets = settings.getReadsets();
-            for (ReadsetModel r : readsets)
+            SequenceAnalysisJob pipelineJob = getJob().getJobSupport(SequenceAnalysisJob.class);
+            for (Readset rs : pipelineJob.getCachedReadsets())
             {
+                SequenceReadsetImpl r = (SequenceReadsetImpl)rs;
+
                 getJob().getLogger().info("Starting readset " + r.getName());
-                row = new ReadsetModel();
+                SequenceReadsetImpl row = new SequenceReadsetImpl();
 
                 row.setSampleId(r.getSampleId());
                 row.setSubjectId(r.getSubjectId());
@@ -156,82 +166,108 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setCreatedBy(getJob().getUser().getUserId());
                 row.setCreated(new Date());
 
-                String fn = r.getFileName();
-                String fn2 = r.getFileName2();
-
-                String expectedName = StringUtils.isEmpty(fn) ? null : r.getExpectedFileNameForPrefix(fn, true);
-                String expectedName2 = StringUtils.isEmpty(fn2) ? null : r.getExpectedFileNameForPrefix(fn2, true);
-
-                getJob().getLogger().debug("Total exp data files: " + datas.size());
-                if (datas.size() > 0)
+                List<ReadDataImpl> readDatas = new ArrayList<>();
+                for (ReadDataImpl rd : r.getReadData())
                 {
-                    boolean found = false;
-                    boolean found2 = false;
-                    for (ExpData d : datas)
+                    File f1 = rd.getFile1();
+                    File f2 = rd.getFile2();
+
+                    getJob().getLogger().debug("Total exp data files: " + datas.size());
+                    if (datas.size() > 0)
                     {
-                        getJob().getLogger().debug("Inspecting exp data file: " + d.getFile().getPath());
-                        if (expectedName.equals(d.getFile().getName()))
+                        boolean found = false;
+                        boolean found2 = false;
+                        for (ExpData d : datas)
                         {
-                            if (found)
+                            getJob().getLogger().debug("Inspecting exp data file: " + d.getFile().getPath());
+                            if (f1.getName().equals(d.getFile().getName()))
                             {
-                                getJob().getLogger().warn("ERROR: More than 1 matching file found for: " + expectedName);
-                                getJob().getLogger().warn("File was: " + d.getFile().getPath());
+                                if (found)
+                                {
+                                    getJob().getLogger().warn("ERROR: More than 1 matching file found for: " + f1.getName());
+                                    getJob().getLogger().warn("File was: " + d.getFile().getPath());
+                                }
+
+                                if (!d.getFile().exists())
+                                    throw new PipelineJobException("Expected file does not exist: " + d.getFile().getPath());
+
+                                rd.setFileId1(d.getRowId());
+                                found = true;
                             }
 
-                            if (!d.getFile().exists())
-                                throw new PipelineJobException("Expected file does not exist: " + d.getFile().getPath());
-
-                            row.setFileId(d.getRowId());
-                            found = true;
-                        }
-
-                        if (expectedName2 != null && expectedName2.equals(d.getFile().getName()))
-                        {
-                            if (found2)
+                            if (f2 != null && f2.getName().equals(d.getFile().getName()))
                             {
-                                getJob().getLogger().warn("ERROR: More than 1 matching file found for second mate file: " + expectedName2);
-                                getJob().getLogger().warn("File was: " + d.getFile().getPath());
+                                if (found2)
+                                {
+                                    getJob().getLogger().warn("ERROR: More than 1 matching file found for: " + f2.getName());
+                                    getJob().getLogger().warn("File was: " + d.getFile().getPath());
+                                }
+
+                                if (!d.getFile().exists())
+                                    throw new PipelineJobException("Expected file does not exist: " + d.getFile().getPath());
+
+                                rd.setFileId2(d.getRowId());
+                                found2 = true;
                             }
-
-                            if (!d.getFile().exists())
-                                throw new PipelineJobException("Expected file does not exist: " + d.getFile().getPath());
-
-                            row.setFileId2(d.getRowId());
-                            found2 = true;
                         }
                     }
+
+                    if (rd.getFileId1() == null)
+                    {
+                        // the rationale here is that an output file should always exist for each readset, unless the input was barcoded,
+                        // in which case its possible to lack reads without the user knowing upfront
+                        if (!getSettings().isDoBarcode())
+                        {
+                            throw new PipelineJobException("Unable to identify FASTQ for reads, expected: " + (rd.getFile1() == null ? "" : rd.getFile1().getName()));
+                        }
+                        else
+                        {
+                            getJob().getLogger().warn("No output file was found for reads: " + r.getName() + ", it will not be imported");
+                            continue;
+                        }
+                    }
+
+                    readDatas.add(rd);
                 }
 
-
-                if (row.getFileId() == null)
-                {
-                    // the rationale here is that an output file should always exist for each readset, unless the input was barcoded,
-                    // in which case its possible to lack reads without the user knowing upfront
-                    if (!getSettings().isDoBarcode())
-                    {
-                        throw new PipelineJobException("Unable to identify FASTQ for readset, expected: " + expectedName);
-                    }
-                    else
-                    {
-                        getJob().getLogger().warn("No output file was found for readset: " + r.getName() + ", it will not be imported");
-                        continue;
-                    }
-                }
                 row.setRunId(SequenceTaskHelper.getExpRunIdForJob(getJob()));
 
                 //then import
+                if (readDatas.isEmpty())
+                {
+                    getJob().getLogger().info("no reads found for readset: " + r.getName() + ", skipping import");
+                    continue;
+                }
+                row.setReadData(readDatas);
+
+                SequenceReadsetImpl newRow;
                 if (r.getReadsetId() == null || r.getReadsetId() == 0)
                 {
-                    ReadsetModel newRow = Table.insert(getJob().getUser(), rs, row);
-                    getJob().getLogger().info("Created readset: " + newRow.getRowId());
+                    newRow = Table.insert(getJob().getUser(), readsetTable, row);
+                    getJob().getLogger().info("Created readset: " + newRow.getReadsetId());
                     newReadsets.add(newRow);
                 }
                 else
                 {
                     Integer[] pks = {r.getReadsetId()};
-                    ReadsetModel newRow = Table.update(getJob().getUser(), rs, row, pks);
+                    newRow = Table.update(getJob().getUser(), readsetTable, row, pks);
                     newReadsets.add(newRow);
-                    getJob().getLogger().info("Updated readset: " + r.getReadsetId());
+                    getJob().getLogger().info("Updated readset: " + newRow.getReadsetId());
+                }
+
+                //create ReadData
+                getJob().getLogger().debug(readDatas.size() + " file pairs to insert");
+                for (ReadDataImpl rd : readDatas)
+                {
+                    getJob().getLogger().debug("creating read data for readset: " + newRow.getReadsetId());
+                    rd.setReadset(newRow.getReadsetId());
+                    rd.setContainer(getJob().getContainer().getId());
+                    rd.setCreatedBy(getJob().getUser().getUserId());
+                    rd.setCreated(new Date());
+                    rd.setModifiedBy(getJob().getUser().getUserId());
+                    rd.setModified(new Date());
+
+                    Table.insert(getJob().getUser(), readDataTable, rd);
                 }
             }
 
@@ -240,23 +276,27 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
         //NOTE: this is outside the transaction because it can take a long time.
         int idx = 0;
-        for (ReadsetModel model : newReadsets)
+        for (SequenceReadsetImpl model : newReadsets)
         {
             idx++;
             getJob().getLogger().info("calculating quality metrics for readset: " + model.getName() + ", " + idx + " of " + newReadsets.size());
-
-            addQualityMetricsForReadset(model, model.getFileId());
-            if (model.getFileId2() != null)
+            for (ReadDataImpl d : model.getReadData())
             {
-                addQualityMetricsForReadset(model, model.getFileId2());
-            }
-
-            if (settings.isRunFastqc())
-            {
-                runFastqcForFile(model.getFileId());
-                if (model.getFileId2() != null)
+                getJob().setStatus("CALCULATING QUALITY METRICS");
+                addQualityMetricsForReadset(model, d.getFileId1());
+                if (d.getFileId2() != null)
                 {
-                    runFastqcForFile(model.getFileId2());
+                    addQualityMetricsForReadset(model, d.getFileId2());
+                }
+
+                if (settings.isRunFastqc())
+                {
+                    getJob().setStatus("RUNNING FASTQC");
+                    runFastqcForFile(d.getFileId1());
+                    if (d.getFileId2() != null)
+                    {
+                        runFastqcForFile(d.getFileId2());
+                    }
                 }
             }
         }
@@ -280,7 +320,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         }
     }
 
-    private void addQualityMetricsForReadset(ReadsetModel rs, int fileId) throws PipelineJobException
+    private void addQualityMetricsForReadset(Readset rs, int fileId) throws PipelineJobException
     {
         try
         {

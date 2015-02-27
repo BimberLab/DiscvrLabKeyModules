@@ -7,9 +7,11 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -65,6 +67,26 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         File baseDir = path == null ? new File(subdir) : new File(path, subdir);
 
         return new File(baseDir, jarName);
+    }
+
+    public List<String> getBaseParams()
+    {
+        List<String> ret = new ArrayList<>();
+
+        String tmpDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARD_TMP_DIR");
+        if (StringUtils.trimToNull(tmpDir) != null)
+        {
+            ret.add("-Djava.io.tmpdir=" + tmpDir);
+        }
+
+        String xmx = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARD_MEMORY");
+        if (StringUtils.trimToNull(xmx) != null)
+        {
+            String[] tokens = xmx.split(" ");
+            ret.addAll(Arrays.asList(tokens));
+        }
+
+        return ret;
     }
 
     public ValidationStringency getStringency()

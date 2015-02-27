@@ -33,8 +33,11 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.sequenceanalysis.model.ReadData;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
@@ -42,7 +45,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 
 import java.io.File;
 import java.util.Collections;
@@ -93,32 +96,29 @@ public class SequenceTaskHelper implements PipelineContext
         return getJob().getLogger();
     }
 
+    //make sure Exp data objects exist for all input files.
     public void createExpDatasForInputs()
     {
-        //make sure Exp data objects exist for all input files.
-        for (ReadsetModel rs : _settings.getReadsets())
+        for (SequenceReadsetImpl rs : _settings.getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class)))
         {
-            String fn = rs.getFileName();
-            Integer id = rs.getFileId();
-            if (StringUtils.isNotBlank(fn) && id == null)
+            for (ReadDataImpl rd : rs.getReadData())
             {
-                File f = new File(getSupport().getDataDirectory(), fn);
-                ExpData d = createExpData(f);
-                if (d != null)
+                if (rd.getFileId1() == null && rd.getFile1() != null)
                 {
-                    rs.setFileId(d.getRowId());
+                    ExpData d = createExpData(rd.getFile1());
+                    if (d != null)
+                    {
+                        rd.setFileId1(d.getRowId());
+                    }
                 }
-            }
 
-            fn = rs.getFileName2();
-            id = rs.getFileId2();
-            if (StringUtils.isNotBlank(fn) && id == null)
-            {
-                File f = new File(getSupport().getDataDirectory(), fn);
-                ExpData d = createExpData(f);
-                if (d != null)
+                if (rd.getFileId2() == null && rd.getFile2() != null)
                 {
-                    rs.setFileId2(d.getRowId());
+                    ExpData d = createExpData(rd.getFile2());
+                    if (d != null)
+                    {
+                        rd.setFileId2(d.getRowId());
+                    }
                 }
             }
         }
@@ -222,29 +222,10 @@ public class SequenceTaskHelper implements PipelineContext
         return (Integer)row.get("rowid");
     }
 
-//    public static String getMinimalBaseName(String filename)
-//    {
-//        String bn;
-//        int i = 0;
-//
-//        if (filename == null)
-//            return null;
-//
-//        while (i < 20){
-//            bn = FilenameUtils.getBaseName(filename);
-//            if (bn.equals(filename)){
-//                break;
-//            }
-//            filename = bn;
-//            i++;
-//        }
-//        return filename;
-//    }
-
     //returns the basename of the file, automatically removing .gz, if present
     public static String getUnzippedBaseName(String filename)
     {
-        filename = filename.replaceAll(".gz$", "");
+        filename = filename.replaceAll("\\.gz$", "");
         return FilenameUtils.getBaseName(filename);
     }
 

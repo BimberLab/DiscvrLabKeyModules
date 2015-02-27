@@ -37,9 +37,10 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
         });
 
         this.addEvents('sectiontoggle');
+    },
 
-        this.add([this.getFilePanelCfg(),
-            {
+    onDataLoad: function(results){
+        this.add([this.getFilePanelCfg(),{
             xtype: 'form',
             border: true,
             bodyBorder: false,
@@ -244,9 +245,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 html: 'Loading...'
             }]
         }]);
-    },
 
-    onDataLoad: function(results){
         var panel = this.down('#analysisOptions');
 
         var items = [];
@@ -281,7 +280,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             containerPath: this.queryContainer,
             schemaName: 'sequenceanalysis',
             queryName: 'sequence_readsets',
-            columns: 'rowid,name,platform,container,container/displayName,container/path,fileid,fileid/name,fileid/fileexists,fileid2,fileid2/name,fileid2/fileexists,mid5.mid3,subjectid,sampleid,instrument_run_id',
+            columns: 'rowid,name,platform,container,container/displayName,container/path,totalFiles,barcode5.barcode3,subjectid,sampleid,instrument_run_id',
             metadata: {
                 queryContainerPath: {
                     createIfDoesNotExist: true,
@@ -302,20 +301,60 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                     var errors = [];
                     var errorNames = [];
                     store.each(function(rec){
-                        if (rec.get('fileid')){
-                            if (!rec.get('fileid/fileexists')){
+                        if (!rec.get('totalFiles')){
+                            errors.push(rec);
+                            errorNames.push(rec.get('name'));
+                        }
+                    }, this);
+
+                    this.onStoreLoad(errors);
+                }
+            }
+        });
+
+        this.readDataStore = Ext4.create("LABKEY.ext4.data.Store", {
+            containerPath: this.queryContainer,
+            schemaName: 'sequenceanalysis',
+            queryName: 'readdata',
+            columns: 'rowid,readset,readset/name,container,container/displayName,container/path,fileid1,fileid1/name,fileid1/fileexists,fileid2,fileid2/name,fileid2/fileexists',
+            metadata: {
+                queryContainerPath: {
+                    createIfDoesNotExist: true,
+                    setValueOnLoad: true,
+                    defaultValue: this.queryContainerPath
+                }
+            },
+            autoLoad: true,
+            filterArray: [
+                LABKEY.Filter.create('readset', this.readsets.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
+            ],
+            sort: 'name',
+            listeners: {
+                scope: this,
+                load: function (store) {
+                    this.fileNames = [];
+                    this.fileIds = [];
+                    var errors = [];
+                    var errorNames = [];
+                    store.each(function(rec){
+                        this.fileNames = [];
+                        this.fileIds = [];
+
+                        if (rec.get('fileid1')){
+                            if (!rec.get('fileid1/fileexists')){
                                 errors.push(rec);
-                                errorNames.push(rec.get('name'));
+                                errorNames.push(rec.get('readset/name'));
                             }
                             else {
-                                this.fileIds.push(rec.get('fileid'));
-                                this.fileNames.push(rec.get('fileid/name'));
+                                this.fileIds.push(rec.get('fileid1'));
+                                this.fileNames.push(rec.get('fileid1/name'));
                             }
                         }
                         else {
                             errors.push(rec);
-                            errorNames.push(rec.get('name'))
+                            errorNames.push(rec.get('readset/name'))
                         }
+
                         if (rec.get('fileid2')){
                             if (!rec.get('fileid2/fileexists')){
                                 errors.push(rec);
@@ -328,14 +367,30 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                         }
                     }, this);
 
-                    if (errors.length){
-                        alert('The follow readsets lack an input file and will be skipped: ' + errorNames.join(', '));
-                    }
-
-                    this.checkProtocol();
+                    this.onStoreLoad(errors);
                 }
             }
         });
+    },
+
+    storesLoaded: 0,
+    errorNames: [],
+
+    onStoreLoad: function(errorNames){
+        this.storesLoaded++;
+        if (errorNames){
+            this.errorNames = this.errorNames.concat(errorNames);
+            this.errorNames = Ext4.unique(this.errorNames);
+        }
+        if (this.storesLoaded == 2)
+        {
+            this.checkProtocol();
+            this.down('dataview').refresh();
+
+            if (this.errorNames.length){
+                alert('The follow readsets lack an input file and will be skipped: ' + this.errorNames.join(', '));
+            }
+        }
     },
 
     getErrors: function(){
@@ -369,19 +424,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
         //and readset information
         this.readsetStore.each(function(rec, idx){
-            json['sample_' + idx] = {
+            json['readset_' + idx] = {
                 readsetname: rec.get('name'),
-                readset: rec.get('rowid'),
-                platform: rec.get('platform'),
-                fileName: rec.get('fileid/name'),
-                fileName2: rec.get('fileid2/name'),
-                fileId: rec.get('fileid'),
-                fileId2: rec.get('fileid2'),
-                mid5: rec.get('mid5'),
-                mid3: rec.get('mid3'),
-                subjectid: rec.get('subjectid'),
-                sampleid: rec.get('sampleid'),
-                instrument_run_id: rec.get('instrument_run_id')
+                readset: rec.get('rowid')
             };
         }, this);
 
@@ -414,16 +459,10 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 xtype: 'dataview',
                 width: '100%',
                 store: this.readsetStore,
+                readDatastore: this.readDataStore,
                 itemSelector: 'tr.file_list',
-//                listeners: {
-//                    viewready: function(panel){
-//                        console.log(panel.getWidth());
-//                        var owner = panel.up('sequenceanalysis-sequenceanalysispanel');
-//                        console.log(owner.getWidth());
-//                    }
-//                },
                 tpl: [
-                    '<table class="fileNames"><tr class="fileNames"><td>Readset Id</td><td>Readset Name</td><td>Sample Id</td><td>Platform</td><td>File 1</td><td>File 2</td><td>Folder</td><td></td></tr>',
+                    '<table class="fileNames"><tr class="fileNames"><td>Readset Id</td><td>Readset Name</td><td>Sample Id</td><td>Platform</td><td>Forward Reads</td><td>Reverse Reads</td><td>Folder</td><td></td></tr>',
                     '<tpl for=".">',
                         '<tr class="file_list">',
                         '<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "sequenceanalysis", "query.queryName":"sequence_readsets", "query.rowId~eq": values.rowid})]}" target="_blank">{rowid:htmlEncode}</a></td>',
@@ -434,18 +473,40 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                             '</tpl>',
                         '</td>',
                         '<td>{platform:htmlEncode}</td>',
-                        '<td',
-                            '<tpl if="values.fileid && !values[\'fileid/fileexists\']"> style="background: red;" data-qtip="File does not exist"</tpl>',
-                        '><a href="{[LABKEY.ActionURL.buildURL("experiment", "showData", values.queryContainerPath, {rowId: values.fileid})]}" target="_blank">{[Ext4.htmlEncode(values["fileid/name"])]}</a></td>',
-                        '<td',
-                            '<tpl if="values.fileid2 && !values[\'fileid2/fileexists\']"> style="background: red;" data-qtip="File does not exist"</tpl>',
-                        '><a href="{[LABKEY.ActionURL.buildURL("experiment", "showData", values.queryContainerPath, {rowId: values.fileid2})]}" target="_blank">{[Ext4.htmlEncode(values["fileid2/name"])]}</a></td>',
+                        '{[this.getFiles(values, 1)]}',
+                        '{[this.getFiles(values, 2)]}',
 
                         '<td><a href="{[LABKEY.ActionURL.buildURL("project", "start", values["container/path"], {})]}" target="_blank">{[Ext4.htmlEncode(values["container/displayName"])]}</a></td>',
                         '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "fastqcReport", values["container/path"], {readsets: values.rowid})]}" target="_blank">View FASTQC Report</a></td>',
                         '</tr>',
                     '</tpl>',
-                    '</table>'
+                    '</table>',
+                    {
+                        readDataStore: this.readDataStore,
+                        getFiles: function(values, idx){
+                            var total = 0;
+                            var ret = '<td>';
+                            this.readDataStore.each(function(r){
+                                if (r.get('readset') == values.rowid && r.get('fileid' + idx)){
+                                    ret += '<span';
+                                    if (!r.get('fileid' + idx + '/fileexists')){
+                                        ret += ' style="background: red;" data-qtip="File does not exist"';
+                                    }
+
+                                    ret += '><a href="' + LABKEY.ActionURL.buildURL("experiment", "showData", values.queryContainerPath, {rowId: r.get('fileid' + idx)}) + '" target="_blank">' + Ext4.htmlEncode(r.get('fileid' + idx + '/name')) + '</a></span>';
+
+                                    total++;
+                                    if (total){
+                                        ret += '<br>';
+                                    }
+                                }
+                            }, this);
+
+                            ret += '</td>';
+
+                            return ret;
+                        }
+                    }
                 ]
             }]
         }

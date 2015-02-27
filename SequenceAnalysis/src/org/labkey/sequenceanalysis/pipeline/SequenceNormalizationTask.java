@@ -16,8 +16,15 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
+import com.drew.lang.annotations.Nullable;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.FastqQualityFormat;
+import htsjdk.samtools.util.IOUtil;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -27,24 +34,35 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.sequenceanalysis.FileGroup;
+import org.labkey.sequenceanalysis.ReadDataImpl;
+import org.labkey.sequenceanalysis.SequenceAnalysisController;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.run.preprocessing.SeqCrumbsRunner;
 import org.labkey.sequenceanalysis.run.util.SFFExtractRunner;
+import org.labkey.sequenceanalysis.run.util.SamToFastqWrapper;
 import org.labkey.sequenceanalysis.util.Barcoder;
 import org.labkey.sequenceanalysis.util.FastaToFastqConverter;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.NucleotideSequenceFileType;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,6 +72,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * User: bbimber
@@ -64,13 +83,12 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 {
     private SequenceTaskHelper _taskHelper;
     private static final String PREPARE_INPUT_ACTIONNAME = "Converting to FASTQ";
+    private static final String MERGE_ACTIONNAME = "Merge FASTQs";
     private static final String PREPARE_INPUT_STATUS = "NORMALIZING INPUT FILES";
     private static final String DECOMPRESS_ACTIONNAME = "Decompressing Inputs";
     private static final String BARCODE_ACTIONNAME = "Separate By Barcode";
     private static final String COMPRESS_ACTIONNAME = "Compressing Outputs";
-    private static final String RELOCATE_ACTIONNAME = "Processing Input Files";
-
-    private List<RecordedAction> _actions;
+    private static final String EXTRACT_READ_GROUP_ACTION = "Extract Read Groups";
 
     private SequenceNormalizationTask(Factory factory, PipelineJob job)
     {
@@ -111,7 +129,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(DECOMPRESS_ACTIONNAME, PREPARE_INPUT_ACTIONNAME, BARCODE_ACTIONNAME, COMPRESS_ACTIONNAME);
+            return Arrays.asList(DECOMPRESS_ACTIONNAME, EXTRACT_READ_GROUP_ACTION, PREPARE_INPUT_ACTIONNAME, MERGE_ACTIONNAME, BARCODE_ACTIONNAME, COMPRESS_ACTIONNAME);
         }
 
         public PipelineJob.Task createTask(PipelineJob job)
@@ -161,6 +179,46 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 toNormalize.add(f);
         }
 
+        try
+        {
+            List<FileGroup> fileGroups = settings.getFileGroups(job.getJobSupport(SequenceAnalysisJob.class));
+            for (FileGroup fg : fileGroups)
+            {
+                List<List<FileGroup.FilePair>> filePairs = fg.groupByPlatformUnit();
+                for (List<FileGroup.FilePair> lanes : filePairs)
+                {
+                    Set<String> distinctPlatformUnits = new HashSet<>();
+                    for (FileGroup.FilePair m : lanes)
+                    {
+                        if (m.platformUnit != null)
+                        {
+                            if (distinctPlatformUnits.contains(m.platformUnit))
+                            {
+                                //indicates 2 file pairs from same platformUnit
+                                job.getLogger().debug("lane will be merged: " + lanes.get(0).platformUnit);
+                                for (FileGroup.FilePair fp : lanes)
+                                {
+                                    if (!toNormalize.contains(fp.file1))
+                                        toNormalize.add(fp.file1);
+                                    if (fp.file2 != null)
+                                    {
+                                        if (!toNormalize.contains(fp.file2))
+                                            toNormalize.add(fp.file2);
+                                    }
+                                }
+                            }
+
+                            distinctPlatformUnits.add(m.platformUnit);
+                        }
+                    }
+                }
+            }
+        }
+        catch (PipelineJobException e)
+        {
+            job.getLogger().error(e.getMessage(), e);
+        }
+
         return toNormalize;
     }
 
@@ -198,9 +256,8 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
     public RecordedActionSet run() throws PipelineJobException
     {
-        PipelineJob job = getJob();
         _taskHelper = new SequenceTaskHelper(getJob(), _wd);
-        _actions = new ArrayList<>();
+        List<RecordedAction> actions = new ArrayList<>();
 
         getJob().getLogger().info("Starting Normalization Task");
         File normalizationDir = new File(_wd.getDir(), SequenceTaskHelper.NORMALIZATION_SUBFOLDER_NAME);
@@ -208,147 +265,160 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
         try
         {
-            List<File> inputs = getHelper().getSupport().getInputFiles();
-            List<File> inputFiles = getFilesToNormalize(getJob(), inputs);
-            if (inputFiles.size() == 0)
+            List<FileGroup> normalizedGroups = new ArrayList<>();
+            List<FileGroup> fileGroups = getHelper().getSettings().getFileGroups(getJob().getJobSupport(SequenceAnalysisJob.class));
+            for (FileGroup fg : fileGroups)
             {
-                getJob().getLogger().info("There are no files to be normalized");
-                return new RecordedActionSet(_actions);
-            }
+                getJob().getLogger().debug("processing group: " + fg.name);
 
-            //files not needing normalization
-            List<File> normalizationNotNeeded = new ArrayList<>(getHelper().getSupport().getInputFiles());
-            normalizationNotNeeded.removeAll(inputFiles);
-            for (File f : normalizationNotNeeded)
-            {
-                getJob().getLogger().info("normalization not required: " + f.getPath());
-                getHelper().getFileManager().addFinalOutputFile(f);
-            }
-
-            //decompress any files, if needed
-            RecordedAction action = new RecordedAction(DECOMPRESS_ACTIONNAME);
-            action.setStartTime(new Date());
-            List<Pair<File, File>> unzippedMap = new ArrayList<>();
-            FileType gz = new FileType(".gz");
-            for (File i : inputFiles)
-            {
-                //NOTE: because we can initate runs on readsets from different containers, we cannot rely on dataDirectory() to be consistent
-                //b/c inputs are always copied to the root of the analysis folder, we will use relative paths
-                if (gz.isType(i))
+                List<FileGroup.FilePair> normalizedPairs = new ArrayList<>();
+                List<List<FileGroup.FilePair>> filePairs = fg.groupByPlatformUnit();
+                for (List<FileGroup.FilePair> lane : filePairs)
                 {
-                    String size = FileUtils.byteCountToDisplaySize(FileUtils.sizeOfAsBigInteger(i));
-                    getJob().getLogger().debug("\tDecompressing file: " + i.getName() + " (" + size + ")");
-
-                    File unzipped = new File(_wd.getDir(), i.getName().replaceAll(".gz$", ""));
-                    unzipped = Compress.decompressGzip(i, unzipped);
-                    unzippedMap.add(Pair.of(i, unzipped));
-                    action.addInput(i, "Compressed File");
-                    getHelper().getFileManager().addOutput(action, "Decompressed File", unzipped);
-                    action.addOutput(unzipped, "Decompressed File", true);
-                }
-            }
-
-            if (unzippedMap.size() > 0)
-            {
-                //swap unzipped files
-                for (Pair<File, File> p : unzippedMap)
-                {
-                    inputFiles.remove(p.first);
-                    inputFiles.add(p.second);
-                }
-            }
-
-            action.setEndTime(new Date());
-            _actions.add(action);
-
-            Map<String, File> fileMap = new HashMap<>();
-            for (File f : inputFiles)
-            {
-                fileMap.put(f.getName(), f);
-            }
-
-            Set<Pair<File, File>> toNormalize = new HashSet<>();
-            for (ReadsetModel m : getHelper().getSettings().getReadsets())
-            {
-                File file1 = fileMap.get(SequenceTaskHelper.getExpectedNameForInput(m.getFileName()));
-                if (file1 == null)
-                {
-                    throw new PipelineJobException("Unable to find input file with name: " + SequenceTaskHelper.getExpectedNameForInput(m.getFileName()));
-                }
-
-                Pair<File, File> pair = Pair.of(normalizeSequence(file1), null);
-
-                if (!StringUtils.isEmpty(m.getFileName2()))
-                {
-                    File file2 = fileMap.get(SequenceTaskHelper.getExpectedNameForInput(m.getFileName2()));
-                    if (file2 == null)
+                    for (FileGroup.FilePair fp : lane)
                     {
-                        throw new PipelineJobException("Unable to find input file with name: " + SequenceTaskHelper.getExpectedNameForInput(m.getFileName2()));
+                        File localCopy = _wd.getWorkingCopyForInput(fp.file1);
+                        if (localCopy != null)
+                        {
+                            getJob().getLogger().debug("using local working copy for file: " + fp.file1.getPath());
+                            fp.file1 = localCopy;
+                        }
+
+                        if (SequenceUtil.FILETYPE.bam.getFileType().isType(fp.file1))
+                        {
+                            File outDir = new File(normalizationDir, FileUtil.getBaseName(fp.file1));
+                            Pair<File, File> p = extractReadGroup(fp.file1, fp.platformUnit, actions, outDir);
+                            fp.file1 = p.first;
+                            fp.file2 = p.second;
+                        }
+
+                        //NOTE: continue to normalize sequence, in case the BAM-derived data has non-standard encoding
+                        fp.file1 = normalizeFastqSequence(fp.file1, actions);
+                        if (fp.file1 == null)
+                        {
+                            throw new PipelineJobException("There was an error processing lane: " + fg.name);
+                        }
+
+                        if (fp.file2 != null)
+                        {
+                            localCopy = _wd.getWorkingCopyForInput(fp.file2);
+                            if (localCopy != null)
+                            {
+                                getJob().getLogger().debug("using local working copy for file: " + fp.file2.getPath());
+                                fp.file2 = localCopy;
+                            }
+
+                            fp.file2 = normalizeFastqSequence(fp.file2, actions);
+                        }
                     }
 
-                    pair.second = normalizeSequence(file2);
+                    if (lane.size() > 1)
+                    {
+                        RecordedAction mergeAction = new RecordedAction(MERGE_ACTIONNAME);
+                        mergeAction.setStartTime(new Date());
+
+                        String platformUnit = lane.get(0).platformUnit == null ? "" : lane.get(0).platformUnit;
+                        getJob().getLogger().info("merging lane: " + fg.name + " / " + platformUnit);
+
+                        File merged1 = new File(normalizationDir, SequenceTaskHelper.getUnzippedBaseName(fg.filePairs.get(0).file1.getName()) + ".merged.fastq.gz");
+                        getJob().getLogger().debug("\tto: " + merged1.getPath());
+
+                        File merged2 = fg.filePairs.get(0).file2 == null ? null : new File(normalizationDir, SequenceTaskHelper.getUnzippedBaseName(fg.filePairs.get(0).file2.getName()) + ".merged.fastq.gz");
+
+                        for (FileGroup.FilePair fp : fg.filePairs)
+                        {
+                            try (GZIPOutputStream os = new GZIPOutputStream(new FileOutputStream(merged1, true)); InputStream is = IOUtil.openFileForReading(fp.file1))
+                            {
+                                getJob().getLogger().debug("appending file: " + fp.file1.getName());
+                                getHelper().getFileManager().addInput(mergeAction, "FASTQ File", fp.file1);
+                                IOUtils.copy(is, os);
+                            }
+
+                            if (fp.file2 != null)
+                            {
+                                try (GZIPOutputStream os = new GZIPOutputStream(new FileOutputStream(merged2, true)); InputStream is = IOUtil.openFileForReading(fp.file2))
+                                {
+                                    getJob().getLogger().debug("appending file: " + fp.file2.getName());
+                                    getHelper().getFileManager().addInput(mergeAction, "FASTQ File", fp.file2);
+                                    IOUtils.copy(is, os);
+                                }
+                            }
+                        }
+
+                        FileGroup.FilePair fp = new FileGroup.FilePair();
+                        fp.centerName = lane.get(0).centerName;
+                        fp.platformUnit = platformUnit;
+                        fp.file1 = merged1;
+                        fp.file2 = merged2;
+                        normalizedPairs.add(fp);
+
+                        getHelper().getFileManager().addOutput(mergeAction, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, merged1);
+                        if (merged2.exists())
+                        {
+                            getHelper().getFileManager().addOutput(mergeAction, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, merged2);
+                        }
+
+                        mergeAction.setEndTime(new Date());
+                        actions.add(mergeAction);
+                    }
+                    else if (lane.isEmpty())
+                    {
+                        throw new PipelineJobException("There are no files associated with file group: " + fg.name);
+                    }
+                    else
+                    {
+                        normalizedPairs.add(lane.get(0));
+                    }
                 }
 
-                toNormalize.add(pair);
+                fg.filePairs = normalizedPairs;
+                normalizedGroups.add(fg);
             }
+
+            SequenceAnalysisJob pipelineJob = getJob().getJobSupport(SequenceAnalysisJob.class);
+            List<SequenceReadsetImpl> readsets = pipelineJob.getCachedReadsetModels();
 
             //barcode, if needed
             if (getHelper().getSettings().isDoBarcode())
             {
                 getJob().getLogger().info("Separating reads by barcode");
 
-                Barcoder barcoder = new Barcoder(getJob().getLogger());
-
-                if (getMismatchesTolerated() != null)
+                Barcoder barcoder = getBarcoder();
+                for (FileGroup fg : normalizedGroups)
                 {
-                    barcoder.setEditDistance(getMismatchesTolerated());
-                }
+                    List<SequenceReadsetImpl> readsetsForGroup = new ArrayList<>();
+                    for (SequenceReadsetImpl rs : readsets)
+                    {
+                        if (fg.name.equals(rs.getFileSetName()))
+                        {
+                            readsetsForGroup.add(rs);
+                        }
+                    }
 
-                if (getBarcodeOffset() != null)
-                {
-                    barcoder.setOffsetDistance(getBarcodeOffset());
-                }
-
-                if (getDeletionsTolerated() != null)
-                {
-                    barcoder.setDeletionsAllowed(getDeletionsTolerated());
-                }
-
-                barcoder.setCreateSummaryLog(true);
-
-                if (getHelper().getSettings().isDebugMode())
-                    barcoder.setCreateDetailedLog(true);
-
-                if (getBarcodeGroupsToScan(getHelper().getSettings()).size() > 0)
-                    barcoder.setScanAll(true);
-
-                List<BarcodeModel> models = getHelper().getSettings().getBarcodes();
-                models.addAll(getExtraBarcodesFromFile());
-
-                for (Pair<File, File> pair : toNormalize)
-                {
                     RecordedAction barcodeAction = new RecordedAction(BARCODE_ACTIONNAME);
                     barcodeAction.setStartTime(new Date());
 
-                    getJob().getLogger().info("demultiplexing: " + pair.first.getPath());
-                    if (pair.second != null)
-                    {
-                        getJob().getLogger().info("and: " + pair.second.getPath());
-                    }
+                    Set<File> outputs;
+                    List<BarcodeModel> barcodeModels = getHelper().getSettings().getBarcodes();
+                    barcodeModels.addAll(getExtraBarcodesFromFile());
 
-                    getHelper().getFileManager().addInput(barcodeAction, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, pair.first);
-                    if (pair.second != null)
-                    {
-                        getHelper().getFileManager().addInput(barcodeAction, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, pair.second);
-                    }
-
-                    File outputDir = new File(normalizationDir, FileUtil.getBaseName(pair.first));
+                    getJob().getLogger().info("demultiplexing file group: " + fg.name);
+                    File outputDir = new File(normalizationDir, SequenceTaskHelper.getUnzippedBaseName(fg.filePairs.get(0).file1.getName()));
                     outputDir.mkdirs();
 
-                    Set<File> outputs;
-                    if (pair.second == null)
+                    if (!fg.isPaired())
                     {
-                        outputs = barcoder.demultiplexFile(pair.first, getHelper().getSettings().getReadsets(), models, outputDir);
+                        List<File> fastqs = new ArrayList<>();
+                        for (FileGroup.FilePair fp : fg.filePairs)
+                        {
+                            fastqs.add(fp.file1);
+                            if (fp.file2 != null)
+                            {
+                                throw new PipelineJobException("The file group " + fg.name + " contains a mixture of paired and non-paired reads");
+                            }
+                        }
+
+                        outputs = barcoder.demultiplexFiles(fastqs, new ArrayList<Readset>(readsetsForGroup), barcodeModels, outputDir);
                         for (File output : outputs)
                         {
                             getHelper().getFileManager().addOutput(barcodeAction, SequenceTaskHelper.BARCODED_FASTQ_OUTPUTNAME, output);
@@ -356,10 +426,67 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     }
                     else
                     {
-                        outputs = barcoder.demultiplexPair(pair, getHelper().getSettings().getReadsets(), models, outputDir);
+                        List<Pair<File, File>> fastqPairs = new ArrayList<>();
+                        for (FileGroup.FilePair fp : fg.filePairs)
+                        {
+                            fastqPairs.add(Pair.of(fp.file1, fp.file2));
+                            if (fp.file2 == null)
+                            {
+                                throw new PipelineJobException("The file group " + fg.name + " contains a mixture of paired and non-paired reads");
+                            }
+                        }
+
+                        outputs = barcoder.demultiplexPairs(fastqPairs, new ArrayList<Readset>(readsetsForGroup), barcodeModels, outputDir);
                         for (File output : outputs)
                         {
                             getHelper().getFileManager().addOutput(barcodeAction, SequenceTaskHelper.BARCODED_FASTQ_OUTPUTNAME, output);
+                        }
+                    }
+
+                    if (outputs.size() > 0)
+                    {
+                        for (FileGroup.FilePair fp : fg.filePairs)
+                        {
+                            getHelper().getFileManager().addIntermediateFile(fp.file1);
+                            if (fp.file2 != null)
+                            {
+                                getHelper().getFileManager().addIntermediateFile(fp.file2);
+                            }
+                        }
+
+                        for (SequenceReadsetImpl rs : readsetsForGroup)
+                        {
+                            List<ReadDataImpl> rd = new ArrayList<>();
+                            for (FileGroup.FilePair fp : fg.filePairs)
+                            {
+                                File barcode1 = new File(outputDir, barcoder.getOutputFilename(fp.file1, rs));
+                                File barcode2 = fp.file2 == null ? null : new File(outputDir, barcoder.getOutputFilename(fp.file2, rs));
+
+                                if (barcode1.exists())
+                                {
+                                    ReadDataImpl r = new ReadDataImpl();
+                                    r.setPlatformUnit(fp.platformUnit);
+                                    r.setCenterName(fp.centerName);
+                                    if (barcode1.exists())
+                                        r.setFile(barcode1, 1);
+                                    if (barcode2 != null && barcode2.exists())
+                                        r.setFile(barcode2, 2);
+                                    rd.add(r);
+
+                                    if (barcode1.exists())
+                                    {
+                                        getHelper().getFileManager().addOutput(barcodeAction, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, barcode1);
+                                    }
+
+                                    if (barcode2 != null && barcode2.exists())
+                                    {
+                                        getHelper().getFileManager().addOutput(barcodeAction, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, barcode2);
+                                    }
+                                }
+                            }
+
+                            getJob().getLogger().debug("readset: " + rs.getName() + ", " + rd.size() + " file pairs");
+                            rs.setReadData(rd);
                         }
                     }
 
@@ -379,30 +506,52 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                         summaryLog.delete();
                     }
 
-                    if (outputs.size() > 0)
+                    getHelper().getFileManager().addFinalOutputFiles(outputs);
+                    if (outputDir.list().length == 0)
                     {
-                        getHelper().getFileManager().addIntermediateFile(pair.first);
-                        if (pair.second != null)
-                        {
-                            getHelper().getFileManager().addIntermediateFile(pair.second);
-                        }
+                        getJob().getLogger().debug("deleting empty directory: " + outputDir.getName());
+                        FileUtils.deleteDirectory(outputDir);
                     }
 
-                    getHelper().getFileManager().addFinalOutputFiles(outputs);
-
                     barcodeAction.setEndTime(new Date());
-                    _actions.add(barcodeAction);
+                    actions.add(barcodeAction);
                 }
             }
             else
             {
-                for (Pair<File, File> pair : toNormalize)
+                for (FileGroup fg : normalizedGroups)
                 {
-                    getHelper().getFileManager().addFinalOutputFile(pair.first);
-                    if (pair.second != null)
+                    for (FileGroup.FilePair pair : fg.filePairs)
                     {
-                        getHelper().getFileManager().addFinalOutputFile(pair.second);
+                        getHelper().getFileManager().addFinalOutputFile(pair.file1);
+                        if (pair.file2 != null)
+                        {
+                            getHelper().getFileManager().addFinalOutputFile(pair.file2);
+                        }
                     }
+                }
+
+                for (SequenceReadsetImpl rs : readsets)
+                {
+                    List<ReadDataImpl> rd = new ArrayList<>();
+                    for (FileGroup fg : normalizedGroups)
+                    {
+                        if (rs.getFileSetName() != null && rs.getFileSetName().equals(fg.name))
+                        {
+                            for (FileGroup.FilePair fp : fg.filePairs)
+                            {
+                                ReadDataImpl r = new ReadDataImpl();
+                                r.setPlatformUnit(fp.platformUnit);
+                                r.setCenterName(fp.centerName);
+                                r.setFile(fp.file1, 1);
+                                r.setFile(fp.file2, 2);
+                                rd.add(r);
+                            }
+
+                            getJob().getLogger().debug("readset: " + rs.getName() + ", " + rd.size() + " file pairs");
+                        }
+                    }
+                    rs.setReadData(rd);
                 }
             }
 
@@ -410,51 +559,20 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             File baseDirectory = new File(_wd.getDir(), SequenceTaskHelper.NORMALIZATION_SUBFOLDER_NAME);
             baseDirectory.mkdirs();
 
-            Set<String> inputPaths = new HashSet<>();
-            for (File input : getHelper().getSupport().getInputFiles())
-            {
-                inputPaths.add(input.getPath());
-            }
-
-            RecordedAction finalAction = new RecordedAction(COMPRESS_ACTIONNAME);
-            finalAction.setStartTime(new Date());
+            FileType gz = new FileType("gz");
             for (File f : getHelper().getFileManager().getFinalOutputFiles())
             {
-                if (gz.isType(f))
+                if (!gz.isType(f))
                 {
-                    getJob().getLogger().info("File is already compressed: " + f.getPath());
-                    getHelper().getFileManager().addOutput(finalAction, SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, f);
-                }
-                else
-                {
-                    getHelper().getFileManager().addInput(finalAction, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, f);
-                    File output = new File(baseDirectory, f.getName() + ".gz");
-                    getJob().getLogger().info("Compressing output file: " + f.getPath());
-                    Compress.compressGzip(f, output);
-                    if (!inputPaths.contains(f.getPath()))
-                    {
-                        getJob().getLogger().info("\tDeleting uncompressed file: " + f.getName());
-                        if (f.exists())
-                        {
-                            f.delete();
-                        }
-                        else
-                        {
-                            getJob().getLogger().error("unable to find file: " + f.getPath());
-                        }
-                    }
-                    getHelper().getFileManager().addOutput(finalAction, SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, output);
+                    //this should no longer ever happen
+                    throw new PipelineJobException("FASTQ was not gzipped");
                 }
             }
-            finalAction.setEndTime(new Date());
-            _actions.add(finalAction);
 
-            //remove unzipped files
-            job.getLogger().info("Removing unzipped inputs");
-            for (Pair<File, File> z : unzippedMap)
+            if (baseDirectory.list().length == 0)
             {
-                getJob().getLogger().debug("\tRemoving unzipped file: " + z.getValue().getName());
-                z.getValue().delete();
+                getJob().getLogger().debug("deleting empty directory: " + baseDirectory.getName());
+                FileUtils.deleteDirectory(baseDirectory);
             }
 
             getHelper().getFileManager().handleInputs();
@@ -465,24 +583,128 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             throw new PipelineJobException(e);
         }
 
-        getJob().getLogger().debug("This job created " + _actions.size() + " actions:");
-        for (RecordedAction a : _actions)
+        getJob().getLogger().debug("This job created " + actions.size() + " actions:");
+        for (RecordedAction a : actions)
         {
             getJob().getLogger().debug("\t" + a.getName());
         }
 
-        return new RecordedActionSet(_actions);
+        return new RecordedActionSet(actions);
     }
 
-    private File normalizeSequence(File input) throws PipelineJobException, IOException
+    private Barcoder getBarcoder() throws PipelineJobException
     {
+        Barcoder barcoder = new Barcoder(getJob().getLogger());
+
+        if (getMismatchesTolerated() != null)
+        {
+            barcoder.setEditDistance(getMismatchesTolerated());
+        }
+
+        if (getBarcodeOffset() != null)
+        {
+            barcoder.setOffsetDistance(getBarcodeOffset());
+        }
+
+        if (getDeletionsTolerated() != null)
+        {
+            barcoder.setDeletionsAllowed(getDeletionsTolerated());
+        }
+
+        barcoder.setCreateSummaryLog(true);
+
+        if (getHelper().getSettings().isDebugMode())
+            barcoder.setCreateDetailedLog(true);
+
+        if (getBarcodeGroupsToScan(getHelper().getSettings()).size() > 0)
+            barcoder.setScanAll(true);
+
+        return barcoder;
+    }
+
+    private Pair<File, File> extractReadGroup(File input, @Nullable String platformUnit, List<RecordedAction> actions, File outDir) throws PipelineJobException, IOException
+    {
+        RecordedAction action = new RecordedAction(EXTRACT_READ_GROUP_ACTION);
+        action.setStartTime(new Date());
+
+        SamToFastqWrapper wrapper = new SamToFastqWrapper(getJob().getLogger());
+        wrapper.setOutputDir(outDir);
+        if (!outDir.exists())
+        {
+            outDir.mkdirs();
+        }
+
+        File out1 = new File(outDir, (platformUnit == null ? FileUtil.getBaseName(input) : platformUnit) + "_R1.fastq");
+        File out2 = new File(outDir, (platformUnit == null ? FileUtil.getBaseName(input) : platformUnit) + "_R2.fastq");
+        if (out1.exists() || out2.exists())
+        {
+            getJob().getLogger().info("existing FASTQ files found, FastqToSam has probably already been run for a different readGroup");
+        }
+        else
+        {
+            if (platformUnit == null)
+            {
+                getJob().getLogger().info("no platform unit supplied, extracting all reads");
+                wrapper.executeCommand(input, out1.getName(), out2.getName());
+            }
+            else
+            {
+                getHelper().getFileManager().addInput(action, "Input BAM File", input);
+                List<File> created = wrapper.extractByReadGroup(input, outDir, null);
+                for (File f : created)
+                {
+                    getJob().getLogger().info("\tfile created: " + f.getName());
+                    String renamedPath = f.getName().replaceAll("_1.fastq", "_R1.fastq");
+                    renamedPath = renamedPath.replaceAll("_2.fastq", "_R2.fastq");
+                    File renamed = new File(f.getParentFile(), renamedPath);
+                    getJob().getLogger().debug("\trenaming to: " + renamed.getName());
+                    FileUtils.moveFile(f, renamed);
+                    getHelper().getFileManager().addOutput(action, "Extracted Read Group FASTQ", renamed);
+                    getHelper().getFileManager().addIntermediateFile(renamed);
+                }
+            }
+        }
+
+        Pair<File, File> ret = new Pair<>(null, null);
+        if (out1.exists() && SequenceUtil.getLineCount(out1) > 0)
+        {
+            ret.first = out1;
+        }
+        else
+        {
+            getJob().getLogger().error("Unable to find file for readgroup: " + platformUnit);
+        }
+
+        if (out2.exists() && SequenceUtil.getLineCount(out2) > 0)
+        {
+            ret.second = out2;
+        }
+        else
+        {
+            getJob().getLogger().info("no reverse read file found for readgroup: " + platformUnit);
+        }
+
+        action.setEndTime(new Date());
+        actions.add(action);
+
+        return ret;
+    }
+
+    // normalize to fastq.gz
+    private File normalizeFastqSequence(File input, List<RecordedAction> actions) throws PipelineJobException, IOException
+    {
+        if (input == null)
+        {
+            return null;
+        }
+
         PipelineJob job = getJob();
         job.setStatus(PREPARE_INPUT_STATUS);
 
         RecordedAction action = new RecordedAction(PREPARE_INPUT_ACTIONNAME);
         action.setStartTime(new Date());
 
-        getJob().getLogger().info("Normalizing to FASTQ: " + input.getName());
+        getJob().getLogger().info("Normalizing to Gzipped FASTQ: " + input.getName());
 
         getHelper().getFileManager().addInput(action, getHelper().SEQUENCE_DATA_INPUT_NAME, input);
         String basename = SequenceTaskHelper.getUnzippedBaseName(input.getName());
@@ -502,6 +724,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         File workingDir = new File(baseDirectory, basename);
         workingDir.mkdirs();
 
+        FileType gz = new FileType("gz");
         File output = null;
         //NOTE: if the file is ASCII33 FASTQ, it should not reach this stage, unless we're doing barcoding or merging
         if (type.equals(SequenceUtil.FILETYPE.fastq))
@@ -515,13 +738,37 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             if (encoding == FastqQualityFormat.Illumina || encoding == FastqQualityFormat.Solexa)
             {
                 getJob().getLogger().info("Converting Illumina/Solexa FASTQ (ASCII 64) to standard encoding (ASCII 33)");
+                File toConvert = input;
+                if (gz.isType(input))
+                {
+                    getJob().getLogger().info("decompressing file: " + input.getName());
+                    toConvert = new File(output.getPath().replaceAll("\\.gz$", ""));
+                    Compress.decompressGzip(input, toConvert);
+                }
+
                 SeqCrumbsRunner runner = new SeqCrumbsRunner(getJob().getLogger());
                 output = new File(workingDir, SequenceTaskHelper.getUnzippedBaseName(input.getName()) + ".fastq");
-                runner.convertFormat(input, output);
+                runner.convertFormat(toConvert, output);
+
+                File compressed = new File(output.getPath() + ".gz");
+                getJob().getLogger().info("compressing file: " + output.getName());
+                Compress.compressGzip(output, compressed);
+                output.delete();
+                output = compressed;
             }
             else
             {
-                output = input;
+                if (!gz.isType(input))
+                {
+                    File compressed = new File(workingDir, input.getName() + ".gz");
+                    getJob().getLogger().info("compressing file: " + input.getName());
+                    Compress.compressGzip(input, compressed);
+                    output = compressed;
+                }
+                else
+                {
+                    output = input;
+                }
             }
         }
         else if (type.equals(SequenceUtil.FILETYPE.fasta))
@@ -530,16 +777,33 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             FastaToFastqConverter converter = new FastaToFastqConverter(getJob().getLogger());
             output = new File(workingDir, SequenceTaskHelper.getUnzippedBaseName(input.getName()) + ".fastq");
             converter.execute(input, output);
+
+            File compressed = new File(output.getPath() + ".gz");
+            getJob().getLogger().info("compressing file: " + output.getName());
+            Compress.compressGzip(output, compressed);
+            output.delete();
+            output = compressed;
         }
         else if (type.equals(SequenceUtil.FILETYPE.sff))
         {
             SFFExtractRunner sff = new SFFExtractRunner(getJob().getLogger());
             output = new File(workingDir, SequenceTaskHelper.getUnzippedBaseName(input.getName()) + ".fastq");
             sff.convert(input, output);
+
+            File compressed = new File(output.getPath() + ".gz");
+            getJob().getLogger().info("compressing file: " + output.getName());
+            Compress.compressGzip(output, compressed);
+            output.delete();
+            output = compressed;
         }
         else
         {
             getJob().getLogger().error("Unknown file type: " + type);
+            if (workingDir.list().length == 0)
+            {
+                FileUtils.deleteDirectory(workingDir);
+            }
+
             return null;
         }
 
@@ -551,7 +815,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             getHelper().getFileManager().addOutput(action, "Normalization Files", directory);
 
         action.setEndTime(new Date());
-        _actions.add(action);
+        actions.add(action);
 
         if (!input.getPath().equals(output.getPath()))
         {
@@ -559,6 +823,11 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             {
                 getHelper().getFileManager().addIntermediateFile(input);
             }
+        }
+
+        if (workingDir.list().length == 0)
+        {
+            FileUtils.deleteDirectory(workingDir);
         }
 
         return output;

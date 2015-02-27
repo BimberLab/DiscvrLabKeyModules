@@ -66,9 +66,9 @@ public class CompareVariantsHandler implements SequenceOutputHandler
     }
 
     @Override
-    public LinkedHashSet<ClientDependency> getClientDependencies()
+    public LinkedHashSet<String> getClientDependencies()
     {
-        return new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("sequenceanalysis/sequenceAnalysisButtons.js")));
+        return new LinkedHashSet<>(Arrays.asList("sequenceanalysis/sequenceAnalysisButtons.js"));
     }
 
     @Override
@@ -103,6 +103,12 @@ public class CompareVariantsHandler implements SequenceOutputHandler
 
     public class Processor implements OutputProcessor
     {
+        @Override
+        public void init(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        {
+
+        }
+
         @Override
         public void processFilesOnWebserver(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {

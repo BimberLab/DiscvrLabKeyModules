@@ -1,12 +1,15 @@
 package org.labkey.sequenceanalysis;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.run.util.CreateSequenceDictionaryWrapper;
 
 import java.io.File;
 import java.lang.reflect.ParameterizedType;
@@ -130,5 +133,18 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         }
 
         return providers;
+    }
+
+    @Override
+    public void ensureSequenceDictionaryExists(File referenceFasta, Logger log, boolean forceRecreate) throws PipelineJobException
+    {
+        new CreateSequenceDictionaryWrapper(log).execute(referenceFasta, false);
+    }
+
+    @Override
+    public String getUnzippedBaseName(String filename)
+    {
+        filename = filename.replaceAll("\\.gz$", "");
+        return FilenameUtils.getBaseName(filename);
     }
 }

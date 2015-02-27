@@ -12,10 +12,13 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
+import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -75,6 +78,23 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         getPipelineJob().setExperimentRunRowId(runId);
 
+        //create analysisRecord
+        AnalysisModelImpl am = new AnalysisModelImpl();
+        am.setContainer(getJob().getContainerId());
+        am.setDescription(getPipelineJob().getDescription());
+        am.setRunId(runId);
+        //am.setReadset();
+        //am.setLibraryId();
+
+        am.setCreated(new Date());
+        am.setModified(new Date());
+        am.setCreatedby(getJob().getUser().getUserId());
+        am.setModifiedby(getJob().getUser().getUserId());
+        am.setType(getPipelineJob().getHandler().getName());
+        TableInfo analysisTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
+        Table.insert(getJob().getUser(), analysisTable, am);
+        int analysisId = am.getRowId();
+
         if (!getPipelineJob().getOutputsToCreate().isEmpty())
         {
             getJob().getLogger().info("creating " + getPipelineJob().getOutputsToCreate().size() + " new output files");
@@ -83,6 +103,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
             for (SequenceOutputFile o : getPipelineJob().getOutputsToCreate())
             {
                 o.setRunId(runId);
+                o.setAnalysis_id(analysisId);
 
                 if (o.getDataId() == null && o.getFile() != null)
                 {

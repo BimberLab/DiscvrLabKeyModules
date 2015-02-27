@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis.run.bampostprocessing;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
@@ -39,7 +39,7 @@ public class RecalibrateBamStep extends AbstractPipelineStep implements BamProce
     }
 
     @Override
-    public Output processBam(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException
+    public Output processBam(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException
     {
         //BamProcessingOutputImpl output = new BamProcessingOutputImpl();
         //return output;

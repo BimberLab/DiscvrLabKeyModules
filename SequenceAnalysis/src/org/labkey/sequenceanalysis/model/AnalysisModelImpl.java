@@ -12,10 +12,10 @@ import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 
 import java.io.File;
 import java.util.Date;
@@ -279,18 +279,18 @@ public class AnalysisModelImpl implements AnalysisModel
         _library_id = library_id;
     }
 
-    public ReadsetModel getReadsetModel()
-    {
-        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
-        {
-            throw new IllegalArgumentException("This method can only be called from the webserver");
-        }
-
-        if (_readset == null)
-            return null;
-
-        return new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS)).getObject(_readset, ReadsetModel.class);
-    }
+//    public Readset getReadsetModel()
+//    {
+//        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+//        {
+//            throw new IllegalArgumentException("This method can only be called from the webserver");
+//        }
+//
+//        if (_readset == null)
+//            return null;
+//
+//        return new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS)).getObject(_readset, Readset.class);
+//    }
 
     private String getFilePath(Integer dataId)
     {

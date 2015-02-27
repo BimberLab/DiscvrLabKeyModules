@@ -20,8 +20,6 @@ import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.laboratory.AbstractDataProvider;
-import org.labkey.api.laboratory.DetailsUrlWithLabelNavItem;
 import org.labkey.api.laboratory.DetailsUrlWithoutLabelNavItem;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.QueryCountNavItem;
@@ -37,7 +35,6 @@ import org.labkey.api.sequenceanalysis.AbstractSequenceDataProvider;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
-import org.labkey.sequenceanalysis.nav.ReadsetCountNavItem;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -160,9 +157,10 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         NavItem nav = new SequenceNavItem(this, LaboratoryService.NavItemCategory.reports);
         if (nav.isVisible(c, u))
         {
-            items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Analyses"));
             items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Readsets"));
+            items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Analyses"));
             items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Outputs"));
+            items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSIS_SETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "File Sets"));
         }
 
         return items;
@@ -215,14 +213,20 @@ public class SequenceProvider extends AbstractSequenceDataProvider
 
         if (category == SequenceNavItemCategory.summary)
         {
-            ret.add(new ReadsetCountNavItem(this, LaboratoryService.NavItemCategory.data, "Sequence", "Readsets Imported"));
-            ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, "Sequence", "Alignments Created"));
+            ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, LaboratoryService.NavItemCategory.data, "Sequence", "Readsets"));
+            //ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ALIGNMENTS, LaboratoryService.NavItemCategory.data, "Sequence", "Alignments"));
+            ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, "Sequence", "Analyses"));
             ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES, LaboratoryService.NavItemCategory.data, "Sequence", "Output Files"));
+            //ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSIS_SETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "File Groups"));
         }
         else if (category == SequenceNavItemCategory.references)
         {
             ret.add(DetailsUrlWithoutLabelNavItem.createForQuery(this, u, c, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES, "Reference Sequences", LaboratoryService.NavItemCategory.data, "Sequence"));
             ret.add(DetailsUrlWithoutLabelNavItem.createForQuery(this, u, c, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES, "Reference Genomes", LaboratoryService.NavItemCategory.data, "Sequence"));
+        }
+        else if (category == SequenceNavItemCategory.misc)
+        {
+            ret.add(DetailsUrlWithoutLabelNavItem.createForQuery(this, u, c, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_INSTRUMENT_RUNS, "Instrument Runs", LaboratoryService.NavItemCategory.misc, "Sequence"));
         }
 
         return Collections.unmodifiableList(ret);

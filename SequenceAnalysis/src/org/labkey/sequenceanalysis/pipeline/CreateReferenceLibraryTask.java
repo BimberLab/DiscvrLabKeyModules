@@ -183,7 +183,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             fasta.createNewFile();
             fasta = FileUtil.getAbsoluteCaseSensitiveFile(fasta);
 
-            idFile = new File(outputDir, rowId + "_" + getPipelineJob().getName().replace(" ", "_") + ".idKey.txt");
+            idFile = new File(outputDir, rowId + "_" + FileUtil.makeLegalName(getPipelineJob().getName()) + ".idKey.txt");
             if (idFile.exists())
             {
                 idFile.delete();

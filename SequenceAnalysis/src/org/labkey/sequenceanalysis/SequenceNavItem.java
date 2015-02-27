@@ -93,8 +93,8 @@ public class SequenceNavItem extends AbstractImportingNavItem
     public JSONObject toJSON(Container c, User u)
     {
         JSONObject ret = super.toJSON(c, u);
-        ret.put("assayRunTemplateText", "Create Readsets");
-        ret.put("uploadResultsText", "Upload Raw Data");
+        ret.put("assayRunTemplateText", "Plan Sequence Run (Create Readsets)");
+        ret.put("uploadResultsText", "Upload/Import Data");
         ret.put("supportsRunTemplates", true);
         ret.put("assayRunTemplateUrl", getUrlObject(getAssayRunTemplateUrl(c, u)));
 

@@ -9,6 +9,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 
 import java.io.File;
 import java.util.Arrays;
@@ -121,11 +122,16 @@ public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask
                 throw new PipelineJobException("Reference file does not exist: " + refFasta.getPath());
             }
 
-            assert getJob() instanceof SequenceAnalysisJob;
-            ((SequenceAnalysisJob)getJob()).setReferenceGenome(output.getReferenceGenome());
+            SequenceAnalysisJob pipelineJob = getJob().getJobSupport(SequenceAnalysisJob.class);
+            pipelineJob.setReferenceGenome(output.getReferenceGenome());
 
             getHelper().getFileManager().addStepOutputs(action, output);
             getHelper().getFileManager().cleanup();
+
+            for (SequenceReadsetImpl rs : getHelper().getSettings().getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class)))
+            {
+                pipelineJob.cacheReadset(rs);
+            }
 
             return new RecordedActionSet(action);
         }

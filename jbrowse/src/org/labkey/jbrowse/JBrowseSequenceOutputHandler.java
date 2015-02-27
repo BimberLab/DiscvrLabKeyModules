@@ -38,7 +38,7 @@ public class JBrowseSequenceOutputHandler implements SequenceOutputHandler
     @Override
     public String getDescription()
     {
-        return null;
+        return "If the file types are supported, they will be imported into the JBrowse genome browser, allowing you to view and inspect the data.";
     }
 
     @Override
@@ -60,9 +60,9 @@ public class JBrowseSequenceOutputHandler implements SequenceOutputHandler
     }
 
     @Override
-    public LinkedHashSet<ClientDependency> getClientDependencies()
+    public LinkedHashSet<String> getClientDependencies()
     {
-        return new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("jbrowse/window/DatabaseWindow.js")));
+        return new LinkedHashSet<>(Arrays.asList("jbrowse/window/DatabaseWindow.js"));
     }
 
     @Override
@@ -97,6 +97,12 @@ public class JBrowseSequenceOutputHandler implements SequenceOutputHandler
 
     public class Processor implements OutputProcessor
     {
+        @Override
+        public void init(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        {
+
+        }
+
         @Override
         public void processFilesOnWebserver(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {

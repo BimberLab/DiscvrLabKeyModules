@@ -29,16 +29,19 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.run.util.BamMetricsRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
@@ -120,9 +123,9 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         ExpRun run = ExperimentService.get().getExpRun(runId);
         List<AnalysisModelImpl> analysisModels = new ArrayList<>();
 
-        for (ReadsetModel rs : taskHelper.getSettings().getReadsets())
+        for (SequenceReadsetImpl rs : taskHelper.getSettings().getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class)))
         {
-            String basename = SequenceTaskHelper.getUnzippedBaseName(rs.getFileName());
+            String basename = FileUtil.makeLegalName(rs.getName());
 
             AnalysisModelImpl model = new AnalysisModelImpl();
             model.setContainer(getJob().getContainer().getId());
@@ -141,7 +144,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 boolean found = false;
                 for (ExpData d : datas)
                 {
-                    if (basename.equals(SequenceTaskHelper.getUnzippedBaseName(d.getFile().getName())))
+                    if (basename.equals(FileUtil.getBaseName(d.getFile())))
                     {
                         if (found)
                         {
@@ -408,7 +411,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         return ret;
     }
 
-    public static List<AnalysisStep.Output> runAnalysesRemote(List<RecordedAction> actions, ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, List<PipelineStepProvider<AnalysisStep>> providers, SequenceTaskHelper taskHelper) throws PipelineJobException
+    public static List<AnalysisStep.Output> runAnalysesRemote(List<RecordedAction> actions, Readset rs, File inputBam, ReferenceGenome referenceGenome, List<PipelineStepProvider<AnalysisStep>> providers, SequenceTaskHelper taskHelper) throws PipelineJobException
     {
         List<AnalysisStep.Output> ret = new ArrayList<>();
         for (PipelineStepProvider<AnalysisStep> provider : providers)

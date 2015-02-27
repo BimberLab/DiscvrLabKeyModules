@@ -15,14 +15,28 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import com.drew.lang.annotations.Nullable;
+import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.ConvertHelper;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.model.ReadData;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.util.DateUtil;
+import org.labkey.sequenceanalysis.FileGroup;
+import org.labkey.sequenceanalysis.ReadDataImpl;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 
+import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,7 +55,8 @@ import java.util.TreeMap;
 public class SequencePipelineSettings
 {
     private Map<String, String> _params;
-    private List<ReadsetModel> _readsets = null;
+    private List<SequenceReadsetImpl> _readsets = null;
+    private List<FileGroup> _fileGroups = null;
 
     //instrument import
     private String _runName;
@@ -68,38 +83,75 @@ public class SequencePipelineSettings
     {
         _runName = _params.get("runName");
         _instrumentId = getInt(_params.get("instrumentId"));
-        _runDate = ConvertHelper.convert(_params.get("runDate"), Date.class);
+        _runDate = StringUtils.trimToNull(_params.get("runDate")) == null ? null : ConvertHelper.convert(_params.get("runDate"), Date.class);
     }
 
-    private List<ReadsetModel> parseReadsets()
+    private void parseReadsets(@Nullable SequenceAnalysisJob job) throws PipelineJobException
     {
-        List<ReadsetModel> readsets = new ArrayList<>();
+        _readsets = new ArrayList<>();
+        _fileGroups = new ArrayList<>();
+
         for (String key : _params.keySet())
         {
-            if (key.startsWith("sample_"))
+            if (key.startsWith("fileGroup_"))
             {
-                readsets.add(createReadsetModel(new JSONObject(_params.get(key))));
+                _fileGroups.add(createFileGroup(new JSONObject(_params.get(key)), job));
             }
         }
 
-        return readsets;
+        for (String key : _params.keySet())
+        {
+            if (key.startsWith("readset_"))
+            {
+                JSONObject json = new JSONObject(_params.get(key));
+                SequenceReadsetImpl rs = createReadsetModel(json);
+                _readsets.add(rs);
+            }
+        }
     }
 
-    public ReadsetModel createReadsetModel(JSONObject o)
+    private FileGroup createFileGroup(JSONObject o, @Nullable SequenceAnalysisJob job) throws PipelineJobException
     {
-        ReadsetModel model = new ReadsetModel();
-        //_rawJSON = o;
-        model.setFileName(o.getString("fileName"));
-        model.setFileName2(o.getString("fileName2"));
-        //these will be set by the task
-        model.setFileId(null); //getInt(o.getString("fileId"));
-        model.setFileId2(null); //getInt(o.getString("fileId2"));
-        model.setMid5(o.getString("mid5"));
-        model.setMid3(o.getString("mid3"));
+        if (!o.containsKey("files"))
+        {
+            throw new PipelineJobException("Malformed file group JSON");
+        }
 
-        //if this is normalization, the inputs used in this pipeline are actually the raw inputs
-        //_rawInputFile = getInt(o.getString("fileId"));
-        //_rawInputFile2 = getInt(o.getString("fileId2"));
+        JSONArray files = o.getJSONArray("files");
+        FileGroup fg = new FileGroup();
+        fg.name = o.getString("name");
+
+        for (JSONObject json : files.toJSONObjectArray())
+        {
+            FileGroup.FilePair p = new FileGroup.FilePair();
+            p.platformUnit = StringUtils.trimToNull(json.getString("platformUnit"));
+            p.centerName = StringUtils.trimToNull(json.getString("centerName"));
+
+            if (json.containsKey("file1"))
+            {
+                JSONObject fileJson = json.getJSONObject("file1");
+                File f = resolveFile(fileJson, job);
+                p.file1 = f;
+            }
+
+            if (json.containsKey("file2"))
+            {
+                File f = resolveFile(json.getJSONObject("file2"), job);
+                p.file2 = f;
+            }
+
+            fg.filePairs.add(p);
+        }
+
+        return fg;
+    }
+
+    public SequenceReadsetImpl createReadsetModel(JSONObject o)
+    {
+        SequenceReadsetImpl model = new SequenceReadsetImpl();
+
+        model.setBarcode5(o.getString("barcode5"));
+        model.setBarcode3(o.getString("barcode3"));
         model.setSampleId(getInt(o.getString("sampleid")));
         model.setSubjectId(o.getString("subjectid"));
         model.setComments(o.getString("comments"));
@@ -121,10 +173,72 @@ public class SequencePipelineSettings
         model.setSampleType(o.getString("sampletype"));
         model.setLibraryType(o.getString("librarytype"));
         model.setName(o.getString("readsetname"));
-        model.setReadsetId(getInt(o.getString("readset")));
-        model.setInstrumentRunId(getInt(o.getString("instrument_run_id")));
+        if (StringUtils.trimToNull(o.getString("readset")) != null)
+            model.setRowId(getInt(o.getString("readset")));
+
+        if (StringUtils.trimToNull(o.getString("instrument_run_id")) != null)
+            model.setInstrumentRunId(o.getInt("instrument_run_id"));
+
+        if (o.containsKey("fileGroupId"))
+        {
+            model.setFileSetName(o.getString("fileGroupId"));
+        }
 
         return model;
+    }
+
+    private File resolveFile(JSONObject json, @Nullable SequenceAnalysisJob job)
+    {
+        if (json.containsKey("dataId"))
+        {
+            Integer dataId = ConvertHelper.convert(json.get("dataId"), Integer.class);
+            if (dataId != null)
+            {
+                if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
+                {
+                    ExpData d = ExperimentService.get().getExpData(dataId);
+                    if (d == null)
+                    {
+                        throw new IllegalArgumentException("Unable to find ExpData: " + json.get("dataId"));
+                    }
+
+                    return d.getFile();
+                }
+                else
+                {
+                    if (job != null && job.getCachedData(dataId) != null)
+                    {
+                        job.getLogger().debug("found using cached ExpData");
+                        return job.getCachedData(dataId);
+                    }
+                }
+            }
+        }
+
+        if (json.containsKey("fileName"))
+        {
+            //resolve based on inputs
+            if (job != null)
+            {
+                for (File input : job.getJobSupport(FileAnalysisJobSupport.class).getInputFiles())
+                {
+                    if (input.getName().equals(json.getString("fileName")))
+                    {
+                        if (input.exists())
+                        {
+                            return input;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (job != null)
+        {
+            job.getLogger().error("unable to find file: " + json.toString());
+        }
+
+        return null;
     }
 
     private Integer getInt(String v)
@@ -188,14 +302,31 @@ public class SequencePipelineSettings
         return ("true".equals(_params.get("debugMode")));
     }
 
-    public List<ReadsetModel> getReadsets()
+    public List<SequenceReadsetImpl> getReadsets(@Nullable SequenceAnalysisJob job)
     {
         if (_readsets == null)
         {
-            _readsets = parseReadsets();
+            try
+            {
+                parseReadsets(job);
+            }
+            catch (PipelineJobException e)
+            {
+                throw new IllegalArgumentException(e.getMessage());
+            }
         }
 
         return _readsets;
+    }
+
+    public List<FileGroup> getFileGroups(SequenceAnalysisJob job) throws PipelineJobException
+    {
+        if (_fileGroups == null)
+        {
+            parseReadsets(job);
+        }
+
+        return _fileGroups;
     }
 
     public String getRunName()

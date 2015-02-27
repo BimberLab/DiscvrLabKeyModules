@@ -23,3 +23,19 @@ SELECT
 FROM assay.GenotypeAssay.Genotype.Data a
 WHERE a.run.assayType = 'SBT'
 GROUP BY a.subjectid, a.marker
+
+UNION ALL
+
+SELECT
+  DISTINCT s.subjectId as Id,
+  p.ref_nt_name as allele,
+  null as shortName,
+  1 as totalTests,
+  cast('NEG' as varchar) as result,
+  cast('SBT' as varchar) as type
+
+--we want any IDs with SBT data, but lacking data for these special-cased markers
+FROM genotypeassays.primer_pairs p
+FULL JOIN (SELECT DISTINCT subjectId FROM assay.GenotypeAssay.Genotype.Data s WHERE s.run.assayType = 'SBT') s ON (1=1)
+LEFT JOIN assay.GenotypeAssay.Genotype.Data a ON (a.run.assayType = 'SBT' AND p.ref_nt_name = a.marker AND a.subjectid = s.subjectid)
+WHERE a.rowid IS NULL AND (p.ref_nt_name LIKE 'Mamu-A%' OR p.ref_nt_name LIKE 'Mamu-B%')

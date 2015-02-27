@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.ObjectFactory;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.exp.ExperimentRunTypeSource;
@@ -43,6 +44,8 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.button.GenomeLoadButton;
 import org.labkey.sequenceanalysis.button.QualiMapButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
+import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
+import org.labkey.sequenceanalysis.model.UnderscoreBeanObjectFactory;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerPipelineProvider;
@@ -100,7 +103,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.292;
+        return 12.293;
     }
 
     public boolean hasScripts()
@@ -193,6 +196,9 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new CoverageDepthHandler());
         SequenceAnalysisService.get().registerFileHandler(new GenotypeGVCFHandler());
         SequenceAnalysisService.get().registerFileHandler(new AlignmentMetricsHandler());
+
+        //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
+        //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));
     }
 
     @Override
@@ -265,6 +271,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
             Barcoder.TestCase.class,
             BamIterator.TestCase.class,
             TestHelper.SequenceImportPipelineTestCase.class,
+            //TestHelper.SequenceAnalysisPipelineTestCase2.class,
             TestHelper.SequenceAnalysisPipelineTestCase.class
         ));
 

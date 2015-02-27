@@ -9,8 +9,8 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
-import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.SamFormatConverterWrapper;
 

@@ -1,2 +1,11 @@
-tr.fileNames td { border-bottom: thin solid black; }
-table.fileNames td { padding: 5px 50px 5px 5px; }
+tr.fileNames td {
+    border-bottom: thin solid black;
+}
+
+table.fileNames td {
+    padding: 5px 50px 5px 5px;
+}
+
+div.ddhover {
+    background-color: #F4F4F4;
+}

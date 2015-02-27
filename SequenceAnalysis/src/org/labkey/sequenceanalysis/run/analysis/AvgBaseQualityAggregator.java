@@ -19,6 +19,7 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.SamLocusIterator;
@@ -43,12 +44,19 @@ public class AvgBaseQualityAggregator
     private File _bai;
     private File _ref;
     private Map<Integer, Map<String, Double>> _quals = null;
+    private List<SamRecordFilter> _filters = null;
 
     public AvgBaseQualityAggregator(Logger log, File bam, File refFasta) throws FileNotFoundException
+    {
+        this(log, bam, refFasta, null);
+    }
+
+    public AvgBaseQualityAggregator(Logger log, File bam, File refFasta, List<SamRecordFilter> filters) throws FileNotFoundException
     {
         _log = log;
         _bam = bam;
         _ref = refFasta;
+        _filters = filters;
 
         _bai = new File(_bam.getPath() + ".bai");
         if(!_bai.exists())
@@ -121,6 +129,11 @@ public class AvgBaseQualityAggregator
         try (SamLocusIterator sli = new SamLocusIterator(sam, il, true))
         {
             sli.setEmitUncoveredLoci(false);
+            if (this._filters != null)
+            {
+                _log.debug("using custom filters for SamLocusIterator");
+                sli.setSamFilters(_filters);
+            }
 
             Iterator<SamLocusIterator.LocusInfo> it = sli.iterator();
             int idx = 0;

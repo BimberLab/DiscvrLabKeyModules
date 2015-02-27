@@ -28,11 +28,12 @@ public class SortSamWrapper extends PicardWrapper
     //if outputFile is null, the input will be replaced
     public File execute(File inputFile, @Nullable File outputFile, SAMFileHeader.SortOrder order) throws PipelineJobException
     {
-        getLogger().info("Coordinate Sorting BAM: " + inputFile.getPath());
+        getLogger().info("Sorting BAM: " + inputFile.getPath());
 
         File outputBam = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".sorted.bam") : outputFile;
         List<String> params = new ArrayList<>();
         params.add("java");
+        params.addAll(getBaseParams());
         params.add("-jar");
         params.add(getJar().getPath());
 
@@ -72,7 +73,7 @@ public class SortSamWrapper extends PicardWrapper
     {
         List<String> params = new LinkedList<>();
         params.add("java");
-        //params.add("-Xmx4g");
+        params.addAll(getBaseParams());
         params.add("-jar");
         params.add(getJar().getPath());
 

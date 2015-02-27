@@ -69,6 +69,7 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.ParamParser;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
@@ -80,6 +81,7 @@ import org.labkey.api.pipeline.file.AbstractFileAnalysisJob;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocol;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocolFactory;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisProvider;
+import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.pipeline.file.FileAnalysisTaskPipeline;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
@@ -98,6 +100,8 @@ import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceDataProvider;
+import org.labkey.api.sequenceanalysis.model.ReadData;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.ParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
@@ -122,7 +126,6 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.webdav.WebdavResource;
 import org.labkey.api.webdav.WebdavService;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -134,6 +137,7 @@ import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
+import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByCodonAggregator;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByReadAggregator;
@@ -146,6 +150,7 @@ import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.run.util.QualiMapRunner;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.FastqUtils;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 import org.labkey.sequenceanalysis.visualization.VariationChart;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
@@ -228,8 +233,19 @@ public class SequenceAnalysisController extends SpringActionController
             {
                 for (int id : form.getReadsets())
                 {
-                    SequenceReadset rs = SequenceReadset.getFromId(getContainer(), id);
-                    files.addAll(rs.getExpDatasForReadset(getUser()));
+                    SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(id, getUser());
+                    for (ReadDataImpl d : rs.getReadData())
+                    {
+                        if (d.getFile1() != null)
+                        {
+                            files.add(d.getFile1());
+                        }
+
+                        if (d.getFile2() != null)
+                        {
+                            files.add(d.getFile2());
+                        }
+                    }
                 }
             }
 
@@ -628,33 +644,6 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
-    @CSRF
-    public class RunVariantEvalAction extends ApiAction<RunVariantEvalForm>
-    {
-        public ApiResponse execute(RunVariantEvalForm form, BindException errors) throws Exception
-        {
-            Map<String, Object> ret = new HashMap<>();
-
-            return new ApiSimpleResponse(ret);
-        }
-    }
-
-    public static class RunVariantEvalForm
-    {
-        int[] _dataIds;
-
-        public int[] getDataIds()
-        {
-            return _dataIds;
-        }
-
-        public void setDataIds(int[] dataIds)
-        {
-            _dataIds = dataIds;
-        }
-    }
-
     @RequiresPermissionClass(ReadPermission.class)
     @CSRF
     public class GetAnalysisToolDetailsAction extends ApiAction<Object>
@@ -831,6 +820,11 @@ public class SequenceAnalysisController extends SpringActionController
                                 map.put("error", msg);
                             }
 
+                            if (SequenceUtil.FILETYPE.bam.getFileType().isType((f)))
+                            {
+                                map.put("readgroups", SequenceUtil.getReadGroupsForBam(f));
+                            }
+
                             fileInfo.add(map);
                         }
                     }
@@ -848,6 +842,10 @@ public class SequenceAnalysisController extends SpringActionController
                         map.put("dataId", d.getRowId());
                         map.put("container", getContainer().getId());
                         map.put("containerPath", getContainer().getPath());
+                        if (SequenceUtil.FILETYPE.bam.getFileType().isType((d.getFile())))
+                        {
+                            map.put("readgroups", SequenceUtil.getReadGroupsForBam(d.getFile()));
+                        }
 
                         String basename = SequenceTaskHelper.getUnzippedBaseName(d.getFile().getName());
                         map.put("basename", basename);
@@ -871,24 +869,24 @@ public class SequenceAnalysisController extends SpringActionController
                         SqlSelector ss = new SqlSelector(ExperimentService.get().getSchema(), sql);
                         if (ss.getRowCount() > 0)
                         {
-                            String msg = "File has already been used as an input for readsets";
+                            String msg = "File has already been used as an input for readsets: " + d.getFile().getName();
                             errorsList.add(msg);
                             map.put("error", msg);
                         }
 
-                        TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
+                        TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
                         //forward reads
-                        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("fileid"), d.getRowId());
+                        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("fileid1"), d.getRowId());
                         Container c = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
                         filter.addClause(ContainerFilter.CURRENT.createFilterClause(SequenceAnalysisSchema.getInstance().getSchema(), FieldKey.fromString("container"), c));
-                        TableSelector ts = new TableSelector(ti, Collections.singleton("rowid"), filter, null);
+                        TableSelector ts = new TableSelector(ti, Collections.singleton("readset"), filter, null);
                         Integer[] readsets1 = ts.getArray(Integer.class);
 
                         //reverse reads
-                        SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("fileid"), d.getRowId());
+                        SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("fileid2"), d.getRowId());
                         filter2.addClause(ContainerFilter.CURRENT.createFilterClause(SequenceAnalysisSchema.getInstance().getSchema(), FieldKey.fromString("container"), c));
-                        TableSelector ts2 = new TableSelector(ti, Collections.singleton("rowid"), filter2, null);
+                        TableSelector ts2 = new TableSelector(ti, Collections.singleton("readset"), filter2, null);
                         Integer[] readsets2 = ts2.getArray(Integer.class);
 
 
@@ -1661,7 +1659,7 @@ public class SequenceAnalysisController extends SpringActionController
             return execute(form, pr, dirData, factory);
         }
 
-        protected ApiResponse execute(AnalyzeForm form, PipeRoot root, File dirData, AbstractFileAnalysisProtocolFactory factory) throws IOException, PipelineValidationException
+        protected ApiResponse execute(AnalyzeForm form, PipeRoot root, File dirData, AbstractFileAnalysisProtocolFactory factory) throws IOException, PipelineValidationException, PipelineJobException
         {
             try
             {
@@ -1692,19 +1690,23 @@ public class SequenceAnalysisController extends SpringActionController
                 if (form.getSplitJobs())
                 {
                     List<String> jobGUIDs = new ArrayList<>();
-                    Map<ReadsetModel, Pair<File, File>> toRun = SequenceAlignmentTask.getAlignmentFiles(params, filesInputList, false);
-                    _log.info("creating split sequence jobs for " + filesInputList.size() + " files.  These divided into: " + toRun.size() + " jobs.");
                     int idx = 1;
-                    for (Pair<File, File> files : toRun.values())
+                    SequencePipelineSettings settings = new SequencePipelineSettings(params);
+                    List<SequenceReadsetImpl> readsets = settings.getReadsets(null);
+                    _log.info("creating split sequence jobs for " + filesInputList.size() + " files.  These divided into: " + readsets + " jobs.");
+                    for (SequenceReadsetImpl r : readsets)
                     {
                         List<File> fileList = new ArrayList<>();
-                        fileList.add(files.first);
-                        if (files.second != null)
+                        for (ReadDataImpl d : r.getReadData())
                         {
-                            fileList.add(files.second);
+                            fileList.add(d.getFile1());
+                            if (d.getFile2() != null)
+                            {
+                                fileList.add(d.getFile2());
+                            }
                         }
 
-                        String protocolName = form.getProtocolName() + (toRun.size() == 1 ? "" : "_" + idx);
+                        String protocolName = form.getProtocolName() + "_" + idx;
                         AbstractFileAnalysisProtocol protocol = getFileAnalysisProtocol(form, taskPipeline, params, root, dirData, factory, protocolName);
                         protocol.getFactory().ensureDefaultParameters(root);
 
@@ -1716,7 +1718,6 @@ public class SequenceAnalysisController extends SpringActionController
                             protocol.saveInstance(fileParameters, getContainer());
                         }
 
-                        _log.info("starting for file(s): " + fileList.get(0).getName() + (files.second != null ? " and " + fileList.get(1).getName() : ""));
                         AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, protocolName, getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, fileList);
                         PipelineService.get().queueJob(job);
                         jobGUIDs.add(job.getJobGUID());
@@ -2862,7 +2863,7 @@ public class SequenceAnalysisController extends SpringActionController
 
     @RequiresPermissionClass(InsertPermission.class)
     @CSRF
-    public class CheckFileStatusAction extends ApiAction<CheckFileStatusForm>
+    public class CheckFileStatusForHandlerAction extends ApiAction<CheckFileStatusForm>
     {
         public ApiResponse execute(CheckFileStatusForm form, BindException errors)
         {
@@ -3507,7 +3508,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                     ExpData data = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
                     data.setName(file.getName());
-                    data.setDataFileURI(file.toURI());
+                    data.setDataFileURI(target.toURI());
                     data.save(getUser());
 
                     Map<String, Object> params = toCreate.get(file);
@@ -3609,4 +3610,110 @@ public class SequenceAnalysisController extends SpringActionController
 //            return new ApiSimpleResponse(ret);
 //        }
 //    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    @CSRF
+    public class GetAvailableHandlersAction extends ApiAction<GetAvailableHandlersForm>
+    {
+        public ApiResponse execute(GetAvailableHandlersForm form, BindException errors) throws Exception
+        {
+            Map<String, Object> ret = new HashMap<>();
+            Set<JSONObject> availableHandlers = new HashSet<>();
+            List<Integer> outputFileIds = new ArrayList<>();
+            for (int i : form.getOutputFileIds())
+            {
+                outputFileIds.add(i);
+            }
+            List<SequenceOutputFile> outputFiles = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), new SimpleFilter(FieldKey.fromString("rowid"), outputFileIds, CompareType.IN), null).getArrayList(SequenceOutputFile.class);
+
+            if (form.getOutputFileIds() == null || form.getOutputFileIds().length == 0)
+            {
+                errors.reject(ERROR_MSG, "No output files provided");
+            }
+
+            //test permissions
+            List<JSONObject> outputFileJson = new ArrayList<>();
+            for (SequenceOutputFile o : outputFiles)
+            {
+                Container c = ContainerManager.getForId(o.getContainer());
+                if (c == null || !c.hasPermission(getUser(), ReadPermission.class))
+                {
+                    throw new UnauthorizedException("You do not have permission to view all of the selected files");
+                }
+
+                JSONObject j = new JSONObject();
+                File f = o.getFile();
+                j.put("name", o.getName());
+                j.put("libraryId", o.getLibrary_id());
+                j.put("container", o.getContainer());
+
+                if (f != null)
+                {
+                    j.put("fileName", f.getName());
+                }
+                outputFileJson.add(j);
+            }
+
+            List<JSONObject> partialHandlers = new ArrayList<>();
+            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers())
+            {
+                boolean available = true;
+                JSONObject json = new JSONObject();
+                json.put("name", handler.getName());
+                json.put("description", handler.getDescription());
+                json.put("handlerClass", handler.getClass().getName());
+
+                List<Integer> availableIds = new ArrayList<>();
+                for (SequenceOutputFile o : outputFiles)
+                {
+                    if (handler.canProcess(o))
+                    {
+                        availableIds.add(o.getRowid());
+                    }
+                    else
+                    {
+                        available = false;
+                    }
+                }
+
+                if (available)
+                {
+                    ActionURL url = handler.getButtonSuccessUrl(getContainer(), getUser(), Arrays.asList(ArrayUtils.toObject(form.getOutputFileIds())));
+                    if (url != null)
+                    {
+                        json.put("successUrl", url.toString());
+                    }
+                    json.put("jsHandler", handler.getButtonJSHandler());
+
+                    availableHandlers.add(json);
+                }
+                else if (!availableIds.isEmpty())
+                {
+                    json.put("files", availableIds);
+                    partialHandlers.add(json);
+                }
+            }
+
+            ret.put("handlers", availableHandlers);
+            ret.put("partialHandlers", partialHandlers);
+            ret.put("outputFiles", outputFileJson);
+
+            return new ApiSimpleResponse(ret);
+        }
+    }
+
+    public static class GetAvailableHandlersForm
+    {
+        int[] _outputFileIds;
+
+        public int[] getOutputFileIds()
+        {
+            return _outputFileIds;
+        }
+
+        public void setOutputFileIds(int[] outputFileIds)
+        {
+            _outputFileIds = outputFileIds;
+        }
+    }
 }

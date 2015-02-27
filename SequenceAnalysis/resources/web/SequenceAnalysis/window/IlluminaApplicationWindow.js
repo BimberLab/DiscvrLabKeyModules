@@ -4,6 +4,14 @@ Ext4.define('SequenceAnalysis.window.IlluminaApplicationWindow', {
     closeAction: 'destroy',
     title: 'Import Illumina Application',
 
+    statics: {
+        importApplicationHandler: function(dataRegionName, btn){
+            Ext4.create('SequenceAnalysis.window.IlluminaApplicationWindow', {
+                dataRegionName: dataRegionName
+            }).show(btn);
+        }
+    },
+
     items: [{
         xtype: 'form',
         width: 612,

@@ -2,6 +2,8 @@ package org.labkey.sequenceanalysis.util;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import htsjdk.samtools.fastq.AsyncFastqWriter;
+import htsjdk.samtools.fastq.BasicFastqWriter;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
@@ -12,18 +14,23 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.TestHelper;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 import org.labkey.sequenceanalysis.model.SequenceTag;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * User: bimber
@@ -51,114 +59,137 @@ public class Barcoder extends AbstractSequenceMatcher
         _logger = logger;
     }
 
-    public Set<File> demultiplexFile(File fastq, List<ReadsetModel> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir)
+    public Set<File> demultiplexFile(File fastq, List<Readset> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir) throws IOException
     {
         return demultiplexPair(Pair.<File, File>of(fastq, null), readsets, barcodes, outputDir);
     }
 
-    public Set<File> demultiplexPair(Pair<File, File> fastqs, List<ReadsetModel> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir)
+    public Set<File> demultiplexFiles(List<File> fastqs, List<Readset> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir) throws IOException
     {
-        if (outputDir == null)
-            outputDir = fastqs.first.getParentFile();
-
-        _outputDir = outputDir;
-        _outputDir.mkdirs();
-
-        for (BarcodeModel m : barcodes)
+        List<Pair<File, File>> fastqPairs = new ArrayList<>();
+        for (File f : fastqs)
         {
-            _barcodes.put(m.getName(), m);
+            fastqPairs.add(Pair.<File, File>of(f, null));
         }
 
-        if (_createDetailedLog)
+        return demultiplexPairs(fastqPairs, readsets, barcodes, outputDir);
+    }
+
+    public Set<File> demultiplexPair(Pair<File, File> fastqs, List<Readset> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir) throws IOException
+    {
+        return demultiplexPairs(Arrays.asList(fastqs), readsets, barcodes, outputDir);
+    }
+
+    public Set<File> demultiplexPairs(List<Pair<File, File>> fastqPairs, List<Readset> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir) throws IOException
+    {
+        try
         {
-            initDetailLog(fastqs.first);
-        }
+            if (outputDir == null)
+                outputDir = fastqPairs.get(0).first.getParentFile();
 
-        if (_createSummaryLog)
-        {
-            initSummaryLog(fastqs.first);
-        }
+            _outputDir = outputDir;
+            _outputDir.mkdirs();
 
-        _sequenceMatch5Counts =  new TreeMap<>();
-        _sequenceMatch3Counts =  new TreeMap<>();
-        _readsetCounts = new TreeMap<>();
-        _otherMatches = new TreeMap<>();
-
-        _fileMap = new HashMap<>();
-
-        _logger.info("Scanning file for barcodes: " + fastqs.first.getPath());
-        if (fastqs.second != null)
-        {
-            _logger.info("\tand: " + fastqs.second.getPath());
-        }
-
-        _logger.info("\tMismatches tolerated: " + _editDistance);
-        _logger.info("\tBarcode can be within " + _offsetDistance + " bases of the sequence end");
-        _logger.info("\tDeletions tolerated (allows partial barcodes): " + _deletionsAllowed);
-
-        _logger.info("\tThe following barcode combinations will be used:");
-        Map<String, SequenceTag> barcodes5 = new HashMap<>();
-        Map<String, SequenceTag> barcodes3 = new HashMap<>();
-
-        for (ReadsetModel rs : readsets)
-        {
-            _logger.info("\t\t" + rs.getName() + ": " + rs.getMid5() + (rs.getMid3() != null ? ", " + rs.getMid3() : ""));
-
-            if (rs.getMid5() != null)
+            for (BarcodeModel m : barcodes)
             {
-                BarcodeModel model = _barcodes.get(rs.getMid5());
-                if (model == null)
-                    throw new IllegalArgumentException("Readset uses a 5' barcode that was not supplied: [" + rs.getMid5() + "]");
-                barcodes5.put(model.getName(), model);
+                _barcodes.put(m.getName(), m);
             }
 
-            if (rs.getMid3() != null)
+            if (_createDetailedLog)
             {
-                BarcodeModel model = _barcodes.get(rs.getMid3());
-                if (model == null)
-                    throw new IllegalArgumentException("Readset uses a 3' barcode that was not supplied: [" + rs.getMid3() + "]");
-                barcodes3.put(model.getName(), model);
-            }
-        }
-
-        if (_scanAll)
-        {
-            for (BarcodeModel barcode : _barcodes.values())
-            {
-                barcodes5.put(barcode.getName(), barcode);
-                barcodes3.put(barcode.getName(), barcode);
-            }
-        }
-
-        _logger.info("\tWill scan for a total of " + _barcodes.size() + " barcodes");
-
-        try (FastqReader reader1 = new FastqReader(fastqs.first);FastqReader reader2 = fastqs.second == null ? null : new FastqReader(fastqs.second))
-        {
-            Iterator<FastqRecord> it = reader1.iterator();
-            Iterator<FastqRecord> it2 = null;
-            if (reader2 != null)
-            {
-                it2 = reader2.iterator();
+                initDetailLog(fastqPairs.get(0).first);
             }
 
-            while (it.hasNext())
+            if (_createSummaryLog)
             {
-                if (reader2 == null)
+                initSummaryLog(fastqPairs.get(0).first);
+            }
+
+            _sequenceMatch5Counts = new TreeMap<>();
+            _sequenceMatch3Counts = new TreeMap<>();
+            _readsetCounts = new TreeMap<>();
+            _otherMatches = new TreeMap<>();
+
+            _fileMap = new HashMap<>();
+
+            _logger.info("Scanning file for barcodes");
+            _logger.info("\tMismatches tolerated: " + _editDistance);
+            _logger.info("\tBarcode can be within " + _offsetDistance + " bases of the sequence end");
+            _logger.info("\tDeletions tolerated (allows partial barcodes): " + _deletionsAllowed);
+
+            _logger.info("\tThe following barcode combinations will be used:");
+            Map<String, SequenceTag> barcodes5 = new HashMap<>();
+            Map<String, SequenceTag> barcodes3 = new HashMap<>();
+
+            for (Readset rs : readsets)
+            {
+                _logger.info("\t\t" + rs.getName() + ": " + rs.getBarcode5() + (rs.getBarcode3() != null ? ", " + rs.getBarcode3() : ""));
+
+                if (rs.getBarcode5() != null)
                 {
-                    FastqRecord rec = it.next();
-                    processSequence(fastqs.first, rec, readsets, barcodes5.values(), barcodes3.values());
+                    BarcodeModel model = _barcodes.get(rs.getBarcode5());
+                    if (model == null)
+                        throw new IllegalArgumentException("Readset uses a 5' barcode that was not supplied: [" + rs.getBarcode5() + "]");
+                    barcodes5.put(model.getName(), model);
                 }
-                else
+
+                if (rs.getBarcode3() != null)
                 {
-                    FastqRecord rec1 = it.next();
-                    if (!it2.hasNext())
+                    BarcodeModel model = _barcodes.get(rs.getBarcode3());
+                    if (model == null)
+                        throw new IllegalArgumentException("Readset uses a 3' barcode that was not supplied: [" + rs.getBarcode3() + "]");
+                    barcodes3.put(model.getName(), model);
+                }
+            }
+
+            if (_scanAll)
+            {
+                for (BarcodeModel barcode : _barcodes.values())
+                {
+                    barcodes5.put(barcode.getName(), barcode);
+                    barcodes3.put(barcode.getName(), barcode);
+                }
+            }
+
+            _logger.info("\tWill scan for a total of " + _barcodes.size() + " barcodes");
+
+            for (Pair<File, File> fastqs : fastqPairs)
+            {
+                _logger.info("processing file(s): " + fastqs.first.getPath());
+                if (fastqs.second != null)
+                {
+                    _logger.info("\tand: " + fastqs.second.getPath());
+                }
+
+                try (FastqReader reader1 = new FastqReader(fastqs.first); FastqReader reader2 = fastqs.second == null ? null : new FastqReader(fastqs.second))
+                {
+                    Iterator<FastqRecord> it = reader1.iterator();
+                    Iterator<FastqRecord> it2 = null;
+                    if (reader2 != null)
                     {
-                        throw new IllegalArgumentException("Second FASTQ has fewer records than the primary FASTQ");
+                        it2 = reader2.iterator();
                     }
 
-                    FastqRecord rec2 = it2.next();
+                    while (it.hasNext())
+                    {
+                        if (reader2 == null)
+                        {
+                            FastqRecord rec = it.next();
+                            processSequence(fastqs.first, rec, readsets, barcodes5.values(), barcodes3.values());
+                        }
+                        else
+                        {
+                            FastqRecord rec1 = it.next();
+                            if (!it2.hasNext())
+                            {
+                                throw new IllegalArgumentException("Second FASTQ has fewer records than the primary FASTQ");
+                            }
 
-                    processSequencePair(fastqs.first, fastqs.second, rec1, rec2, readsets, barcodes5.values(), barcodes3.values());
+                            FastqRecord rec2 = it2.next();
+
+                            processSequencePair(fastqs.first, fastqs.second, rec1, rec2, readsets, barcodes5.values(), barcodes3.values());
+                        }
+                    }
                 }
             }
         }
@@ -265,7 +296,7 @@ public class Barcoder extends AbstractSequenceMatcher
         }
     }
 
-    private void writeSummaryLine(FastqRecord rec, @Nullable ReadsetModel rs, SequenceMatch match5, SequenceMatch match3, int start, int stop, int originalLength)
+    private void writeSummaryLine(FastqRecord rec, @Nullable Readset rs, SequenceMatch match5, SequenceMatch match3, int start, int stop, int originalLength)
     {
         if (!_createSummaryLog)
             return;
@@ -276,17 +307,17 @@ public class Barcoder extends AbstractSequenceMatcher
 
     private File getDetailedLogFile(File fastq)
     {
-        String basename = FileUtil.getBaseName(fastq);
+        String basename = FileUtil.getBaseName(fastq.getName().replaceAll("\\.gz$", ""));
         return new File(_outputDir, basename + ".barcode-detailed.txt");
     }
 
     private File getSummaryLogFile(File fastq)
     {
-        String basename = FileUtil.getBaseName(fastq);
+        String basename = FileUtil.getBaseName(fastq.getName().replaceAll("\\.gz$", ""));
         return new File(_outputDir, basename + ".barcode-summary.txt");
     }
 
-    private void processSequencePair(File fastq1, File fastq2, FastqRecord rec1, FastqRecord rec2, List<ReadsetModel> readsets, Collection<SequenceTag> barcodes5, Collection<SequenceTag> barcodes3)
+    private void processSequencePair(File fastq1, File fastq2, FastqRecord rec1, FastqRecord rec2, List<Readset> readsets, Collection<SequenceTag> barcodes5, Collection<SequenceTag> barcodes3) throws IOException
     {
         Map<Integer, Map<String, SequenceMatch>> forwardMatches5 = new TreeMap<>();
         Map<Integer, Map<String, SequenceMatch>> forwardMatches3 = new TreeMap<>();
@@ -302,28 +333,28 @@ public class Barcoder extends AbstractSequenceMatcher
         SequenceMatch reverseBc5 = findBestMatch(reverseMatches5, _sequenceMatch5Counts);
         SequenceMatch reverseBc3 = findBestMatch(reverseMatches3, _sequenceMatch3Counts);
 
-        List<ReadsetModel> readsetMatches = new ArrayList<>();
-        for (ReadsetModel model : readsets)
+        List<Readset> readsetMatches = new ArrayList<>();
+        for (Readset model : readsets)
         {
             boolean forwardMatches = false;
             boolean reverseMatches = false;
 
             //either forward barcode is not null and matches the read's 5' barcode, or both are null
-            if (model.getMid5() != null && forwardBc5 != null && model.getMid5().equals(forwardBc5.getSequenceTag().getName()))
+            if (model.getBarcode5() != null && forwardBc5 != null && model.getBarcode5().equals(forwardBc5.getSequenceTag().getName()))
             {
                 forwardMatches = true;
             }
-            else if (model.getMid5() == null && forwardBc5 == null)
+            else if (model.getBarcode5() == null && forwardBc5 == null)
             {
                 forwardMatches = true;
             }
 
             //the 3' code is optional, since if we find the bc, this is probably read-through
-            if (model.getMid3() != null && reverseBc5 != null && model.getMid3().equals(reverseBc5.getSequenceTag().getName()))
+            if (model.getBarcode3() != null && reverseBc5 != null && model.getBarcode3().equals(reverseBc5.getSequenceTag().getName()))
             {
                 reverseMatches = true;
             }
-            else if (model.getMid3() == null && reverseBc5 == null)
+            else if (model.getBarcode3() == null && reverseBc5 == null)
             {
                 reverseMatches = true;
             }
@@ -346,7 +377,7 @@ public class Barcoder extends AbstractSequenceMatcher
         }
     }
 
-    private void processSequence(File fastq, FastqRecord rec, List<ReadsetModel> readsets, Collection<SequenceTag> barcodes5, Collection<SequenceTag> barcodes3)
+    private void processSequence(File fastq, FastqRecord rec, List<Readset> readsets, Collection<SequenceTag> barcodes5, Collection<SequenceTag> barcodes3) throws IOException
     {
         Map<Integer, Map<String, SequenceMatch>> matches5 = new TreeMap<>();
         Map<Integer, Map<String, SequenceMatch>> matches3 = new TreeMap<>();
@@ -357,23 +388,23 @@ public class Barcoder extends AbstractSequenceMatcher
         SequenceMatch bc3 = findBestMatch(matches3, _sequenceMatch3Counts);
 
         boolean found = false;
-        for (ReadsetModel model : readsets)
+        for (Readset model : readsets)
         {
-            if (model.getMid5() != null)
+            if (model.getBarcode5() != null)
             {
                 if (bc5 == null)
                     continue;
 
-                if (!model.getMid5().equals(bc5.getSequenceTag().getName()))
+                if (!model.getBarcode5().equals(bc5.getSequenceTag().getName()))
                     continue;
             }
 
-            if (model.getMid3() != null)
+            if (model.getBarcode3() != null)
             {
                 if (bc3 == null)
                     continue;
 
-                if (!model.getMid3().equals(bc3.getSequenceTag().getName()))
+                if (!model.getBarcode3().equals(bc3.getSequenceTag().getName()))
                     continue;
             }
 
@@ -387,7 +418,7 @@ public class Barcoder extends AbstractSequenceMatcher
         }
     }
 
-    private void addMatchingRead(File fastq, FastqRecord rec, @Nullable ReadsetModel rs, @Nullable SequenceMatch match5, @Nullable SequenceMatch match3, boolean includeInCounts)
+    private void addMatchingRead(File fastq, FastqRecord rec, @Nullable Readset rs, @Nullable SequenceMatch match5, @Nullable SequenceMatch match3, boolean includeInCounts) throws IOException
     {
         //a read would be excluded from counts if it is the second mate and the first-mate is already being counted
         if (includeInCounts)
@@ -433,11 +464,12 @@ public class Barcoder extends AbstractSequenceMatcher
         int start = (match5 == null ? 0 : match5.getStart());
         int stop = (match3 == null ? rec.getReadString().length() : match3.getStop());
 
+        //NOTE: always compressed now
         File output = new File(_outputDir, getOutputFilename(fastq, rs));
         FastqWriter writer = _fileMap.get(output);
         if (writer == null)
         {
-            writer = _fastqWriterFactory.newWriter(output);
+            writer = new AsyncFastqWriter(new BasicFastqWriter(new PrintStream(new GZIPOutputStream(new FileOutputStream(output)))), AsyncFastqWriter.DEFAULT_QUEUE_SIZE);
             _fileMap.put(output, writer);
         }
 
@@ -450,21 +482,21 @@ public class Barcoder extends AbstractSequenceMatcher
         }
     }
 
-    private String getOutputFilename(File fastq, @Nullable ReadsetModel rs)
+    public String getOutputFilename(File fastq, @Nullable Readset rs)
     {
-        String basename = FileUtil.getBaseName(fastq);
+        String basename = FileUtil.getBaseName(fastq.getName().replaceAll("\\.gz$", ""));
         if (rs != null)
         {
-            if (rs.getMid3() == null && rs.getMid5() != null)
-                return basename + "_" + rs.getMid5() + ".fastq";
-            else if (rs.getMid3() != null && rs.getMid5() != null)
-                return basename + "_" + rs.getMid5() + "_" + rs.getMid3() + ".fastq";
+            if (rs.getBarcode3() == null && rs.getBarcode5() != null)
+                return basename + "_" + rs.getBarcode5() + ".fastq.gz";
+            else if (rs.getBarcode3() != null && rs.getBarcode5() != null)
+                return basename + "_" + rs.getBarcode5() + "_" + rs.getBarcode3() + ".fastq.gz";
             else
                 throw new IllegalArgumentException("Improper readset for barcoding.  Must have either a 5' barcode or 5' + 3' barcodes.  Readset name was: " + rs.getName());
         }
         else
         {
-            return basename + "_unknowns.fastq";
+            return basename + "_unknowns.fastq.gz";
         }
     }
 
@@ -527,7 +559,7 @@ public class Barcoder extends AbstractSequenceMatcher
             testBarcoder(log, 1, 1, 1);
         }
 
-        private void testBarcoder(Logger log, int editDistance, int offset, int deletions)
+        private void testBarcoder(Logger log, int editDistance, int offset, int deletions) throws IOException
         {
             Barcoder bc = new Barcoder(log);
             bc.setCreateDetailedLog(true);
@@ -537,17 +569,17 @@ public class Barcoder extends AbstractSequenceMatcher
             bc.setOffsetDistance(offset);
             bc.setDeletionsAllowed(deletions);
 
-            List<ReadsetModel> readsets = getReadsets();
+            List<Readset> readsets = getReadsets();
             Set<BarcodeModel> barcodes5 = new HashSet<>();
             Set<BarcodeModel> barcodes3 = new HashSet<>();
-            for (ReadsetModel rs : getReadsets())
+            for (Readset rs : getReadsets())
             {
                 //we assume this is run w/ full access to the DB
-                if (rs.getMid5() != null)
-                    barcodes5.add(BarcodeModel.getByName(rs.getMid5()));
+                if (rs.getBarcode5() != null)
+                    barcodes5.add(BarcodeModel.getByName(rs.getBarcode5()));
 
-                if (rs.getMid3() != null)
-                    barcodes3.add(BarcodeModel.getByName(rs.getMid3()));
+                if (rs.getBarcode3() != null)
+                    barcodes3.add(BarcodeModel.getByName(rs.getBarcode3()));
             }
 
             List<BarcodeModel> allBarcodes = new ArrayList<>();
@@ -562,10 +594,8 @@ public class Barcoder extends AbstractSequenceMatcher
             Assert.assertTrue("Detailed log not found", detailLog.exists());
             detailLog.delete();
 
-            CSVReader reader = null;
-            try
+            try (CSVReader reader = new CSVReader(new FileReader(summaryLog), '\t'))
             {
-                reader = new CSVReader(new FileReader(summaryLog), '\t');
                 String[] line;
                 int lineNum = 0;
                 while ((line = reader.readNext()) != null)
@@ -642,22 +672,6 @@ public class Barcoder extends AbstractSequenceMatcher
                     readMap.put(key, count);
                 }
             }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e);
-            }
-            finally
-            {
-                try
-                {
-                    if (reader != null)
-                        reader.close();
-                }
-                catch (IOException e)
-                {
-                    //ignore
-                }
-            }
 
             summaryLog.delete();
 
@@ -676,12 +690,14 @@ public class Barcoder extends AbstractSequenceMatcher
                     }
 
                     String key;
-                    String[] tokens = FileUtil.getBaseName(f.getName()).split("_");
+                    String basename = FileUtil.getBaseName(f.getName().replaceAll("\\.gz$", ""));
+                    String[] tokens = basename.split("_");
                     if (tokens.length == 3)
                         key = tokens[1] + "_" +  tokens[2];
                     else
                         key = tokens[1];
 
+                    Assert.assertTrue("key missing: " + key, readMap.containsKey(key));
                     int expectedCount = readMap.get(key);
 
                     Assert.assertEquals("Incorrect read number for file: " + f.getName(), expectedCount, count);
@@ -699,50 +715,50 @@ public class Barcoder extends AbstractSequenceMatcher
         private BarcodeModel[] getBarcodes()
         {
             List<String> names = new ArrayList<>();
-            for (ReadsetModel rs : getReadsets())
+            for (Readset rs : getReadsets())
             {
-                if (rs.getMid5() != null)
-                    names.add(rs.getMid5());
+                if (rs.getBarcode5() != null)
+                    names.add(rs.getBarcode5());
 
-                if (rs.getMid3() != null)
-                    names.add(rs.getMid3());
+                if (rs.getBarcode3() != null)
+                    names.add(rs.getBarcode3());
             }
 
             return BarcodeModel.getByNames(names.toArray(new String[names.size()]));
         }
 
-        private List<ReadsetModel> getReadsets()
+        private List<Readset> getReadsets()
         {
-            List<ReadsetModel> readsets = new ArrayList<>();
+            List<Readset> readsets = new ArrayList<>();
 
-            ReadsetModel rs1 = new ReadsetModel();
+            SequenceReadsetImpl rs1 = new SequenceReadsetImpl();
             rs1.setName("Readset1");
-            rs1.setMid5("MID002");
-            rs1.setMid3("MID003");
+            rs1.setBarcode5("MID002");
+            rs1.setBarcode3("MID003");
             readsets.add(rs1);
 
-            ReadsetModel rs2 = new ReadsetModel();
+            SequenceReadsetImpl rs2 = new SequenceReadsetImpl();
             rs2.setName("Readset2");
-            rs2.setMid5("MID002");
-            rs2.setMid3("MID002");
+            rs2.setBarcode5("MID002");
+            rs2.setBarcode3("MID002");
             readsets.add(rs2);
 
-            ReadsetModel rs3 = new ReadsetModel();
+            SequenceReadsetImpl rs3 = new SequenceReadsetImpl();
             rs3.setName("Readset3");
-            rs3.setMid5("MID002");
-            rs3.setMid3("MID001");
+            rs3.setBarcode5("MID002");
+            rs3.setBarcode3("MID001");
             readsets.add(rs3);
 
-            ReadsetModel rs4 = new ReadsetModel();
+            SequenceReadsetImpl rs4 = new SequenceReadsetImpl();
             rs4.setName("Readset4");
-            rs4.setMid5("MID001");
-            rs4.setMid3("MID003");
+            rs4.setBarcode5("MID001");
+            rs4.setBarcode3("MID003");
             readsets.add(rs4);
 
-            ReadsetModel rs5 = new ReadsetModel();
+            SequenceReadsetImpl rs5 = new SequenceReadsetImpl();
             rs5.setName("Readset5");
-            rs5.setMid5("MID003");
-            rs5.setMid3("MID004");
+            rs5.setBarcode5("MID003");
+            rs5.setBarcode3("MID004");
             readsets.add(rs5);
 
             return readsets;

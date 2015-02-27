@@ -32,7 +32,7 @@ public class BuildBamIndexWrapper extends PicardWrapper
 
         super.execute(getParams(file));
 
-        File output = new File(getOutputFilename(file));
+        File output = new File(getOutputDir(file), getOutputFilename(file));
         if (!output.exists())
         {
             throw new PipelineJobException("Output file could not be found: " + output.getPath());
@@ -44,7 +44,7 @@ public class BuildBamIndexWrapper extends PicardWrapper
     {
         List<String> params = new LinkedList<>();
         params.add("java");
-        //params.add("-Xmx4g");
+        params.addAll(getBaseParams());
         params.add("-jar");
         params.add(getJar().getPath());
         params.add("INPUT=" + file.getPath());

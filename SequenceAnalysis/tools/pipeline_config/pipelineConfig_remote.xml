@@ -35,6 +35,12 @@
                         <entry key="SEQUENCEANALYSIS_MAX_THREADS" value="6"/>
 
                         <entry key="EHRKinship" value="/usr/local/labkey/modules/ehr/pipeline/kinship"/>
+
+                        <!--optional, can be used to shift tmp dir from the system disk to another disk-->
+                        <entry key="PICARD_TMP_DIR" value="/tmp"/>
+
+                        <!--a whitespace separated list of arguments passed directly to java when running picard tools-->
+                        <entry key="PICARD_MEMORY" value="-Xmx4g"/>
                     </map>
                 </property>
             </bean>

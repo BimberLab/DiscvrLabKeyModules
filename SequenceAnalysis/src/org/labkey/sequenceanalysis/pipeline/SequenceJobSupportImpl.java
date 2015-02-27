@@ -3,9 +3,10 @@ package org.labkey.sequenceanalysis.pipeline;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 
 import java.io.File;
 import java.io.Serializable;
@@ -22,7 +23,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
 {
     private Map<Integer, File> _cachedFilePaths = new HashMap<>();
     private ReferenceGenome _referenceGenome;
-    private Map<Integer, ReadsetModel> _cachedReadsets = new HashMap<>();
+    private List<SequenceReadsetImpl> _cachedReadsets = new ArrayList<>();
     private Map<Integer, AnalysisModel> _cachedAnalyses = new HashMap<>();
     private Map<Integer, ReferenceGenome> _cachedGenomes = new HashMap<>();
 
@@ -36,14 +37,22 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         _cachedFilePaths.putAll(support._cachedFilePaths);
         _referenceGenome = support.getReferenceGenome();
         _cachedAnalyses.putAll(support._cachedAnalyses);
-        _cachedReadsets.putAll(support._cachedReadsets);
+        _cachedReadsets.addAll(support._cachedReadsets);
         _cachedGenomes.putAll(support._cachedGenomes);
     }
 
     @Override
-    public ReadsetModel getCachedReadset(int rowId)
+    public SequenceReadsetImpl getCachedReadset(Integer rowId)
     {
-        return _cachedReadsets.get(rowId);
+        for (SequenceReadsetImpl rs : _cachedReadsets)
+        {
+            if (rowId.equals(rs.getRowId()))
+            {
+                return rs;
+            }
+        }
+
+        return null;
     }
 
     @Override
@@ -52,9 +61,10 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         return _cachedAnalyses.get(rowId);
     }
 
-    public void cacheReadset(ReadsetModel m)
+    public void cacheReadset(SequenceReadsetImpl m)
     {
-        _cachedReadsets.put(m.getRowId(), m);
+        m.cacheForRemoteServer();
+        _cachedReadsets.add(m);
     }
 
     public void cacheAnalysis(AnalysisModel m)
@@ -67,9 +77,9 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         _cachedGenomes.put(m.getGenomeId(), m);
     }
 
-    public List<ReadsetModel> getCachedReadsets()
+    public List<Readset> getCachedReadsets()
     {
-        return Collections.unmodifiableList(new ArrayList<>(_cachedReadsets.values()));
+        return Collections.unmodifiableList(new ArrayList<Readset>(_cachedReadsets));
     }
 
     public List<AnalysisModel> getCachedAnalyses()

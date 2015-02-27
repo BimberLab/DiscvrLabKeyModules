@@ -42,7 +42,7 @@ public class SamFormatConverterWrapper extends PicardWrapper
     {
         List<String> params = new LinkedList<>();
         params.add("java");
-        //params.add("-Xmx4g");
+        params.addAll(getBaseParams());
         params.add("-jar");
         params.add(getJar().getPath());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());

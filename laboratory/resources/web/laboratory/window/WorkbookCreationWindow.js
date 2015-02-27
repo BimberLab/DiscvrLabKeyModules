@@ -161,21 +161,21 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
         target.add({
             xtype: 'labkey-combo',
             labelAlign: 'top',
-            displayField: 'container/Title',
+            displayField: 'rowIdAndName',
             valueField: 'container/RowId',
             itemId: 'workbookName',
             fieldLabel: 'Choose Workbook',
             typeAhead: true,
             minChars: 0,
-            listConfig: {
-                itemTpl: Ext4.create('Ext.XTemplate', '<tpl for=".">{[values[\'container/Title\']]} ({workbookId})</tpl>').compile()
-            },
+            forceSelection: true,
+            caseSensitive: false,
+            anyMatch: true,
             width: 400,
             queryMode: 'local',
             store: Ext4.create('LABKEY.ext4.data.Store', {
                 schemaName: 'laboratory',
                 queryName: 'workbooks',
-                columns: 'workbookId,container/RowId,container/Title,container/CreatedBy,container/Name',
+                columns: 'workbookId,rowIdAndName,container/RowId,container/Title,container/CreatedBy,container/Name',
                 sort: '-workbookId',
                 autoLoad: true
             })
@@ -213,7 +213,7 @@ Ext4.define('Laboratory.window.WorkbookCreationWindow', {
             closeAction:'destroy',
             title: this.title || 'Import Data',
             modal: true,
-            items: [{
+            items: [Ext4.apply({
                 xtype: 'laboratory-workbookcreationpanel',
                 bubbleEvents: ['uploadexception', 'uploadcomplete'],
                 frame: false,
@@ -224,7 +224,7 @@ Ext4.define('Laboratory.window.WorkbookCreationWindow', {
                 controller: this.controller,
                 canAddToExistingExperiment: this.canAddToExistingExperiment,
                 buttons: []
-            }],
+            }, this.workbookPanelCfg)],
             listeners: {
                 scope: this,
                 delay: 100,

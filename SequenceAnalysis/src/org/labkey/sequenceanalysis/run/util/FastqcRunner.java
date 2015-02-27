@@ -88,7 +88,7 @@ public class FastqcRunner
             {
                 runForFile(f);
 
-                File zip = new File(expectedHtml.getParentFile(), FileUtil.getBaseName(expectedHtml) + ".zip");
+                File zip = new File(expectedHtml.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(expectedHtml)) + ".zip");
                 if (zip.exists())
                 {
                     if (!zip.delete())

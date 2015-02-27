@@ -16,6 +16,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVWriter;
+import org.apache.commons.io.FileUtils;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
@@ -26,6 +27,9 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
+import org.labkey.sequenceanalysis.FileGroup;
+import org.labkey.sequenceanalysis.ReadDataImpl;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.NucleotideSequenceFileType;
@@ -131,50 +135,52 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
 
         _taskHelper.createExpDatasForInputs();
 
-
         List<RecordedAction> actions = new ArrayList<>();
         RecordedAction action = new RecordedAction(COMPRESS_INPUT_ACTIONNAME);
         actions.add(action);
 
         //NOTE: if none of the files require external normalization, we handle all processing now and skip the external step
         //however, since processing usually deletes/moves the input, we only process files now if this step will be skipped
-        Set<File> noNormalization = new HashSet<>();
-
-        FileType gz = new FileType(".gz");
 
         try
         {
             List<File> needsNormalization = SequenceNormalizationTask.getFilesToNormalize(getJob(), _support.getInputFiles());
+            List<FileGroup> fileGroups = getHelper().getSettings().getFileGroups(getJob().getJobSupport(SequenceAnalysisJob.class));
+            List<SequenceReadsetImpl> readsets = getHelper().getSettings().getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class));
+
             if (needsNormalization.size() == 0)
             {
                 getJob().getLogger().info("No files required external normalization, processing inputs locally");
-
-                for (File f : _support.getInputFiles())
+                for (FileGroup fg : fileGroups)
                 {
-                    if (!FastqUtils.FqFileType.isType(f))
+                    for (FileGroup.FilePair fp : fg.filePairs)
                     {
-                        getJob().getLogger().warn("Input file is not FASTQ: " + f.getPath());
-                        continue;
+                        fp.file1 = processFile(fp.file1, action);
+                        fp.file2 = processFile(fp.file2, action);
                     }
+                }
 
-                    getHelper().getFileManager().addInput(action, getHelper().FASTQ_DATA_INPUT_NAME, f);
-
-                    File output;
-                    if (!gz.isType(f))
+                for (SequenceReadsetImpl rs : readsets)
+                {
+                    List<ReadDataImpl> rd = new ArrayList<>();
+                    for (FileGroup fg : fileGroups)
                     {
-                        getJob().getLogger().info("\tcompressing input file: " + f.getName());
-                        output = new File(getHelper().getSupport().getAnalysisDirectory(), f.getName() + ".gz");
-                        //note: the non-compressed file will potentially be deleted during cleanup, depending on the selection for input handling
-                        Compress.compressGzip(f, output);
-                    }
-                    else
-                    {
-                        output = f;
-                    }
+                        if (rs.getFileSetName() != null && rs.getFileSetName().equals(fg.name))
+                        {
+                            for (FileGroup.FilePair fp : fg.filePairs)
+                            {
+                                ReadDataImpl r = new ReadDataImpl();
+                                r.setPlatformUnit(fp.platformUnit);
+                                r.setCenterName(fp.centerName);
+                                r.setFile(fp.file1, 1);
+                                r.setFile(fp.file2, 2);
+                                rd.add(r);
+                            }
 
-                    getHelper().getFileManager().addOutput(action, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, output);
-                    getHelper().getFileManager().addUnalteredOutput(output); //even if compressed, it was not really changed
-                    getHelper().getFileManager().addFinalOutputFile(output);
+                            getJob().getLogger().debug("readset: " + rs.getName() + ", " + rd.size() + " file pairs");
+                        }
+                    }
+                    rs.setReadData(rd);
                 }
 
                 getHelper().getFileManager().handleInputs();
@@ -188,8 +194,15 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
             {
                 writeExtraBarcodes();
             }
+
+            SequenceAnalysisJob pipelineJob = getJob().getJobSupport(SequenceAnalysisJob.class);
+            for (SequenceReadsetImpl rs : readsets)
+            {
+                getJob().getLogger().debug("caching readset: " + rs.getName() + " with " + rs.getReadData().size() + " files");
+                pipelineJob.cacheReadset(rs);
+            }
         }
-        catch (FileNotFoundException e)
+        catch (IOException e)
         {
             throw new PipelineJobException(e);
         }
@@ -197,6 +210,57 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
         getHelper().getFileManager().cleanup();
 
         return new RecordedActionSet(actions);
+    }
+
+    private File processFile(File f, RecordedAction action) throws IOException
+    {
+        if (f == null)
+        {
+            return null;
+        }
+
+        FileType gz = new FileType(".gz");
+        if (!FastqUtils.FqFileType.isType(f))
+        {
+            getJob().getLogger().warn("Input file is not FASTQ: " + f.getPath());
+            return null;
+        }
+
+        getHelper().getFileManager().addInput(action, getHelper().SEQUENCE_DATA_INPUT_NAME, f);
+
+        File output;
+        if (!gz.isType(f))
+        {
+            getJob().getLogger().info("\tcompressing input file: " + f.getName());
+            output = new File(getHelper().getSupport().getAnalysisDirectory(), f.getName() + ".gz");
+            //note: the non-compressed file will potentially be deleted during cleanup, depending on the selection for input handling
+            Compress.compressGzip(f, output);
+        }
+        else
+        {
+            output = new File(getHelper().getSupport().getAnalysisDirectory(), f.getName());
+            if (!output.exists())
+            {
+                if (getHelper().getFileManager().getInputfileTreatment().equals("delete") || getHelper().getFileManager().getInputfileTreatment().equals("compress"))
+                {
+                    getJob().getLogger().info("moving unaltered input to final location");
+                    getJob().getLogger().debug(output.getPath());
+                    FileUtils.moveFile(f, output);
+                }
+                else
+                {
+                    getJob().getLogger().info("copying unaltered input to final location");
+                    getJob().getLogger().debug(output.getPath());
+                    FileUtils.copyFile(f, output);
+                }
+            }
+        }
+
+        getHelper().getFileManager().addOutput(action, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, output);
+        getHelper().getFileManager().addUnalteredOutput(output); //even if compressed, it was not really changed and we shouldnt copy it back to the server
+        getHelper().getFileManager().addFinalOutputFile(output);
+
+        return output;
     }
 
     public void writeExtraBarcodes() throws PipelineJobException

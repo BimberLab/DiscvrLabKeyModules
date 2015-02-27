@@ -2643,6 +2643,7 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfiles/.qvie
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfiles/File[!!-~]Details.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/peptide_positions.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/quality_metrics/.qview.xml -text
+labModules/SequenceAnalysis/resources/queries/sequenceanalysis/readData/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_aa_sequences.js -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_nt_sequences.js -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_nt_sequences/.qview.xml -text
@@ -2661,8 +2662,6 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_readsets
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_readsets/Data[!!-~]Not[!!-~]Imported.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/virus_strains.query.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/virus_strains.sql -text
-labModules/SequenceAnalysis/resources/reports/schemas/sequenceanalysis/alignment_summary_grouped/barChart.r -text
-labModules/SequenceAnalysis/resources/reports/schemas/sequenceanalysis/alignment_summary_grouped/barChart.report.xml -text
 labModules/SequenceAnalysis/resources/sampleData/README.txt -text
 labModules/SequenceAnalysis/resources/sampleData/Ref_DB.fasta -text
 labModules/SequenceAnalysis/resources/sampleData/Ref_DB.fasta.fai -text
@@ -2723,6 +2722,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.289-12.290.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.290-12.291.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.291-12.292.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.292-12.293.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -2791,6 +2791,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.289-12.290.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.290-12.291.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.291-12.292.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.292-12.293.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -2889,7 +2890,6 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/AnalysisSection
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/BaseSequencePanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/IlluminaSampleExportPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/InstrumentImportPanel.js -text
-labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SamplePanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SequenceAnalysisPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SequenceImportPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SnpAlignmentConfigPanel.js -text
@@ -2923,6 +2923,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/sequenceAnalysis.css 
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/sequenceAnalysis.lib.xml -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/sequenceanalysisButtons.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/snp_haplotype.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CreateAnalysisSetWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CreateReferenceLibraryWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/DownloadSequencesWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/GenomeLoadWindow.js -text
@@ -2937,8 +2938,10 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/OutputHandlerW
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ReprocessLibraryWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/RunExportWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js -text
-labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/SequenceFileOrderWindow.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/VisualizeDataWindow.js -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/FileGroup.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/PipelineStartup.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/ReadDataImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisContainerListener.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisController.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisExperimentRunType.java -text
@@ -2951,7 +2954,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalyssiMain
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceNavItem.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequencePipelineServiceImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceProvider.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceReadset.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceReadsetImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/TestHelper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/AlignmentMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CompareVariantsHandler.java -text
@@ -2959,11 +2962,6 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CoverageDep
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/GenotypeGVCFHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/LiftoverHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/picard/CigarPositionIterable.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/AbstractCommandPipelineStep.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/AbstractCommandWrapper.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/CommandWrapper.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/InputStreamHandler.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/run/ToolPreferences.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/GenomeLoadButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/QualiMapButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/ReprocessLibraryButton.java -text
@@ -2973,7 +2971,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/BarcodeModel.j
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/ReferenceLibraryMember.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/SequenceModel.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/SequenceTag.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/nav/ReadsetCountNavItem.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/UnderscoreBeanObjectFactory.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AbstractSequenceTaskFactory.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentAnalysisCleanupTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentAnalysisInitTask.java -text
@@ -3003,6 +3001,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceAna
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceJobSupportImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceNormalizationTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOutputHandlerFinalTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOutputHandlerInitTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOutputHandlerJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOutputHandlerPipelineProvider.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOutputHandlerRemoteTask.java -text
@@ -3118,6 +3117,7 @@ labModules/SequenceAnalysis/tools/pipeline_config/pipelineConfig_remote.xml -tex
 labModules/SequenceAnalysis/tools/pipeline_config/sequenceanalysisConfig.xml -text
 labModules/SequenceAnalysis/webapp/WEB-INF/SequenceAnalysis/sequenceanalysisContext.xml -text
 labModules/laboratory/Laboratory.iml -text
+labModules/laboratory/distributions/discvr.xml -text
 labModules/laboratory/module.properties -text
 labModules/laboratory/resources/folderTypes/Expt[!!-~]Workbook.folderType.xml -text
 labModules/laboratory/resources/folderTypes/Laboratory.folderType.xml -text

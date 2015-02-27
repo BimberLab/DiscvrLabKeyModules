@@ -16,7 +16,6 @@
                     SequenceAnalysis.Utils.getDataItems({
                         success: function(resp){
                             var items = resp.results || {};
-console.log(items.data)
                             var config = {
                                 xtype: 'ldk-navpanel',
                                 width: 550,
@@ -32,7 +31,7 @@ console.log(items.data)
                                         {renderer: function(){
                                             return {
                                                 xtype: 'ldk-linkbutton',
-                                                text: 'Create Readsets',
+                                                text: 'Plan Sequence Run (Create Readsets)',
                                                 linkCls: 'labkey-text-link-noarrow',
                                                 style: LDK.panel.NavPanel.ITEM_STYLE_DEFAULT + ';margin-left: 2px;',
                                                 handler: function(btn){
@@ -52,7 +51,7 @@ console.log(items.data)
                                         {renderer: function() {
                                             return {
                                                 xtype: 'ldk-linkbutton',
-                                                text: 'Upload Files / Start Analysis',
+                                                text: 'Upload/Import Sequence Data',
                                                 linkCls: 'labkey-text-link-noarrow',
                                                 style: LDK.panel.NavPanel.ITEM_STYLE_DEFAULT + ';margin-left: 2px;',
                                                 handler: function (btn) {
@@ -65,9 +64,7 @@ console.log(items.data)
                                                     }).show();
                                                 }
                                             }
-                                        }},
-                                        {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL('pipeline-status', 'showList.view'), renderer: 'linkWithoutLabel'},
-                                        {name: 'Instrument Runs', url: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', queryName: 'instrument_runs'}), renderer: 'linkWithoutLabel'}
+                                        }}
                                     ]
                                 }]
                             };

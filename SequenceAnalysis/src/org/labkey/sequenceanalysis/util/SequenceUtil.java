@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.util;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
@@ -13,8 +14,11 @@ import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -28,7 +32,9 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: bimber
@@ -50,20 +56,28 @@ public class SequenceUtil
 
     public static enum FILETYPE
     {
-        fastq(".fastq", ".fq"),
+        fastq(Arrays.asList(".fastq", ".fq"), true),
         fasta(".fasta"),
+        bam(".bam"),
         sff(".sff");
 
-        List<String> _extensions;
+        private List<String> _extensions;
+        private boolean _allowGzip;
 
-        FILETYPE(String... extensions)
+        FILETYPE(String extension)
         {
-            _extensions = Arrays.asList(extensions);
+            this(Arrays.asList(extension), false);
+        }
+
+        FILETYPE(List<String> extensions, boolean allowGzip)
+        {
+            _extensions = extensions;
+            _allowGzip = allowGzip;
         }
 
         public FileType getFileType()
         {
-            return new FileType(_extensions, _extensions.get(0));
+            return new FileType(_extensions, _extensions.get(0), false, _allowGzip ? FileType.gzSupportLevel.SUPPORT_GZ : FileType.gzSupportLevel.NO_GZ);
         }
 
         public String getPrimaryExtension()
@@ -133,7 +147,6 @@ public class SequenceUtil
     {
         SamReaderFactory fact = SamReaderFactory.makeDefault();
         fact.validationStringency(ValidationStringency.SILENT);
-
         try (SamReader reader = fact.open(bam))
         {
             try (SAMRecordIterator it = reader.iterator())
@@ -156,6 +169,7 @@ public class SequenceUtil
                     }
                 }
 
+                log.info("file size: " + FileUtils.byteCountToDisplaySize(bam.length()));
                 log.info("total alignments: " + total);
                 log.info("primary alignments: " + primary);
                 log.info("unaligned: " + unaligned);
@@ -243,6 +257,7 @@ public class SequenceUtil
                     }
                 }
 
+                log.info("File size: " + FileUtils.byteCountToDisplaySize(bam.length()));
                 log.info("Total first mate alignments: " + totalFirstMateAlignments);
                 log.info("Total first second mate alignments: " + totalSecondMateAlignments);
 
@@ -273,6 +288,42 @@ public class SequenceUtil
                 {
                     BEDFeature f = i.next();
                     ret.add(new Interval(f.getChr(), f.getStart(), f.getEnd()));
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    public static JSONArray getReadGroupsForBam(File bam) throws IOException
+    {
+        if (bam == null || !bam.exists())
+        {
+            return null;
+        }
+
+        JSONArray ret = new JSONArray();
+
+        SamReaderFactory fact = SamReaderFactory.makeDefault();
+        try (SamReader reader = fact.open(bam))
+        {
+            SAMFileHeader header = reader.getFileHeader();
+            if (header != null)
+            {
+                List<SAMReadGroupRecord> groups = header.getReadGroups();
+                for (SAMReadGroupRecord g : groups)
+                {
+                    JSONObject details = new JSONObject();
+                    details.put("platform", g.getPlatform());
+                    details.put("platformUnit", g.getPlatformUnit());
+                    details.put("description", g.getDescription());
+                    details.put("sample", g.getSample());
+                    details.put("id", g.getId());
+                    details.put("date", g.getRunDate());
+                    details.put("readGroupId", g.getReadGroupId());
+                    details.put("centerName", g.getSequencingCenter());
+
+                    ret.put(details);
                 }
             }
         }

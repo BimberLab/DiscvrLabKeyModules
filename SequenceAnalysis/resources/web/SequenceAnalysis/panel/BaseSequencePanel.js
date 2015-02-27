@@ -115,7 +115,8 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
     },
 
     checkProtocol: function(){
-        if (this.down('#protocolName').getValue()){
+        var field = this.down('#protocolName');
+        if (field && field.getValue()){
             LABKEY.Pipeline.getFileStatus({
                 taskId: this.taskId,
                 path: this.path,

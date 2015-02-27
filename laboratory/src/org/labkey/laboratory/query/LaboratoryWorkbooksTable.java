@@ -64,7 +64,11 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
         tagsCol.setLabel("Tags");
         tagsCol.setDisplayWidth("200");
         addColumn(tagsCol);
-        
+
+        ExprColumn nameCol = new ExprColumn(this, "rowIdAndName", new SQLFragment("(" + getSqlDialect().concatenate("CAST(" + ExprColumn.STR_TABLE_ALIAS + ".workbookId AS VARCHAR)", "': '", "(SELECT title FROM core.containers c WHERE c.entityid = " + ExprColumn.STR_TABLE_ALIAS + ".container)") + ")"), JdbcType.VARCHAR, getColumn("container"));
+        nameCol.setLabel("Name");
+        addColumn(nameCol);
+
         return this;
     }
 

@@ -964,41 +964,40 @@ public class TaskFileManagerImpl implements TaskFileManager
     }
 
     @Override
-    public void decompressInputFiles(List<File> inputFiles, List<RecordedAction> actions)
+    public void decompressInputFiles(Pair<File, File> pair, List<RecordedAction> actions)
     {
+        List<File> list = new ArrayList<>();
+        if (pair.first != null)
+            pair.first = decompressFile(pair.first, actions);
+        if (pair.second != null)
+            pair.second = decompressFile(pair.second, actions);
+    }
+
+    private File decompressFile(File i, List<RecordedAction> actions)
+    {
+        //NOTE: because we can initate runs on readsets from different containers, we cannot rely on dataDirectory() to be consistent
+        //b/c inputs are always copied to the root of the analysis folder, we will use relative paths
         FileType gz = new FileType(".gz");
-
-        for (File i : inputFiles)
+        File unzipped = null;
+        if (gz.isType(i))
         {
-            //NOTE: because we can initate runs on readsets from different containers, we cannot rely on dataDirectory() to be consistent
-            //b/c inputs are always copied to the root of the analysis folder, we will use relative paths
-            File unzipped = null;
-            if (gz.isType(i))
-            {
-                //NOTE: we use relative paths in all cases here
-                _job.getLogger().info("Decompressing file: " + i.getPath());
+            //NOTE: we use relative paths in all cases here
+            _job.getLogger().info("Decompressing file: " + i.getPath());
 
-                unzipped = new File(_wd.getDir(), i.getName().replaceAll(".gz$", ""));
-                unzipped = Compress.decompressGzip(i, unzipped);
-                _job.getLogger().debug("\tunzipped: " + unzipped.getPath());
+            unzipped = new File(_wd.getDir(), i.getName().replaceAll(".gz$", ""));
+            unzipped = Compress.decompressGzip(i, unzipped);
+            _job.getLogger().debug("\tunzipped: " + unzipped.getPath());
 
-                _unzippedMap.put(i, unzipped);
+            _unzippedMap.put(i, unzipped);
 
-                RecordedAction action = new RecordedAction(SequenceAlignmentTask.DECOMPRESS_ACTIONNAME);
-                action.addInput(i, "Compressed File");
-                action.addOutput(unzipped, "Decompressed File", true);
-                actions.add(action);
-            }
+            RecordedAction action = new RecordedAction(SequenceAlignmentTask.DECOMPRESS_ACTIONNAME);
+            action.addInput(i, "Compressed File");
+            action.addOutput(unzipped, "Decompressed File", true);
+            actions.add(action);
+
+            return unzipped;
         }
 
-        if (_unzippedMap.size() > 0)
-        {
-            //swap unzipped files
-            for (File f : _unzippedMap.keySet())
-            {
-                inputFiles.remove(f);
-                inputFiles.add(_unzippedMap.get(f));
-            }
-        }
+        return i;
     }
 }

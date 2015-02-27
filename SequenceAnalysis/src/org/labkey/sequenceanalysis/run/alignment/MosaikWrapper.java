@@ -1,23 +1,26 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
-import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
-import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileUtil;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -81,7 +84,15 @@ public class MosaikWrapper extends AbstractCommandWrapper
             File reads = getWrapper().buildFastqReads(outputDirectory, inputFastq1, inputFastq2, SequencingTechnology.illumina_long);
             output.addIntermediateFile(reads);
 
-            File bam = getWrapper().executeMosaikAligner(referenceGenome.getWorkingFastaFile(), reads, outputDirectory, basename, getClientCommandArgs());
+            List<String> params = new ArrayList<>();
+            params.addAll(getClientCommandArgs());
+            if (SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob()) != null)
+            {
+                params.add("-p");
+                params.add(SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob()).toString());
+            }
+
+            File bam = getWrapper().executeMosaikAligner(referenceGenome.getWorkingFastaFile(), reads, outputDirectory, basename, params);
             if (!bam.exists())
             {
                 throw new PipelineJobException("BAM not created, expected: " + bam.getPath());
@@ -112,9 +123,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
         {
 ////            'ma|mode' => 'm',
 ////            'ma|hash_size' => 'hs',
-////            'ma|processors' => 'p',
 ////            'ma|use_aligned_length' => 'mmal',
-////            'ma|output_multiple' => 'om',
 
             super("Mosaik", "Mosaik is suitable for longer reads and has the option to retain multiple hits per read. The only downside is that it can be slower. When this pipeline was first written, this aligner was preferred for sequence-based genotyping and similar applications which require retaining multiple hits. It supports paired end reads. The aligner is still good; however, Lastz also seems to perform well for SBT.", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-om"), "output_multiple", "Retain All Hits", "If selected, all hits above thresholds will be reported. If not, only a single hit will be retained", "checkbox", new JSONObject()
@@ -135,9 +144,10 @@ public class MosaikWrapper extends AbstractCommandWrapper
                     {{
                             put("minValue", 0);
                             put("maxValue", 200);
-                        }}, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-act"), "align_threshold", "Alignment Threshold", "The alignment score (length) required for an alignment to continue to local alignment. Because the latter is slow, a higher value can improve speed", "ldk-integerfield", null, 55)
-            ), null, "https://code.google.com/p/mosaik-aligner/", true);
+                        }}, 200),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-act"), "align_threshold", "Alignment Threshold", "The alignment score (length) required for an alignment to continue to local alignment. Because the latter is slow, a higher value can improve speed", "ldk-integerfield", null, 55),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-bw"), "banded_smith_waterman", "Use Banded Smith-Waterman", "Uses the banded Smith-Waterman algorithm for increased performance", "ldk-integerfield", null, 51)
+                    ), null, "https://code.google.com/p/mosaik-aligner/", true);
         }
 
         public MosaikAlignmentStep create(PipelineContext context)
@@ -203,7 +213,6 @@ public class MosaikWrapper extends AbstractCommandWrapper
         args.add("-in");
         args.add(reads.getPath());
 
-
         args.add("-out");
         args.add(new File(outputDirectory, basename).getPath());
 
@@ -218,7 +227,38 @@ public class MosaikWrapper extends AbstractCommandWrapper
 
         execute(args);
 
-        return new File(outputDirectory, basename + ".bam");
+        try
+        {
+            File bam = new File(outputDirectory, basename + ".bam");
+            File multipleHitsBam = new File(outputDirectory, basename + ".multiple.bam");
+
+            //this switch makes mosaik output all hits
+            boolean retainAll = args.contains("-om");
+            if (retainAll)
+            {
+                getLogger().info("using multiple hits BAM");
+                if (bam.exists())
+                {
+                    bam.delete();
+                }
+
+                FileUtils.moveFile(multipleHitsBam, bam);
+            }
+            else
+            {
+                getLogger().info("using single hits BAM");
+                if (multipleHitsBam.exists())
+                {
+                    multipleHitsBam.delete();
+                }
+            }
+
+            return bam;
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 
     public void executeMosaikBuild(File input1, @Nullable File input2, File output, String outParam, @Nullable List<String> options) throws PipelineJobException

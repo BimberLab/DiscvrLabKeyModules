@@ -9,10 +9,6 @@
        <column name="application" />
        <column name="sampletype" />
        <column name="comments" />
-       <column name="fileid" />
-       <!--<column name="qc_file" />-->
-       <column name="fileid2" />
-       <!--<column name="qc_file2" />-->
        <column name="barcode5" />
        <column name="barcode3" />
        <column name="sampleid" />
@@ -25,12 +21,11 @@
            </properties>
        </column>
        <column name="created" />
+       <column name="status" />
        <column name="workbook" />
+       <column name="files" />
    </columns>
    <sorts>
        <sort column="rowid" descending="true"/>
    </sorts>
-    <!--<filters>-->
-        <!--<filter column="fileid" operator="isnonblank"/>-->
-    <!--</filters>-->
 </customView>

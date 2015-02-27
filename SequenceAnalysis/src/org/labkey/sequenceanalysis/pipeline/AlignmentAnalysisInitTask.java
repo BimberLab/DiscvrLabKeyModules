@@ -7,13 +7,15 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileType;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
 import java.util.ArrayList;
@@ -126,7 +128,7 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
             getTaskHelper().getSequenceSupport().cacheExpData(m.getReferenceLibraryData());
             ((SequenceAnalysisJob)getTaskHelper().getSequenceSupport()).cacheAnalysis(m);
 
-            ReadsetModel rs = ReadsetModel.getForId(m.getReadset(), getJob().getUser());
+            SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(m.getReadset(), getJob().getUser());
             ((SequenceAnalysisJob)getTaskHelper().getSequenceSupport()).cacheReadset(rs);
 
             ReferenceGenome rg = ReferenceGenomeImpl.getForId(m.getLibraryId(), getJob().getUser());

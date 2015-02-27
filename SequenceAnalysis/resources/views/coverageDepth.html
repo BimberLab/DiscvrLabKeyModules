@@ -244,16 +244,16 @@ Ext4.onReady(function(){
                             boxLabel: 'Plot All Chromosomes on Same Line',
                             inputValue: 'horizontal'
                         }]
-                    },{
-                        title: 'Step 3: Other Settings',
-                        border: true,
-                        items: [{
-                            xtype: 'checkbox',
-                            fieldLabel: 'Delete Raw Data',
-                            name: 'deleteRawData',
-                            inputValue: true,
-                            checked: true
-                        }]
+                    }]
+                },{
+                    title: 'Step 3: Other Settings',
+                    border: true,
+                    items: [{
+                        xtype: 'checkbox',
+                        fieldLabel: 'Delete Raw Data',
+                        name: 'deleteRawData',
+                        inputValue: true,
+                        checked: true
                     }]
                 }],
                 buttonAlign: 'left',
@@ -274,7 +274,6 @@ Ext4.onReady(function(){
             }
 
             var values = this.getForm().getValues();
-            console.log(values);
 
             Ext4.Msg.wait('Saving...');
             LABKEY.Ajax.request({
@@ -287,7 +286,6 @@ Ext4.onReady(function(){
                 scope: this,
                 success: function(){
                     Ext4.Msg.hide();
-                    this.close();
 
                     window.location = LABKEY.ActionURL.buildURL('pipeline-status', 'showList');
                 },

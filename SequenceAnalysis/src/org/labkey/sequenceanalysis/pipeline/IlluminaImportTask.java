@@ -32,9 +32,12 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.Pair;
+import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.File;
@@ -154,6 +157,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             }
 
             TableInfo rs = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
+            TableInfo readDataTable = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
             //update the readsets
             Map<String, Object> row;
@@ -161,15 +165,24 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             {
                 Integer readsetId = (Integer) key;
 
+                Readset readset = SequenceAnalysisService.get().getReadset(readsetId, getJob().getUser());
+
                 row = new HashMap<>();
                 Pair<Integer, Integer> pair = Pair.of(readsetId, 1);
+                ReadDataImpl rd = new ReadDataImpl();
+                rd.setReadset(readsetId);
+                rd.setCreated(new Date());
+                rd.setCreatedBy(getJob().getUser().getUserId());
+                rd.setModified(new Date());
+                rd.setModifiedBy(getJob().getUser().getUserId());
+
                 if (fileMap.containsKey(pair))
                 {
                     action.addOutput(fileMap.get(pair), "FASTQ File", false);
                     ExpData d = createExpData(fileMap.get(pair));
                     if (d != null)
                     {
-                        row.put("fileid", d.getRowId());
+                        rd.setFileId1(d.getRowId());
 
                         //now add quality metrics
                         addQualityMetrics(schema, readsetId, pair, parser, d);
@@ -192,7 +205,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                     ExpData d = createExpData(fileMap.get(pair));
                     if (d != null)
                     {
-                        row.put("fileid2", d.getRowId());
+                        rd.setFileId2(d.getRowId());
 
                         //now add quality metrics
                         addQualityMetrics(schema, readsetId, pair, parser, d);
@@ -204,6 +217,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 if (readsetId == 0)
                     continue;
 
+                rd.setContainer(readset.getContainer());
                 row.put("rowid", readsetId);
 
                 if (_instrumentRunId != null)
@@ -218,6 +232,9 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 {
                     Table.update(getJob().getUser(), rs, row, pks);
                     getJob().getLogger().info("Updated readset: " + readsetId);
+
+                    getJob().getLogger().debug("creating readdata");
+                    Table.insert(getJob().getUser(), readDataTable, rd);
                 }
                 catch (Table.OptimisticConflictException e)
                 {
@@ -351,17 +368,15 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
     //not very efficient, but we only expect a handful of samples per run
     private boolean validateReadsetId(Integer id) throws PipelineJobException, PipelineValidationException
     {
-        TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_READSETS), Collections.singleton("fileid"),
-            new SimpleFilter(FieldKey.fromString("rowid"), id), null);
-
-        if (ts.getRowCount() < 1)
+        TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_READSETS), new SimpleFilter(FieldKey.fromString("rowid"), id), null);
+        if (!ts.exists())
         {
             getJob().getLogger().warn("No readsets found that match Id " + id + ", skipping.");
             return false;
         }
 
-        List<Integer> fileId = (List)ts.getCollection(Integer.class);
-        if (fileId.get(0) != null && fileId.get(0) > 0)
+        TableSelector ts2 = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_READ_DATA), new SimpleFilter(FieldKey.fromString("readset"), id), null);
+        if (ts2.exists())
         {
             getJob().getLogger().warn("Readset " + id + " already has a file associated with it and cannot be re-imported.  It will be skipped");
             return false;

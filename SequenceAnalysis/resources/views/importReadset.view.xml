@@ -2,9 +2,7 @@
     <dependencies>
         <dependency path="laboratory.context"/>
         <!--<dependency path="SequenceAnalysis/sequenceAnalysis.css"/>-->
-        <dependency path="SequenceAnalysis/panel/SamplePanel.js"/>
         <dependency path="SequenceAnalysis/panel/BaseSequencePanel.js"/>
         <dependency path="SequenceAnalysis/panel/SequenceImportPanel.js"/>
-        <dependency path="SequenceAnalysis/window/SequenceFileOrderWindow.js"/>
     </dependencies>
 </view>

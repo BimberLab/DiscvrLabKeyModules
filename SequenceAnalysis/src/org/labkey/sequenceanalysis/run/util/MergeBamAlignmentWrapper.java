@@ -38,14 +38,22 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             getLogger().info("Running MergeBamAlignment: " + alignedBam.getPath());
             setStringency(ValidationStringency.SILENT);
 
+            if (SequenceUtil.getBamSortOrder(alignedBam) != SAMFileHeader.SortOrder.queryname)
+            {
+                getLogger().info("Queryname Sorting BAM: " + alignedBam.getPath());
+                SortSamWrapper sortSamWrapper = new SortSamWrapper(getLogger());
+                sortSamWrapper.execute(alignedBam, null, SAMFileHeader.SortOrder.queryname);
+            }
+
             List<String> params = new LinkedList<>();
             params.add("java");
-            //params.add("-Xmx4g");
+            params.addAll(getBaseParams());
             params.add("-jar");
             params.add(getJar().getPath());
             params.add("ALIGNED_BAM=" + alignedBam.getPath());
+            params.add("MAX_INSERTIONS_OR_DELETIONS=-1");
 
-            getLogger().info("\ttotal alignments in starting BAM: ");
+            getLogger().info("total alignments in starting BAM: ");
             SequenceUtil.logAlignmentCount(alignedBam, getLogger());
 
             File unmappedReadsBam;

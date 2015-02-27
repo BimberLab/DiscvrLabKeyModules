@@ -494,7 +494,7 @@
                     <ns:onClick>SequenceAnalysis.window.SaveAnalysisAsTemplateWindow.buttonHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
                 </ns:item>
                 <ns:item text="Download Sequence Files">
-                    <ns:onClick>SequenceAnalysis.Buttons.downloadFilesForAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
+                    <ns:onClick>SequenceAnalysis.window.RunExportWindow.downloadFilesForAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
                 </ns:item>
                 <ns:item text="Alignment Reports">
                     <ns:item text="Alignment Summary">
@@ -528,9 +528,6 @@
                     <ns:item text="SNP Viewer">
                         <ns:onClick>SequenceAnalysis.Buttons.viewSNPs(dataRegionName)</ns:onClick>
                     </ns:item>
-                    <!--<ns:item text="SNP Haplotype Viewer">-->
-                    <!--<ns:onClick>SequenceAnalysis.Buttons.viewSNPDetails(dataRegionName)</ns:onClick>-->
-                    <!--</ns:item>-->
                 </ns:item>
             </ns:item>
         </ns:buttonBarOptions>        
@@ -1003,42 +1000,6 @@
                     <ns:fkDisplayColumnName useRawValue="true"/>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="inputMaterial">
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>50</ns:scale>
-                <ns:inputType>textfield</ns:inputType>
-                <ns:columnTitle>Input Material</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>input_material</ns:fkTable>
-                    <ns:fkColumnName>material</ns:fkColumnName>
-                    <ns:fkDisplayColumnName useRawValue="true"/>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="fileid">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Input File</ns:columnTitle>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:fk>
-                    <ns:fkDbSchema>exp</ns:fkDbSchema>
-                    <ns:fkTable>data</ns:fkTable>
-                    <ns:fkColumnName>RowId</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="fileid2">
-                <ns:nullable>true</ns:nullable>
-                <ns:columnTitle>Input File 2</ns:columnTitle>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:fk>
-                    <ns:fkDbSchema>exp</ns:fkDbSchema>
-                    <ns:fkTable>data</ns:fkTable>
-                    <ns:fkColumnName>RowId</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
             <ns:column columnName="platform">
                 <ns:columnTitle>Sequencing Platform</ns:columnTitle>
                 <ns:nullable>true</ns:nullable>
@@ -1143,23 +1104,109 @@
                 <ns:originalText>Page Size</ns:originalText>
             </ns:item>
             <ns:item insertPosition="end" requiresSelection="true" text="More Actions">
-                <ns:item text="View Analyses">
-                    <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {keyField: 'readset', queryName: 'sequence_analyses'})</ns:onClick>
-                </ns:item>
-                <ns:item text="Analyze Selected">
+                <ns:item text="Align/Analyze Selected">
                     <ns:onClick>SequenceAnalysis.Buttons.performAnalysisFromReadsets(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null)</ns:onClick>
                 </ns:item>
                 <ns:item text="View FASTQC Report">
                     <ns:onClick>SequenceAnalysis.Buttons.generateFastQc(dataRegionName);</ns:onClick>
                 </ns:item>
                 <ns:item text="Download Sequence Files">
-                    <ns:onClick>SequenceAnalysis.Buttons.downloadFilesForReadset(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
+                    <ns:onClick>SequenceAnalysis.window.RunExportWindow.downloadFilesForReadset(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
                 </ns:item>
                 <ns:item text="Create Illumina Sample Sheet">
                     <ns:onClick>SequenceAnalysis.Buttons.generateIlluminaSampleFile(dataRegionName);</ns:onClick>
                 </ns:item>
             </ns:item>
         </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="readData" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableTitle>Sequence Read Data</ns:tableTitle>
+        <ns:pkColumnName>rowid</ns:pkColumnName>
+        <ns:tableUrl></ns:tableUrl>
+        <ns:importUrl></ns:importUrl>
+        <ns:updateUrl>/ldk/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=readData&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
+        <ns:insertUrl></ns:insertUrl>
+        <ns:deleteUrl></ns:deleteUrl>
+        <ns:titleColumn>fileid</ns:titleColumn>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:isAutoInc>true</ns:isAutoInc>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:isUserEditable>false</ns:isUserEditable>
+            </ns:column>
+            <ns:column columnName="readset">
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>sequence_readsets</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>name</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="platformUnit">
+                <ns:columnTitle>Platform Unit</ns:columnTitle>
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="centerName">
+                <ns:columnTitle>Center Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="date">
+                <ns:columnTitle>Date</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="fileid1">
+                <ns:nullable>true</ns:nullable>
+                <ns:columnTitle>Input File</ns:columnTitle>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:fk>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                    <ns:fkTable>data</ns:fkTable>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="fileid2">
+                <ns:nullable>true</ns:nullable>
+                <ns:columnTitle>Input File 2</ns:columnTitle>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:fk>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                    <ns:fkTable>data</ns:fkTable>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="description">
+                <ns:columnTitle>Description/Comments</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container">
+            </ns:column>
+            <ns:column columnName="createdby">
+                <!--<ns:isHidden>true</ns:isHidden>-->
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <!--<ns:isHidden>true</ns:isHidden>-->
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="haplotype_types" tableDbType="TABLE">
         <ns:auditLogging>DETAILED</ns:auditLogging>
@@ -1834,7 +1881,7 @@
             <ns:includeScript>/sequenceanalysis/window/IlluminaApplicationWindow.js</ns:includeScript>
             <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
             <ns:item insertPosition="beginning" text="Import New Application">
-                <ns:onClick>SequenceAnalysis.Buttons.importApplicationHandler(dataRegionName, arguments[0].srcElement)</ns:onClick>
+                <ns:onClick>SequenceAnalysis.window.IlluminaApplicationWindow.importApplicationHandler(dataRegionName, arguments[0].srcElement)</ns:onClick>
             </ns:item>
         </ns:buttonBarOptions>
     </ns:table>
@@ -1885,22 +1932,9 @@
             <ns:includeScript>/sequenceanalysis/window/IlluminaSampleKitWindow.js</ns:includeScript>
             <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
             <ns:item insertPosition="beginning" text="Import New Sample Kit">
-                <ns:onClick>SequenceAnalysis.Buttons.importSampleKitHandler(dataRegionName, arguments[0].srcElement)</ns:onClick>
+                <ns:onClick>SequenceAnalysis.window.IlluminaSampleKitWindow.importSampleKitHandler(dataRegionName, arguments[0].srcElement)</ns:onClick>
             </ns:item>
         </ns:buttonBarOptions>
-    </ns:table>
-    <ns:table tableName="input_material" tableDbType="TABLE">
-        <ns:javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</ns:javaCustomizer>
-        <ns:auditLogging>DETAILED</ns:auditLogging>
-        <ns:tableUrl></ns:tableUrl>
-        <ns:updateUrl></ns:updateUrl>
-        <ns:insertUrl></ns:insertUrl>
-        <ns:importUrl></ns:importUrl>
-        <ns:deleteUrl></ns:deleteUrl>
-        <ns:tableTitle>Input Materials</ns:tableTitle>
-        <ns:columns>
-            <ns:column columnName="material"/>
-        </ns:columns>
     </ns:table>
     <ns:table tableName="reference_libraries" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
@@ -2242,10 +2276,6 @@
                     <ns:fkDisplayColumnName useRawValue="true"/>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="intermediate">
-                <ns:columnTitle>Is Intermediate File?</ns:columnTitle>
-                <ns:description>This column is used to tag files that are intermediates in a process, as opposed to the final end product.</ns:description>
-            </ns:column>
             <ns:column columnName="container">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
@@ -2275,11 +2305,15 @@
         <ns:buttonBarOptions includeStandardButtons="true">
             <ns:includeScript>sequenceanalysis/field/ReadsetField.js</ns:includeScript>
             <ns:includeScript>sequenceanalysis/window/ImportOutputFileWindow.js</ns:includeScript>
+            <ns:includeScript>sequenceanalysis/window/VisualizeDataWindow.js</ns:includeScript>
             <ns:item text="Import Files" insertPosition="beginning">
                 <ns:onClick>SequenceAnalysis.window.ImportOutputFileWindow.buttonHandler(dataRegionName);</ns:onClick>
             </ns:item>
             <ns:item hidden="true">
                 <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+            <ns:item text="Visualize/Analyze Data" insertPosition="end">
+                <ns:onClick>SequenceAnalysis.window.VisualizeDataWindow.buttonHandler(dataRegionName);</ns:onClick>
             </ns:item>
         </ns:buttonBarOptions>
     </ns:table>
@@ -2419,5 +2453,148 @@
             <ns:column columnName="modifiedby"/>
             <ns:column columnName="modified"/>
         </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="analysisSets" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableTitle>Analysis Sets</ns:tableTitle>
+        <ns:pkColumnName>rowid</ns:pkColumnName>
+        <ns:tableUrl></ns:tableUrl>
+        <ns:importUrl></ns:importUrl>
+        <ns:updateUrl>/ldk/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=analysisSets&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
+        <ns:insertUrl></ns:insertUrl>
+        <ns:deleteUrl></ns:deleteUrl>
+        <ns:titleColumn>fileid</ns:titleColumn>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:isAutoInc>true</ns:isAutoInc>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:columnTitle>SetId</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="name">
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="description">
+                <ns:columnTitle>Description</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="category">
+                <ns:columnTitle>Category</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container">
+            </ns:column>
+            <ns:column columnName="createdby">
+                <!--<ns:isHidden>true</ns:isHidden>-->
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <!--<ns:isHidden>true</ns:isHidden>-->
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>
+    </ns:table>
+    <ns:table tableName="analysisSetMembers" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
+        <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:tableTitle>Analysis Set Files</ns:tableTitle>
+        <ns:pkColumnName>rowid</ns:pkColumnName>
+        <ns:tableUrl></ns:tableUrl>
+        <ns:importUrl></ns:importUrl>
+        <ns:updateUrl>/ldk/manageRecord.view?schemaName=sequenceanalysis&amp;query.queryName=analysisSetMembers&amp;keyField=rowid&amp;key=${rowid}</ns:updateUrl>
+        <ns:insertUrl></ns:insertUrl>
+        <ns:deleteUrl></ns:deleteUrl>
+        <ns:titleColumn>fileid</ns:titleColumn>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:isAutoInc>true</ns:isAutoInc>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="analysisSet">
+                <ns:nullable>false</ns:nullable>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:fk>
+                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
+                    <ns:fkTable>analysisSets</ns:fkTable>
+                    <ns:fkColumnName>rowid</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="dataid">
+                <ns:nullable>true</ns:nullable>
+                <ns:columnTitle>File</ns:columnTitle>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:fk>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                    <ns:fkTable>data</ns:fkTable>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="groupName">
+                <ns:columnTitle>Group Name</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="description">
+                <ns:columnTitle>Description</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container">
+            </ns:column>
+            <ns:column columnName="createdby">
+                <!--<ns:isHidden>true</ns:isHidden>-->
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <!--<ns:isHidden>true</ns:isHidden>-->
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+        </ns:columns>
+        <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:item hidden="true">
+                <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+        </ns:buttonBarOptions>
     </ns:table>
 </ns:tables>

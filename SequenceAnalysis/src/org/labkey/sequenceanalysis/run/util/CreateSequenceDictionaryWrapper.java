@@ -49,7 +49,7 @@ public class CreateSequenceDictionaryWrapper extends PicardWrapper
 
         List<String> params = new LinkedList<>();
         params.add("java");
-        //params.add("-Xmx4g");
+        params.addAll(getBaseParams());
         params.add("-jar");
         params.add(getJar().getPath());
 

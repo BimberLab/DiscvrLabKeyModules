@@ -11,9 +11,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
@@ -21,6 +21,8 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -74,7 +76,7 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
     }
 
     @Override
-    public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
+    public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         return null;
     }
@@ -105,7 +107,7 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
         }
 
         File outputFile = new File(getPipelineCtx().getJob().getJobSupport(FileAnalysisJobSupport.class).getAnalysisDirectory(), FileUtil.getBaseName(inputBam) + ".snps.txt");
-        ReadsetModel rs = ReadsetModel.getForId(model.getReadset(), getPipelineCtx().getJob().getUser());
+        SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(model.getReadset(), getPipelineCtx().getJob().getUser());
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(referenceFasta, new FastaSequenceIndex(fastaIndexFile)))
         {

@@ -123,7 +123,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
     }
 
     @Override
-    public LinkedHashSet<ClientDependency> getClientDependencies()
+    public LinkedHashSet<String> getClientDependencies()
     {
         return null;
     }
@@ -154,6 +154,12 @@ public class CoverageDepthHandler implements SequenceOutputHandler
 
     public class Processor implements OutputProcessor
     {
+        @Override
+        public void init(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        {
+
+        }
+
         @Override
         public void processFilesOnWebserver(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {

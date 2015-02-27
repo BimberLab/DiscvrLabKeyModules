@@ -174,24 +174,6 @@ SequenceAnalysis.Buttons = new function(){
             );
         },
 
-        viewSNPDetails: function(dataRegionName, options){
-            var dataRegion = LABKEY.DataRegions[dataRegionName];
-            var checked = dataRegion.getChecked();
-            options = options || {};
-
-            if (!checked.length){
-                alert('Must select one or more rows');
-                return;
-            }
-
-            window.location = LABKEY.ActionURL.buildURL(
-                'sequenceanalysis',
-                'snp_haplotype.view',
-                LABKEY.ActionURL.getContainer(),
-                {analysisIds: checked.join(';')}
-            );
-        },
-
         performAnalysis: function(dataRegionName, btnEl){
             if (!LABKEY.Security.currentUser.canUpdate){
                 alert('You do not have permission to analyze data');
@@ -688,83 +670,6 @@ SequenceAnalysis.Buttons = new function(){
             })
         },
 
-        downloadFilesForReadset: function(dataRegionName, btnEl){
-            var dataRegion = LABKEY.DataRegions[dataRegionName];
-            var checked = dataRegion.getChecked();
-
-            if (!checked.length){
-                alert('Must select one or more rows');
-                return;
-            }
-
-            Ext4.Msg.wait('Loading...');
-
-            LABKEY.Query.selectRows({
-                schemaName: 'sequenceanalysis',
-                queryName: 'sequence_readsets',
-                filterArray: [
-                    LABKEY.Filter.create('rowid', checked.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
-                ],
-                columns: 'rowid,fileid,fileid2',
-                scope: this,
-                success: function(result){
-                    Ext4.Msg.hide();
-
-                    var ids = [];
-                    if (result && result.rows.length){
-                        Ext4.create('SequenceAnalysis.window.RunExportWindow', {
-                            dataRegionName: dataRegionName,
-                            records: result.rows,
-                            fileTypes: [
-                                {name: 'Forward Reads', fields: ['fileid'], checked: true},
-                                {name: 'Reverse Reads', fields: ['fileid2'], checked: true}
-                            ]
-                        }).show(btnEl);
-                    }
-                },
-                failure: LDK.Utils.getErrorCallback()
-            });
-        },
-
-        downloadFilesForAnalysis: function(dataRegionName, btnEl){
-            var dataRegion = LABKEY.DataRegions[dataRegionName];
-            var checked = dataRegion.getChecked();
-
-            if (!checked.length){
-                alert('Must select one or more rows');
-                return;
-            }
-
-            Ext4.Msg.wait('Loading...');
-
-            LABKEY.Query.selectRows({
-                schemaName: 'sequenceanalysis',
-                queryName: 'sequence_analyses',
-                filterArray: [
-                    LABKEY.Filter.create('rowid', checked.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
-                ],
-                columns: 'rowid,inputfile,inputfile2,readset/fileid,readset/fileid2,alignmentfile,alignmentfileindex,reference_library',
-                scope: this,
-                success: function(result){
-                    Ext4.Msg.hide();
-
-                    var ids = [];
-                    if (result && result.rows.length){
-                        Ext4.create('SequenceAnalysis.window.RunExportWindow', {
-                            dataRegionName: dataRegionName,
-                            records: result.rows,
-                            fileTypes: [
-                                {name: 'Raw Input File(s)', fields: ['readset/fileid','readset/fileid2'], checked: false},
-                                {name: 'Alignment File', fields: ['alignmentfile'], checked: true},
-                                {name: 'Reference Genome', fields: ['reference_library'], checked: true}
-                            ]
-                        }).show(btnEl);
-                    }
-                },
-                failure: LDK.Utils.getErrorCallback()
-            });
-        },
-
         deleteTable: function(dataRegionName){
             if (!LABKEY.Security.currentUser.canDelete){
                 alert('You do not have permission to delete data');
@@ -788,18 +693,6 @@ SequenceAnalysis.Buttons = new function(){
             });
         },
 
-        importApplicationHandler: function(dataRegionName, btn){
-            Ext4.create('SequenceAnalysis.window.IlluminaApplicationWindow', {
-                dataRegionName: dataRegionName
-            }).show(btn);
-        },
-
-        importSampleKitHandler: function(dataRegionName, btn){
-            Ext4.create('SequenceAnalysis.window.IlluminaSampleKitWindow', {
-                dataRegionName: dataRegionName
-            }).show(btn);
-        },
-
         sequenceOutputHandler: function(dataRegionName, handlerClass){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
@@ -812,7 +705,7 @@ SequenceAnalysis.Buttons = new function(){
             Ext4.Msg.wait('Checking files...');
             LABKEY.Ajax.request({
                 method: 'POST',
-                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatus'),
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatusForHandler'),
                 params: {
                     handlerClass: handlerClass,
                     outputFileIds: checked
@@ -844,10 +737,10 @@ SequenceAnalysis.Buttons = new function(){
                         window.location = results.successUrl;
                     }
                     else if (results.jsHandler){
-                        var handler = eval(results.jsHandler);
-                        LDK.Assert.assertTrue('Unable to find JS handler: ' + results.jsHandler, Ext4.isFunction(handler));
+                        var handlerFn = eval(results.jsHandler);
+                        LDK.Assert.assertTrue('Unable to find JS handler: ' + results.jsHandler, Ext4.isFunction(handlerFn));
 
-                        handler(dataRegionName, checked, handlerClass);
+                        handlerFn(dataRegionName, checked, handlerClass);
                     }
                     else {
                         LDK.Utils.logError('Handler did not provide successUrl or jsHandler: ' + handlerClass);

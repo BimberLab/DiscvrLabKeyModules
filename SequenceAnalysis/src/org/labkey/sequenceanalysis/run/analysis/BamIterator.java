@@ -203,12 +203,6 @@ public class BamIterator
 
     private void processRead(SAMRecord r, IndexedFastaSequenceFile indexedRef)
     {
-        //NOTE: in order to match the behavior of SamLocusIterator, skip over Duplicate or Secondary/Supplemental reads
-        if (r.getDuplicateReadFlag() || r.isSecondaryOrSupplementary())
-        {
-            return;
-        }
-
         if (r.getReadUnmappedFlag())
         {
             for (AlignmentAggregator aggregator : _alignmentAggregators)

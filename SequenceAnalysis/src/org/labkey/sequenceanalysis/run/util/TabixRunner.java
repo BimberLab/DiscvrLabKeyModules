@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 
 import java.io.File;
 import java.util.ArrayList;

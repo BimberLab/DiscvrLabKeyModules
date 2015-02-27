@@ -7,6 +7,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,13 +23,40 @@ public class SamToFastqWrapper extends PicardWrapper
         super(logger);
     }
 
+    public List<File> extractByReadGroup(File file, File outDir, @Nullable List<String> params) throws PipelineJobException
+    {
+        getLogger().info("Converting SAM file to FASTQ: " + file.getPath());
+        getLogger().info("\tSamToFastq version: " + getVersion());
+
+        List<String> args = getBaseParams(file);
+        args.add("INCLUDE_NON_PRIMARY_ALIGNMENTS=FALSE");
+        args.add("INCLUDE_NON_PF_READS=TRUE");
+        args.add("OUTPUT_PER_RG=TRUE");
+        args.add("OUTPUT_DIR=" + outDir.getPath());
+
+        execute(args);
+
+        return Arrays.asList(outDir.listFiles());
+    }
+
     public Pair<File, File> executeCommand(File file, String outputName1, @Nullable String outputName2) throws PipelineJobException
     {
         getLogger().info("Converting SAM file to FASTQ: " + file.getPath());
         getLogger().info("\tSamToFastq version: " + getVersion());
 
         File workingDir = getOutputDir(file);
-        execute(getParams(file, outputName1, outputName2));
+        List<String> args = getBaseParams(file);
+
+        File output1 = new File(getOutputDir(file), outputName1);
+        args.add("FASTQ=" + output1.getPath());
+
+        if (outputName2 != null)
+        {
+            File output2 = new File(getOutputDir(file), outputName2);
+            args.add("SECOND_END_FASTQ=" + output2.getPath());
+        }
+
+        execute(args);
         File output = new File(workingDir, outputName1);
         if (!output.exists())
         {
@@ -48,22 +76,15 @@ public class SamToFastqWrapper extends PicardWrapper
         return Pair.of(output, output2);
     }
 
-    private List<String> getParams(File file, String outputName1, @Nullable String outputName2) throws PipelineJobException
+    private List<String> getBaseParams(File file) throws PipelineJobException
     {
         List<String> params = new LinkedList<>();
         params.add("java");
+        params.addAll(super.getBaseParams());
         params.add("-jar");
         params.add(getJar().getPath());
 
         params.add("INPUT=" + file.getPath());
-        File output1 = new File(getOutputDir(file), outputName1);
-        params.add("FASTQ=" + output1.getPath());
-
-        if (outputName2 != null)
-        {
-            File output2 = new File(getOutputDir(file), outputName2);
-            params.add("SECOND_END_FASTQ=" + output2.getPath());
-        }
 
         return params;
     }

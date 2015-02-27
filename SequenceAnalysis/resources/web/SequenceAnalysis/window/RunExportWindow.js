@@ -6,6 +6,86 @@
 
 Ext4.define('SequenceAnalysis.window.RunExportWindow', {
     extend: 'Ext.window.Window',
+
+    statics: {
+        downloadFilesForReadset: function(dataRegionName, btnEl){
+            var dataRegion = LABKEY.DataRegions[dataRegionName];
+            var checked = dataRegion.getChecked();
+
+            if (!checked.length){
+                alert('Must select one or more rows');
+                return;
+            }
+
+            Ext4.Msg.wait('Loading...');
+
+            LABKEY.Query.selectRows({
+                schemaName: 'sequenceanalysis',
+                queryName: 'readdata',
+                filterArray: [
+                    LABKEY.Filter.create('readset', checked.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
+                ],
+                columns: 'rowid,fileid1,fileid2',
+                scope: this,
+                success: function(result){
+                    Ext4.Msg.hide();
+
+                    var ids = [];
+                    if (result && result.rows.length){
+                        Ext4.create('SequenceAnalysis.window.RunExportWindow', {
+                            dataRegionName: dataRegionName,
+                            records: result.rows,
+                            fileTypes: [
+                                {name: 'Forward Reads', fields: ['fileid1'], checked: true},
+                                {name: 'Reverse Reads', fields: ['fileid2'], checked: true}
+                            ]
+                        }).show(btnEl);
+                    }
+                },
+                failure: LDK.Utils.getErrorCallback()
+            });
+        },
+
+        downloadFilesForAnalysis: function(dataRegionName, btnEl){
+            var dataRegion = LABKEY.DataRegions[dataRegionName];
+            var checked = dataRegion.getChecked();
+
+            if (!checked.length){
+                alert('Must select one or more rows');
+                return;
+            }
+
+            Ext4.Msg.wait('Loading...');
+
+            LABKEY.Query.selectRows({
+                schemaName: 'sequenceanalysis',
+                queryName: 'sequence_analyses',
+                filterArray: [
+                    LABKEY.Filter.create('rowid', checked.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
+                ],
+                columns: 'rowid,inputfile,inputfile2,readset/fileid,readset/fileid2,alignmentfile,alignmentfileindex,reference_library',
+                scope: this,
+                success: function(result){
+                    Ext4.Msg.hide();
+
+                    var ids = [];
+                    if (result && result.rows.length){
+                        Ext4.create('SequenceAnalysis.window.RunExportWindow', {
+                            dataRegionName: dataRegionName,
+                            records: result.rows,
+                            fileTypes: [
+                                {name: 'Raw Input File(s)', fields: ['readset/fileid','readset/fileid2'], checked: false},
+                                {name: 'Alignment File', fields: ['alignmentfile'], checked: true},
+                                {name: 'Reference Genome', fields: ['reference_library'], checked: true}
+                            ]
+                        }).show(btnEl);
+                    }
+                },
+                failure: LDK.Utils.getErrorCallback()
+            });
+        }
+    },
+
     initComponent: function(){
         Ext4.apply(this, {
             title: 'Export Files',

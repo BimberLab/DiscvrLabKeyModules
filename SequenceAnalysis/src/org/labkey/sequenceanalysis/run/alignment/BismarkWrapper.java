@@ -14,11 +14,11 @@ import org.labkey.api.reports.LabkeyScriptEngineManager;
 import org.labkey.api.reports.RScriptEngineFactory;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.Resource;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
@@ -27,8 +27,8 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.api.run.AbstractCommandPipelineStep;
-import org.labkey.sequenceanalysis.api.run.AbstractCommandWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.run.analysis.AnalysisOutputImpl;
@@ -220,7 +220,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public Output performAnalysisPerSampleRemote(ReadsetModel rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
+        public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             AnalysisOutputImpl output = new AnalysisOutputImpl();
             BismarkWrapper wrapper = getWrapper();
@@ -233,7 +233,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
             args.add(new SamtoolsRunner(getPipelineCtx().getLogger()).getSamtoolsPath().getParentFile().getPath());
 
             //paired end vs. single
-            if (rs.getFileName2() == null)
+            if (!rs.hasPairedData())
             {
                 args.add("-s");
             }
@@ -309,14 +309,14 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     if (siteReportPng != null && siteReportPng.exists())
                     {
                         output.addOutput(siteReportPng, "Bismark CpG Methylation Report");
-                        output.addSequenceOutput(siteReportPng, rs.getName() + " methylation report", "Bismark CpG Methylation Report", rs.getRowId(), null, referenceGenome.getGenomeId());
+                        output.addSequenceOutput(siteReportPng, rs.getName() + " methylation report", "Bismark CpG Methylation Report", rs.getReadsetId(), null, referenceGenome.getGenomeId());
                     }
                 }
 
                 if (outputGff.exists())
                 {
                     output.addOutput(outputGff, "Bismark CpG Methylation Rates");
-                    output.addSequenceOutput(outputGff, rs.getName() + " methylation", "CpG Methylation Rates", rs.getRowId(), null, referenceGenome.getGenomeId());
+                    output.addSequenceOutput(outputGff, rs.getName() + " methylation", "CpG Methylation Rates", rs.getReadsetId(), null, referenceGenome.getGenomeId());
                 }
 
 //                File siteReport2 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".NonCpG_Site_Summary.txt");

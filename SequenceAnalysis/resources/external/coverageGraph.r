@@ -21,9 +21,10 @@ spec <- matrix(c(
 opts = getopt(spec, commandArgs(trailingOnly = TRUE));
 if ( is.null(opts$vertical ) ) { opts$vertical = 0 }
 
-df <- read.table(opts$inputFile, quote="\"", header = TRUE);
-df$SequenceName <- factor(df$SequenceName, levels = naturalsort(unique(df$SequenceName)))
+df <- read.table(opts$inputFile, quote="\"", header = TRUE, fill = TRUE, na.strings = "NA");
+df$SequenceName <- factor(df$SequenceName, levels = naturalsort(unique(df$SequenceName)));
 
+df <- df[(!is.na(df[opts$colHeader])),];
 #str(df)
 
 plotHeight <- 680;

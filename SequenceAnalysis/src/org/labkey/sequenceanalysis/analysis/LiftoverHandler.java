@@ -81,7 +81,7 @@ public class LiftoverHandler implements SequenceOutputHandler
     @Override
     public String getDescription()
     {
-        return null;
+        return "This will translate (liftover) VCF or BED files from one reference genome to another.  This is often useful to compare data aligned against different genome builds, or to compare between closely related species.";
     }
 
     @Override
@@ -103,9 +103,9 @@ public class LiftoverHandler implements SequenceOutputHandler
     }
 
     @Override
-    public LinkedHashSet<ClientDependency> getClientDependencies()
+    public LinkedHashSet<String> getClientDependencies()
     {
-        return new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("sequenceanalysis/window/LiftoverWindow.js")));
+        return new LinkedHashSet<>(Arrays.asList("sequenceanalysis/window/LiftoverWindow.js"));
     }
 
     @Override
@@ -144,6 +144,12 @@ public class LiftoverHandler implements SequenceOutputHandler
     public class Processor implements OutputProcessor
     {
         @Override
+        public void init(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        {
+
+        }
+
+        @Override
         public void processFilesOnWebserver(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             for (SequenceOutputFile f : inputFiles)
@@ -155,7 +161,7 @@ public class LiftoverHandler implements SequenceOutputHandler
 
                 boolean isGzip = f.getFile().getPath().toLowerCase().endsWith(".gz");
                 int dots = isGzip ? 2 : 1;
-                String extension = isGzip ? FileUtil.getExtension(f.getFile().getName().replace(".gz$", "")) : FileUtil.getExtension(f.getFile());
+                String extension = isGzip ? FileUtil.getExtension(f.getFile().getName().replaceAll(".gz$", "")) : FileUtil.getExtension(f.getFile());
                 String baseName = FileUtil.getBaseName(f.getFile(), dots);
 
                 Integer chainRowId = params.getInt("chainRowId");
@@ -418,7 +424,7 @@ public class LiftoverHandler implements SequenceOutputHandler
         LiftOver lo = new LiftOver(chain);
         try (CSVWriter writer = new CSVWriter(new FileWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER);CSVWriter unmappedWriter = new CSVWriter(new FileWriter(unmappedOutput), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            try (FeatureReader<BEDFeature> reader = AbstractFeatureReader.getFeatureReader(input.getAbsolutePath(), new BEDCodec()))
+            try (FeatureReader<BEDFeature> reader = AbstractFeatureReader.getFeatureReader(input.getAbsolutePath(), new BEDCodec(), false))
             {
                 try (CloseableTribbleIterator<BEDFeature> i = reader.iterator())
                 {

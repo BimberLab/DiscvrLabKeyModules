@@ -14,7 +14,7 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
             Ext4.Msg.wait('Validating files...');
             LABKEY.Ajax.request({
                 method: 'POST',
-                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatus'),
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatusForHandler'),
                 params: {
                     handlerClass: 'org.labkey.sequenceanalysis.analysis.LiftoverHandler',
                     outputFileIds: checked

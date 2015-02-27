@@ -4,6 +4,14 @@ Ext4.define('SequenceAnalysis.window.IlluminaSampleKitWindow', {
     closeAction: 'destroy',
     title: 'Import Illumina Sample Kit',
 
+    statics: {
+        importSampleKitHandler: function(dataRegionName, btn){
+            Ext4.create('SequenceAnalysis.window.IlluminaSampleKitWindow', {
+                dataRegionName: dataRegionName
+            }).show(btn);
+        }
+    },
+
     items: [{
         xtype: 'form',
         width: 612,

@@ -91,8 +91,11 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
     @Override
     public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi)
     {
-        if (record.getReadUnmappedFlag())
+        //NOTE: in order to match the behavior of SamLocusIterator, skip over Duplicate or Secondary/Supplemental reads
+        if (record.getReadUnmappedFlag() || record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary())
+        {
             return;
+        }
 
         assert cpi != null;
 

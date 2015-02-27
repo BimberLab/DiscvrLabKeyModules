@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import com.drew.lang.annotations.Nullable;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
@@ -11,6 +12,8 @@ import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisJob;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocol;
 import org.labkey.api.pipeline.file.FileAnalysisTaskPipeline;
+import org.labkey.api.sequenceanalysis.model.ReadData;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
@@ -18,16 +21,17 @@ import org.labkey.api.util.Pair;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.model.ReadsetModel;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.sequenceanalysis.ReadDataImpl;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +44,7 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
 {
     private TaskId _taskPipelineId;
     private SequenceJobSupportImpl _support;
+    private List<Integer> _readsetIdsToProcess = null;
 
     public SequenceAnalysisJob(AbstractFileAnalysisProtocol<AbstractFileAnalysisJob> protocol,
                                String protocolName,
@@ -54,13 +59,15 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
         _taskPipelineId = taskPipelineId;
     }
 
-    public SequenceAnalysisJob(SequenceAnalysisJob job, List<File> filesInput)
+    public SequenceAnalysisJob(SequenceAnalysisJob job, List<File> filesInput, @Nullable List<Integer> readsetIdsToProcess)
     {
         super(job, filesInput);
 
         //NOTE: must copy any relevant properties from parent->child
         _taskPipelineId = job._taskPipelineId;
         _support = new SequenceJobSupportImpl(job._support);
+
+        _readsetIdsToProcess = readsetIdsToProcess;
     }
 
     @Override
@@ -82,7 +89,7 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
     @Override
     public AbstractFileAnalysisJob createSingleFileJob(File file)
     {
-        return new SequenceAnalysisJob(this, Collections.singletonList(file));
+        return new SequenceAnalysisJob(this, Collections.singletonList(file), null);
     }
 
     @Override
@@ -94,15 +101,18 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
                 //|| getActiveTaskFactory().getId().getNamespaceClass().equals(SequenceAnalysisTask.class)
         ) && getInputFiles().size() > 1)
         {
-            Collection<Pair<File, File>> files = SequenceAlignmentTask.getAlignmentFiles(getParameters(), getInputFiles(), false).values();
-            for (Pair<File, File> pair : files)
+            SequencePipelineSettings settings = new SequencePipelineSettings(getParameters());
+            for (SequenceReadsetImpl rs : settings.getReadsets(this))
             {
                 List<File> toRun = new ArrayList<>();
-                if (pair.first != null)
-                    toRun.add(pair.first);
+                for (ReadDataImpl rd : rs.getReadData())
+                {
+                    if (rd.getFile1() != null)
+                        toRun.add(rd.getFile1());
 
-                if (pair.second != null)
-                    toRun.add(pair.second);
+                    if (rd.getFile2() != null)
+                        toRun.add(rd.getFile2());
+                }
 
                 if (!toRun.isEmpty())
                 {
@@ -115,7 +125,7 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
                         }
                     }
 
-                    SequenceAnalysisJob newJob = new SequenceAnalysisJob(this, toRun);
+                    SequenceAnalysisJob newJob = new SequenceAnalysisJob(this, toRun, Arrays.asList(rs.getReadsetId()));
                     newJob.setSplittable(false);
                     jobs.add(newJob);
                 }
@@ -125,7 +135,7 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
         {
             for (File file : getInputFiles())
             {
-                jobs.add(new SequenceAnalysisJob(this, Collections.singletonList(file)));
+                jobs.add(new SequenceAnalysisJob(this, Collections.singletonList(file), null));
             }
         }
 
@@ -270,7 +280,7 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
     }
 
     @Override
-    public ReadsetModel getCachedReadset(int rowId)
+    public Readset getCachedReadset(Integer rowId)
     {
         return _support.getCachedReadset(rowId);
     }
@@ -281,7 +291,7 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
         return _support.getCachedAnalysis(rowId);
     }
 
-    public void cacheReadset(ReadsetModel m)
+    public void cacheReadset(SequenceReadsetImpl m)
     {
         _support.cacheReadset(m);
     }
@@ -296,9 +306,21 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
         _support.cacheGenome(m);
     }
 
-    public List<ReadsetModel> getCachedReadsets()
+    @Override
+    public List<Readset> getCachedReadsets()
     {
         return _support.getCachedReadsets();
+    }
+
+    public List<SequenceReadsetImpl> getCachedReadsetModels()
+    {
+        List<SequenceReadsetImpl> ret = new ArrayList<>();
+        for (Readset r : _support.getCachedReadsets())
+        {
+            ret.add((SequenceReadsetImpl)r);
+        }
+
+        return ret;
     }
 
     public List<AnalysisModel> getCachedAnalyses()
@@ -315,5 +337,10 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
     public PipelineJob getJob()
     {
         return this;
+    }
+
+    public List<Integer> getReadsetIdToProcesss()
+    {
+        return _readsetIdsToProcess;
     }
 }

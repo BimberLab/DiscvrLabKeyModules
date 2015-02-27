@@ -65,6 +65,12 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
     @Override
     public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi)
     {
+        //NOTE: in order to match the behavior of SamLocusIterator, skip over Duplicate or Secondary/Supplemental reads
+        if (record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary())
+        {
+            return;
+        }
+
         //NOTE: depth is handled by superclass
         getCoverageAggregator().inspectAlignment(record, ref, snps, cpi);
 

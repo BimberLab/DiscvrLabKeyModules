@@ -96,7 +96,7 @@ public class MergeSamFilesWrapper extends PicardWrapper
 
         //create index
         BuildBamIndexWrapper idx = new BuildBamIndexWrapper(getLogger());
-        idx.setOutputDir(getOutputDir(output));
+        //idx.setOutputDir(getOutputDir(output));
         idx.executeCommand(output);
 
         return output;
@@ -106,7 +106,7 @@ public class MergeSamFilesWrapper extends PicardWrapper
     {
         List<String> params = new LinkedList<>();
         params.add("java");
-        //params.add("-Xmx4g");
+        params.addAll(getBaseParams());
         params.add("-jar");
         params.add(getJar().getPath());
 
