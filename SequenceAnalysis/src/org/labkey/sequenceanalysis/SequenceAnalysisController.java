@@ -673,43 +673,24 @@ public class SequenceAnalysisController extends SpringActionController
     {
         public ApiResponse execute(SaveAnalysisAsTemplateForm form, BindException errors) throws Exception
         {
-            Map<String, Object> ret = new HashMap<>();
-
-            if (form.getAnalysisId() == null)
+            if (StringUtils.isEmpty(form.getJson()))
             {
                 errors.reject(ERROR_MSG, "No analysis Id provided");
                 return null;
             }
 
-            AnalysisModel model = AnalysisModelImpl.getFromDb(form.getAnalysisId(), getUser());
-            if (model == null)
+            if (StringUtils.isEmpty(form.getTaskId()))
             {
-                errors.reject(ERROR_MSG, "Unable to find run for analysis: " + form.getAnalysisId());
+                errors.reject(ERROR_MSG, "No taskId provided");
                 return null;
             }
-
-            ExpRun run = ExperimentService.get().getExpRun(model.getRunId());
-            List<? extends ExpData> datas = run.getInputDatas("AnalysisParameters", ExpProtocol.ApplicationType.ExperimentRun);
-            if (datas.size() != 1 || !datas.get(0).getFile().exists())
-            {
-                errors.reject(ERROR_MSG, "Unable to find paramters file for selected job");
-                return null;
-            }
-
-            String[] tokens = run.getProtocol().getLSID().split(":");
-            String taskId = tokens[tokens.length - 1];
-            taskId = PageFlowUtil.decode(taskId);
-
-            File xml = datas.get(0).getFile();
-            ParamParser parser = PipelineJobService.get().createParamParser();
-            parser.parse(new ReaderInputStream(new FileReader(xml)));
 
             Map<String, Object> toSave = new CaseInsensitiveHashMap<>();
             toSave.put("name", form.getName());
             toSave.put("description", form.getDescription());
-            toSave.put("taskid", taskId);
-            toSave.put("originalAnalysisId", form.getAnalysisId());
-            toSave.put("json", new JSONObject(parser.getInputParameters()).toString());
+            toSave.put("taskid", form.getTaskId());
+
+            toSave.put("json", new JSONObject(form.getJson()));
 
             TableInfo ti = QueryService.get().getUserSchema(getUser(), getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_SAVED_ANALYSES);
             ti.getUpdateService().insertRows(getUser(), getContainer(), Arrays.asList(toSave), new BatchValidationException(), null, new HashMap<String, Object>());
@@ -720,19 +701,10 @@ public class SequenceAnalysisController extends SpringActionController
 
     public static class SaveAnalysisAsTemplateForm
     {
-        private Integer _analysisId;
         private String _name;
         private String _description;
-
-        public Integer getAnalysisId()
-        {
-            return _analysisId;
-        }
-
-        public void setAnalysisId(Integer analysisId)
-        {
-            _analysisId = analysisId;
-        }
+        private String _taskId;
+        private String _json;
 
         public String getName()
         {
@@ -749,9 +721,29 @@ public class SequenceAnalysisController extends SpringActionController
             return _description;
         }
 
+        public String getTaskId()
+        {
+            return _taskId;
+        }
+
+        public void setTaskId(String taskId)
+        {
+            _taskId = taskId;
+        }
+
         public void setDescription(String description)
         {
             _description = description;
+        }
+
+        public String getJson()
+        {
+            return _json;
+        }
+
+        public void setJson(String json)
+        {
+            _json = json;
         }
     }
 

@@ -491,7 +491,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         if (params && params.length) {
             Ext4.Array.forEach(params, function (p) {
                 if (Ext4.isDefined(values[p.name])){
-                    console.log('setting: ' + p.name + ' to: ' + values[p.name]);
+                    //console.log('setting: ' + p.name + ' to: ' + values[p.name]);
                     p.setValue(values[p.name]);
                 }
             }, this);

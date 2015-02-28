@@ -22,6 +22,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentPanel', {
             fieldLabel: 'Perform Alignment',
             name: 'doAlignment',
             itemId: 'doAlignment',
+            isToolParam: true,
             checked: true,
             listeners: {
                 change: this.onCheckChange,

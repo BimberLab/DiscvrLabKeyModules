@@ -467,7 +467,6 @@
         <ns:buttonBarOptions includeStandardButtons="false">
             <ns:includeScript>laboratory.context</ns:includeScript>
             <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
-            <ns:includeScript>SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js</ns:includeScript>
             <ns:item text="Views">
                 <ns:originalText>Views</ns:originalText>
             </ns:item>
@@ -489,9 +488,6 @@
                 </ns:item>
                 <ns:item text="View FASTQC Report">
                     <ns:onClick>SequenceAnalysis.Buttons.generateFastQcForAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
-                </ns:item>
-                <ns:item text="Save Analysis As Template">
-                    <ns:onClick>SequenceAnalysis.window.SaveAnalysisAsTemplateWindow.buttonHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
                 </ns:item>
                 <ns:item text="Download Sequence Files">
                     <ns:onClick>SequenceAnalysis.window.RunExportWindow.downloadFilesForAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>

@@ -85,155 +85,181 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 checked: true,
                 xtype: 'checkbox'
             },{
-                xtype: 'ldk-linkbutton',
-                style: 'margin-left: ' + (this.fieldDefaults.labelWidth + 4) + 'px;',
-                text: 'Copy Settings From Previous Run',
-                linkCls: 'labkey-text-link',
-                scope: this,
-                handler: function(btn){
-                    Ext4.create('Ext.window.Window', {
-                        taskId: this.taskId,
-                        modal: true,
-                        sequencePanel: this,
-                        title: 'Copy Settings From Previous Run',
-                        width: 700,
-                        bodyStyle: 'padding: 5px;',
-                        defaults: {
-                            border: false
-                        },
-                        items: [{
-                            html: 'This will allow you to apply saved settings from a previous run.  Use the toggle below to select from runs bookmarked as templates, or you can choose any previous run to apply to this form.',
-                            style: 'padding-bottom: 10px;'
-                        },{
-                            xtype: 'radiogroup',
-                            name: 'selector',
-                            columns: 1,
+                xtype: 'container',
+                layout: 'hbox',
+                width: null,
+                items: [{
+                    xtype: 'ldk-linkbutton',
+                    style: 'margin-left: ' + (this.fieldDefaults.labelWidth + 4) + 'px;',
+                    width: null,
+                    text: 'Copy Previous Run',
+                    itemId: 'copyPrevious',
+                    linkCls: 'labkey-text-link',
+                    scope: this,
+                    handler: function(btn){
+                        Ext4.create('Ext.window.Window', {
+                            taskId: this.taskId,
+                            modal: true,
+                            sequencePanel: this,
+                            title: 'Copy Previous Run?',
+                            width: 700,
+                            bodyStyle: 'padding: 5px;',
                             defaults: {
-                                name: 'selector'
+                                border: false
                             },
                             items: [{
-                                boxLabel: 'Choose From Bookmarked Runs',
-                                inputValue: 'bookmarkedRuns',
-                                checked: true
+                                html: 'This will allow you to apply saved settings from a previous run.  Use the toggle below to select from runs bookmarked as templates, or you can choose any previous run to apply to this form.  You can click cancel to manually choose your options.',
+                                style: 'padding-bottom: 10px;'
                             },{
-                                boxLabel: 'Choose From All Runs',
-                                inputValue: 'allRuns'
-                            }],
-                            listeners: {
-                                change: function (field, val) {
-                                    var win = field.up('window');
-                                    var target = win.down('#selectionArea');
-                                    var toAdd = [];
-                                    if (val.selector == 'bookmarkedRuns'){
-                                        toAdd.push({
-                                            xtype: 'labkey-combo',
-                                            width: 450,
-                                            fieldLabel: 'Select Run',
-                                            editable: false,
-                                            store: {
-                                                type: 'labkey-store',
-                                                containerPath: Laboratory.Utils.getQueryContainerPath(),
-                                                schemaName: 'sequenceanalysis',
-                                                queryName: 'saved_analyses',
-                                                autoLoad: true,
-                                                columns: 'rowid,name,json'
-                                            },
-                                            displayField: 'name',
-                                            valueField: 'rowid',
-                                            queryMode: 'local'
-                                        });
-                                    }
-                                    else if (val.selector == 'allRuns'){
-                                        toAdd.push({
-                                            xtype: 'combo',
-                                            width: 450,
-                                            fieldLabel: 'Select Run',
-                                            editable: false,
-                                            store: {
-                                                type: 'json',
-                                                fields: ['rowid', 'name', 'json']
-                                            },
-                                            displayField: 'name',
-                                            valueField: 'rowid',
-                                            queryMode: 'local',
-                                            taskId: win.taskId,
-                                            listeners: {
-                                                render: function(field){
-                                                    Ext4.Msg.wait('Loading...');
-                                                    LABKEY.Pipeline.getProtocols({
-                                                        containerPath: Laboratory.Utils.getQueryContainerPath(),
-                                                        taskId: field.taskId,
-                                                        path: './',
-                                                        includeWorkbooks: true,
-                                                        scope: this,
-                                                        success: function(results){
-                                                            Ext4.Msg.hide();
-                                                            var records = [];
-                                                            if (results && results.length){
-                                                                Ext4.Array.forEach(results, function(r, idx){
-                                                                    records.push(field.store.createModel({
-                                                                        name: r.name,
-                                                                        rowid: idx + 1,
-                                                                        json: r.jsonParameters
-                                                                    }));
-                                                                }, this);
-                                                            }
-
-                                                            field.store.removeAll();
-                                                            if (records.length) {
-                                                                field.store.add(records);
-                                                            }
-                                                        },
-                                                        failure: LDK.Utils.getErrorCallback()
-                                                    })
-                                                }
-                                            }
-                                        });
-                                    }
-                                    else {
-                                        console.error('Unknown type: ' + val.selector);
-                                    }
-
-                                    target.removeAll();
-                                    target.add(toAdd);
+                                xtype: 'radiogroup',
+                                name: 'selector',
+                                columns: 1,
+                                defaults: {
+                                    name: 'selector'
                                 },
-                                render: function(field){
-                                    field.fireEvent('change', field, field.getValue());
-                                }
-                            }
-                        },{
-                            xtype: 'panel',
-                            itemId: 'selectionArea',
-                            bodyStyle: 'padding-top: 10px;padding-left: 5px;'
-                        }],
-                        buttons: [{
-                            text: 'Submit',
-                            handler: function(btn){
-                                var win = btn.up('window');
-                                var combo = win.down('combo');
-                                if (!combo.getValue()){
-                                    Ext4.Msg.alert('Error', 'Must choose a protocol');
-                                    return;
-                                }
+                                items: [{
+                                    boxLabel: 'Choose From Saved Templates',
+                                    inputValue: 'bookmarkedRuns',
+                                    checked: true
+                                },{
+                                    boxLabel: 'Choose From All Runs',
+                                    inputValue: 'allRuns'
+                                }],
+                                listeners: {
+                                    change: function (field, val) {
+                                        var win = field.up('window');
+                                        var target = win.down('#selectionArea');
+                                        var toAdd = [];
+                                        if (val.selector == 'bookmarkedRuns'){
+                                            toAdd.push({
+                                                xtype: 'labkey-combo',
+                                                width: 450,
+                                                fieldLabel: 'Select Run',
+                                                editable: true,
+                                                forceSeletion: true,
+                                                store: {
+                                                    type: 'labkey-store',
+                                                    containerPath: Laboratory.Utils.getQueryContainerPath(),
+                                                    schemaName: 'sequenceanalysis',
+                                                    queryName: 'saved_analyses',
+                                                    autoLoad: true,
+                                                    columns: 'rowid,name,json'
+                                                },
+                                                displayField: 'name',
+                                                valueField: 'rowid',
+                                                queryMode: 'local',
+                                                listeners: {
+                                                    afterrender: function(field){
+                                                        field.focus.defer(200, field);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                        else if (val.selector == 'allRuns'){
+                                            toAdd.push({
+                                                xtype: 'combo',
+                                                width: 450,
+                                                fieldLabel: 'Select Run',
+                                                editable: false,
+                                                store: {
+                                                    type: 'json',
+                                                    fields: ['rowid', 'name', 'json']
+                                                },
+                                                displayField: 'name',
+                                                valueField: 'rowid',
+                                                queryMode: 'local',
+                                                taskId: win.taskId,
+                                                listeners: {
+                                                    afterrender: function(field){
+                                                        field.focus.defer(100, field);
+                                                    },
+                                                    render: function(field){
+                                                        Ext4.Msg.wait('Loading...');
+                                                        LABKEY.Pipeline.getProtocols({
+                                                            containerPath: Laboratory.Utils.getQueryContainerPath(),
+                                                            taskId: field.taskId,
+                                                            path: './',
+                                                            includeWorkbooks: true,
+                                                            scope: this,
+                                                            success: function(results){
+                                                                Ext4.Msg.hide();
+                                                                var records = [];
+                                                                if (results && results.length){
+                                                                    Ext4.Array.forEach(results, function(r, idx){
+                                                                        records.push(field.store.createModel({
+                                                                            name: r.name,
+                                                                            rowid: idx + 1,
+                                                                            json: r.jsonParameters
+                                                                        }));
+                                                                    }, this);
+                                                                }
 
-                                var recIdx = combo.store.find('rowid', combo.getValue());
-                                var rec = combo.store.getAt(recIdx);
-                                var json = rec.get('json');
-                                if (Ext4.isString(rec.get('json'))){
-                                    json = Ext4.decode(json);
-                                }
+                                                                field.store.removeAll();
+                                                                if (records.length) {
+                                                                    field.store.add(records);
+                                                                }
+                                                            },
+                                                            failure: LDK.Utils.getErrorCallback()
+                                                        })
+                                                    }
+                                                }
+                                            });
+                                        }
+                                        else {
+                                            console.error('Unknown type: ' + val.selector);
+                                        }
 
-                                win.sequencePanel.applySavedValues(json);
-                                win.close();
-                            }
-                        },{
-                            text: 'Cancel',
-                            handler: function(btn){
-                                btn.up('window').close();
-                            }
-                        }]
-                    }).show(btn);
-                }
+                                        target.removeAll();
+                                        target.add(toAdd);
+                                    },
+                                    render: function(field){
+                                        field.fireEvent('change', field, field.getValue());
+                                    }
+                                }
+                            },{
+                                xtype: 'panel',
+                                itemId: 'selectionArea',
+                                bodyStyle: 'padding-top: 10px;padding-left: 5px;'
+                            }],
+                            buttons: [{
+                                text: 'Submit',
+                                handler: function(btn){
+                                    var win = btn.up('window');
+                                    var combo = win.down('combo');
+                                    if (!combo.getValue()){
+                                        Ext4.Msg.alert('Error', 'Must choose a protocol');
+                                        return;
+                                    }
+
+                                    var recIdx = combo.store.find('rowid', combo.getValue());
+                                    var rec = combo.store.getAt(recIdx);
+                                    var json = rec.get('json');
+                                    if (Ext4.isString(rec.get('json'))){
+                                        json = Ext4.decode(json);
+                                    }
+
+                                    win.sequencePanel.applySavedValues(json);
+                                    win.close();
+                                }
+                            },{
+                                text: 'Cancel',
+                                handler: function(btn){
+                                    btn.up('window').close();
+                                }
+                            }]
+                        }).show(btn);
+                    }
+                },{
+                    xtype: 'ldk-linkbutton',
+                    text: 'Save Form As Template',
+                    linkCls: 'labkey-text-link',
+                    scope: this,
+                    handler: function(btn){
+                        Ext4.create('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
+                            sequencePanel: this
+                        }).show(btn);
+                    }
+                }]
             }]
         },{
             xtype: 'panel',
@@ -272,6 +298,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
         this.remove(panel);
         this.add(items);
+
+        var btn = this.down('#copyPrevious');
+        btn.handler.call(this, btn);
     },
 
     //loads the exp.RowId for each file
@@ -408,9 +437,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
         return errors;
     },
 
-    getJsonParams: function(){
+    getJsonParams: function(ignoreErrors){
         var errors = this.getErrors();
-        if (errors.length){
+        if (errors.length && !ignoreErrors){
             Ext4.Msg.alert('Error', errors.join('<br>'));
             return;
         }
@@ -429,6 +458,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 readset: rec.get('rowid')
             };
         }, this);
+
+        json['alignment.doAlignment'] = this.down('#doAlignment').getValue();
 
         //then append each section
         var sections = this.query('sequenceanalysis-analysissectionpanel');
@@ -516,7 +547,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
         //allows for subclasses to exclude this panel
         var alignPanel = this.down('sequenceanalysis-alignmentpanel');
         if (alignPanel) {
-            alignPanel.down('#doAlignment').setValue(!!values.alignment);
+            alignPanel.down('#doAlignment').setValue(!!values.alignment || !!values['alignment.doAlignment']);
         }
 
         var sections = this.query('sequenceanalysis-analysissectionpanel');
