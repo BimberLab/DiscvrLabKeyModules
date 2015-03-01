@@ -228,6 +228,10 @@ public class SequencePipelineSettings
                         {
                             return input;
                         }
+                        else
+                        {
+                            job.getLogger().error("expected input file does not exist: " + input.getPath());
+                        }
                     }
                 }
             }
@@ -236,6 +240,11 @@ public class SequencePipelineSettings
         if (job != null)
         {
             job.getLogger().error("unable to find file: " + json.toString());
+            job.getLogger().debug("input files were: ");
+            for (File f : job.getJobSupport(FileAnalysisJobSupport.class).getInputFiles())
+            {
+                job.getLogger().debug("[" + f.getPath() + "], exists: " + f.exists());
+            }
         }
 
         return null;
