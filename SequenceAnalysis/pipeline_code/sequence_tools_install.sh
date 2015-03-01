@@ -498,36 +498,36 @@ else
 fi
 
 
+##
+##MORGAN
+##
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Install MORGAN"
+#echo ""
+#cd $LKSRC_DIR
 #
-#MORGAN
+#if [[ ! -e ${LKTOOLS_DIR}/MORGAN || ! -z $FORCE_REINSTALL ]];
+#then
+#    echo "Cleaning up previous installs"
+#    rm -Rf morgan32_release*
+#    rm -Rf MORGAN_V32_Release
+#    rm -Rf $LKTOOLS_DIR/MORGAN
 #
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install MORGAN"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/MORGAN || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf morgan32_release*
-    rm -Rf MORGAN_V32_Release
-    rm -Rf $LKTOOLS_DIR/MORGAN
-
-    wget --read-timeout=10 http://faculty.washington.edu/eathomp/Anonftp/PANGAEA/MORGAN/morgan32_release.tar.gz
-    gunzip morgan32_release.tar.gz
-    tar -xf morgan32_release.tar
-    echo "Compressing TAR"
-    gzip morgan32_release.tar
-    cd MORGAN_V32_Release
-    make morgan
-    
-    cd $LKTOOLS_DIR    
-    ln -s ./src/MORGAN_V32_Release MORGAN
-else
-    echo "Already installed"
-fi
+#    wget --read-timeout=10 http://faculty.washington.edu/eathomp/Anonftp/PANGAEA/MORGAN/morgan32_release.tar.gz
+#    gunzip morgan32_release.tar.gz
+#    tar -xf morgan32_release.tar
+#    echo "Compressing TAR"
+#    gzip morgan32_release.tar
+#    cd MORGAN_V32_Release
+#    make morgan
+#
+#    cd $LKTOOLS_DIR
+#    ln -s ./src/MORGAN_V32_Release MORGAN
+#else
+#    echo "Already installed"
+#fi
 
 
 #
