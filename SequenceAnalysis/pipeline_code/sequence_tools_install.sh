@@ -530,33 +530,33 @@ fi
 #fi
 
 
+##
+##GIGI
+##
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Install GIGI"
+#echo ""
+#cd $LKSRC_DIR
 #
-#GIGI
+#if [[ ! -e ${LKTOOLS_DIR}/GIGI || ! -z $FORCE_REINSTALL ]];
+#then
+#    echo "Cleaning up previous installs"
+#    rm -Rf GIGI_v1.06.1*
+#    rm -Rf $LKTOOLS_DIR/GIGI
+#    rm -Rf __MACOSX*
 #
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install GIGI"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/GIGI || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf GIGI_v1.06.1*
-    rm -Rf $LKTOOLS_DIR/GIGI
-    rm -Rf __MACOSX*
-
-    wget --read-timeout=10 https://faculty.washington.edu/wijsman/progdists/gigi/software/GIGI/GIGI_v1.06.1.zip
-    unzip GIGI_v1.06.1.zip
-    cd GIGI_v1.06.1
-    make
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/GIGI_v1.06.1/GIGI GIGI
-else
-    echo "Already installed"
-fi
+#    wget --read-timeout=10 https://faculty.washington.edu/wijsman/progdists/gigi/software/GIGI/GIGI_v1.06.1.zip
+#    unzip GIGI_v1.06.1.zip
+#    cd GIGI_v1.06.1
+#    make
+#
+#    cd $LKTOOLS_DIR
+#    ln -s ./src/GIGI_v1.06.1/GIGI GIGI
+#else
+#    echo "Already installed"
+#fi
 
 
 #
