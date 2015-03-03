@@ -252,19 +252,9 @@ public class TestHelper
             {
                 File dir = new File(path);
                 _log.info("sequence junit tests will look for tools in: [" + path + "]");
-                if (dir.exists())
+                if (!dir.exists())
                 {
-                    _log.info("files in sequence tools dir: ");
-                    File[] fileNames = dir.listFiles();
-                    Arrays.sort(fileNames);
-                    for (File f : fileNames)
-                    {
-                        _log.info(f.getName());
-                    }
-                }
-                else
-                {
-                    _log.info("directory does not exist");
+                    _log.error("directory does not exist");
                 }
             }
             else
@@ -1442,7 +1432,8 @@ public class TestHelper
         }
     }
 
-    public static class SequenceAnalysisPipelineTestCase extends AbstractAnalysisPipelineTestCase
+    @TestTimeout(480)
+    public static class SequenceAnalysisPipelineTestCase1 extends AbstractAnalysisPipelineTestCase
     {
         @Test
         public void testMosaik() throws Exception
@@ -2269,7 +2260,11 @@ public class TestHelper
             validateAlignment(bam2, 158, 53);
             validateAlignment(bam3, 156, 55);
         }
+    }
 
+    @TestTimeout(480)
+    public static class SequenceAnalysisPipelineTestCase2 extends AbstractAnalysisPipelineTestCase
+    {
         @Test
         public void testBowtie() throws Exception
         {
@@ -2846,7 +2841,7 @@ public class TestHelper
         }
     }
 
-    public static class SequenceAnalysisPipelineTestCase2 extends AbstractAnalysisPipelineTestCase
+    public static class SequenceAnalysisPipelineTestCase3 extends AbstractAnalysisPipelineTestCase
     {
         //@Test
         public void testGSnap() throws Exception

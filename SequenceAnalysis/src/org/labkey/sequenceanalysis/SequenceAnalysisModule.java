@@ -271,8 +271,9 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
             Barcoder.TestCase.class,
             BamIterator.TestCase.class,
             TestHelper.SequenceImportPipelineTestCase.class,
-            //TestHelper.SequenceAnalysisPipelineTestCase2.class,
-            TestHelper.SequenceAnalysisPipelineTestCase.class
+            //TestHelper.SequenceAnalysisPipelineTestCase3.class,
+            TestHelper.SequenceAnalysisPipelineTestCase1.class,
+            TestHelper.SequenceAnalysisPipelineTestCase2.class
         ));
 
         return testClasses;
