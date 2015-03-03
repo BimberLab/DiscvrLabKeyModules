@@ -1537,8 +1537,10 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.fasta.fai"));
             expectedOutputs.add(new File(basedir, "Shared/SIVmac239.idKey.txt"));
-            expectedOutputs.add(new File(basedir, "Shared/SIVmac239.dict"));
-
+            if (isGATKPresent())
+            {
+                expectedOutputs.add(new File(basedir, "Shared/SIVmac239.dict"));
+            }
             expectedOutputs.add(new File(basedir, "Shared/Mosaik"));
             expectedOutputs.add(new File(basedir, "Shared/Mosaik/SIVmac239.mosaik"));
 
