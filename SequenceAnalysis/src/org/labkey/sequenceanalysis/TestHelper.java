@@ -2232,6 +2232,29 @@ public class TestHelper
             validateAlignment(bam2, 158, 53);
             validateAlignment(bam3, 156, 55);
         }
+    }
+
+    @TestTimeout(480)
+    public static class SequenceAnalysisPipelineTestCase2 extends AbstractAnalysisPipelineTestCase
+    {
+        private static final String PROJECT_NAME = "SequenceAnalysisTestProject2";
+
+        @BeforeClass
+        public static void initialSetUp() throws Exception
+        {
+            doInitialSetUp(PROJECT_NAME);
+        }
+
+        @AfterClass
+        public static void cleanup()
+        {
+            doCleanup(PROJECT_NAME);
+        }
+
+        protected String getProjectName()
+        {
+            return PROJECT_NAME;
+        }
 
         @Test
         public void testBWA() throws Exception
@@ -2298,29 +2321,6 @@ public class TestHelper
             validateAlignment(bam1, 317, 105);
             validateAlignment(bam2, 158, 53);
             validateAlignment(bam3, 156, 55);
-        }
-    }
-
-    @TestTimeout(480)
-    public static class SequenceAnalysisPipelineTestCase2 extends AbstractAnalysisPipelineTestCase
-    {
-        private static final String PROJECT_NAME = "SequenceAnalysisTestProject2";
-
-        @BeforeClass
-        public static void initialSetUp() throws Exception
-        {
-            doInitialSetUp(PROJECT_NAME);
-        }
-
-        @AfterClass
-        public static void cleanup()
-        {
-            doCleanup(PROJECT_NAME);
-        }
-
-        protected String getProjectName()
-        {
-            return PROJECT_NAME;
         }
 
         @Test
