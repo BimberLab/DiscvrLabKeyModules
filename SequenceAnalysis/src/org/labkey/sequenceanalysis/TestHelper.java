@@ -181,7 +181,7 @@ public class TestHelper
     }
 
     @TestTimeout(240)
-    public static class AbstractPipelineTestCase extends Assert
+    abstract public static class AbstractPipelineTestCase extends Assert
     {
         protected final String DUAL_BARCODE_FILENAME = "dualBarcodes_SIV.fastq";
         protected final String SAMPLE_SFF_FILENAME = "sample454_SIV.sff";
@@ -205,7 +205,6 @@ public class TestHelper
         protected final String IMPORT_TASKID = "org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceImportPipeline";
         protected final String ANALYSIS_TASKID = "org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceAnalysisPipeline";
 
-        protected static final String PROJECT_NAME = "SequencePipelineTestProject";
         protected Container _project;
         protected TestContext _context;
         protected File _pipelineRoot;
@@ -216,16 +215,15 @@ public class TestHelper
 
         protected static final Logger _log = Logger.getLogger(AbstractPipelineTestCase.class);
 
-        @BeforeClass
-        public static void initialSetUp() throws Exception
+        protected static void doInitialSetUp(String projectName) throws Exception
         {
             //pre-clean
-            cleanup();
+            doCleanup(projectName);
 
-            Container project = ContainerManager.getForPath(PROJECT_NAME);
+            Container project = ContainerManager.getForPath(projectName);
             if (project == null)
             {
-                project = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME);
+                project = ContainerManager.createContainer(ContainerManager.getRoot(), projectName);
                 Set<Module> modules = new HashSet<>();
                 modules.addAll(project.getActiveModules());
                 modules.add(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME));
@@ -233,6 +231,8 @@ public class TestHelper
                 project.setActiveModules(modules);
             }
         }
+
+        abstract protected String getProjectName();
 
         @Before
         public void setUp() throws Exception
@@ -243,7 +243,7 @@ public class TestHelper
             {
                 throw new Exception("sampledata folder does not exist: " + _sampleData.getPath());
             }
-            _project = ContainerManager.getForPath(PROJECT_NAME);
+            _project = ContainerManager.getForPath(getProjectName());
             _pipelineRoot = PipelineService.get().getPipelineRootSetting(_project).getRootPath();
 
             String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
@@ -625,10 +625,9 @@ public class TestHelper
             }
         }
 
-        @AfterClass
-        public static void cleanup()
+        protected static void doCleanup(String projectName)
         {
-            Container project = ContainerManager.getForPath(PROJECT_NAME);
+            Container project = ContainerManager.getForPath(projectName);
             if (project != null)
             {
                 File _pipelineRoot = PipelineService.get().getPipelineRootSetting(project).getRootPath();
@@ -661,6 +660,25 @@ public class TestHelper
 
     public static class SequenceImportPipelineTestCase extends AbstractPipelineTestCase
     {
+        private static final String PROJECT_NAME = "SequenceImportTestProject";
+
+        @BeforeClass
+        public static void initialSetUp() throws Exception
+        {
+            doInitialSetUp(PROJECT_NAME);
+        }
+
+        @AfterClass
+        public static void cleanup()
+        {
+            doCleanup(PROJECT_NAME);
+        }
+
+        protected String getProjectName()
+        {
+            return PROJECT_NAME;
+        }
+
         /**
          * This is the most basic test of readset import and creation.  A single FASTQ is provided, which can be normalized on the webserver
          * without external tools.
@@ -1435,6 +1453,25 @@ public class TestHelper
     @TestTimeout(480)
     public static class SequenceAnalysisPipelineTestCase1 extends AbstractAnalysisPipelineTestCase
     {
+        private static final String PROJECT_NAME = "SequenceAnalysisTestProject1";
+
+        @BeforeClass
+        public static void initialSetUp() throws Exception
+        {
+            doInitialSetUp(PROJECT_NAME);
+        }
+
+        @AfterClass
+        public static void cleanup()
+        {
+            doCleanup(PROJECT_NAME);
+        }
+
+        protected String getProjectName()
+        {
+            return PROJECT_NAME;
+        }
+
         @Test
         public void testMosaik() throws Exception
         {
@@ -2267,6 +2304,25 @@ public class TestHelper
     @TestTimeout(480)
     public static class SequenceAnalysisPipelineTestCase2 extends AbstractAnalysisPipelineTestCase
     {
+        private static final String PROJECT_NAME = "SequenceAnalysisTestProject2";
+
+        @BeforeClass
+        public static void initialSetUp() throws Exception
+        {
+            doInitialSetUp(PROJECT_NAME);
+        }
+
+        @AfterClass
+        public static void cleanup()
+        {
+            doCleanup(PROJECT_NAME);
+        }
+
+        protected String getProjectName()
+        {
+            return PROJECT_NAME;
+        }
+
         @Test
         public void testBowtie() throws Exception
         {
@@ -2845,6 +2901,25 @@ public class TestHelper
 
     public static class SequenceAnalysisPipelineTestCase3 extends AbstractAnalysisPipelineTestCase
     {
+        private static final String PROJECT_NAME = "SequenceAnalysisTestProject3";
+
+        @BeforeClass
+        public static void initialSetUp() throws Exception
+        {
+            doInitialSetUp(PROJECT_NAME);
+        }
+
+        @AfterClass
+        public static void cleanup()
+        {
+            doCleanup(PROJECT_NAME);
+        }
+
+        protected String getProjectName()
+        {
+            return PROJECT_NAME;
+        }
+
         //@Test
         public void testGSnap() throws Exception
         {
