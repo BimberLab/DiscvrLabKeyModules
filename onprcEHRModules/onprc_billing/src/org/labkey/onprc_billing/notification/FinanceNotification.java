@@ -527,7 +527,7 @@ public class FinanceNotification extends AbstractNotification
         {
             SQLFragment sql = ti.getFromSQL("t");
             QueryService.get().bindNamedParameters(sql, params);
-            sql = new SQLFragment("SELECT * FROM " + sql);
+            sql = new SQLFragment("SELECT * FROM ").append(sql);
             QueryService.get().bindNamedParameters(sql, params);
 
             SqlSelector ss = new SqlSelector(ti.getSchema(), sql);
@@ -554,7 +554,7 @@ public class FinanceNotification extends AbstractNotification
         {
             SQLFragment sql = ti.getFromSQL("t");
             QueryService.get().bindNamedParameters(sql, params);
-            sql = new SQLFragment("SELECT * FROM " + sql);
+            sql = new SQLFragment("SELECT * FROM ").append(sql);
             QueryService.get().bindNamedParameters(sql, params);
 
             SqlSelector ss = new SqlSelector(ti.getSchema(), sql);

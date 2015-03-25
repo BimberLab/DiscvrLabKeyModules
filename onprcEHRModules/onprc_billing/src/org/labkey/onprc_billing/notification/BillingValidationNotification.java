@@ -128,7 +128,7 @@ public class BillingValidationNotification extends FinanceNotification
 
         SQLFragment sql = table1.getFromSQL("t");
         QueryService.get().bindNamedParameters(sql, params);
-        sql = new SQLFragment("SELECT * FROM " + sql);
+        sql = new SQLFragment("SELECT * FROM ").append(sql);
         QueryService.get().bindNamedParameters(sql, params);
 
         SqlSelector ss = new SqlSelector(table1.getSchema(), sql);
@@ -150,7 +150,7 @@ public class BillingValidationNotification extends FinanceNotification
         TableInfo table2 = us.getTable(queryName2);
         SQLFragment sql2 = table2.getFromSQL("t");
         QueryService.get().bindNamedParameters(sql2, params);
-        sql2 = new SQLFragment("SELECT * FROM " + sql2);
+        sql2 = new SQLFragment("SELECT * FROM ").append(sql2);
         QueryService.get().bindNamedParameters(sql2, params);
 
         SqlSelector ss2 = new SqlSelector(table2.getSchema(), sql2);
