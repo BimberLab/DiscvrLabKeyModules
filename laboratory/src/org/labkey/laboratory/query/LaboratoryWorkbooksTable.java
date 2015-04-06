@@ -60,7 +60,7 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
         col.setURL(DetailsURL.fromString("/project/start.view"));
 
         String chr = getSqlDialect().isPostgreSQL() ? "chr" : "char";
-        ExprColumn tagsCol = new ExprColumn(this, "tags", new SQLFragment("(SELECT " + getSqlDialect().getGroupConcat(new SQLFragment("tag"), true, true, getSqlDialect().concatenate("','", chr + "(10)")) + " FROM laboratory.workbook_tags wt WHERE wt.container = " + ExprColumn.STR_TABLE_ALIAS + ".container)"), JdbcType.VARCHAR, getColumn("container"));
+        ExprColumn tagsCol = new ExprColumn(this, "tags", new SQLFragment("(SELECT ").append(getSqlDialect().getGroupConcat(new SQLFragment("tag"), true, true, getSqlDialect().concatenate("','", chr + "(10)"))).append(" FROM laboratory.workbook_tags wt WHERE wt.container = " + ExprColumn.STR_TABLE_ALIAS + ".container)"), JdbcType.VARCHAR, getColumn("container"));
         tagsCol.setLabel("Tags");
         tagsCol.setDisplayWidth("200");
         addColumn(tagsCol);

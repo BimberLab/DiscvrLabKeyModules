@@ -521,7 +521,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
     {
         ColumnInfo accountCol = ti.getColumn("account");
         ti.removeColumn(accountCol);
-        SQLFragment sql4 = new SQLFragment("(SELECT " + ti.getSqlDialect().getGroupConcat(new SQLFragment("pa.account"), true, true) + " as expr FROM onprc_billing.projectAccountHistory pa WHERE pa.project = " + ExprColumn.STR_TABLE_ALIAS + ".project AND (").append(getIsActiveSql(ti, "pa")).append(") = " + ti.getSqlDialect().getBooleanTRUE() + ")");
+        SQLFragment sql4 = new SQLFragment("(SELECT ").append(ti.getSqlDialect().getGroupConcat(new SQLFragment("pa.account"), true, true)).append(" as expr FROM onprc_billing.projectAccountHistory pa WHERE pa.project = " + ExprColumn.STR_TABLE_ALIAS + ".project AND (").append(getIsActiveSql(ti, "pa")).append(") = " + ti.getSqlDialect().getBooleanTRUE() + ")");
         ExprColumn newAccountCol = new ExprColumn(ti, "account", sql4, JdbcType.VARCHAR, ti.getColumn("project"));
         newAccountCol.setLabel("Alias");
         if (newAccountCol.getFk() == null)
