@@ -123,112 +123,115 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         ExpRun run = ExperimentService.get().getExpRun(runId);
         List<AnalysisModelImpl> analysisModels = new ArrayList<>();
 
-        for (SequenceReadsetImpl rs : taskHelper.getSettings().getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class)))
+        if (SequenceTaskHelper.isAlignmentUsed(getJob()))
         {
-            String basename = FileUtil.makeLegalName(rs.getName());
-
-            AnalysisModelImpl model = new AnalysisModelImpl();
-            model.setContainer(getJob().getContainer().getId());
-            model.setCreatedby(getJob().getUser().getUserId());
-            model.setCreated(new Date());
-            model.setModifiedby(getJob().getUser().getUserId());
-            model.setModified(new Date());
-            model.setDescription(taskHelper.getSettings().getProtocolDescription());
-            model.setRunId(runId);
-            model.setReadset(rs.getReadsetId());
-
-            //find BAM
-            List<? extends ExpData> datas = run.getInputDatas(SequenceAlignmentTask.FINAL_BAM_ROLE, ExpProtocol.ApplicationType.ExperimentRunOutput);
-            if (datas.size() > 0)
+            for (SequenceReadsetImpl rs : taskHelper.getSettings().getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class)))
             {
-                boolean found = false;
-                for (ExpData d : datas)
+                String basename = rs.getLegalFileName();
+
+                AnalysisModelImpl model = new AnalysisModelImpl();
+                model.setContainer(getJob().getContainer().getId());
+                model.setCreatedby(getJob().getUser().getUserId());
+                model.setCreated(new Date());
+                model.setModifiedby(getJob().getUser().getUserId());
+                model.setModified(new Date());
+                model.setDescription(taskHelper.getSettings().getProtocolDescription());
+                model.setRunId(runId);
+                model.setReadset(rs.getReadsetId());
+
+                //find BAM
+                List<? extends ExpData> datas = run.getInputDatas(SequenceAlignmentTask.FINAL_BAM_ROLE, ExpProtocol.ApplicationType.ExperimentRunOutput);
+                if (datas.size() > 0)
                 {
-                    if (basename.equals(FileUtil.getBaseName(d.getFile())))
+                    boolean found = false;
+                    for (ExpData d : datas)
                     {
-                        if (found)
+                        if (basename.equals(FileUtil.getBaseName(d.getFile())))
                         {
-                            getJob().getLogger().warn("ERROR: More than 1 matching BAM found for basename: " + basename);
-                            getJob().getLogger().warn("BAM was: " + d.getFile().getPath());
+                            if (found)
+                            {
+                                getJob().getLogger().warn("ERROR: More than 1 matching BAM found for basename: " + basename);
+                                getJob().getLogger().warn("BAM was: " + d.getFile().getPath());
+                            }
+
+                            if (!d.getFile().exists())
+                                throw new PipelineJobException("Unable to find file: " + d.getFile().getPath());
+
+                            model.setAlignmentFile(d.getRowId());
+                            found = true;
                         }
-
-                        if (!d.getFile().exists())
-                            throw new PipelineJobException("Unable to find file: " + d.getFile().getPath());
-
-                        model.setAlignmentFile(d.getRowId());
-                        found = true;
                     }
                 }
-            }
 
-            if (model.getAlignmentFile() == null)
-            {
-                getJob().getLogger().warn("Unable to find BAM for run: " + run.getRowId() + ". Expected file beginning with: " + basename);
-                getJob().getLogger().info("Total BAMs found : " + datas.size());
-                for (ExpData d : datas)
+                if (model.getAlignmentFile() == null)
                 {
-                    getJob().getLogger().info("\t" + d.getFile().getPath());
+                    getJob().getLogger().warn("Unable to find BAM for run: " + run.getRowId() + ". Expected file beginning with: " + basename);
+                    getJob().getLogger().info("Total BAMs found : " + datas.size());
+                    for (ExpData d : datas)
+                    {
+                        getJob().getLogger().info("\t" + d.getFile().getPath());
+                    }
+                    continue;
                 }
-                continue;
-            }
 
-            //reference
-            ReferenceGenome referenceGenome = taskHelper.getSequenceSupport().getReferenceGenome();
-            if (referenceGenome == null)
-            {
-                throw new PipelineJobException("unable to find cached reference genome");
-            }
-
-            model.setLibraryId(referenceGenome.getGenomeId());
-            if (referenceGenome.getFastaExpDataId() != null)
-            {
-                model.setReferenceLibrary(referenceGenome.getFastaExpDataId());
-            }
-            else
-            {
-                List<? extends ExpData> fastaDatas = run.getInputDatas(ReferenceLibraryTask.REFERENCE_DB_FASTA, null);
-                if (fastaDatas.size() > 0)
+                //reference
+                ReferenceGenome referenceGenome = taskHelper.getSequenceSupport().getReferenceGenome();
+                if (referenceGenome == null)
                 {
-                    for (ExpData d : fastaDatas)
+                    throw new PipelineJobException("unable to find cached reference genome");
+                }
+
+                model.setLibraryId(referenceGenome.getGenomeId());
+                if (referenceGenome.getFastaExpDataId() != null)
+                {
+                    model.setReferenceLibrary(referenceGenome.getFastaExpDataId());
+                }
+                else
+                {
+                    List<? extends ExpData> fastaDatas = run.getInputDatas(ReferenceLibraryTask.REFERENCE_DB_FASTA, null);
+                    if (fastaDatas.size() > 0)
+                    {
+                        for (ExpData d : fastaDatas)
+                        {
+                            if (d.getFile() == null)
+                            {
+                                job.getLogger().debug("No file found for ExpData: " + d.getRowId());
+                            }
+                            else if (d.getFile().exists())
+                            {
+                                model.setReferenceLibrary(d.getRowId());
+                                break;
+                            }
+                            else
+                            {
+                                job.getLogger().debug("File does not exist: " + d.getFile().getPath());
+                            }
+                        }
+                    }
+                }
+
+                if (model.getReferenceLibrary() == null)
+                {
+                    getJob().getLogger().error("Unable to find reference FASTA for run: " + run.getRowId());
+                    continue;
+                }
+
+                //input FASTQs
+                datas = run.getInputDatas(SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, ExpProtocol.ApplicationType.ProtocolApplication);
+                if (datas.size() > 0)
+                {
+                    for (ExpData d : datas)
                     {
                         if (d.getFile() == null)
                         {
-                            job.getLogger().debug("No file found for ExpData: " + d.getRowId());
-                        }
-                        else if (d.getFile().exists())
-                        {
-                            model.setReferenceLibrary(d.getRowId());
-                            break;
-                        }
-                        else
-                        {
-                            job.getLogger().debug("File does not exist: " + d.getFile().getPath());
+                            getJob().getLogger().debug("No file found for data: " + d.getRowId() + " / run: " + run.getRowId());
+                            continue;
                         }
                     }
                 }
-            }
 
-            if (model.getReferenceLibrary() == null)
-            {
-                getJob().getLogger().error("Unable to find reference FASTA for run: " + run.getRowId());
-                continue;
+                analysisModels.add(model);
             }
-
-            //input FASTQs
-            datas = run.getInputDatas(SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, ExpProtocol.ApplicationType.ProtocolApplication);
-            if (datas.size() > 0)
-            {
-                for (ExpData d : datas)
-                {
-                    if (d.getFile() == null)
-                    {
-                        getJob().getLogger().debug("No file found for data: " + d.getRowId() + " / run: " + run.getRowId());
-                        continue;
-                    }
-                }
-            }
-
-            analysisModels.add(model);
         }
 
         if (analysisModels.size() == 0)
@@ -303,8 +306,8 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             }
         }
 
-        List<AnalysisModel> models = new ArrayList<>();
-        models.addAll(analysisModels);
+        //List<AnalysisModel> models = new ArrayList<>();
+        //models.addAll(analysisModels);
 
         taskHelper.getFileManager().createSequenceOutputRecords();
 
@@ -422,8 +425,14 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             taskHelper.getFileManager().addInput(action, "Input BAM File", inputBam);
             taskHelper.getFileManager().addInput(action, "Reference DB FASTA", referenceGenome.getSourceFastaFile());
 
+            File outDir = new File(taskHelper.getWorkingDirectory(), FileUtil.getBaseName(inputBam));
+            if (!outDir.exists())
+            {
+                outDir.mkdirs();
+            }
+
             AnalysisStep step = provider.create(taskHelper);
-            AnalysisStep.Output o = step.performAnalysisPerSampleRemote(rs, inputBam, referenceGenome, inputBam.getParentFile());
+            AnalysisStep.Output o = step.performAnalysisPerSampleRemote(rs, inputBam, referenceGenome, outDir);
             if (o != null)
             {
                 ret.add(o);

@@ -29,6 +29,7 @@ import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.AbstractSequenceDataProvider;
@@ -82,6 +83,11 @@ public class SequenceProvider extends AbstractSequenceDataProvider
 
     public List<NavItem> getSettingsItems(Container c, User u)
     {
+        if (!c.isRoot() && !ContainerManager.getSharedContainer().equals(c) && !c.getActiveModules().contains(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class)))
+        {
+            return Collections.emptyList();
+        }
+
         String categoryName = "Sequence";
         List<NavItem> items = new ArrayList<>();
         if (ContainerManager.getSharedContainer().equals(c))

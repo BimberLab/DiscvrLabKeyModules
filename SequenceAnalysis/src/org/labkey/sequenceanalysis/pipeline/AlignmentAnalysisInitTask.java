@@ -7,6 +7,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileType;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
@@ -82,6 +83,8 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
     public RecordedActionSet run() throws PipelineJobException
     {
         _taskHelper = new SequenceTaskHelper(getJob(), _wd);
+
+        getTaskHelper().cacheExpDatasForParams();
         List<AnalysisModel> models = cacheAnalysisModels();
 
         List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
@@ -131,7 +134,7 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
             SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(m.getReadset(), getJob().getUser());
             ((SequenceAnalysisJob)getTaskHelper().getSequenceSupport()).cacheReadset(rs);
 
-            ReferenceGenome rg = ReferenceGenomeImpl.getForId(m.getLibraryId(), getJob().getUser());
+            ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(m.getLibraryId(), getJob().getUser());
             ((SequenceAnalysisJob)getTaskHelper().getSequenceSupport()).cacheGenome(rg);
             (getTaskHelper().getSequenceSupport()).cacheExpData(ExperimentService.get().getExpData(rg.getFastaExpDataId()));
         }

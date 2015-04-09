@@ -230,7 +230,12 @@ public class SequencePipelineSettings
                         }
                         else
                         {
-                            job.getLogger().error("expected input file does not exist: " + input.getPath());
+                            //file might have been a copied input, check in analysis directory
+                            File test = new File(job.getJobSupport(FileAnalysisJobSupport.class).getAnalysisDirectory(), input.getName());
+                            if (test.exists())
+                            {
+                                return test;
+                            }
                         }
                     }
                 }

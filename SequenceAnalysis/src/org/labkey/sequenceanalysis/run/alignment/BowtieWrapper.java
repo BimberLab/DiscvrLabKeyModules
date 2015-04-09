@@ -45,7 +45,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
         public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName());
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName(), referenceGenome);
             BowtieWrapper wrapper = getWrapper();
 
             List<String> args = new ArrayList<>();
@@ -110,6 +110,12 @@ public class BowtieWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean doAddReadGroups()
+        {
+            return true;
+        }
+
+        @Override
         public boolean doSortIndexBam()
         {
             return true;
@@ -122,7 +128,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
             File indexDir = new File(outputDir, getProvider().getName());
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName());
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName(), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!indexDir.exists())
@@ -143,7 +149,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
             output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getProvider().getName(), output);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getProvider().getName(), referenceGenome);
 
             return output;
         }
@@ -160,7 +166,11 @@ public class BowtieWrapper extends AbstractCommandWrapper
         {
             super("Bowtie", "Bowtie is a fast aligner often used for short reads. Disadvantages are that it does not perform gapped alignment. It will return a single hit for each read.", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-l"), "seed_length", "Seed Length", null, "ldk-numberfield", null, 20),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), "max_seed_mismatches", "Max Seed Mismatches", null, "ldk-numberfield", null, 3)
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), "max_seed_mismatches", "Max Seed Mismatches", "Maximum number of mismatches permitted in the 'seed', i.e. the first L base pairs of the read (where L is set with -l/--seedlen). This may be 0, 1, 2 or 3 and the default is 2. This option is mutually exclusive with the Max Mismatches (-v) option.", "ldk-integerfield", null, 3),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-v"), "max_mismatches", "Max Mismatches", "Report alignments with at most <int> mismatches. -e and -l options are ignored and quality values have no effect on what alignments are valid. -v is mutually exclusive with Max Seed Mismatches (-n).", "ldk-integerfield", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-m"), "supress_threshold", "Suppress All Alignments", "Suppress all alignments for a particular read or pair if more than <int> reportable alignments exist for it. Reportable alignments are those that would be reported given the -n, -v, -l, -e, -k, -a, --best, and --strata options. Default: no limit. Bowtie is designed to be very fast for small -m but bowtie can become significantly slower for larger values of -m. If you would like to use Bowtie for larger values of -k, consider building an index with a denser suffix-array sample, i.e. specify a smaller -o/--offrate when invoking bowtie-build for the relevant index (see the Performance tuning section for details).", "ldk-integerfield", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--best"), "best", "Report Best Alignment", "Make Bowtie guarantee that reported singleton alignments are 'best' in terms of stratum (i.e. number of mismatches, or mismatches in the seed in the case of -n mode) and in terms of the quality values at the mismatched position(s). Stratum always trumps quality; e.g. a 1-mismatch alignment where the mismatched position has Phred quality 40 is preferred over a 2-mismatch alignment where the mismatched positions both have Phred quality 10. When --best is not specified, Bowtie may report alignments that are sub-optimal in terms of stratum and/or quality (though an effort is made to report the best alignment). --best mode also removes all strand bias. Note that --best does not affect which alignments are considered 'valid' by bowtie, only which valid alignments are reported by bowtie. When --best is specified and multiple hits are allowed (via -k or -a), the alignments for a given read are guaranteed to appear in best-to-worst order in bowtie's output. bowtie is somewhat slower when --best is specified.", "checkbox", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--strata"), "strata", "Strata", "", "checkbox", null, null)
             ), null, "http://bowtie-bio.sourceforge.net/index.shtml", true);
         }
 

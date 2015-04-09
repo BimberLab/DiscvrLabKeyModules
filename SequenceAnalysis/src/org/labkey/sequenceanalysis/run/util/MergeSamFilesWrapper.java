@@ -94,10 +94,14 @@ public class MergeSamFilesWrapper extends PicardWrapper
             }
         }
 
-        //create index
-        BuildBamIndexWrapper idx = new BuildBamIndexWrapper(getLogger());
-        //idx.setOutputDir(getOutputDir(output));
-        idx.executeCommand(output);
+        //create index.  if there is a pre-existing index, we need to delete this since it is out of date
+        getLogger().debug("recreating BAM index");
+        File idx = new File(output.getPath() + ".bai");
+        if (idx.exists())
+        {
+            idx.delete();
+        }
+        new BuildBamIndexWrapper(getLogger()).executeCommand(output);
 
         return output;
     }

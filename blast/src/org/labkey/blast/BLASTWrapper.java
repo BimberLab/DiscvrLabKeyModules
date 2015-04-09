@@ -26,7 +26,7 @@ import java.util.Map;
  */
 public class BLASTWrapper
 {
-    public static FileType DB_TYPE = new FileType(Arrays.asList("nhr", "nin", "nsq"), "nhr");
+    public static FileType DB_TYPE = new FileType(Arrays.asList("nhr", "nin", "nsq", "idx"), "nhr");
     private Logger _log = null;
 
     public BLASTWrapper()
@@ -73,6 +73,12 @@ public class BLASTWrapper
         //always produce ASN.  will convert later
         args.add("-outfmt");
         args.add("11");
+
+        args.add("-use_index");
+        args.add("true");
+
+        args.add("-index_name");
+        args.add(db.getPath());
 
         args.add("-out");
         args.add(outputFile.getPath());
@@ -179,6 +185,33 @@ public class BLASTWrapper
         if (!dbFile.exists())
         {
             throw new IOException("Expected file not created: " + dbFile.getPath());
+        }
+
+        //make index
+        File indexExe = new File(binDir, "makembindex" + getExtension());
+        if (!indexExe.exists())
+        {
+            throw new IllegalArgumentException("Unable to find makembindex executable");
+        }
+
+        List<String> indexArgs = new ArrayList<>();
+        indexArgs.add(indexExe.getPath());
+
+        indexArgs.add("-input");
+        indexArgs.add(outFile.getPath());
+
+        indexArgs.add("-iformat");
+        indexArgs.add("blastdb");
+
+        indexArgs.add("-output");
+        indexArgs.add(outFile.getPath());
+
+        execute(indexArgs, null);
+
+        File indexFile = new File(dbDir, dbName + ".00.idx");
+        if (!indexFile.exists())
+        {
+            throw new IOException("Expected file not created: " + indexFile.getPath());
         }
 
         return outFile;

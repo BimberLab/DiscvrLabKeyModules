@@ -76,6 +76,12 @@ public class LastzWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean doAddReadGroups()
+        {
+            return false;
+        }
+
+        @Override
         public boolean doSortIndexBam()
         {
             return true;

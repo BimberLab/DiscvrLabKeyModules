@@ -51,6 +51,16 @@ public class CallMdWrapper extends SamtoolsRunner
             {
                 getLogger().info("\treplacing original file with sorted BAM");
                 FileUtils.moveFile(output, inputBam);
+
+                //note: if there is a pre-existing index, we need to delete this since it is out of date
+                File idx = new File(inputBam.getPath() + ".bai");
+                if (idx.exists())
+                {
+                    getLogger().debug("deleting/recreating BAM index");
+                    idx.delete();
+                    new BuildBamIndexWrapper(getLogger()).executeCommand(inputBam);
+                }
+
                 output = inputBam;
             }
             catch (IOException e)

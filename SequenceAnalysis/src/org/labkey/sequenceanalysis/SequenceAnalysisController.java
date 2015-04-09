@@ -565,6 +565,7 @@ public class SequenceAnalysisController extends SpringActionController
             else if (SequenceAnalysisSchema.TABLE_READSETS.equals(_table.getName()))
             {
                 msg.append("readsets " + StringUtils.join(keys, ", ") + "?  This will delete the readsets, plus all associated data.  This includes:<br>");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_READ_DATA, "Sequence File Records", keys, "readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_ANALYSES, "Analyses", keys, "readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id/readset");
@@ -667,7 +668,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermissionClass(UpdatePermission.class)
     @CSRF
     public class SaveAnalysisAsTemplateAction extends ApiAction<SaveAnalysisAsTemplateForm>
     {
@@ -689,11 +690,25 @@ public class SequenceAnalysisController extends SpringActionController
             toSave.put("name", form.getName());
             toSave.put("description", form.getDescription());
             toSave.put("taskid", form.getTaskId());
-
             toSave.put("json", new JSONObject(form.getJson()));
 
-            TableInfo ti = QueryService.get().getUserSchema(getUser(), getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_SAVED_ANALYSES);
-            ti.getUpdateService().insertRows(getUser(), getContainer(), Arrays.asList(toSave), new BatchValidationException(), null, new HashMap<String, Object>());
+            Container c = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
+
+            TableInfo ti = QueryService.get().getUserSchema(getUser(), c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_SAVED_ANALYSES);
+
+            //check if there is an existing
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), form.getName());
+            filter.addCondition(FieldKey.fromString("taskid"), form.getTaskId());
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
+            if (ts.exists())
+            {
+                List<Map<String, Object>> oldKeys = Arrays.asList(ts.getMapArray());
+                ti.getUpdateService().updateRows(getUser(), getContainer(), Arrays.asList(toSave), oldKeys, null, new HashMap<String, Object>());
+            }
+            else
+            {
+                ti.getUpdateService().insertRows(getUser(), getContainer(), Arrays.asList(toSave), new BatchValidationException(), null, new HashMap<String, Object>());
+            }
 
             return new ApiSimpleResponse("Success", true);
         }
@@ -1019,7 +1034,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                 for (AlignmentAggregator agg : aggregators)
                 {
-                    agg.saveToDb(getUser(), c, m);
+                    agg.writeOutput(getUser(), c, m);
                 }
 
                 bi.saveSynopsis(getUser(), m);
@@ -1679,15 +1694,34 @@ public class SequenceAnalysisController extends SpringActionController
                 }
 
                 Map<String, Object> resultProperties = new HashMap<>();
+                // TODO: this isnt quite the right thing to do here.  i think i need to split up jobs on the client, and pass a flag that makes the server-side
+                // action resolve inputFiles based on readsetIds
                 if (form.getSplitJobs())
                 {
                     List<String> jobGUIDs = new ArrayList<>();
-                    int idx = 1;
                     SequencePipelineSettings settings = new SequencePipelineSettings(params);
                     List<SequenceReadsetImpl> readsets = settings.getReadsets(null);
-                    _log.info("creating split sequence jobs for " + filesInputList.size() + " files.  These divided into: " + readsets + " jobs.");
+                    _log.info("creating split sequence jobs for " + filesInputList.size() + " files.  divided into: " + readsets.size() + " jobs.");
+                    int readsetIdx = 0;
                     for (SequenceReadsetImpl r : readsets)
                     {
+                        //NOTE: copy the params, but only include one readset per job
+                        Map<String, String> paramsCopy = new HashMap<>();
+                        for (String key : params.keySet())
+                        {
+                            if (key.startsWith("readset_"))
+                            {
+                                if (key.equals("readset_" + readsetIdx))
+                                {
+                                    paramsCopy.put("readset_0", params.get(key));
+                                }
+                            }
+                            else
+                            {
+                                paramsCopy.put(key, params.get(key));
+                            }
+                        }
+
                         List<File> fileList = new ArrayList<>();
                         for (ReadDataImpl d : r.getReadData())
                         {
@@ -1698,8 +1732,8 @@ public class SequenceAnalysisController extends SpringActionController
                             }
                         }
 
-                        String protocolName = form.getProtocolName() + "_" + idx;
-                        AbstractFileAnalysisProtocol protocol = getFileAnalysisProtocol(form, taskPipeline, params, root, dirData, factory, protocolName);
+                        String protocolName = form.getProtocolName() + "_" + (readsetIdx + 1);
+                        AbstractFileAnalysisProtocol protocol = getFileAnalysisProtocol(form, taskPipeline, paramsCopy, root, dirData, factory, protocolName);
                         protocol.getFactory().ensureDefaultParameters(root);
 
                         File fileParameters = factory.getParametersFile(dirData, protocolName, root);
@@ -1713,7 +1747,7 @@ public class SequenceAnalysisController extends SpringActionController
                         AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, protocolName, getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, fileList);
                         PipelineService.get().queueJob(job);
                         jobGUIDs.add(job.getJobGUID());
-                        idx++;
+                        readsetIdx++;
                     }
 
                     resultProperties.put("jobGUIDs", jobGUIDs);

@@ -296,7 +296,7 @@ public class JBrowseRoot
         }
 
         AssayFileWriter afw = new AssayFileWriter();
-        File fasta = afw.findUniqueFileName(model.getName() + ".fasta", outDir);
+        File fasta = afw.findUniqueFileName(FileUtil.makeLegalName(model.getName()) + ".fasta", outDir);
         fasta.createNewFile();
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fasta)))
@@ -752,6 +752,8 @@ public class JBrowseRoot
 
         if (Boolean.TRUE.equals(map.get("createOwnIndex")) || Boolean.TRUE.equals(map.get("primaryDb")))
         {
+            getLogger().debug("session will not attempt to use cached index");
+
             return null;
         }
 
@@ -1295,28 +1297,18 @@ public class JBrowseRoot
         }
 
         //check for index.  should be made on compressed file
-        File indexFile = new File(inputFile.getPath() + ".tbi");
+        File indexFile = new File(inputFile.getPath() + ".idx");
         if (!indexFile.exists())
         {
             getLogger().info("unable to find index file for VCF, creating");
-            try
-            {
-                indexFile = SequenceAnalysisService.get().createTabixIndex(inputFile, getLogger());
-            }
-            catch (PipelineJobException e)
-            {
-                getLogger().error("Unable to run tabix to create VCF index.  you will need to do this manually in order to view this file in JBrowse", e);
-            }
-
-            //TabixIndex idx = IndexFactory.createTabixIndex(inputFile, new VCFCodec(), TabixFormat.VCF, null);
-            //idx.write(indexFile);
+            indexFile = SequenceAnalysisService.get().ensureVcfIndex(inputFile, getLogger());
         }
 
         File targetFile = new File(outDir, inputFile.getName());
 
         //make sym link
         createSymlink(targetFile, inputFile);
-        File targetIndex = new File(targetFile.getPath() + ".tbi");
+        File targetIndex = new File(targetFile.getPath() + ".tbi"); //note: for the time being work with the extension expected by JBrowse, even though GATK/Tabix will produce .idx
         createSymlink(targetIndex, indexFile);
 
         //create track JSON
@@ -1546,6 +1538,7 @@ public class JBrowseRoot
     // NOTE: there is abug in FileUtils causing it to delete the contents of directories that are symlinks, instead of just deleting the symlink on windows machines
     private void safeDeleteDiretory(File directory) throws IOException
     {
+        getLogger().debug("deleting directory: "+ directory.getPath());
         if (SystemUtils.IS_OS_WINDOWS)
         {
             FileUtil.deleteDir(directory);

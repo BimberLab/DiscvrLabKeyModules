@@ -96,7 +96,7 @@ public class SequenceOutputHandlerWebserverTask extends PipelineJob.Task<Sequenc
         SequenceOutputHandler handler = getPipelineJob().getHandler();
         List<SequenceOutputFile> outputsToCreate = new ArrayList<>();
 
-        handler.getProcessor().processFilesOnWebserver(getJob(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
+        handler.getProcessor().processFilesOnWebserver(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
 
         if (!outputsToCreate.isEmpty())
         {

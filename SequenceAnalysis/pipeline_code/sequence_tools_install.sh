@@ -109,7 +109,7 @@ if [ -n $SKIP_PACKAGE_MANAGER ]; then
     echo "Skipping package install"
 elif [ $(which yum) ]; then
     echo "Using Yum"
-    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion cpan git cmake liblzf-devel
+    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion cpan git cmake liblzf-devel apache-maven
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
 
@@ -118,7 +118,7 @@ elif [ $(which apt-get) ]; then
     #gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9 or gpg --hkp://keyserver keyserver.ubuntu.com:80 --recv-key E084DAB9
     #gpg -a --export E084DAB9 | sudo apt-key add -
 
-    apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake
+    apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven
 else
     echo "No known package manager present, aborting"
     exit 1
@@ -170,17 +170,35 @@ echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Install GATK"
 echo ""
 cd $LKSRC_DIR
-mkdir -p GATK
-cd GATK
 
-if [[ ! -e ${LKSRC_DIR}/GATK || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/Queue.jar || ! -z $FORCE_REINSTALL ]];
 then
+    rm -Rf ${LKTOOLS_DIR}/Queue.jar
+    rm -Rf ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
+    rm -Rf ${LKSRC_DIR}/gatk
+
+    mkdir -p gatk
+    cd gatk
+
     echo "Downloading GATK from GIT"
     #git clone git://github.com/broadgsa/gatk.git
-    #git clone git://github.com/broadgsa/gatk-protected.git
-else
-    echo "Updating GATK from GIT"
-    #git pull
+    git clone git://github.com/broadgsa/gatk-protected.git
+
+    #this is a custom extension
+    svn export https://github.com/NationalGenomicsInfrastructure/piper/trunk/src/main/scala/molmed/queue/engine/parallelshell
+    sed -i 's/molmed.queue.engine.parallelshell/org.broadinstitute.gatk.queue.engine.parallelshell/' parallelshell/*
+    mv parallelshell ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/
+
+    cd gatk-protected
+
+    #remove due to compilation error
+    rm ./public/external-example/src/main/java/org/mycompany/app/*
+    rm ./public/external-example/src/test/java/org/mycompany/app/*
+
+    mvn verify
+    mvn package
+    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.3.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
+    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.3.jar ${LKTOOLS_DIR}/Queue.jar
 fi
 
 
@@ -487,6 +505,7 @@ then
     tar -xf tabix-0.2.6.tar
     echo "Compressing TAR"
     bzip2 tabix-0.2.6.tar
+    chmod 755 tabix-0.2.6
     cd tabix-0.2.6
     make
     
@@ -496,67 +515,6 @@ then
 else
     echo "Already installed"
 fi
-
-
-##
-##MORGAN
-##
-#echo ""
-#echo ""
-#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-#echo "Install MORGAN"
-#echo ""
-#cd $LKSRC_DIR
-#
-#if [[ ! -e ${LKTOOLS_DIR}/MORGAN || ! -z $FORCE_REINSTALL ]];
-#then
-#    echo "Cleaning up previous installs"
-#    rm -Rf morgan32_release*
-#    rm -Rf MORGAN_V32_Release
-#    rm -Rf $LKTOOLS_DIR/MORGAN
-#
-#    wget --read-timeout=10 http://faculty.washington.edu/eathomp/Anonftp/PANGAEA/MORGAN/morgan32_release.tar.gz
-#    gunzip morgan32_release.tar.gz
-#    tar -xf morgan32_release.tar
-#    echo "Compressing TAR"
-#    gzip morgan32_release.tar
-#    cd MORGAN_V32_Release
-#    make morgan
-#
-#    cd $LKTOOLS_DIR
-#    ln -s ./src/MORGAN_V32_Release MORGAN
-#else
-#    echo "Already installed"
-#fi
-
-
-##
-##GIGI
-##
-#echo ""
-#echo ""
-#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-#echo "Install GIGI"
-#echo ""
-#cd $LKSRC_DIR
-#
-#if [[ ! -e ${LKTOOLS_DIR}/GIGI || ! -z $FORCE_REINSTALL ]];
-#then
-#    echo "Cleaning up previous installs"
-#    rm -Rf GIGI_v1.06.1*
-#    rm -Rf $LKTOOLS_DIR/GIGI
-#    rm -Rf __MACOSX*
-#
-#    wget --read-timeout=10 https://faculty.washington.edu/wijsman/progdists/gigi/software/GIGI/GIGI_v1.06.1.zip
-#    unzip GIGI_v1.06.1.zip
-#    cd GIGI_v1.06.1
-#    make
-#
-#    cd $LKTOOLS_DIR
-#    ln -s ./src/GIGI_v1.06.1/GIGI GIGI
-#else
-#    echo "Already installed"
-#fi
 
 
 #
@@ -1120,6 +1078,32 @@ then
     
     cd $LKTOOLS_DIR
     ln -s ./src/liftOver liftOver
+else
+    echo "Already installed"
+fi
+
+
+#
+#faToTwoBit
+#
+
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing faToTwoBit"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/faToTwoBit || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf faToTwoBit
+    rm -Rf $LKTOOLS_DIR/faToTwoBit
+
+    wget --read-timeout=10 http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/faToTwoBit
+    chmod +x faToTwoBit
+
+    cd $LKTOOLS_DIR
+    ln -s ./src/faToTwoBit faToTwoBit
 else
     echo "Already installed"
 fi

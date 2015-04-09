@@ -4,8 +4,11 @@
         <dependency path="SequenceAnalysis/sequenceAnalysis"/>
         <dependency path="SequenceAnalysis/sequenceAnalysis.css"/>
 
+        <dependency path="SequenceAnalysis/panel/AnalysisSectionPanel.js"/>
         <dependency path="SequenceAnalysis/panel/BaseSequencePanel.js"/>
         <dependency path="SequenceAnalysis/panel/SequenceImportPanel.js"/>
         <dependency path="SequenceAnalysis/panel/AlignmentImportPanel.js"/>
+
+        <dependency path="SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js"/>
     </dependencies>
 </view>

@@ -33,18 +33,17 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.sequenceanalysis.model.ReadData;
-import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.util.FileType;
-import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.ReadDataImpl;
-import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.ReadDataImpl;
+import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 
 import java.io.File;
@@ -262,6 +261,11 @@ public class SequenceTaskHelper implements PipelineContext
 
     public static Integer getMaxThreads(PipelineJob job)
     {
+        return getMaxThreads(job.getLogger());
+    }
+
+    public static Integer getMaxThreads(Logger log)
+    {
         String threads = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("SEQUENCEANALYSIS_MAX_THREADS");
         if (StringUtils.trimToNull(threads) != null && NumberUtils.isNumber(threads))
         {
@@ -271,7 +275,7 @@ public class SequenceTaskHelper implements PipelineContext
             }
             catch (NumberFormatException e)
             {
-                job.error("Non-integer value for SEQUENCEANALYSIS_MAX_THREADS: " + threads);
+                log.error("Non-integer value for SEQUENCEANALYSIS_MAX_THREADS: " + threads);
             }
         }
         else
@@ -280,5 +284,29 @@ public class SequenceTaskHelper implements PipelineContext
         }
 
         return null;
+    }
+
+    public void cacheExpDatasForParams() throws PipelineJobException
+    {
+        //cache ExpDatas as needed:
+        for (PipelineStep.StepType stepType : PipelineStep.StepType.values())
+        {
+            for (PipelineStepProvider fact : SequencePipelineService.get().getProviders(stepType.getStepClass()))
+            {
+                for (Object o : fact.getParameters())
+                {
+                    ToolParameterDescriptor pd = (ToolParameterDescriptor)o;
+                    if (pd.isExpData() && !org.labkey.api.gwt.client.util.StringUtils.isEmpty(pd.extractValue(getJob(), fact)))
+                    {
+                        Integer dataId = pd.extractValue(getJob(), fact, Integer.class);
+                        ExpData d = ExperimentService.get().getExpData(dataId);
+                        if (d != null)
+                        {
+                            getSequenceSupport().cacheExpData(d);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

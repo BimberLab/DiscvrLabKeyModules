@@ -175,9 +175,9 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
     }
 
     @Override
-    public void saveToDb(User u, Container c, AnalysisModel model)
+    public void writeOutput(User u, Container c, AnalysisModel model)
     {
-        getLogger().info("Saving AA SNP Results to DB");
+        getLogger().info("Saving AA SNP Results");
         Map<String, Integer> summary = new HashMap<>();
 
         try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())

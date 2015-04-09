@@ -47,7 +47,7 @@ public class AddOrReplaceReadGroupsStep extends AbstractCommandPipelineStep<AddO
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".readgroups.bam");
         output.addIntermediateFile(outputBam);
-        output.setBAM(getWrapper().executeCommand(inputBam, outputBam, rs.getReadsetId().toString(), rs.getPlatform(), rs.getReadsetId().toString(), rs.getName()));
+        output.setBAM(getWrapper().executeCommand(inputBam, outputBam, rs.getReadsetId().toString(), rs.getPlatform(), rs.getReadsetId().toString(), rs.getName().replaceAll(" ", "_")));
 
         return output;
     }

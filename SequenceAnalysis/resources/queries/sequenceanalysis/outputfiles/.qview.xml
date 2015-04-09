@@ -9,7 +9,11 @@
        <column name="library_id" />
        <column name="category" />
        <column name="analysis_id" />
-       <column name="analysisSets"/>
+       <column name="dataid/RowId">
+           <properties>
+               <property name="columnTitle" value="File Id"/>
+           </properties>
+       </column>
        <column name="runid" />
        <column name="runid/jobid" />
        <column name="workbook" />

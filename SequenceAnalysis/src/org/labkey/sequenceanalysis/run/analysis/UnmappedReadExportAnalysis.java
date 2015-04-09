@@ -23,6 +23,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.sequenceanalysis.run.alignment.FastqCollapser;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.BufferedWriter;
@@ -86,14 +87,22 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
         {
             File fasta = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + "_unmapped." + extension);
 
-            writeUnmappedReadsAsFasta(inputBam, fasta, getPipelineCtx().getLogger(), null);
+            writeUnmappedReadsAsFasta(inputBam, fasta, getPipelineCtx().getLogger(), null, null);
             if (SequenceUtil.getLineCount(fasta) == 0)
             {
                 fasta.delete();
             }
             else
             {
-                output.addSequenceOutput(fasta, "Unmapped reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+                output.addIntermediateFile(fasta);
+
+                File collapsed = new File(fasta.getParentFile(), FileUtil.getBaseName(inputBam) + "_unmapped.collapsed." + extension);
+                FastqCollapser collapser = new FastqCollapser(getPipelineCtx().getLogger());
+                collapser.collapseFile(fasta, collapsed);
+                long collapsedLineCount = SequenceUtil.getLineCount(collapsed);
+                getPipelineCtx().getLogger().info("total FASTA sequences: " + (collapsedLineCount / 2));
+
+                output.addSequenceOutput(collapsed, "Unmapped reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
             }
         }
         else
@@ -221,7 +230,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
         return new FastqRecord(readName, bases, null, qualities);
     }
 
-    public static List<File> writeUnmappedReadsAsFasta(File inputBam, File fasta, Logger log, @Nullable Long maxReads) throws PipelineJobException
+    public static List<File> writeUnmappedReadsAsFasta(File inputBam, File fasta, Logger log, @Nullable Long maxReads, @Nullable Integer lineLength) throws PipelineJobException
     {
         List<File> ret = new ArrayList<>();
         ret.add(fasta);
@@ -265,7 +274,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
                                 name = name + (r.getFirstOfPairFlag() ? "/1" : "/2");
                             }
 
-                            SequenceUtil.writeFastaRecord(writer, name, r.getReadString(), 100);
+                            SequenceUtil.writeFastaRecord(writer, name, r.getReadString(), (lineLength == null ? 9999999: lineLength));
                         }
                     }
                 }

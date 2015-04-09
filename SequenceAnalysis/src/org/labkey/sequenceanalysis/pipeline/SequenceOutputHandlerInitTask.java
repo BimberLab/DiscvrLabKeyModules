@@ -78,7 +78,12 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
         SequenceOutputHandler handler = getPipelineJob().getHandler();
         List<SequenceOutputFile> outputsToCreate = new ArrayList<>();
 
-        handler.getProcessor().init(getJob(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
+        for (SequenceOutputFile f : getPipelineJob().getFiles())
+        {
+            f.cacheForRemoteServer();
+        }
+
+        handler.getProcessor().init(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
 
         if (!outputsToCreate.isEmpty())
         {
@@ -91,5 +96,4 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
 
         return new RecordedActionSet(actions);
     }
-
 }

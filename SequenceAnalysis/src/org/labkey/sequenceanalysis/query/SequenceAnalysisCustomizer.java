@@ -40,6 +40,14 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
                     LDKService.get().applyNaturalSort(ti, "name");
                 }
             }
+            else if (tableInfo.getName().equalsIgnoreCase(SequenceAnalysisSchema.TABLE_OUTPUTFILES))
+            {
+                //behaves slowly on postgres
+                if (tableInfo.getSqlDialect().isSqlServer())
+                {
+                    LDKService.get().applyNaturalSort(ti, "name");
+                }
+            }
 
             customizeSharedCols(ti);
         }

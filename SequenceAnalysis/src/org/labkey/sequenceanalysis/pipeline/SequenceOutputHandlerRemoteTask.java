@@ -95,7 +95,7 @@ public class SequenceOutputHandlerRemoteTask extends PipelineJob.Task<SequenceOu
         SequenceOutputHandler handler = getPipelineJob().getHandler();
         List<SequenceOutputFile> outputsToCreate = new ArrayList<>();
 
-        handler.getProcessor().processFilesRemote(getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
+        handler.getProcessor().processFilesRemote(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
 
         if (!outputsToCreate.isEmpty())
         {

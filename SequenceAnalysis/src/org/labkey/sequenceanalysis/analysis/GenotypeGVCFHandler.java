@@ -72,18 +72,18 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
     public class Processor implements OutputProcessor
     {
         @Override
-        public void init(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
 
         }
 
         @Override
-        public void processFilesRemote(SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
-            GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(support.getJob().getLogger());
+            GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(job.getLogger());
 
             Set<Integer> genomeIds = new HashSet<>();
             List<File> inputVcfs = new ArrayList<>();
@@ -101,7 +101,7 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
             int genomeId = genomeIds.iterator().next();
             ReferenceGenome genome = support.getCachedGenome(genomeId);
 
-            File outDir = ((FileAnalysisJobSupport) support.getJob()).getAnalysisDirectory();
+            File outDir = ((FileAnalysisJobSupport) job).getAnalysisDirectory();
             File outputVcf = new File(outDir, "CombinedGenotypes.vcf.gz");
             List<String> toolParams = new ArrayList<>();
 
@@ -116,11 +116,11 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
                 so1.setFile(outputVcf);
                 so1.setLibrary_id(genomeId);
                 so1.setCategory("Combined VCF");
-                so1.setContainer(support.getJob().getContainerId());
+                so1.setContainer(job.getContainerId());
                 so1.setCreated(new Date());
-                so1.setCreatedby(support.getJob().getUser().getUserId());
+                so1.setCreatedby(job.getUser().getUserId());
                 so1.setModified(new Date());
-                so1.setModifiedby(support.getJob().getUser().getUserId());
+                so1.setModifiedby(job.getUser().getUserId());
 
                 outputsToCreate.add(so1);
             }
@@ -130,7 +130,7 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
         }
 
         @Override
-        public void processFilesOnWebserver(PipelineJob job, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
 
         }

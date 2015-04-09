@@ -332,9 +332,9 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
     }
 
     @Override
-    public void saveToDb(User u, Container c, AnalysisModel model)
+    public void writeOutput(User u, Container c, AnalysisModel model)
     {
-        getLogger().info("Saving Coverage Results to DB");
+        getLogger().info("Saving Coverage Results");
         Map<String, Integer> summary = new HashMap<>();
 
         try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())

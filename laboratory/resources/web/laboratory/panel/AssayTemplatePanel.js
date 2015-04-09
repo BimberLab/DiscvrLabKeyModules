@@ -67,6 +67,7 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
 
         this.callParent(arguments);
 
+        Ext4.Msg.wait('Loading...');
         Laboratory.Utils.getAssayDetails({
             assayId: this.assayId,
             success: this.onMetaLoad,
@@ -282,6 +283,8 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
     },
 
     onMetaLoad: function(result){
+        Ext4.Msg.hide();
+
         if (!result.domains || LABKEY.Utils.isEmptyObj(result.domains)){
             Ext4.Msg.alert('Error', 'Error: assay not found: ' + this.assayId);
             console.log(result);

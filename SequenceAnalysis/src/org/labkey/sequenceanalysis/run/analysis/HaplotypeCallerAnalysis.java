@@ -18,7 +18,9 @@ import org.labkey.sequenceanalysis.run.util.HaplotypeCallerWrapper;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: bimber
@@ -40,12 +42,11 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-stand_call_conf"), "stand_call_conf", "Threshold For Calling Variants", "The minimum phred-scaled confidence threshold at which variants should be called", "ldk-numberfield", null, 20),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-stand_emit_conf"), "stand_emit_conf", "Threshold For Emitting Variants", "The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold)", "ldk-numberfield", null, 20),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--emitRefConfidence"), "emitRefConfidence", "Emit Reference Confidence Scores", "Mode for emitting experimental reference confidence scores.  Allowable values are: NONE, BP_RESOLUTION, GVCF", "textfield", null, "GVCF"),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-recoverDanglingHeads"), "recoverDanglingHeads", "Recover Dangling Heads", "Should we enable dangling head recovery in the read threading assembler? This mode is currently experimental and should only be used in the RNA-seq calling pipeline.", "checkbox", null, true),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-dontUseSoftClippedBases"), "dontUseSoftClippedBases", "Don't Use Soft Clipped Bases", "If specified, we will not analyze soft clipped bases in the reads", "checkbox", null, true),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--variant_index_type"), "variant_index_type", "Variant Index Type", "Type of IndexCreator to use for VCF/BCF indices", "textfield", null, "LINEAR"),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--variant_index_parameter"), "variant_index_parameter", "Variant Index Parameter", "Parameter to pass to the VCF/BCF IndexCreator", "ldk-integerfield", null, 128000),
-                    ToolParameterDescriptor.create("dbsnp", "dbSNP file", "rsIDs from this file are used to populate the ID column of the output. Also, the DB INFO flag will be set when appropriate. dbSNP is not used in any way for the calculations themselves.", "displayfield", null, null),
-                    ToolParameterDescriptor.create("comp", "Comparison Track", "If a call overlaps with a record from the provided comp track, the INFO field will be annotated as such in the output with the track name (e.g. -comp:FOO will have 'FOO' in the INFO field). Records that are filtered in the comp track will be ignored. Note that 'dbSNP' has been special-cased (see the --dbsnp argument).", "displayfield", null, null)
+                    ToolParameterDescriptor.create("multithreaded", "Multithreaded?", "If checked, this tool will attempt to run in multi-threaded mode.  There are sometimes issues with this.", "checkbox", null, null),
+                    ToolParameterDescriptor.create("useQueue", "Use Queue?", "If checked, this tool will attempt to run using GATK queue.  This is the preferred way to multi-thread this tool.", "checkbox", null, null)
             ), null, null);
         }
 
@@ -71,17 +72,25 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         File outputFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".vcf.gz");
         File idxFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".vcf.gz.idx");
 
-        List<String> args = new ArrayList<>();
-        Integer threads = SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob());
-        if (threads != null)
+        if (getProvider().getParameterByName("multithreaded").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
         {
-            args.add("-nct");
-            args.add(threads.toString());
+            getPipelineCtx().getLogger().debug("HaplotypeCaller will run multi-threaded");
+            getWrapper().setMultiThreaded(true);
         }
 
-        args.addAll(getClientCommandArgs());
+        getWrapper().setOutputDir(outputDir);
 
-        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, args);
+        if (getProvider().getParameterByName("useQueue").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+        {
+            getWrapper().executeWithQueue(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, getClientCommandArgs());
+        }
+        else
+        {
+            List<String> args = new ArrayList<>();
+            args.addAll(getClientCommandArgs());
+
+            getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, args);
+        }
 
         output.addOutput(outputFile, "gVCF File");
         output.addSequenceOutput(outputFile, rs.getName() + ": HaplotypeCaller Variants", "gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId());

@@ -1,6 +1,6 @@
 <folderType xmlns="http://labkey.org/data/xml/folderType">
     <name>Sequence Analysis</name>
-    <description>The default folder layout for the sequence analysis module</description>
+    <description>The default folder layout for DISCVR-Seq</description>
     <folderTabs>
         <folderTab>
             <name>overview</name>

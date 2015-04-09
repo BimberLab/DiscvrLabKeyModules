@@ -1,35 +1,43 @@
 package org.labkey.sequenceanalysis;
 
+import htsjdk.tribble.Tribble;
+import htsjdk.tribble.index.Index;
+import htsjdk.tribble.index.IndexFactory;
+import htsjdk.variant.vcf.VCFCodec;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.ldk.LDKService;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.ldk.NavItem;
-import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
-import org.labkey.api.sequenceanalysis.*;
+import org.labkey.api.sequenceanalysis.GenomeTrigger;
+import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.SequenceDataProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.UnauthorizedException;
-import org.labkey.api.view.template.ClientDependency;
+import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,11 +89,11 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         _fileHandlers.add(handler);
     }
 
-    @Override
-    public File createTabixIndex(File input, @Nullable Logger log) throws PipelineJobException
-    {
-        return new TabixRunner(log).execute(input);
-    }
+//    @Override
+//    public File createTabixIndex(File input, @Nullable Logger log) throws PipelineJobException
+//    {
+//        return new TabixRunner(log).execute(input);
+//    }
 
     public Set<SequenceOutputHandler> getFileHandlers()
     {
@@ -154,5 +162,69 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         return model;
     }
 
+    @Override
+    public ReferenceGenomeImpl getReferenceGenome(int genomeId, User u)
+    {
+        TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), genomeId);
 
+        Map<String, Object> map = new TableSelector(ti, PageFlowUtil.set("rowid", "fasta_file", "container"), filter, null).getObject(Map.class);
+        if (map == null)
+        {
+            return null;
+        }
+
+        Container c = ContainerManager.getForId((String)map.get("container"));
+        if (!c.hasPermission(u, ReadPermission.class))
+        {
+            throw new UnauthorizedException("Cannot read data in container: " + c.getPath());
+        }
+
+        ExpData d = ExperimentService.get().getExpData((Integer)map.get("fasta_file"));
+
+        return new ReferenceGenomeImpl(d.getFile(), d, genomeId);
+    }
+
+    @Override
+    public File ensureVcfIndex(File vcf, Logger log) throws IOException
+    {
+        try
+        {
+            FileType gz = new FileType(".gz");
+            File expected = new File(vcf.getPath() + Tribble.STANDARD_INDEX_EXTENSION);
+            File tbi = new File(vcf.getPath() + ".tbi");
+
+            if (expected.exists())
+            {
+                return expected;
+            }
+            else if  (tbi.exists())
+            {
+                return tbi;
+            }
+            else
+            {
+                log.info("creating vcf index: " + expected.getPath());
+                //note: there is a bug in htsjdk's index creation with gz inputs
+                if (gz.isType(vcf) && !SystemUtils.IS_OS_WINDOWS)
+                {
+                    TabixRunner r = new TabixRunner(log);
+                    r.execute(vcf);
+
+                    return tbi;
+                }
+                else
+                {
+                    Index idx = IndexFactory.createDynamicIndex(vcf, new VCFCodec());
+                    idx.writeBasedOnFeatureFile(vcf);
+
+                    return expected;
+                }
+            }
+        }
+        catch (PipelineJobException e)
+        {
+            throw new IOException(e);
+        }
+    }
 }

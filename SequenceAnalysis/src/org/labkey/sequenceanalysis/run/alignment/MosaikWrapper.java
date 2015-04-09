@@ -51,7 +51,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
 
             File indexDir = new File(outputDir, getProvider().getName());
             File outputFile = getWrapper().getExpectedMosaikRefFile(indexDir, referenceGenome.getWorkingFastaFile());
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName());
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName(), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!indexDir.exists())
@@ -68,7 +68,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
             output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getProvider().getName(), output);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getProvider().getName(), referenceGenome);
 
             return output;
         }
@@ -77,7 +77,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
         public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName());
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName(), referenceGenome);
             getWrapper().setOutputDir(outputDirectory);
 
             //TODO: can we infer the technology?
@@ -106,6 +106,13 @@ public class MosaikWrapper extends AbstractCommandWrapper
 
         @Override
         public boolean doMergeUnalignedReads()
+        {
+            return true;
+        }
+
+
+        @Override
+        public boolean doAddReadGroups()
         {
             return true;
         }

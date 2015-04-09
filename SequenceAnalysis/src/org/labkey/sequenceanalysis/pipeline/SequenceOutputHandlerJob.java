@@ -4,8 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.Table;
-import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.exp.api.ExperimentUrls;
@@ -27,7 +25,6 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
-import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,6 +37,7 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
 {
     private String _handlerClassName;
     private String _name;
+    private String _protocolName;
     private JSONObject _jsonParams;
     private List<SequenceOutputFile> _files;
     private List<SequenceOutputFile> _outputsToCreate = new ArrayList<>();
@@ -52,6 +50,7 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
         super(SequenceOutputHandlerPipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
         _support = new SequenceJobSupportImpl();
         _name = handler.getName();
+        _protocolName = handler.getName() + "_" + FileUtil.getTimestamp();
         _handlerClassName = handler.getClass().getName();
         _jsonParams = jsonParams;
         _files = files;
@@ -83,7 +82,7 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
     @Override
     public String getDescription()
     {
-        return _name;
+        return _protocolName;
     }
 
     @Override
@@ -101,7 +100,7 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
     @Override
     public TaskPipeline getTaskPipeline()
     {
-        return PipelineJobService.get().getTaskPipeline(new TaskId(SequenceOutputHandlerJob.class));
+        return  PipelineJobService.get().getTaskPipeline(new TaskId(SequenceOutputHandlerJob.class));
     }
 
     public SequenceOutputHandler getHandler()
@@ -138,7 +137,7 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
     @Override
     public String getProtocolName()
     {
-        return null;
+        return _protocolName;
     }
 
     @Override

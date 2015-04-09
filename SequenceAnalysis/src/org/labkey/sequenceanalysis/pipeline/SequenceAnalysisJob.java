@@ -333,12 +333,6 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
         return _support.getCachedGenome(genomeId);
     }
 
-    @Override
-    public PipelineJob getJob()
-    {
-        return this;
-    }
-
     public List<Integer> getReadsetIdToProcesss()
     {
         return _readsetIdsToProcess;

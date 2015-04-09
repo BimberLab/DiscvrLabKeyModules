@@ -1,0 +1,183 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var outputFileIds = LABKEY.ActionURL.getParameter('outputFileIds') || '';
+        outputFileIds = outputFileIds.split(';');
+        if (!outputFileIds.length){
+            Ext4.Msg.alert('Error', 'Must Provide Outfile Files Ids');
+            return;
+        }
+
+        Ext4.define('GeneticsCore.panel.MethylationComparisonPanel', {
+            extend: 'Ext.form.Panel',
+            alias: 'widget.sequenceanalysis-MethylationComparisonPanel',
+            LABEL_WIDTH: 125,
+
+            initComponent: function(){
+                Ext4.QuickTips.init();
+
+                this.outputFileStore = Ext4.create('LABKEY.ext4.data.Store', {
+                    type: 'labkey-store',
+                    autoLoad: true,
+                    containerPath: Laboratory.Utils.getQueryContainerPath(),
+                    schemaName: 'sequenceanalysis',
+                    queryName: 'outputfiles',
+                    columns: 'rowid,name,dataid,dataid/name,dataid/fileexists,container/path,container/displayName',
+                    filterArray: [LABKEY.Filter.create('rowid', this.outputFileIds.join(';'), LABKEY.Filter.Types.IN)],
+                    sort: 'name',
+                    listeners: {
+                        scope: this,
+                        load: this.onLoad
+                    }
+                });
+
+                Ext4.apply(this, {
+                    border: false,
+                    defaults: {
+                        border: true,
+                        bodyStyle: 'padding: 5px;',
+                        style: 'padding-bottom: 10px;',
+                        defaults: {
+                            border: false,
+                            bodyStyle: 'padding: 5px;'
+                        }
+                    },
+                    items: [{
+                        title: 'Instructions',
+                        items: [{
+                            html: 'This tool can be used to compare methylation rates between samples.  Please choose from the options below:'
+                        }]
+                    },{
+                        title: 'Sample Information',
+                        itemId: 'sampleInfo',
+                        items: [{
+                            xtype: 'dataview',
+                            store: this.outputFileStore,
+                            itemSelector: 'tr.file_list',
+                            tpl: [
+                                '<table class="fileNames"><tr class="fileNames"><td>File Id</td><td>Name</td><td>File</td><td>Folder</td></tr>',
+                                '<tpl for=".">',
+                                '<tr class="file_list">',
+                                '<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "sequenceanalysis", "query.queryName":"outputfiles", "query.rowId~eq": values.rowid})]}" target="_blank">{rowid:htmlEncode}</a></td>',
+                                '<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "sequenceanalysis", "query.queryName":"outputfiles", "query.rowId~eq": values.rowid})]}" target="_blank">{name:htmlEncode}</a></td>',
+                                '<td',
+                                '<tpl if="values.dataid && !values[\'dataid/fileexists\']"> style="background: red;" data-qtip="File does not exist"</tpl>',
+                                '><a href="{[LABKEY.ActionURL.buildURL("experiment", "showData", values.queryContainerPath, {rowId: values.dataid})]}" target="_blank">{[Ext4.htmlEncode(values["dataid/name"])]}</a></td>',
+                                '<td><a href="{[LABKEY.ActionURL.buildURL("project", "start", values["container/path"], {})]}" target="_blank">{[Ext4.htmlEncode(values["container/displayName"])]}</a></td>',
+                                '</tr>',
+                                '</tpl>',
+                                '</table>'
+                            ]
+                        }]
+                    },{
+                        title: 'Step 1: Methylation Rate Standard Curve',
+                        itemId: 'sampleSection',
+                        items: [{
+                            html: 'Loading...'
+                        }]
+                    },{
+                        title: 'Step 2: Options',
+                        items: [{
+                            html: 'There are no options currently supported',
+                            style: 'padding-bottom: 10px;'
+                        }]
+                    }],
+                    buttonAlign: 'left',
+                    buttons: [{
+                        text: 'Submit',
+                        scope: this,
+                        handler: this.onSubmit
+                    }]
+                });
+
+                this.callParent(arguments);
+            },
+
+            onLoad: function(store){
+                var items = [{
+                    xtype: 'textarea',
+                    height: 200,
+                    width: 600,
+                    fieldLabel: 'Amplicon Borders',
+                    itemId: 'ampliconBorders'
+                },{
+                    layout: {
+                        type: 'table',
+                        columns: 2
+                    },
+                    defaults: {
+                        border: false,
+                        style: 'margin-right: 10px;margin-bottom: 5px;vertical-align:text-top;'
+                    },
+                    items: [{
+                        html: 'Sample Name'
+                    },{
+                        html: 'Expected Methylation Rate (0-1)'
+                    }]
+                }];
+
+                store.each(function(r){
+                    items[1].items.push({
+                        html: r.get('name'),
+                        outputFileId: r.get('rowid')
+                    });
+
+                    items[1].items.push({
+                        xtype: 'ldk-numberfield',
+                        decimalPrecision: 4,
+                        width: 80,
+                        minValue: 0,
+                        maxValue: 1,
+                        outputFileId: r.get('rowid'),
+                        fieldName: 'expectedRate'
+                    });
+                }, this);
+
+                var target = this.down('#sampleSection');
+                target.removeAll();
+                target.add({
+                    html: 'This section allows you to calculate a standard curve using samples with known methylation rates.  For each sample, enter the expected methylation rate.  If unknown you if you wish to exclude it, do not enter a value.'
+                });
+                target.add(items);
+            },
+
+            onSubmit: function(){
+                if (!this.getForm().isValid()){
+                    Ext4.Msg.alert('Error', 'One or more fields is invalid.  Please fill in any missing or invalid values (marked in red)');
+                    return;
+                }
+
+                var params = {};
+                params.ampliconBorders = this.down('#ampliconBorders').getValue();
+
+                params.stds = {};
+                Ext4.each(this.query('field[fieldName=expectedRate]'), function(field){
+                    if (field.getValue() !== null){
+                        params.stds[field.outputFileId] = field.getValue();
+                    }
+                }, this);
+
+                Ext4.Msg.wait('Saving...');
+                LABKEY.Ajax.request({
+                    url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler'),
+                    jsonData: {
+                        handlerClass: 'org.labkey.GeneticsCore.analysis.MethylationRateComparison',
+                        outputFileIds: this.outputFileIds,
+                        params: Ext4.encode(params)
+                    },
+                    scope: this,
+                    success: function(){
+                        Ext4.Msg.hide();
+
+                        window.location = LABKEY.ActionURL.buildURL('pipeline-status', 'showList');
+                    },
+                    failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback())
+                });
+            }
+        });
+
+        Ext4.create('GeneticsCore.panel.MethylationComparisonPanel', {
+            outputFileIds: outputFileIds
+        }).render(<%=webpartContext%>.wrapperDivId);
+    });
+</script>

@@ -12,6 +12,7 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
@@ -88,7 +89,15 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
                 final Set<String> expectedSequences = new HashSet<>();
                 for (Integer rowId : ts.getArrayList(Integer.class))
                 {
-                    expectedSequences.add(rowId + ".txt.gz");
+                    String fileName = rowId + ".txt.gz";
+                    expectedSequences.add(fileName);
+
+                    //check whether file exists
+                    File expected = new File(sequenceDir, fileName);
+                    if (!expected.exists())
+                    {
+                        _log.error("expected sequence file does not exist: " + expected.getPath());
+                    }
                 }
 
                 for (File child : sequenceDir.listFiles())
@@ -128,8 +137,12 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
                         //inspect within library
                         List<String> expectedChildren = new ArrayList<>();
                         Integer fastaId = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file")).getObject(Integer.parseInt(child.getName()), Integer.class);
-                        ExpData d = ExperimentService.get().getExpData(fastaId);
-                        File fasta = d.getFile();
+                        ExpData fastaData = ExperimentService.get().getExpData(fastaId);
+                        File fasta = fastaData.getFile();
+                        if (!fasta.exists())
+                        {
+                            _log.error("expected fasta file does not exist: " + fasta.getPath());
+                        }
 
                         expectedChildren.add(fasta.getName());
                         expectedChildren.add(fasta.getName() + ".fai");
@@ -160,7 +173,17 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
                             {
                                 ExpData trackData = ExperimentService.get().getExpData(dataId);
                                 if (trackData != null && trackData.getFile() != null)
-                                    expectedTracks.add(d.getFile().getName());
+                                {
+                                    expectedTracks.add(trackData.getFile().getName());
+                                    if (!trackData.getFile().exists())
+                                    {
+                                        _log.error("expected track file does not exist: " + trackData.getFile().getPath());
+                                    }
+                                }
+                                else
+                                {
+                                    _log.warn("unable to find ExpData for track with dataId: " + dataId);
+                                }
                             }
 
                             for (File f : trackDir.listFiles())
@@ -183,7 +206,13 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
                             {
                                 ExpData chainData = ExperimentService.get().getExpData(dataId);
                                 if (chainData != null && chainData.getFile() != null)
+                                {
                                     expectedChains.add(chainData.getFile().getName());
+                                    if (!chainData.getFile().exists())
+                                    {
+                                        _log.error("expected chain file does not exist: " + chainData.getFile().getPath());
+                                    }
+                                }
                             }
 
                             for (File f : chainDir.listFiles())
@@ -211,15 +240,12 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
                     if (d != null)
                     {
                         expectedFileNames.add(d.getFile().getName());
+                        expectedFileNames.addAll(appendExtraFiles(d.getFile()));
 
-                        //TODO: this seems like a hack.  certaion file types can get gzipped or indexed, so add those variants:
-                        expectedFileNames.add(d.getFile().getName() + ".bai");
-                        expectedFileNames.add(d.getFile().getName() + ".tbi");
-                        expectedFileNames.add(d.getFile().getName() + ".bgz");
-
-                        expectedFileNames.add(d.getFile().getName() + ".gz");
-                        expectedFileNames.add(d.getFile().getName() + ".gz.tbi");
-                        expectedFileNames.add(d.getFile().getName() + ".gz.idx");
+                        if (!d.getFile().exists())
+                        {
+                            _log.error("expected output file does not exist: " + d.getFile().getPath());
+                        }
                     }
                 }
 
@@ -242,13 +268,39 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
     private void deleteFile(File f) throws IOException
     {
         _log.info("deleting sequence file: " + f.getPath());
-//        if (f.isDirectory())
-//        {
-//            FileUtils.deleteDirectory(f);
-//        }
-//        else
-//        {
-//            f.delete();
-//        }
+        if (f.isDirectory())
+        {
+            FileUtils.deleteDirectory(f);
+        }
+        else
+        {
+            f.delete();
+        }
+    }
+
+    private static FileType _bamFileType = new FileType("bam");
+    private static FileType _vcfFileType = new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ);
+
+    private List<String> appendExtraFiles(File f)
+    {
+        List<String> ret = new ArrayList<>();
+
+        //TODO: this is sort of a hack.  certaion file types can get gzipped or indexed, so add those variants:
+        if (_bamFileType.isType(f))
+        {
+            ret.add(f.getName() + ".bai");
+        }
+        else if (_vcfFileType.isType(f))
+        {
+            ret.add(f.getName() + ".tbi");
+            ret.add(f.getName() + ".idx");
+            ret.add(f.getName() + ".bgz");
+
+            ret.add(f.getName() + ".gz");
+            ret.add(f.getName() + ".gz.tbi");
+            ret.add(f.getName() + ".gz.idx");
+        }
+
+        return ret;
     }
 }

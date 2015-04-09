@@ -17,6 +17,7 @@
 package org.labkey.GeneticsCore;
 
 import org.jetbrains.annotations.NotNull;
+import org.labkey.GeneticsCore.analysis.MethylationRateComparison;
 import org.labkey.GeneticsCore.button.ChangeReadsetStatusButton;
 import org.labkey.GeneticsCore.button.PublishSBTResultsButton;
 import org.labkey.GeneticsCore.button.SBTReviewButton;
@@ -29,6 +30,7 @@ import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.notification.NotificationService;
 import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.view.template.ClientDependency;
 
 import java.util.Collection;
@@ -75,6 +77,8 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(new ChangeReadsetStatusButton(), "sequenceanalysis", "sequence_analyses");
         LDKService.get().registerQueryButton(new PublishSBTResultsButton(), "sequenceanalysis", "alignment_summary_by_lineage");
         LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "sequence_analyses");
+
+        SequenceAnalysisService.get().registerFileHandler(new MethylationRateComparison());
     }
 
     @Override

@@ -358,7 +358,7 @@ public class BamIterator
 
             final Logger log2 = mock.mock(Logger.class, "log2");
             mock.checking(new Expectations() {{
-                oneOf(log2).info("Saving Coverage Results to DB");
+                oneOf(log2).info("Saving Coverage Results");
                 oneOf(log2).info("\tReference sequences saved: 1");
                 oneOf(log2).info("\tPositions saved by reference (may include indels, so total could exceed reference length):");
                 oneOf(log2).info("\t1|SIVmac239: 8892");
@@ -366,7 +366,7 @@ public class BamIterator
 
             final Logger log3 = mock.mock(Logger.class, "log3");
             mock.checking(new Expectations() {{
-                oneOf(log3).info("Saving NT SNP results to DB");
+                oneOf(log3).info("Saving NT SNP results");
                 oneOf(log3).info("\tReference sequences saved: 1");
                 oneOf(log3).info("\tSNPs saved by reference:");
                 oneOf(log3).info("\t1|SIVmac239: 473");
@@ -374,7 +374,7 @@ public class BamIterator
 
             final Logger log4 = mock.mock(Logger.class, "log4");
             mock.checking(new Expectations() {{
-                oneOf(log4).info("Saving AA SNP Results to DB");
+                oneOf(log4).info("Saving AA SNP Results");
                 oneOf(log4).info("\tTotal AA Reference sequences encountered: 11");
                 oneOf(log4).info("\tSNPs saved by reference:");
                 oneOf(log4).info("\t1|SIVmac239 Nef: 9");
@@ -409,17 +409,17 @@ public class BamIterator
             m.setContainer(_project.getId());
             Table.insert(TestContext.get().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES), m);
 
-            agg2.saveToDb(TestContext.get().getUser(), _project, m);
+            agg2.writeOutput(TestContext.get().getUser(), _project, m);
             TableSelector coverage = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_COVERAGE), new SimpleFilter(FieldKey.fromString("analysis_id"), m.getRowId()), null);
             long coverageCount = coverage.getRowCount();
             Assert.assertEquals("Incorrect coverage count", 8892L, coverageCount);
 
-            agg3.saveToDb(TestContext.get().getUser(), _project, m);
+            agg3.writeOutput(TestContext.get().getUser(), _project, m);
             TableSelector ntPos = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS), new SimpleFilter(FieldKey.fromString("analysis_id"), m.getRowId()), null);
             long ntPosCount = ntPos.getRowCount();
             Assert.assertEquals("Incorrect NT pos count", 473L, ntPosCount);
 
-            agg4.saveToDb(TestContext.get().getUser(), _project, m);
+            agg4.writeOutput(TestContext.get().getUser(), _project, m);
             TableSelector aaByCodon = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON), new SimpleFilter(FieldKey.fromString("analysis_id"), m.getRowId()), null);
             long aaByCodonCount = aaByCodon.getRowCount();
             Assert.assertEquals("Incorrect AA codon count", 259L, aaByCodonCount);
@@ -468,7 +468,7 @@ public class BamIterator
                 throw new FileNotFoundException("File not found: " + file.getPath());
 
             //NOTE: we cant guarantee that the NT Id of the test data will be identical to that of the server.  therefore we find mac239's rowId here an swap in later
-            TableInfo tableNt = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
+            TableInfo tableNt = QueryService.get().getUserSchema(TestContext.get().getUser(), _project, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
             SimpleFilter ntFilter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
             TableSelector tsNt = new TableSelector(tableNt, ntFilter, null);
             RefNtSequenceModel nt = tsNt.getObject(RefNtSequenceModel.class);

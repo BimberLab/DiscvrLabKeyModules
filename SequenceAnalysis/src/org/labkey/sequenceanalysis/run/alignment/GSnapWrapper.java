@@ -1,10 +1,12 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
@@ -48,7 +50,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
         public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName());
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName(), referenceGenome);
             GSnapWrapper wrapper = getWrapper();
 
             List<String> args = new ArrayList<>();
@@ -79,23 +81,74 @@ public class GSnapWrapper extends AbstractCommandWrapper
             args.add("1");  //use suffix array, which should increase speed
 
             args.add("--batch");
-            args.add("4");
+            args.add("5");
 
             //look for novel splicing
             args.add("-N");
             args.add("1");
 
-            //TODO
-            //args.add("-s");
-            //args.add(<splice sites file>);
-            //cat <gtf file> | gtf_splicesites > foo.splicesites
-            //cat <gtf file> | gtf_introns > foo.introns
 
-            // -m <mismatches>
+            if (!StringUtils.isEmpty(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider())))
+            {
+                getPipelineCtx().getLogger().info("creating splice site file");
+                File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class));
+                if (gtf.exists())
+                {
+                    //cat <gtf file> | gtf_splicesites > foo.splicesites
+                    List<String> params = new ArrayList<>();
 
-            ///TODO
-            //--fails-as-input?
-            //args.add("--failed-input");
+                    File spliceSitesExe = SequencePipelineService.get().getExeForPackage("GSNAPPATH", "gtf_splicesites");
+                    params.add("/bin/sh");
+                    params.add("-c");
+                    params.add("cat " + gtf.getPath() + " | " + spliceSitesExe.getPath());
+
+                    File spliceOutput1 = new File(outputDirectory, FileUtil.getBaseName(gtf) + "_splicesites");
+                    if (spliceOutput1.exists())
+                    {
+                        getPipelineCtx().getLogger().debug("deleting existing file: " + spliceOutput1.getPath());
+                        spliceOutput1.delete();
+                    }
+                    getWrapper().execute(params, spliceOutput1);
+
+                    if (!spliceOutput1.exists())
+                    {
+                        throw new PipelineJobException("Unable to find splice file: " + spliceOutput1.getPath());
+                    }
+
+                    //cat <file> | iit_store -o <splicesitesfile>
+                    File spliceOutput2 = new File(outputDirectory, FileUtil.getBaseName(gtf) + "_splice");
+                    List<String> params2 = new ArrayList<>();
+
+                    File storeExe = SequencePipelineService.get().getExeForPackage("GSNAPPATH", "iit_store");
+                    params2.add("/bin/sh");
+                    params2.add("-c");
+                    params2.add("cat " + spliceOutput1.getPath() + " | " + storeExe.getPath() + " -o " + spliceOutput2.getPath());
+                    getWrapper().execute(params2);
+
+                    spliceOutput2 = new File(spliceOutput2.getPath() + ".iit");
+                    if (!spliceOutput2.exists())
+                    {
+                        throw new PipelineJobException("Unable to find splice file: " + spliceOutput2.getPath());
+                    }
+
+                    output.addIntermediateFile(spliceOutput1);
+                    //output.addIntermediateFile(spliceOutput2);
+
+                    args.add("-s");
+                    args.add(spliceOutput2.getPath());
+                }
+                else
+                {
+                    throw new PipelineJobException("expected GTF file does not exist: " + gtf.getPath());
+                }
+            }
+
+            //--fails-as-input
+            if (getProvider().getParameterByName("outputFailed").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+            {
+                args.add("--failed-input");
+                args.add(new File(outputDirectory, basename).getPath() + "_failed");
+            }
 
             args.add("--split-output");
             args.add(new File(outputDirectory, basename).getPath());
@@ -166,6 +219,12 @@ public class GSnapWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean doAddReadGroups()
+        {
+            return true;
+        }
+
+        @Override
         public boolean doSortIndexBam()
         {
             return true;
@@ -178,7 +237,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
             File indexDir = outputDir; //note: GNSAP will create a subdirectory
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName());
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName(), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!indexDir.exists())
@@ -200,7 +259,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
                 args.add(getProvider().getName());
                 args.add(referenceGenome.getWorkingFastaFile().getPath());
 
-                //TODO: conditionalize
+                //TODO: conditionalize?
                 args.add("-k");
                 args.add("12");
 
@@ -210,7 +269,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
             output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getProvider().getName(), output);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), new File(indexDir, getProvider().getName()), getProvider().getName(), referenceGenome);
 
             return output;
         }
@@ -221,15 +280,19 @@ public class GSnapWrapper extends AbstractCommandWrapper
         public Provider()
         {
             super("GSnap", "GSnap is a splice aware aligner, suitable for RNA-Seq.", Arrays.asList(
-                    ToolParameterDescriptor.create("splice_sites_files", "Gene File", "This is the ID of a GTF file containing genes from this genome.  It will be used to identify splice sites.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
+                    ToolParameterDescriptor.createExpDataParam("splice_sites_file", "Gene File", "This is the ID of a GTF file containing genes from this genome.  It will be used to identify splice sites.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                     {{
-                        put("extension", "gtf");
+                        put("extensions", Arrays.asList("gtf"));
+                        put("width", 400);
                     }}, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-m"), "mismatches", "Max Mismatches", null, "ldk-integerfield", null, 5),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-m"), "mismatches", "Max Mismatches", "Controls the maximum number of mismatches.  If the value is less than 1, it will be interpreted as a percentage.  Otherwise it will be a fixed cutoff.", "ldk-numberfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 0.05),
                     new ToolParameterDescriptor(CommandLineParam.create("-N"), "allow_novel_splicing", "Allow Novel Splicing", null, "checkbox", true, new JSONObject()
                     {{
                         put("checked", true);
-                    }})
+                    }}, false)
                     {
                         @Override
                         public String extractValueForCommandLine(PipelineJob job, PipelineStepProvider provider) throws PipelineJobException
@@ -244,7 +307,11 @@ public class GSnapWrapper extends AbstractCommandWrapper
                                 return "1";
                             }
                         }
-                    }
+                    },
+                    ToolParameterDescriptor.create("outputFailed", "Output Failed", "If checked, the tool will output failed reads to a separate file", "checkbox", new JSONObject()
+                    {{
+                        put("checked", false);
+                    }}, false)
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "http://research-pub.gene.com/gmap/", true);
         }
 
@@ -256,7 +323,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
 
     protected File getGMapExe()
     {
-        return SequencePipelineService.get().getExeForPackage("GSNAPPATH", "gsnap");
+        return SequencePipelineService.get().getExeForPackage("GSNAPPATH", "gmap");
     }
 
     protected File getBuildExe()

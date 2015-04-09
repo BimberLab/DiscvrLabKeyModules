@@ -20,9 +20,6 @@ import java.util.List;
  * User: bimber
  * Date: 12/15/12
  * Time: 8:34 PM
- *
- * This task is designed to create the reference FASTA, which requires the DB.  this task will run
- * on the webserver
  */
 public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerIndexesTask.Factory>
 {

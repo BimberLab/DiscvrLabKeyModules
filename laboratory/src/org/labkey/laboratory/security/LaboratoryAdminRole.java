@@ -19,7 +19,7 @@ public class LaboratoryAdminRole extends AbstractRole
 {
     public LaboratoryAdminRole()
     {
-        super("Laboratory Admin", "Grants users the ability to manage folder-level settings in the laboratory module.",
+        super("Laboratory Admin", "Grants users the ability to manage folder-level settings in DISCVR and the laboratory module.",
                 ReadPermission.class,
                 InsertPermission.class,
                 UpdatePermission.class,

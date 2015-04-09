@@ -15,10 +15,8 @@
  */
 package org.labkey.blast.pipeline;
 
-import org.apache.commons.compress.compressors.gzip.GzipUtils;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -34,9 +32,7 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
-import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
-import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.blast.BLASTManager;
 import org.labkey.blast.BLASTSchema;
@@ -54,7 +50,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
 
 /**
  * User: bbimber
@@ -137,7 +132,7 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
         boolean dbExists = new TableSelector(databases, new SimpleFilter(FieldKey.fromString("objectid"), getPipelineJob().getDatabaseGuid()), null).exists();
         if (dbExists)
         {
-            getJob().getLogger().info("database already exists, creating files");
+            getJob().getLogger().info("database record already exists, creating files");
         }
         else
         {

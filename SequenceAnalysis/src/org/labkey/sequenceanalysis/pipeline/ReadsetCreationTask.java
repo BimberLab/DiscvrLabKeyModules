@@ -43,6 +43,7 @@ import org.labkey.sequenceanalysis.util.FastqUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -312,6 +313,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 getJob().getLogger().info("running FastQC for file: " + d1.getFile().getName());
                 FastqcRunner runner = new FastqcRunner(getJob().getLogger());
                 runner.execute(Arrays.asList(d1.getFile()));
+                getJob().getLogger().info("done");
             }
             catch (FileNotFoundException e)
             {

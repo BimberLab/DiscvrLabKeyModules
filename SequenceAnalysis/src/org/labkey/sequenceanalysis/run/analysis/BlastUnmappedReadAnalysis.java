@@ -19,6 +19,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.sequenceanalysis.run.alignment.FastqCollapser;
 import org.labkey.sequenceanalysis.run.util.BlastNWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
@@ -89,86 +90,84 @@ public class BlastUnmappedReadAnalysis extends AbstractCommandPipelineStep<Blast
             }
         }
 
-
-        File fasta = new File(outputDir, FileUtil.getBaseName(inputBam) + "_unmapped.fasta");
-        output.addIntermediateFile(fasta);
-        output.addInput(fasta, "Unmapped Reads FASTA");
-
         getPipelineCtx().getLogger().info("writing unmapped reads to FASTA");
-        List<File> fastas = UnmappedReadExportAnalysis.writeUnmappedReadsAsFasta(inputBam, fasta, getPipelineCtx().getLogger(), 1000L);
-        if (fastas.size() > 1)
+        File fasta = new File(outputDir, FileUtil.getBaseName(inputBam) + "_unmapped.fasta");
+        UnmappedReadExportAnalysis.writeUnmappedReadsAsFasta(inputBam, fasta, getPipelineCtx().getLogger(), null, null).get(0);
+        long lineCount = SequenceUtil.getLineCount(fasta);
+        if (lineCount == 0)
         {
-            getPipelineCtx().getLogger().info("The unmapped reads have been split into " + fastas.size() + " smaller files to BLAST.  This may still take some time to run.");
+            fasta.delete();
+
+            getPipelineCtx().getLogger().info("There are no unmapped reads, skipping");
         }
-
-        Map<String, Integer> hitCount = new TreeMap<>();
-        Map<String, Integer> taxaCount = new TreeMap<>();
-
-        for (File f : fastas)
+        else
         {
-            getPipelineCtx().getLogger().info("processing file: " + f.getName());
-            output.addIntermediateFile(f, "Unmapped Reads FASTA");
-            long lineCount = SequenceUtil.getLineCount(f);
-            if (lineCount == 0)
+            output.addIntermediateFile(fasta);
+            output.addInput(fasta, "Unmapped Reads FASTA");
+
+            Map<String, Integer> hitCount = new TreeMap<>();
+            Map<String, Integer> taxaCount = new TreeMap<>();
+
+            //collapse reads
+            FastqCollapser collapser = new FastqCollapser(getPipelineCtx().getLogger());
+            File collapsed = new File(fasta.getParentFile(), FileUtil.getBaseName(fasta) + ".collapsed.fasta");
+            collapser.collapseFile(fasta, collapsed);
+            long collapsedLineCount = SequenceUtil.getLineCount(collapsed);
+            getPipelineCtx().getLogger().info("total FASTA sequences: " + (collapsedLineCount / 2));
+
+            output.addIntermediateFile(collapsed, "Collapsed Reads FASTA");
+
+            File blastResults = new File(outputDir, FileUtil.getBaseName(fasta) + ".bls");
+
+            List<String> args = new ArrayList<>();
+            args.add("-outfmt");
+            args.add("6 qseqid qlen slen length sseqid sgi sacc evalue bitscore pident mismatch staxids sscinames scomnames sblastnames stitle");
+            args.add("-perc_identity");
+            args.add("90");
+
+            args.add("-evalue");
+            args.add("1e-10");
+            args.add("-best_hit_score_edge");
+            args.add("0.05");
+            args.add("-best_hit_overhang");
+            args.add("0.25");
+            args.add("-max_target_seqs");
+            args.add("1");
+
+            getWrapper().doRemoteBlast(collapsed, blastResults, args, taxDbDir);
+            if (blastResults.exists())
             {
-                f.delete();
-
-                getPipelineCtx().getLogger().info("There are no unmapped reads, skipping");
-            }
-            else
-            {
-                File blastResults = new File(outputDir, FileUtil.getBaseName(f) + ".bls");
-
-                List<String> args = new ArrayList<>();
-                args.add("-outfmt");
-                args.add("6 qseqid qlen slen length sseqid sgi sacc evalue bitscore pident mismatch staxids sscinames scomnames sblastnames stitle");
-                args.add("-perc_identity");
-                args.add("90");
-
-                args.add("-evalue");
-                args.add("1e-10");
-                args.add("-best_hit_score_edge");
-                args.add("0.05");
-                args.add("-best_hit_overhang");
-                args.add("0.25");
-                args.add("-max_target_seqs");
-                args.add("1");
-
-                getWrapper().doRemoteBlast(f, blastResults, args, taxDbDir);
-                if (blastResults.exists())
+                try (BufferedReader lr = new BufferedReader(new FileReader(blastResults)))
                 {
-                    try (BufferedReader lr = new BufferedReader(new FileReader(blastResults)))
+                    String line;
+                    while ((line = lr.readLine()) != null)
                     {
-                        String line;
-                        while ((line = lr.readLine()) != null)
-                        {
-                            //qseqid qlen slen length sseqid sgi sacc evalue bitscore pident mismatch staxids sscinames scomnames sblastnames stitle
-                            String[] tokens = line.split("\t");
-                            appendColumn(tokens, 12, hitCount);
-                            appendColumn(tokens, 11, taxaCount);
-                        }
+                        //qseqid qlen slen length sseqid sgi sacc evalue bitscore pident mismatch staxids sscinames scomnames sblastnames stitle
+                        String[] tokens = line.split("\t");
+                        appendColumn(tokens, 12, hitCount);
+                        appendColumn(tokens, 11, taxaCount);
                     }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-
-                    Compress.compressGzip(blastResults);
-                    output.addInput(new File(blastResults.getPath() + ".gz"), "BLAST Results");
                 }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+                Compress.compressGzip(blastResults);
+                output.addInput(new File(blastResults.getPath() + ".gz"), "BLAST Results");
             }
-        }
 
-        getPipelineCtx().getLogger().info("hits: ");
-        for (String key : hitCount.keySet())
-        {
-            getPipelineCtx().getLogger().info(key + ": " + hitCount.get(key));
-        }
+            getPipelineCtx().getLogger().info("hits: ");
+            for (String key : hitCount.keySet())
+            {
+                getPipelineCtx().getLogger().info(key + ": " + hitCount.get(key));
+            }
 
-        getPipelineCtx().getLogger().info("taxa: ");
-        for (String key : taxaCount.keySet())
-        {
-            getPipelineCtx().getLogger().info(key + ": " + taxaCount.get(key));
+            getPipelineCtx().getLogger().info("taxa: ");
+            for (String key : taxaCount.keySet())
+            {
+                getPipelineCtx().getLogger().info(key + ": " + taxaCount.get(key));
+            }
         }
 
         return output;

@@ -131,7 +131,7 @@ public class AvgBaseQualityAggregator
             sli.setEmitUncoveredLoci(false);
             if (this._filters != null)
             {
-                _log.debug("using custom filters for SamLocusIterator");
+                //_log.debug("using custom filters for SamLocusIterator");
                 sli.setSamFilters(_filters);
             }
 

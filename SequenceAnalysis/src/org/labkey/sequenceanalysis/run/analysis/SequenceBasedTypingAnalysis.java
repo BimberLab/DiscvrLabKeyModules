@@ -13,6 +13,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,12 +63,21 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                     ToolParameterDescriptor.create("minCountForRef", "Min Read # Per Reference", "If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this many reads across each sample.  This can be a way to reduce ambiguity among allele calls.", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
-                        }}, null),
-                    ToolParameterDescriptor.create("minPctForRef", "Min Read Pct Per Reference", "If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this percent of total from each sample.  This can be a way to reduce ambiguity among allele calls.  Value should between 0-100.", "ldk-integerfield", new JSONObject()
+                        }}, 5),
+                    ToolParameterDescriptor.create("minPctForRef", "Min Read Pct Per Reference", "If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this percent of total from each sample.  This can be a way to reduce ambiguity among allele calls.  Value should between 0-100.", "ldk-numberfield", new JSONObject()
                     {{
                             put("minValue", 0);
                             put("maxValue", 100);
-                        }}, null)
+                        }}, 0.05),
+                    ToolParameterDescriptor.create("minPctWithinGroup", "Min Read Pct Within Group", "If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this percent of total reads within a set of hits.  For example, says 30 reads matched alleles A, B and C.  Within the whole sample, 300 reads aligned to allele B, 200 to allele B and only 30 aligned to C.  The latter represent 10% (30 / 300) of hits for that group.  If you set this filter above this, allele C would be discarded.  Value should between 0-100.", "ldk-numberfield", new JSONObject()
+                    {{
+                            put("minValue", 0);
+                            put("maxValue", 100);
+                        }}, 25),
+                    ToolParameterDescriptor.create("writeLog", "Write Detailed Log", "If checked, the analysis will write a detailed log file of read mapping and calls.  This is intended for debugging purposes", "checkbox", new JSONObject()
+                    {{
+                            put("checked", false);
+                    }}, null)
             ), null, null);
         }
 
@@ -108,7 +118,19 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             BamIterator bi = new BamIterator(inputBam, referenceFasta, getPipelineCtx().getLogger());
 
             List<AlignmentAggregator> aggregators = new ArrayList<>();
-            aggregators.add(new SequenceBasedTypingAlignmentAggregator(getPipelineCtx().getLogger(), referenceFasta, avgBaseQualityAggregator, toolParams));
+            SequenceBasedTypingAlignmentAggregator agg = new SequenceBasedTypingAlignmentAggregator(getPipelineCtx().getLogger(), referenceFasta, avgBaseQualityAggregator, toolParams);
+            if (getProvider().getParameterByName("writeLog").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+            {
+                File workDir = new File(getPipelineCtx().getSourceDirectory(), FileUtil.getBaseName(inputBam));
+                if (!workDir.exists())
+                {
+                    workDir.mkdirs();
+                }
+                File outputLog = new File(workDir, FileUtil.getBaseName(inputBam) + ".sbt.txt");
+                agg.setOutputLog(outputLog);
+            }
+
+            aggregators.add(agg);
 
             bi.addAggregators(aggregators);
             bi.iterateReads();
@@ -116,7 +138,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
 
             for (AlignmentAggregator a : aggregators)
             {
-                a.saveToDb(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), model);
+                a.writeOutput(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), model);
             }
 
             bi.saveSynopsis(getPipelineCtx().getJob().getUser(), model);

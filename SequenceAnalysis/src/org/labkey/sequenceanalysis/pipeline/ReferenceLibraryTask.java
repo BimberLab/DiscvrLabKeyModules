@@ -50,7 +50,9 @@ public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask
         @Override
         public boolean isParticipant(PipelineJob job)
         {
-            return SequenceTaskHelper.isAlignmentUsed(job);
+            //note: this must be included because this is now how we cache readsets
+            //consider moving this to sequence job?
+            return true;
         }
 
         public List<FileType> getInputTypes()
@@ -88,52 +90,59 @@ public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask
 
     public RecordedActionSet run() throws PipelineJobException
     {
-        PipelineJob job = getJob();
-        _taskHelper = new SequenceTaskHelper(job, _wd);
+        SequenceAnalysisJob pipelineJob = getJob().getJobSupport(SequenceAnalysisJob.class);
+        _taskHelper = new SequenceTaskHelper(getJob(), _wd);
 
-        List<PipelineStepProvider<ReferenceLibraryStep>> providers = SequencePipelineService.get().getSteps(getJob(), ReferenceLibraryStep.class);
-        if (providers.isEmpty())
+        for (SequenceReadsetImpl rs : getHelper().getSettings().getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class)))
         {
-            throw new PipelineJobException("No reference library type was supplied");
+            pipelineJob.cacheReadset(rs);
         }
-        else if (providers.size() > 1)
-        {
-            throw new PipelineJobException("More than 1 reference library type was supplied");
-        }
-        else
+
+        getHelper().cacheExpDatasForParams();
+
+        //build reference if needed
+        if (SequenceTaskHelper.isAlignmentUsed(getJob()))
         {
             RecordedAction action = new RecordedAction(ACTIONNAME);
-            getHelper().getFileManager().addInput(action, "Job Parameters", getHelper().getSupport().getParametersFile());
-            getJob().getLogger().info("Creating Reference Library FASTA");
-
-            ReferenceLibraryStep step = providers.get(0).create(getHelper());
-
-            //ensure the FASTA exists
-            File sharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
-            if (!sharedDirectory.exists())
+            List<PipelineStepProvider<ReferenceLibraryStep>> providers = SequencePipelineService.get().getSteps(getJob(), ReferenceLibraryStep.class);
+            if (providers.isEmpty())
             {
-                sharedDirectory.mkdirs();
+                throw new PipelineJobException("No reference library type was supplied");
             }
-
-            ReferenceLibraryStep.Output output = step.createReferenceFasta(sharedDirectory);
-            File refFasta = output.getReferenceGenome().getSourceFastaFile();
-            if (!refFasta.exists())
+            else if (providers.size() > 1)
             {
-                throw new PipelineJobException("Reference file does not exist: " + refFasta.getPath());
+                throw new PipelineJobException("More than 1 reference library type was supplied");
             }
-
-            SequenceAnalysisJob pipelineJob = getJob().getJobSupport(SequenceAnalysisJob.class);
-            pipelineJob.setReferenceGenome(output.getReferenceGenome());
-
-            getHelper().getFileManager().addStepOutputs(action, output);
-            getHelper().getFileManager().cleanup();
-
-            for (SequenceReadsetImpl rs : getHelper().getSettings().getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class)))
+            else
             {
-                pipelineJob.cacheReadset(rs);
+                getHelper().getFileManager().addInput(action, "Job Parameters", getHelper().getSupport().getParametersFile());
+                getJob().getLogger().info("Creating Reference Library FASTA");
+
+                ReferenceLibraryStep step = providers.get(0).create(getHelper());
+
+                //ensure the FASTA exists
+                File sharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
+                if (!sharedDirectory.exists())
+                {
+                    sharedDirectory.mkdirs();
+                }
+
+                ReferenceLibraryStep.Output output = step.createReferenceFasta(sharedDirectory);
+                File refFasta = output.getReferenceGenome().getSourceFastaFile();
+                if (!refFasta.exists())
+                {
+                    throw new PipelineJobException("Reference file does not exist: " + refFasta.getPath());
+                }
+
+                pipelineJob.setReferenceGenome(output.getReferenceGenome());
+
+                getHelper().getFileManager().addStepOutputs(action, output);
+                getHelper().getFileManager().cleanup();
             }
 
             return new RecordedActionSet(action);
         }
+
+        return new RecordedActionSet();
     }
 }

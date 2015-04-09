@@ -30,7 +30,8 @@ select
 --     else 'Minor'
 --   end as category,
 
-  group_concat(a.rowid) as rowids
+  group_concat(a.rowid) as rowids,
+  a.haplotypesWithAllele
 
 FROM (
 
@@ -38,9 +39,10 @@ FROM (
     a.analysis_id,
     a.rowid,
 
-    group_concat(j.ref_nt_id) as alleleIds,
-    group_concat(j.ref_nt_id.name, chr(10)) as alleles,
+    group_concat(distinct j.ref_nt_id) as alleleIds,
+    group_concat(distinct j.ref_nt_id.name, chr(10)) as alleles,
     group_concat(distinct j.ref_nt_id.lineage, chr(10)) as lineages,
+    group_concat(distinct hs.haplotype) as haplotypesWithAllele,
 
     total,
     total_forward,
@@ -50,8 +52,9 @@ FROM (
 
   from sequenceanalysis.alignment_summary a
   left join sequenceanalysis.alignment_summary_junction j ON (j.alignment_id = a.rowid and j.status = true)
+  left join sequenceanalysis.haplotype_sequences hs ON (hs.lineage = j.ref_nt_id.lineage)
   group by a.analysis_id, a.rowid, a.total, total_forward, total_reverse, valid_pairs
 
 ) a
 
-GROUP BY a.analysis_id, a.alleles, a.alleleIds, a.lineages
+GROUP BY a.analysis_id, a.alleles, a.alleleIds, a.lineages, a.haplotypesWithAllele

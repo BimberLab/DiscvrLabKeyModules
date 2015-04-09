@@ -144,7 +144,8 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
                 fieldLabel: 'Title',
                 name: 'title',
                 itemId: 'titleField',
-                value: LABKEY.Security.currentUser.displayName + ' ' + (new Date().format('Y-m-d'))
+                value: LABKEY.Security.currentUser.displayName + ' ' + (new Date().format('Y-m-d')),
+                selectOnFocus: true
             },{
                 xtype: 'textarea',
                 fieldLabel: 'Description',
@@ -178,7 +179,12 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
                 columns: 'workbookId,rowIdAndName,container/RowId,container/Title,container/CreatedBy,container/Name',
                 sort: '-workbookId',
                 autoLoad: true
-            })
+            }),
+            listeners: {
+                render: function(field){
+                    field.focus.defer(100, field);
+                }
+            }
         },{
             xtype: 'checkbox',
             fieldLabel: 'My Workbooks Only',

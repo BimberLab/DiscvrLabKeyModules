@@ -119,7 +119,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
 
         DetailsURL details = DetailsURL.fromString("/laboratory/siteLabSettings.view");
         details.setContainerContext(ContainerManager.getSharedContainer());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "laboratory module admin", details.getActionURL());
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "discvr admin", details.getActionURL());
         NotificationService.get().registerNotification(new LabSummaryNotification(this));
 
         LaboratoryService.get().registerTableIndex("core", "containers", Arrays.asList("RowId", "Parent", "EntityId", "Type"));

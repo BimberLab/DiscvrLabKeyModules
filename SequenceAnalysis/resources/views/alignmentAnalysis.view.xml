@@ -9,5 +9,7 @@
         <dependency path="SequenceAnalysis/panel/BaseSequencePanel.js"/>
         <dependency path="SequenceAnalysis/panel/SequenceAnalysisPanel.js"/>
         <dependency path="SequenceAnalysis/panel/AlignmentAnalysisPanel.js"/>
+
+        <dependency path="SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js"/>
     </dependencies>
 </view>

@@ -1,0 +1,16 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" containerFilter="CurrentAndSubfolders">
+    <columns>
+        <column name="Status" />
+        <column name="Description" />
+        <column name="ActiveHostName"/>
+        <column name="Created" />
+        <column name="Provider"/>
+        <column name="totalReadsets"/>
+        <column name="totalAnalyses"/>
+        <column name="totalOutputs"/>
+        <column name="hasSequenceData"/>
+    </columns>
+    <sorts>
+        <sort column="Created" descending="true"/>
+    </sorts>
+</customView>

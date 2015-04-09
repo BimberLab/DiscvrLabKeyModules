@@ -14,6 +14,10 @@ import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.tribble.index.IndexFactory;
+import htsjdk.tribble.index.tabix.TabixFormat;
+import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -211,7 +215,7 @@ public class SequenceUtil
         }
     }
 
-    public static void logFastqBamDifferences(Logger log, File bam, Integer fastqReadCount, @Nullable Integer fastq2ReadCount) throws IOException
+    public static void logFastqBamDifferences(Logger log, File bam) throws IOException
     {
         int totalFirstMateAlignments = 0;
         int totalFirstMatePrimaryAlignments = 0;
@@ -262,16 +266,8 @@ public class SequenceUtil
                 log.info("Total first second mate alignments: " + totalSecondMateAlignments);
 
                 log.info("Total first mate primary alignments: " + totalFirstMatePrimaryAlignments);
-                if (fastqReadCount != null)
-                {
-                    log.info("\tDifference from FASTQ: " + (fastqReadCount - totalFirstMatePrimaryAlignments));
-                }
 
                 log.info("Total second mate primary alignments: " + totalSecondMatePrimaryAlignments);
-                if (fastq2ReadCount != null)
-                {
-                    log.info("\tDifference from second FASTQ: " + (fastq2ReadCount - totalSecondMatePrimaryAlignments));
-                }
             }
         }
     }
@@ -329,5 +325,16 @@ public class SequenceUtil
         }
 
         return ret;
+    }
+
+    public static void deleteBamAndIndex(File bam)
+    {
+        bam.delete();
+
+        File idx = new File(bam.getPath() + ".bai");
+        if (idx.exists())
+        {
+            idx.delete();
+        }
     }
 }

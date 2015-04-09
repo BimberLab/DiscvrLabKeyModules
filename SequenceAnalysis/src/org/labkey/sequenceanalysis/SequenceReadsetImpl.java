@@ -15,26 +15,13 @@
  */
 package org.labkey.sequenceanalysis;
 
-import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJobService;
-import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.security.User;
-import org.labkey.api.security.permissions.ReadPermission;
-import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.view.UnauthorizedException;
+import org.labkey.api.util.FileUtil;
 
-import java.io.File;
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -353,5 +340,10 @@ public class SequenceReadsetImpl implements Readset
     public void setFileSetName(String fileSetName)
     {
         _fileSetName = fileSetName;
+    }
+
+    public String getLegalFileName()
+    {
+        return FileUtil.makeLegalName(getName()).replaceAll(" ", "_");
     }
 }

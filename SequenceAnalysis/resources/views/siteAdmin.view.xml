@@ -1,4 +1,4 @@
-<view xmlns="http://labkey.org/data/xml/view" title="Sequence Analysis Module Site Settings">
+<view xmlns="http://labkey.org/data/xml/view" title="DISCVR-Seq Site Settings">
     <permissions>
         <permission name="admin"/>
     </permissions>

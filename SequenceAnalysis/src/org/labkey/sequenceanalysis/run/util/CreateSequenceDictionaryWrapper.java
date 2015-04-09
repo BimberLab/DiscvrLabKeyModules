@@ -32,8 +32,6 @@ public class CreateSequenceDictionaryWrapper extends PicardWrapper
 
     public File execute(File referenceFasta, boolean forceRecreate) throws PipelineJobException
     {
-        getLogger().info("Creating dictionary for: " + referenceFasta.getPath());
-
         File expected = getExpectedDictionaryFile(referenceFasta);
         if (expected.exists())
         {
@@ -43,9 +41,12 @@ public class CreateSequenceDictionaryWrapper extends PicardWrapper
             }
             else
             {
+                getLogger().info("Dictionary already exists for: " + referenceFasta.getPath());
                 return expected;
             }
         }
+
+        getLogger().info("Creating dictionary for: " + referenceFasta.getPath());
 
         List<String> params = new LinkedList<>();
         params.add("java");

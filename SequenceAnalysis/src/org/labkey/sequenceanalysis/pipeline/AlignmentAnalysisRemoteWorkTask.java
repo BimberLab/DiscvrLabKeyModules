@@ -137,6 +137,8 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
             outputs.addAll(SequenceAnalysisTask.runAnalysesRemote(actions, rs, inputBam, genome, providers, getTaskHelper()));
         }
 
+        getTaskHelper().getFileManager().cleanup();
+
         return new RecordedActionSet(actions);
     }
 

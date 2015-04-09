@@ -767,6 +767,7 @@ public class TestHelper
                 config.put("deleteIntermediateFiles", false);
                 config.put("inputfile.inputTreatment", "compress");
             }
+            config.put("inputfile.runFastqc", true);
             appendSamplesForImport(config, Arrays.asList(g, g2, g3));
 
             PipelineJob job = createPipelineJob(protocolName, IMPORT_TASKID, config.toString(), fileNames);
@@ -781,11 +782,15 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "Normalization"));
             File merge1 = new File(basedir, "Normalization/" + SequenceTaskHelper.getUnzippedBaseName(PAIRED_FILENAME_L1a) + ".merged.fastq.gz");
             expectedOutputs.add(merge1);
+            expectedOutputs.add(new File(merge1.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(merge1)) + "_fastqc.html.gz"));
             File merge2 = new File(basedir, "Normalization/" + SequenceTaskHelper.getUnzippedBaseName(PAIRED_FILENAME2_L1a) + ".merged.fastq.gz");
             expectedOutputs.add(merge2);
+            expectedOutputs.add(new File(merge2.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(merge2)) + "_fastqc.html.gz"));
 
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME1));
+            expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME1)) + "_fastqc.html.gz"));
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME2));
+            expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2)) + "_fastqc.html.gz"));
 
             //these will be merged
             if (!deleteIntermediates)
@@ -797,8 +802,11 @@ public class TestHelper
             }
 
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME_L2));
+            expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME_L2)) + "_fastqc.html.gz"));
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME2_L2));
+            expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2_L2)) + "_fastqc.html.gz"));
             expectedOutputs.add(new File(basedir, UNPAIRED_FILENAME));
+            expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(UNPAIRED_FILENAME)) + "_fastqc.html.gz"));
 
             verifyFileOutputs(basedir, expectedOutputs);
             verifyFileInputs(basedir, fileNames, config);
@@ -1496,9 +1504,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -1564,9 +1569,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -1698,9 +1700,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -1758,9 +1757,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -1814,9 +1810,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -1885,9 +1878,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -1989,9 +1979,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -2044,9 +2031,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -2106,9 +2090,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -2172,9 +2153,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -2275,9 +2253,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -2342,9 +2317,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -2412,9 +2384,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -2483,9 +2452,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             //NOTE: the first time we create a library, we make the indexes.  this job did not choose to delete intermediates, so they remain in the analysis dir too
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
@@ -2552,9 +2518,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "Shared"));
@@ -2631,9 +2594,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "Shared"));
@@ -2653,8 +2613,8 @@ public class TestHelper
             addOptionalFile(expectedOutputs, new File(basedir, "paired1/Alignment/Non_CpG_OT_TestReadset1.txt.gz"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam_splitting_report.txt"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.gff"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.txt"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.txt.png"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.methylation.txt"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.methylation.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias.txt"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias_R2.png"));
@@ -2677,8 +2637,8 @@ public class TestHelper
             addOptionalFile(expectedOutputs, new File(basedir, "paired3/Alignment/Non_CpG_OT_TestReadset2.txt.gz"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam_splitting_report.txt"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.gff"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.txt"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.txt.png"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.methylation.txt"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.methylation.png"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.M-bias.txt"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fastq_bismark_SE.alignment_overview.png"));
@@ -2698,8 +2658,8 @@ public class TestHelper
             addOptionalFile(expectedOutputs, new File(basedir, "paired4/Alignment/Non_CpG_OT_TestReadset3.txt.gz"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam_splitting_report.txt"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.gff"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.txt"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.txt.png"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.methylation.txt"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.methylation.png"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.M-bias.txt"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fastq_bismark_SE.alignment_overview.png"));
@@ -2757,9 +2717,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
             expectedOutputs.add(new File(basedir, "Shared"));
@@ -2775,8 +2732,8 @@ public class TestHelper
             addOptionalFile(expectedOutputs, new File(basedir, "paired1/Alignment/Non_CpG_OT_TestReadset1.txt.gz"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam_splitting_report.txt"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.gff"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.txt"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.txt.png"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.methylation.txt"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.methylation.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias.txt"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias_R2.png"));
@@ -2794,8 +2751,8 @@ public class TestHelper
             addOptionalFile(expectedOutputs, new File(basedir, "paired3/Alignment/Non_CpG_OT_TestReadset2.txt.gz"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam_splitting_report.txt"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.gff"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.txt"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.txt.png"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.methylation.txt"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.methylation.png"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.M-bias.txt"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fastq_bismark_SE.alignment_overview.png"));
@@ -2812,8 +2769,8 @@ public class TestHelper
             addOptionalFile(expectedOutputs, new File(basedir, "paired4/Alignment/Non_CpG_OT_TestReadset3.txt.gz"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam_splitting_report.txt"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.gff"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.txt"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.txt.png"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.methylation.txt"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.methylation.png"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.M-bias.txt"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fastq_bismark_SE.alignment_overview.png"));
@@ -2868,7 +2825,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "s_G1_L001_R1_001.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -2920,7 +2876,7 @@ public class TestHelper
             return PROJECT_NAME;
         }
 
-        //@Test
+        @Test
         public void testGSnap() throws Exception
         {
             if (!isExternalPipelineEnabled())
@@ -2939,9 +2895,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 
@@ -3006,8 +2959,9 @@ public class TestHelper
             //this is probably due to adapters
             verifyFileOutputs(basedir, expectedOutputs);
             validateAlignment(bam1, 316, 106);
-            //validateAlignment(bam2, 150, 59);
-            //validateAlignment(bam3, 150, 59);
+            //NOTE: some of the time we have 150 aligned and sometimes 150??
+            //validateAlignment(bam2, 152, 59);
+            //validateAlignment(bam3, 152, 59);
         }
 
         //@Test
@@ -3029,9 +2983,6 @@ public class TestHelper
             File basedir = new File(_pipelineRoot, "sequenceAnalysis/" + protocolName);
             expectedOutputs.add(new File(basedir, protocolName + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, protocolName + ".log"));
-            expectedOutputs.add(new File(basedir, "paired1.log"));
-            expectedOutputs.add(new File(basedir, "paired3.log"));
-            expectedOutputs.add(new File(basedir, "paired4.log"));
 
             expectedOutputs.add(new File(basedir, "sequenceAnalysis.xml"));
 

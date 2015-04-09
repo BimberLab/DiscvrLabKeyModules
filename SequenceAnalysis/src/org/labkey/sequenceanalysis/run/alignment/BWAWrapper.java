@@ -78,7 +78,7 @@ public class BWAWrapper extends AbstractCommandWrapper
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
             File indexDir = new File(outputDir, "bwa");
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), "bwa");
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), "bwa", referenceGenome);
             if (!hasCachedIndex)
             {
                 List<String> args = new ArrayList<>();
@@ -106,7 +106,7 @@ public class BWAWrapper extends AbstractCommandWrapper
             output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, "bwa", output);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, "bwa", referenceGenome);
 
             return output;
         }
@@ -115,13 +115,19 @@ public class BWAWrapper extends AbstractCommandWrapper
         public final AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, "bwa");
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, "bwa", referenceGenome);
 
             return _performAlignment(output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename);
         }
 
         @Override
         public boolean doMergeUnalignedReads()
+        {
+            return true;
+        }
+
+        @Override
+        public boolean doAddReadGroups()
         {
             return true;
         }

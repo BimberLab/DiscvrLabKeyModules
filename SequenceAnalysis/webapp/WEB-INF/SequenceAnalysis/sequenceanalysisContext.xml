@@ -8,7 +8,7 @@
             <list>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask$Factory">
                     <!--<property name="location" value="sequenceAnalysis" />-->
-                    <property name="join" value="false" />
+                    <property name="join" value="true" />
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.FileCleanupTask$Factory">
                     <!--<property name="location" value="sequenceAnalysis" />-->
@@ -27,6 +27,10 @@
                     <property name="join" value="true" />
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.ReadsetImportTask$Factory">
+                    <property name="location" value="webserver" />
+                    <property name="join" value="true" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentImportInitTask$Factory">
                     <property name="location" value="webserver" />
                     <property name="join" value="true" />
                 </bean>
@@ -151,6 +155,7 @@
                     <property name="initialInputExt" ref="bamFileType" />
                     <property name="taskProgressionSpec">
                         <list>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentImportInitTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentNormalizationTask</value>
                             <ref bean="xarGeneratorJoin"/>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentImportTask</value>
@@ -168,8 +173,8 @@
                     <property name="taskProgressionSpec">
                         <list>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisInitTask</value>
-                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisWorkTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisRemoteWorkTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisWorkTask</value>
                             <ref bean="xarGeneratorJoin"/>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisCleanupTask</value>
                         </list>

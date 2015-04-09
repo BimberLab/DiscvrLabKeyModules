@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.MergedDirectoryResource;
 import org.labkey.api.resource.Resource;
@@ -96,6 +97,9 @@ public class FastqcRunner
                         throw new RuntimeException("Unable to delete ZIP file: " + zip.getPath());
                     }
                 }
+
+                //force compression
+                getExpectedHtmlFile(f);
             }
         }
 
@@ -143,7 +147,7 @@ public class FastqcRunner
         }
     }
 
-    private String getExpectedBasename(File f)
+    public String getExpectedBasename(File f)
     {
         String basename = FileUtil.getBaseName(f);
         FileType gz = new FileType(".gz");
@@ -172,6 +176,12 @@ public class FastqcRunner
 
     private String processOutput(List<File> inputFiles)
     {
+        //NOTE: this allows remote servers to run/cache the data.  AppProps.getContextPath() will fail remotely, so abort.
+        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+        {
+            return "";
+        }
+
         String output = "";
         String header = "<div class=\"fastqc_overview\"><h2>File Summary:</h2><ul>";
 

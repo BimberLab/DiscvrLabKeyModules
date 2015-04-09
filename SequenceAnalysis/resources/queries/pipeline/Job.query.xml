@@ -1,0 +1,9 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="Job" tableDbType="TABLE">
+                <javaCustomizer>org.labkey.sequenceanalysis.query.JobsTableCustomizer</javaCustomizer>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -17,6 +17,6 @@ public class ReprocessDatabaseButton extends SimpleButtonConfigFactory
 {
     public ReprocessDatabaseButton()
     {
-        super(ModuleLoader.getInstance().getModule(BLASTModule.class), "Re-process Selected", "BLAST.window.ReprocessDatabaseWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("blast/window/ReprocessDatabaseWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(BLASTModule.class), "Re-process Selected", "BLAST.window.ReprocessDatabaseWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromModuleName("ldk"), ClientDependency.fromFilePath("blast/window/ReprocessDatabaseWindow.js"))));
     }
 }

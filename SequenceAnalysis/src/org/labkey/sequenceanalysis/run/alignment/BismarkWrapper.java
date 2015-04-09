@@ -74,7 +74,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, CACHED_NAME);
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, CACHED_NAME, referenceGenome);
             BismarkWrapper wrapper = getWrapper();
 
             List<String> args = new ArrayList<>();
@@ -136,6 +136,12 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean doAddReadGroups()
+        {
+            return false;
+        }
+
+        @Override
         public boolean doSortIndexBam()
         {
             return false;
@@ -156,7 +162,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
 
 
             File genomeBuild = new File(indexOutputDir, CACHED_NAME);
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), CACHED_NAME);
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), CACHED_NAME, referenceGenome);
             if (!hasCachedIndex)
             {
                 List<String> args = new ArrayList<>();
@@ -183,7 +189,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
             output.appendOutputs(referenceGenome.getWorkingFastaFile(), genomeBuild, !(fastaParentDir.equals(outputDir)));
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), genomeBuild, CACHED_NAME, output);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), genomeBuild, CACHED_NAME, referenceGenome);
 
             return output;
         }
@@ -296,7 +302,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
                 getPipelineCtx().getLogger().info("creating per-site summary report");
 
                 Integer minCoverageDepth = getProvider().getParameterByName("minCoverageDepth").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class);
-                File siteReport = new File(outputDir, FileUtil.getBaseName(inputBam) + ".CpG_Site_Summary.txt");
+                File siteReport = new File(outputDir, FileUtil.getBaseName(inputBam) + ".CpG_Site_Summary.methylation.txt");
                 File outputGff = new File(outputDir, FileUtil.getBaseName(inputBam) + ".CpG_Site_Summary.gff");
 
                 produceSiteReport(getWrapper().getLogger(), siteReport, outputGff, CpGmethlyationData, minCoverageDepth);
@@ -309,14 +315,14 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     if (siteReportPng != null && siteReportPng.exists())
                     {
                         output.addOutput(siteReportPng, "Bismark CpG Methylation Report");
-                        output.addSequenceOutput(siteReportPng, rs.getName() + " methylation report", "Bismark CpG Methylation Report", rs.getReadsetId(), null, referenceGenome.getGenomeId());
+                        output.addSequenceOutput(siteReportPng, rs.getName() + " methylation rates", "Bismark CpG Methylation Report", rs.getReadsetId(), null, referenceGenome.getGenomeId());
                     }
                 }
 
                 if (outputGff.exists())
                 {
                     output.addOutput(outputGff, "Bismark CpG Methylation Rates");
-                    output.addSequenceOutput(outputGff, rs.getName() + " methylation", "CpG Methylation Rates", rs.getReadsetId(), null, referenceGenome.getGenomeId());
+                    output.addSequenceOutput(outputGff, rs.getName() + " methylation rates (GFF)", "CpG Methylation Rates", rs.getReadsetId(), null, referenceGenome.getGenomeId());
                 }
 
 //                File siteReport2 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".NonCpG_Site_Summary.txt");
@@ -396,7 +402,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
 
                 getWrapper().execute(params);
 
-                File siteReportPng = new File(siteReport.getPath() + ".png");
+                File siteReportPng = new File(FileUtil.getBaseName(siteReport.getPath()) + ".png");
                 if (siteReportPng.exists())
                 {
                     return siteReportPng;

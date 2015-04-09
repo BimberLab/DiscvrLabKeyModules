@@ -1,10 +1,14 @@
 Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
     extend: 'SequenceAnalysis.panel.BaseSequencePanel',
+    analysisController: 'sequenceanalysis',
+    splitJobs: false,
 
     initComponent: function(){
         this.taskId = 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:AlignmentImportPipeline';
+        Ext4.QuickTips.init();
 
         Ext4.apply(this, {
+            buttonAlign: 'left',
             buttons: [{
                 text: 'Import Data',
                 itemId: 'startAnalysis',
@@ -15,7 +19,27 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
 
         this.callParent(arguments);
 
+        LABKEY.Ajax.request({
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getAnalysisToolDetails'),
+            scope: this,
+            success: LABKEY.Utils.getCallbackWrapper(this.onDataLoad, this),
+            failure: LDK.Utils.getErrorCallback()
+        });
+
         this.add(this.getItemCfg());
+
+        this.on('afterrender', this.updateColWidth, this, {single: true});
+        this.down('#sampleGrid').on('columnresize', this.updateColWidth, this);
+    },
+
+    onDataLoad: function(results) {
+        this.add({
+            xtype: 'sequenceanalysis-analysissectionpanel',
+            title: 'BAM Processing (optional)',
+            sectionDescription: 'The steps below will act on the BAM file(s).  They can be used to filter reads, sort the alignments, correct alignment information, etc.  They will be executed in the order selected.',
+            stepType: 'bamPostProcessing',
+            toolConfig: results
+        });
     },
 
     getItemCfg: function(){
@@ -72,6 +96,13 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 name: 'protocolDescription',
                 allowBlank: true
             },{
+                fieldLabel: 'Delete Intermediate Files',
+                helpPopup: 'Check to delete the intermediate files created by this pipeline.  In general these are not needed and it will save disk space.  These files might be useful for debugging though.',
+                name: 'deleteIntermediateFiles',
+                inputValue: true,
+                checked: true,
+                xtype: 'checkbox'
+            },{
                 fieldLabel: 'Treatment of Input Files',
                 xtype: 'combo',
                 helpPopup: 'This determines how the input files are handled.  By default, files are moved to a standardized location and the originals deleted to save space.  However, you can choose to copy the BAMs to the new location, but leave the originals alone.  This is not usually recommended for space reasons.',
@@ -90,7 +121,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                         ['Leave originals alone', 'none']
                     ]
                 }
-            }]
+            }, this.getSaveTemplateCfg()]
         }
     },
 
@@ -136,7 +167,6 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
             title: 'Sample Information',
             xtype: 'ldk-gridpanel',
             width: '100%',
-            forceFit: true,
             bodyStyle: 'padding: 0px;',
             fileNameStore: this.distinctFileStore,
             editingPluginId: 'cellediting',
@@ -146,20 +176,46 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
             stripeRows: true,
             selType: 'rowmodel',
             store: Ext4.create('Ext.data.ArrayStore', {
-                fields: [
-                    {name: 'fileName', allowBlank: false},
-                    {name: 'library_id'},
-                    {name: 'readset', allowBlank: false},
-                    {name: 'readsetname'},
-                    {name: 'platform', allowBlank: false},
-                    {name: 'application', allowBlank: false},
-                    {name: 'sampletype'},
-                    {name: 'subjectid'},
-                    {name: 'sampledate'},
-                    {name: 'sampleid'},
-                    {name: 'instrument_run_id'},
-                    {name: 'fileId'}
-                ],
+                model: Ext4.define('SequenceAnalysis.model.AlignmentImportModel', {
+                    extend: 'Ext.data.Model',
+                    fields: [
+                        {name: 'fileName', allowBlank: false},
+                        {name: 'library_id'},
+                        {name: 'readset', allowBlank: false},
+                        {name: 'readsetname'},
+                        {name: 'platform', allowBlank: false},
+                        {name: 'application', allowBlank: false},
+                        {name: 'sampletype'},
+                        {name: 'subjectid'},
+                        {name: 'sampledate'},
+                        {name: 'sampleid'},
+                        {name: 'instrument_run_id'},
+                        {name: 'fileId'}
+                    ],
+                    validations: [
+                        {type: 'presence', field: 'fileName'},
+                        {type: 'presence', field: 'library_id'},
+                        {type: 'presence', field: 'readsetname'},
+                        {type: 'presence', field: 'platform'},
+                        {type: 'presence', field: 'application'}
+                    ],
+                    validate: function(options) {
+                        var errors = this.callParent(arguments);
+                        var name = this.get('readsetname');
+                        if (this.store){
+                            this.store.each(function(r){
+                                if (r !== this && r.get('readsetname') === name){
+                                    errors.add({
+                                        field: 'readsetname',
+                                        message: 'All names must be unique'
+                                    });
+                                }
+                            }, this);
+                        }
+
+                        return errors;
+                    }
+                }),
                 storeId: 'metadata',
                 listeners: {
                     scope: this,
@@ -169,6 +225,13 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                     add: this.validateReadsets
                 }
             }),
+            getEditingPlugin: function() {
+                return {
+                    ptype: 'ldk-cellediting',
+                    pluginId: 'cellediting',
+                    clicksToEdit: 1
+                }
+            },
             tbar: [{
                 text: 'Add',
                 itemId: 'sampleAddBtn',
@@ -225,6 +288,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 name: 'library_id',
                 text: 'Reference Genome',
                 dataIndex: 'library_id',
+                width: 180,
                 editor: {
                     xtype: 'labkey-combo',
                     triggerAction: 'all',
@@ -244,7 +308,25 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                         autoLoad: true
                     }
                 },
-                renderer: function(data, attrs, record){
+                renderer: function(data, cellMetaData, record){
+                    var errors = record.validate();
+                    if (!errors.isValid()) {
+                        var msgs = errors.getByField('library_id');
+                        if (msgs.length) {
+                            var texts = [];
+                            Ext4.Array.forEach(msgs, function (m) {
+                                texts.push(m.message);
+                            }, this);
+                            texts = Ext4.unique(texts);
+
+                            cellMetaData.tdCls = cellMetaData.tdCls ? cellMetaData.tdCls + ' ' : '';
+                            cellMetaData.tdCls += 'labkey-grid-cell-invalid';
+
+                            cellMetaData.tdAttr = cellMetaData.tdAttr || '';
+                            cellMetaData.tdAttr += " data-qtip=\"" + Ext4.util.Format.htmlEncode(texts.join('<br>')) + "\"";
+                        }
+                    }
+
                     if (data){
                         var store = Ext4.StoreMgr.get('sequenceanalysis||reference_libraries');
                         if (store){
@@ -263,7 +345,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 queryMode: 'local',
                 hidden: false,
                 dataIndex: 'readset',
-                width: 40,
+                width: 90,
                 editable: true,
                 editor: {
                     //TODO: add lookup feature
@@ -274,8 +356,10 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
             },{
                 text: 'Readset Name',
                 name: 'readsetname',
+                width: 180,
                 mode: 'local',
                 dataIndex: 'readsetname',
+                renderer: SequenceAnalysis.panel.SequenceImportPanel.getRenderer('readsetname'),
                 editor: {
                     xtype: 'textfield',
                     allowBlank: false
@@ -283,17 +367,20 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
             },{
                 text: 'Platform',
                 name: 'platform',
-                width: 80,
+                width: 170,
                 mode: 'local',
                 dataIndex: 'platform',
+                renderer: SequenceAnalysis.panel.SequenceImportPanel.getRenderer('platform'),
                 editor: {
                     xtype: 'labkey-combo',
                     allowBlank: false,
                     forceSelection: true,
                     displayField: 'platform',
                     valueField: 'platform',
-                    editable: false,
+                    queryMode: 'local',
+                    editable: true,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
+                        type: 'labkey-store',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
                         queryName: 'sequence_platforms',
@@ -303,17 +390,20 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
             },{
                 text: 'Application',
                 name: 'application',
-                width: 80,
-                mode: 'local',
+                width: 180,
                 dataIndex: 'application',
+                renderer: SequenceAnalysis.panel.SequenceImportPanel.getRenderer('application'),
                 editor: {
                     xtype: 'labkey-combo',
                     allowBlank: false,
                     forceSelection: true,
                     displayField: 'application',
                     valueField: 'application',
-                    editable: false,
+                    plugins: ['ldk-usereditablecombo'],
+                    queryMode: 'local',
+                    editable: true,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
+                        type: 'labkey-store',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
                         queryName: 'sequence_applications',
@@ -323,17 +413,19 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
             },{
                 text: 'Sample Type',
                 name: 'sampletype',
-                width: 80,
+                width: 120,
                 dataIndex: 'sampletype',
                 editor: {
                     xtype: 'labkey-combo',
                     allowBlank: true,
                     forceSelection: true,
+                    queryMode: 'local',
                     displayField: 'type',
                     valueField: 'type',
                     plugins: ['ldk-usereditablecombo'],
-                    editable: false,
+                    editable: true,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
+                        type: 'labkey-store',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'laboratory',
                         queryName: 'sample_type',
@@ -363,6 +455,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 text: 'Instrument Run Id',
                 name: 'instrument_run_id',
                 dataIndex: 'instrument_run_id',
+                width: 140,
                 editor: {
                     xtype: 'labkey-combo',
                     allowBlank: true,
@@ -372,10 +465,10 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                     queryMode: 'local',
                     showValueInList: true,
                     store: Ext4.create('LABKEY.ext4.data.Store', {
+                        type: 'labkey-store',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
                         queryName: 'instrument_runs',
-                        containerPath: Laboratory.Utils.getQueryContainerPath(),
                         autoLoad: true
                     })
                 }
@@ -410,7 +503,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
         }
 
         var sql = 'select  ' +
-                'r.rowid,r.name,r.platform,r.application,r.sampletype,r.subjectid,r.sampledate,r.sampleid,r.barcode5,r.barcode3,r.fileid,r.fileid2,r.instrument_run_id,r.fileid2.name as fileName,r.fileid.name as fileName2 \n' +
+                'r.rowid,r.name,r.platform,r.application,r.sampletype,r.subjectid,r.sampledate,r.sampleid,r.barcode5,r.barcode3,r.instrument_run_id \n' +
                 'from sequenceanalysis.sequence_readsets r \n';
 
         sql += 'WHERE rowid IN (' + readsets.join(',') + ')';
@@ -541,54 +634,52 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
     },
 
     onSubmit: function(btn){
-        var ret = this.getJsonParams();
-
-        if (!ret)
+        var json = this.getJsonParams();
+        if (!json)
             return;
+
+        var distinctIds = [];
+        var distinctNames = [];
+        this.down('#sampleGrid').getStore().each(function(r) {
+            if (!r.data['fileId'])
+                distinctNames.push(r.data['fileName']);
+            else
+                distinctIds.push(r.data['fileId']);
+        }, this);
+
+        var ret = {
+            json: json,
+            distinctIds: distinctIds,
+            distinctNames: distinctNames
+        };
 
         this.startAnalysis(ret.json, ret.distinctIds, ret.distinctNames);
     },
 
-    getJsonParams: function(btn){
+    getJsonParams: function(ignoreErrors){
         var fields = this.callParent(arguments);
 
         if (!fields)
             return;
 
-        var error;
-
-        //we build a hash of samples to verify there are no duplicates
-        var sampleMap = {};
-
-        var cols = this.down('#sampleGrid').columns;
-        var sampleInfo = this.down('#sampleGrid').getStore();
-        var inputFiles = [];
-        sampleInfo.each(function(r, sampleIdx){
-            var key = [r.data['fileName']];
-            key = key.join(";");
-
-            inputFiles.push({name: r.data['fileName'], id: r.data['fileId']});
-
-            if (sampleMap[key]){
-                Ext4.Msg.alert('Error', 'Duplicate Sample: '+key+'. Please remove or edit rows in the \'Readsets\' section');
-                error = 1;
-                return false;
-            }
-            sampleMap[key] = true;
-
-            if (!r.get('fileName') || !r.get('library_id') || (!r.get('readset') && !(r.get('platform') && r.get('readsetname')))){
-                Ext4.Msg.alert('Error', 'For each file, you must provide the reference library name, and either the Id of an existing, unused readset or a name/platform to create a new one');
-                error = 1;
+        var errors = Ext4.create('Ext.data.Errors');
+        this.down('#sampleGrid').getStore().each(function(r, sampleIdx) {
+            var recErrors = r.validate();
+            if (recErrors.getCount()){
+                errors.add(recErrors.getRange());
             }
 
-            if (error){
-                return false;
-            }
-
-            fields['sample_'+sampleIdx] = r.data;
+            fields['readset_' + sampleIdx] = r.data;
         }, this);
 
-        if (error){
+        //then append each section
+        var sections = this.query('sequenceanalysis-analysissectionpanel');
+        Ext4.Array.forEach(sections, function(s){
+            Ext4.apply(fields, s.toJSON());
+        }, this);
+
+        if (errors.getCount() && !ignoreErrors){
+            Ext4.Msg.alert('Error', 'There are ' + errors.getCount() + ' errors.  Please review the cells highlighted in red.  Note: you can hover over the cell for more information on the issue.');
             return false;
         }
 
@@ -599,24 +690,25 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 total++;
         }, this);
 
-        if (!total){
+        if (!total && !ignoreErrors){
             Ext4.Msg.alert('Error', 'All input files had errors and cannot be used.  Please hover over the red cells near the top of the page to see more detail on these errors');
             return;
         }
 
-        var distinctIds = [];
-        var distinctNames = [];
-        Ext4.each(inputFiles, function(file){
-            if (!file.id)
-                distinctNames.push(file.name);
-            else
-                distinctIds.push(file.id)
+        return fields;
+    },
+
+    updateColWidth: function(){
+        var readsetGrid = this.down('#sampleGrid');
+        readsetGrid.reconfigure();
+
+        var width = 60;
+        Ext4.Array.forEach(readsetGrid.columns, function(c){
+            if (c.isVisible()){
+                width += c.getWidth();
+            }
         }, this);
 
-        return {
-            json: fields,
-            distinctIds: distinctIds,
-            distinctNames: distinctNames
-        };
+        this.doResize(width);
     }
 });

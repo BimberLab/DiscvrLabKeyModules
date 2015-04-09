@@ -1,6 +1,5 @@
 package org.labkey.sequenceanalysis.query;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.ColumnInfo;
@@ -28,19 +27,14 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.TabStripView;
-import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
-import java.util.List;
 
 /**
  * User: bimber
@@ -90,8 +84,6 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         else if (SequenceAnalysisSchema.TABLE_AA_FEATURES.equalsIgnoreCase(name))
             return new SharedDataTable(this, sourceTable, true).init();
         else if (SequenceAnalysisSchema.TABLE_NT_FEATURES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable, true).init();
-        else if (SequenceAnalysisSchema.TABLE_SAVED_ANALYSES.equalsIgnoreCase(name))
             return new SharedDataTable(this, sourceTable, true).init();
         else if (SequenceAnalysisSchema.TABLE_CHAIN_FILES.equalsIgnoreCase(name))
             return new SharedDataTable(this, sourceTable, true).init();
@@ -183,7 +175,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         if (ret.getColumn("totalFiles") == null)
         {
             SQLFragment sql = new SQLFragment("(SELECT COUNT(rd.rowid) FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
-            ExprColumn newCol = new ExprColumn(ret, "totalFiles", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
+            ExprColumn newCol = new ExprColumn(ret, "totalFiles", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=readData&query.readset~eq=${rowid}"));
             newCol.setLabel("Total Files");
             ret.addColumn(newCol);
@@ -192,7 +184,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         if (ret.getColumn("totalAlignments") == null)
         {
             SQLFragment sql = new SQLFragment("(SELECT COUNT(rd.rowid) FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
-            ExprColumn newCol = new ExprColumn(ret, "totalAlignments", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
+            ExprColumn newCol = new ExprColumn(ret, "totalAlignments", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
             newCol.setLabel("Alignments Using This Readset");
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=sequence_analyses&query.readset~eq=${rowid}"));
 
@@ -202,7 +194,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         if (ret.getColumn("totalOutputs") == null)
         {
             SQLFragment sql = new SQLFragment("(SELECT COUNT(rd.rowid) FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
-            ExprColumn newCol = new ExprColumn(ret, "totalOutputs", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
+            ExprColumn newCol = new ExprColumn(ret, "totalOutputs", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
             newCol.setLabel("Output Files From This Readset");
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=outputfiles&query.readset~eq=${rowid}"));
 

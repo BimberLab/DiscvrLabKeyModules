@@ -117,7 +117,7 @@ public class AASnpByReadAggregator extends AASnpByCodonAggregator
     }
 
     @Override
-    public void saveToDb(User u, Container c, AnalysisModel model)
+    public void writeOutput(User u, Container c, AnalysisModel model)
     {
         throw new UnsupportedOperationException("Not supported for this aggregator");
     }

@@ -15,8 +15,10 @@
  */
 package org.labkey.sequenceanalysis.run.analysis;
 
+import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
@@ -24,16 +26,18 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.gwt.client.util.StringUtils;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -41,6 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * User: bimber
@@ -49,7 +54,9 @@ import java.util.Set;
  */
 public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAggregator
 {
-    private Map<String, Integer> _totalByReference = new HashMap<>();
+    private File _outputLog = null;
+
+    private Set<String> _distinctReferences = new HashSet<>();
     private Map<String, Integer> _acceptedAlignments = new HashMap<>();
     private Set<String> _uniqueReads = new HashSet<>();
     private Map<String, Set<String>> _alignmentsByReadM1 = new HashMap<>();
@@ -74,6 +81,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     private boolean _onlyImportValidPairs = false;
     private Double _minCountForRef = null;
     private Double _minPctForRef = null;
+    private Double _minPctWithinGroup = null;
 
     public SequenceBasedTypingAlignmentAggregator(Logger log, File refFasta, AvgBaseQualityAggregator avgBaseQualityAggregator, Map<String, String> settings)
     {
@@ -85,8 +93,21 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         if (settings.get("minPctForRef") != null)
             _minPctForRef = Double.parseDouble(settings.get("minPctForRef"));
 
+        if (settings.get("minPctWithinGroup") != null)
+            _minPctWithinGroup = Double.parseDouble(settings.get("minPctWithinGroup"));
+
         if (settings.get("onlyImportValidPairs") != null)
             _onlyImportValidPairs = Boolean.parseBoolean(settings.get("onlyImportValidPairs"));
+    }
+
+    public File getOutputLog()
+    {
+        return _outputLog;
+    }
+
+    public void setOutputLog(File outputLog)
+    {
+        _outputLog = outputLog;
     }
 
     @Override
@@ -96,7 +117,10 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
         if (record.getReferenceName().equals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME) || record.getReadUnmappedFlag())
         {
-            _unaligned.add(record.getReadName());
+            if (!record.getReadPairedFlag() || record.getMateUnmappedFlag())
+            {
+                _unaligned.add(record.getReadName());
+            }
         }
         else
         {
@@ -140,14 +164,8 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
         alignmentsByRead.put(record.getReadName(), alignments);
 
-        //retain a tracking of alignments by ref
-        Integer total = _totalByReference.get(record.getReferenceName());
-        if (total == null)
-            total = 0;
-
-        total++;
         _totalAlignmentsIncluded++;
-        _totalByReference.put(record.getReferenceName(), total);
+        _distinctReferences.add(record.getReferenceName());
     }
 
     private int getNumMismatches(SAMRecord record, Map<Integer, List<NTSnp>> snps)
@@ -173,55 +191,65 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 ;
     }
 
-    private static final String TOTAL = "total";
-    private static final String FORWARD = "forward";
-    private static final String REVERSE = "reverse";
-    private static final String VALID_PAIRS = "valid_pair";
-
-    public Map<String, Map<String, Integer>> getAlignmentSummary()
+    public Map<String, HitSet> getAlignmentSummary(File outputLog) throws IOException
     {
-        //optionally filter by total read #
-        Set<String> disallowedReferences = new HashSet<>();
-        if (_minCountForRef != null || _minPctForRef != null)
+        try (CSVWriter writer = outputLog == null ? null : new CSVWriter(new FileWriter(outputLog), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            for (String refName : _totalByReference.keySet())
-            {
-                //NOTE: the user is entering this as a number 0-100
-                double pct = ((double)_totalByReference.get(refName) / _totalAlignmentsIncluded) * 100.0;
+            //these are stage-1 filters, filtering on the read-pair level
+            Map<String, HitSet> totals = doFilterStage1(writer);
 
-                if (_minCountForRef != null && _totalByReference.get(refName) < _minCountForRef)
+            //stage 2 filters, filtering across the set of alignments
+            Map<String, HitSet> totals2 = doFilterStage2(writer, totals);
+
+            //stage 3 filters: filtering within each set
+            Map<String, HitSet> totals3 = doFilterStage3(writer, totals2);
+
+            Map<String, Integer> totalByReferenceStage3 = new HashMap<>();
+            int distinctStageThreeReads = 0;
+            for (HitSet hs : totals3.values())
+            {
+                for (String refName : hs.refNames)
                 {
-                    _skippedReferencesByRead++;
-                    getLogger().debug("Reference discarded due to read count: " + refName + " / " + _totalAlignmentsIncluded + " / " + _totalByReference.get(refName) + " / " + pct + "%");
-                    disallowedReferences.add(refName);
-                    continue;
+                    int total = totalByReferenceStage3.containsKey(refName) ? totalByReferenceStage3.get(refName) : 0;
+                    total += hs.readNames.size();
+                    totalByReferenceStage3.put(refName, total);
                 }
 
-                if (_minPctForRef != null && pct < _minPctForRef)
+                if (!hs.refNames.isEmpty())
                 {
-                    _skippedReferencesByPct++;
-                    getLogger().debug("Reference discarded due to percent: " + refName + " / " + _totalAlignmentsIncluded + " / " + _totalByReference.get(refName) + " / " + pct + "%");
-                    disallowedReferences.add(refName);
-                    continue;
+                    distinctStageThreeReads += hs.readNames.size();
                 }
             }
+
+            getLogger().info("after filters:");
+            getLogger().info("\tpassing references: " + totalByReferenceStage3.size());
+            getLogger().info("\ttotal passing reads: " + distinctStageThreeReads);
+            getLogger().info("\ttotal allele groups: " + totals3.size());
+            getLogger().info("\ttotal unaligned reads: " + _unaligned.size());
+
+            return totals3;
+        }
+    }
+
+    private Map<String, HitSet> doFilterStage1(CSVWriter writer)
+    {
+        Map<String, HitSet> totals = new HashMap<>();
+        if (writer != null)
+        {
+            writer.writeNext(new String[]{""});
+            writer.writeNext(new String[]{"*****Summary By Read*****"});
+            writer.writeNext(new String[]{"Orientation", "ReadName", "InitialRefs", "PassingRefs", "RefName", "PassedFilters", "ReadsForReference"});
         }
 
-        Map<String, Map<String, Integer>> totals = new HashMap<>();
+        getLogger().info("starting stage 1 filters (by read pair)");
+        getLogger().info("\tinitial references: " + _distinctReferences.size());
+        getLogger().info("\tinitial reads: " + _uniqueReads.size());
+        getLogger().info("\tinitial unaligned reads: " + _unaligned.size());
 
         //handle single or first-mate reads first
         for (String readName : _alignmentsByReadM1.keySet())
         {
             List<String> refNames = new ArrayList(_alignmentsByReadM1.get(readName));
-            if (disallowedReferences.size() > 0)
-            {
-                int originalSize = refNames.size();
-                refNames.removeAll(disallowedReferences);
-                if (refNames.size() != originalSize)
-                {
-                    _alignmentsHelpedByAlleleFilters++;
-                }
-            }
 
             //if this read has an aligned mate, we find the intersect between its alignments
             boolean hasMate = false;
@@ -232,13 +260,25 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 refNames.retainAll(refNames2);
                 if (refNames.size() > 0)
                 {
-                    if (refNames.size() != originalSize){
+                    if (refNames.size() != originalSize)
+                    {
                         _alignmentsHelpedByMate++;
                     }
                     hasMate = true;
                 }
                 else
                     _pairsWithoutSharedHits++;
+            }
+
+            if (writer != null)
+            {
+                List<String> names = new ArrayList<>(_alignmentsByReadM1.get(readName));
+                Collections.sort(names);
+
+                for (String refName : names)
+                {
+                    writer.writeNext(new String[]{"Forward", readName, String.valueOf(_alignmentsByReadM1.get(readName).size()), String.valueOf(refNames.size()), refName, String.valueOf(refNames.contains(refName))});
+                }
             }
 
             if (refNames.size() > 0)
@@ -271,16 +311,6 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             List<String> refNames = new ArrayList(_alignmentsByReadM2.get(mateName));
             if (!_onlyImportValidPairs)
             {
-                if (disallowedReferences.size() > 0)
-                {
-                    int originalSize = refNames.size();
-                    refNames.removeAll(disallowedReferences);
-                    if (refNames.size() != originalSize)
-                    {
-                        _alignmentsHelpedByAlleleFilters++;
-                    }
-                }
-
                 if (refNames.size() > 0)
                 {
                     appendReadToTotals(mateName, refNames, totals, false, true);
@@ -295,143 +325,388 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             {
                 _rejectedSingletons++;
             }
+
+            if (writer != null)
+            {
+                List<String> names = new ArrayList<>(_alignmentsByReadM2.get(mateName));
+                Collections.sort(names);
+                for (String refName : names)
+                {
+                    writer.writeNext(new String[]{"Reverse", mateName, String.valueOf(_alignmentsByReadM2.get(mateName).size()), String.valueOf(refNames.size()), refName, String.valueOf(refNames.contains(refName))});
+                }
+            }
         }
+
+        getLogger().info("\talignments helped using paired read: " + _alignmentsHelpedByMate);
+        getLogger().info("\trejected singleton reads: " + _rejectedSingletons);
 
         return totals;
     }
-
-    private void appendReadToTotals(String readName, List<String> refNames, Map<String, Map<String, Integer>> totals, boolean hasForward, boolean hasReverse)
+    
+    private Map<String, HitSet> doFilterStage2(CSVWriter writer, Map<String, HitSet> stage1Totals)
     {
-        String refs = StringUtils.join(refNames, "||");
-        Collections.sort(refNames);
-
-        Map<String, Integer> counts = totals.get(refs);
-        if (counts == null)
+        //build map of totals by ref, only counting each read pair once
+        Map<String, Integer> totalByReferenceStage2 = new HashMap<>();
+        int distinctStageTwoReads = 0;
+        for (HitSet hs : stage1Totals.values())
         {
-            counts = new HashMap<>();
-            counts.put(TOTAL, 0);
-            counts.put(FORWARD, 0);
-            counts.put(REVERSE, 0);
-            counts.put(VALID_PAIRS, 0);
+            for (String refName : hs.refNames)
+            {
+                int total = totalByReferenceStage2.containsKey(refName) ? totalByReferenceStage2.get(refName) : 0;
+                total += hs.readNames.size();
+                totalByReferenceStage2.put(refName, total);
+            }
+
+            if (!hs.refNames.isEmpty())
+            {
+                distinctStageTwoReads += hs.readNames.size();
+            }
+        }
+        
+        getLogger().info("starting stage 2 filters:");
+        getLogger().info("\tinitial references: " + totalByReferenceStage2.size());
+        getLogger().info("\tinitial distinct reads: " + distinctStageTwoReads);
+        getLogger().info("\tinitial allele groups: " + stage1Totals.size());
+        getLogger().info("\tinitial unaligned reads: " + _unaligned.size());
+
+        //optionally filter by total read #
+        Set<String> disallowedReferences = new HashSet<>();
+        if (writer != null)
+        {
+            writer.writeNext(new String[]{"*****Summary By Reference*****"});
+            writer.writeNext(new String[]{"RefName", "PassingReadsForRef", "TotalReads", "PctOfTotal"});
         }
 
-        Integer total = counts.get(TOTAL);
-        total++;
-        counts.put(TOTAL, total);
+        List<String> sortedReferences = new ArrayList<>(totalByReferenceStage2.keySet());
+        Collections.sort(sortedReferences);
+        for (String refName : sortedReferences)
+        {
+            int totalForRef = totalByReferenceStage2.get(refName);
+
+            //NOTE: the user is entering this as a number 0-100
+            double pct = ((double) totalByReferenceStage2.get(refName) / distinctStageTwoReads) * 100.0;
+            String msg = "";
+            if (_minCountForRef != null && totalForRef < _minCountForRef)
+            {
+                _skippedReferencesByRead++;
+                getLogger().debug("Reference discarded due to read count: " + refName + " / " + distinctStageTwoReads + " / " + totalForRef + " / " + pct + "%");
+                msg = "**skipped due to read count";
+                disallowedReferences.add(refName);
+            }
+            else if (_minPctForRef != null && pct < _minPctForRef)
+            {
+                _skippedReferencesByPct++;
+                getLogger().debug("Reference discarded due to percent: " + refName + " / " + distinctStageTwoReads + " / " + totalForRef + " / " + pct + "%");
+                msg = "**skipped due to percent";
+                disallowedReferences.add(refName);
+            }
+
+            if (writer != null)
+            {
+                writer.writeNext(new String[]{refName, String.valueOf(totalForRef), String.valueOf(distinctStageTwoReads), String.valueOf(pct), msg});
+            }
+        }
+
+        //then actually use these for filtering
+        Map<String, HitSet> totals2 = new HashMap<>();
+        for (HitSet hs : stage1Totals.values())
+        {
+            List<String> refNames = new ArrayList<>(hs.refNames);
+            refNames.removeAll(disallowedReferences);
+            if (refNames.isEmpty())
+            {
+                _unaligned.addAll(hs.readNames);
+            }
+            else
+            {
+                if (refNames.size() != hs.refNames.size())
+                {
+                    _alignmentsHelpedByAlleleFilters++;
+                }
+
+                //merge sets
+                Collections.sort(refNames);
+                String newKey = StringUtils.join(refNames, "||");
+                HitSet hs2 = totals2.containsKey(newKey) ? totals2.get(newKey) : new HitSet(refNames);
+                hs2.append(hs);
+
+                totals2.put(newKey, hs2);
+            }
+        }
+        
+        return totals2;
+    }
+
+    private Map<String, HitSet> doFilterStage3(CSVWriter writer, Map<String, HitSet> stage2Totals)
+    {
+        Map<String, Integer> totalByReferenceStage3 = new HashMap<>();
+        int distinctStageThreeReads = 0;
+        for (HitSet hs : stage2Totals.values())
+        {
+            for (String refName : hs.refNames)
+            {
+                int total = totalByReferenceStage3.containsKey(refName) ? totalByReferenceStage3.get(refName) : 0;
+                total += hs.readNames.size();
+                totalByReferenceStage3.put(refName, total);
+            }
+
+            if (!hs.refNames.isEmpty())
+            {
+                distinctStageThreeReads += hs.readNames.size();
+            }
+        }
+
+        getLogger().info("starting stage 3 filters:");
+        getLogger().info("\tinitial references: " + totalByReferenceStage3.size());
+        getLogger().info("\tinitial distinct reads: " + distinctStageThreeReads);
+        getLogger().info("\tinitial allele groups: " + stage2Totals.size());
+        getLogger().info("\tinitial unaligned reads: " + _unaligned.size());
+        
+        Map<String, HitSet> totals3 = new HashMap<>();
+        List<String> sortedRefs = new ArrayList<>(stage2Totals.keySet());
+        Collections.sort(sortedRefs);
+
+        if (writer != null)
+        {
+            writer.writeNext(new String[]{"*****Summary By Hit Set*****"});
+            writer.writeNext(new String[]{"Alleles", "RefName", "TotalReadsInGroup", "TotalReadsForRef", "RefPctOfTotal", "PctWithinGroup"});
+        }
+
+        int totalFiltered = 0;
+        for (String refGroup : sortedRefs)
+        {
+            HitSet hs = stage2Totals.get(refGroup);
+
+            int maxForSet = 0;
+            for (String refName : hs.refNames)
+            {
+                if (totalByReferenceStage3.get(refName) > maxForSet)
+                {
+                    maxForSet = totalByReferenceStage3.get(refName);
+                }
+            }
+
+            int idx = 0;
+            List<String> passingRefs = new ArrayList<>();
+            for (String refName : hs.refNames)
+            {
+                Double pct = 100.0 * ((double) totalByReferenceStage3.get(refName) / maxForSet);
+                String msg = "";
+                if (_minPctWithinGroup != null && pct < _minPctWithinGroup)
+                {
+                    msg = "**discarded due to group pct filter";
+                    _unaligned.addAll(hs.readNames);
+                    totalFiltered++;
+                }
+                else
+                {
+                    passingRefs.add(refName);
+                }
+
+                if (writer != null)
+                {
+                    writer.writeNext(new String[]{
+                            idx == 0 ? refGroup : "",
+                            refName,
+                            String.valueOf(hs.readNames.size()),
+                            String.valueOf(totalByReferenceStage3.get(refName)),
+                            String.valueOf(100.0 * ((double) totalByReferenceStage3.get(refName) / distinctStageThreeReads)),
+                            String.valueOf(pct),
+                            msg
+                    });
+                }
+
+                idx++;
+            }
+
+            //merge sets
+            if (passingRefs.isEmpty())
+            {
+                _unaligned.addAll(hs.readNames);
+            }
+            else
+            {
+                Collections.sort(passingRefs);
+                String newKey = StringUtils.join(passingRefs, "||");
+                HitSet hs2 = totals3.containsKey(newKey) ? totals3.get(newKey) : new HitSet(passingRefs);
+                hs2.append(hs);
+
+                totals3.put(newKey, hs2);
+            }
+        }
+
+        getLogger().info("\ttotal alleles filtered: " + totalFiltered);
+
+        return totals3;
+    }
+
+    private class HitSet
+    {
+        public Set<String> readNames = new HashSet<>();
+        public Set<String> refNames = new TreeSet<>();
+
+        public HitSet(Collection<String> refNames)
+        {
+            this.refNames.addAll(refNames);
+        }
+
+        public int forward = 0;
+        public int reverse = 0;
+        public int valid_pair = 0;
+
+        public void append(HitSet other)
+        {
+            forward += other.forward;
+            reverse += other.reverse;
+            valid_pair += other.valid_pair;
+            readNames.addAll(other.readNames);
+        }
+
+        public String getKey()
+        {
+            List<String> ret = new ArrayList<>(refNames);
+            Collections.sort(ret);
+
+            return StringUtils.join(ret, "||");
+        }
+    }
+
+    private void appendReadToTotals(String readName, List<String> refNames, Map<String, HitSet> totals, boolean hasForward, boolean hasReverse)
+    {
+        Collections.sort(refNames);
+        String refs = StringUtils.join(refNames, "||");
+
+        HitSet hs = totals.get(refs);
+        if (hs == null)
+        {
+            hs = new HitSet(refNames);
+        }
 
         if (hasForward)
         {
-            total = counts.get(FORWARD);
-            total++;
-            counts.put(FORWARD, total);
+            hs.forward = hs.forward + 1;
         }
 
         if (hasReverse)
         {
-            total = counts.get(REVERSE);
-            total++;
-            counts.put(REVERSE, total);
+            hs.reverse = hs.reverse + 1;
         }
 
         if (hasForward && hasReverse)
         {
-            total = counts.get(VALID_PAIRS);
-            total++;
-            counts.put(VALID_PAIRS, total);
+            hs.valid_pair = hs.valid_pair + 1;
         }
 
-        totals.put(refs, counts);
+        hs.readNames.add(readName);
+
+        totals.put(refs, hs);
     }
 
     @Override
-    public void saveToDb(User u, Container c, AnalysisModel model)
+    public void writeOutput(User u, Container c, AnalysisModel model)
     {
-        Map<String, Map<String, Integer>> map = getAlignmentSummary();
-
-        getLogger().info("Saving SBT Results to DB");
-        getLogger().info("\tTotal alignments inspected: " + _totalAlignmentsInspected);
-        getLogger().info("\tTotal reads inspected: " + _uniqueReads.size());
-
-        getLogger().info("\tAlignments retained (lacking high quality SNPs): " + _acceptedAlignments.size());
-        getLogger().info("\tAlignments discarded (due to presence of high quality SNPs): " + (_totalAlignmentsInspected - _acceptedAlignments.size()));
-        getLogger().info("\tAlignments retained that contained low qual SNPs (thse may have been discarded for other factors): " + _alignmentsIncludingDiscardedSnps);
-        getLogger().info("\tReferences with at least 1 aligned read (these may get filtered out downstream): " + _totalByReference.size());
-        getLogger().info("\tReferences disallowed due to read count filters: " + _skippedReferencesByRead);
-        getLogger().info("\tReferences disallowed due to percent filters: " + _skippedReferencesByPct);
-
-        getLogger().info("\tReads with no alignments: " + _unaligned.size());
-        getLogger().info("\tSingleton or First Mate Reads with at least 1 alignment that passed thresholds: " + _alignmentsByReadM1.keySet().size());
-        getLogger().info("\tSecond Mate Reads with at least 1 alignment that passed thresholds: " + _alignmentsByReadM2.keySet().size());
-
-        getLogger().info("\tAlignment calls improved by paired read: " + _alignmentsHelpedByMate);
-        getLogger().info("\tAlignment calls improved by allele filters (see references disallowed): " + _alignmentsHelpedByAlleleFilters);
-        getLogger().info("\tPaired reads without common alignments: " + _pairsWithoutSharedHits);
-        getLogger().info("\tAlignment calls using paired reads: " + _pairedCalls);
-        getLogger().info("\tAlignment calls using only 1 read: " + _singletonCalls);
-
-        if (_onlyImportValidPairs)
+        try
         {
-            getLogger().info("\tOnly alignments representing valid pairs will be included");
-            getLogger().info("\tAlignments rejected because they lacked a valid pair: " + _rejectedSingletons);
-        }
+            Map<String, HitSet> map = getAlignmentSummary(_outputLog);
 
-        Set<String> allReadNames = new HashSet<>();
-        allReadNames.addAll(_alignmentsByReadM1.keySet());
-        allReadNames.addAll(_alignmentsByReadM2.keySet());
-        int noHits = _uniqueReads.size() - allReadNames.size();
-        getLogger().info("\tReads discarded due to no passing alignments: " + noHits);
+            getLogger().info("Saving SBT Results");
+            getLogger().info("\tTotal alignments inspected: " + _totalAlignmentsInspected);
+            getLogger().info("\tTotal reads inspected: " + _uniqueReads.size());
 
-        try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
-        {
-            //delete existing records
-            TableInfo ti_summary = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY);
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("analysis_id"), model.getAnalysisId());
-            Table.delete(ti_summary, filter);
+            getLogger().info("\tAlignments retained (lacking high quality SNPs): " + _acceptedAlignments.size());
+            getLogger().info("\tAlignments discarded (due to presence of high quality SNPs): " + (_totalAlignmentsInspected - _acceptedAlignments.size()));
+            getLogger().info("\tAlignments retained that contained low qual SNPs (thse may have been discarded for other factors): " + _alignmentsIncludingDiscardedSnps);
+            getLogger().info("\tReferences with at least 1 aligned read (these may get filtered out downstream): " + _distinctReferences.size());
+            getLogger().info("\tReferences disallowed due to read count filters: " + _skippedReferencesByRead);
+            getLogger().info("\tReferences disallowed due to percent filters: " + _skippedReferencesByPct);
 
-            TableInfo ti_junction = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION);
-            Table.delete(ti_junction, filter);
+            getLogger().info("\tReads with no alignments: " + _unaligned.size());
+            getLogger().info("\tSingleton or First Mate Reads with at least 1 alignment that passed thresholds: " + _alignmentsByReadM1.keySet().size());
+            getLogger().info("\tSecond Mate Reads with at least 1 alignment that passed thresholds: " + _alignmentsByReadM2.keySet().size());
 
-            //insert new
-            for (String key : map.keySet())
+            getLogger().info("\tAlignment calls improved by paired read: " + _alignmentsHelpedByMate);
+            getLogger().info("\tAlignment calls improved by allele filters (see references disallowed): " + _alignmentsHelpedByAlleleFilters);
+            getLogger().info("\tPaired reads without common alignments: " + _pairsWithoutSharedHits);
+            getLogger().info("\tAlignment calls using paired reads: " + _pairedCalls);
+            getLogger().info("\tAlignment calls using only 1 read: " + _singletonCalls);
+
+            Set<String> acceptedReferences = new HashSet<>();
+            for (HitSet hs : map.values())
             {
+                acceptedReferences.addAll(hs.refNames);
+            }
+
+            getLogger().info("\tTotal references retained: " + acceptedReferences.size() + " (" + (100.0 * ((double) acceptedReferences.size() / (double) _distinctReferences.size())) + "%)");
+
+            if (_onlyImportValidPairs)
+            {
+                getLogger().info("\tOnly alignments representing valid pairs will be included");
+                getLogger().info("\tAlignments rejected because they lacked a valid pair: " + _rejectedSingletons);
+            }
+
+            Set<String> allReadNames = new HashSet<>();
+            allReadNames.addAll(_alignmentsByReadM1.keySet());
+            allReadNames.addAll(_alignmentsByReadM2.keySet());
+            int noHits = _uniqueReads.size() - allReadNames.size();
+            getLogger().info("\tReads discarded due to no passing alignments: " + noHits + " (" + (100.0 * (noHits / (double) _uniqueReads.size())) + "%)");
+
+            try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
+            {
+                //delete existing records
+                TableInfo ti_summary = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY);
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("analysis_id"), model.getAnalysisId());
+                Table.delete(ti_summary, filter);
+
+                TableInfo ti_junction = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION);
+                Table.delete(ti_junction, filter);
+
+                //insert new
+                for (String key : map.keySet())
+                {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("analysis_id", model.getAnalysisId());
+                    row.put("file_id", model.getAlignmentFile());
+
+                    HitSet totals = map.get(key);
+                    row.put("total", totals.readNames.size());
+                    row.put("total_forward", totals.forward);
+                    row.put("total_reverse", totals.reverse);
+                    row.put("valid_pairs", totals.valid_pair);
+
+                    row.put("container", c.getEntityId());
+                    row.put("createdby", u.getUserId());
+                    row.put("modifiedby", u.getUserId());
+                    row.put("created", new Date());
+                    row.put("modified", new Date());
+                    Map<String, Object> newRow = Table.insert(u, ti_summary, row);
+
+                    String[] names = key.split("\\|\\|");
+                    for (String refName : names)
+                    {
+                        Integer refId = getReferenceLibraryHelper().resolveSequenceId(refName);
+
+                        Map<String, Object> junction_row = new HashMap<>();
+                        junction_row.put("analysis_id", model.getAnalysisId());
+                        junction_row.put("ref_nt_id", refId);
+                        junction_row.put("alignment_id", newRow.get("rowid"));
+                        junction_row.put("status", true);
+                        Table.insert(u, ti_junction, junction_row);
+                    }
+                }
+
+                //append unaligned
                 Map<String, Object> row = new HashMap<>();
                 row.put("analysis_id", model.getAnalysisId());
                 row.put("file_id", model.getAlignmentFile());
+                row.put("total", _unaligned.size());
 
-                Map<String, Integer> totals = map.get(key);
-                row.put("total", totals.get(TOTAL));
-                row.put("total_forward", totals.get(FORWARD));
-                row.put("total_reverse", totals.get(REVERSE));
-                row.put("valid_pairs", totals.get(VALID_PAIRS));
-
-                row.put("container", c.getEntityId());
-                row.put("createdby", u.getUserId());
-                row.put("modifiedby", u.getUserId());
-                row.put("created", new Date());
-                row.put("modified", new Date());
-                Map<String, Object> newRow = Table.insert(u, ti_summary, row);
-
-                String[] names = key.split("\\|\\|");
-                for (String refName: names)
-                {
-                    Integer refId = getReferenceLibraryHelper().resolveSequenceId(refName);
-
-                    Map<String, Object> junction_row = new HashMap<>();
-                    junction_row.put("analysis_id", model.getAnalysisId());
-                    junction_row.put("ref_nt_id", refId);
-                    junction_row.put("alignment_id", newRow.get("rowid"));
-                    junction_row.put("status", true);
-                    Table.insert(u, ti_junction, junction_row);
-                }
+                transaction.commit();
             }
-
-            //append unaligned
-            Map<String, Object> row = new HashMap<>();
-            row.put("analysis_id", model.getAnalysisId());
-            row.put("file_id", model.getAlignmentFile());
-            row.put("total", _unaligned.size());
-
-            transaction.commit();
+        }
+        catch (IOException e)
+        {
+            //TODO: can this be done better?
+            throw new RuntimeException(e);
         }
     }
 
@@ -446,7 +721,8 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         "\tMinDipQual: " + getMinDipQual() + "\n" +
         "\tMinAvgDipQual: " + getMinAvgDipQual() + "\n" +
         "\tMinCountForRef: " + _minCountForRef + "\n" +
-        "\tMinPctForRef: " + _minPctForRef + "\n"
+        "\tMinPctForRef: " + _minPctForRef + "\n" +
+        "\tMinPctWithinGroup: " + _minPctWithinGroup + "\n"
         ;
     }
 }

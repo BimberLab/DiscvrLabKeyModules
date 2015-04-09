@@ -18,6 +18,7 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -109,40 +110,22 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
             SequencePipelineSettings settings = new SequencePipelineSettings(getJob().getParameters());
 
             //ensure readsets exist
-            TableInfo rs = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
             TableInfo analyses = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
             TableInfo outputFiles = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
 
             List<AnalysisModel> ret = new ArrayList<>();
+            List<Readset> readsets = getJob().getJobSupport(SequenceAnalysisJobSupport.class).getCachedReadsets();
+
             Map<String, String> params = getJob().getParameters();
+            int idx = 0;
             for (String key : params.keySet())
             {
                 if (key.startsWith("readset_"))
                 {
+                    Readset r = readsets.get(idx);
+                    idx++;
+
                     JSONObject o = new JSONObject(params.get(key));
-
-                    SequenceReadsetImpl r = settings.createReadsetModel(o);
-                    if (r.getReadsetId() == null || r.getReadsetId() == 0)
-                    {
-                        r.setContainer(getJob().getContainer().getId());
-                        r.setCreated(new Date());
-                        r.setCreatedBy(getJob().getUser().getUserId());
-                        r.setModified(new Date());
-                        r.setModifiedBy(getJob().getUser().getUserId());
-                        r.setRunId(runId);
-
-                        r = Table.insert(getJob().getUser(), rs, r);
-                        getJob().getLogger().info("Created readset: " + r.getReadsetId());
-                    }
-                    else
-                    {
-                        //verify this readset exists:
-                        r = new TableSelector(rs, new SimpleFilter(FieldKey.fromString("rowid"), r.getReadsetId()), null).getObject(SequenceReadsetImpl.class);
-                        if (r == null)
-                        {
-                            throw new PipelineJobException("Readset with RowId: " + r.getReadsetId() + " does not exist, aborting");
-                        }
-                    }
 
                     AnalysisModelImpl a = new AnalysisModelImpl();
                     a.setReadset(r.getReadsetId());

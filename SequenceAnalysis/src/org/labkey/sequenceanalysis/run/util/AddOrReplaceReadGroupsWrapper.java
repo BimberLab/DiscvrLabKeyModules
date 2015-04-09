@@ -61,6 +61,15 @@ public class AddOrReplaceReadGroupsWrapper extends PicardWrapper
                 inputFile.delete();
                 FileUtils.moveFile(outputBam, inputFile);
 
+                //note: if there is a pre-existing index, we need to delete this since it is out of date
+                File idx = new File(inputFile.getPath() + ".bai");
+                if (idx.exists())
+                {
+                    getLogger().debug("deleting/recreating BAM index");
+                    idx.delete();
+                    new BuildBamIndexWrapper(getLogger()).executeCommand(inputFile);
+                }
+
                 return inputFile;
             }
             catch (IOException e)

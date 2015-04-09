@@ -50,6 +50,16 @@ public class SamSorter extends SamtoolsRunner
             {
                 getLogger().info("\treplacing original file with sorted BAM");
                 FileUtils.moveFile(output, input);
+
+                //note: if there is a pre-existing index, we need to delete this since it is out of date
+                File idx = new File(input.getPath() + ".bai");
+                if (idx.exists())
+                {
+                    getLogger().debug("deleting/recreating BAM index");
+                    idx.delete();
+                    new BuildBamIndexWrapper(getLogger()).executeCommand(input);
+                }
+
                 output = input;
             }
             catch (IOException e)

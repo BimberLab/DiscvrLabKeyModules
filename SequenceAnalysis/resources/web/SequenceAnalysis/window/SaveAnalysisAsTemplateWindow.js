@@ -17,17 +17,25 @@ Ext4.define('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
             },{
                 xtype: 'textfield',
                 fieldLabel: 'Name',
-                itemId: 'nameField',
-                listeners: {
-                    afterrender: function(field){
-                        field.focus.defer(100, field);
-                    }
-                }
+                itemId: 'nameField'
             },{
                 xtype: 'textarea',
                 fieldLabel: 'Description',
                 itemId: 'descriptionField'
             }],
+            listeners: {
+                show: function(win){
+                    var field = win.down('#nameField');
+                    field.focus.defer(100, field);
+
+                    new Ext4.util.KeyNav(win.getEl(), {
+                        "enter" : function(e){
+                            win.onSubmit();
+                        },
+                        scope : this
+                    });
+                }
+            },
             buttons: [{
                 text: 'Submit',
                 scope: this,
@@ -43,9 +51,9 @@ Ext4.define('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
         this.callParent(arguments);
     },
 
-    onSubmit: function(){
+    onSubmit: function() {
         var name = this.down('#nameField').getValue();
-        if (!name){
+        if (!name) {
             Ext4.Msg.alert('Error', 'Must provide a name');
             return;
         }
@@ -54,22 +62,55 @@ Ext4.define('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
         var json = this.sequencePanel.getJsonParams(true);
         delete json.protocolName;
         delete json.protocolDesription;
-        for (var key in json){
-            if (key.match(/^readset_/)){
+        for (var key in json) {
+            if (key.match(/^readset_/) || key.match(/^sample_/)) {
                 delete json[key];
             }
         }
 
-        Ext4.Msg.wait('Loading...');
+        LDK.Assert.assertNotEmpty('unable to find taskid when saving template', this.sequencePanel.taskId);
+
+        var params = {
+            taskId: this.sequencePanel.taskId,
+            name: name,
+            description: description,
+            json: Ext4.encode(json)
+        };
+
+        Ext4.Msg.wait('Saving...');
+        LABKEY.Query.selectRows({
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            schemaName: 'sequenceanalysis',
+            queryName: 'saved_analyses',
+            columns: 'rowid',
+            filterArray: [
+                LABKEY.Filter.create('name', name),
+                LABKEY.Filter.create('taskid', this.sequencePanel.taskId)
+            ],
+            scope: this,
+            failure: LDK.Utils.getErrorCallback(),
+            success: function(results){
+                if (results && results.rows && results.rows.length){
+                    Ext4.Msg.confirm('Overwrite Existing?', 'There is another saves templated with this name.  Do you want to overwrite it?', function(val){
+                        if (val === 'yes'){
+                            this.doSave(params);
+                        }
+                    }, this);
+                }
+                else {
+                    this.doSave(params);
+                }
+            }
+
+        })
+    },
+
+    doSave: function(params){
+        Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'saveAnalysisAsTemplate', Laboratory.Utils.getQueryContainerPath()),
             method: 'POST',
-            params: {
-                taskId: this.sequencePanel.taskId,
-                name: name,
-                description: description,
-                json: Ext4.encode(json)
-            },
+            params: params,
             scope: this,
             failure: LDK.Utils.getErrorCallback(),
             success: function(results){

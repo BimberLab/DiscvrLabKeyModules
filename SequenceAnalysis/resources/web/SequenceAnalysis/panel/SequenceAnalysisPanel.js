@@ -8,6 +8,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
     extend: 'SequenceAnalysis.panel.BaseSequencePanel',
     analysisController: 'sequenceanalysis',
     alias: 'widget.sequenceanalysis-sequenceanalysispanel',
+    splitJobs: true,
     statics: {
         TASKID: 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceAnalysisPipeline'
     },
@@ -40,228 +41,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
     },
 
     onDataLoad: function(results){
-        this.add([this.getFilePanelCfg(),{
-            xtype: 'form',
-            border: true,
-            bodyBorder: false,
-            title: 'Step 1: Run Information',
-            itemId: 'runInformation',
-            width: '100%',
-            defaults: Ext4.Object.merge({}, this.fieldDefaults, {bodyStyle: 'padding:5px;'}),
-            defaultType: 'textfield',
-            items :[{
-                fieldLabel: 'Job Name',
-                width: 600,
-                helpPopup: 'This is the name assigned to this job, which must be unique.  Results will be moved into a folder with this name.',
-                name: 'protocolName',
-                itemId: 'protocolName',
-                allowBlank:false,
-                value: 'SequenceAnalysis_'+new Date().format('Ymd'),
-                maskRe: new RegExp('[A-Za-z0-9_]'),
-                validator: function(val){
-                    return (this.isValidProtocol === false ? 'Job Name Already In Use' : true);
-                },
-                listeners: {
-                    scope: this,
-                    change: {
-                        fn: this.checkProtocol,
-                        buffer: 200,
-                        scope: this
-                    }
-                }
-            },{
-                fieldLabel: 'Description',
-                xtype: 'textarea',
-                width: 600,
-                height: 100,
-                helpPopup: 'Description for this analysis (optional)',
-                name: 'protocolDescription',
-                allowBlank:true
-            },{
-                fieldLabel: 'Delete Intermediate Files',
-                helpPopup: 'Check to delete the intermediate files created by this pipeline.  In general these are not needed and it will save disk space.  These files might be useful for debugging though.',
-                name: 'deleteIntermediateFiles',
-                inputValue: true,
-                checked: true,
-                xtype: 'checkbox'
-            },{
-                xtype: 'container',
-                layout: 'hbox',
-                width: null,
-                items: [{
-                    xtype: 'ldk-linkbutton',
-                    style: 'margin-left: ' + (this.fieldDefaults.labelWidth + 4) + 'px;',
-                    width: null,
-                    text: 'Copy Previous Run',
-                    itemId: 'copyPrevious',
-                    linkCls: 'labkey-text-link',
-                    scope: this,
-                    handler: function(btn){
-                        Ext4.create('Ext.window.Window', {
-                            taskId: this.taskId,
-                            modal: true,
-                            sequencePanel: this,
-                            title: 'Copy Previous Run?',
-                            width: 700,
-                            bodyStyle: 'padding: 5px;',
-                            defaults: {
-                                border: false
-                            },
-                            items: [{
-                                html: 'This will allow you to apply saved settings from a previous run.  Use the toggle below to select from runs bookmarked as templates, or you can choose any previous run to apply to this form.  You can click cancel to manually choose your options.',
-                                style: 'padding-bottom: 10px;'
-                            },{
-                                xtype: 'radiogroup',
-                                name: 'selector',
-                                columns: 1,
-                                defaults: {
-                                    name: 'selector'
-                                },
-                                items: [{
-                                    boxLabel: 'Choose From Saved Templates',
-                                    inputValue: 'bookmarkedRuns',
-                                    checked: true
-                                },{
-                                    boxLabel: 'Choose From All Runs',
-                                    inputValue: 'allRuns'
-                                }],
-                                listeners: {
-                                    change: function (field, val) {
-                                        var win = field.up('window');
-                                        var target = win.down('#selectionArea');
-                                        var toAdd = [];
-                                        if (val.selector == 'bookmarkedRuns'){
-                                            toAdd.push({
-                                                xtype: 'labkey-combo',
-                                                width: 450,
-                                                fieldLabel: 'Select Run',
-                                                editable: true,
-                                                forceSeletion: true,
-                                                store: {
-                                                    type: 'labkey-store',
-                                                    containerPath: Laboratory.Utils.getQueryContainerPath(),
-                                                    schemaName: 'sequenceanalysis',
-                                                    queryName: 'saved_analyses',
-                                                    autoLoad: true,
-                                                    columns: 'rowid,name,json'
-                                                },
-                                                displayField: 'name',
-                                                valueField: 'rowid',
-                                                queryMode: 'local',
-                                                listeners: {
-                                                    afterrender: function(field){
-                                                        field.focus.defer(200, field);
-                                                    }
-                                                }
-                                            });
-                                        }
-                                        else if (val.selector == 'allRuns'){
-                                            toAdd.push({
-                                                xtype: 'combo',
-                                                width: 450,
-                                                fieldLabel: 'Select Run',
-                                                editable: false,
-                                                store: {
-                                                    type: 'json',
-                                                    fields: ['rowid', 'name', 'json']
-                                                },
-                                                displayField: 'name',
-                                                valueField: 'rowid',
-                                                queryMode: 'local',
-                                                taskId: win.taskId,
-                                                listeners: {
-                                                    afterrender: function(field){
-                                                        field.focus.defer(100, field);
-                                                    },
-                                                    render: function(field){
-                                                        Ext4.Msg.wait('Loading...');
-                                                        LABKEY.Pipeline.getProtocols({
-                                                            containerPath: Laboratory.Utils.getQueryContainerPath(),
-                                                            taskId: field.taskId,
-                                                            path: './',
-                                                            includeWorkbooks: true,
-                                                            scope: this,
-                                                            success: function(results){
-                                                                Ext4.Msg.hide();
-                                                                var records = [];
-                                                                if (results && results.length){
-                                                                    Ext4.Array.forEach(results, function(r, idx){
-                                                                        records.push(field.store.createModel({
-                                                                            name: r.name,
-                                                                            rowid: idx + 1,
-                                                                            json: r.jsonParameters
-                                                                        }));
-                                                                    }, this);
-                                                                }
-
-                                                                field.store.removeAll();
-                                                                if (records.length) {
-                                                                    field.store.add(records);
-                                                                }
-                                                            },
-                                                            failure: LDK.Utils.getErrorCallback()
-                                                        })
-                                                    }
-                                                }
-                                            });
-                                        }
-                                        else {
-                                            console.error('Unknown type: ' + val.selector);
-                                        }
-
-                                        target.removeAll();
-                                        target.add(toAdd);
-                                    },
-                                    render: function(field){
-                                        field.fireEvent('change', field, field.getValue());
-                                    }
-                                }
-                            },{
-                                xtype: 'panel',
-                                itemId: 'selectionArea',
-                                bodyStyle: 'padding-top: 10px;padding-left: 5px;'
-                            }],
-                            buttons: [{
-                                text: 'Submit',
-                                handler: function(btn){
-                                    var win = btn.up('window');
-                                    var combo = win.down('combo');
-                                    if (!combo.getValue()){
-                                        Ext4.Msg.alert('Error', 'Must choose a protocol');
-                                        return;
-                                    }
-
-                                    var recIdx = combo.store.find('rowid', combo.getValue());
-                                    var rec = combo.store.getAt(recIdx);
-                                    var json = rec.get('json');
-                                    if (Ext4.isString(rec.get('json'))){
-                                        json = Ext4.decode(json);
-                                    }
-
-                                    win.sequencePanel.applySavedValues(json);
-                                    win.close();
-                                }
-                            },{
-                                text: 'Cancel',
-                                handler: function(btn){
-                                    btn.up('window').close();
-                                }
-                            }]
-                        }).show(btn);
-                    }
-                },{
-                    xtype: 'ldk-linkbutton',
-                    text: 'Save Form As Template',
-                    linkCls: 'labkey-text-link',
-                    scope: this,
-                    handler: function(btn){
-                        Ext4.create('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
-                            sequencePanel: this
-                        }).show(btn);
-                    }
-                }]
-            }]
-        },{
+        this.add([this.getFilePanelCfg(),this.getProtocolPanelCfg(),{
             xtype: 'panel',
             title: 'Analysis Options',
             width: '100%',
@@ -305,6 +85,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
     //loads the exp.RowId for each file
     initFiles: function(sql){
+        this.fileNames = [];
+        this.fileIds = [];
+
         this.readsetStore = Ext4.create("LABKEY.ext4.data.Store", {
             containerPath: this.queryContainer,
             schemaName: 'sequenceanalysis',
@@ -325,8 +108,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             listeners: {
                 scope: this,
                 load: function(store){
-                    this.fileNames = [];
-                    this.fileIds = [];
                     var errors = [];
                     var errorNames = [];
                     store.each(function(rec){
@@ -336,7 +117,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                         }
                     }, this);
 
-                    this.onStoreLoad(errors);
+                    this.onStoreLoad(errorNames);
                 }
             }
         });
@@ -361,14 +142,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             listeners: {
                 scope: this,
                 load: function (store) {
-                    this.fileNames = [];
-                    this.fileIds = [];
                     var errors = [];
                     var errorNames = [];
                     store.each(function(rec){
-                        this.fileNames = [];
-                        this.fileIds = [];
-
                         if (rec.get('fileid1')){
                             if (!rec.get('fileid1/fileexists')){
                                 errors.push(rec);
@@ -396,7 +172,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                         }
                     }, this);
 
-                    this.onStoreLoad(errors);
+                    this.onStoreLoad(errorNames);
                 }
             }
         });
@@ -472,6 +248,55 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
     populateSamples: Ext4.emptyFn,
 
+    getProtocolPanelCfg: function(){
+        return {
+            xtype: 'form',
+            border: true,
+            bodyBorder: false,
+            title: 'Step 1: Run Information',
+            itemId: 'runInformation',
+            width: '100%',
+            defaults: Ext4.Object.merge({}, this.fieldDefaults, {bodyStyle: 'padding:5px;'}),
+            defaultType: 'textfield',
+            items :[{
+                fieldLabel: 'Job Name',
+                width: 600,
+                helpPopup: 'This is the name assigned to this job, which must be unique.  Results will be moved into a folder with this name.',
+                name: 'protocolName',
+                itemId: 'protocolName',
+                allowBlank:false,
+                value: 'SequenceAnalysis_'+new Date().format('Ymd'),
+                maskRe: new RegExp('[A-Za-z0-9_]'),
+                validator: function(val){
+                    return (this.isValidProtocol === false ? 'Job Name Already In Use' : true);
+                },
+                listeners: {
+                    scope: this,
+                    change: {
+                        fn: this.checkProtocol,
+                        buffer: 200,
+                        scope: this
+                    }
+                }
+            },{
+                fieldLabel: 'Description',
+                xtype: 'textarea',
+                width: 600,
+                height: 100,
+                helpPopup: 'Description for this analysis (optional)',
+                name: 'protocolDescription',
+                allowBlank:true
+            },{
+                fieldLabel: 'Delete Intermediate Files',
+                helpPopup: 'Check to delete the intermediate files created by this pipeline.  In general these are not needed and it will save disk space.  These files might be useful for debugging though.',
+                name: 'deleteIntermediateFiles',
+                inputValue: true,
+                checked: true,
+                xtype: 'checkbox'
+            }, this.getSaveTemplateCfg()]
+        };
+    },
+
     getFilePanelCfg: function(){
         return {
             xtype: 'panel',
@@ -541,18 +366,5 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 ]
             }]
         }
-    },
-
-    applySavedValues: function(values){
-        //allows for subclasses to exclude this panel
-        var alignPanel = this.down('sequenceanalysis-alignmentpanel');
-        if (alignPanel) {
-            alignPanel.down('#doAlignment').setValue(!!values.alignment || !!values['alignment.doAlignment']);
-        }
-
-        var sections = this.query('sequenceanalysis-analysissectionpanel');
-        Ext4.Array.forEach(sections, function(s){
-            s.applySavedValues(values);
-        }, this);
     }
 });

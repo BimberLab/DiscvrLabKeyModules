@@ -133,11 +133,20 @@ public class BLASTMaintenanceTask implements SystemMaintenance.MaintenanceTask
             {
                 if (BLASTWrapper.DB_TYPE.isType(f))
                 {
-                    if (!dbNames.contains(FileUtil.getBaseName(f)))
+                    if (!dbNames.contains(FileUtil.getBaseName(f)) && !dbNames.contains(f.getName().replaceAll("\\.[0-9]+\\.idx", "")))
                     {
                         _log.info("deleting unused BLAST db: " + f.getName());
                         f.delete();
                     }
+                }
+            }
+
+            for (String dbName : dbNames)
+            {
+                File expected = new File(dbDir, dbName + ".nhr");
+                if (!expected.exists())
+                {
+                    _log.error("BLAST db does not exist: " + expected.getPath());
                 }
             }
         }

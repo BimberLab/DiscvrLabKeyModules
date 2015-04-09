@@ -11,7 +11,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
     onDataLoad: function(results){
         var panel = this.down('#analysisOptions');
 
-        var items = [];
+        var items = [this.getFilePanelCfg(), this.getProtocolPanelCfg()];
         items.push({
             xtype: 'sequenceanalysis-analysissectionpanel',
             title: 'Step 2: Downstream Analysis',

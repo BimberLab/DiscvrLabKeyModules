@@ -699,6 +699,23 @@ public class TaskFileManagerImpl implements TaskFileManager
                 throw new PipelineJobException("Unable to move file: " + input.getPath());
             }
 
+            //TODO: kinda of a hack
+            File fastqcHtml = new File(input.getParentFile(), input.getName().replaceAll(".fastq.gz", "") + "_fastqc.html.gz");
+            if (fastqcHtml.exists())
+            {
+                _job.getLogger().debug("also moving FASTQC file: " + fastqcHtml.getName());
+                File target = new File(output.getParentFile(), fastqcHtml.getName());
+                if (target.exists())
+                {
+                    _job.getLogger().warn("FASTQ file already exists on the server.  not expected: " + target.getPath());
+                }
+                else
+                {
+                    FileUtils.moveFile(fastqcHtml, target);
+                    swapFiles(fastqcHtml, target);
+                }
+            }
+
             swapFiles(input, output);
 
             return output;
@@ -855,10 +872,14 @@ public class TaskFileManagerImpl implements TaskFileManager
         {
             _job.getLogger().debug("deleting empty directory: " + input.getPath());
             FileUtils.deleteDirectory(input);
+            return;
         }
 
         String path = _wd.getRelativePath(input);
         File dest = new File(getSupport().getAnalysisDirectory(), path);
+        _job.getLogger().debug("to: " + dest.getPath());
+
+        boolean doMove = true;
         if (dest.exists())
         {
             if (input.isDirectory())
@@ -870,15 +891,19 @@ public class TaskFileManagerImpl implements TaskFileManager
                 }
 
                 FileUtils.deleteDirectory(input);
+                doMove = false;
             }
             else
             {
-                //ignore
-                _job.getLogger().debug("file already exists, deleting file");
-                input.delete();
+                _job.getLogger().debug("file already exists, deleting pre-existing local file");
+                if (!dest.delete())
+                {
+                    _job.getLogger().error("unable to delete local file: " + dest.getPath());
+                }
             }
         }
-        else
+
+        if (doMove)
         {
             _job.getLogger().debug("copying input: " + input.getPath());
             _job.getLogger().debug("to: " + dest.getPath());

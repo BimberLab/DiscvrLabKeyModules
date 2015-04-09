@@ -41,7 +41,7 @@ public class StarWrapper extends AbstractCommandWrapper
         public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName());
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName(), referenceGenome);
             StarWrapper wrapper = getWrapper();
 
             getPipelineCtx().getLogger().info("Aligning sample with STAR... 1st pass");
@@ -130,6 +130,12 @@ public class StarWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean doAddReadGroups()
+        {
+            return true;
+        }
+
+        @Override
         public boolean doSortIndexBam()
         {
             return true;
@@ -142,7 +148,7 @@ public class StarWrapper extends AbstractCommandWrapper
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
             File indexDir = new File(outputDir, getProvider().getName());
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName());
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName(), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!indexDir.exists())
@@ -170,7 +176,7 @@ public class StarWrapper extends AbstractCommandWrapper
             output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getProvider().getName(), output);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getProvider().getName(), referenceGenome);
 
             return output;
         }

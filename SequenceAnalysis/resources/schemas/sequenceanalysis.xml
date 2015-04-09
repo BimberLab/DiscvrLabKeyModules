@@ -1042,7 +1042,7 @@
                     <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
                     <ns:fkTable>readset_status</ns:fkTable>
                     <ns:fkColumnName>status</ns:fkColumnName>
-                    <ns:fkDisplayColumnName>status</ns:fkDisplayColumnName>
+                    <ns:fkDisplayColumnName useRawValue="true"/>
                 </ns:fk>
             </ns:column>
             <ns:column columnName="container">
@@ -2061,7 +2061,7 @@
         </ns:buttonBarOptions>
     </ns:table>
     <ns:table tableName="reference_library_tracks" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</ns:javaCustomizer>
+        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryEditingTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:tableUrl></ns:tableUrl>
         <!--<ns:updateUrl></ns:updateUrl>-->
@@ -2208,7 +2208,7 @@
         <ns:tableTitle>Outputs</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowid">
-                <ns:columnTitle>Row Id</ns:columnTitle>
+                <ns:columnTitle>Output File Id</ns:columnTitle>
             </ns:column>
             <ns:column columnName="name">
                 <ns:scale>80</ns:scale>

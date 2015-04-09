@@ -4,25 +4,39 @@ import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by bimber on 8/5/2014.
  */
 public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNormalizationTask.Factory>
 {
-    private static final String ACTION_NAME = "Normalizing Alignments";
+    private static final String ACTION_NAME = "Normalizing BAM";
+
     private SequenceTaskHelper _taskHelper;
 
     protected AlignmentNormalizationTask(Factory factory, PipelineJob job)
@@ -39,12 +53,20 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
 
         public String getStatusName()
         {
-            return ACTION_NAME;
+            return ACTION_NAME.toUpperCase();
         }
 
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(ACTION_NAME);
+            List<String> allowableNames = new ArrayList<>();
+            for (PipelineStepProvider provider: SequencePipelineService.get().getProviders(BamProcessingStep.class))
+            {
+                allowableNames.add(provider.getLabel());
+            }
+
+            allowableNames.add(ACTION_NAME);
+
+            return allowableNames;
         }
 
         public PipelineJob.Task createTask(PipelineJob job)
@@ -68,13 +90,41 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
     {
         try
         {
+            List<RecordedAction> actions = new ArrayList<>();
             _taskHelper = new SequenceTaskHelper(getJob(), _wd);
-            RecordedAction action = new RecordedAction(ACTION_NAME);
 
             //move and make sure BAMs are indexed
             FileType bamFile = new FileType("bam");
-            for (File originalFile : getTaskHelper().getSupport().getInputFiles())
+            Map<String, File> bamMap = new HashMap<>();
+            for (File f : getTaskHelper().getSupport().getInputFiles())
             {
+                getJob().getLogger().debug("input file: " + f.getPath());
+                bamMap.put(f.getName(), f);
+            }
+
+
+            Map<String, String> params = getJob().getParameters();
+            List<Readset> readsets = getJob().getJobSupport(SequenceAnalysisJobSupport.class).getCachedReadsets();
+            int idx = 0;
+            for (String key : params.keySet())
+            {
+                if (!key.startsWith("readset_"))
+                {
+                    continue;
+                }
+
+                JSONObject o = new JSONObject(params.get(key));
+                Readset rs = readsets.get(idx);
+                idx++;
+
+                File originalFile = bamMap.get(o.getString("fileName"));
+                if (originalFile == null)
+                {
+                    //NOTE: this task will be split, meaning the XML has multiple readsets, even though this task has only one input file
+                    getJob().getLogger().debug("skipping readset with file: " + o.getString("fileName"));
+                    continue;
+                }
+
                 getJob().getLogger().info("processing file: " + originalFile.getPath());
                 if (!bamFile.isType(originalFile))
                 {
@@ -82,56 +132,103 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                     continue;
                 }
 
-                File movedFile = new File(getTaskHelper().getSupport().getAnalysisDirectory(), originalFile.getName());
-
-                //delete original, if required
-                String handling = getTaskHelper().getFileManager().getInputfileTreatment();
-                action.addInput(movedFile, "BAM Index");
-                if ("delete".equals(handling))
+                List<PipelineStepProvider<BamProcessingStep>> providers = SequencePipelineService.get().getSteps(getJob(), BamProcessingStep.class);
+                File bam = originalFile;
+                if (providers.isEmpty())
                 {
-                    getJob().getLogger().info("moving BAM to: " + movedFile.getPath());
-                    FileUtils.moveFile(originalFile, movedFile);
+                    getJob().getLogger().info("No BAM postprocessing is necessary");
                 }
                 else
                 {
-                    getJob().getLogger().info("copying BAM to: " + movedFile.getPath());
-                    FileUtils.copyFile(originalFile, movedFile);
+                    File workDir = new File(getTaskHelper().getWorkingDirectory(), FileUtil.getBaseName(originalFile.getName()));
+                    getJob().getLogger().info("***Starting BAM Post processing");
+                    getJob().setStatus("BAM POST-PROCESSING");
+                    if (!workDir.exists())
+                        workDir.mkdirs();
+
+                    ReferenceGenome referenceGenome = getJob().getJobSupport(SequenceAnalysisJobSupport.class).getCachedGenome(o.getInt("library_id"));
+                    for (PipelineStepProvider<BamProcessingStep> provider : providers)
+                    {
+                        getJob().getLogger().info("performing step: " + provider.getLabel());
+                        RecordedAction action = new RecordedAction(provider.getLabel());
+                        action.setStartTime(new Date());
+                        _taskHelper.getFileManager().addInput(action, "Input BAM", bam);
+
+                        BamProcessingStep step = provider.create(_taskHelper);
+                        getJob().setStatus("RUNNING: " + provider.getLabel().toUpperCase());
+                        BamProcessingStep.Output output = step.processBam(rs, bam, referenceGenome, workDir);
+                        _taskHelper.getFileManager().addStepOutputs(action, output);
+
+                        if (output.getBAM() != null)
+                        {
+                            bam = output.getBAM();
+                        }
+                        getJob().getLogger().info("\ttotal alignments in processed BAM: " + SequenceUtil.getAlignmentCount(bam));
+
+                        action.setEndTime(new Date());
+                        actions.add(action);
+                    }
                 }
 
-                File indexFile = new File(originalFile.getPath() + ".bai");
-                File movedIndexFile = new File(movedFile.getPath() + ".bai");
-                if (indexFile.exists())
+                //first copy the end product to the final location
+                getJob().setStatus("MOVING BAM");
+                File finalDestination = new File(getTaskHelper().getSupport().getAnalysisDirectory(), originalFile.getName());
+                RecordedAction moveAction = new RecordedAction(ACTION_NAME);
+                getTaskHelper().getFileManager().addInput(moveAction, "Input BAM", bam);
+                actions.add(moveAction);
+
+                if (!bam.getPath().equals(finalDestination.getPath()))
                 {
-                    action.addInput(movedFile, "BAM Index");
-                    if ("delete".equals(handling))
+                    //note: if BAM is unaltered, copy rather than move to preserve original
+                    if (bam.equals(originalFile) && "none".equals(getTaskHelper().getFileManager().getInputfileTreatment()))
                     {
-                        getJob().getLogger().info("BAM index exists, moving");
-                        FileUtils.moveFile(indexFile, movedIndexFile);
+                        FileUtils.copyFile(bam, finalDestination);
                     }
                     else
                     {
-                        getJob().getLogger().info("BAM index exists, copying");
-                        FileUtils.copyFile(indexFile, movedIndexFile);
+                        FileUtils.moveFile(bam, finalDestination);
                     }
                 }
-                else
+                getTaskHelper().getFileManager().addOutput(moveAction, SequenceAlignmentTask.FINAL_BAM_ROLE, finalDestination);
+
+                getJob().setStatus("INDEXING BAM");
+                File finalIndexFile = new File(finalDestination.getPath() + ".bai");
+                if (!finalIndexFile.exists())
                 {
                     getJob().getLogger().info("creating BAM index");
                     //TODO: SamReaderFactory fact = SamReaderFactory.make();
-                    try (SAMFileReader reader = new SAMFileReader(movedFile))
+                    try (SAMFileReader reader = new SAMFileReader(finalDestination))
                     {
                         reader.setValidationStringency(ValidationStringency.SILENT);
 
                         getJob().getLogger().info("\tcreating BAM index");
-                        BAMIndexer.createIndex(reader, movedIndexFile);
+                        BAMIndexer.createIndex(reader, finalIndexFile);
                     }
                 }
 
-                action.addOutput(movedFile, SequenceAlignmentTask.FINAL_BAM_ROLE, false);
-                action.addOutput(movedIndexFile, SequenceAlignmentTask.FINAL_BAM_INDEX_ROLE, false);
+                getTaskHelper().getFileManager().addOutput(moveAction, SequenceAlignmentTask.FINAL_BAM_INDEX_ROLE, finalIndexFile);
+
+                //delete original, if required
+                String handling = getTaskHelper().getFileManager().getInputfileTreatment();
+                if ("delete".equals(handling))
+                {
+                    getJob().getLogger().info("deleting original BAM: " + originalFile.getPath());
+                    originalFile.delete();
+
+                    File indexFile = new File(originalFile.getPath() + ".bai");
+                    if (indexFile.exists())
+                    {
+                        getJob().getLogger().info("BAM index exists, deleting");
+                        indexFile.delete();
+                    }
+                }
             }
 
-            return new RecordedActionSet(Arrays.asList(action));
+            getJob().setStatus("PERFORMING CLEANUP");
+            getTaskHelper().getFileManager().deleteIntermediateFiles();
+            getTaskHelper().getFileManager().cleanup();
+
+            return new RecordedActionSet(actions);
         }
         catch (IOException e)
         {

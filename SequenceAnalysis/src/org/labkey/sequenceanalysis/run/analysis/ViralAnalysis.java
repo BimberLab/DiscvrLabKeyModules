@@ -108,7 +108,7 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
 
             for (AlignmentAggregator a : aggregators)
             {
-                a.saveToDb(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), model);
+                a.writeOutput(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), model);
             }
 
             bi.saveSynopsis(getPipelineCtx().getJob().getUser(), model);

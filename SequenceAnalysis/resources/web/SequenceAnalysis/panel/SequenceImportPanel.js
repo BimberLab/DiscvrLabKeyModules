@@ -113,11 +113,11 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             groupField: 'fileGroupId',
             model: Ext4.define('SequenceAnalysis.model.ReadsetDataModel', {
                 extend: 'Ext.data.Model',
-                fields: [                        
+                fields: [
                     {name: 'id'},
                     {name: 'fileGroupId', allowBlank: false},
                     {name: 'fileRecord1'},
-                    {name: 'fileRecord2'},                                                                
+                    {name: 'fileRecord2'},
                     {name: 'platformUnit'},
                     {name: 'centerName'},
                     {name: 'comments'}
@@ -200,7 +200,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 html: 'The purpose of this import process is to normalize the sequence data into a common format (FASTQ), create one file per sample, and capture sample metadata (name, sample type, subject name, etc).  Reads are organized into readsets.  ' +
                         'Each readset is roughly equals to one input file (or 2 for pair-end data), and it connects the sequences in this file with sample attributes, such as subject name, sample type, platform, etc.'
             },{
-                html: '<h3><a href="' + LABKEY.ActionURL.buildURL('sequenceAnalysis', 'instructions') + '" target="_blank">Click here for more detailed instructions</a></h3>'
+                html: '<h3><a href="https://github.com/bbimber/discvr-seq/wiki/Sequence-Management" target="_blank">Click here for more detailed instructions</a></h3>'
             }]
         }, this.getRunInfoCfg(), this.getFilePanelCfg(),{
             xtype:'panel',
@@ -365,13 +365,14 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     map[rec.get('readgroup').sample].push(m);
                 }
                 else if (this.ILLUMINA_REGEX.test(rec.get('fileName'))){
-                    var tokens = rec.get('fileName').split('_');
-                    var sample = tokens[0] + '-' + tokens[1];
-                    var platformUnit = tokens[0] + '-' + tokens[1] + '_' + tokens[2];
-                    var setId = tokens[0] + '-' + tokens[1] + '_' + tokens[2] + '_' + tokens[4];
+                    var match = this.ILLUMINA_REGEX.exec(rec.get('fileName'));
+                    var sample = match[1] + '-' + match[2];
+                    var platformUnit = match[1] + '-' + match[2] + '_L' + match[3];
+                    var lane = match[5];
+                    var setId = match[1] + '-' + match[2] + '_L' + match[3] + '_' + lane;
                     map[sample] = map[sample] || {};
                     map[sample][setId] = map[sample][setId] || [];
-                    var readSet = tokens[3].replace('R', '');
+                    var readSet = match[4];
                     if (readSet == 1){
                         var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
                         m.set('fileRecord1', rec.get('id'));
@@ -381,7 +382,23 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     }
                     else {
                         var arr = map[sample][setId];
-                        arr[arr.length - 1].set('fileRecord2', rec.get('id'));
+                        if (!arr.length){
+                            var msg = 'Possible error parsing file groups on SequenceImportPanel.  Encountered reverse reads prior to forward for file: [' + f.get('fileName') + '].  Names were:\n';
+                            this.fileNameStore.each(function(f){
+                                msg += '[' + f.get('fileName') + ']\n';
+                            }, this);
+
+                            LDK.Utils.logError(msg);
+
+                            var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
+                            m.set('fileRecord2', rec.get('id'));
+                            m.set('fileGroupId', sample);
+                            m.set('platformUnit', platformUnit);
+                            map[sample][setId].push(m);
+                        }
+                        else {
+                            arr[arr.length - 1].set('fileRecord2', rec.get('id'));
+                        }
                     }
                 }
                 else {
@@ -452,6 +469,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         }, this);
         distinctNames = Ext4.unique(distinctNames);
 
+        //update fileGroupIds
+        Ext4.Array.forEach(distinctNames, function(name){
+            this.fileGroupStore.add(this.fileGroupStore.createModel({
+                fileGroupId: name
+            }));
+        }, this);
+
         Ext4.Array.forEach(distinctNames, function(name){
             if (this.readsetStore.findExact('fileGroupId', name) == -1) {
                 this.readsetStore.add(this.readsetStore.createModel({
@@ -465,6 +489,15 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 this.readsetStore.remove(r);
             }
         }, this);
+
+        if (this.readDataStore.getCount() == 0 && this.fileNameStore.getCount() != 0){
+            var msg = 'Possible error parsing file groups on SequenceImportPanel.  Names were:\n';
+            this.fileNameStore.each(function(f){
+                msg += '[' + f.get('fileName') + ']\n';
+            }, this);
+
+            LDK.Utils.logError(msg);
+        }
     },
 
     getJsonParams: function(btn){
@@ -521,6 +554,11 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
         var fileGroupMap = {};
         this.readDataStore.each(function(r, idx){
+            var recErrors = r.validate();
+            if (recErrors.getCount()){
+                errors.add(recErrors.getRange());
+            }
+
             var i = 1;
             var readData = {
                 fileGroupId: r.get('fileGroupId'),
@@ -555,6 +593,16 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             fileIdx++;
         }
 
+        if (Ext4.Object.isEmpty(fileGroupMap)){
+            Ext4.Msg.alert('Error', 'There are no file groups.  You must complete the section showing how your files are grouped into lanes/groups');
+            return false;
+        }
+
+        if (!this.readsetStore.getCount()){
+            Ext4.Msg.alert('Error', 'There are no readsets defined.  Please fill out the readset grid');
+            return false;
+        }
+
         this.readsetStore.each(function(r, sampleIdx){
             var recErrors = r.validate();
             if (recErrors.getCount()){
@@ -565,29 +613,29 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             key.push(r.get('fileRecord2'));
 
             if (!useBarcode){
-                delete r.data['mid5'];
-                delete r.data['mid3'];
+                delete r.data['barcode5'];
+                delete r.data['barcode3'];
             }
             else {
-                key.push(r.data['mid5']);
-                key.push(r.data['mid3']);
+                key.push(r.data['barcode5']);
+                key.push(r.data['barcode3']);
             }
 
             key = key.join("||");
 
             //handle barcodes
             var rec;
-            if (r.get('mid5')){
-                rec = this.barcodeStore.getAt(this.barcodeStore.find('tag_name', r.get('mid5')));
-                if (!barcodes[r.get('mid5')]){
-                    barcodes[r.get('mid5')] = [r.get('mid5'), rec.get('sequence')];
+            if (r.get('barcode5')){
+                rec = this.barcodeStore.getAt(this.barcodeStore.find('tag_name', r.get('barcode5')));
+                if (!barcodes[r.get('barcode5')]){
+                    barcodes[r.get('barcode5')] = [r.get('barcode5'), rec.get('sequence')];
                 }
             }
 
-            if (r.get('mid3')){
-                rec = this.barcodeStore.getAt(this.barcodeStore.find('tag_name', r.get('mid3')));
-                if (rec && !barcodes[r.get('mid3')]){
-                    barcodes[r.get('mid3')] = [r.get('mid3'), rec.get('sequence')];
+            if (r.get('barcode3')){
+                rec = this.barcodeStore.getAt(this.barcodeStore.find('tag_name', r.get('barcode3')));
+                if (rec && !barcodes[r.get('barcode3')]){
+                    barcodes[r.get('barcode3')] = [r.get('barcode3'), rec.get('sequence')];
                 }
             }
 

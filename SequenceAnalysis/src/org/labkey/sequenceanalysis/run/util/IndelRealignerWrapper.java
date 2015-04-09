@@ -11,6 +11,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.BufferedReader;
@@ -71,18 +72,21 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
         ensureDictionary(referenceFasta);
 
         File expectedIndex = new File(inputBam.getPath() + ".bai");
+        if (expectedIndex.exists() && expectedIndex.lastModified() < inputBam.lastModified())
+        {
+            getLogger().info("deleting out of date index: " + expectedIndex.getPath());
+            expectedIndex.delete();
+        }
+
         if (!expectedIndex.exists())
         {
             getLogger().debug("\tcreating temp index for BAM: " + inputBam.getName());
-            //TODO: SamReaderFactory fact = SamReaderFactory.make();
-            //fact.validationStringency(ValidationStringency.SILENT);
-            try (SAMFileReader reader = new SAMFileReader(inputBam))
-            {
-                reader.setValidationStringency(ValidationStringency.SILENT);
-                BAMIndexer.createIndex(reader, expectedIndex);
-            }
-
+            new BuildBamIndexWrapper(getLogger()).executeCommand(inputBam);
             tempFiles.add(expectedIndex);
+        }
+        else
+        {
+            getLogger().debug("BAM index already exists: " + expectedIndex.getPath());
         }
 
         getLogger().info("\tbuilding target intervals");
@@ -107,22 +111,18 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
             args.add(knownSnpsVcf.getPath());
         }
 
+        Integer maxThreads = SequenceTaskHelper.getMaxThreads(getLogger());
+        if (maxThreads != null)
+        {
+            args.add("-nt");
+            args.add(maxThreads.toString());
+        }
+
         execute(args);
 
         //log the intervals
-        getLogger().info("\ttarget intervals:");
-        try (BufferedReader reader = new BufferedReader(new FileReader(intervalsFile)))
-        {
-            String line;
-            while ((line = reader.readLine()) != null)
-            {
-                getLogger().info("\t" + line);
-            }
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
+        long lineCount = SequenceUtil.getLineCount(intervalsFile);
+        getLogger().info("\ttarget intervals to realign: " + lineCount);
 
         //then run realigner
         getLogger().info("\trunning IndelRealigner");

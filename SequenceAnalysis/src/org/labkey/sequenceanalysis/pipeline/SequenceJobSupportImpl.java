@@ -72,6 +72,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         _cachedAnalyses.put(m.getRowId(), m);
     }
 
+    @Override
     public void cacheGenome(ReferenceGenome m)
     {
         _cachedGenomes.put(m.getGenomeId(), m);
@@ -90,12 +91,6 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     public ReferenceGenome getCachedGenome(int genomeId)
     {
         return _cachedGenomes.get(genomeId);
-    }
-
-    @Override
-    public PipelineJob getJob()
-    {
-        return null;
     }
 
     @Override

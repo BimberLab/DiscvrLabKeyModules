@@ -2496,6 +2496,7 @@ labModules/SequenceAnalysis/pipeline_code/external/picard/MergeSamFiles.jar -tex
 labModules/SequenceAnalysis/pipeline_code/external/picard/SamToFastq.jar -text
 labModules/SequenceAnalysis/pipeline_code/external/trimmomatic/LICENSE -text
 labModules/SequenceAnalysis/pipeline_code/external/trimmomatic/trimmomatic-0.22.jar -text
+labModules/SequenceAnalysis/pipeline_code/extra_tools_install.sh -text
 labModules/SequenceAnalysis/pipeline_code/sequence_tools_install.sh -text
 labModules/SequenceAnalysis/resources/credits/executables.txt -text
 labModules/SequenceAnalysis/resources/credits/jars.txt -text
@@ -2606,13 +2607,16 @@ labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/babraham/FastQC/Util
 labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/babraham/FastQC/Utilities/QualityCount.class -text
 labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/babraham/FastQC/Utilities/RGB.class -text
 labModules/SequenceAnalysis/resources/external/jbzip2-0.9.jar -text
+labModules/SequenceAnalysis/resources/external/qscript/HaplotypeCaller.scala -text
 labModules/SequenceAnalysis/resources/external/sam-1.96.jar -text
 labModules/SequenceAnalysis/resources/external/tableToGraph.r -text
 labModules/SequenceAnalysis/resources/folderTypes/Sequence[!!-~]Analysis.folderType.xml -text
 labModules/SequenceAnalysis/resources/module.xml -text
 labModules/SequenceAnalysis/resources/queries/exp/DataInputs/.qview.xml -text
+labModules/SequenceAnalysis/resources/queries/pipeline/Job.query.xml -text
 labModules/SequenceAnalysis/resources/queries/pipeline/Job/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/pipeline/Job/Active[!!-~]Jobs.qview.xml -text
+labModules/SequenceAnalysis/resources/queries/pipeline/Job/Sequence[!!-~]Jobs.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/aa_features_combined.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/aa_snps_by_codon/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/adapter_sets.sql -text
@@ -2977,6 +2981,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentAn
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentAnalysisInitTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentAnalysisRemoteWorkTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentAnalysisWorkTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentImportInitTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentImportTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentNormalizationTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/CreateReferenceLibraryTask.java -text
@@ -3011,6 +3016,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceTas
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/TaskFileManagerImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/AnalysesTableCustomizer.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/DownloadSequenceDisplayColumnFactory.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/JobsTableCustomizer.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceAnalysisCustomizer.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceAnalysisUserSchema.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceTriggerHelper.java -text
@@ -3021,6 +3027,8 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BWASWW
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BWAWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BismarkWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BowtieWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/FastaToTwoBitRunner.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/FastqCollapser.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/GSnapWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/IndexOutputImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/LastzWrapper.java -text
@@ -3037,6 +3045,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/BlastUn
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/HaplotypeCallerAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/NtCoverageAggregator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/NtSnpByPosAggregator.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/PARalyzerAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SequenceBasedTypingAlignmentAggregator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SequenceBasedTypingAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SnpCountAnalysis.java -text
@@ -3085,6 +3094,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MarkDuplica
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MergeBamAlignmentWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MergeSamFilesWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/NTSnp.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/PARalyzerRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/PicardWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/QualiMapRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SFFExtractRunner.java -text
@@ -3389,6 +3399,7 @@ labModules/laboratory/src/org/labkey/laboratory/view/workbookHeader.jsp -text
 onprcEHRModules/GeneticsCore/GeneticsCore.iml -text
 onprcEHRModules/GeneticsCore/build.xml -text
 onprcEHRModules/GeneticsCore/module.properties -text
+onprcEHRModules/GeneticsCore/resources/external/amplicon_standard_curve.R -text
 onprcEHRModules/GeneticsCore/resources/module.xml -text
 onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/sequence_analyses/SBT[!!-~]Information.qview.xml -text
 onprcEHRModules/GeneticsCore/resources/queries/study/dnaFlagSummary.query.xml -text
@@ -3403,6 +3414,8 @@ onprcEHRModules/GeneticsCore/resources/views/begin.webpart.xml -text
 onprcEHRModules/GeneticsCore/resources/views/geneticsMenu.html -text
 onprcEHRModules/GeneticsCore/resources/views/geneticsMenu.view.xml -text
 onprcEHRModules/GeneticsCore/resources/views/geneticsMenu.webpart.xml -text
+onprcEHRModules/GeneticsCore/resources/views/methylationComparison.html -text
+onprcEHRModules/GeneticsCore/resources/views/methylationComparison.view.xml -text
 onprcEHRModules/GeneticsCore/resources/views/sbtReview.html -text
 onprcEHRModules/GeneticsCore/resources/views/sbtReview.view.xml -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/buttons.js -text
@@ -3413,6 +3426,7 @@ onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreController.
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreManager.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreModule.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsTableCustomizer.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/analysis/MethylationRateComparison.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/ChangeReadsetStatusButton.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/PublishSBTResultsButton.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/SBTReviewButton.java -text

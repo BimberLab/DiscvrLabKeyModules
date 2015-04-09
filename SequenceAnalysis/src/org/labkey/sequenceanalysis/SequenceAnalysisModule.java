@@ -62,6 +62,7 @@ import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.BlastUnmappedReadAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.PARalyzerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.UnmappedReadExportAnalysis;
@@ -190,6 +191,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.MethylationExtractorProvider());
         SequencePipelineService.get().registerPipelineStep(new UnmappedReadExportAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
@@ -242,7 +244,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         DetailsURL details = DetailsURL.fromString("/sequenceAnalysis/siteAdmin.view");
         details.setContainerContext(ContainerManager.getRoot());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "sequence analysis module admin", details.getActionURL());
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "discvr-seq admin", details.getActionURL());
 
         PipelineService.get().registerPipelineProvider(new ReferenceLibraryPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new NcbiGenomeImportPipelineProvider(this));

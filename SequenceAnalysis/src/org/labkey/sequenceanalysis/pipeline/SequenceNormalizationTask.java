@@ -17,12 +17,10 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
 import com.drew.lang.annotations.Nullable;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.util.FastqQualityFormat;
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.QualityEncodingDetector;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -41,10 +39,10 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.FileGroup;
 import org.labkey.sequenceanalysis.ReadDataImpl;
-import org.labkey.sequenceanalysis.SequenceAnalysisController;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.run.preprocessing.SeqCrumbsRunner;
+import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.run.util.SFFExtractRunner;
 import org.labkey.sequenceanalysis.run.util.SamToFastqWrapper;
 import org.labkey.sequenceanalysis.util.Barcoder;
@@ -53,24 +51,19 @@ import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.NucleotideSequenceFileType;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
@@ -87,6 +80,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
     private static final String PREPARE_INPUT_STATUS = "NORMALIZING INPUT FILES";
     private static final String DECOMPRESS_ACTIONNAME = "Decompressing Inputs";
     private static final String BARCODE_ACTIONNAME = "Separate By Barcode";
+    private static final String FASTQ_ACTION_NAME = "FASTQC";
     private static final String COMPRESS_ACTIONNAME = "Compressing Outputs";
     private static final String EXTRACT_READ_GROUP_ACTION = "Extract Read Groups";
 
@@ -129,7 +123,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(DECOMPRESS_ACTIONNAME, EXTRACT_READ_GROUP_ACTION, PREPARE_INPUT_ACTIONNAME, MERGE_ACTIONNAME, BARCODE_ACTIONNAME, COMPRESS_ACTIONNAME);
+            return Arrays.asList(DECOMPRESS_ACTIONNAME, EXTRACT_READ_GROUP_ACTION, PREPARE_INPUT_ACTIONNAME, MERGE_ACTIONNAME, BARCODE_ACTIONNAME, FASTQ_ACTION_NAME, COMPRESS_ACTIONNAME);
         }
 
         public PipelineJob.Task createTask(PipelineJob job)
@@ -232,7 +226,24 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
         if (FastqUtils.FqFileType.isType(f))
         {
-            if (!FastqQualityFormat.Standard.equals(FastqUtils.inferFastqEncoding(f)))
+            QualityEncodingDetector detector = new QualityEncodingDetector();
+            try (FastqReader reader = new FastqReader(f))
+            {
+                detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE * 2, reader);
+            }
+
+            if (detector.isDeterminationAmbiguous())
+            {
+                job.getLogger().warn("ambigous encoding detected: " + f.getPath() + ". matched:");
+                EnumSet<FastqQualityFormat> formats = detector.generateCandidateQualities(false);
+                for (FastqQualityFormat fmt : formats)
+                {
+                    job.getLogger().warn(fmt.name());
+                }
+
+                return false;
+            }
+            else if (!FastqQualityFormat.Standard.equals(detector.generateBestGuess(QualityEncodingDetector.FileContext.FASTQ, null)))
             {
                 job.getLogger().debug("fastq file does not appear to use standard encoding (ASCII 33): " + f.getPath());
                 return true;
@@ -353,7 +364,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                         normalizedPairs.add(fp);
 
                         getHelper().getFileManager().addOutput(mergeAction, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, merged1);
-                        if (merged2.exists())
+                        if (merged2 != null && merged2.exists())
                         {
                             getHelper().getFileManager().addOutput(mergeAction, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, merged2);
                         }
@@ -567,6 +578,23 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     //this should no longer ever happen
                     throw new PipelineJobException("FASTQ was not gzipped");
                 }
+
+                //NOTE: this could result is the artifact being created on the source directory in the case of
+                if (getHelper().getSettings().isRunFastqc())
+                {
+                    RecordedAction fqAction = new RecordedAction(FASTQ_ACTION_NAME);
+                    fqAction.setStartTime(new Date());
+                    _taskHelper.getFileManager().addInput(fqAction, "FASTQ File", f);
+
+                    getJob().setStatus("RUNNING FASTQC");
+                    getJob().getLogger().info("running FastQC for file: " + f);
+                    FastqcRunner runner = new FastqcRunner(getJob().getLogger());
+                    runner.execute(Arrays.asList(f));
+
+                    _taskHelper.getFileManager().addOutput(fqAction, "FASTQC Output", new File(f.getParentFile(), runner.getExpectedBasename(f) + "_fastqc.html.gz"));
+                    fqAction.setEndTime(new Date());
+                    actions.add(fqAction);
+                }
             }
 
             if (baseDirectory.list().length == 0)
@@ -575,6 +603,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 FileUtils.deleteDirectory(baseDirectory);
             }
 
+            getJob().setStatus("CLEANUP FILES");
             getHelper().getFileManager().handleInputs();
             getHelper().getFileManager().cleanup();
         }
@@ -729,13 +758,41 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         //NOTE: if the file is ASCII33 FASTQ, it should not reach this stage, unless we're doing barcoding or merging
         if (type.equals(SequenceUtil.FILETYPE.fastq))
         {
-            FastqQualityFormat encoding = FastqUtils.inferFastqEncoding(input);
-            if (encoding == null)
+            QualityEncodingDetector detector = new QualityEncodingDetector();
+            try (FastqReader reader = new FastqReader(input))
+            {
+                detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE * 2, reader);
+            }
+
+            EnumSet<FastqQualityFormat> formats = detector.generateCandidateQualities(false);
+            if (formats.isEmpty())
             {
                 throw new PipelineJobException("Unable to infer FASTQ encoding for file: " + input.getPath());
             }
+            else if (formats.size() > 1)
+            {
+                job.getLogger().warn("ambigous encoding detected: " + input.getPath() + ". matched:");
+                for (FastqQualityFormat fmt : formats)
+                {
+                    job.getLogger().warn(fmt.name());
+                }
+            }
 
-            if (encoding == FastqQualityFormat.Illumina || encoding == FastqQualityFormat.Solexa)
+            if (formats.contains(FastqQualityFormat.Standard))
+            {
+                if (!gz.isType(input))
+                {
+                    File compressed = new File(workingDir, input.getName() + ".gz");
+                    getJob().getLogger().info("compressing file: " + input.getName());
+                    Compress.compressGzip(input, compressed);
+                    output = compressed;
+                }
+                else
+                {
+                    output = input;
+                }
+            }
+            else if (formats.contains(FastqQualityFormat.Illumina) || formats.contains(FastqQualityFormat.Solexa))
             {
                 getJob().getLogger().info("Converting Illumina/Solexa FASTQ (ASCII 64) to standard encoding (ASCII 33)");
                 File toConvert = input;
@@ -755,20 +812,6 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 Compress.compressGzip(output, compressed);
                 output.delete();
                 output = compressed;
-            }
-            else
-            {
-                if (!gz.isType(input))
-                {
-                    File compressed = new File(workingDir, input.getName() + ".gz");
-                    getJob().getLogger().info("compressing file: " + input.getName());
-                    Compress.compressGzip(input, compressed);
-                    output = compressed;
-                }
-                else
-                {
-                    output = input;
-                }
             }
         }
         else if (type.equals(SequenceUtil.FILETYPE.fasta))

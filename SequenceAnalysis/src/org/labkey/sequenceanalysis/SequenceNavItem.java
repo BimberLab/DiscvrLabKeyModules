@@ -68,7 +68,7 @@ public class SequenceNavItem extends AbstractImportingNavItem
     @Override
     public ActionURL getSearchUrl(Container c, User u)
     {
-        return new ActionURL(SequenceAnalysisModule.CONTROLLER_NAME, "search", getTargetContainer(c));
+        return null;
     }
 
     @Override
@@ -84,9 +84,7 @@ public class SequenceNavItem extends AbstractImportingNavItem
 
     private ActionURL getViewAssayRunTemplateUrl(Container c, User u)
     {
-        ActionURL url = QueryService.get().urlFor(u, c, QueryAction.executeQuery, SequenceAnalysisModule.CONTROLLER_NAME, SequenceAnalysisSchema.TABLE_READSETS);
-        url.addParameter("query.viewName", "Data Not Imported");
-        return url;
+        return QueryService.get().urlFor(u, c, QueryAction.executeQuery, SequenceAnalysisModule.CONTROLLER_NAME, SequenceAnalysisSchema.TABLE_READSETS);
     }
 
     @Override
@@ -100,6 +98,7 @@ public class SequenceNavItem extends AbstractImportingNavItem
 
         ret.put("viewRunTemplateText", "View Readsets");
         ret.put("viewRunTemplateUrl", getUrlObject(getViewAssayRunTemplateUrl(c, u)));
+        ret.put("showSearch", false);
 
         return ret;
     }

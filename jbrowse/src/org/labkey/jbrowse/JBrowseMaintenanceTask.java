@@ -112,6 +112,10 @@ public class JBrowseMaintenanceTask implements SystemMaintenance.MaintenanceTask
                     if (json.getBaseDir() != null)
                     {
                         expectedDirs.add(json.getBaseDir());
+                        if (!json.getBaseDir().exists())
+                        {
+                            _log.error("expected jbrowse folder does not exist: " + json.getBaseDir().getPath());
+                        }
                     }
                 }
 
@@ -163,6 +167,14 @@ public class JBrowseMaintenanceTask implements SystemMaintenance.MaintenanceTask
                             FileUtils.deleteDirectory(childDir);
                         }
                     }
+                }
+                else if (!expectedDatabases.isEmpty() && !databaseDir.exists())
+                {
+                    _log.error("missing expected database directory: " + databaseDir.getPath());
+                }
+                else if (!expectedDatabases.isEmpty() && databaseDir.list().length == 0)
+                {
+                    _log.error("database directory is empty: " + databaseDir.getPath());
                 }
             }
         }
