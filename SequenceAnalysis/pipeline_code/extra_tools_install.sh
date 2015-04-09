@@ -198,3 +198,45 @@ then
 else
     echo "Already installed"
 fi
+
+
+#
+# GATK
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install GATK"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/Queue.jar || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf ${LKTOOLS_DIR}/Queue.jar
+    rm -Rf ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
+    rm -Rf ${LKSRC_DIR}/gatk
+
+    mkdir -p gatk
+    cd gatk
+
+    echo "Downloading GATK from GIT"
+    #git clone git://github.com/broadgsa/gatk.git
+    git clone git://github.com/broadgsa/gatk-protected.git
+
+    #this is a custom extension
+    svn export https://github.com/NationalGenomicsInfrastructure/piper/trunk/src/main/scala/molmed/queue/engine/parallelshell
+    sed -i 's/molmed.queue.engine.parallelshell/org.broadinstitute.gatk.queue.engine.parallelshell/' parallelshell/*
+    mv parallelshell ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/
+
+    cd gatk-protected
+
+    #remove due to compilation error
+    rm ./public/external-example/src/main/java/org/mycompany/app/*
+    rm ./public/external-example/src/test/java/org/mycompany/app/*
+
+    mvn verify
+    mvn package
+    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.3.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
+    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.3.jar ${LKTOOLS_DIR}/Queue.jar
+fi
+
