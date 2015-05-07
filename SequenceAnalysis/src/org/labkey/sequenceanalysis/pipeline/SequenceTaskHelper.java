@@ -255,8 +255,8 @@ public class SequenceTaskHelper implements PipelineContext
 
     public void logModuleVersions()
     {
-        getLogger().info("SequenceAnalysis Module Version: " + ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getFormattedVersion() + " (r" + (ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getSvnRevision()) + ")");
-        getLogger().info("Pipeline Module Version: " + ModuleLoader.getInstance().getModule("pipeline").getFormattedVersion() + " (r" + (ModuleLoader.getInstance().getModule("pipeline").getSvnRevision()) + ")");
+        getLogger().info("SequenceAnalysis Module Version: " + ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getFormattedVersion() + " (r" + (ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getVcsRevision()) + ")");
+        getLogger().info("Pipeline Module Version: " + ModuleLoader.getInstance().getModule("pipeline").getFormattedVersion() + " (r" + (ModuleLoader.getInstance().getModule("pipeline").getVcsRevision()) + ")");
     }
 
     public static Integer getMaxThreads(PipelineJob job)
