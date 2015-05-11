@@ -40,6 +40,7 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.exp.property.Domain;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.module.FolderType;
+import org.labkey.api.module.FolderTypeManager;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.DuplicateKeyException;
@@ -219,10 +220,10 @@ public class LaboratoryManager
      */
     public void resetLaboratoryFolderTypes(User u, Container c, boolean includeChildren)
     {
-        FolderType lab = ModuleLoader.getInstance().getFolderType("Laboratory Folder");
+        FolderType lab = FolderTypeManager.get().getFolderType("Laboratory Folder");
         String folderType = LaboratoryService.get().getDefaultWorkbookFolderType(c);
-        FolderType expt = ModuleLoader.getInstance().getFolderType(folderType);
-        FolderType custom = ModuleLoader.getInstance().getFolderType("None");
+        FolderType expt = FolderTypeManager.get().getFolderType(folderType);
+        FolderType custom = FolderTypeManager.get().getFolderType("None");
         assert lab != null && expt != null && custom != null;
 
         if (c.isWorkbook() && c.getParent().getFolderType().equals(lab))

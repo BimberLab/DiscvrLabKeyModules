@@ -39,6 +39,7 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.module.FolderTypeManager;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -302,7 +303,7 @@ public class BamIterator
                     Set<Module> modules = new HashSet<>();
                     modules.addAll(project.getActiveModules());
                     modules.add(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME));
-                    project.setFolderType(ModuleLoader.getInstance().getFolderType("Laboratory Folder"), TestContext.get().getUser());
+                    project.setFolderType(FolderTypeManager.get().getFolderType("Laboratory Folder"), TestContext.get().getUser());
                     project.setActiveModules(modules);
                 }
             }
