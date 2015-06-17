@@ -37,14 +37,19 @@ set -u
 FORCE_REINSTALL=
 SKIP_PACKAGE_MANAGER=
 LK_HOME=
+LK_USER=
 
-while getopts "d:fp" arg;
+while getopts "d:u:fp" arg;
 do
   case $arg in
     d)
        LK_HOME=$OPTARG
        LK_HOME=${LK_HOME%/}
        echo "LK_HOME = ${LK_HOME}"
+       ;;
+    u)
+       LK_USER=$OPTARG
+       echo "LK_USER = ${LK_USER}"
        ;;
     f)
        FORCE_REINSTALL=1
@@ -55,6 +60,7 @@ do
     *)
        echo "The following arguments are supported:"
        echo "-d: the path to the labkey install, such as /usr/local/labkey.  If only this parameter is provided, tools will be installed in bin/ and src/ under this location."
+       echo "-u: optional.  The OS user that will own the downloaded files.  Defaults to labkey"
        echo "-f: optional.  If provided, all tools will be reinstalled, even if already present"
        echo "-p: optional. "
        echo "Example command:"
@@ -71,8 +77,9 @@ then
 fi
 
 LKTOOLS_DIR=${LK_HOME}/bin
-LKSRC_DIR=${LKTOOLS_DIR}/src
+LKSRC_DIR=${LK_HOME}/tool_src
 mkdir -p $LKSRC_DIR
+mkdir -p $LKTOOLS_DIR
 
 echo ""
 echo ""
@@ -105,7 +112,7 @@ echo ""
 #    fi
 #fi
 
-if [ -n $SKIP_PACKAGE_MANAGER ]; then
+if [ ! -n $SKIP_PACKAGE_MANAGER ]; then
     echo "Skipping package install"
 elif [ $(which yum) ]; then
     echo "Using Yum"
@@ -117,6 +124,14 @@ elif [ $(which apt-get) ]; then
     #add-apt-repository "deb http://cran.cnr.berkeley.edu/bin/linux/ubuntu/ precise/"
     #gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9 or gpg --hkp://keyserver keyserver.ubuntu.com:80 --recv-key E084DAB9
     #gpg -a --export E084DAB9 | sudo apt-key add -
+
+    #install oracle java
+    #apt-get install python-software-properties
+    #add-apt-repository ppa:webupd8team/java
+    #apt-get update
+    #apt-get install oracle-java7-installer
+    #update-alternatives --config java
+    #update-alternatives --config javac
 
     apt-get -q -y install libc6 libc6-dev libncurses5-dev libtcmalloc-minimal0 libgtextutils-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven
 else
@@ -153,11 +168,88 @@ then
     bzip2 bwa-0.7.9a.tar
     cd bwa-0.7.9a
     make CFLAGS=-msse2
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/bwa-0.7.9a/bwa bwa
+    install bwa $LKTOOLS_DIR/
 else
     echo "Already installed"
+fi
+
+#
+#FLASH
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install FLASH"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/flash || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf FLASH-1.2.7.tar.gz
+    rm -Rf FLASH-1.2.7.tar
+    rm -Rf FLASH-1.2.7
+    rm -Rf $LKTOOLS_DIR/flash
+
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/flashpage/FLASH-1.2.7.tar.gz
+    gunzip FLASH-1.2.7.tar.gz
+    tar -xf FLASH-1.2.7.tar
+    echo "Compressing TAR"
+    gzip FLASH-1.2.7.tar
+    cd FLASH-1.2.7
+    make
+
+    install flash $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
+
+#
+# GATK
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install GATK"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/Queue.jar || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf ${LKTOOLS_DIR}/Queue.jar
+    rm -Rf ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
+    rm -Rf ${LKSRC_DIR}/gatk
+
+    mkdir -p gatk
+    cd gatk
+
+    echo "Downloading GATK from GIT"
+    #git clone git://github.com/broadgsa/gatk.git
+    git clone git://github.com/broadgsa/gatk-protected.git
+    cd gatk-protected
+    git checkout tags/3.4
+    cd ../
+
+    #this is a custom extension
+    svn export https://github.com/NationalGenomicsInfrastructure/piper/trunk/src/main/scala/molmed/queue/engine/parallelshell
+    sed -i 's/molmed.queue.engine.parallelshell/org.broadinstitute.gatk.queue.engine.parallelshell/' parallelshell/*
+    mv parallelshell ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/
+
+    #another one: https://github.com/biodev/HTCondor_drivers
+    git clone https://github.com/biodev/HTCondor_drivers.git
+    mkdir ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/condor
+    cp ./HTCondor_drivers/Queue/CondorJob* ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/condor/
+
+    cd gatk-protected
+
+    #remove due to compilation error
+    rm ./public/external-example/src/main/java/org/mycompany/app/*
+    rm ./public/external-example/src/test/java/org/mycompany/app/*
+
+    mvn verify
+    mvn package
+    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.4.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
+    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.4.jar ${LKTOOLS_DIR}/Queue.jar
 fi
 
 
@@ -214,8 +306,7 @@ then
     tar -xf STAR_2.4.0h.tar
     gzip STAR_2.4.0h.tar
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/STAR-STAR_2.4.0h/bin/Linux_x86_64_static/STAR STAR
+    install ./STAR-STAR_2.4.0h/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR/STAR
 else
     echo "Already installed"
 fi
@@ -267,11 +358,10 @@ then
     echo "Compressing TAR"
     gzip MOSAIK-2.1.73-binary.tar
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/MOSAIK-2.1.73-binary/MosaikAligner MosaikAligner
-    ln -s ./src/MOSAIK-2.1.73-binary/MosaikBuild MosaikBuild
-    ln -s ./src/MOSAIK-2.1.73-binary/MosaikJump MosaikJump
-    ln -s ./src/MOSAIK-2.1.73-binary/MosaikText MosaikText
+    install ./MOSAIK-2.1.73-binary/MosaikAligner $LKTOOLS_DIR/MosaikAligner
+    install ./MOSAIK-2.1.73-binary/MosaikBuild $LKTOOLS_DIR/MosaikBuild
+    install ./MOSAIK-2.1.73-binary/MosaikJump $LKTOOLS_DIR/MosaikJump
+    install ./MOSAIK-2.1.73-binary/MosaikText $LKTOOLS_DIR/MosaikText
 fi
 
 #also download src to get the networkFiles
@@ -291,8 +381,7 @@ then
     echo "Compressing TAR"
     gzip MOSAIK-2.1.73-source.tar
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/MOSAIK-2.1.73-source/networkFile mosaikNetworkFile
+    cp -R ./MOSAIK-2.1.73-source/networkFile $LKTOOLS_DIR/mosaikNetworkFile
 else
     echo "Mosaik network files already downloaded"
 fi
@@ -314,7 +403,7 @@ then
     rm -Rf fastq_screen_v0.4.4
     rm -Rf $LKTOOLS_DIR/fastq_screen
 
-    wget --read-timeout=10 http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/fastq_screen_v0.4.4.tar.gz
+    wget http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/fastq_screen_v0.4.4.tar.gz
     gunzip fastq_screen_v0.4.4.tar.gz
     tar -xf fastq_screen_v0.4.4.tar
     echo "Compressing TAR"
@@ -357,14 +446,13 @@ then
     gzip bismark_v0.12.5.tar
     cd bismark_v0.12.5
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/bismark_v0.12.5/bismark bismark
-    ln -s ./src/bismark_v0.12.5/bismark2bedGraph bismark2bedGraph 
-    ln -s ./src/bismark_v0.12.5/bismark2report bismark2report 
-    ln -s ./src/bismark_v0.12.5/bismark_genome_preparation bismark_genome_preparation
-    ln -s ./src/bismark_v0.12.5/bismark_methylation_extractor bismark_methylation_extractor
-    ln -s ./src/bismark_v0.12.5/coverage2cytosine coverage2cytosine
-    ln -s ./src/bismark_v0.12.5/deduplicate_bismark deduplicate_bismark 
+    install ./bismark $LKTOOLS_DIR/bismark
+    install ./bismark2bedGraph $LKTOOLS_DIR/bismark2bedGraph
+    install ./bismark2report $LKTOOLS_DIR/bismark2report
+    install ./bismark_genome_preparation $LKTOOLS_DIR/bismark_genome_preparation
+    install ./bismark_methylation_extractor $LKTOOLS_DIR/bismark_methylation_extractor
+    install ./coverage2cytosine $LKTOOLS_DIR/coverage2cytosine
+    install ./deduplicate_bismark $LKTOOLS_DIR/deduplicate_bismark
 
     if [ -n $SKIP_PACKAGE_MANAGER ]; then
         echo "Skipping package install"
@@ -378,48 +466,17 @@ else
 fi
 
 
-##
-##tophat
-##
-#echo ""
-#echo ""
-#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-#echo "Install tophat"
-#echo ""
-#cd $LKSRC_DIR
-#
-#if [[ ! -e ${LKTOOLS_DIR}/tophat || ! -z $FORCE_REINSTALL ]];
-#then
-#    echo "Cleaning up previous installs"
-#    rm -Rf tophat-2.0.12*
-#    rm -Rf $LKTOOLS_DIR/tophat2
-#    rm -Rf $LKTOOLS_DIR/prep_reads
-#
-#    wget --read-timeout=10 http://ccb.jhu.edu/software/tophat/downloads/tophat-2.0.12.Linux_x86_64.tar.gz
-#    gunzip tophat-2.0.12.Linux_x86_64.tar.gz
-#    tar -xf tophat-2.0.12.Linux_x86_64.tar
-#    echo "Compressing TAR"
-#    gzip tophat-2.0.12.Linux_x86_64.tar
-#    cd tophat-2.0.12.Linux_x86_64
-#
-#    ln -s ./src/tophat-2.0.12.Linux_x86_64/tophat2 $LKTOOLS_DIR
-#    ln -s ./src/tophat-2.0.12.Linux_x86_64/prep_reads $LKTOOLS_DIR
-#else
-#    echo "Already installed"
-#fi
-
-
 #
 #samtools
 #
 echo ""
 echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install samtools/bcftools"
+echo "Install samtools"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/bcftools || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/samtools || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf samtools-0.1.18*
@@ -434,10 +491,7 @@ then
     cd samtools-0.1.18
     #note: this is used later by Bio::DB::Samtools
     make CXXFLAGS=-fPIC CFLAGS=-fPIC CPPFLAGS=-fPIC
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/samtools-0.1.18/samtools samtools
-    ln -s ./src/samtools-0.1.18/bcftools/bcftools bcftools
+    install samtools ${LKTOOLS_DIR}/samtools
 else
     echo "Already installed"
 fi
@@ -468,9 +522,8 @@ then
     cd tabix-0.2.6
     make
     
-    cd $LKTOOLS_DIR
-    ln -s ./src/tabix-0.2.6/tabix tabix
-    ln -s ./src/tabix-0.2.6/bgzip bgzip
+    install ./tabix $LKTOOLS_DIR
+    install ./bgzip $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -490,48 +543,18 @@ if [[ ! -e ${LKTOOLS_DIR}/bedtools || ! -f ${LKTOOLS_DIR}/bedtools || ! -z $FORC
 then
     echo "Cleaning up previous installs"
     rm -Rf bedtools-2.20.1*
+    rm -Rf bedtools-2.24.0*
     rm -Rf $LKTOOLS_DIR/bedtools
 
-    wget --read-timeout=10 https://github.com/arq5x/bedtools2/releases/download/v2.20.1/bedtools-2.20.1.tar.gz
-    gunzip bedtools-2.20.1.tar.gz
-    tar -xf bedtools-2.20.1.tar
+    wget --read-timeout=10 https://github.com/arq5x/bedtools2/releases/download/v2.24.0/bedtools-2.24.0.tar.gz
+    gunzip bedtools-2.24.0.tar.gz
+    tar -xf bedtools-2.24.0.tar
     echo "Compressing TAR"
-    gzip bedtools-2.20.1.tar
-    cd bedtools2-2.20.1
+    gzip bedtools-2.24.0.tar
+    cd bedtools2
     make
     
-    cd $LKTOOLS_DIR
-    ln -s ./src/bedtools2-2.20.1/bin/bedtools bedtools
-else
-    echo "Already installed"
-fi
-
-#
-#VCFTools
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install vcftools"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/vcftools || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf vcftools_0.1.12*
-    rm -Rf $LKTOOLS_DIR/vcftools
-
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/vcftools/vcftools_0.1.12b.tar.gz
-    gunzip vcftools_0.1.12b.tar.gz
-    tar -xf vcftools_0.1.12b.tar
-    echo "Compressing TAR"
-    gzip vcftools_0.1.12b.tar
-    cd vcftools_0.1.12b
-    make
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/vcftools_0.1.12b/bin/vcftools vcftools
+    install ./bin/bedtools ${LKTOOLS_DIR}/bedtools
 else
     echo "Already installed"
 fi
@@ -555,10 +578,8 @@ then
 
     wget --read-timeout=10 http://downloads.sourceforge.net/project/snpeff/snpEff_latest_core.zip
     unzip snpEff_latest_core.zip
-    cd snpEff
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/snpEff snpEff
+    cp -R ./snpEff ${LKTOOLS_DIR}/snpEff
 else
     echo "Already installed"
 fi
@@ -584,9 +605,8 @@ then
     cd blat
     wget --read-timeout=10 http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/blat/blat
     chmod +x blat
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/blat/blat blat
+
+    install blat $LKTOOLS_DIR/blat
 else
     echo "Already installed"
 fi
@@ -620,9 +640,8 @@ then
     mv src/Makefile src/Makefile.dist
     sed 's/-Werror //g' src/Makefile.dist > src/Makefile
     make
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/lastz-distrib-1.02.00/src/lastz lastz
+
+    install ./src/lastz $LKTOOLS_DIR/lastz
 else
     echo "Already installed"
 fi
@@ -673,7 +692,7 @@ echo "Install picard"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKSRC_DIR}/picard-tools-1.119 || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e $LKTOOLS_DIR/picard-tools || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf picard-tools-*
@@ -682,9 +701,8 @@ then
 
     wget --read-timeout=10 http://downloads.sourceforge.net/project/picard/picard-tools/1.119/picard-tools-1.119.zip
     unzip picard-tools-1.119.zip
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/picard-tools-1.119 picard-tools
+
+    cp -R ./picard-tools-1.119 $LKTOOLS_DIR/picard-tools
 else
     echo "Already installed"
 fi
@@ -711,11 +729,9 @@ then
 
     wget --read-timeout=10 http://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.0.1/bowtie-1.0.1-linux-x86_64.zip
     unzip bowtie-1.0.1-linux-x86_64.zip
-    cd bowtie-1.0.1
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/bowtie-1.0.1/bowtie bowtie
-    ln -s ./src/bowtie-1.0.1/bowtie-build bowtie-build
+    install ./bowtie-1.0.1/bowtie $LKTOOLS_DIR/bowtie
+    install ./bowtie-1.0.1/bowtie-build $LKTOOLS_DIR/bowtie-build
 else
     echo "Already installed"
 fi
@@ -730,50 +746,23 @@ echo "Install cutadapt"
 echo ""
 cd $LKSRC_DIR
 
-if [[ (-z $(which cutadapt) || ! -z $FORCE_REINSTALL) && -z $SKIP_PACKAGE_MANAGER ]];
+if [[ ! -e ${LKTOOLS_DIR}/cutadapt || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
+    rm -Rf cutadapt-*
+    rm -Rf $LKTOOLS_DIR/cutadapt
 
-    if [ $(which apt-get) ]; then
-        apt-get -q -y install python-pip
-    elif [ $(which yum) ]; then
-        yum -y install python-pip
-    fi
+    wget https://pypi.python.org/packages/source/c/cutadapt/cutadapt-1.8.1.tar.gz
+    gunzip cutadapt-1.8.1.tar.gz
+    tar -xf cutadapt-1.8.1.tar
+    gzip cutadapt-1.8.1.tar
 
-    pip install cutadapt
+    install ./cutadapt-1.8.1/bin/cutadapt ${LKTOOLS_DIR}/cutadapt
+
 else
     echo "Already installed"
 fi
 
-
-#
-#cap3
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install cap3"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/cap3 || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf cap3.linux.opteron64.tar.gz
-    rm -Rf cap3.linux.opteron64.tar
-    rm -Rf CAP3
-    rm -Rf $LKTOOLS_DIR/cap3
-
-    wget --read-timeout=10 http://seq.cs.iastate.edu/CAP3/cap3.linux.opteron64.tar
-    tar -xf cap3.linux.opteron64.tar
-    echo "Compressing TAR"
-    gzip cap3.linux.opteron64.tar
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/CAP3/cap3 cap3
-else
-    echo "Already installed"
-fi
 
 #
 #biopython
@@ -839,181 +828,12 @@ then
     tar -xf seq_crumbs-0.1.8-x64-linux.tar
     echo "Compressing TAR"
     gzip seq_crumbs-0.1.8-x64-linux.tar
-    cd seq_crumbs-0.1.8-x64-linux
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/seq_crumbs-0.1.8-x64-linux/sff_extract sff_extract
-    ln -s ./src/seq_crumbs-0.1.8-x64-linux/convert_format convert_format
+
+    install ./seq_crumbs-0.1.8-x64-linux/sff_extract $LKTOOLS_DIR/sff_extract
+    install ./seq_crumbs-0.1.8-x64-linux/convert_format $LKTOOLS_DIR/convert_format
 else
     echo "Already installed"
 fi
-
-#
-#FLASH
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install FLASH"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/flash || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf FLASH-1.2.7.tar.gz
-    rm -Rf FLASH-1.2.7.tar
-    rm -Rf FLASH-1.2.7
-    rm -Rf $LKTOOLS_DIR/flash
-
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/flashpage/FLASH-1.2.7.tar.gz
-    gunzip FLASH-1.2.7.tar.gz
-    tar -xf FLASH-1.2.7.tar
-    echo "Compressing TAR"
-    gzip FLASH-1.2.7.tar
-    cd FLASH-1.2.7
-    make
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/FLASH-1.2.7/flash flash
-else
-    echo "Already installed"
-fi
-
-#
-#Mira
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install Mira Assembler"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/mira || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf mira_4.0rc4_linux-gnu_x86_64*
-    rm -Rf mira_4.0.2_linux-gnu_x86_64*
-    rm -Rf mira-4.0*
-
-    rm -Rf $LKTOOLS_DIR/mira
-    rm -Rf $LKTOOLS_DIR/miraconvert
-
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira_4.0.2_linux-gnu_x86_64_static.tar.bz2
-    bunzip2 mira_4.0.2_linux-gnu_x86_64_static.tar.bz2
-    tar -xf mira_4.0.2_linux-gnu_x86_64_static.tar
-    echo "Compressing TAR"
-    bzip2 mira_4.0.2_linux-gnu_x86_64_static.tar
-    cd mira_4.0.2_linux-gnu_x86_64_static
-
-    cd $LKTOOLS_DIR
-    ln -s ./src/mira_4.0.2_linux-gnu_x86_64_static/bin/mira mira
-    ln -s ./src/mira_4.0.2_linux-gnu_x86_64_static/bin/miraconvert miraconvert
-else
-    echo "Already installed"
-fi
-
-#
-#velvet
-#
-
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install velvet"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/velvetg || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf velvet_1.2.09.tgz
-    rm -Rf velvet_1.2.09.tar.gz
-    rm -Rf velvet_1.2.09.tar
-    rm -Rf velvet_1.2.09
-    rm -Rf $LKTOOLS_DIR/velvetg
-    rm -Rf $LKTOOLS_DIR/velveth
-
-    wget --read-timeout=10 http://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.09.tgz
-    gunzip velvet_1.2.09.tgz
-    tar -xf velvet_1.2.09.tar
-    echo "Compressing TAR"
-    gzip velvet_1.2.09.tar
-    cd velvet_1.2.09
-    make OPENMP=1 LONGSEQUENCES=1
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/velvet_1.2.09/velvetg velvetg
-    ln -s ./src/velvet_1.2.09/velveth velveth
-else
-    echo "Already installed"
-fi
-
-#
-#VelvetOptimiser
-#
-
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Installing VelvetOptimiser"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/VelvetOptimiser.pl || ! -z $FORCE_REINSTALL ]];
-then
-    rm -Rf VelvetOptimiser-2.2.5.tar.gz
-    rm -Rf VelvetOptimiser-2.2.5.tar
-    rm -Rf VelvetOptimiser-2.2.5
-    rm -Rf $LKTOOLS_DIR/VelvetOptimiser.pl
-
-    wget --read-timeout=10 http://www.vicbioinformatics.com/VelvetOptimiser-2.2.5.tar.gz
-    gunzip VelvetOptimiser-2.2.5.tar.gz
-    tar -xf VelvetOptimiser-2.2.5.tar
-    gzip VelvetOptimiser-2.2.5.tar
-    cd VelvetOptimiser-2.2.5
-    
-    cd $LKTOOLS_DIR    
-    ln -s ./src/VelvetOptimiser-2.2.5/VelvetOptimiser.pl VelvetOptimiser.pl  
-else
-    echo "Already installed"
-fi
-
-#
-#AMOS
-#
-#
-#echo ""
-#echo ""
-#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-#echo "Installing AMOS"
-#echo ""
-#cd $LKSRC_DIR
-#
-#if [[ ! -e ${LKTOOLS_DIR}/bank-transact || ! -z $FORCE_REINSTALL ]];
-#then
-#    rm -Rf amos-3.1.0.tar.gz
-#    rm -Rf amos-3.1.0.tar
-#    rm -Rf amos-3.1.0
-#    rm -Rf $LKTOOLS_DIR/bank2fasta
-#    rm -Rf $LKTOOLS_DIR/bank2contig
-#    rm -Rf $LKTOOLS_DIR/bank-transact
-#
-#    wget --read-timeout=10 http://downloads.sourceforge.net/project/amos/amos/3.1.0/amos-3.1.0.tar.gz
-#    gunzip amos-3.1.0.tar.gz
-#    tar -xf amos-3.1.0.tar
-#    cd amos-3.1.0
-#    ./configure
-#    make
-#    make install
-#
-#    ln -sr $LKSRC_DIR/amos-3.1.0/bin/bank2fasta $LKTOOLS_DIR
-#    ln -sr $LKSRC_DIR/amos-3.1.0/bin/bank2contig $LKTOOLS_DIR
-#    ln -sr $LKSRC_DIR/amos-3.1.0/bin/bank-transact $LKTOOLS_DIR
-#else
-#    echo "Already installed"
-#fi
 
 
 #
@@ -1034,9 +854,8 @@ then
 
     wget --read-timeout=10 http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/liftOver
     chmod +x liftOver
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/liftOver liftOver
+
+    install ./liftOver $LKTOOLS_DIR/liftOver
 else
     echo "Already installed"
 fi
@@ -1061,8 +880,7 @@ then
     wget --read-timeout=10 http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/faToTwoBit
     chmod +x faToTwoBit
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/faToTwoBit faToTwoBit
+    install ./faToTwoBit $LKTOOLS_DIR/faToTwoBit
 else
     echo "Already installed"
 fi
@@ -1089,9 +907,9 @@ then
     rm JBrowse-1.11.5.zip
     cd JBrowse-1.11.5
     ./setup.sh
+    cd ../
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/JBrowse-1.11.5 JBrowse-1.11.5
+    cp -R ./JBrowse-1.11.5 $LKTOOLS_DIR/JBrowse-1.11.5
 else
     echo "Already installed"
 fi
@@ -1120,70 +938,13 @@ then
     tar -xf ncbi-blast-2.2.30+-x64-linux.tar
     gzip ncbi-blast-2.2.30+-x64-linux.tar
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/ncbi-blast-2.2.30+/bin/blastn blastn
-    ln -s ./src/ncbi-blast-2.2.30+/bin/blast_formatter blast_formatter
-    ln -s ./src/ncbi-blast-2.2.30+/bin/makeblastdb makeblastdb
+    install ./ncbi-blast-2.2.30+/bin/blastn $LKTOOLS_DIR/blastn
+    install ./ncbi-blast-2.2.30+/bin/blast_formatter $LKTOOLS_DIR/blast_formatter
+    install ./ncbi-blast-2.2.30+/bin/makeblastdb $LKTOOLS_DIR/makeblastdb
 else
     echo "Already installed"
 fi
 
-
-#
-#varscan2
-#
-
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Installing Varscan2"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/VarScan2.jar || ! -z $FORCE_REINSTALL ]];
-then
-    rm -Rf VarScan.v2.3.6.jar
-    rm -Rf $LKTOOLS_DIR/VarScan2.jar
-
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/varscan/VarScan.v2.3.6.jar
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/VarScan.v2.3.6.jar VarScan2.jar
-else
-    echo "Already installed"
-fi
-
-
-#
-
-#
-#variscan
-#
-
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Installing Variscan"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/variscan || ! -z $FORCE_REINSTALL ]];
-then
-    rm -Rf variscan-2.0.3.tar.gz
-    rm -Rf variscan-2.0.3.tar
-    rm -Rf variscan-2.0.3
-    rm -Rf $LKTOOLS_DIR/variscan
-
-    #NOTE: -U seems required to avoid a 403 error
-    wget --read-timeout=10 -U firefox http://www.ub.es/softevol/variscan/variscan-2.0.3.tar.gz
-    gunzip variscan-2.0.3.tar.gz
-    tar -xf variscan-2.0.3.tar
-    
-    cd $LKTOOLS_DIR
-    ln -s ./src/variscan-2.0.3/bin/Linux-i386/variscan variscan
-else
-    echo "Already installed"
-fi
 
 #
 #clustalw
@@ -1211,8 +972,7 @@ then
     ./configure
     make
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/clustalw-2.1/src/clustalw2 clustalw2
+    install ./src/clustalw2 $LKTOOLS_DIR/clustalw2
 
 else
     echo "Already installed"
@@ -1242,8 +1002,7 @@ then
     tar -xf muscle3.8.31_i86linux64.tar
     gzip muscle3.8.31_i86linux64.tar
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/muscle3.8.31_i86linux64 muscle
+    install ./muscle3.8.31_i86linux64 $LKTOOLS_DIR/muscle
 
 else
     echo "Already installed"
@@ -1264,89 +1023,24 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/trimmomatic.jar || ! -z $FORCE_REINSTALL ]];
 then
     rm -Rf Trimmomatic-0.32*
+    rm -Rf Trimmomatic-0.33*
     rm -Rf $LKTOOLS_DIR/trimmomatic.jar
 
-    wget --read-timeout=10 http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.32.zip
-    unzip Trimmomatic-0.32.zip
-    cd Trimmomatic-0.32
+    wget --read-timeout=10 http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.33.zip
+    unzip Trimmomatic-0.33.zip
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/Trimmomatic-0.32/trimmomatic-0.32.jar trimmomatic.jar
+    install ./Trimmomatic-0.33/trimmomatic-0.33.jar $LKTOOLS_DIR/trimmomatic.jar
 
 else
     echo "Already installed"
 fi
 
-
-##
-##misc perl modules
-##
-#echo ""
-#echo ""
-#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-#echo "Install All required Perl modules"
-#echo ""
-#
-## preferentially use apt-get when available
-#if [ $(which apt-get) ];
-#then
-#    apt-get -q -y install perl-base libclass-data-inheritable-perl libstatistics-descriptive-perl libgetopt-long-descriptive-perl libxml-sax-perl libxml-writer-perl libxml-xpath-perl libcrypt-ssleay-perl libtest-cpan-meta-perl libtest-warn-perl libproc-processtable-perl libtext-diff-perl liblist-moreutils-perl libtest-exception-perl libjson-perl libyaml-perl libstring-approx-perl libmath-round-perl libalgorithm-diff-perl libfile-homedir-perl libipc-run-perl libipc-run-safehandles-perl libfile-util-perl libarray-compare-perl libset-scalar-perl libsort-naturally-perl libdata-stag-perl libtest-most-perl liburi-perl
-#elif [ $(which yum) ];
-#then
-#    #most packages can be installed using yum
-#    yum -y install perl-JSON.noarch perl-YAML.noarch perl-IPC-Run.noarch perl-Class-Data-Inheritable.noarch perl-libxml-perl.noarch perl-XML-SAX.noarch perl-XML-SAX-Writer.noarch perl-XML-Simple.noarch perl-XML-Twig.noarch perl-XML-DOM.noarch perl-XML-DOM-XPath.noarch perl-Crypt-SSLeay.x86_64 perl-Test-Warn.noarch perl-Test-Exception.noarch perl-Test-Simple.x86_64 perl-Text-Diff.noarch perl-List-MoreUtils.x86_64 perl-Algorithm-Diff.noarch perl-File-HomeDir.noarch perl-URI.noarch
-#    cpan -i Proc::ProcessTable String::Approx Math::Round File::Util XML::Writer
-#else
-#    cpan -i JSON YAML IPC::Run Class::Data::Inheritable Statistics::Descriptive XML::Parser::PerlSAX XML::SAX XML::SAX::Writer XML::Simple XML::Twig XML::DOM::XPath Test::CPAN::Meta::JSON Test::Warn Proc::ProcessTable Text::Diff List::Util Test::Exception String::Approx Math::Round Algorithm::Diff File::HomeDir File::Util Array::Compare Set::Scalar Sort::Naturally Data::Stag Test::Most URI XML::Writer
-#fi
-
-#this is no longer necessary for the pipeline
-#cpan -i LabKey::Query
-
-
-##
-##bioperl
-##
-#
-#if [[ $(perldoc -l Bio::SeqIO) || ! -z $FORCE_REINSTALL ]];
-#then
-#    echo "BioPerl already installed"
-#else
-#    if [ $(which apt-get) ];
-#    then
-#        echo "Installing BioPerl using apt-get"
-#        apt-get -q -y install libbio-perl-perl
-#    else
-#        cpan -i -f BioPerl
-#    fi
-#fi
-#
-#if [[ $(perldoc -l Bio::DB::Sam) || ! -z $FORCE_REINSTALL ]];
-#then
-#    echo "Bio::DB::Sam already installed"
-#else
-#    if [ $(which apt-get) ];
-#    then
-#        echo "Installing Bio::DB::Sam using apt-get"
-#        apt-get -q -y install libbio-samtools-perl
-#    else
-#        cpan -i Bio::DB::Sam
-#    fi
-#fi
-#
-#if [[ $(perldoc -l Bio::Tools::Run::BWA) || ! -z $FORCE_REINSTALL ]];
-#then
-#    echo "BioPerl-Run already installed"
-#else
-#    if [ $(which apt-get) ];
-#    then
-#        echo "Installing BioPerl-Run using apt-get"
-#        apt-get -q -y install bioperl-run
-#    else
-#        cpan -i -f CJFIELDS/BioPerl-Run-1.006900.tar.gz
-#    fi
-#fi
-
+if [ ! -z $LK_USER ];
+then
+    echo "Setting owner of files to: ${LK_USER}"
+    chown -R ${LK_USER} $LKTOOLS_DIR
+    chown -R ${LK_USER} $LKSRC_DIR
+fi
 
 echo ""
 echo ""
