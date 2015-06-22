@@ -41,6 +41,9 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
                             ]
                         }).show(btnEl);
                     }
+                    else {
+                        Ext4.Msg.alert('Error', 'No sequence files found for the selected readsets');
+                    }
                 },
                 failure: LDK.Utils.getErrorCallback()
             });
@@ -74,11 +77,13 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
                             dataRegionName: dataRegionName,
                             records: result.rows,
                             fileTypes: [
-                                {name: 'Raw Input File(s)', fields: ['readset/fileid','readset/fileid2'], checked: false},
                                 {name: 'Alignment File', fields: ['alignmentfile'], checked: true},
                                 {name: 'Reference Genome', fields: ['reference_library'], checked: true}
                             ]
                         }).show(btnEl);
+                    }
+                    else {
+                        Ext4.Msg.alert('Error', 'No sequence files found for the selected analyses');
                     }
                 },
                 failure: LDK.Utils.getErrorCallback()
@@ -206,12 +211,17 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
 
         if(!url)
             return;
-
+console.log(url);
         var form = Ext4.create('Ext.form.Panel', {
             url: url,
             standardSubmit: true
         });
-        form.submit();
+        form.submit({
+            method: 'POST',
+            params: {
+                dataIds: this.getDataIds()
+            }
+        });
 
         win.close();
     },
@@ -235,10 +245,10 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
 
         var url;
         if (exportType == 'zip'){
-            url = LABKEY.ActionURL.buildURL('sequenceanalysis', 'exportSequenceFiles', null, {dataIds: dataIds, zipFileName: fileName});
+            url = LABKEY.ActionURL.buildURL('sequenceanalysis', 'exportSequenceFiles', null, {zipFileName: fileName});
         }
         else {
-            url = LABKEY.ActionURL.buildURL('sequenceanalysis', 'mergeFastqFiles', null, {dataIds: dataIds, zipFileName: fileName});
+            url = LABKEY.ActionURL.buildURL('sequenceanalysis', 'mergeFastqFiles', null, {zipFileName: fileName});
         }
 
         return url;

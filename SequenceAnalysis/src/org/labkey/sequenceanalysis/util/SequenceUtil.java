@@ -1,6 +1,8 @@
 package org.labkey.sequenceanalysis.util;
 
+import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
@@ -335,6 +337,34 @@ public class SequenceUtil
         if (idx.exists())
         {
             idx.delete();
+        }
+    }
+
+    public static void recreateOldBamIndex(File bam, boolean forceRecreate, @Nullable Logger log)
+    {
+        File idx = new File(bam.getPath() + ".bai");
+
+        //delete out of date index
+        if (idx.exists() && (forceRecreate || idx.lastModified() < bam.lastModified()))
+        {
+            if (log != null)
+                log.info("deleting existing BAM index");
+
+            idx.delete();
+        }
+
+        if (!idx.exists())
+        {
+            //TODO: SamReaderFactory fact = SamReaderFactory.make();
+            try (SAMFileReader reader = new SAMFileReader(bam))
+            {
+                reader.setValidationStringency(ValidationStringency.SILENT);
+
+                if (log != null)
+                    log.info("creating BAM index");
+
+                BAMIndexer.createIndex(reader, bam);
+            }
         }
     }
 }

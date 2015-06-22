@@ -72,7 +72,7 @@ then
 fi
 
 LKTOOLS_DIR=${LK_HOME}/bin
-LKSRC_DIR=${LKTOOLS_DIR}/src
+LKSRC_DIR=${LK_HOME}/tool_src
 mkdir -p $LKSRC_DIR
 mkdir -p $LKTOOLS_DIR
 
@@ -99,19 +99,20 @@ if [[ ! -e ${LKTOOLS_DIR}/MORGAN || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf morgan32_release*
-    rm -Rf MORGAN_V32_Release
+    rm -Rf morgan_v33_release*
+    rm -Rf MORGAN_V*
     rm -Rf $LKTOOLS_DIR/MORGAN
 
-    wget http://faculty.washington.edu/eathomp/Anonftp/PANGAEA/MORGAN/morgan32_release.tar.gz
-    gunzip morgan32_release.tar.gz
-    tar -xf morgan32_release.tar
+    wget http://faculty.washington.edu/eathomp/Anonftp/PANGAEA/MORGAN/morgan_v33_release.tar.gz
+    gunzip morgan_v33_release.tar.gz
+    tar -xf morgan_v33_release.tar
     echo "Compressing TAR"
-    gzip morgan32_release.tar
-    cd MORGAN_V32_Release
+    gzip morgan_v33_release.tar
+    cd MORGAN_V33_Release
     make morgan
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/MORGAN_V32_Release MORGAN
+    cd ../
+    cp -R ./MORGAN_V33_Release $LKTOOLS_DIR/MORGAN
 else
     echo "Already installed"
 fi
@@ -138,9 +139,9 @@ then
     unzip GIGI_v1.06.1.zip
     cd GIGI_v1.06.1
     make
+    cd ../
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/GIGI_v1.06.1/GIGI GIGI
+    install ./GIGI_v1.06.1/GIGI $LKTOOLS_DIR/GIGI
 else
     echo "Already installed"
 fi
@@ -167,8 +168,7 @@ then
     tar -xf PARalyzer_v1_5.tar
     gzip PARalyzer_v1_5.tar
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/PARalyzer_v1_5/PARalyzer PARalyzer
+    install ./PARalyzer_v1_5/PARalyzer $LKTOOLS_DIR/PARalyzer
 else
     echo "Already installed"
 fi
@@ -184,7 +184,7 @@ echo "Install miRDeep2"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/miRDeep2.pl || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/miRDeep2 || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf mirdeep2_0_0_7*
@@ -193,50 +193,143 @@ then
     wget --no-check-certificate https://www.mdc-berlin.de/43969303/en/research/research_teams/systems_biology_of_gene_regulatory_elements/projects/miRDeep/mirdeep2_0_0_7.zip
     unzip mirdeep2_0_0_7.zip
 
-    cd $LKTOOLS_DIR
-    ln -s ./src/mirdeep2_0_0_7/miRDeep2.pl miRDeep2.pl
+    cp -R ./mirdeep2_0_0_7 $LKTOOLS_DIR/miRDeep2
 else
     echo "Already installed"
 fi
 
-
+##
+##Mira
+##
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Install Mira Assembler"
+#echo ""
+#cd $LKSRC_DIR
 #
-# GATK
+#if [[ ! -e ${LKTOOLS_DIR}/mira || ! -z $FORCE_REINSTALL ]];
+#then
+#    echo "Cleaning up previous installs"
+#    rm -Rf mira_4.0rc4_linux-gnu_x86_64*
+#    rm -Rf mira_4.0.2_linux-gnu_x86_64*
+#    rm -Rf mira-4.0*
 #
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install GATK"
-echo ""
-cd $LKSRC_DIR
+#    rm -Rf $LKTOOLS_DIR/mira
+#    rm -Rf $LKTOOLS_DIR/miraconvert
+#
+#    wget http://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira_4.0.2_linux-gnu_x86_64_static.tar.bz2
+#    bunzip2 mira_4.0.2_linux-gnu_x86_64_static.tar.bz2
+#    tar -xf mira_4.0.2_linux-gnu_x86_64_static.tar
+#    echo "Compressing TAR"
+#    bzip2 mira_4.0.2_linux-gnu_x86_64_static.tar
+#    cd mira_4.0.2_linux-gnu_x86_64_static
+#
+#    cd $LKTOOLS_DIR
+#    ln -s ./src/mira_4.0.2_linux-gnu_x86_64_static/bin/mira mira
+#    ln -s ./src/mira_4.0.2_linux-gnu_x86_64_static/bin/miraconvert miraconvert
+#else
+#    echo "Already installed"
+#fi
 
-if [[ ! -e ${LKTOOLS_DIR}/Queue.jar || ! -z $FORCE_REINSTALL ]];
-then
-    rm -Rf ${LKTOOLS_DIR}/Queue.jar
-    rm -Rf ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
-    rm -Rf ${LKSRC_DIR}/gatk
+##
+##velvet
+##
+#
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Install velvet"
+#echo ""
+#cd $LKSRC_DIR
+#
+#if [[ ! -e ${LKTOOLS_DIR}/velvetg || ! -z $FORCE_REINSTALL ]];
+#then
+#    echo "Cleaning up previous installs"
+#    rm -Rf velvet_1.2.09.tgz
+#    rm -Rf velvet_1.2.09.tar.gz
+#    rm -Rf velvet_1.2.09.tar
+#    rm -Rf velvet_1.2.09
+#    rm -Rf $LKTOOLS_DIR/velvetg
+#    rm -Rf $LKTOOLS_DIR/velveth
+#
+#    wget http://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.09.tgz
+#    gunzip velvet_1.2.09.tgz
+#    tar -xf velvet_1.2.09.tar
+#    echo "Compressing TAR"
+#    gzip velvet_1.2.09.tar
+#    cd velvet_1.2.09
+#    make OPENMP=1 LONGSEQUENCES=1
+#
+#    cd $LKTOOLS_DIR
+#    ln -s ./src/velvet_1.2.09/velvetg velvetg
+#    ln -s ./src/velvet_1.2.09/velveth velveth
+#else
+#    echo "Already installed"
+#fi
 
-    mkdir -p gatk
-    cd gatk
+##
+##VelvetOptimiser
+##
+#
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Installing VelvetOptimiser"
+#echo ""
+#cd $LKSRC_DIR
+#
+#if [[ ! -e ${LKTOOLS_DIR}/VelvetOptimiser.pl || ! -z $FORCE_REINSTALL ]];
+#then
+#    rm -Rf VelvetOptimiser-2.2.5.tar.gz
+#    rm -Rf VelvetOptimiser-2.2.5.tar
+#    rm -Rf VelvetOptimiser-2.2.5
+#    rm -Rf $LKTOOLS_DIR/VelvetOptimiser.pl
+#
+#    wget http://www.vicbioinformatics.com/VelvetOptimiser-2.2.5.tar.gz
+#    gunzip VelvetOptimiser-2.2.5.tar.gz
+#    tar -xf VelvetOptimiser-2.2.5.tar
+#    gzip VelvetOptimiser-2.2.5.tar
+#    cd VelvetOptimiser-2.2.5
+#
+#    cd $LKTOOLS_DIR
+#    ln -s ./src/VelvetOptimiser-2.2.5/VelvetOptimiser.pl VelvetOptimiser.pl
+#else
+#    echo "Already installed"
+#fi
 
-    echo "Downloading GATK from GIT"
-    #git clone git://github.com/broadgsa/gatk.git
-    git clone git://github.com/broadgsa/gatk-protected.git
-
-    #this is a custom extension
-    svn export https://github.com/NationalGenomicsInfrastructure/piper/trunk/src/main/scala/molmed/queue/engine/parallelshell
-    sed -i 's/molmed.queue.engine.parallelshell/org.broadinstitute.gatk.queue.engine.parallelshell/' parallelshell/*
-    mv parallelshell ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/
-
-    cd gatk-protected
-
-    #remove due to compilation error
-    rm ./public/external-example/src/main/java/org/mycompany/app/*
-    rm ./public/external-example/src/test/java/org/mycompany/app/*
-
-    mvn verify
-    mvn package
-    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.3.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
-    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.3.jar ${LKTOOLS_DIR}/Queue.jar
-fi
-
+##
+##AMOS
+##
+#
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Installing AMOS"
+#echo ""
+#cd $LKSRC_DIR
+#
+#if [[ ! -e ${LKTOOLS_DIR}/bank-transact || ! -z $FORCE_REINSTALL ]];
+#then
+#    rm -Rf amos-3.1.0.tar.gz
+#    rm -Rf amos-3.1.0.tar
+#    rm -Rf amos-3.1.0
+#    rm -Rf $LKTOOLS_DIR/bank2fasta
+#    rm -Rf $LKTOOLS_DIR/bank2contig
+#    rm -Rf $LKTOOLS_DIR/bank-transact
+#
+#    wget http://downloads.sourceforge.net/project/amos/amos/3.1.0/amos-3.1.0.tar.gz
+#    gunzip amos-3.1.0.tar.gz
+#    tar -xf amos-3.1.0.tar
+#    cd amos-3.1.0
+#    ./configure
+#    make
+#    make install
+#
+#    cd $LKTOOLS_DIR
+#    ln -s ./src/amos-3.1.0/bin/bank2fasta bank2fasta
+#    ln -s ./src/amos-3.1.0/bin/bank2contig bank2contig
+#    ln -s ./src/amos-3.1.0/bin/bank-transact bank-transact
+#else
+#    echo "Already installed"
+#fi

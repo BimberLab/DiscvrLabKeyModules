@@ -33,6 +33,7 @@ public class SamToFastqWrapper extends PicardWrapper
         args.add("INCLUDE_NON_PF_READS=TRUE");
         args.add("OUTPUT_PER_RG=TRUE");
         args.add("OUTPUT_DIR=" + outDir.getPath());
+        args.add("MAX_RECORDS_IN_RAM=2000000");
 
         execute(args);
 

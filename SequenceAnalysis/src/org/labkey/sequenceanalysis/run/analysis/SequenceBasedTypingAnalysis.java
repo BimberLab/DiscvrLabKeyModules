@@ -58,7 +58,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                         }}, 17),
                     ToolParameterDescriptor.create("onlyImportValidPairs", "Only Import Valid Pairs", "If selected, only alignments consisting of valid forward/reverse pairs will be imported.  Do not check this unless you are using paired-end sequence.", "checkbox", new JSONObject()
                     {{
-                            put("checked", true);
+                            put("checked", false);
                         }}, null),
                     ToolParameterDescriptor.create("minCountForRef", "Min Read # Per Reference", "If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this many reads across each sample.  This can be a way to reduce ambiguity among allele calls.", "ldk-integerfield", new JSONObject()
                     {{
@@ -74,9 +74,13 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                             put("minValue", 0);
                             put("maxValue", 100);
                         }}, 25),
+                    ToolParameterDescriptor.create("minAlignmentLength", "Min Alignment Length", "If a value is provided, any alignment with a length less than this value will be discarded.", "ldk-integerfield", new JSONObject()
+                    {{
+                            put("minValue", 0);
+                        }}, 40),
                     ToolParameterDescriptor.create("writeLog", "Write Detailed Log", "If checked, the analysis will write a detailed log file of read mapping and calls.  This is intended for debugging purposes", "checkbox", new JSONObject()
                     {{
-                            put("checked", false);
+                            put("checked", true);
                     }}, null)
             ), null, null);
         }
@@ -126,7 +130,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                 {
                     workDir.mkdirs();
                 }
-                File outputLog = new File(workDir, FileUtil.getBaseName(inputBam) + ".sbt.txt");
+                File outputLog = new File(workDir, FileUtil.getBaseName(inputBam) + ".sbt.txt.gz");
                 agg.setOutputLog(outputLog);
             }
 

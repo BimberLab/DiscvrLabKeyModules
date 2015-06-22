@@ -83,7 +83,7 @@ public class BWAMemWrapper extends BWAWrapper
     {
         public Provider()
         {
-            super("BWA-Mem", null, null, null, "http://bio-bwa.sourceforge.net/", true);
+            super("BWA-Mem", null, null, null, "http://bio-bwa.sourceforge.net/", true, true);
         }
 
         public BWAMemAlignmentStep create(PipelineContext context)

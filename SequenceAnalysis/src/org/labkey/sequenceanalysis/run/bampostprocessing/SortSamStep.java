@@ -4,16 +4,18 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.run.util.SortSamWrapper;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * User: bimber
@@ -48,11 +50,29 @@ public class SortSamStep extends AbstractCommandPipelineStep<SortSamWrapper> imp
         getWrapper().setOutputDir(outputDirectory);
         getWrapper().setStringency(ValidationStringency.SILENT);
 
-        File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".sorted.bam");
-        output.addIntermediateFile(outputBam);
-        File sorted = getWrapper().execute(inputBam, outputBam, SAMFileHeader.SortOrder.coordinate);
-        output.setBAM(sorted);
+        try
+        {
+            File sorted;
+            SAMFileHeader.SortOrder order = SequenceUtil.getBamSortOrder(inputBam);
+            if (SAMFileHeader.SortOrder.coordinate != order)
+            {
+                File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".sorted.bam");
+                output.addIntermediateFile(outputBam);
+                sorted = getWrapper().execute(inputBam, outputBam, SAMFileHeader.SortOrder.coordinate);
+            }
+            else
+            {
+                getPipelineCtx().getLogger().info("BAM is already coordinate sorted, no need to re-sort");
+                sorted = inputBam;
+            }
 
-        return output;
+            output.setBAM(sorted);
+
+            return output;
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 }

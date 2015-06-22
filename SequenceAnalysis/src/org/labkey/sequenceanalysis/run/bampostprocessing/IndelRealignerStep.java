@@ -1,7 +1,9 @@
 package org.labkey.sequenceanalysis.run.bampostprocessing;
 
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
@@ -12,6 +14,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.run.util.IndelRealignerWrapper;
 
 import java.io.File;
+import java.util.Arrays;
 
 /**
  * User: bimber
@@ -29,7 +32,12 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
     {
         public Provider()
         {
-            super("IndelRealigner", "Indel Realigner", "GATK", "The step runs GATK's IndelRealigner tool.  This tools performs local realignment to minmize the number of mismatching bases across all the reads.", null, null, "http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_indels_IndelRealigner.html");
+            super("IndelRealigner", "Indel Realigner", "GATK", "The step runs GATK's IndelRealigner tool.  This tools performs local realignment to minmize the number of mismatching bases across all the reads.", Arrays.asList(
+                    ToolParameterDescriptor.create("useQueue", "Use Queue?", "If checked, this tool will attempt to run using GATK queue, allowing parallelization using scatter/gather.", "checkbox", new JSONObject()
+                    {{
+                        put("checked", false);
+                    }}, false)
+            ), null, "http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_indels_IndelRealigner.html");
         }
 
         @Override
@@ -50,7 +58,15 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
         getPipelineCtx().getLogger().debug("dict exists: " + dictionaryExists + ", " + dictionary.getPath());
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".realigned.bam");
-        output.setBAM(getWrapper().execute(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null));
+        if (getProvider().getParameterByName("useQueue").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+        {
+            output.setBAM(getWrapper().executeWithQueue(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null));
+        }
+        else
+        {
+            output.setBAM(getWrapper().execute(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null));
+        }
+
         output.addIntermediateFile(outputBam);
         output.addIntermediateFile(getWrapper().getExpectedIntervalsFile(inputBam), "Realigner Intervals File");
 

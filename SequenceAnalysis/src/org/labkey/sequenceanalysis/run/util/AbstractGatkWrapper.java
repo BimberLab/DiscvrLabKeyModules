@@ -7,6 +7,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Created by bimber on 8/8/2014.
@@ -61,5 +62,10 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
     {
         getLogger().info("\tensure dictionary exists");
         new CreateSequenceDictionaryWrapper(getLogger()).execute(referenceFasta, false);
+    }
+
+    protected List<String> getBaseParams()
+    {
+        return PicardWrapper.getBaseParams();
     }
 }

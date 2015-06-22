@@ -105,13 +105,6 @@ public class MosaikWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public boolean doMergeUnalignedReads()
-        {
-            return true;
-        }
-
-
-        @Override
         public boolean doAddReadGroups()
         {
             return true;
@@ -154,7 +147,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
                         }}, 200),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-act"), "align_threshold", "Alignment Threshold", "The alignment score (length) required for an alignment to continue to local alignment. Because the latter is slow, a higher value can improve speed", "ldk-integerfield", null, 55),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-bw"), "banded_smith_waterman", "Use Banded Smith-Waterman", "Uses the banded Smith-Waterman algorithm for increased performance", "ldk-integerfield", null, 51)
-                    ), null, "https://code.google.com/p/mosaik-aligner/", true);
+                    ), null, "https://code.google.com/p/mosaik-aligner/", true, true);
         }
 
         public MosaikAlignmentStep create(PipelineContext context)

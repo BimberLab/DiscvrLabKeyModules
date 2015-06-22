@@ -1,0 +1,215 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function (){
+
+        if (LABKEY.Security.currentUser.isAdmin){
+            var webpart = <%=webpartContext%>;
+
+            Ext4.define('GalaxyIntegration.panel.SettingsPanel', {
+                extend: 'Ext.form.Panel',
+                alias: 'widget.galaxy-settingspanel',
+                initComponent: function(){
+                    Ext4.apply(this, {
+                        border: false,
+                        items: [{
+                            html: 'In order to interact with a Galaxy Server, you must register the host name and API key for your Galaxy user.  Use the table below to manage or add servers and keys:',
+                            border: false,
+                            style: 'padding-bottom: 20px;'
+                        },{
+                            border: false,
+                            itemId: 'settings',
+                            items: [{
+                                html: 'Loading...',
+                                border: false
+                            }]
+                        }]
+                    });
+
+                    this.loadData();
+                    this.callParent();
+                },
+
+                loadData: function(){
+                    LABKEY.Ajax.request({
+                        url: LABKEY.ActionURL.buildURL('galaxyintegration', 'getApiKeys', null),
+                        method : 'GET',
+                        scope: this,
+                        failure: LDK.Utils.getErrorCallback(),
+                        success: LABKEY.Utils.getCallbackWrapper(this.onLoad, this, false)
+                    });
+                },
+
+                onLoad: function(json){
+                    var toAdd = [];
+                    Ext4.each(Ext4.Object.getKeys(json.hosts), function(hostName){
+                        toAdd.push({
+                            html: hostName,
+                            itemId: hostName,
+                        });
+
+                        toAdd.push({
+                            xtype: 'textfield',
+                            width: 550,
+                            hostName: hostName,
+                            value: json.hosts[hostName]
+                        });
+
+                        toAdd.push({
+                            xtype: 'button',
+                            border: true,
+                            text: 'Update',
+                            hostName: hostName,
+                            handler: function(btn){
+                                var apiKey = btn.up('panel').down('textfield[hostName=' + btn.hostName + ']').getValue();
+
+                                LABKEY.Ajax.request({
+                                    url: LABKEY.ActionURL.buildURL('galaxyintegration', 'setApiKey', null),
+                                    method : 'POST',
+                                    params: {
+                                        hostName: btn.hostName,
+                                        apiKey: apiKey
+                                    },
+                                    scope: this,
+                                    failure: LDK.Utils.getErrorCallback(),
+                                    success: function(response){
+                                        Ext4.Msg.alert('Success', 'Save Successful', function(){
+                                            btn.up('galaxy-settingspanel').loadData();
+                                        });
+                                    }
+                                });
+                            }
+                        });
+
+                        toAdd.push({
+                            xtype: 'button',
+                            border: true,
+                            text: 'Remove',
+                            hostName: hostName,
+                            handler: function(btn){
+                                LABKEY.Ajax.request({
+                                    url: LABKEY.ActionURL.buildURL('galaxyintegration', 'setApiKey', null),
+                                    method : 'POST',
+                                    params: {
+                                        hostName: btn.hostName,
+                                        apiKey: null
+                                    },
+                                    scope: this,
+                                    failure: LDK.Utils.getErrorCallback(),
+                                    success: LABKEY.Utils.getCallbackWrapper(function(){
+                                        btn.up('galaxy-settingspanel').loadData();
+                                    }, this, false)
+                                });
+                            }
+                        });
+                    }, this);
+
+                    if (!toAdd.length){
+                        toAdd.push({
+                            html: 'There are no Galaxy servers currently defined.  Use the \'Add Server\' button to add a host.',
+                            colSpan: 4,
+                            style: 'padding-bottom: 20px;'
+                        });
+                    }
+
+                    var target = this.down('#settings');
+                    target.removeAll();
+                    target.add({
+                        xtype: 'form',
+                        border: false,
+                        defaults: {
+                            border: false,
+                            style: 'margin-right: 10px;'
+                        },
+                        layout: {
+                            type: 'table',
+                            columns: 4
+                        },
+                        items: toAdd,
+                        buttonAlign: 'left',
+                        buttons: [{
+                            text: 'Add New Server',
+                            handler: this.addServer,
+                            scope: this
+                        }]
+                    });
+                },
+
+                addServer: function(btn){
+                    Ext4.create('Ext.window.Window', {
+                        title: 'Add Galaxy Server',
+                        bodyStyle: 'padding: 5px;',
+                        settingsPanel: btn.up('galaxy-settingspanel'),
+                        modal: true,
+                        closeAction: 'destroy',
+                        width: 500,
+                        listeners: {
+                            scope: this,
+                            delay: 100,
+                            show: function(win){
+                                win.down('#hostName').focus(20);
+
+                                new Ext4.util.KeyNav(win.getEl(), {
+                                    "enter" : function(e){
+                                        this.onFormSubmit.call(this, win.down('button[text=Submit]'));
+                                    },
+                                    scope : win
+                                });
+                            }
+                        },
+                        buttons: [{
+                            text: 'Submit',
+                            handler: function(btn){
+                                btn.up('window').onFormSubmit(btn);
+                            }
+                        },{
+                            text: 'Cancel',
+                            handler: function(btn){
+                                btn.up('window').close();
+                            }
+                        }],
+                        items: [{
+                            xtype: 'textfield',
+                            fieldLabel: 'Host Name',
+                            itemId: 'hostName',
+                            allowBlank: false,
+                            width: 450
+                        },{
+                            xtype: 'textfield',
+                            fieldLabel: 'API Key',
+                            itemId: 'apiKey',
+                            allowBlank: false,
+                            width: 450
+                        }],
+                        onFormSubmit: function(btn){
+                            var win = btn.up('window');
+                            var hostName = win.down('#hostName').getValue();
+                            var apiKey = win.down('#apiKey').getValue();
+                            if (!hostName || !apiKey){
+                                Ext4.Msg.alert('Error', 'Must provide the hostname and API key');
+                                return;
+                            }
+
+                            LABKEY.Ajax.request({
+                                url: LABKEY.ActionURL.buildURL('galaxyintegration', 'setApiKey', null),
+                                method : 'POST',
+                                params: {
+                                    hostName: hostName,
+                                    apiKey: apiKey
+                                },
+                                scope: this,
+                                failure: LDK.Utils.getErrorCallback(),
+                                success: LABKEY.Utils.getCallbackWrapper(function(){
+                                    this.settingsPanel.loadData();
+                                    this.close();
+                                }, this, false)
+                            });
+                        }
+                    }).show(btn);
+                }
+            });
+
+            Ext4.create('GalaxyIntegration.panel.SettingsPanel', {}).render(webpart.wrapperDivId);
+        }
+    });
+
+</script>

@@ -6,6 +6,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
@@ -81,6 +82,10 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
         for (SequenceOutputFile f : getPipelineJob().getFiles())
         {
             f.cacheForRemoteServer();
+            if (f.getLibrary_id() != null)
+            {
+                getPipelineJob().getSequenceSupport().cacheGenome(SequenceAnalysisService.get().getReferenceGenome(f.getLibrary_id(), getJob().getUser()));
+            }
         }
 
         handler.getProcessor().init(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);

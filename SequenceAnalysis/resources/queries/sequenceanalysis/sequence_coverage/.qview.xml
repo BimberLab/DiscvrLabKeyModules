@@ -39,7 +39,7 @@
        <column name="workbook" />
    </columns>
    <sorts>
-       <sort column="analysis_id/readset/sampleid/samplename"/>
+       <!--<sort column="analysis_id/readset/sampleid/samplename"/>-->
        <sort column="ref_nt_id/name"/>
        <sort column="ref_nt_position"/>
        <sort column="ref_nt_insert_index"/>

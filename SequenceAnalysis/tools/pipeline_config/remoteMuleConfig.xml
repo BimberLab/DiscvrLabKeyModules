@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mule-configuration PUBLIC "-//MuleSource //DTD mule-configuration XML V1.0//EN"
+                                "http://mule.mulesource.org/dtds/mule-configuration.dtd">
+
+<mule-configuration id="LabKey_Pipeline" version="1.0">
+
+    <mule-environment-properties serverUrl="" synchronous="true">
+        <queue-profile maxOutstandingMessages="0" persistent="true"/>
+        <connection-strategy className="org.mule.providers.SimpleRetryConnectionStrategy">
+            <properties>
+                <property name="retryCount" value="-1"/>
+                <property name="frequency" value="5000"/>
+                <property name="doThreading" value="true" />
+            </properties>
+        </connection-strategy>
+    </mule-environment-properties>
+
+    <container-context name="pipeline" className="org.labkey.pipeline.mule.LabKeySpringContainerContext" />
+
+    <connector name="jmsConnectorTask" className="org.mule.providers.jms.activemq.ActiveMqJmsConnector">
+        <properties>
+            <container-property name="connectionFactory" reference="activeMqConnectionFactory" />
+            <property name="persistentDelivery" value="true"/>
+            <property name="numberOfConsumers" value="1"/>
+            <property name="numberOfConcurrentTransactedReceivers" value="1"/>
+            <property name="synchronous" value="true"/>
+            <property name="asyncDispatch" value="false"/>
+            <property name="specification" value="1.1"/>
+            <!--<property name="acknowledgementMode" value="CLIENT_ACKNOWLEDGE"/>-->
+            <!--<property name="deleteUnacceptedMessages" value="true"/>-->
+        </properties>
+
+        <!--maxThreadsActive should control number of concurrent jobs-->
+        <threading-profile id="default" maxBufferSize="0" maxThreadsActive="1"
+               maxThreadsIdle="0" threadTTL="10" poolExhaustedAction="WHEN_EXHAUSTED_RUN"/>
+
+        <exception-strategy className="org.labkey.pipeline.mule.PipelineJobExceptionStrategy"/>
+    </connector>
+
+    <connector name="jmsConnectorStatus" className="org.mule.providers.jms.activemq.ActiveMqJmsConnector">
+        <properties>
+            <container-property name="connectionFactory" reference="activeMqConnectionFactory" />
+            <property name="persistentDelivery" value="true"/>
+
+            <property name="specification" value="1.1"/>
+        </properties>
+        <threading-profile id="receiver" maxBufferSize="0" maxThreadsActive="1"
+                maxThreadsIdle="0" threadTTL="100" poolExhaustedAction="WAIT"/>
+
+        <exception-strategy className="org.labkey.pipeline.mule.PipelineJobExceptionStrategy" />
+    </connector>
+
+    <endpoint-identifiers>
+        <endpoint-identifier name="JobMQ" value="jms://job.queue"/>
+        <endpoint-identifier name="StatusMQ" value="jms://status.queue"/>
+    </endpoint-identifiers>
+
+    <transformers>
+        <transformer name="JobToJMSMessage" className="org.labkey.pipeline.mule.transformers.PipelineJobToJMSMessage"
+            returnClass="javax.jms.TextMessage"/>
+        <transformer name="JMSMessageToJob" className="org.labkey.pipeline.mule.transformers.JMSMessageToPipelineJob"
+            returnClass="org.labkey.api.pipeline.PipelineJob"/>
+        <transformer name="StatusToXML" className="org.mule.transformers.xml.ObjectToXml"
+            returnClass="java.lang.String"/>
+        <transformer name="XMLToJMSMessage" className="org.mule.providers.jms.transformers.ObjectToJMSMessage"
+            returnClass="javax.jms.TextMessage" />
+        <transformer name="NoOpTransformer" className="org.labkey.pipeline.mule.transformers.NoOpTransformer"
+            returnClass="java.lang.Object"/>
+    </transformers>
+
+<!--
+    <interceptor-stack name="default">
+        <interceptor className="org.mule.interceptors.LoggingInterceptor"/>
+        <interceptor className="org.mule.interceptors.TimerInterceptor"/>
+    </interceptor-stack>
+-->
+
+    <global-endpoints>
+        <endpoint name="StatusQueue" type="sender" address="StatusMQ"
+                  transformers="StatusToXML XMLToJMSMessage" connector="jmsConnectorStatus" />
+
+        <endpoint name="JobQueue" address="JobMQ" connector="jmsConnectorTask"/>
+    </global-endpoints>
+
+    <model name="pipeline">
+        <mule-descriptor name="PipelineTaskRunnerUMO"
+            implementation="org.labkey.pipeline.mule.PipelineTaskRunner">
+            <inbound-router>
+                <!--<catch-all-strategy className="org.mule.routing.ForwardingCatchAllStrategy">-->
+                    <!--<endpoint type="senderAndReceiver" address="JobMQ" connector="jmsConnectorTask"/>-->
+                <!--</catch-all-strategy>-->
+                <endpoint type="receiver" address="JobMQ" transformers="JMSMessageToJob" synchronous="true" createConnector="GET_OR_CREATE"
+                        responseTransformers="NoOpTransformer" connector="jmsConnectorTask">
+                    <!-- <transaction action="ALWAYS_BEGIN" factory="org.mule.providers.jms.JmsTransactionFactory"/> -->
+                    <filter className="org.labkey.pipeline.mule.filters.TaskRemoteServerJmsSelectorFilter"/>
+                </endpoint>
+            </inbound-router>
+
+            <!-- Return to job queue (task runner cannot complete) -->
+            <outbound-router>
+                <router className="org.mule.routing.outbound.OutboundPassThroughRouter">
+                    <endpoint type="sender" address="JobMQ" transformers="JobToJMSMessage" createConnector="GET_OR_CREATE"
+                            connector="jmsConnectorTask"/>
+                </router>
+            </outbound-router>
+
+            <!--maxThreadsActive/maxActive controls the # of active jobs.  should match jmsTask-->
+            <threading-profile maxThreadsActive="2" maxThreadsIdle="0" maxBufferSize="0" threadTTL="10" poolExhaustedAction="WHEN_EXHAUSTED_RUN"/>
+            <pooling-profile maxActive="2" maxIdle="0" initialisationPolicy="INITIALISE_NONE" exhaustedAction="WHEN_EXHAUSTED_GROW"/>
+
+            <exception-strategy className="org.labkey.pipeline.mule.PipelineJobExceptionStrategy" />
+        </mule-descriptor>
+    </model>
+</mule-configuration>

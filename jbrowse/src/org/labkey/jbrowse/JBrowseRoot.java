@@ -1191,6 +1191,7 @@ public class JBrowseRoot
 
         JSONObject ret = new JSONObject();
         ret.put("formatVersion", 1);
+        ret.put("refSeqSelectorMaxSize", 50);
         ret.put("tracks", tracks);
 
         writeJsonToFile(new File(outDir, "trackList.json"), ret.toString(1));

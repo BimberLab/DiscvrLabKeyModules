@@ -130,12 +130,6 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public boolean doMergeUnalignedReads()
-        {
-            return false;
-        }
-
-        @Override
         public boolean doAddReadGroups()
         {
             return false;
@@ -203,7 +197,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-l"), "seed_length", "Seed Length", "The 'seed length'; i.e., the number of bases of the high quality end of the read to which the -n ceiling applies. The default is 28. Bowtie (and thus Bismark) is faster for larger values of -l. This option is only available for Bowtie 1 (for Bowtie 2 see -L).", "ldk-numberfield", null, 65),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), "max_seed_mismatches", "Max Seed Mismatches", "The maximum number of mismatches permitted in the 'seed', i.e. the first L base pairs of the read (where L is set with -l/--seedlen). This may be 0, 1, 2 or 3 and the default is 1. This option is only available for Bowtie 1 (for Bowtie 2 see -N).", "ldk-numberfield", null, 3),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-e"), "maqerr", "Max Errors", "Maximum permitted total of quality values at all mismatched read positions throughout the entire alignment, not just in the 'seed'. The default is 70. Like Maq, bowtie rounds quality values to the nearest 10 and saturates at 30. This value is not relevant for Bowtie 2.", "ldk-numberfield", null, 240)
-            ), null, "http://www.bioinformatics.babraham.ac.uk/projects/bismark/", true);
+            ), null, "http://www.bioinformatics.babraham.ac.uk/projects/bismark/", true, false);
         }
 
         public BismarkAlignmentStep create(PipelineContext context)

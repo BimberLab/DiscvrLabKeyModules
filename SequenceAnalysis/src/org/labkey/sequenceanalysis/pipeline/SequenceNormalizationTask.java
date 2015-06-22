@@ -635,6 +635,9 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             barcoder.setOffsetDistance(getBarcodeOffset());
         }
 
+        //default is false
+        barcoder.setBarcodesInReadHeader(getBarcodesInReadHeader());
+
         if (getDeletionsTolerated() != null)
         {
             barcoder.setDeletionsAllowed(getDeletionsTolerated());
@@ -906,6 +909,11 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
     private Integer getBarcodeOffset()
     {
         return getHelper().getSettings().getParams().containsKey("inputfile.barcodeOffset") ? Integer.parseInt(getHelper().getSettings().getParams().get("inputfile.barcodeOffset")) : null;
+    }
+
+    private boolean getBarcodesInReadHeader()
+    {
+        return getHelper().getSettings().getParams().containsKey("inputfile.barcodesInReadHeader") ? Boolean.parseBoolean(getHelper().getSettings().getParams().get("inputfile.barcodesInReadHeader")) : false;
     }
 
     public List<BarcodeModel> getExtraBarcodesFromFile() throws PipelineJobException

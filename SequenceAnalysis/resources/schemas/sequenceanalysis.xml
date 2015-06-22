@@ -810,6 +810,7 @@
             <ns:includeScript>SequenceAnalysis/window/CreateReferenceLibraryWindow.js</ns:includeScript>
             <ns:includeScript>SequenceAnalysis/window/ImportSequencesFromFastaWindow.js</ns:includeScript>
             <ns:includeScript>SequenceAnalysis/window/DownloadSequencesWindow.js</ns:includeScript>
+            <ns:includeScript>SequenceAnalysis/window/CompareSequencesWindow.js</ns:includeScript>
             <ns:item text="Views">
                 <ns:originalText>Views</ns:originalText>
             </ns:item>
@@ -831,6 +832,9 @@
                 </ns:item>
                 <ns:item text="Download As FASTA">
                     <ns:onClick>SequenceAnalysis.window.DownloadSequencesWindow.buttonHandler(dataRegionName)</ns:onClick>
+                </ns:item>
+                <ns:item text="Compare FASTA Against Database">
+                    <ns:onClick>SequenceAnalysis.window.CompareSequencesWindow.buttonHandler(dataRegionName)</ns:onClick>
                 </ns:item>
             </ns:item>
         </ns:buttonBarOptions>        
@@ -1421,6 +1425,7 @@
                     <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
                     <ns:fkTable>quality_metrics_types</ns:fkTable>
                     <ns:fkColumnName>type</ns:fkColumnName>
+                    <ns:fkDisplayColumnName useRawValue="true"/>
                 </ns:fk>
             </ns:column>
             <ns:column columnName="metricvalue">

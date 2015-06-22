@@ -19,6 +19,6 @@
        <column name="dataid/ViewOrDownload"/>
    </columns>
    <sorts>
-       <sort column="name"/>
+       <sort column="rowid" descending="true"/>
    </sorts>
 </customView>

@@ -8,6 +8,7 @@ import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.junit.After;
@@ -48,6 +49,7 @@ import java.util.zip.GZIPOutputStream;
  */
 public class Barcoder extends AbstractSequenceMatcher
 {
+    private int _totalReads = 0;
     private Map<String, Integer> _readsetCounts;
     private Map<String, Integer> _otherMatches;
     private Map<String, BarcodeModel> _barcodes = new HashMap<>();
@@ -116,6 +118,10 @@ public class Barcoder extends AbstractSequenceMatcher
             _logger.info("\tMismatches tolerated: " + _editDistance);
             _logger.info("\tBarcode can be within " + _offsetDistance + " bases of the sequence end");
             _logger.info("\tDeletions tolerated (allows partial barcodes): " + _deletionsAllowed);
+            if (_barcodesInReadHeader)
+            {
+                _logger.info("\tWill scan for barcodes in the read header, which assumes something upstream has already called barcodes.  Because we are not calling barcodes here, any mismatch/offset/deletion settings will be ignored.");
+            }
 
             _logger.info("\tThe following barcode combinations will be used:");
             Map<String, SequenceTag> barcodes5 = new HashMap<>();
@@ -125,7 +131,7 @@ public class Barcoder extends AbstractSequenceMatcher
             {
                 _logger.info("\t\t" + rs.getName() + ": " + rs.getBarcode5() + (rs.getBarcode3() != null ? ", " + rs.getBarcode3() : ""));
 
-                if (rs.getBarcode5() != null)
+                if (StringUtils.trimToNull(rs.getBarcode5()) != null)
                 {
                     BarcodeModel model = _barcodes.get(rs.getBarcode5());
                     if (model == null)
@@ -133,7 +139,7 @@ public class Barcoder extends AbstractSequenceMatcher
                     barcodes5.put(model.getName(), model);
                 }
 
-                if (rs.getBarcode3() != null)
+                if (StringUtils.trimToNull(rs.getBarcode3()) != null)
                 {
                     BarcodeModel model = _barcodes.get(rs.getBarcode3());
                     if (model == null)
@@ -248,7 +254,7 @@ public class Barcoder extends AbstractSequenceMatcher
         _logger.info("Readset Match Summary:");
         for (String rs : _readsetCounts.keySet())
         {
-            _logger.info("\t" + rs + ": " + _readsetCounts.get(rs));
+            _logger.info("\t" + rs + ": " + _readsetCounts.get(rs) + " (" + (100.0 * (double)_readsetCounts.get((rs)) / _totalReads) + "%)");
         }
 
         if (_readsetCounts.isEmpty())
@@ -261,7 +267,7 @@ public class Barcoder extends AbstractSequenceMatcher
             _logger.info("Reads Not Matching A Readset:");
             for (String key : _otherMatches.keySet())
             {
-                _logger.info("\t" + key + ": " + _otherMatches.get(key));
+                _logger.info("\t" + key + ": " + _otherMatches.get(key) + " (" + (100.0 * (double)_otherMatches.get((key)) / _totalReads) + "%)");
             }
         }
 
@@ -323,9 +329,10 @@ public class Barcoder extends AbstractSequenceMatcher
         Map<Integer, Map<String, SequenceMatch>> forwardMatches3 = new TreeMap<>();
         Map<Integer, Map<String, SequenceMatch>> reverseMatches5 = new TreeMap<>();
         Map<Integer, Map<String, SequenceMatch>> reverseMatches3 = new TreeMap<>();
+        _totalReads++;
 
         scanForMatches(rec1, barcodes5, barcodes3, forwardMatches5, forwardMatches3);
-        scanForMatches(rec1, barcodes3, barcodes5, reverseMatches5, reverseMatches3);
+        scanForMatches(rec2, barcodes3, barcodes5, reverseMatches5, reverseMatches3);
 
         //find the best match for each end:
         SequenceMatch forwardBc5 = findBestMatch(forwardMatches5, _sequenceMatch5Counts);
@@ -386,6 +393,7 @@ public class Barcoder extends AbstractSequenceMatcher
         //find the best match for each end:
         SequenceMatch bc5 = findBestMatch(matches5, _sequenceMatch5Counts);
         SequenceMatch bc3 = findBestMatch(matches3, _sequenceMatch3Counts);
+        _totalReads++;
 
         boolean found = false;
         for (Readset model : readsets)
@@ -462,7 +470,16 @@ public class Barcoder extends AbstractSequenceMatcher
         }
 
         int start = (match5 == null ? 0 : match5.getStart());
+        if (start < 0)
+        {
+            throw new IOException("Error with read: " + rec.getReadHeader() + ", length: " + rec.getReadString().length() + ".  5' barcode: " + match5.getSequenceTag().getSequence() + ", " + start + ", offset: " + match5.getOffset() + ", edit distance: " + match5.getEditDistance());
+        }
+
         int stop = (match3 == null ? rec.getReadString().length() : match3.getStop());
+        if (stop > rec.getReadString().length())
+        {
+            throw new IOException("Error with read: " + rec.getReadHeader() + ", length: " + rec.getReadString().length() + ".  3' barcode: " + match3.getSequenceTag().getSequence() + ", " + start + "-" + stop + ", offset: " + match3.getOffset() + ", edit distance: " + match3.getEditDistance());
+        }
 
         //NOTE: always compressed now
         File output = new File(_outputDir, getOutputFilename(fastq, rs));

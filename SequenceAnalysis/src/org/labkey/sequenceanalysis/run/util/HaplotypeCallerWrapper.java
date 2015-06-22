@@ -2,21 +2,21 @@ package org.labkey.sequenceanalysis.run.util;
 
 import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.log4j.Logger;
+import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.sequenceanalysis.SequenceAnalysisManager;
+import org.labkey.api.resource.FileResource;
+import org.labkey.api.util.Path;
+import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by bimber on 8/8/2014.
@@ -62,7 +62,7 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
 
         List<String> args = new ArrayList<>();
         args.add("java");
-        //args.add("-Xmx4g");
+        args.addAll(getBaseParams());
         args.add("-jar");
         args.add(getJAR().getPath());
         args.add("-T");
@@ -128,14 +128,22 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
 
         try
         {
-            File scalaScript = SequenceAnalysisManager.get().findResource("external/qscript/HaplotypeCaller.scala");
+            Module module = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
+            FileResource r = (FileResource)module.getModuleResolver().lookup(Path.parse("external/qscript/HaplotypeCallerRunner.scala"));
+            File scalaScript = r.getFile();
+
+            if (scalaScript == null)
+                throw new FileNotFoundException("Not found: " + scalaScript);
+
+            if (!scalaScript.exists())
+                throw new FileNotFoundException("Not found: " + scalaScript.getPath());
 
             List<String> args = new ArrayList<>();
             args.add("java");
+            args.addAll(getBaseParams());
             args.add("-classpath");
             args.add(getJAR().getPath());
-            //TODO: tmpDir??
-            //args.add("-Xmx4g");
+
             args.add("-jar");
             args.add(getQueueJAR().getPath());
             args.add("-S");
@@ -155,6 +163,7 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
                 args.addAll(options);
             }
 
+            args.add("-startFromScratch");
             args.add("-scatterCount");
             Integer maxThreads = SequenceTaskHelper.getMaxThreads(getLogger());
             if (maxThreads != null)

@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.pipeline;
 import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.metrics.MetricsFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -19,6 +20,9 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.run.util.AlignmentSummaryMetricsWrapper;
+import org.labkey.sequenceanalysis.run.util.BamMetricsRunner;
+import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -65,6 +69,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
             }
 
             allowableNames.add(ACTION_NAME);
+            allowableNames.add(SequenceAlignmentTask.ALIGNMENT_METRICS_ACTIONNAME);
 
             return allowableNames;
         }
@@ -132,6 +137,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                     continue;
                 }
 
+                ReferenceGenome referenceGenome = getJob().getJobSupport(SequenceAnalysisJobSupport.class).getCachedGenome(o.getInt("library_id"));
                 List<PipelineStepProvider<BamProcessingStep>> providers = SequencePipelineService.get().getSteps(getJob(), BamProcessingStep.class);
                 File bam = originalFile;
                 if (providers.isEmpty())
@@ -146,7 +152,6 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                     if (!workDir.exists())
                         workDir.mkdirs();
 
-                    ReferenceGenome referenceGenome = getJob().getJobSupport(SequenceAnalysisJobSupport.class).getCachedGenome(o.getInt("library_id"));
                     for (PipelineStepProvider<BamProcessingStep> provider : providers)
                     {
                         getJob().getLogger().info("performing step: " + provider.getLabel());
@@ -208,7 +213,33 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
 
                 getTaskHelper().getFileManager().addOutput(moveAction, SequenceAlignmentTask.FINAL_BAM_INDEX_ROLE, finalIndexFile);
 
+                //generate alignment metrics
+                RecordedAction metricsAction = new RecordedAction(SequenceAlignmentTask.ALIGNMENT_METRICS_ACTIONNAME);
+                metricsAction.setStartTime(new Date());
+
+                getJob().getLogger().info("calculating alignment metrics");
+                getJob().setStatus("CALCULATING ALIGNMENT SUMMARY METRICS");
+                File metricsFile = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".summary.metrics");
+                new AlignmentSummaryMetricsWrapper(getJob().getLogger()).executeCommand(finalDestination, metricsFile);
+                getTaskHelper().getFileManager().addInput(metricsAction, "BAM File", finalDestination);
+                getTaskHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
+
+                //and insert size metrics
+                getJob().getLogger().info("calculating insert size metrics");
+                getJob().setStatus("CALCULATING INSERT SIZE METRICS");
+                File metricsFile2 = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".insertsize.metrics");
+                File metricsHistogram = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".insertsize.metrics.pdf");
+                if (new CollectInsertSizeMetricsWrapper(getJob().getLogger()).executeCommand(finalDestination, metricsFile2, metricsHistogram) != null)
+                {
+                    getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
+                    getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size  Metrics Histogram", metricsHistogram);
+                }
+
+                metricsAction.setEndTime(new Date());
+                actions.add(metricsAction);
+
                 //delete original, if required
+                getJob().setStatus("PERFORMING CLEANUP");
                 String handling = getTaskHelper().getFileManager().getInputfileTreatment();
                 if ("delete".equals(handling))
                 {
@@ -224,7 +255,6 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 }
             }
 
-            getJob().setStatus("PERFORMING CLEANUP");
             getTaskHelper().getFileManager().deleteIntermediateFiles();
             getTaskHelper().getFileManager().cleanup();
 

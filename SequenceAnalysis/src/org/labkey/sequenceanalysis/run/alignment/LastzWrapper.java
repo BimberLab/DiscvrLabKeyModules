@@ -70,12 +70,6 @@ public class LastzWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public boolean doMergeUnalignedReads()
-        {
-            return false;
-        }
-
-        @Override
         public boolean doAddReadGroups()
         {
             return false;
@@ -95,7 +89,7 @@ public class LastzWrapper extends AbstractCommandWrapper
             super("Lastz", "Lastz has performed well for both sequence-based genotyping and viral analysis.  A considerable downside is that Lastz discard quality scores, so other aligners may be a better choice.", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--identity"), "identity", "Min Pct Identity", "The minimum percent identity required per alignment for that match to be included", "ldk-numberfield", null, 98),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--continuity"), "continuity", "Percent Continuity", "Continuity is the percentage of alignment columns that are not gaps. Alignment blocks outside the given range are discarded.", "ldk-numberfield", null, 90)
-            ), null, "http://www.bx.psu.edu/~rsharris/lastz/", false);
+            ), null, "http://www.bx.psu.edu/~rsharris/lastz/", false, false);
         }
 
         public LastzAlignmentStep create(PipelineContext context)

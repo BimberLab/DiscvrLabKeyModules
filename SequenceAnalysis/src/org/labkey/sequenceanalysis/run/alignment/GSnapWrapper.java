@@ -213,12 +213,6 @@ public class GSnapWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public boolean doMergeUnalignedReads()
-        {
-            return true;
-        }
-
-        @Override
         public boolean doAddReadGroups()
         {
             return true;
@@ -312,7 +306,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
                     {{
                         put("checked", false);
                     }}, false)
-            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "http://research-pub.gene.com/gmap/", true);
+            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "http://research-pub.gene.com/gmap/", true, true);
         }
 
         public GSnapAlignmentStep create(PipelineContext context)

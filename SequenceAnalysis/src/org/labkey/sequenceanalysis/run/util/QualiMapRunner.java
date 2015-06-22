@@ -23,9 +23,11 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -36,9 +38,15 @@ public class QualiMapRunner
     private static final Logger _log = Logger.getLogger(QualiMapRunner.class);
     public final static String CONFIG_PROPERTY_DOMAIN = "org.labkey.sequenceanalysis.settings";
     public final static String QUALIMAP_DIR = "qualiMapDir";
+    private boolean _cacheResults = true;
 
     public QualiMapRunner()
     {
+    }
+
+    public void setCacheResults(boolean cacheResults)
+    {
+        _cacheResults = cacheResults;
     }
 
     public static File getQualiMapDir()
@@ -98,6 +106,8 @@ public class QualiMapRunner
         sequenceFiles = tmpList;
 
         Map<File, File> outputMap = new HashMap<>();
+        Set<File> filesCreated = new HashSet<>();
+
         for (File bam : sequenceFiles)
         {
             boolean shouldRun = true;
@@ -164,6 +174,8 @@ public class QualiMapRunner
                 {
                     prepareHtmlFile(bam, htmlFile);
                     outputMap.put(bam, htmlFile);
+
+                    filesCreated.add(outputDir);
                 }
                 else
                 {
@@ -172,7 +184,7 @@ public class QualiMapRunner
             }
         }
 
-        return processOutput(outputMap);
+        return processOutput(outputMap, filesCreated);
     }
 
     private List<String> getParams(File inputFile) throws FileNotFoundException
@@ -210,7 +222,7 @@ public class QualiMapRunner
         return new File(bamFile.getParentFile(), FileUtil.getBaseName(bamFile) + "_qualimapReport");
     }
 
-    private String processOutput(Map<File, File> outputFiles)
+    private String processOutput(Map<File, File> outputFiles, Set<File> filesCreated) throws IOException
     {
         String output = "";
         String header = "<h3>Files:</h3>";
@@ -253,6 +265,14 @@ public class QualiMapRunner
         {
             header += "<br><br>";
             output = header + output;
+        }
+
+        if (!_cacheResults)
+        {
+            for (File f : filesCreated)
+            {
+                FileUtils.deleteDirectory(f);
+            }
         }
 
         return output;

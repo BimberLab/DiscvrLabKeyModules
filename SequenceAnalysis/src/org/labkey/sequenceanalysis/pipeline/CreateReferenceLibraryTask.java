@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.apache.commons.io.FileUtils;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.SimpleFilter;
@@ -191,6 +192,13 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             idFile.createNewFile();
             idFile = FileUtil.getAbsoluteCaseSensitiveFile(idFile);
 
+            File alignerIndexes = new File(outputDir, "alignerIndexes");
+            if (alignerIndexes.exists())
+            {
+                getJob().getLogger().info("deleting existing aligner indexes");
+                FileUtils.deleteDirectory(alignerIndexes);
+            }
+
             //then gather sequences and create the FASTA
             try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fasta), StringUtilsLabKey.DEFAULT_CHARSET)); BufferedWriter idWriter = new BufferedWriter(new FileWriter(idFile)))
             {
@@ -230,6 +238,12 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
 
             try
             {
+                File dict = new File(outputDir, basename + ".dict");
+                if (dict.exists())
+                {
+                    getJob().getLogger().info("deleting existing dictionary");
+                    dict.delete();
+                }
                 CreateSequenceDictionaryWrapper wrapper = new CreateSequenceDictionaryWrapper(getJob().getLogger());
                 wrapper.execute(fasta, true);
             }

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+    <bean id="activeMqConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <constructor-arg value="tcp://appserver:61616"/>
+        <!--<property name="userName" value="admin" />-->
+        <!--<property name="password" value="activemq" />-->
+	<property name="redeliveryPolicy" ref="redeliveryPolicy"/>
+    </bean>
+
+    <bean id="redeliveryPolicy" class="org.apache.activemq.RedeliveryPolicy">
+        <property name="maximumRedeliveries" value="-1"/>
+    </bean>
+
+    <bean id="pipelineJobService" class="org.labkey.pipeline.api.PipelineJobServiceImpl">
+        <property name="appProperties">
+            <bean class="org.labkey.pipeline.api.properties.ApplicationPropertiesImpl">
+                <property name="toolsDirectory" value="/usr/local/labkey/bin" />
+            </bean>
+        </property>
+        <property name="remoteServerProperties">
+            <bean class="org.labkey.pipeline.api.properties.RemoteServerPropertiesImpl">
+                <property name="location" value="sequenceAnalysis"/>
+                <property name="muleConfig" value="/usr/local/labkey/configs/remoteMuleConfig.xml"/>
+            </bean>
+        </property>
+        <property name="configProperties">
+            <bean class="org.labkey.pipeline.api.properties.ConfigPropertiesImpl">
+                <property name="softwarePackages">
+                    <map>
+                        <!--If the sequence tools are not in the standard pipeline tools dir, this is required-->
+                        <entry key="SEQUENCEANALYSIS_TOOLS" value="/usr/local/labkey/bin"/>
+                        <entry key="JAVA_MEMORY" value="-Xmx16g"/>
+			<entry key="SEQUENCEANALYSIS_MAX_THREADS" value="12"/>
+                    </map>
+                </property>
+            </bean>
+        </property>
+        <property name="statusWriter">
+            <bean class="org.labkey.pipeline.mule.JMSStatusWriter"/>
+        </property>
+        <property name="jobStore">
+            <bean class="org.labkey.pipeline.api.PipelineJobMarshaller"/>
+        </property>
+        <property name="workDirFactory">
+            <bean class="org.labkey.pipeline.api.WorkDirectoryRemote$Factory">
+                <property name="tempDirectory" value="/pipeline"/>
+                <!--
+                <property name="outputPermissions" value="0664"/>
+                -->
+            </bean>
+        </property>
+        <property name="largeWorkDirFactory">
+            <bean class="org.labkey.pipeline.api.WorkDirectoryLocal$Factory">
+                <property name="outputPermissions" value="0664"/>
+            </bean>
+        </property>
+        <property name="pathMapper">
+            <bean class="org.labkey.api.pipeline.file.PathMapperImpl">
+                <property name="localIgnoreCase" value="false"/>
+                <property name="remoteIgnoreCase" value="false"/>
+                <property name="pathMap">
+                    <map>
+                        <entry key="file:/usr/local/labkey/files/" value="file:/labkey_files/"/>
+                    </map>
+                </property>
+            </bean>
+        </property>
+    </bean>
+</beans>
+

@@ -54,7 +54,7 @@ public class CompareVariantsHandler implements SequenceOutputHandler
     @Override
     public boolean canProcess(SequenceOutputFile f)
     {
-        FileType ft = new FileType(Arrays.asList("vcf", "gvcf"), "vcf", FileType.gzSupportLevel.SUPPORT_GZ);
+        FileType ft = new FileType(Arrays.asList("vcf"), "vcf", FileType.gzSupportLevel.SUPPORT_GZ);
 
         return f.getFile() != null && ft.isType(f.getFile());
     }

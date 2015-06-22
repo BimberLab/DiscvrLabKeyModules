@@ -41,6 +41,7 @@ public class SortSamWrapper extends PicardWrapper
         params.add("INPUT=" + inputFile.getPath());
         params.add("OUTPUT=" + outputBam.getPath());
         params.add("SORT_ORDER=" + order.name());
+        params.add("MAX_RECORDS_IN_RAM=2000000");
 
         execute(params);
 

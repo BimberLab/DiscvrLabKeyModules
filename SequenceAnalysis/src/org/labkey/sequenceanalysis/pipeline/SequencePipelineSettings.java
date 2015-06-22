@@ -150,8 +150,8 @@ public class SequencePipelineSettings
     {
         SequenceReadsetImpl model = new SequenceReadsetImpl();
 
-        model.setBarcode5(o.getString("barcode5"));
-        model.setBarcode3(o.getString("barcode3"));
+        model.setBarcode5(StringUtils.trimToNull(o.getString("barcode5")));
+        model.setBarcode3(StringUtils.trimToNull(o.getString("barcode3")));
         model.setSampleId(getInt(o.getString("sampleid")));
         model.setSubjectId(o.getString("subjectid"));
         model.setComments(o.getString("comments"));

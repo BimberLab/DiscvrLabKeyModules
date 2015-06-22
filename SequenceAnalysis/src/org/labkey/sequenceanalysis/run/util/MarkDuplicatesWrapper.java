@@ -76,6 +76,7 @@ public class MarkDuplicatesWrapper extends PicardWrapper
         params.add("-jar");
         params.add(getJar().getPath());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
+        params.add("MAX_RECORDS_IN_RAM=2000000");
         // added for compatibility with GATK.  see:
         // http://gatkforums.broadinstitute.org/discussion/2790/indelrealigner-with-markduplicates
         params.add("PROGRAM_RECORD_ID=null");

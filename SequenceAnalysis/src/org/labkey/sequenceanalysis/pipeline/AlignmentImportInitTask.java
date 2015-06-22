@@ -45,7 +45,7 @@ public class AlignmentImportInitTask extends WorkDirectoryTask<AlignmentImportIn
 
         public String getStatusName()
         {
-            return "Importing Alignment";
+            return "IMPORTING ALIGNMENT";
         }
 
         public List<String> getProtocolActionNames()

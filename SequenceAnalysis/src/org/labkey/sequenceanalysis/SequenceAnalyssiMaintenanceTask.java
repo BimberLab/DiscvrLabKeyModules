@@ -280,6 +280,7 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
 
     private static FileType _bamFileType = new FileType("bam");
     private static FileType _vcfFileType = new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ);
+    private static FileType _bedFileType = new FileType("bed");
 
     private List<String> appendExtraFiles(File f)
     {
@@ -299,6 +300,10 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
             ret.add(f.getName() + ".gz");
             ret.add(f.getName() + ".gz.tbi");
             ret.add(f.getName() + ".gz.idx");
+        }
+        else if (_bedFileType.isType(f))
+        {
+            ret.add(f.getName() + ".idx");
         }
 
         return ret;

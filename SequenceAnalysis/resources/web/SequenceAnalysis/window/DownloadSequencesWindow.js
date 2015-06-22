@@ -173,8 +173,13 @@ Ext4.define('SequenceAnalysis.window.DownloadSequencesWindow', {
                 border: false
             }],
             buttons: [{
-                text: 'Download',
+                text: 'Download File',
                 scope: this,
+                handler: this.onSubmit
+            },{
+                text: 'Download To Browser',
+                scope: this,
+                toBrowser: true,
                 handler: this.onSubmit
             },{
                 text: 'Cancel',
@@ -188,10 +193,13 @@ Ext4.define('SequenceAnalysis.window.DownloadSequencesWindow', {
     },
 
     onSubmit: function(btn){
-        var fileName = this.down('#fileName').getValue();
-        if (!fileName) {
-            Ext4.Msg.alert('Error', 'Must enter a filename');
-            return;
+        var fileName;
+        if (!btn.toBrowser) {
+            fileName = this.down('#fileName').getValue();
+            if (!fileName) {
+                Ext4.Msg.alert('Error', 'Must enter a filename');
+                return;
+            }
         }
 
         var lineLength = this.down('#lineLength').getValue();
@@ -239,11 +247,51 @@ Ext4.define('SequenceAnalysis.window.DownloadSequencesWindow', {
             params.intervals = Ext4.encode(intervalMap);
         }
 
-        var form = Ext4.create('Ext.form.Panel', {
-            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'downloadReferences', null, params),
-            standardSubmit: true
-        });
-        form.submit();
+        if (btn.toBrowser){
+            Ext4.create('Ext.form.Panel', {
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'downloadReferences', null)
+            }).submit({
+                params: params,
+                scope: this,
+                failure: function(form, action){
+                    //this is kind of a hack.  should revisit how this response is created server-side
+                    if (action.response.status == 200)
+                    {
+                        var text = action.response.responseText;
+                        Ext4.create('Ext.window.Window', {
+                            title: 'FASTA Sequences',
+                            modal: true,
+                            bodyStyle: 'padding: 5px;',
+                            items: [{
+                                xtype: 'textarea',
+                                width: 800,
+                                height: 400,
+                                value: action.response.responseText
+                            }],
+                            buttons: [{
+                                text: 'Close',
+                                handler: function(btn){
+                                    btn.up('window').close();
+                                }
+                            }]
+                        }).show();
+                    }
+                    else {
+                        Ext4.Msg.alert('Error', 'Error downloading sequences');
+                        LDK.Utils.logError('Error downloading FASTA sequences');
+                    }
+                }
+            });
+        }
+        else {
+            Ext4.create('Ext.form.Panel', {
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'downloadReferences', null),
+                standardSubmit: true
+            }).submit({
+                params: params
+            });
+        }
+
         this.close();
     }
 });

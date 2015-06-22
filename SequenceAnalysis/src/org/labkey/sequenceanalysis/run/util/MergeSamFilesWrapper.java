@@ -120,6 +120,8 @@ public class MergeSamFilesWrapper extends PicardWrapper
         }
 
         params.add("OUTPUT=" + outputPath);
+        params.add("MAX_RECORDS_IN_RAM=2000000");
+        //USE_THREADING=true ?
 
         return params;
     }

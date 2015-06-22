@@ -7,6 +7,11 @@
         <constructor-arg value="tcp://appserver:61616"/>
         <!--<property name="userName" value="username" />-->
         <!--<property name="password" value="password" />-->
+        <property name="redeliveryPolicy" ref="redeliveryPolicy"/>
+    </bean>
+
+    <bean id="redeliveryPolicy" class="org.apache.activemq.RedeliveryPolicy">
+        <property name="maximumRedeliveries" value="-1"/>
     </bean>
 
     <bean id="pipelineJobService" class="org.labkey.pipeline.api.PipelineJobServiceImpl">
@@ -37,10 +42,10 @@
                         <entry key="EHRKinship" value="/usr/local/labkey/modules/ehr/pipeline/kinship"/>
 
                         <!--optional, can be used to shift tmp dir from the system disk to another disk-->
-                        <entry key="PICARD_TMP_DIR" value="/tmp"/>
+                        <entry key="JAVA_TMP_DIR" value="/tmp"/>
 
-                        <!--a whitespace separated list of arguments passed directly to java when running picard tools-->
-                        <entry key="PICARD_MEMORY" value="-Xmx4g"/>
+                        <!--a whitespace separated list of arguments passed directly to java when running picard tools and GATK-->
+                        <entry key="JAVA_MEMORY" value="-Xmx4g"/>
                     </map>
                 </property>
             </bean>

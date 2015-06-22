@@ -23,6 +23,7 @@ import htsjdk.samtools.util.PeekableIterator;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
@@ -34,6 +35,7 @@ import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.reports.ExternalScriptEngineDefinition;
@@ -51,13 +53,13 @@ import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -80,6 +82,8 @@ import java.util.TreeMap;
 public class CoverageDepthHandler implements SequenceOutputHandler
 {
     private FileType _bamFileType = new FileType("bam", false);
+    private static final String URL_BASE = "<%URL_BASE%>";
+    private static final String CONTAINER_PATH = "<%CONTAINER_PATH%>";
 
     public CoverageDepthHandler()
     {
@@ -137,7 +141,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
     @Override
     public boolean doRunRemote()
     {
-        return false;
+        return true;
     }
 
     @Override
@@ -161,7 +165,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
         }
 
         @Override
-        public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             CoverageSettings settings = new CoverageSettings(params);
             Set<File> rawDataFiles = new HashSet<>();
@@ -264,7 +268,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                             writer.write("<tr><td><a href='#normalizedToSample'>Section 3: Data Normalized to Another Sample</a></td></tr>");
                         }
 
-                        String urlBase = AppProps.getInstance().getBaseServerUrl() + AppProps.getInstance().getContextPath() + "/_webdav" + job.getContainer().getPath() + "/@files/sequenceOutputPipeline/" + outputDir.getName() + "/";
+                        String urlBase = URL_BASE + "/_webdav" + CONTAINER_PATH + "/@files/sequenceOutputPipeline/" + outputDir.getName() + "/";
 
                         if (!settings.deleteRawData())
                         {
@@ -353,17 +357,10 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                     SequenceOutputFile htmlOut = new SequenceOutputFile();
                     htmlOut.setContainer(job.getContainerId());
                     htmlOut.setCreated(new Date());
-                    htmlOut.setCreatedby(job.getUser().getUserId());
                     htmlOut.setModified(new Date());
-                    htmlOut.setModifiedby(job.getUser().getUserId());
-
-                    ExpData htmlData = ExperimentService.get().createData(job.getContainer(), new DataType("Coverage Report"));
-                    htmlData.setDataFileURI(html.toURI());
-                    htmlData.setName(html.getName());
-                    htmlData.save(job.getUser());
 
                     htmlOut.setName(html.getName());
-                    htmlOut.setDataId(htmlData.getRowId());
+                    htmlOut.setFile(html);
                     htmlOut.setDescription("Summary report of coverage for the BAM: " + outputFile.getFile().getName());
                     htmlOut.setCategory("Coverage Summary");
                     htmlOut.setLibrary_id(outputFile.getLibrary_id());
@@ -404,9 +401,42 @@ public class CoverageDepthHandler implements SequenceOutputHandler
         }
 
         @Override
-        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
+            for (SequenceOutputFile outputFile : inputFiles)
+            {
+                //correct URLs from webserver:
+                File html = new File(outputDir, getBaseNameForFile(outputFile) + ".summary.html");
+                if (html.exists())
+                {
+                    String htmlContents = null;
+                    String urlBase = AppProps.getInstance().getBaseServerUrl() + AppProps.getInstance().getContextPath();
+                    String containerPath = job.getContainer().getPath();
+                    try (FileInputStream is = new FileInputStream(html))
+                    {
+                        htmlContents = IOUtils.toString(is);
+                        htmlContents = htmlContents.replaceAll(URL_BASE, urlBase);
+                        htmlContents = htmlContents.replaceAll(CONTAINER_PATH, containerPath);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
 
+                    if (htmlContents != null)
+                    {
+                        html.delete();
+                        try (FileWriter writer = new FileWriter(html))
+                        {
+                            IOUtils.write(htmlContents, writer);
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1096,11 +1126,14 @@ public class CoverageDepthHandler implements SequenceOutputHandler
     private String inferRPath()
     {
         //preferentially use R config setup in scripting props.  only works if running locally.
-        for (ExternalScriptEngineDefinition def : LabkeyScriptEngineManager.getEngineDefinitions())
+        if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
-            if (RScriptEngineFactory.isRScriptEngine(def.getExtensions()))
+            for (ExternalScriptEngineDefinition def : LabkeyScriptEngineManager.getEngineDefinitions())
             {
-                return new File(def.getExePath()).getParent();
+                if (RScriptEngineFactory.isRScriptEngine(def.getExtensions()))
+                {
+                    return new File(def.getExePath()).getParent();
+                }
             }
         }
 

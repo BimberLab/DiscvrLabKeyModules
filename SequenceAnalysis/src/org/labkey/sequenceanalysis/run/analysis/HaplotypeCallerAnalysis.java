@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileUtil;
@@ -39,14 +40,11 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         public Provider()
         {
             super("HaplotypeCallerAnalysis", "Haplotype Caller", "GATK", "This will run GATK's HaplotypeCaller on the selected data.  The typical purpose of this step is to create per-sample genotype likelihoods (ie. gVCF file).  gVCFs from many samples can be used it a later step for joint genotyping, which should produce more accurate results.", Arrays.asList(
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-stand_call_conf"), "stand_call_conf", "Threshold For Calling Variants", "The minimum phred-scaled confidence threshold at which variants should be called", "ldk-numberfield", null, 20),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-stand_emit_conf"), "stand_emit_conf", "Threshold For Emitting Variants", "The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold)", "ldk-numberfield", null, 20),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--emitRefConfidence"), "emitRefConfidence", "Emit Reference Confidence Scores", "Mode for emitting experimental reference confidence scores.  Allowable values are: NONE, BP_RESOLUTION, GVCF", "textfield", null, "GVCF"),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-dontUseSoftClippedBases"), "dontUseSoftClippedBases", "Don't Use Soft Clipped Bases", "If specified, we will not analyze soft clipped bases in the reads", "checkbox", null, true),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--variant_index_type"), "variant_index_type", "Variant Index Type", "Type of IndexCreator to use for VCF/BCF indices", "textfield", null, "LINEAR"),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--variant_index_parameter"), "variant_index_parameter", "Variant Index Parameter", "Parameter to pass to the VCF/BCF IndexCreator", "ldk-integerfield", null, 128000),
                     ToolParameterDescriptor.create("multithreaded", "Multithreaded?", "If checked, this tool will attempt to run in multi-threaded mode.  There are sometimes issues with this.", "checkbox", null, null),
-                    ToolParameterDescriptor.create("useQueue", "Use Queue?", "If checked, this tool will attempt to run using GATK queue.  This is the preferred way to multi-thread this tool.", "checkbox", null, null)
+                    ToolParameterDescriptor.create("useQueue", "Use Queue?", "If checked, this tool will attempt to run using GATK queue.  This is the preferred way to multi-thread this tool.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true)
             ), null, null);
         }
 
@@ -69,8 +67,8 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         AnalysisOutputImpl output = new AnalysisOutputImpl();
         output.addInput(inputBam, "Input BAM File");
 
-        File outputFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".vcf.gz");
-        File idxFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".vcf.gz.idx");
+        File outputFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz");
+        File idxFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz.idx");
 
         if (getProvider().getParameterByName("multithreaded").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
         {
@@ -88,6 +86,14 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         {
             List<String> args = new ArrayList<>();
             args.addAll(getClientCommandArgs());
+            args.add("--emitRefConfidence");
+            args.add("GVCF");
+
+            args.add("--variant_index_type");
+            args.add("LINEAR");
+
+            args.add("--variant_index_parameter");
+            args.add("128000");
 
             getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, args);
         }

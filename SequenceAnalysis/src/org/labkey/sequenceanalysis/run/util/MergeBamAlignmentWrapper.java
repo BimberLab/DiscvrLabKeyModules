@@ -52,6 +52,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             params.add(getJar().getPath());
             params.add("ALIGNED_BAM=" + alignedBam.getPath());
             params.add("MAX_INSERTIONS_OR_DELETIONS=-1");
+            params.add("MAX_RECORDS_IN_RAM=2000000");
 
             getLogger().info("total alignments in starting BAM: ");
             SequenceUtil.logAlignmentCount(alignedBam, getLogger());

@@ -46,8 +46,11 @@ import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.run.util.BamMetricsRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import picard.analysis.AlignmentSummaryMetrics;
+import picard.analysis.InsertSizeMetrics;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -249,72 +252,62 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
         for (AnalysisModelImpl model : analysisModels)
         {
-            try
+            i++;
+            getJob().getLogger().info("processing BAM " + i + " of " + analysisModels.size());
+
+            File bam = ExperimentService.get().getExpData(model.getAlignmentFile()).getFile();
+            if (bam == null)
             {
-                i++;
-                getJob().getLogger().info("processing BAM " + i + " of " + analysisModels.size());
-
-                File bam = ExperimentService.get().getExpData(model.getAlignmentFile()).getFile();
-                if (bam == null)
-                {
-                    getJob().getLogger().error("unable to find BAM, skipping");
-                    continue;
-                }
-
-                File refDB = ExperimentService.get().getExpData(model.getReferenceLibrary()).getFile();
-                if (refDB == null)
-                {
-                    getJob().getLogger().error("unable to find reference fasta, skipping");
-                    continue;
-                }
-
-                getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
-                TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
-                Table.insert(getJob().getUser(), ti, model);
-
-                SequenceOutputFile so = new SequenceOutputFile();
-                so.setName(bam.getName());
-                so.setCategory("Alignment");
-                so.setAnalysis_id(model.getAnalysisId());
-                so.setReadset(model.getReadset());
-                so.setLibrary_id(model.getLibrary_Id());
-                ExpData d = ExperimentService.get().getExpDataByURL(bam, getJob().getContainer());
-                if (d == null)
-                {
-                    getJob().getLogger().info("creating ExpData for file: " + bam.getPath());
-
-                    d = ExperimentService.get().createData(getJob().getContainer(), new DataType("Alignment"));
-                    d.setDataFileURI(bam.toURI());
-                    d.setName(bam.getName());
-                    d.save(getJob().getUser());
-                }
-                so.setDataId(d.getRowId());
-                so.setContainer(getJob().getContainerId());
-
-                Table.insert(getJob().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), so);
-
-                addMetricsForAnalysis(model);
-
-                if (!providers.isEmpty())
-                {
-                    outputs.addAll(runAnalysesLocal(actions, model, bam, refDB, providers, taskHelper));
-                }
+                getJob().getLogger().error("unable to find BAM, skipping");
+                continue;
             }
-            catch (SQLException e)
+
+            File refDB = ExperimentService.get().getExpData(model.getReferenceLibrary()).getFile();
+            if (refDB == null)
             {
-                throw new RuntimeSQLException(e);
+                getJob().getLogger().error("unable to find reference fasta, skipping");
+                continue;
+            }
+
+            getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
+            TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
+            Table.insert(getJob().getUser(), ti, model);
+
+            SequenceOutputFile so = new SequenceOutputFile();
+            so.setName(bam.getName());
+            so.setCategory("Alignment");
+            so.setAnalysis_id(model.getAnalysisId());
+            so.setReadset(model.getReadset());
+            so.setLibrary_id(model.getLibrary_Id());
+            ExpData d = ExperimentService.get().getExpDataByURL(bam, getJob().getContainer());
+            if (d == null)
+            {
+                getJob().getLogger().info("creating ExpData for file: " + bam.getPath());
+
+                d = ExperimentService.get().createData(getJob().getContainer(), new DataType("Alignment"));
+                d.setDataFileURI(bam.toURI());
+                d.setName(bam.getName());
+                d.save(getJob().getUser());
+            }
+            so.setDataId(d.getRowId());
+            so.setContainer(getJob().getContainerId());
+
+            Table.insert(getJob().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), so);
+
+            addMetricsForAnalysis(model, getJob());
+
+            if (!providers.isEmpty())
+            {
+                outputs.addAll(runAnalysesLocal(actions, model, bam, refDB, providers, taskHelper));
             }
         }
-
-        //List<AnalysisModel> models = new ArrayList<>();
-        //models.addAll(analysisModels);
 
         taskHelper.getFileManager().createSequenceOutputRecords();
 
         return new RecordedActionSet();
     }
 
-    private void addMetricsForAnalysis(AnalysisModel model) throws SQLException, PipelineJobException
+    public static void addMetricsForAnalysis(AnalysisModel model, PipelineJob job) throws PipelineJobException
     {
         if (model.getAlignmentFile() != null && model.getReferenceLibraryFile() != null && model.getReferenceLibraryFile().exists())
         {
@@ -327,38 +320,100 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             File fai = new File(model.getReferenceLibraryFile().getPath() + ".fai");
             if (!fai.exists())
             {
-                getJob().getLogger().error("missing FASTA index, cannot calculate BAM metrics");
+                job.getLogger().error("missing FASTA index, cannot calculate BAM metrics");
             }
 
-            getJob().getLogger().info("calculating metrics for BAM using Picard AlignmentSummaryMetricsCollector: " + d.getFile().getName());
-
-            MetricsFile metricsFile = new BamMetricsRunner(getJob().getLogger()).addMetricsForFile(d.getFile(), model.getReferenceLibraryFile());
-            List<AlignmentSummaryMetrics> metrics = metricsFile.getMetrics();
-            TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
-            for (AlignmentSummaryMetrics m : metrics)
+            File mf = new File(model.getAlignmentFileObject().getParentFile(), FileUtil.getBaseName(model.getAlignmentFileObject()) + ".summary.metrics");
+            if (mf.exists())
             {
-                Map<String, Object> row = new HashMap<>();
-                row.put("Avg Sequence Length", m.MEAN_READ_LENGTH);
-                row.put("%Reads Aligned In Pairs", m.PCT_READS_ALIGNED_IN_PAIRS * 100);
-                row.put("Total Sequences", m.TOTAL_READS);
-                row.put("Total Sequences Passed Filter", m.PF_READS);
-                row.put("Reads Aligned", m.PF_READS_ALIGNED);
-                row.put("%Reads Aligned", m.PCT_PF_READS_ALIGNED * 100);
+                job.getLogger().info("Importing Picard AlignmentSummaryMetricsCollector metrics for: " + d.getFile().getName());
+                TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
 
-                for (String metricName : row.keySet())
+                try (FileReader reader = new FileReader(mf))
                 {
-                    Map<String, Object> r = new HashMap<>();
-                    r.put("category", m.CATEGORY);
-                    r.put("metricname", metricName);
-                    r.put("metricvalue", row.get(metricName));
-                    r.put("dataid", d.getRowId());
-                    r.put("analysis_id", model.getAnalysisId());
-                    r.put("readset", model.getReadset());
-                    r.put("container", getJob().getContainer().getEntityId());
-                    r.put("createdby", getJob().getUser().getUserId());
+                    MetricsFile metricsFile = new MetricsFile();
+                    metricsFile.read(reader);
 
-                    Table.insert(getJob().getUser(), ti, r);
+                    List<AlignmentSummaryMetrics> metrics = metricsFile.getMetrics();
+                    for (AlignmentSummaryMetrics m : metrics)
+                    {
+                        Map<String, Object> row = new HashMap<>();
+                        row.put("Avg Sequence Length", m.MEAN_READ_LENGTH);
+                        row.put("%Reads Aligned In Pairs", m.PCT_READS_ALIGNED_IN_PAIRS * 100);
+                        row.put("Total Sequences", m.TOTAL_READS);
+                        row.put("Total Sequences Passed Filter", m.PF_READS);
+                        row.put("Reads Aligned", m.PF_READS_ALIGNED);
+                        row.put("%Reads Aligned", m.PCT_PF_READS_ALIGNED * 100);
+
+                        for (String metricName : row.keySet())
+                        {
+                            Map<String, Object> r = new HashMap<>();
+                            r.put("category", m.CATEGORY);
+                            r.put("metricname", metricName);
+                            r.put("metricvalue", row.get(metricName));
+                            r.put("dataid", d.getRowId());
+                            r.put("analysis_id", model.getAnalysisId());
+                            r.put("readset", model.getReadset());
+                            r.put("container", job.getContainer().getEntityId());
+                            r.put("createdby", job.getUser().getUserId());
+
+                            Table.insert(job.getUser(), ti, r);
+                        }
+                    }
                 }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+            else
+            {
+                job.getLogger().info("alignment summary metrics file not found, skipping");
+            }
+
+            File mf2 = new File(model.getAlignmentFileObject().getParentFile(), FileUtil.getBaseName(model.getAlignmentFileObject()) + ".insertsize.metrics");
+            if (mf2.exists())
+            {
+                job.getLogger().info("Importing Picard InsertSize metrics for: " + d.getFile().getName());
+                TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
+
+                try (FileReader reader = new FileReader(mf2))
+                {
+                    MetricsFile metricsFile = new MetricsFile();
+                    metricsFile.read(reader);
+
+                    List<InsertSizeMetrics> metrics = metricsFile.getMetrics();
+                    for (InsertSizeMetrics m : metrics)
+                    {
+                        Map<String, Object> row = new HashMap<>();
+                        row.put("Mean Insert Size", m.MEAN_INSERT_SIZE);
+                        row.put("Median Insert Size", m.MEDIAN_INSERT_SIZE);
+                        row.put("Insert Size Std. Deviation", m.STANDARD_DEVIATION);
+
+                        for (String metricName : row.keySet())
+                        {
+                            Map<String, Object> r = new HashMap<>();
+                            r.put("category", "Insert Size");
+                            r.put("metricname", metricName);
+                            r.put("metricvalue", row.get(metricName));
+                            r.put("dataid", d.getRowId());
+                            r.put("analysis_id", model.getAnalysisId());
+                            r.put("readset", model.getReadset());
+                            r.put("container", job.getContainer().getEntityId());
+                            r.put("createdby", job.getUser().getUserId());
+
+                            Table.insert(job.getUser(), ti, r);
+                        }
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+            else
+            {
+                job.getLogger().info("insert size metrics file not found, skipping");
             }
         }
     }
@@ -393,6 +448,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         for (PipelineStepProvider<AnalysisStep> provider : providers)
         {
             taskHelper.getJob().getLogger().info("Running " + provider.getLabel() + " for analysis: " + model.getRowId());
+            taskHelper.getJob().setStatus(("Running: " + provider.getLabel()).toUpperCase());
             taskHelper.getJob().getLogger().info("\tUsing alignment: " + inputBam.getPath());
 
             RecordedAction action = new RecordedAction(provider.getLabel());
@@ -420,6 +476,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         for (PipelineStepProvider<AnalysisStep> provider : providers)
         {
             taskHelper.getJob().getLogger().info("Running " + provider.getLabel() + " for BAM: " + inputBam.getPath());
+            taskHelper.getJob().setStatus(("Running: " + provider.getLabel()).toUpperCase());
 
             RecordedAction action = new RecordedAction(provider.getLabel());
             taskHelper.getFileManager().addInput(action, "Input BAM File", inputBam);

@@ -100,7 +100,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
                 FastqCollapser collapser = new FastqCollapser(getPipelineCtx().getLogger());
                 collapser.collapseFile(fasta, collapsed);
                 long collapsedLineCount = SequenceUtil.getLineCount(collapsed);
-                getPipelineCtx().getLogger().info("total FASTA sequences: " + (collapsedLineCount / 2));
+                getPipelineCtx().getLogger().info("total collapsed FASTA sequences: " + (collapsedLineCount / 2));
 
                 output.addSequenceOutput(collapsed, "Unmapped reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
             }
@@ -155,7 +155,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
         try (FastqWriter paired1Writer = fact.newWriter(paired1);FastqWriter paired2Writer = fact.newWriter(paired2);FastqWriter singletonsWriter = fact.newWriter(singletons))
         {
             SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault();
-            try (SamReader reader = samReaderFactory.open(inputBam))
+            try (SamReader reader = samReaderFactory.open(inputBam);SamReader mateReader = samReaderFactory.open(inputBam))
             {
                 try (SAMRecordIterator it = reader.iterator())
                 {
@@ -169,7 +169,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
                             {
                                 if (r.getFirstOfPairFlag())
                                 {
-                                    SAMRecord mate = reader.queryMate(r);
+                                    SAMRecord mate = mateReader.queryMate(r);
                                     if (mate != null)
                                     {
                                         FastqRecord fq = samReadToFastqRecord(r, "/1");
@@ -232,6 +232,8 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
 
     public static List<File> writeUnmappedReadsAsFasta(File inputBam, File fasta, Logger log, @Nullable Long maxReads, @Nullable Integer lineLength) throws PipelineJobException
     {
+        log.info("writing unmapped reads to FASTA");
+
         List<File> ret = new ArrayList<>();
         ret.add(fasta);
 
@@ -279,6 +281,8 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
                     }
                 }
             }
+
+            log.info("total unmapped reads: " + readsEncountered);
         }
         catch (IOException e)
         {

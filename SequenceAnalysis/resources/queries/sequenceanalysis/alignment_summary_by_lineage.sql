@@ -22,6 +22,7 @@ select
   sum(a.total) as total,
   max(a.total_reads) as total_reads,
   round(100 * (cast(sum(a.total) as float) / cast(max(a.total_reads) as float)), 2) as percent,
+  max(a.haplotypesWithAllele) as haplotypesWithAllele
 
 FROM (
 
@@ -34,9 +35,11 @@ FROM (
 
     total,
     cast((select sum(total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = a.analysis_id) as integer) as total_reads,
+    group_concat(distinct hs.haplotype) as haplotypesWithAllele
 
   from sequenceanalysis.alignment_summary a
   join sequenceanalysis.alignment_summary_junction j ON (j.alignment_id = a.rowid and j.status = true)
+  left join sequenceanalysis.haplotype_sequences hs ON (hs.lineage = j.ref_nt_id.lineage)
   group by a.analysis_id, a.rowid, a.total
 
 ) a

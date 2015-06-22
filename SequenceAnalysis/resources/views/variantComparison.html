@@ -53,7 +53,7 @@
                     if (!r.get('dataid/FileExists')){
                         errors.push('File does not exist: ' + r.get('dataid/Name'));
                     }
-                    else if (!r.get('dataid/FileExtension') || ['vcf', 'gvcf'].indexOf(r.get('dataid/FileExtension')) == -1){
+                    else if (!r.get('dataid/FileExtension') || ['vcf'].indexOf(r.get('dataid/FileExtension')) == -1){
                         errors.push('Only VCF/gVCF files are supported.  This is determined by file extension.  Skipping: ' + r.get('dataid/Name'));
                     }
                     else {

@@ -59,6 +59,7 @@ public class FastqToSamWrapper extends PicardWrapper
         params.addAll(getBaseParams());
         params.add("-jar");
         params.add(getJar().getPath());
+        params.add("MAX_RECORDS_IN_RAM=2000000");
         params.add("FASTQ=" + file.getPath());
         if (file2 != null)
             params.add("FASTQ2=" + file2.getPath());

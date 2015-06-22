@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+PARAMETERS(MinimumPercent INTEGER default 1)
+
 select
 
 t.*,
@@ -36,7 +38,7 @@ FROM sequenceanalysis.haplotype_sequences h
 inner join sequenceanalysis.alignment_summary_grouped asg
   ON (h.lineage = asg.lineages AND h.present = true)
 
-WHERE asg.percent >= 1 and asg.total_reads > 2
+WHERE (MinimumPercent IS NULL OR asg.percent >= MinimumPercent) and asg.total_reads > 2
 
 group by
 h.haplotype,

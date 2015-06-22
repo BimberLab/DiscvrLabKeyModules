@@ -103,12 +103,7 @@ GeneticsCore.buttons = new function(){
                 return;
             }
 
-            if (checked.length != 1){
-                alert('Can only select one row at a time');
-                return;
-            }
-
-            window.location = LABKEY.ActionURL.buildURL('geneticscore', 'sbtReview', null, {analysisId: checked[0]});
+            window.location = LABKEY.ActionURL.buildURL('geneticscore', 'sbtReview', null, {analysisIds: checked});
         }
     }
 };

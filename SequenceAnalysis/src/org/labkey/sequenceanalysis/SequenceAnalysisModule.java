@@ -20,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.ObjectFactory;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.exp.ExperimentRunTypeSource;
@@ -32,6 +31,7 @@ import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
@@ -40,12 +40,10 @@ import org.labkey.sequenceanalysis.analysis.AlignmentMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.CoverageDepthHandler;
 import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.GenomeLoadButton;
 import org.labkey.sequenceanalysis.button.QualiMapButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
-import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
-import org.labkey.sequenceanalysis.model.UnderscoreBeanObjectFactory;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerPipelineProvider;
@@ -104,7 +102,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.293;
+        return 12.294;
     }
 
     public boolean hasScripts()
@@ -190,7 +188,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new SnpCountAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.MethylationExtractorProvider());
         SequencePipelineService.get().registerPipelineStep(new UnmappedReadExportAnalysis.Provider());
-        SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
+        //SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());
 
         //handlers
@@ -198,6 +196,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new CoverageDepthHandler());
         SequenceAnalysisService.get().registerFileHandler(new GenotypeGVCFHandler());
         SequenceAnalysisService.get().registerFileHandler(new AlignmentMetricsHandler());
+        SequenceAnalysisService.get().registerFileHandler(new UnmappedSequenceBasedGenotypeHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));

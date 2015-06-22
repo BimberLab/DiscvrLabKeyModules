@@ -11,7 +11,11 @@ Ext4.define('SequenceAnalysis.window.VisualizeDataWindow', {
 
             Ext4.Msg.wait('Loading...');
             LABKEY.Ajax.request({
-                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getAvailableHandlers', null, {outputFileIds: checked}),
+                method: 'POST',
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getAvailableHandlers', null),
+                params: {
+                    outputFileIds: checked
+                },
                 scope: this,
                 failure: LDK.Utils.getErrorCallback(),
                 success: LABKEY.Utils.getCallbackWrapper(function(results){

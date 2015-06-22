@@ -45,7 +45,7 @@ public class BWAWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), "MaxMismatches", "Max Mismatches", "Maximum edit distance if the value is INT, or the fraction of missing alignments given 2% uniform base error rate if FLOAT. In the latter case, the maximum edit distance is automatically chosen for different read lengths. [0.04]", "ldk-numberfield", null, null)
                     //ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), ),
                     //ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), )
-            ), null, "http://bio-bwa.sourceforge.net/", true);
+            ), null, "http://bio-bwa.sourceforge.net/", true, true);
         }
 
         public String getName()
@@ -118,12 +118,6 @@ public class BWAWrapper extends AbstractCommandWrapper
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, "bwa", referenceGenome);
 
             return _performAlignment(output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename);
-        }
-
-        @Override
-        public boolean doMergeUnalignedReads()
-        {
-            return true;
         }
 
         @Override

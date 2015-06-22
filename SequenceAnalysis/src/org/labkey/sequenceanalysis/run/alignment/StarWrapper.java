@@ -124,12 +124,6 @@ public class StarWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public boolean doMergeUnalignedReads()
-        {
-            return true;
-        }
-
-        @Override
         public boolean doAddReadGroups()
         {
             return true;
@@ -186,7 +180,7 @@ public class StarWrapper extends AbstractCommandWrapper
     {
         public Provider()
         {
-            super("STAR", "STAR is a splice aware aligner, suitable for RNA-Seq.", null, null, "https://github.com/alexdobin/STAR/", true);
+            super("STAR", "STAR is a splice aware aligner, suitable for RNA-Seq.", null, null, "https://github.com/alexdobin/STAR/", true, true);
         }
 
         public StarAlignmentStep create(PipelineContext context)

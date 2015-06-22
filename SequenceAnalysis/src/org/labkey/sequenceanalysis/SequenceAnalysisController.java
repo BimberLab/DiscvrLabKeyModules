@@ -18,10 +18,15 @@ package org.labkey.sequenceanalysis;
 import htsjdk.samtools.SAMException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.input.ReaderInputStream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.biojava3.core.sequence.DNASequence;
+import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
+import org.biojava3.core.sequence.compound.NucleotideCompound;
+import org.biojava3.core.sequence.io.DNASequenceCreator;
+import org.biojava3.core.sequence.io.FastaReader;
+import org.biojava3.core.sequence.io.GenericFastaHeaderParser;
 import org.jfree.chart.JFreeChart;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,9 +64,8 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExpProtocol;
-import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.files.FileContentService;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleHtmlView;
@@ -81,7 +85,6 @@ import org.labkey.api.pipeline.file.AbstractFileAnalysisJob;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocol;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocolFactory;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisProvider;
-import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.pipeline.file.FileAnalysisTaskPipeline;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
@@ -100,12 +103,15 @@ import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceDataProvider;
-import org.labkey.api.sequenceanalysis.model.ReadData;
-import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.sequenceanalysis.pipeline.ParameterizedOutputHandler;
-import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.pipeline.ParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.ExceptionUtil;
@@ -123,18 +129,11 @@ import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.template.ClientDependency;
-import org.labkey.api.webdav.WebdavResource;
-import org.labkey.api.webdav.WebdavService;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
-import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
@@ -160,7 +159,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -173,6 +171,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -207,10 +206,11 @@ public class SequenceAnalysisController extends SpringActionController
             {
                 for (String fn : form.getFilenames())
                 {
-                    WebdavResource r = WebdavService.get().getRootResolver().lookup(Path.parse(fn));
-                    if (r.getFile().exists())
+                    File root = ServiceRegistry.get().getService(FileContentService.class).getFileRoot(getContainer(), FileContentService.ContentType.files);
+                    File target = new File (root, fn);
+                    if (target.exists())
                     {
-                        files.add(r.getFile());
+                        files.add(target);
                     }
                 }
 
@@ -218,8 +218,19 @@ public class SequenceAnalysisController extends SpringActionController
 
             if (form.getDataIds() != null)
             {
-                for (int id : form.getDataIds())
+                if (ArrayUtils.isEmpty(form.getDataIds()))
                 {
+                    errors.reject(ERROR_MSG, "List of data IDs is empty");
+                    return null;
+                }
+
+                for (Integer id : form.getDataIds())
+                {
+                    if (id == null)
+                    {
+                        continue;
+                    }
+
                     ExpData data = ExperimentService.get().getExpData(id);
                     if (data != null && data.getContainer().hasPermission(getUser(), ReadPermission.class))
                     {
@@ -249,12 +260,28 @@ public class SequenceAnalysisController extends SpringActionController
                 }
             }
 
+            if (form.getAnalysisIds() != null)
+            {
+                for (int id : form.getAnalysisIds())
+                {
+                    AnalysisModel m = AnalysisModelImpl.getFromDb(id, getUser());
+                    if (m != null && m.getAlignmentFileObject() != null)
+                    {
+                        files.add(m.getAlignmentFileObject());
+                    }
+                }
+            }
+
             if (files.size() == 0)
             {
                 return new HtmlView("Error: either no files provided or the files did not exist on the server");
             }
 
             FastqcRunner runner = new FastqcRunner(null);
+            if (!form.isCacheResults())
+            {
+                runner.setCacheResults(false);
+            }
             try
             {
                 String html = runner.execute(files);
@@ -289,13 +316,13 @@ public class SequenceAnalysisController extends SpringActionController
             {
                 for (String fn : form.getFilenames())
                 {
-                    WebdavResource r = WebdavService.get().getRootResolver().lookup(Path.parse(fn));
-                    if (r.getFile().exists())
+                    File root = ServiceRegistry.get().getService(FileContentService.class).getFileRoot(getContainer(), FileContentService.ContentType.files);
+                    File target = new File (root, fn);
+                    if (target.exists())
                     {
-                        files.add(r.getFile());
+                        files.add(target);
                     }
                 }
-
             }
 
             if (form.getDataIds() != null)
@@ -334,6 +361,11 @@ public class SequenceAnalysisController extends SpringActionController
             }
 
             QualiMapRunner runner = new QualiMapRunner();
+            if (!form.isCacheResults())
+            {
+                runner.setCacheResults(false);
+            }
+
             try
             {
                 HtmlView view = new HtmlView("QualiMap Report", runner.execute(files));
@@ -1375,6 +1407,7 @@ public class SequenceAnalysisController extends SpringActionController
         private Integer[] _dataIds;
         private Integer[] _readsets;
         private Integer[] _analysisIds;
+        private boolean _cacheResults = true;
 
         public void setFilenames(String... filename)
         {
@@ -1414,6 +1447,16 @@ public class SequenceAnalysisController extends SpringActionController
         public void setAnalysisIds(Integer... analysisIds)
         {
             _analysisIds = analysisIds;
+        }
+
+        public boolean isCacheResults()
+        {
+            return _cacheResults;
+        }
+
+        public void setCacheResults(boolean cacheResults)
+        {
+            _cacheResults = cacheResults;
         }
     }
 
@@ -2677,11 +2720,12 @@ public class SequenceAnalysisController extends SpringActionController
                 throw new IllegalArgumentException("No header format provided");
             }
 
+            String filename = form.getFileName();
             if (StringUtils.isEmpty(form.getFileName()))
             {
-                throw new NotFoundException("Must provide an output filename");
+                filename = "output.fasta";
             }
-            String filename = form.getFileName();
+
             final StringExpressionFactory.FieldKeyStringExpression se = StringExpressionFactory.URLStringExpression.create(form.getHeaderFormat(), false, StringExpressionFactory.AbstractStringExpression.NullValueBehavior.ReplaceNullWithBlank);
             Set<FieldKey> keys = new HashSet<>(se.getFieldKeys());
             keys.add(FieldKey.fromString("sequenceFile"));
@@ -3740,6 +3784,180 @@ public class SequenceAnalysisController extends SpringActionController
         public void setOutputFileIds(int[] outputFileIds)
         {
             _outputFileIds = outputFileIds;
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    @CSRF
+    public class CompareFastaSequencesAction extends ApiAction<CompareFastaSequencesForm>
+    {
+        public ApiResponse execute(CompareFastaSequencesForm form, BindException errors) throws Exception
+        {
+            Map<String, Object> ret = new HashMap<>();
+
+            if (StringUtils.isEmpty(form.getFasta()))
+            {
+                errors.reject(ERROR_MSG, "Must provide the FASTA sequences");
+                return null;
+            }
+
+            List<JSONObject> allHits = new ArrayList<>();
+
+            List<RefNtSequenceModel> references = null;
+            TableInfo ti = QueryService.get().getUserSchema(getUser(), getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
+            if (!StringUtils.isEmpty(form.getCategory()))
+            {
+                references = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("category"), form.getCategory(), CompareType.EQUAL), null).getArrayList(RefNtSequenceModel.class);
+            }
+
+            InputStream is = null;
+            try
+            {
+                is = IOUtils.toInputStream(form.getFasta());
+                FastaReader<DNASequence, NucleotideCompound> fastaReader = new FastaReader<>(is, new GenericFastaHeaderParser<DNASequence, NucleotideCompound>(), new DNASequenceCreator(AmbiguityDNACompoundSet.getDNACompoundSet()));
+                LinkedHashMap<String, DNASequence> fastaData = fastaReader.process();
+
+                for (String fastaHeader : fastaData.keySet())
+                {
+                    List<JSONObject> hits = new ArrayList<>();
+                    Set<String> hitNames = new HashSet<>();
+
+                    List<RefNtSequenceModel> nameMatches = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("name"), fastaHeader), null).getArrayList(RefNtSequenceModel.class);
+                    for (RefNtSequenceModel m : nameMatches)
+                    {
+                        if (hitNames.contains(m.getName()))
+                        {
+                            continue;
+                        }
+
+                        SequenceMatch sm = SequenceMatch.checkReference(fastaHeader, fastaData.get(fastaHeader), m);
+                        if (sm != null)
+                        {
+                            hits.add(sm.toJSON());
+                            hitNames.add(sm._refName);
+                        }
+                    }
+
+                    if (references != null)
+                    {
+                        for (RefNtSequenceModel m : references)
+                        {
+                            if (hitNames.contains(m.getName()))
+                            {
+                                continue;
+                            }
+
+                            SequenceMatch sm = SequenceMatch.checkReference(fastaHeader, fastaData.get(fastaHeader), m);
+                            if (sm != null)
+                            {
+                                hits.add(sm.toJSON());
+                                hitNames.add(sm._refName);
+                            }
+                        }
+                    }
+
+                    JSONObject o = new JSONObject();
+                    o.put("hits", hits);
+                    o.put("name", fastaHeader);
+
+                    allHits.add(o);
+                }
+            }
+            finally
+            {
+                IOUtils.closeQuietly(is);
+            }
+
+            ret.put("hits", allHits);
+            ret.put("success", true);
+
+            return new ApiSimpleResponse(ret);
+        }
+    }
+
+    public static class SequenceMatch
+    {
+        String _name;
+        String _refName;
+        int _refId;
+        boolean _sequencesMatch;
+        boolean _fastaSequenceIsSubsetOfReference;
+        boolean _referenceSequenceIsSubsetOfFasta;
+
+        private SequenceMatch()
+        {
+
+        }
+
+        public static SequenceMatch checkReference(String name, DNASequence fastaSequence, RefNtSequenceModel match)
+        {
+            String seq = fastaSequence.getSequenceAsString();
+            seq = (seq == null) ? "" : seq.toLowerCase();
+
+            String refSeq = match.getSequence();
+            refSeq = (refSeq == null) ? "" : refSeq.toLowerCase();
+            if (refSeq.length() > 10000)
+                match.clearCachedSequence();
+
+            boolean sequencesMatch = refSeq.length() > 0 && seq.length() > 0 && seq.equals(refSeq);
+            boolean fastaSequenceIsSubsetOfReference = refSeq.length() > 0 && seq.length() > 0 && refSeq.contains(seq);
+            boolean referenceSequenceIsSubsetOfFasta = refSeq.length() > 0 && seq.length() > 0 && seq.contains(refSeq);
+
+            if (name.equals(match.getName()) || sequencesMatch || fastaSequenceIsSubsetOfReference || referenceSequenceIsSubsetOfFasta)
+            {
+                SequenceMatch r = new SequenceMatch();
+                r._name = name;
+                r._refName = match.getName();
+                r._refId = match.getRowid();
+                r._sequencesMatch = sequencesMatch;
+                r._fastaSequenceIsSubsetOfReference = fastaSequenceIsSubsetOfReference;
+                r._referenceSequenceIsSubsetOfFasta = referenceSequenceIsSubsetOfFasta;
+
+                return r;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public JSONObject toJSON()
+        {
+            JSONObject ret = new JSONObject();
+            ret.put("name", _name);
+            ret.put("refName", _refName);
+            ret.put("refId", _refId);
+            ret.put("sequencesMatch", _sequencesMatch);
+            ret.put("fastaSequenceIsSubsetOfReference", _fastaSequenceIsSubsetOfReference);
+            ret.put("referenceSequenceIsSubsetOfFasta", _referenceSequenceIsSubsetOfFasta);
+
+            return ret;
+        }
+    }
+
+    public static class CompareFastaSequencesForm
+    {
+        String _fasta;
+        String _category;
+
+        public String getFasta()
+        {
+            return _fasta;
+        }
+
+        public void setFasta(String fasta)
+        {
+            _fasta = fasta;
+        }
+
+        public String getCategory()
+        {
+            return _category;
+        }
+
+        public void setCategory(String category)
+        {
+            _category = category;
         }
     }
 }

@@ -563,94 +563,14 @@ SequenceAnalysis.Buttons = new function(){
                 return;
             }
 
-            Ext4.create('Ext.window.Window', {
-                modal: true,
-                dataRegionName: dataRegionName,
-                dataRegionSelections: checked,
-                title: 'FastQC Report',
-                width: 300,
-                items: [{
-                    xtype: 'form',
-                    bodyStyle: 'padding: 5px;',
-                    border: false,
-                    items: [{
-                        xtype: 'displayfield',
-                        labelWidth: 150,
-                        fieldLabel: 'Choose files to include'
-                    },{
-                        xtype: 'checkboxgroup',
-                        itemId: 'chooseFiles',
-                        columns: 1,
-                        items: [{
-                            name: 'chooseFiles',
-                            boxLabel: 'Raw Input File(s)',
-                            inputValue: 'readset/fileid;readset/fileid2'
-                        },{
-                            name: 'chooseFiles',
-                            boxLabel: 'Alignment File',
-                            inputValue: 'alignmentfile',
-                            checked: true
-                        }]
-                    }]
-                }],
-                buttons: [{
-                    text: 'Submit',
-                    handler: function(btn){
-                        var win = btn.up('window');
-                        var selections = win.down('#chooseFiles').getValue().chooseFiles;
-
-                        if (!selections || !selections.length){
-                            alert("Must choose one or more file types");
-                            return;
-                        }
-
-                        var props = [];
-                        Ext4.each(selections, function(s){
-                            s = s.split(';');
-                            props = props.concat(s);
-                        }, this);
-
-                        LABKEY.Query.selectRows({
-                            containerPath: Laboratory.Utils.getQueryContainerPath(),
-                            schemaName: 'sequenceanalysis',
-                            queryName: 'sequence_analyses',
-                            columns: 'rowid,inputfile,inputfile2,alignmentfile,readset/fileid,readset/fileid2',
-                            filterArray: [
-                                LABKEY.Filter.create('rowid', win.dataRegionSelections.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
-                            ],
-                            scope: this,
-                            failure: LDK.Utils.getErrorCallback(),
-                            success: function(results){
-                                var ids = [];
-
-                                Ext4.each(results.rows, function(row){
-                                    Ext4.each(props, function(prop){
-                                        if (row[prop])
-                                            ids.push(row[prop]);
-                                    }, this);
-                                }, this);
-
-
-                                if (ids.length){
-                                    window.location = LABKEY.ActionURL.buildURL(
-                                        'sequenceanalysis',
-                                        'fastqcReport',
-                                        LABKEY.ActionURL.getContainer(),
-                                        {dataIds: ids}
-                                    );
-                                }
-                            }
-                        })
-
-                        win.close();
-                    }
-                },{
-                    text: 'Cancel',
-                    handler: function(btn){
-                        btn.up('window').close();
-                    }
-                }]
-            }).show(btnEl);
+            Ext4.Msg.alert('FastQC', 'You are about to run FastQC, a tool that generates reports on the selected sequence files.  Note: unless the report was previously cached for these files, it runs on the fly, meaning it may take time for the page to load, depending on the size of your input files.<p>FastQC is a third party tool, not written by the authors of this module.', function() {
+                window.location = LABKEY.ActionURL.buildURL(
+                        'sequenceanalysis',
+                        'fastqcReport',
+                        LABKEY.ActionURL.getContainer(),
+                        {analysisIds: checked}
+                );
+            }, this);
         },
 
         generateIlluminaSampleFile: function(dataRegionName){

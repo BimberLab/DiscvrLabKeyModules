@@ -104,12 +104,6 @@ public class BowtieWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public boolean doMergeUnalignedReads()
-        {
-            return true;
-        }
-
-        @Override
         public boolean doAddReadGroups()
         {
             return true;
@@ -154,7 +148,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
             return output;
         }
 
-        private String getExpectedIndexName(File refFasta)
+        public static String getExpectedIndexName(File refFasta)
         {
             return FileUtil.getBaseName(refFasta) + ".bowtie.index";
         }
@@ -171,7 +165,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-m"), "supress_threshold", "Suppress All Alignments", "Suppress all alignments for a particular read or pair if more than <int> reportable alignments exist for it. Reportable alignments are those that would be reported given the -n, -v, -l, -e, -k, -a, --best, and --strata options. Default: no limit. Bowtie is designed to be very fast for small -m but bowtie can become significantly slower for larger values of -m. If you would like to use Bowtie for larger values of -k, consider building an index with a denser suffix-array sample, i.e. specify a smaller -o/--offrate when invoking bowtie-build for the relevant index (see the Performance tuning section for details).", "ldk-integerfield", null, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--best"), "best", "Report Best Alignment", "Make Bowtie guarantee that reported singleton alignments are 'best' in terms of stratum (i.e. number of mismatches, or mismatches in the seed in the case of -n mode) and in terms of the quality values at the mismatched position(s). Stratum always trumps quality; e.g. a 1-mismatch alignment where the mismatched position has Phred quality 40 is preferred over a 2-mismatch alignment where the mismatched positions both have Phred quality 10. When --best is not specified, Bowtie may report alignments that are sub-optimal in terms of stratum and/or quality (though an effort is made to report the best alignment). --best mode also removes all strand bias. Note that --best does not affect which alignments are considered 'valid' by bowtie, only which valid alignments are reported by bowtie. When --best is specified and multiple hits are allowed (via -k or -a), the alignments for a given read are guaranteed to appear in best-to-worst order in bowtie's output. bowtie is somewhat slower when --best is specified.", "checkbox", null, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--strata"), "strata", "Strata", "", "checkbox", null, null)
-            ), null, "http://bowtie-bio.sourceforge.net/index.shtml", true);
+            ), null, "http://bowtie-bio.sourceforge.net/index.shtml", true, true);
         }
 
         public BowtieAlignmentStep create(PipelineContext context)

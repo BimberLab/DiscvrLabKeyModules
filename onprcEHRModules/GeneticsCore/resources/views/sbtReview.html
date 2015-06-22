@@ -1,68 +1,223 @@
 <script type="text/javascript">
 
-    Ext4.onReady(function (){
-        var analysisId = LABKEY.ActionURL.getParameter('analysisId');
+    Ext4.onReady(function () {
+        var analysisIds = LABKEY.ActionURL.getParameterArray('analysisIds');
 
-        if (!analysisId){
-            alert('Must Provide Analysis Id');
+        if (!analysisIds.length) {
+            alert('Must Provide At Least One Analysis Id');
             return;
         }
 
+        Ext4.define('GeneticsCore.panel.SBTReviewPanel', {
+            extend: 'Ext.panel.Panel',
+            initComponent: function () {
+                this.analysisIds = this.analysisIds.sort();
+
+                Ext4.apply(this, {
+                    border: false,
+                    //bodyStyle: 'padding: 5px;',
+                    defaults: {
+                        border: false
+                    },
+                    items: [{
+                        xtype: 'ldk-webpartpanel',
+                        style: 'margin-bottom: 10px;',
+                        items: [{
+                            html: 'This page is designed to help review the results of sequence based genotyping data.  Use the buttons below to scroll between the analyses you selected.',
+                            border: false,
+                            style: 'margin-bottom: 20px;'
+                        },{
+                            layout: 'hbox',
+                            border: false,
+                            items: [{
+                                xtype: 'labkey-combo',
+                                itemId: 'analysisCombo',
+                                fieldLabel: 'Jump To Analysis',
+                                style: 'margin-right: 10px;',
+                                forceSelection: true,
+                                labelWidth: 150,
+                                valueField: 'rowid',
+                                displayField: 'rowid',
+                                value: this.analysisIds[0],
+                                store: {
+                                    type: 'labkey-store',
+                                    containerPath: Laboratory.Utils.getQueryContainerPath(),
+                                    schemaName: 'sequenceanalysis',
+                                    queryName: 'sequence_analyses',
+                                    columns: 'rowid,name',
+                                    sort: 'rowid',
+                                    filterArray: [LABKEY.Filter.create('rowid', this.analysisIds.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)],
+                                    autoLoad: true
+                                }
+                            },{
+                                xtype: 'button',
+                                text: 'Go',
+                                scope: this,
+                                handler: function(){
+                                    var analysisId = this.down('#analysisCombo').getValue();
+                                    if (!analysisId){
+                                        Ext4.Msg.alert('Error', 'No analysis selected');
+                                    }
+                                    else {
+                                        this.loadAnalysis(analysisId);
+                                    }
+                                }
+                            }]
+                        }]
+                    },{
+                        xtype: 'panel',
+                        itemId: 'sbtPanel',
+                        style: 'margin-bottom: 40px;'
+                    }],
+                    buttonAlign: 'left',
+                    buttons: [{
+                        text: 'Previous',
+                        scope: this,
+                        handler: function () {
+                            var idx = Ext4.Array.indexOf(this.analysisIds, this.activeAnalysisId);
+                            idx--;
+                            if (idx < 0){
+                                Ext4.Msg.alert('Error', 'This is the first analysis');
+                            }
+                            else {
+                                this.loadAnalysis(this.analysisIds[idx]);
+                            }
+                        }
+                    },{
+                        text: 'Next',
+                        scope: this,
+                        handler: function () {
+                            var idx = Ext4.Array.indexOf(this.analysisIds, this.activeAnalysisId);
+                            idx++;
+
+                            if (idx >= this.analysisIds.length){
+                                Ext4.Msg.alert('Error', 'This is the last analysis');
+                            }
+                            else {
+                                this.loadAnalysis(this.analysisIds[idx]);
+                            }
+                        }
+                    },{
+                        text: 'Refresh',
+                        scope: this,
+                        handler: function () {
+                            this.doLayout();
+                        }
+                    }]
+                });
+
+                this.callParent(arguments);
+
+                this.loadAnalysis(this.analysisIds[0]);
+            },
+
+            loadAnalysis: function (analysisId) {
+                this.activeAnalysisId = analysisId;
+                this.down('#analysisCombo').setValue(analysisId);
+
+                var panel = this.down('#sbtPanel');
+                panel.removeAll();
+                panel.add([
+                    {
+                        xtype: 'ldk-querypanel',
+                        style: 'margin-bottom: 10px;',
+                        queryConfig: LDK.Utils.getReadOnlyQWPConfig({
+                            title: 'Analysis Details',
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'sequence_analyses',
+                            viewName: 'SBT Information',
+                            containerPath: Laboratory.Utils.getQueryContainerPath(),
+                            filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)],
+                            scope: this,
+                            success: this.onDataRegionLoad
+                        })
+                    },{
+                        xtype: 'ldk-querypanel',
+                        style: 'margin-bottom: 10px;',
+                        queryConfig: LDK.Utils.getReadOnlyQWPConfig({
+                            title: 'Alignments, By Allele',
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'alignment_summary_grouped',
+                            viewName: 'With Haplotype Matches',
+                            maxRows: 30,
+                            containerPath: Laboratory.Utils.getQueryContainerPath(),
+                            filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)],
+                            scope: this,
+                            success: this.onDataRegionLoad
+                        })
+                    },{
+                        xtype: 'ldk-querypanel',
+                        style: 'margin-bottom: 10px;',
+                        queryConfig: LDK.Utils.getReadOnlyQWPConfig({
+                            title: 'Alignments, By Lineage',
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'alignment_summary_by_lineage',
+                            viewName: 'With Haplotype Matches',
+                            containerPath: Laboratory.Utils.getQueryContainerPath(),
+                            filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)],
+                            scope: this,
+                            success: this.onDataRegionLoad
+                        })
+                    },{
+                        xtype: 'ldk-querypanel',
+                        style: 'margin-bottom: 10px;',
+                        queryConfig: LDK.Utils.getReadOnlyQWPConfig({
+                            title: 'Matching Haplotypes',
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'haplotypeMatches',
+                            parameters: {
+                                MinimumPercent: 1
+                            },
+                            containerPath: Laboratory.Utils.getQueryContainerPath(),
+                            filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)],
+                            scope: this,
+                            success: this.onDataRegionLoad
+                        })
+                    },{
+                        xtype: 'ldk-querypanel',
+                        style: 'margin-bottom: 10px;',
+                        queryConfig: LDK.Utils.getReadOnlyQWPConfig({
+                            title: 'Published Results',
+                            schemaName: 'assay.GenotypeAssay.Genotype',
+                            queryName: 'Data',
+                            containerPath: Laboratory.Utils.getQueryContainerPath(),
+                            filterArray: [LABKEY.Filter.create('analysisId', analysisId, LABKEY.Filter.Types.EQUAL)],
+                            failure: function(){
+                                console.log(arguments);
+                            },
+                            scope: this,
+                            success: this.onDataRegionLoad
+                        })
+                    }
+                ]);
+            },
+
+            onDataRegionLoad: function(dr){
+                var itemWidth = Ext4.get('dataregion_'+dr.id).getSize().width + 150;
+                this.doResize(itemWidth);
+            },
+
+            doResize: function(itemWidth){
+                var width2 = this.getWidth();
+                if (itemWidth > width2){
+                    this.setWidth(itemWidth);
+                    this.doLayout();
+                }
+                else if (itemWidth < width2) {
+                    if (this.originalWidth && width2 != this.originalWidth){
+                        this.setWidth(Math.max(this.originalWidth, itemWidth));
+                        this.doLayout();
+                    }
+                }
+            }
+        });
+
         var webpart = <%=webpartContext%>;
 
-        Ext4.get(webpart.wrapperDivId).update(
-            '<div id="analysisDetails_'+webpart.wrapperDivId+'"></div>' +
-            '<br>' +
-            '<div id="alignmentSummaryGrouped_'+webpart.wrapperDivId+'"></div>' +
-            '<br>' +
-            '<div id="alignmentSummaryByLineage_'+webpart.wrapperDivId+'"></div>' +
-            '<br>' +
-            '<div id="haplotypeMatches_'+webpart.wrapperDivId+'"></div>' +
-            '<br>' +
-            '<div id="publishedResults_'+webpart.wrapperDivId+'"></div>'
-        );
+        Ext4.create('GeneticsCore.panel.SBTReviewPanel', {
+            analysisIds: analysisIds
+        }).render(webpart.wrapperDivId);
 
-        LDK.Utils.getReadOnlyQWP({
-            title: 'Analysis Details',
-            schemaName: 'sequenceanalysis',
-            queryName: 'sequence_analyses',
-            viewName: 'SBT Information',
-            containerPath: Laboratory.Utils.getQueryContainerPath(),
-            filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)]
-        }).render('analysisDetails_'+webpart.wrapperDivId);
-
-        LDK.Utils.getReadOnlyQWP({
-            title: 'Alignments, By Lineage',
-            schemaName: 'sequenceanalysis',
-            queryName: 'alignment_summary_by_lineage',
-            containerPath: Laboratory.Utils.getQueryContainerPath(),
-            filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)]
-        }).render('alignmentSummaryByLineage_'+webpart.wrapperDivId);
-
-        LDK.Utils.getReadOnlyQWP({
-            title: 'Matching Haplotypes',
-            schemaName: 'sequenceanalysis',
-            queryName: 'haplotypeMatches',
-            containerPath: Laboratory.Utils.getQueryContainerPath(),
-            filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)]
-        }).render('haplotypeMatches_'+webpart.wrapperDivId);
-
-        LDK.Utils.getReadOnlyQWP({
-            title: 'Alignments, By Allele',
-            schemaName: 'sequenceanalysis',
-            queryName: 'alignment_summary_grouped',
-            maxRows: 30,
-            containerPath: Laboratory.Utils.getQueryContainerPath(),
-            filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)]
-        }).render('alignmentSummaryGrouped_'+webpart.wrapperDivId);
-
-        LDK.Utils.getBasicQWP({
-            title: 'Published Results',
-            schemaName: 'assay.GenotypeAssay.Genotype',
-            queryName: 'Data',
-            containerPath: Laboratory.Utils.getQueryContainerPath(),
-            filterArray: [LABKEY.Filter.create('analysisId', analysisId, LABKEY.Filter.Types.EQUAL)]
-        }).render('publishedResults_'+webpart.wrapperDivId);
     });
 
 </script>

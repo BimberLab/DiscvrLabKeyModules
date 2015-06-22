@@ -36,7 +36,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.NumberFormat;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
@@ -53,7 +52,12 @@ public class FastqUtils
     {
         try (FastqReader reader = new FastqReader(fastq))
         {
-            return QualityEncodingDetector.detect(reader);
+            QualityEncodingDetector detector = new QualityEncodingDetector();
+            detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE * 2, reader);
+
+            //NOTE: even though this is a FASTQ file, use SAM since this will default to standard encoding (the current norm), instead of FASTQ which defaults to illumina.
+            //this is only relevant for situations of ambiguous encoding.
+            return detector.generateBestGuess(QualityEncodingDetector.FileContext.SAM, null);
         }
     }
 

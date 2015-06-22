@@ -372,29 +372,6 @@ public class SequenceAnalysisManager
         }
     }
 
-    public File findResource(String path) throws FileNotFoundException
-    {
-        Module module = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
-        MergedDirectoryResource resource = (MergedDirectoryResource) module.getModuleResolver().lookup(Path.parse(path));
-        File file = null;
-        for (Resource r : resource.list())
-        {
-            if (r instanceof FileResource)
-            {
-                file = ((FileResource) r).getFile().getParentFile();
-                break;
-            }
-        }
-
-        if (file == null)
-            throw new FileNotFoundException("Not found: " + path);
-
-        if (!file.exists())
-            throw new FileNotFoundException("Not found: " + file.getPath());
-
-        return file;
-    }
-
     public String getNTRefForAARef(Integer refId)
     {
         SQLFragment sql = new SQLFragment("SELECT name FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES + " a " +

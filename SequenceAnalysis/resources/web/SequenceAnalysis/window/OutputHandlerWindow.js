@@ -9,7 +9,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                 Ext4.Msg.alert('Error', 'No records selected');
                 return;
             }
-console.log(handlerClass)
+
             //first validate
             Ext4.Msg.wait('Validating files...');
             LABKEY.Ajax.request({
@@ -55,15 +55,23 @@ console.log(handlerClass)
                     }
                     else {
                         distinctGenomes = Ext4.Array.unique(distinctGenomes);
-console.log(results)
-                        Ext4.create('SequenceAnalysis.window.OutputHandlerWindow', {
-                            dataRegionName: dataRegionName,
-                            handlerClass: handlerClass,
-                            outputFileIds: checked,
-                            title: results.name,
-                            handlerConfig: results,
-                            toolParameters: results.toolParameters,
-                            libraryId: distinctGenomes.length == 1 ? distinctGenomes[0] : null
+
+                        Ext4.create('Laboratory.window.WorkbookCreationWindow', {
+                            title: 'Create New Workbook or Add To Existing?',
+                            workbookPanelCfg: {
+                                doLoad: function (containerPath) {
+                                    Ext4.create('SequenceAnalysis.window.OutputHandlerWindow', {
+                                        containerPath: containerPath,
+                                        dataRegionName: dataRegionName,
+                                        handlerClass: handlerClass,
+                                        outputFileIds: checked,
+                                        title: results.name,
+                                        handlerConfig: results,
+                                        toolParameters: results.toolParameters,
+                                        libraryId: distinctGenomes.length == 1 ? distinctGenomes[0] : null
+                                    }).show();
+                                }
+                            }
                         }).show();
                     }
                 }, this)
@@ -149,7 +157,7 @@ console.log(results)
 
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler'),
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler', this.containerPath),
             jsonData: {
                 handlerClass: this.handlerClass,
                 outputFileIds: this.outputFileIds,

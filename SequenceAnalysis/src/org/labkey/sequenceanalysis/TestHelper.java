@@ -1517,6 +1517,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaikreads"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.stat"));
@@ -1526,6 +1529,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaikreads"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.stat"));
@@ -1535,6 +1540,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaikreads"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.stat"));
@@ -1598,7 +1605,7 @@ public class TestHelper
                 expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.intervals"));
                 expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bam"));
                 expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bai"));
-                expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
+                //expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.sorted.realigned.markduplicates.bam"));
                 expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.realigned.metrics"));
             }
             else
@@ -1610,6 +1617,9 @@ public class TestHelper
 
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
@@ -1627,7 +1637,7 @@ public class TestHelper
                 expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.intervals"));
                 expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bam"));
                 expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bai"));
-                expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
+                //expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
                 expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.metrics"));
             }
             else
@@ -1639,6 +1649,8 @@ public class TestHelper
 
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
@@ -1656,7 +1668,7 @@ public class TestHelper
                 expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.intervals"));
                 expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bam"));
                 expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bai"));
-                expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
+                //expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam"));
                 expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.metrics"));
             }
             else
@@ -1668,6 +1680,8 @@ public class TestHelper
 
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
 
             validateInputs();
@@ -1713,6 +1727,9 @@ public class TestHelper
 
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
@@ -1720,6 +1737,8 @@ public class TestHelper
 
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
@@ -1727,6 +1746,8 @@ public class TestHelper
 
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
 
             validateInputs();
@@ -1768,18 +1789,25 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
 
             validateInputs();
@@ -1822,6 +1850,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.lastz.bam"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.fasta"));
 
@@ -1830,6 +1859,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.lastz.bam"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.fasta"));
 
@@ -1838,6 +1869,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.lastz.bam"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.fasta"));
 
@@ -1890,6 +1923,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.lastz.bam"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fasta"));
 
@@ -1898,6 +1933,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.lastz.bam"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fasta"));
 
@@ -1906,6 +1943,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.lastz.bam"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fasta"));
 
@@ -1990,18 +2029,23 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
 
             validateInputs();
@@ -2049,18 +2093,28 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bwa-sw.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bwa-sw.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bwa-sw.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
 
             validateInputs();
@@ -2108,18 +2162,28 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bwa-mem.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bwa-mem.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bwa-mem.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
 
             validateInputs();
@@ -2176,6 +2240,10 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.bwa.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq.sai"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired2.preprocessed.fastq.sai"));
@@ -2188,6 +2256,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.bwa.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fastq.sai"));
 
@@ -2199,6 +2270,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.bwa.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fastq.sai"));
 
@@ -2271,6 +2345,10 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bwa.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.fastq.sai"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired2.fastq.sai"));
@@ -2279,6 +2357,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bwa.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.fastq.sai"));
 
@@ -2286,6 +2367,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bwa.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.fastq.sai"));
 
@@ -2336,6 +2420,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned_1.fastq"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned_2.fastq"));
@@ -2344,6 +2430,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bowtie.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bowtie.unaligned.fastq"));
 
@@ -2351,6 +2440,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bowtie.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bowtie.unaligned.fastq"));
 
@@ -2395,6 +2487,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned_1.fastq"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned_2.fastq"));
@@ -2403,6 +2496,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bowtie.unaligned.fastq"));
 
@@ -2410,6 +2505,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bowtie.unaligned.fastq"));
 
@@ -2466,18 +2563,28 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bwa-mem.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bwa-mem.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bwa-mem.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
 
             validateInputs();
@@ -2525,18 +2632,28 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bwa-mem.bam"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bwa-mem.bam"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bwa-mem.bam"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
 
             validateInputs();
@@ -2605,6 +2722,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
 
             addOptionalFile(expectedOutputs, new File(basedir, "paired1/Alignment/CpG_OB_TestReadset1.txt.gz"));
             addOptionalFile(expectedOutputs, new File(basedir, "paired1/Alignment/CpG_OT_TestReadset1.txt.gz"));
@@ -2628,7 +2748,8 @@ public class TestHelper
 
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
-
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
 
             addOptionalFile(expectedOutputs, new File(basedir, "paired3/Alignment/CpG_OB_TestReadset2.txt.gz"));
             addOptionalFile(expectedOutputs, new File(basedir, "paired3/Alignment/CpG_OT_TestReadset2.txt.gz"));
@@ -2650,6 +2771,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
 
             addOptionalFile(expectedOutputs, new File(basedir, "paired4/Alignment/CpG_OB_TestReadset3.txt.gz"));
             addOptionalFile(expectedOutputs, new File(basedir, "paired4/Alignment/CpG_OT_TestReadset3.txt.gz"));
@@ -2724,6 +2847,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
 
             addOptionalFile(expectedOutputs, new File(basedir, "paired1/Alignment/CpG_OB_TestReadset1.txt.gz"));
             addOptionalFile(expectedOutputs, new File(basedir, "paired1/Alignment/CpG_OT_TestReadset1.txt.gz"));
@@ -2743,6 +2869,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
 
             addOptionalFile(expectedOutputs, new File(basedir, "paired3/Alignment/CpG_OB_TestReadset2.txt.gz"));
             addOptionalFile(expectedOutputs, new File(basedir, "paired3/Alignment/CpG_OT_TestReadset2.txt.gz"));
@@ -2761,6 +2889,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
 
             addOptionalFile(expectedOutputs, new File(basedir, "paired4/Alignment/CpG_OB_TestReadset3.txt.gz"));
             addOptionalFile(expectedOutputs, new File(basedir, "paired4/Alignment/CpG_OT_TestReadset3.txt.gz"));
@@ -2844,6 +2974,9 @@ public class TestHelper
             File bam1 = new File(basedir, "s_G1_L001_R1_001/Alignment/TestMergedReadset.bam");
             expectedOutputs.add(bam1);
             expectedOutputs.add(new File(basedir, "s_G1_L001_R1_001/Alignment/TestMergedReadset.bam.bai"));
+            expectedOutputs.add(new File(basedir, "s_G1_L001_R1_001/Alignment/TestMergedReadset.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "s_G1_L001_R1_001/Alignment/TestMergedReadset.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "s_G1_L001_R1_001/Alignment/TestMergedReadset.insertsize.metrics.pdf"));
 
             expectedOutputs.add(new File(basedir, "s_G1_L002_R1_001"));
             expectedOutputs.add(new File(basedir, "s_G1_L002_R1_001/Alignment"));
@@ -2928,6 +3061,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
             //expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.gsnap.concordant_mult.bam"));
             //expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.gsnap.halfmapping_mult.bam"));
@@ -2941,6 +3077,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.gsnap.nomapping.bam"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.gsnap.unpaired_mult.bam"));
@@ -2949,6 +3087,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.gsnap.nomapping.bam"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.gsnap.unpaired_mult.bam"));
@@ -3002,6 +3142,9 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
             expectedOutputs.add(bam1);
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.summary.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned_1.fastq"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.bowtie.unaligned_2.fastq"));
@@ -3010,6 +3153,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
             File bam2 = new File(basedir, "paired3/Alignment/TestReadset2.bam");
             expectedOutputs.add(bam2);
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.bowtie.unaligned.fastq"));
 
@@ -3017,6 +3162,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
             File bam3 = new File(basedir, "paired4/Alignment/TestReadset3.bam");
             expectedOutputs.add(bam3);
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.summary.metrics"));
+            //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.bowtie.unaligned.fastq"));
 

@@ -29,6 +29,9 @@ public class FastqCollapser extends AbstractCommandWrapper
         args.add("-o");
         args.add(output.getPath());
 
+        args.add("-Q");
+        args.add("33");
+
         execute(args);
 
         if (!output.exists())

@@ -53,7 +53,7 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
 
         public String getStatusName()
         {
-            return "Importing Alignment";
+            return "IMPORTING ALIGNMENT";
         }
 
         public List<String> getProtocolActionNames()
@@ -172,6 +172,11 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
             }
 
             transaction.commit();
+
+            for (AnalysisModel m : ret)
+            {
+                SequenceAnalysisTask.addMetricsForAnalysis(m, getJob());
+            }
 
             return ret;
         }

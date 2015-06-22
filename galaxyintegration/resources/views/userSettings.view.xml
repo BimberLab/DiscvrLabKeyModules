@@ -1,0 +1,6 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Galaxy User Settings">
+    <dependencies>
+        <dependency path="ldk/LDKApi.lib.xml" />
+        <dependency path="galaxyintegration/GalaxyUtils.js" />
+    </dependencies>
+</view>

@@ -55,11 +55,12 @@ public class JobsTableCustomizer implements TableCustomizer
             String hasSequenceData = "hasSequenceData";
             if (ti.getColumn(hasSequenceData) == null)
             {
-                SQLFragment sql = new SQLFragment("(SELECT CASE WHEN (COUNT(distinct rs.rowid) > 0 OR COUNT(distinct sa.rowid) > 0 OR COUNT(distinct o.rowid) > 0) THEN " + ti.getSqlDialect().getBooleanTRUE() + " ELSE " + ti.getSqlDialect().getBooleanFALSE() + " END as expr\n" +
+                SQLFragment sql = new SQLFragment("(SELECT CASE WHEN (" +
+                        "(SELECT count(rs.rowid) FROM sequenceanalysis.sequence_readsets rs WHERE r.RowId = rs.runid) > 0 OR\n" +
+                        "(SELECT count(sa.rowid) FROM sequenceanalysis.sequence_analyses sa WHERE r.RowId = sa.runid) > 0 OR\n" +
+                        "(SELECT count(o.rowid) FROM sequenceanalysis.outputfiles o WHERE r.RowId = o.runid) > 0\n" +
+                        ") THEN " + ti.getSqlDialect().getBooleanTRUE() + " ELSE " + ti.getSqlDialect().getBooleanFALSE() + " END as expr\n" +
                         "FROM exp.experimentrun r\n" +
-                        "LEFT JOIN sequenceanalysis.sequence_readsets rs ON (r.RowId = rs.runid)\n" +
-                        "LEFT JOIN sequenceanalysis.sequence_analyses sa ON (r.RowId = sa.runid)\n" +
-                        "LEFT JOIN sequenceanalysis.outputfiles o ON (r.RowId = o.runid)\n" +
                         "WHERE (r.jobid = " + ExprColumn.STR_TABLE_ALIAS + ".RowId OR r.rowid = (SELECT p.RowId FROM pipeline.statusfiles p WHERE " + ExprColumn.STR_TABLE_ALIAS + ".jobparent = p.job))\n" +
                         ")");
                 ExprColumn newCol = new ExprColumn(ti, hasSequenceData, sql, JdbcType.BOOLEAN, ti.getColumn("RowId"));

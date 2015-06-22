@@ -1,0 +1,5 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Galaxy Integration">
+    <dependencies>
+        <dependency path="galaxyintegration/GalaxyUtils.js" />
+    </dependencies>
+</view>

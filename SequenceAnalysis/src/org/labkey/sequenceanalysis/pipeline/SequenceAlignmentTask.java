@@ -20,7 +20,6 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -30,12 +29,7 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.util.FileType;
-import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.NetworkDrive;
-import org.labkey.api.util.Pair;
-import org.labkey.sequenceanalysis.ReadDataImpl;
-import org.labkey.sequenceanalysis.SequenceAnalysisManager;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
@@ -43,9 +37,18 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.NetworkDrive;
+import org.labkey.api.util.Pair;
+import org.labkey.sequenceanalysis.ReadDataImpl;
+import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.util.AddOrReplaceReadGroupsWrapper;
+import org.labkey.sequenceanalysis.run.util.AlignmentSummaryMetricsWrapper;
+import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.FlagStatRunner;
 import org.labkey.sequenceanalysis.run.util.MergeBamAlignmentWrapper;
@@ -56,10 +59,8 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +86,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
     public static final String INDEX_ACTION = "Indexing BAM";
     public static final String RENAME_BAM_ACTION = "Renaming BAM";
     public static final String NORMALIZE_FILENAMES_ACTION = "Normalizing File Names";
+    public static final String ALIGNMENT_METRICS_ACTIONNAME = "Calculating Alignment Metrics";
 
     public static final String MERGE_ALIGNMENT_ACTIONNAME = "Merging Alignments";
     public static final String DECOMPRESS_ACTIONNAME = "Decompressing Inputs";
@@ -140,6 +142,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             allowableNames.add(COPY_REFERENCE_LIBRARY_ACTIONNAME);
             allowableNames.add(NORMALIZE_FILENAMES_ACTION);
             allowableNames.add(MERGE_ALIGNMENT_ACTIONNAME);
+            allowableNames.add(ALIGNMENT_METRICS_ACTIONNAME);
 
             return allowableNames;
         }
@@ -559,6 +562,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 sortAction.setEndTime(new Date());
                 actions.add(sortAction);
             }
+            else
+            {
+                getJob().getLogger().debug("BAM is already coordinate sorted, no need to sort");
+            }
 
             //finally index
             getJob().setStatus("INDEXING BAM");
@@ -596,10 +603,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             //fact.validationStringency(ValidationStringency.SILENT);
             try (SAMFileReader reader = new SAMFileReader(finalBam))
             {
-                getJob().getLogger().info("\tcreating BAM index");
+                getJob().getLogger().info("creating BAM index");
                 reader.setValidationStringency(ValidationStringency.SILENT);
                 BAMIndexer.createIndex(reader, bai);
                 getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_INDEX_ROLE, bai);
+                getJob().getLogger().info("\tdone");
             }
             getJob().getLogger().info("\ttotal alignments in final BAM: " + SequenceUtil.getAlignmentCount(finalBam));
 
@@ -628,6 +636,35 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             renameAction.setEndTime(new Date());
             actions.add(renameAction);
         }
+
+        //generate alignment metrics
+        RecordedAction metricsAction = new RecordedAction(ALIGNMENT_METRICS_ACTIONNAME);
+        metricsAction.setStartTime(new Date());
+        getJob().getLogger().info("calculating alignment metrics");
+        getJob().setStatus("CALCULATING ALIGNMENT SUMMARY METRICS");
+        File metricsFile = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".summary.metrics");
+        new AlignmentSummaryMetricsWrapper(getJob().getLogger()).executeCommand(finalBam, metricsFile);
+        getHelper().getFileManager().addInput(metricsAction, "BAM File", finalBam);
+        getHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
+
+        //and insert size metrics
+        if (rs.hasPairedData())
+        {
+            getJob().getLogger().info("calculating insert size metrics");
+            getJob().setStatus("CALCULATING INSERT SIZE METRICS");
+            File metricsFile2 = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".insertsize.metrics");
+            File metricsHistogram = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".insertsize.metrics.pdf");
+            if (new CollectInsertSizeMetricsWrapper(getJob().getLogger()).executeCommand(finalBam, metricsFile2, metricsHistogram) != null)
+            {
+                getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
+                getHelper().getFileManager().addOutput(metricsAction, "Insert Size  Metrics Histogram", metricsHistogram);
+            }
+        }
+
+        metricsAction.setEndTime(new Date());
+        actions.add(metricsAction);
+
+        getJob().setStatus("PROCESSING BAM");
 
         //perform remote analyses, if necessary
         List<PipelineStepProvider<AnalysisStep>> analysisProviders = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
@@ -707,9 +744,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         SequenceUtil.logFastqBamDifferences(getJob().getLogger(), alignmentOutput.getBAM());
 
-        if (alignmentStep.doMergeUnalignedReads())
+        ToolParameterDescriptor mergeParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.SUPPORT_MERGED_UNALIGNED);
+        boolean doMergeUnaligned = mergeParam == null ? false : mergeParam.extractValue(getJob(), alignmentStep.getProvider(), Boolean.class, false);
+        if (doMergeUnaligned)
         {
-            getJob().setStatus("MERGING UNALIGNED READS INTO BAM");
+            getJob().setStatus("MERGING UNALIGNED READS INTO BAM" + (msgSuffix != null ? ": " + msgSuffix : ""));
             getJob().getLogger().info("merging unaligned reads into BAM");
             File idx = new File(alignmentOutput.getBAM().getPath() + ".bai");
             if (idx.exists())
@@ -728,7 +767,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         if (alignmentStep.doAddReadGroups())
         {
-            getJob().setStatus("ADDING READ GROUPS");
+            getJob().setStatus("ADDING READ GROUPS" + (msgSuffix != null ? ": " + msgSuffix : ""));
             new AddOrReplaceReadGroupsWrapper(getJob().getLogger()).executeCommand(alignmentOutput.getBAM(), null, rs.getReadsetId().toString(), rs.getPlatform(), (rd.getPlatformUnit() == null ? rs.getReadsetId().toString() : rd.getPlatformUnit()), rs.getName().replaceAll(" ", "_"));
         }
         else

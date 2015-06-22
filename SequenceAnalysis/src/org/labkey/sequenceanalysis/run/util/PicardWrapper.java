@@ -69,17 +69,17 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         return new File(baseDir, jarName);
     }
 
-    public List<String> getBaseParams()
+    public static List<String> getBaseParams()
     {
         List<String> ret = new ArrayList<>();
 
-        String tmpDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARD_TMP_DIR");
+        String tmpDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_TMP_DIR");
         if (StringUtils.trimToNull(tmpDir) != null)
         {
             ret.add("-Djava.io.tmpdir=" + tmpDir);
         }
 
-        String xmx = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARD_MEMORY");
+        String xmx = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_MEMORY");
         if (StringUtils.trimToNull(xmx) != null)
         {
             String[] tokens = xmx.split(" ");

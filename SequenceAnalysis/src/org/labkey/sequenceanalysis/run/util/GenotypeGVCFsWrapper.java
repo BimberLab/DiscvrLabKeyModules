@@ -32,7 +32,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
 
         List<String> args = new ArrayList<>();
         args.add("java");
-        args.add("-Xmx8g");
+        args.addAll(getBaseParams());
         args.add("-jar");
         args.add(getJAR().getPath());
         args.add("-T");

@@ -649,7 +649,22 @@ public class TaskFileManagerImpl implements TaskFileManager
                     continue;
                 }
 
-                f.delete();
+                if (f.isDirectory())
+                {
+                    try
+                    {
+                        FileUtils.deleteDirectory(f);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+                else
+                {
+                    f.delete();
+                }
+
                 if (f.exists())
                 {
                     throw new PipelineJobException("Unable to delete file: " + f.getPath());
@@ -818,6 +833,7 @@ public class TaskFileManagerImpl implements TaskFileManager
     public void cleanup() throws PipelineJobException
     {
         _job.getLogger().debug("performing file cleanup");
+        _job.setStatus("PERFORMING FILE CLEANUP");
 
         try
         {

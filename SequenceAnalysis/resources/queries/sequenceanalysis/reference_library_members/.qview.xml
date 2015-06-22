@@ -1,0 +1,12 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <columns>
+       <column name="library_id" />
+       <column name="ref_nt_id" />
+       <column name="start" />
+       <column name="stop" />
+       <column name="ref_nt_id/downloadSequence" />
+   </columns>
+   <sorts>
+       <sort column="ref_nt_id"/>
+   </sorts>
+</customView>

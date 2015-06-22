@@ -49,6 +49,7 @@ public class DownsampleSamWrapper extends PicardWrapper
         params.add("INPUT=" + file.getPath());
         params.add("OUTPUT=" + new File(getOutputDir(file), getOutputFilename(file)).getPath());
         params.add("PROBABILITY=" + pctRetained);
+        params.add("MAX_RECORDS_IN_RAM=2000000");
 
         return params;
     }

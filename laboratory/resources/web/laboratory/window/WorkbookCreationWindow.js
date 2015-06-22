@@ -235,17 +235,15 @@ Ext4.define('Laboratory.window.WorkbookCreationWindow', {
                 scope: this,
                 delay: 100,
                 show: function(win){
-                    listeners: {
-                        win.down('#titleField').focus(20);
+                    win.down('#titleField').focus(20);
 
-                        new Ext4.util.KeyNav(win.getEl(), {
-                            "enter" : function(e){
-                                var form = this.down('#theForm');
-                                form.formSubmit.call(form, form);
-                            },
-                            scope : this
-                        });
-                    }
+                    new Ext4.util.KeyNav(win.getEl(), {
+                        "enter" : function(e){
+                            var form = this.down('#theForm');
+                            form.formSubmit.call(form, form);
+                        },
+                        scope : this
+                    });
                 }
             },
             buttons: [{

@@ -56,6 +56,7 @@ do
        ;;
     p)
        SKIP_PACKAGE_MANAGER=1
+       echo "SKIP_PACKAGE_MANAGER = ${SKIP_PACKAGE_MANAGER}"
        ;;
     *)
        echo "The following arguments are supported:"
@@ -112,7 +113,7 @@ echo ""
 #    fi
 #fi
 
-if [ ! -n $SKIP_PACKAGE_MANAGER ]; then
+if [ ! -z $SKIP_PACKAGE_MANAGER ]; then
     echo "Skipping package install"
 elif [ $(which yum) ]; then
     echo "Using Yum"

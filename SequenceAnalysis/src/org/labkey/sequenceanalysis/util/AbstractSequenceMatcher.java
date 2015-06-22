@@ -24,6 +24,7 @@ abstract public class AbstractSequenceMatcher
     protected int _editDistance = 0;
     protected int _offsetDistance = 0;
     protected int _deletionsAllowed = 0;
+    protected boolean _barcodesInReadHeader = false;
     protected boolean _createDetailedLog = false;
     protected boolean _createSummaryLog = true;
 
@@ -40,6 +41,53 @@ abstract public class AbstractSequenceMatcher
     abstract protected void initDetailLog(File fastq);
 
     abstract protected void initSummaryLog(File fastq);
+
+    protected void processHeader(FastqRecord rec, Collection<SequenceTag> barcodesToCheck, Map<Integer, Map<String, SequenceMatch>> trackingMap, boolean isForward)
+    {
+        String header = rec.getReadHeader();
+
+        //example: NS500556:30:H2LMCAFXX:1:11101:0:0 1:N:0:TCCGGAGA+AGGCTATA
+        if (!header.contains(":"))
+        {
+            _logger.error("Malformed read, expected barcodes after a semicolon: [" + header + "]");
+            return;
+        }
+
+        header = header.substring(header.lastIndexOf(":") + 1);
+
+        String[] barcodes = header.split("\\+");
+        if (barcodes.length == 0)
+        {
+            _logger.error("Malformed read, expected barcodes after a semicolon: [" + header + "]");
+            return;
+        }
+
+        if (!isForward && barcodes.length != 2)
+        {
+            _logger.error("Did not find dual barcodes on read: [" + rec.getReadHeader() + "]");
+            return;
+        }
+
+        String barcode = isForward ? barcodes[0] : barcodes[1];
+        for (SequenceTag bc : barcodesToCheck)
+        {
+            if (bc.getSequence().matches(barcode))
+            {
+                Map<String, SequenceMatch> matchesAtDist = trackingMap.get(0);
+                if (matchesAtDist == null)
+                    matchesAtDist = new TreeMap<>();
+
+                if (!matchesAtDist.containsKey(bc.getName()))
+                {
+                    SequenceMatch match = new SequenceMatch(bc, rec, true, 0, 0, 0, null);
+                    matchesAtDist.put(bc.getName(), match);
+                    trackingMap.put(0, matchesAtDist);
+
+                    writeDetailedLine(match, bc.getSequence(), barcode);
+                }
+            }
+        }
+    }
 
     protected void processTag5(FastqRecord rec, SequenceTag bc, int offset, Map<Integer, Map<String, SequenceMatch>> trackingMap)
     {
@@ -134,6 +182,11 @@ abstract public class AbstractSequenceMatcher
         _deletionsAllowed = deletionsAllowed;
     }
 
+    public void setBarcodesInReadHeader(boolean val)
+    {
+        _barcodesInReadHeader = val;
+    }
+
     public boolean isCreateDetailedLog()
     {
         return _createDetailedLog;
@@ -159,82 +212,95 @@ abstract public class AbstractSequenceMatcher
         //first scan 5' end
 
         //try default matching from end, without deletions first
-        for (SequenceTag bc : barcodes5)
+        if (_barcodesInReadHeader)
         {
-            processTag5(rec, bc, 0, matches5);
+            processHeader(rec, barcodes5, matches5, true);
         }
-
-        if (_offsetDistance > 0)
+        else
         {
-            int i = 1;
-            while (i <= _offsetDistance)
+            for (SequenceTag bc : barcodes5)
             {
-                for (SequenceTag bc : barcodes5)
-                {
-                    processTag5(rec, bc, i, matches5);
-                }
-                i++;
-
-                if (matches5.size() > 0)
-                    break;
+                processTag5(rec, bc, 0, matches5);
             }
-        }
 
-        //then try patrial matches, only if no matches found
-        if (matches5.isEmpty() && _deletionsAllowed > 0)
-        {
-            int i = 1;
-            while (i <= _deletionsAllowed)
+            if (_offsetDistance > 0)
             {
-                for (SequenceTag bc : barcodes5)
+                int i = 1;
+                while (i <= _offsetDistance)
                 {
-                    processTag5(rec, bc, -i, matches5);
-                }
-                i++;
+                    for (SequenceTag bc : barcodes5)
+                    {
+                        processTag5(rec, bc, i, matches5);
+                    }
+                    i++;
 
-                if (matches5.size() > 0)
-                    break;
+                    if (matches5.size() > 0)
+                        break;
+                }
+            }
+
+            //then try patrial matches, only if no matches found
+            if (matches5.isEmpty() && _deletionsAllowed > 0)
+            {
+                int i = 1;
+                while (i <= _deletionsAllowed)
+                {
+                    for (SequenceTag bc : barcodes5)
+                    {
+                        processTag5(rec, bc, -i, matches5);
+                    }
+                    i++;
+
+                    if (matches5.size() > 0)
+                        break;
+                }
             }
         }
 
         //then 3' end
-
-        //try default matching from end, without deletions first
-        for (SequenceTag bc : barcodes3)
+        if (_barcodesInReadHeader)
         {
-            processTag3(rec, bc, 0, matches3);
+            processHeader(rec, barcodes3, matches3, false);
         }
-
-        if (_offsetDistance > 0)
+        else
         {
-            int i = 1;
-            while (i <= _offsetDistance)
+            //try default matching from end, without deletions first
+            for (SequenceTag bc : barcodes3)
             {
-                for (SequenceTag bc : barcodes3)
-                {
-                    processTag3(rec, bc, i, matches3);
-                }
-                i++;
-
-                if (matches3.size() > 0)
-                    break;
+                processTag3(rec, bc, 0, matches3);
             }
-        }
 
-        //then try patrial matches, only if no matches found
-        if (matches3.isEmpty() && _deletionsAllowed > 0)
-        {
-            int i = 1;
-            while (i <= _deletionsAllowed)
+            if (_offsetDistance > 0)
             {
-                for (SequenceTag bc : barcodes3)
+                int i = 1;
+                while (i <= _offsetDistance)
                 {
-                    processTag3(rec, bc, -i, matches3);
-                }
-                i++;
+                    for (SequenceTag bc : barcodes3)
+                    {
+                        processTag3(rec, bc, i, matches3);
+                    }
+                    i++;
 
-                if (matches3.size() > 0)
-                    break;
+                    if (matches3.size() > 0)
+                        break;
+                }
+            }
+
+            //then try patrial matches, only if no matches found
+            if (matches3.isEmpty() && _deletionsAllowed > 0)
+            {
+                int i = 1;
+                while (i <= _deletionsAllowed)
+                {
+                    for (SequenceTag bc : barcodes3)
+                    {
+                        processTag3(rec, bc, -i, matches3);
+                    }
+                    i++;
+
+                    if (matches3.size() > 0)
+                        break;
+                }
             }
         }
     }

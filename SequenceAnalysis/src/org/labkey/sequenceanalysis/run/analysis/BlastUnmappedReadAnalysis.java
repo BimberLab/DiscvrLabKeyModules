@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
@@ -90,7 +91,6 @@ public class BlastUnmappedReadAnalysis extends AbstractCommandPipelineStep<Blast
             }
         }
 
-        getPipelineCtx().getLogger().info("writing unmapped reads to FASTA");
         File fasta = new File(outputDir, FileUtil.getBaseName(inputBam) + "_unmapped.fasta");
         UnmappedReadExportAnalysis.writeUnmappedReadsAsFasta(inputBam, fasta, getPipelineCtx().getLogger(), null, null).get(0);
         long lineCount = SequenceUtil.getLineCount(fasta);
@@ -114,8 +114,10 @@ public class BlastUnmappedReadAnalysis extends AbstractCommandPipelineStep<Blast
             collapser.collapseFile(fasta, collapsed);
             long collapsedLineCount = SequenceUtil.getLineCount(collapsed);
             getPipelineCtx().getLogger().info("total FASTA sequences: " + (collapsedLineCount / 2));
-
             output.addIntermediateFile(collapsed, "Collapsed Reads FASTA");
+
+            //filter based on # hits
+
 
             File blastResults = new File(outputDir, FileUtil.getBaseName(fasta) + ".bls");
 
@@ -167,6 +169,18 @@ public class BlastUnmappedReadAnalysis extends AbstractCommandPipelineStep<Blast
             for (String key : taxaCount.keySet())
             {
                 getPipelineCtx().getLogger().info(key + ": " + taxaCount.get(key));
+            }
+
+            if (taxDbDir.exists())
+            {
+                try
+                {
+                    FileUtils.deleteDirectory(taxDbDir);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
             }
         }
 

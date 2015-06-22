@@ -363,9 +363,9 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         List<String> params = new LinkedList<>();
         params.add("java");
 
-        params.add("-classpath");
+        params.add("-jar");
         params.add(getJar().getPath());
-        params.add("org.usadellab.trimmomatic.Trimmomatic" + (input2 != null ? "PE" : "SE"));
+        params.add((input2 != null ? "PE" : "SE"));
         File trimLog = getTrimlog(getOutputDir(input));
         params.add("-trimlog");
         params.add(trimLog.getPath());

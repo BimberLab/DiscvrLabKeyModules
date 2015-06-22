@@ -38,6 +38,7 @@ public class CleanSamWrapper extends PicardWrapper
         params.add("-jar");
         params.add(getJar().getPath());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
+        params.add("MAX_RECORDS_IN_RAM=2000000");
         params.add("INPUT=" + inputFile.getPath());
         params.add("OUTPUT=" + outputBam.getPath());
 

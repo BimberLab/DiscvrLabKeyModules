@@ -55,6 +55,7 @@ public class CreateSequenceDictionaryWrapper extends PicardWrapper
         params.add(getJar().getPath());
 
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
+        params.add("MAX_RECORDS_IN_RAM=2000000");
         params.add("REFERENCE=" + referenceFasta.getPath());
         params.add("OUTPUT=" + expected.getPath());
 

@@ -346,7 +346,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     //<sample name>_<barcode sequence>_L<lane (0-padded to 3 digits)>_R<read number>_<set number (0-padded to 3 digits>.fastq.gz
     ILLUMINA_REGEX: /^(.+)_(.+)_L(.+)_R(.+)_(.+)(\.fastq)(\.gz)?$/i,
 
-    populateSamples: function(orderType){
+    populateSamples: function(orderType, isPaired){
         this.fileNameStore.sort('displayName', 'ASC');
         this.readDataStore.removeAll();
 
@@ -383,7 +383,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     else {
                         var arr = map[sample][setId];
                         if (!arr.length){
-                            var msg = 'Possible error parsing file groups on SequenceImportPanel.  Encountered reverse reads prior to forward for file: [' + f.get('fileName') + '].  Names were:\n';
+                            var msg = 'Possible error parsing file groups on SequenceImportPanel.  Encountered reverse reads prior to forward for file: [' + setId + '].  Names were:\n';
                             this.fileNameStore.each(function(f){
                                 msg += '[' + f.get('fileName') + ']\n';
                             }, this);
@@ -432,32 +432,67 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         }
         else if (orderType == 'row'){
             this.fileNameStore.each(function(rec, i) {
-                if (i % 2 == 0){
+                if (isPaired){
+                    if (i % 2 == 0){
+                        var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
+                        var fileArr = rec.get('fileName').replace(/\.gz$/, '').split('.');
+                        fileArr.pop();
+                        m.set('fileRecord1', rec.get('id'));
+
+                        var fileGroupId = fileArr.length == 1 ? fileArr[0] : fileArr.join('.');
+                        m.set('fileGroupId', fileGroupId);
+                        this.readDataStore.add(m);
+                    }
+                    else
+                    {
+                        this.readDataStore.getAt(this.readDataStore.getCount() - 1).set('fileRecord2', rec.get('id'));
+                    }
+                }
+                else {
                     var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
                     var fileArr = rec.get('fileName').replace(/\.gz$/, '').split('.');
                     fileArr.pop();
-                    m.set('fileRecord1', rec.get('id'));
 
+                    m.set('fileRecord1', rec.get('id'));
                     var fileGroupId = fileArr.length == 1 ? fileArr[0] : fileArr.join('.');
                     m.set('fileGroupId', fileGroupId);
                     this.readDataStore.add(m);
                 }
-                else {
-                    this.readDataStore.getAt(this.readDataStore.getCount() - 1).set('fileRecord2', rec.get('id'));
-                }
             }, this);
         }
         else if (orderType == 'column') {
-            this.fileNameStore.each(function(rec, i) {
-                var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
-                var fileArr = rec.get('fileName').replace(/\.gz$/, '').split('.');
-                fileArr.pop();
+            if (isPaired){
+                var colSize = Math.ceil(this.fileNameStore.getCount() / 2);
+                console.log(colSize);
+                this.fileNameStore.each(function (rec, i){
+                    if (i < colSize) {
+                        var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
+                        var fileArr = rec.get('fileName').replace(/\.gz$/, '').split('.');
+                        fileArr.pop();
+                        m.set('fileRecord1', rec.get('id'));
 
-                m.set('fileRecord1', rec.get('id'));
-                var fileGroupId = fileArr.length == 1 ? fileArr[0] : fileArr.join('.');
-                m.set('fileGroupId', fileGroupId);
-                this.readDataStore.add(m);
-            }, this);
+                        var fileGroupId = fileArr.length == 1 ? fileArr[0] : fileArr.join('.');
+                        m.set('fileGroupId', fileGroupId);
+                        this.readDataStore.add(m);
+                    }
+                    else {
+                        this.readDataStore.getAt(i - colSize).set('fileRecord2', rec.get('id'));
+                    }
+                }, this);
+            }
+            else {
+                //this should never get called.  column/paired is the same thing as row/paired
+                this.fileNameStore.each(function (rec, i){
+                    var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
+                    var fileArr = rec.get('fileName').replace(/\.gz$/, '').split('.');
+                    fileArr.pop();
+
+                    m.set('fileRecord1', rec.get('id'));
+                    var fileGroupId = fileArr.length == 1 ? fileArr[0] : fileArr.join('.');
+                    m.set('fileGroupId', fileGroupId);
+                    this.readDataStore.add(m);
+                }, this);
+            }
         }
 
         this.down('#readDataGrid').getView().refresh();
@@ -703,7 +738,12 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             '><a href="{[LABKEY.ActionURL.buildURL("experiment", "showData", values.containerPath, {rowId: values.dataId})]}" target="_blank">{fileName:htmlEncode}</a></td>',
                         '<td>{[values.readgroup ? values.readgroup.platformUnit : ""]}</td>',
                         '<td><a href="{[LABKEY.ActionURL.buildURL("project", "start", null, {})]}" target="_blank">{containerPath:htmlEncode}</a></td>',
-                        '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "fastqcReport", values["container/path"], {dataIds: values.dataId})]}" target="_blank">View FASTQC Report</a></td>',
+                        '<tpl if="dataId">',
+                            '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "fastqcReport", values["container/path"], {dataIds: values.dataId, cacheResults: false})]}" target="_blank">View FASTQC Report</a></td>',
+                        '</tpl>',
+                        '<tpl if="!dataId">',
+                            '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "fastqcReport", values["container/path"], {filenames: values.fileName, cacheResults: false})]}" target="_blank">View FASTQC Report</a></td>',
+                        '</tpl>',
                         '</tr>',
                     '</tpl>',
                     '</table>'
@@ -967,6 +1007,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             btn.up('sequenceanalysis-sequenceimportpanel').populateSamples('row', true);
                         }
                     },{
+                        text: 'Fill by Column (Paired End)',
+                        style: 'margin-right: 5px;',
+                        border: true,
+                        handler: function(btn){
+                            btn.up('sequenceanalysis-sequenceimportpanel').populateSamples('column', true);
+                        }
+                    },{
                         text: 'Fill by Column (Single End)',
                         style: 'margin-right: 5px;',
                         border: true,
@@ -1129,6 +1176,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     value: 0,
                     minValue: 0,
                     helpPopup: 'If provided, the barcode can be located up to this many bases from the end of the read'
+                },{
+                    xtype: 'checkbox',
+                    fieldLabel: 'Barcodes Are In Read Header',
+                    name: 'inputfile.barcodesInReadHeader',
+                    value: 0,
+                    minValue: 0,
+                    helpPopup: 'In rare cases, the sequencer has already parsed the sequence reads for barcodes and placed this information in the read header.  If true, check this.  Otherwise we will inspect the read sequence itself for the barcodes (the default).'
                 },{
                     xtype: 'ldk-linkbutton',
                     text: 'View Available Barcodes',
@@ -1757,7 +1811,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                                 console.log('lookup');
                                 var recIdx = col.editor.store.find(col.editor.valueField, value, null, false, false);
                                 if (recIdx == -1){
-                                    errors.push('Invalid value for field '+col.text+': '+value);
+                                    errors.push('Invalid value for field ' + col.text + ': ' + value);
                                 }
                                 else {
                                     //ensure correct case
@@ -1766,7 +1820,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             }
                         }
 
-                        obj[col.dataIndex] = value;
+                        if (!Ext4.isEmpty(value)){
+                            obj[col.dataIndex] = value;
+                        }
                     }, this);
 
                     if (!LABKEY.Utils.isEmptyObj(obj))

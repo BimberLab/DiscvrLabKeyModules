@@ -121,7 +121,13 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
                     var owner = win.ownerPanel;
                     var target = owner.down('#toolConfgPanel');
 
-                    target.add(owner.getAbbreviatedConfigForItem(btn.step));
+                    //check if exists
+                    if (target.down('[stepName=' + btn.step.name + ']')){
+                        Ext4.Msg.alert('Already Added', 'This step has already been added and cannot be used twice.');
+                    }
+                    else {
+                        target.add(owner.getAbbreviatedConfigForItem(btn.step));
+                    }
                 }
             })
         }, this);

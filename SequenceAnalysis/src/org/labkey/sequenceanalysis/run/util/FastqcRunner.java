@@ -42,8 +42,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -58,6 +60,7 @@ public class FastqcRunner
 {
     private Logger _logger;
     private int _threads = 1;
+    private boolean _cacheResults = true;
 
     public FastqcRunner(@Nullable Logger log)
     {
@@ -71,6 +74,11 @@ public class FastqcRunner
         }
     }
 
+    public void setCacheResults(boolean cacheResults)
+    {
+        _cacheResults = cacheResults;
+    }
+
     public String execute(List<File> sequenceFiles) throws FileNotFoundException
     {
         //remove duplicates
@@ -80,6 +88,8 @@ public class FastqcRunner
             if (!uniqueFiles.contains(f))
                 uniqueFiles.add(f);
         }
+
+        Set<File> filesCreated = new HashSet<>();
 
         for (File f : uniqueFiles)
         {
@@ -100,10 +110,12 @@ public class FastqcRunner
 
                 //force compression
                 getExpectedHtmlFile(f);
+
+                filesCreated.add(expectedHtml);
             }
         }
 
-        return processOutput(uniqueFiles);
+        return processOutput(uniqueFiles, filesCreated);
     }
 
     private void runForFile(File f)
@@ -174,7 +186,7 @@ public class FastqcRunner
         return compressed;
     }
 
-    private String processOutput(List<File> inputFiles)
+    private String processOutput(List<File> inputFiles, Set<File> filesCreated)
     {
         //NOTE: this allows remote servers to run/cache the data.  AppProps.getContextPath() will fail remotely, so abort.
         if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
@@ -246,6 +258,14 @@ public class FastqcRunner
         catch (IOException e)
         {
             throw new RuntimeException(e);
+        }
+
+        if (!_cacheResults)
+        {
+            for (File f : filesCreated)
+            {
+                f.delete();
+            }
         }
 
         return output;
