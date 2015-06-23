@@ -208,7 +208,7 @@ public class LiftoverHandler implements SequenceOutputHandler
                     throw new PipelineJobException(e);
                 }
 
-                action.addOutput(lifted, "Lifted Features", lifted.exists());
+                action.addOutput(lifted, "Lifted Features", lifted.exists(), true);
                 if (lifted.exists())
                 {
                     SequenceOutputFile so1 = new SequenceOutputFile();
@@ -244,7 +244,7 @@ public class LiftoverHandler implements SequenceOutputHandler
                 }
                 else
                 {
-                    action.addOutput(unmappedOutput, "Unmapped features", false);
+                    action.addOutput(unmappedOutput, "Unmapped features", false, true);
 
                     SequenceOutputFile so2 = new SequenceOutputFile();
                     so2.setName(f.getName() + " (lifted/unmapped)");

@@ -121,7 +121,7 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
             }
 
             wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcfs.toArray(new File[inputVcfs.size()]));
-            action.addOutput(outputVcf, "Combined VCF", outputVcf.exists());
+            action.addOutput(outputVcf, "Combined VCF", outputVcf.exists(), true);
 
             if (outputVcf.exists())
             {

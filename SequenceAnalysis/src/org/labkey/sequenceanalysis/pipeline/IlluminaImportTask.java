@@ -178,7 +178,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
                 if (fileMap.containsKey(pair))
                 {
-                    action.addOutput(fileMap.get(pair), "FASTQ File", false);
+                    action.addOutput(fileMap.get(pair), "FASTQ File", false, true);
                     ExpData d = createExpData(fileMap.get(pair));
                     if (d != null)
                     {
@@ -201,7 +201,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 pair = Pair.of(readsetId, 2);
                 if (fileMap.containsKey(pair))
                 {
-                    action.addOutput(fileMap.get(pair), "Paired FASTQ File", false);
+                    action.addOutput(fileMap.get(pair), "Paired FASTQ File", false, true);
                     ExpData d = createExpData(fileMap.get(pair));
                     if (d != null)
                     {

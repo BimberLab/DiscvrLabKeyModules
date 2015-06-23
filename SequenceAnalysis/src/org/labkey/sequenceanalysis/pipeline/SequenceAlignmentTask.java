@@ -315,7 +315,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     File movedFile = _wd.inputFile(f, new File(targetDir, f.getName()), true);
 
                     action.addInput(f, "Reference File");
-                    action.addOutput(movedFile, "Copied Reference File", true);
+                    action.addOutput(movedFile, "Copied Reference File", true, true);
                 }
             }
 

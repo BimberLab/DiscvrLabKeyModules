@@ -212,7 +212,7 @@ public class MethylationRateComparison implements SequenceOutputHandler
                     }
                     else
                     {
-                        action.addOutput(graph, "Standard Curve", false);
+                        action.addOutput(graph, "Standard Curve", false, true);
                     }
 
                     File data = new File(outputDir, FileUtil.getBaseName(ampliconName) + ".std_crv_data.txt");
@@ -222,7 +222,7 @@ public class MethylationRateComparison implements SequenceOutputHandler
                     }
                     else
                     {
-                        action.addOutput(data, "Standard Curve", false);
+                        action.addOutput(data, "Standard Curve", false, true);
                     }
                 }
             }

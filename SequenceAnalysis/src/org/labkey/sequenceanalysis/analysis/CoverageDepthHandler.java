@@ -206,13 +206,13 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                     job.getLogger().info("generating raw data for: " + outputFile.getName());
                     File rawDataFile = new File(outputDir, getBaseNameForFile(outputFile) + ".coverage.txt");
                     generateRawDataForOutput(bam, intervalList, rawDataFile);
-                    action.addOutput(getFinalFilename(rawDataFile, settings), "Coverage Data", settings.deleteRawData());
+                    action.addOutput(getFinalFilename(rawDataFile, settings), "Coverage Data", settings.deleteRawData(), true);
                     rawDataFiles.add(rawDataFile);
 
                     job.getLogger().info("generating coverage-normalized data for: " + outputFile.getName());
                     File normalizedDataFile = new File(outputDir, getBaseNameForFile(outputFile) + ".normalizedCoverage.txt");
                     generateNormalizedDataForOutput(rawDataFile, normalizedDataFile);
-                    action.addOutput(getFinalFilename(normalizedDataFile, settings), "Coverage Data - Normalized To Avg", settings.deleteRawData());
+                    action.addOutput(getFinalFilename(normalizedDataFile, settings), "Coverage Data - Normalized To Avg", settings.deleteRawData(), true);
                     rawDataFiles.add(normalizedDataFile);
 
                     normalizedDataMap.put(outputFile, normalizedDataFile);
@@ -242,7 +242,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                         long sampleReadCount = getReadCount(outputFile);
                         job.getLogger().info("total reads in BAM: " + sampleReadCount);
                         generateNormalizedDataForSample(job, rawData, normalizedToReference, referenceData, refReadCount, sampleReadCount);
-                        actionMap.get(outputFile).addOutput(getFinalFilename(normalizedToReference, settings), "Coverage Data - Normalized To Reference Sample", settings.deleteRawData());
+                        actionMap.get(outputFile).addOutput(getFinalFilename(normalizedToReference, settings), "Coverage Data - Normalized To Reference Sample", settings.deleteRawData(), true);
                         rawDataFiles.add(normalizedToReference);
                         normalizedToSampleMap.put(outputFile, normalizedToReference);
                     }
@@ -367,7 +367,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                     htmlOut.setReadset(outputFile.getReadset());
                     outputsToCreate.add(htmlOut);
 
-                    actionMap.get(outputFile).addOutput(html, "Coverage Data Summary", false);
+                    actionMap.get(outputFile).addOutput(html, "Coverage Data Summary", false, true);
                 }
 
                 if (settings.deleteRawData())

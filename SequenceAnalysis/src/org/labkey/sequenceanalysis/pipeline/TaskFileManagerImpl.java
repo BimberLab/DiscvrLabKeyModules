@@ -772,7 +772,7 @@ public class TaskFileManagerImpl implements TaskFileManager
                         _job.getLogger().info("\tFile does not exist: " + file.getPath());
                         isTransient = true;
                     }
-                    action.addOutput(file, role, isTransient);
+                    action.addOutput(file, role, isTransient, true);
                 }
                 _outputFiles.remove(relPath);
             }
@@ -870,7 +870,7 @@ public class TaskFileManagerImpl implements TaskFileManager
                     File file = (File)array[2];
                     boolean isTransient = (Boolean)array[3];
                     _job.getLogger().debug("\tProcessing output: " + file.getName() + " / " + role + " / " + action.getName());
-                    action.addOutput(file, role, isTransient);
+                    action.addOutput(file, role, isTransient, true);
                 }
             }
         }
@@ -1033,7 +1033,7 @@ public class TaskFileManagerImpl implements TaskFileManager
 
             RecordedAction action = new RecordedAction(SequenceAlignmentTask.DECOMPRESS_ACTIONNAME);
             action.addInput(i, "Compressed File");
-            action.addOutput(unzipped, "Decompressed File", true);
+            action.addOutput(unzipped, "Decompressed File", true, true);
             actions.add(action);
 
             return unzipped;

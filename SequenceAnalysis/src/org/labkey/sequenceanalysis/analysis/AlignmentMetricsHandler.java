@@ -122,15 +122,15 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler
             }
 
             File totalAlignmentsFile = new File(outputDir, "totalAlignments.bed");
-            action.addOutput(totalAlignmentsFile, "Total Alignments BED", false);
+            action.addOutput(totalAlignmentsFile, "Total Alignments BED", false, true);
             File totalReadsFile = new File(outputDir, "totalReads.bed");
-            action.addOutput(totalReadsFile, "Total Reads BED", false);
+            action.addOutput(totalReadsFile, "Total Reads BED", false, true);
             File duplicateReadsFile = new File(outputDir, "duplicateReads.bed");
-            action.addOutput(duplicateReadsFile, "Duplicate Reads BED", false);
+            action.addOutput(duplicateReadsFile, "Duplicate Reads BED", false, true);
             File notPrimaryAlignmentsFile = new File(outputDir, "notPrimaryAlignments.bed");
-            action.addOutput(notPrimaryAlignmentsFile, "Not Primary Alignments BED", false);
+            action.addOutput(notPrimaryAlignmentsFile, "Not Primary Alignments BED", false, true);
             File avgMappingQualFile = new File(outputDir, "avgMappingQual.bed");
-            action.addOutput(avgMappingQualFile, "Avg Mapping Quality BED", false);
+            action.addOutput(avgMappingQualFile, "Avg Mapping Quality BED", false, true);
 
             try (
                     BufferedWriter totalAlignmentsWriter = new BufferedWriter(new FileWriter(totalAlignmentsFile, true));

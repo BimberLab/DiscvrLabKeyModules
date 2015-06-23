@@ -269,12 +269,12 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                         outputs.second.delete();
                     }
 
-                    action.addOutput(unmappedGz, "Unmapped FASTA", false);
-                    action.addOutput(unmappedCollapsedGz, "Unmapped Collapsed FASTA", false);
+                    action.addOutput(unmappedGz, "Unmapped FASTA", false, true);
+                    action.addOutput(unmappedCollapsedGz, "Unmapped Collapsed FASTA", false, true);
 
                     if (outputLog != null)
                     {
-                        action.addOutput(outputLog, "SBT Detail Log", false);
+                        action.addOutput(outputLog, "SBT Detail Log", false, true);
                     }
                 }
                 catch (IOException e)
@@ -283,7 +283,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                 }
             }
 
-            action.addOutput(jointUnmappedCollapsed, "Combined Unmapped FASTA", false);
+            action.addOutput(jointUnmappedCollapsed, "Combined Unmapped FASTA", false, true);
 
             action.setEndTime(new Date());
             actions.add(action);
