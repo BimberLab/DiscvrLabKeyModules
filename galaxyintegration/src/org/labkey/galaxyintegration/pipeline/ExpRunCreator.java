@@ -29,6 +29,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.util.GUID;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -152,7 +153,16 @@ public class ExpRunCreator
             URI uri = runInput.getKey();
             String role = runInput.getValue();
             ExpData data = _createdDatas.get(uri);
-            inputApp.addDataInput(u, data, role);
+            if (data != null)
+            {
+                inputApp.addDataInput(u, data, role);
+            }
+            else
+            {
+                _log.error("unable to find created ExpData input matching: " + uri);
+                ExpData d = addData(c, u, uri, "input");
+                inputApp.addDataInput(u, d, role);
+            }
         }
 
         // Set up the inputs and outputs for the individual actions
@@ -210,12 +220,12 @@ public class ExpRunCreator
                     //TODO
                     //datas.remove(dd.getURI());
                     //datas.remove(outputData.getDataFileURI());
-                    outputData.setDataFileURI(null);
-                    outputData.save(u);
+                    //outputData.setDataFileURI(null);
+                    //outputData.save(u);
 
-                    outputData = _createdDatas.get(dd.getURI());
-                    outputData.setSourceApplication(app);
-                    outputData.save(u);
+                    //outputData = _createdDatas.get(dd.getURI());
+                    //outputData.setSourceApplication(app);
+                    //outputData.save(u);
                 }
                 else
                 {
@@ -265,14 +275,22 @@ public class ExpRunCreator
         {
             Lsid lsid = new Lsid(ExperimentService.get().generateGuidLSID(c, new DataType("Galaxy")));
             ExpData data = ExperimentService.get().createData(c, name, lsid.toString());
-            //data.setDataFileURI(originalURI);
-
-            if (data != null)
+            try
             {
-                data.save(u);
-            }
+                URI updatedUri = new URI(originalURI.toString() + "/display");
+                data.setDataFileURI(updatedUri);
 
-            _createdDatas.put(originalURI, data);
+                if (data != null)
+                {
+                    data.save(u);
+                }
+
+                _createdDatas.put(originalURI, data);
+            }
+            catch (URISyntaxException e)
+            {
+                throw new PipelineJobException(e);
+            }
         }
 
         return _createdDatas.get(originalURI);
@@ -325,6 +343,10 @@ public class ExpRunCreator
                 protocol.save(u);
             }
             protocols.put(name, protocol);
+        }
+        else
+        {
+            _log.error("existing protocol with name: " + name);
         }
     }
 }

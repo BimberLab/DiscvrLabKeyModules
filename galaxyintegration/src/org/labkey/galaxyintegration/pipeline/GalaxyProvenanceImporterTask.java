@@ -112,22 +112,6 @@ public class GalaxyProvenanceImporterTask
         return ret;        
     }
 
-    private List<JobDetails> _allJobs = null;
-
-    private List<JobDetails> getAllJobs()
-    {
-        if (_allJobs == null)
-        {
-            _allJobs = new ArrayList<>();
-            for (Job j : getGalaxyInstance().getJobsClient().getJobsForHistory(getHistoryId()))
-            {
-                _allJobs.add(getGalaxyInstance().getJobsClient().showJob(j.getId()));
-            }
-        }
-
-        return Collections.unmodifiableList(_allJobs);
-    }
-
     private void appendJob(Dataset ds, LinkedHashSet<JobDetails> jobs) throws PipelineJobException
     {
         HistoryContentsProvenance prov = getGalaxyInstance().getHistoriesClient().showProvenance(getHistoryId(), ds.getId());
@@ -140,6 +124,13 @@ public class GalaxyProvenanceImporterTask
         }
         _encounteredJobs.add(job.getId());
 
+        //NOTE: galaxy seems to have odd handling of the initial upload step, and including this is resulting in run graphs with inappropriate inputs included
+        if (job.getToolId().equals("upload1"))
+        {
+            _log.info("skipping upload file job");
+            return;
+        }
+
         jobs.add(job);
 
         Map<String, JobInputOutput> inputs = job.getInputs();
@@ -149,7 +140,8 @@ public class GalaxyProvenanceImporterTask
             Dataset dataset;
             if (JobInputOutput.Source.hda.name().equals(jio.getSource()))
             {
-                dataset = getGalaxyInstance().getHistoriesClient().showDataset(getHistoryId(), jio.getId());
+                _log.error("unable to find dataset for jobId: " + jio.getId() + ", with source: " + jio.getSource());
+                continue;
             }
             else
             {
@@ -167,7 +159,8 @@ public class GalaxyProvenanceImporterTask
             Dataset dataset;
             if (JobInputOutput.Source.hda.name().equals(jio.getSource()))
             {
-                dataset = getGalaxyInstance().getHistoriesClient().showDataset(getHistoryId(), jio.getId());
+                _log.error("unable to find dataset for jobId: " + jio.getId() + ", with source: " + jio.getSource());
+                continue;
             }
             else
             {
@@ -176,35 +169,6 @@ public class GalaxyProvenanceImporterTask
             }
 
             appendJob(dataset, jobs);
-        }
-
-        //also find any job using this an as input
-        for (JobDetails jd : getAllJobs())
-        {
-            if (jd.getInputs() != null)
-            {
-                for (JobInputOutput jio : jd.getInputs().values())
-                {
-                    if (jio.getSource().equals(ds.getId()))
-                    {
-                        Dataset dataset;
-                        if (JobInputOutput.Source.hda.name().equals(jio.getSource()))
-                        {
-                            dataset = getGalaxyInstance().getHistoriesClient().showDataset(getHistoryId(), jio.getId());
-                        }
-                        else
-                        {
-                            throw new UnsupportedOperationException("Library datasets not yet supported!");
-                            //dataset = gi.getLibrariesClient().showDataset(libraryId, jio.getId());
-                        }
-
-                        if (dataset != null)
-                        {
-                            appendJob(ds, jobs);
-                        }
-                    }
-                }
-            }
         }
     }
 
