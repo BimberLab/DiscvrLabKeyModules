@@ -1,5 +1,6 @@
 package org.labkey.galaxyintegration.pipeline;
 
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
@@ -33,6 +34,7 @@ import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -44,6 +46,8 @@ import java.util.Set;
  */
 public class ExpRunCreator
 {
+    private static final Logger _log = Logger.getLogger(ExpRunCreator.class);
+
     public ExpRunCreator()
     {
 
@@ -205,16 +209,30 @@ public class ExpRunCreator
             }
 
             // Set up the inputs
+            Set<Integer> encounteredDatas = new HashSet<>();
             for (RecordedAction.DataFile dd : action.getInputs())
             {
                 ExpData data = addData(c, u, dd.getURI(), dd.getRole());
+                if (encounteredDatas.contains(data.getRowId()))
+                {
+                    _log.error("duplicate input file for action: " + action.getName() + ", " + dd.getURI());
+                    continue;
+                }
+                encounteredDatas.add(data.getRowId());
                 app.addDataInput(u, data, dd.getRole());
             }
 
             // Set up the outputs
+            encounteredDatas.clear();
             for (RecordedAction.DataFile dd : action.getOutputs())
             {
                 ExpData outputData = addData(c, u, dd.getURI(), dd.getRole());
+                if (encounteredDatas.contains(outputData.getRowId()))
+                {
+                    _log.error("duplicate output file for action: " + action.getName() + ", " + dd.getURI());
+                    continue;
+                }
+
                 if (outputData.getSourceApplication() != null)
                 {
                     //TODO
@@ -243,7 +261,15 @@ public class ExpRunCreator
             {
                 URI uri = entry.getKey();
                 String role = entry.getValue();
-                outputApp.addDataInput(u, _createdDatas.get(uri), role);
+                ExpData data = _createdDatas.get(uri);
+                if (data != null)
+                {
+                    outputApp.addDataInput(u, data, role);
+                }
+                else
+                {
+                    _log.error("unable to find created ExpData output matching: " + uri);
+                }
             }
         }
         return run;

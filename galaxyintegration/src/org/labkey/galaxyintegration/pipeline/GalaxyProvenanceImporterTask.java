@@ -9,6 +9,7 @@ import com.github.jmchilton.blend4j.galaxy.beans.JobDetails;
 import com.github.jmchilton.blend4j.galaxy.beans.JobInputOutput;
 import com.github.jmchilton.blend4j.galaxy.beans.Tool;
 import com.github.jmchilton.blend4j.galaxy.beans.ToolSection;
+import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.exp.PropertyType;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -33,6 +34,8 @@ import java.util.Set;
  */
 public class GalaxyProvenanceImporterTask
 {
+    private static final Logger _log = Logger.getLogger(GalaxyProvenanceImporterTask.class);
+
     private GalaxyInstance _gi = null;
     private Map<String, Tool> _toolMap = null;
     private Set<String> _encounteredJobs = new HashSet<>();
@@ -63,7 +66,7 @@ public class GalaxyProvenanceImporterTask
 
         LinkedHashSet<JobDetails> jobs = getJobsToImport();
         List<RecordedAction> actions = convertJobsToActions(jobs);
-        
+
         return new RecordedActionSet(actions);
     }
 
@@ -89,9 +92,12 @@ public class GalaxyProvenanceImporterTask
             Map<String, Tool> m = new HashMap<>();
             for (ToolSection ts : getGalaxyInstance().getToolsClient().getTools())
             {
-                for (Tool t : ts.getElems())
+                if (ts.getElems() != null)
                 {
-                    m.put(t.getId(), t);
+                    for (Tool t : ts.getElems())
+                    {
+                        m.put(t.getId(), t);
+                    }
                 }
             }
 
@@ -109,7 +115,7 @@ public class GalaxyProvenanceImporterTask
 
         appendJob(ds, ret);
 
-        return ret;        
+        return ret;
     }
 
     private void appendJob(Dataset ds, LinkedHashSet<JobDetails> jobs) throws PipelineJobException
@@ -137,16 +143,11 @@ public class GalaxyProvenanceImporterTask
         for (String name : inputs.keySet())
         {
             JobInputOutput jio = inputs.get(name);
-            Dataset dataset;
-            if (JobInputOutput.Source.hda.name().equals(jio.getSource()))
+            Dataset dataset = getGalaxyInstance().getHistoriesClient().showDataset(getHistoryId(), jio.getId());
+            if (dataset == null)
             {
                 _log.error("unable to find dataset for jobId: " + jio.getId() + ", with source: " + jio.getSource());
                 continue;
-            }
-            else
-            {
-                throw new UnsupportedOperationException("Library datasets not yet supported!");
-                //dataset = gi.getLibrariesClient().showDataset(libraryId, jio.getId());
             }
 
             appendJob(dataset, jobs);
@@ -156,16 +157,11 @@ public class GalaxyProvenanceImporterTask
         for (String name : outputs.keySet())
         {
             JobInputOutput jio = outputs.get(name);
-            Dataset dataset;
-            if (JobInputOutput.Source.hda.name().equals(jio.getSource()))
+            Dataset dataset = getGalaxyInstance().getHistoriesClient().showDataset(getHistoryId(), jio.getId());
+            if (dataset == null)
             {
                 _log.error("unable to find dataset for jobId: " + jio.getId() + ", with source: " + jio.getSource());
                 continue;
-            }
-            else
-            {
-                throw new UnsupportedOperationException("Library datasets not yet supported!");
-                //dataset = gi.getLibrariesClient().showDataset(libraryId, jio.getId());
             }
 
             appendJob(dataset, jobs);
@@ -224,15 +220,11 @@ public class GalaxyProvenanceImporterTask
         for (String name : inputs.keySet())
         {
             JobInputOutput jio = inputs.get(name);
-            Dataset dataset;
-            if (JobInputOutput.Source.hda.name().equals(jio.getSource()))
+            Dataset dataset = getGalaxyInstance().getHistoriesClient().showDataset(getHistoryId(), jio.getId());
+            if (dataset == null)
             {
-                dataset = getGalaxyInstance().getHistoriesClient().showDataset(getHistoryId(), jio.getId());
-            }
-            else
-            {
-                throw new UnsupportedOperationException("Library datasets not yet supported!");
-                //dataset = gi.getLibrariesClient().showDataset(libraryId, jio.getId());
+                _log.error("unable to find dataset for jobId: " + jio.getId() + ", with source: " + jio.getSource());
+                continue;
             }
 
             //NOTE: this could potentially use dataset.getName(); however, this is often exactly the same as job name
@@ -243,15 +235,11 @@ public class GalaxyProvenanceImporterTask
         for (String name : outputs.keySet())
         {
             JobInputOutput jio = outputs.get(name);
-            Dataset dataset;
-            if (JobInputOutput.Source.hda.name().equals(jio.getSource()))
+            Dataset dataset = getGalaxyInstance().getHistoriesClient().showDataset(getHistoryId(), jio.getId());
+            if (dataset == null)
             {
-                dataset = getGalaxyInstance().getHistoriesClient().showDataset(getHistoryId(), jio.getId());
-            }
-            else
-            {
-                throw new UnsupportedOperationException("Library datasets not yet supported!");
-                //dataset = gi.getLibrariesClient().showDataset(libraryId, jio.getId());
+                _log.error("unable to find dataset for jobId: " + jio.getId() + ", with source: " + jio.getSource());
+                continue;
             }
 
             action.addOutput(getURI(dataset), name, true);
@@ -264,7 +252,7 @@ public class GalaxyProvenanceImporterTask
     {
         try
         {
-            return new URI(ds.getFullDownloadUrl());
+            return new URI(ds.getGalaxyUrl() + ds.getUrl());
         }
         catch (URISyntaxException e)
         {
