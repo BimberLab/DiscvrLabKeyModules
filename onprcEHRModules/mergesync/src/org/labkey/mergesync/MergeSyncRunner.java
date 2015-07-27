@@ -459,7 +459,7 @@ public class MergeSyncRunner implements Job
             }
         });
 
-        DbScope scope = DbScope.getLabkeyScope();
+        DbScope scope = DbScope.getLabKeyScope();
         try (DbScope.Transaction transaction = scope.ensureTransaction())
         {
             String taskId = null;

@@ -99,7 +99,7 @@ public class GeneticsCoreManager
         final List<Integer> runsCreated = new ArrayList<>();
         final List<Integer> runsDeleted = new ArrayList<>();
 
-        try (DbScope.Transaction transaction = DbScope.getLabkeyScope().ensureTransaction())
+        try (DbScope.Transaction transaction = DbScope.getLabKeyScope().ensureTransaction())
         {
             //next identify a build up the results
             TableInfo tableAlignments = QueryService.get().getUserSchema(u, ctx.getContainer(), SEQUENCEANALYSIS_SCHEMA).getTable("alignment_summary_by_lineage");

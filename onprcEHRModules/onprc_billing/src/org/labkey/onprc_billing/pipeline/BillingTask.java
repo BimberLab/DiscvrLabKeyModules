@@ -146,9 +146,9 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
     private void loadTransactionNumber()
     {
         SqlSelector se;
-        if (DbScope.getLabkeyScope().getSqlDialect().isSqlServer())
+        if (DbScope.getLabKeyScope().getSqlDialect().isSqlServer())
             se = new SqlSelector(ONPRC_BillingSchema.getInstance().getSchema(), new SQLFragment("select max(cast(transactionNumber as integer)) as expr from " + ONPRC_BillingSchema.NAME+ "." + ONPRC_BillingSchema.TABLE_INVOICED_ITEMS + " WHERE transactionNumber not like '%[^0-9]%'"));
-        else if (DbScope.getLabkeyScope().getSqlDialect().isPostgreSQL())
+        else if (DbScope.getLabKeyScope().getSqlDialect().isPostgreSQL())
         {
             se = new SqlSelector(ONPRC_BillingSchema.getInstance().getSchema(), new SQLFragment("select max(cast(transactionNumber as integer)) as expr from " + ONPRC_BillingSchema.NAME+ "." + ONPRC_BillingSchema.TABLE_INVOICED_ITEMS + " WHERE transactionNumber ~ '^[0-9]$'"));
         }

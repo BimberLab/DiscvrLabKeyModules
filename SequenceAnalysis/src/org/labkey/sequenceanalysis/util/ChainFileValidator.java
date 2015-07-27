@@ -190,7 +190,7 @@ public class ChainFileValidator
         if (!_cachedReferencesByGenome.containsKey(genomeId))
         {
             final Map<String, Integer> cachedReferences = new CaseInsensitiveHashMap<>();
-            SqlSelector ss = new SqlSelector(DbScope.getLabkeyScope(), new SQLFragment("SELECT r.rowid, r.name FROM sequenceanalysis.ref_nt_sequences r WHERE r.rowid IN (SELECT ref_nt_id FROM sequenceanalysis.reference_library_members m WHERE m.library_id = ?) ", genomeId));
+            SqlSelector ss = new SqlSelector(DbScope.getLabKeyScope(), new SQLFragment("SELECT r.rowid, r.name FROM sequenceanalysis.ref_nt_sequences r WHERE r.rowid IN (SELECT ref_nt_id FROM sequenceanalysis.reference_library_members m WHERE m.library_id = ?) ", genomeId));
             ss.forEach(new Selector.ForEachBlock<ResultSet>()
             {
                 @Override

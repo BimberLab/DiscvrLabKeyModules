@@ -247,7 +247,7 @@ public class ETLRunnable implements Runnable
 
                 for (String script : sqls)
                 {
-                    s = DbScope.getLabkeyScope().getConnection().prepareStatement(script);
+                    s = DbScope.getLabKeyScope().getConnection().prepareStatement(script);
                     s.execute();
                 }
                 transaction.commit();
