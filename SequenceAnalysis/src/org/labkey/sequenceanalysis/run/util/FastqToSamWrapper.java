@@ -2,7 +2,6 @@ package org.labkey.sequenceanalysis.run.util;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.util.FastqQualityFormat;
-import htsjdk.samtools.util.QualityEncodingDetector;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -47,9 +46,9 @@ public class FastqToSamWrapper extends PicardWrapper
         return output;
     }
 
-    protected File getJar()
+    protected String getTooName()
     {
-        return getPicardJar("FastqToSam.jar");
+        return "FastqToSam";
     }
 
     private List<String> getParams(File file, File file2, SAMFileHeader.SortOrder sortOrder, String readGroupName) throws PipelineJobException
@@ -58,8 +57,9 @@ public class FastqToSamWrapper extends PicardWrapper
         params.add("java");
         params.addAll(getBaseParams());
         params.add("-jar");
-        params.add(getJar().getPath());
-        params.add("MAX_RECORDS_IN_RAM=2000000");
+        params.add(getPicardJar().getPath());
+        params.add(getTooName());
+        inferMaxRecordsInRam(params);
         params.add("FASTQ=" + file.getPath());
         if (file2 != null)
             params.add("FASTQ2=" + file2.getPath());

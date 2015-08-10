@@ -104,6 +104,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 
 public class LaboratoryController extends SpringActionController
@@ -2290,6 +2291,48 @@ public class LaboratoryController extends SpringActionController
         public void setProtocol(Integer protocol)
         {
             _protocol = protocol;
+        }
+    }
+
+    @RequiresPermissionClass(AdminPermission.class)
+    @CSRF
+    public class MigrateWorkbooksAction extends ApiAction<Object>
+    {
+        public ApiResponse execute(Object form, BindException errors) throws Exception
+        {
+            if (getContainer().isWorkbook())
+            {
+                errors.reject(ERROR_MSG, "Cannot be run on workbooks");
+                return null;
+            }
+
+            //find current workbook #
+
+
+            //find all workbooks where workbookId doesnt match LK ID
+            TreeMap<Integer, Container> toFix = new TreeMap<>();
+            for (Container c : ContainerManager.getChildren(getContainer()))
+            {
+                if (c.isWorkbook())
+                {
+                    WorkbookModel w = LaboratoryManager.get().getWorkbookModel(c);
+                    if (w != null && !c.getName().equals(w.getWorkbookId().toString()))
+                    {
+                        toFix.put(w.getWorkbookId(), c);
+                    }
+                }
+            }
+
+            _log.info("workbooks to migrate: " + toFix.size());
+            for (Integer id : toFix.descendingKeySet())
+            {
+                Container wb = toFix.get(id);
+                ContainerManager.rename(wb, getUser(), id.toString());
+            }
+
+
+
+            return new ApiSimpleResponse("success", true);
         }
     }
 }

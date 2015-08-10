@@ -13,6 +13,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
 
 import java.io.File;
@@ -99,7 +100,29 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
     }
 
     @Override
-    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
+    {
+        File expectedTxt = getSBTSummaryFile(outDir, inputBam);
+        if (expectedTxt.exists())
+        {
+            SequenceBasedTypingAlignmentAggregator.processSBTSummary(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), model, expectedTxt, referenceFasta);
+
+            File compressed = Compress.compressGzip(expectedTxt);
+            if (compressed.exists() && expectedTxt.exists())
+            {
+                expectedTxt.delete();
+            }
+        }
+        else
+        {
+            getPipelineCtx().getLogger().info("SBT output not found, skipping: " + expectedTxt.getPath());
+        }
+
+        return null;
+    }
+
+    @Override
+    public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         try
         {
@@ -112,17 +135,17 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
 
             //first calculate avg qualities at each position
             getPipelineCtx().getLogger().info("Calculating avg quality scores");
-            AvgBaseQualityAggregator avgBaseQualityAggregator = new AvgBaseQualityAggregator(getPipelineCtx().getLogger(), inputBam, referenceFasta, Arrays.<SamRecordFilter>asList(
+            AvgBaseQualityAggregator avgBaseQualityAggregator = new AvgBaseQualityAggregator(getPipelineCtx().getLogger(), inputBam, referenceGenome.getWorkingFastaFile(), Arrays.<SamRecordFilter>asList(
                     new DuplicateReadFilter()
             ));
             avgBaseQualityAggregator.calculateAvgQuals();
             getPipelineCtx().getLogger().info("\tCalculation complete");
 
             getPipelineCtx().getLogger().info("Inspecting alignments in BAM");
-            BamIterator bi = new BamIterator(inputBam, referenceFasta, getPipelineCtx().getLogger());
+            BamIterator bi = new BamIterator(inputBam, referenceGenome.getWorkingFastaFile(), getPipelineCtx().getLogger());
 
             List<AlignmentAggregator> aggregators = new ArrayList<>();
-            SequenceBasedTypingAlignmentAggregator agg = new SequenceBasedTypingAlignmentAggregator(getPipelineCtx().getLogger(), referenceFasta, avgBaseQualityAggregator, toolParams);
+            SequenceBasedTypingAlignmentAggregator agg = new SequenceBasedTypingAlignmentAggregator(getPipelineCtx().getLogger(), referenceGenome.getWorkingFastaFile(), avgBaseQualityAggregator, toolParams);
             if (getProvider().getParameterByName("writeLog").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
             {
                 File workDir = new File(getPipelineCtx().getSourceDirectory(), FileUtil.getBaseName(inputBam));
@@ -140,12 +163,8 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             bi.iterateReads();
             getPipelineCtx().getLogger().info("Inspection complete");
 
-            for (AlignmentAggregator a : aggregators)
-            {
-                a.writeOutput(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), model);
-            }
-
-            bi.saveSynopsis(getPipelineCtx().getJob().getUser(), model);
+            //write output as TSV
+            agg.writeTable(getSBTSummaryFile(outputDir, inputBam));
 
             return null;
         }
@@ -155,9 +174,8 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
         }
     }
 
-    @Override
-    public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
+    private File getSBTSummaryFile(File outputDir, File bam)
     {
-        return null;
+        return new File(outputDir, FileUtil.getBaseName(bam) + ".sbt_hits.txt");
     }
 }

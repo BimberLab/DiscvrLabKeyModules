@@ -196,7 +196,7 @@ public class BlastUnmappedReadAnalysis extends AbstractCommandPipelineStep<Blast
     }
 
     @Override
-    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
         return null;
     }

@@ -162,6 +162,8 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setComments(r.getComments());
                 row.setApplication(r.getApplication());
                 row.setInstrumentRunId(r.getInstrumentRunId());
+                row.setBarcode3(r.getBarcode3());
+                row.setBarcode5(r.getBarcode5());
 
                 row.setContainer(getJob().getContainer().getId());
                 row.setCreatedBy(getJob().getUser().getUserId());

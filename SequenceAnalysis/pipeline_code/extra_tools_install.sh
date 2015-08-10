@@ -333,3 +333,38 @@ fi
 #else
 #    echo "Already installed"
 #fi
+
+#
+# htseq
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install htseq"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/htseq || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf STAR_2.4*
+    rm -Rf $LKTOOLS_DIR/STAR
+
+    if [ -n $SKIP_PACKAGE_MANAGER ]; then
+        echo "Skipping package install"
+    elif [ $(which apt-get) ]; then
+        apt-get install build-essential python2.7-dev python-numpy python-matplotlib
+    elif [ $(which yum) ]; then
+        yum install python-devel numpy python-matplotlib
+    fi
+
+    wget https://pypi.python.org/packages/source/H/HTSeq/HTSeq-0.6.1.tar.gz
+    gunzip HTSeq-0.6.1.tar.gz
+    tar -xf HTSeq-0.6.1.tar
+    gzip HTSeq-0.6.1.tar
+
+    cd HTSeq-0.6.1
+    python setup.py install --user
+else
+    echo "Already installed"
+fi

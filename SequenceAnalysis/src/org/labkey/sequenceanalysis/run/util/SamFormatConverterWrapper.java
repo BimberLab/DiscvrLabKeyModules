@@ -1,10 +1,12 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 
 import java.io.File;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,6 +24,7 @@ public class SamFormatConverterWrapper extends PicardWrapper
 
     public File execute(File inputFile, File outputFile, boolean deleteInput) throws PipelineJobException
     {
+        Date start = new Date();
         getLogger().info("Converting file: " + inputFile.getPath());
         getLogger().info("\tto file: " + outputFile.getPath());
 
@@ -35,6 +38,8 @@ public class SamFormatConverterWrapper extends PicardWrapper
             inputFile.delete();
         }
 
+        getLogger().info("\tSamFormatConverter duration: " + DurationFormatUtils.formatDurationWords((new Date()).getTime() - start.getTime(), true, true));
+
         return outputFile;
     }
 
@@ -44,9 +49,10 @@ public class SamFormatConverterWrapper extends PicardWrapper
         params.add("java");
         params.addAll(getBaseParams());
         params.add("-jar");
-        params.add(getJar().getPath());
+        params.add(getPicardJar().getPath());
+        params.add(getTooName());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
-        params.add("MAX_RECORDS_IN_RAM=2000000");
+        inferMaxRecordsInRam(params);
         params.add("INPUT=" + inputFile.getPath());
         params.add("OUTPUT=" + outputFile.getPath());
 
@@ -54,8 +60,8 @@ public class SamFormatConverterWrapper extends PicardWrapper
     }
 
     @Override
-    protected File getJar()
+    protected String getTooName()
     {
-        return getPicardJar("SamFormatConverter.jar");
+        return "SamFormatConverter";
     }
 }

@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.util;
 
 import com.drew.lang.annotations.Nullable;
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.module.Module;
@@ -271,7 +272,9 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
         if (!expectedIndex.exists())
         {
             getLogger().debug("\tcreating temp index for BAM: " + inputBam.getName());
-            new BuildBamIndexWrapper(getLogger()).executeCommand(inputBam);
+            BuildBamIndexWrapper buildBamIndexWrapper = new BuildBamIndexWrapper(getLogger());
+            buildBamIndexWrapper.setStringency(ValidationStringency.SILENT);
+            buildBamIndexWrapper.executeCommand(inputBam);
             tempFiles.add(expectedIndex);
         }
         else

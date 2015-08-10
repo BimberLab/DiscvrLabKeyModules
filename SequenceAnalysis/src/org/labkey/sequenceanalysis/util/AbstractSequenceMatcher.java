@@ -5,6 +5,7 @@ import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.model.SequenceTag;
 
 import java.io.File;
@@ -42,7 +43,7 @@ abstract public class AbstractSequenceMatcher
 
     abstract protected void initSummaryLog(File fastq);
 
-    protected void processHeader(FastqRecord rec, Collection<SequenceTag> barcodesToCheck, Map<Integer, Map<String, SequenceMatch>> trackingMap, boolean isForward)
+    protected Pair<String, String> extractBarcodeFromHeader(FastqRecord rec)
     {
         String header = rec.getReadHeader();
 
@@ -50,7 +51,7 @@ abstract public class AbstractSequenceMatcher
         if (!header.contains(":"))
         {
             _logger.error("Malformed read, expected barcodes after a semicolon: [" + header + "]");
-            return;
+            return null;
         }
 
         header = header.substring(header.lastIndexOf(":") + 1);
@@ -59,37 +60,13 @@ abstract public class AbstractSequenceMatcher
         if (barcodes.length == 0)
         {
             _logger.error("Malformed read, expected barcodes after a semicolon: [" + header + "]");
-            return;
+            return null;
         }
 
-        if (!isForward && barcodes.length != 2)
-        {
-            _logger.error("Did not find dual barcodes on read: [" + rec.getReadHeader() + "]");
-            return;
-        }
-
-        String barcode = isForward ? barcodes[0] : barcodes[1];
-        for (SequenceTag bc : barcodesToCheck)
-        {
-            if (bc.getSequence().matches(barcode))
-            {
-                Map<String, SequenceMatch> matchesAtDist = trackingMap.get(0);
-                if (matchesAtDist == null)
-                    matchesAtDist = new TreeMap<>();
-
-                if (!matchesAtDist.containsKey(bc.getName()))
-                {
-                    SequenceMatch match = new SequenceMatch(bc, rec, true, 0, 0, 0, null);
-                    matchesAtDist.put(bc.getName(), match);
-                    trackingMap.put(0, matchesAtDist);
-
-                    writeDetailedLine(match, bc.getSequence(), barcode);
-                }
-            }
-        }
+        return Pair.of(barcodes[0], barcodes.length > 2 ? barcodes[1] : null);
     }
 
-    protected void processTag5(FastqRecord rec, SequenceTag bc, int offset, Map<Integer, Map<String, SequenceMatch>> trackingMap)
+    protected void processTag5(FastqRecord rec, String sequenceToTest, SequenceTag bc, int offset, Map<Integer, Map<String, SequenceMatch>> trackingMap)
     {
         String targetSeq;
         String barcodeSeq;
@@ -97,12 +74,12 @@ abstract public class AbstractSequenceMatcher
         if (offset >= 0)
         {
             barcodeSeq = bc.getSequence();
-            targetSeq = rec.getReadString().substring(offset, offset + barcodeSeq.length());
+            targetSeq = sequenceToTest.substring(offset, offset + barcodeSeq.length());
         }
         else
         {
             barcodeSeq = bc.getSequence().substring(-offset);
-            targetSeq = rec.getReadString().substring(0, barcodeSeq.length());
+            targetSeq = sequenceToTest.substring(0, barcodeSeq.length());
         }
 
         int editDist = StringUtils.getLevenshteinDistance(barcodeSeq, targetSeq);
@@ -124,7 +101,7 @@ abstract public class AbstractSequenceMatcher
         }
     }
 
-    protected void processTag3(FastqRecord rec, SequenceTag bc, int offset, Map<Integer, Map<String, SequenceMatch>> trackingMap)
+    protected void processTag3(FastqRecord rec, String sequenceToTest, SequenceTag bc, int offset, Map<Integer, Map<String, SequenceMatch>> trackingMap)
     {
         String targetSeq;
         String barcodeSeq;
@@ -132,12 +109,12 @@ abstract public class AbstractSequenceMatcher
         if (offset >= 0)
         {
             barcodeSeq = StringUtils.reverse(bc.getReverseComplement());
-            targetSeq = StringUtils.reverse(rec.getReadString()).substring(offset, offset + barcodeSeq.length());
+            targetSeq = StringUtils.reverse(sequenceToTest).substring(offset, offset + barcodeSeq.length());
         }
         else
         {
             barcodeSeq = StringUtils.reverse(bc.getReverseComplement()).substring(-offset);
-            targetSeq = StringUtils.reverse(rec.getReadString()).substring(0, barcodeSeq.length());
+            targetSeq = StringUtils.reverse(sequenceToTest).substring(0, barcodeSeq.length());
         }
 
         int editDist = StringUtils.getLevenshteinDistance(barcodeSeq, targetSeq);
@@ -149,7 +126,7 @@ abstract public class AbstractSequenceMatcher
 
             if (!matchesAtDist.containsKey(bc.getName()))
             {
-                int stop = (rec.getReadString().length() - barcodeSeq.length() - (offset > 0 ? offset : 0));
+                int stop = (sequenceToTest.length() - barcodeSeq.length() - (offset > 0 ? offset : 0));
                 SequenceMatch match = new SequenceMatch(bc, rec, false, editDist, offset, null, stop);
                 matchesAtDist.put(bc.getName(), match);
                 trackingMap.put(editDist, matchesAtDist);
@@ -212,95 +189,115 @@ abstract public class AbstractSequenceMatcher
         //first scan 5' end
 
         //try default matching from end, without deletions first
+        String sequenceToTest5;
         if (_barcodesInReadHeader)
         {
-            processHeader(rec, barcodes5, matches5, true);
+            Pair<String, String> barcodes = extractBarcodeFromHeader(rec);
+            if (barcodes == null)
+            {
+                return;
+            }
+
+            //TODO: consider if this should be reversed?
+            sequenceToTest5 = barcodes.first;
         }
         else
         {
-            for (SequenceTag bc : barcodes5)
-            {
-                processTag5(rec, bc, 0, matches5);
-            }
+            sequenceToTest5 = rec.getReadString();
+        }
 
-            if (_offsetDistance > 0)
+        for (SequenceTag bc : barcodes5)
+        {
+            processTag5(rec, sequenceToTest5, bc, 0, matches5);
+        }
+
+        if (_offsetDistance > 0)
+        {
+            int i = 1;
+            while (i <= _offsetDistance)
             {
-                int i = 1;
-                while (i <= _offsetDistance)
+                for (SequenceTag bc : barcodes5)
                 {
-                    for (SequenceTag bc : barcodes5)
-                    {
-                        processTag5(rec, bc, i, matches5);
-                    }
-                    i++;
-
-                    if (matches5.size() > 0)
-                        break;
+                    processTag5(rec, sequenceToTest5, bc, i, matches5);
                 }
+                i++;
+
+                if (matches5.size() > 0)
+                    break;
             }
+        }
 
-            //then try patrial matches, only if no matches found
-            if (matches5.isEmpty() && _deletionsAllowed > 0)
+        //then try patrial matches, only if no matches found
+        if (matches5.isEmpty() && _deletionsAllowed > 0)
+        {
+            int i = 1;
+            while (i <= _deletionsAllowed)
             {
-                int i = 1;
-                while (i <= _deletionsAllowed)
+                for (SequenceTag bc : barcodes5)
                 {
-                    for (SequenceTag bc : barcodes5)
-                    {
-                        processTag5(rec, bc, -i, matches5);
-                    }
-                    i++;
-
-                    if (matches5.size() > 0)
-                        break;
+                    processTag5(rec, sequenceToTest5, bc, -i, matches5);
                 }
+                i++;
+
+                if (matches5.size() > 0)
+                    break;
             }
         }
 
         //then 3' end
+        String sequenceToTest3;
         if (_barcodesInReadHeader)
         {
-            processHeader(rec, barcodes3, matches3, false);
+            Pair<String, String> barcodes = extractBarcodeFromHeader(rec);
+            if (barcodes == null || barcodes.second == null)
+            {
+                return;
+            }
+
+            //TODO: consider if this should be reversed?
+            sequenceToTest3 = barcodes.second;
         }
         else
         {
-            //try default matching from end, without deletions first
-            for (SequenceTag bc : barcodes3)
-            {
-                processTag3(rec, bc, 0, matches3);
-            }
+            sequenceToTest3 = rec.getReadString();
+        }
 
-            if (_offsetDistance > 0)
+        //try default matching from end, without deletions first
+        for (SequenceTag bc : barcodes3)
+        {
+            processTag3(rec, sequenceToTest3, bc, 0, matches3);
+        }
+
+        if (_offsetDistance > 0)
+        {
+            int i = 1;
+            while (i <= _offsetDistance)
             {
-                int i = 1;
-                while (i <= _offsetDistance)
+                for (SequenceTag bc : barcodes3)
                 {
-                    for (SequenceTag bc : barcodes3)
-                    {
-                        processTag3(rec, bc, i, matches3);
-                    }
-                    i++;
-
-                    if (matches3.size() > 0)
-                        break;
+                    processTag3(rec, sequenceToTest3, bc, i, matches3);
                 }
+                i++;
+
+                if (matches3.size() > 0)
+                    break;
             }
+        }
 
-            //then try patrial matches, only if no matches found
-            if (matches3.isEmpty() && _deletionsAllowed > 0)
+        //then try patrial matches, only if no matches found
+        if (matches3.isEmpty() && _deletionsAllowed > 0)
+        {
+            int i = 1;
+            while (i <= _deletionsAllowed)
             {
-                int i = 1;
-                while (i <= _deletionsAllowed)
+                for (SequenceTag bc : barcodes3)
                 {
-                    for (SequenceTag bc : barcodes3)
-                    {
-                        processTag3(rec, bc, -i, matches3);
-                    }
-                    i++;
-
-                    if (matches3.size() > 0)
-                        break;
+                    processTag3(rec, sequenceToTest3, bc, -i, matches3);
                 }
+                i++;
+
+                if (matches3.size() > 0)
+                    break;
             }
         }
     }

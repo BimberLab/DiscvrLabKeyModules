@@ -1,7 +1,9 @@
 package org.labkey.sequenceanalysis.analysis;
 
+import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.filter.DuplicateReadFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.module.ModuleLoader;
@@ -27,8 +29,9 @@ import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAlignmentAggr
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -120,6 +123,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
     private static class FastqAggregate
     {
         private Map<String, Integer> _sampleMap = new HashMap<>();
+        private Map<String, Integer> _sampleTotalReadsMap = new HashMap<>();
         private Integer _totalReads = 0;
         private String _sequence;
 
@@ -128,7 +132,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
             _sequence = sequence;
         }
 
-        public void addSample(String sampleName, String header)
+        public void addSample(String sampleName, String header, int totalReads)
         {
             String[] tokens = header.split("-");
 
@@ -137,11 +141,44 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
             c += count;
             _totalReads += count;
             _sampleMap.put(sampleName, c);
+            _sampleTotalReadsMap.put(sampleName, totalReads);
+        }
+
+        public double getAvgPct()
+        {
+            double sum = 0.0;
+            for (String sn : _sampleMap.keySet())
+            {
+                sum += (double) _sampleMap.get(sn) / (double) _sampleTotalReadsMap.get(sn);
+            }
+
+            return (sum / (double)_sampleMap.size());
+        }
+
+        private List<Double> getAvgPcts()
+        {
+            List<Double> ret = new ArrayList<>();
+            for (String sn : _sampleMap.keySet())
+            {
+                ret.add((double) _sampleMap.get(sn) / (double) _sampleTotalReadsMap.get(sn));
+            }
+
+            return ret;
         }
 
         public String getHeaderLine()
         {
-            return "Samples-" + _sampleMap.keySet().size() + ";Reads-" + _totalReads;
+            return "Samples-" + _sampleMap.keySet().size() + ";Reads-" + _totalReads + ";AvgPct-" + getAvgPct();
+        }
+
+        public static String[] getTSVHeader()
+        {
+            return new String[]{"NumSamples", "TotalReads", "AvgPct", "ReadCounts", "Percents", "SampleNames"};
+        }
+
+        public String[] getTSVLine()
+        {
+            return new String[]{String.valueOf(_sampleMap.keySet().size()), String.valueOf(_totalReads), String.valueOf(getAvgPct()), StringUtils.join(_sampleMap.values(), ";"), StringUtils.join(getAvgPcts(), ";"), StringUtils.join(_sampleMap.keySet(), ";")};
         }
     }
 
@@ -157,6 +194,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
         public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             File jointUnmappedCollapsed = new File(outputDir, "unmapped_collapsed.fasta");
+            File jointUnmappedCollapsedTsv = new File(outputDir, "unmapped_collapsed.txt");
 
             Map<String, FastqAggregate> uniqueReads = new HashMap<>();
             RecordedAction action = new RecordedAction(getName());
@@ -252,7 +290,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                                 }
 
                                 FastqAggregate fa = uniqueReads.get(sequence);
-                                fa.addSample(so.getReadset().toString(), map.get("header").toString());
+                                fa.addSample(so.getReadset().toString(), map.get("header").toString(), agg.getUniqueReads().size());
                             }
                         }
                     }
@@ -283,12 +321,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                 }
             }
 
-            action.addOutput(jointUnmappedCollapsed, "Combined Unmapped FASTA", false, true);
-
-            action.setEndTime(new Date());
-            actions.add(action);
-
-            try (BufferedWriter jointUnmappedCollapsedWriter = new BufferedWriter(new FileWriter(jointUnmappedCollapsed)))
+            try (BufferedWriter jointUnmappedCollapsedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(jointUnmappedCollapsed), "UTF-8"));CSVWriter jointUnmappedCollapsedTsvWriter = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(jointUnmappedCollapsedTsv), "UTF-8"), '\t')))
             {
                 List<FastqAggregate> sorted = new ArrayList<>();
                 sorted.addAll(uniqueReads.values());
@@ -301,16 +334,26 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     }
                 });
 
+                jointUnmappedCollapsedTsvWriter.writeNext(FastqAggregate.getTSVHeader());
+
                 for (FastqAggregate fa : sorted)
                 {
                     jointUnmappedCollapsedWriter.write(">" + fa.getHeaderLine() + "\n");
                     jointUnmappedCollapsedWriter.write(fa._sequence + "\n");
+
+                    jointUnmappedCollapsedTsvWriter.writeNext(fa.getTSVLine());
                 }
             }
             catch (IOException e)
             {
                 throw new PipelineJobException(e);
             }
+
+            action.addOutput(jointUnmappedCollapsed, "Combined Unmapped FASTA", false);
+            action.addOutput(jointUnmappedCollapsedTsv, "Combined Unmapped Summaary", false);
+
+            action.setEndTime(new Date());
+            actions.add(action);
         }
 
         @Override

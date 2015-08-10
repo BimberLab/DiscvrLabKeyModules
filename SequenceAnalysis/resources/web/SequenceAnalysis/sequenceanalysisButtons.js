@@ -669,6 +669,24 @@ SequenceAnalysis.Buttons = new function(){
                     }
                 }, this)
             });
+        },
+
+        viewQualityMetrics: function(dataRegionName, fieldName){
+            var dataRegion = LABKEY.DataRegions[dataRegionName];
+            var checked = dataRegion.getChecked();
+
+            if (!checked.length){
+                Ext4.Msg.alert('Error', 'Must select one or more rows');
+                return;
+            }
+
+            var params = {
+                schemaName: 'sequenceanalysis',
+                'query.queryName': 'quality_metrics'
+            };
+            params['query.' + fieldName + '~in'] = checked.join(';');
+
+            window.location = LABKEY.ActionURL.buildURL('query', 'executeQuery', null, params);
         }
     }
 };

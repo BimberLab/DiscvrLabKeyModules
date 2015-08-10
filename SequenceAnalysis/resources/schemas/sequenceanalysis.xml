@@ -489,6 +489,9 @@
                 <ns:item text="View FASTQC Report">
                     <ns:onClick>SequenceAnalysis.Buttons.generateFastQcForAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
                 </ns:item>
+                <ns:item text="View Quality Metrics">
+                    <ns:onClick>SequenceAnalysis.Buttons.viewQualityMetrics(dataRegionName, 'analysis_id');</ns:onClick>
+                </ns:item>
                 <ns:item text="Download Sequence Files">
                     <ns:onClick>SequenceAnalysis.window.RunExportWindow.downloadFilesForAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
                 </ns:item>
@@ -1113,6 +1116,9 @@
                 <ns:item text="Download Sequence Files">
                     <ns:onClick>SequenceAnalysis.window.RunExportWindow.downloadFilesForReadset(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</ns:onClick>
                 </ns:item>
+                <ns:item text="View Quality Metrics">
+                    <ns:onClick>SequenceAnalysis.Buttons.viewQualityMetrics(dataRegionName, 'readset');</ns:onClick>
+                </ns:item>
                 <ns:item text="Create Illumina Sample Sheet">
                     <ns:onClick>SequenceAnalysis.Buttons.generateIlluminaSampleFile(dataRegionName);</ns:onClick>
                 </ns:item>
@@ -1237,7 +1243,8 @@
                     <ns:fkColumnName>name</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="lineage"/>
+            <ns:column columnName="name"/>
+            <ns:column columnName="type"/>
             <ns:column columnName="present"/>
             <ns:column columnName="required"/>
             <ns:column columnName="createdby">
@@ -1964,6 +1971,9 @@
                     <ns:fkColumnName>RowId</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
+            <ns:column columnName="datedisabled">
+                <ns:columnTitle>Date Disabled</ns:columnTitle>
+            </ns:column>
             <ns:column columnName="container">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
@@ -1991,8 +2001,14 @@
             </ns:column>
         </ns:columns>
         <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:includeScript>SequenceAnalysis/window/ImportSequencesFromFastaWindow.js</ns:includeScript>
             <ns:item hidden="true">
                 <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+            <ns:item insertPosition="end" text="More Actions">
+                <ns:item text="Import From FASTA">
+                    <ns:onClick>SequenceAnalysis.window.ImportSequencesFromFastaWindow.buttonHandler(dataRegionName, true)</ns:onClick>
+                </ns:item>
             </ns:item>
         </ns:buttonBarOptions>
     </ns:table>

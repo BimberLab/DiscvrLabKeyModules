@@ -155,7 +155,7 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
 
                     SequenceOutputFile outputFile = new SequenceOutputFile();
                     outputFile.setName(o.getString("fileName"));
-                    outputFile.setCategory("BAM");
+                    outputFile.setCategory("Alignment");
                     outputFile.setDataId(movedDataId.getRowId());
                     outputFile.setLibrary_id(o.getInt("library_id"));
                     outputFile.setAnalysis_id(a.getRowId());

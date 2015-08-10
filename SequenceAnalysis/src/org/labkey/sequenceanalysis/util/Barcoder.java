@@ -30,6 +30,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -120,7 +121,7 @@ public class Barcoder extends AbstractSequenceMatcher
             _logger.info("\tDeletions tolerated (allows partial barcodes): " + _deletionsAllowed);
             if (_barcodesInReadHeader)
             {
-                _logger.info("\tWill scan for barcodes in the read header, which assumes something upstream has already called barcodes.  Because we are not calling barcodes here, any mismatch/offset/deletion settings will be ignored.");
+                _logger.info("\tWill scan for barcodes in the read header, which assumes something upstream has already called barcodes.");
             }
 
             _logger.info("\tThe following barcode combinations will be used:");
@@ -176,8 +177,15 @@ public class Barcoder extends AbstractSequenceMatcher
                         it2 = reader2.iterator();
                     }
 
+                    long count = 0;
                     while (it.hasNext())
                     {
+                        count++;
+                        if (count % 100000 == 0)
+                        {
+                            _logger.info("\tprocessed " + NumberFormat.getInstance().format(count) + " reads");
+                        }
+
                         if (reader2 == null)
                         {
                             FastqRecord rec = it.next();
@@ -196,6 +204,8 @@ public class Barcoder extends AbstractSequenceMatcher
                             processSequencePair(fastqs.first, fastqs.second, rec1, rec2, readsets, barcodes5.values(), barcodes3.values());
                         }
                     }
+
+                    _logger.info("\tfinished " + NumberFormat.getInstance().format(count) + " reads");
                 }
             }
         }

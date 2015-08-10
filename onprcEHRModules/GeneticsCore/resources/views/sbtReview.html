@@ -12,6 +12,7 @@
             extend: 'Ext.panel.Panel',
             initComponent: function () {
                 this.analysisIds = this.analysisIds.sort();
+                var analysisId = LABKEY.ActionURL.getParameter('analysisId') || this.analysisIds[0];
 
                 Ext4.apply(this, {
                     border: false,
@@ -35,16 +36,17 @@
                                 fieldLabel: 'Jump To Analysis',
                                 style: 'margin-right: 10px;',
                                 forceSelection: true,
+                                showValueInList: true,
                                 labelWidth: 150,
                                 valueField: 'rowid',
-                                displayField: 'rowid',
-                                value: this.analysisIds[0],
+                                displayField: 'readset/name',
+                                value: analysisId,
                                 store: {
                                     type: 'labkey-store',
                                     containerPath: Laboratory.Utils.getQueryContainerPath(),
                                     schemaName: 'sequenceanalysis',
                                     queryName: 'sequence_analyses',
-                                    columns: 'rowid,name',
+                                    columns: 'rowid,readset/name',
                                     sort: 'rowid',
                                     filterArray: [LABKEY.Filter.create('rowid', this.analysisIds.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)],
                                     autoLoad: true
@@ -59,7 +61,7 @@
                                         Ext4.Msg.alert('Error', 'No analysis selected');
                                     }
                                     else {
-                                        this.loadAnalysis(analysisId);
+                                        this.changeAnalysis(analysisId);
                                     }
                                 }
                             }]
@@ -80,7 +82,7 @@
                                 Ext4.Msg.alert('Error', 'This is the first analysis');
                             }
                             else {
-                                this.loadAnalysis(this.analysisIds[idx]);
+                                this.changeAnalysis(this.analysisIds[idx]);
                             }
                         }
                     },{
@@ -94,7 +96,7 @@
                                 Ext4.Msg.alert('Error', 'This is the last analysis');
                             }
                             else {
-                                this.loadAnalysis(this.analysisIds[idx]);
+                                this.changeAnalysis(this.analysisIds[idx]);
                             }
                         }
                     },{
@@ -108,7 +110,14 @@
 
                 this.callParent(arguments);
 
-                this.loadAnalysis(this.analysisIds[0]);
+                this.loadAnalysis(analysisId);
+            },
+
+            changeAnalysis: function(analysisId){
+                window.location = LABKEY.ActionURL.buildURL('geneticscore', 'sbtReview', null, {
+                    analysisIds: this.analysisIds,
+                    analysisId: analysisId
+                });
             },
 
             loadAnalysis: function (analysisId) {
@@ -117,21 +126,20 @@
 
                 var panel = this.down('#sbtPanel');
                 panel.removeAll();
-                panel.add([
-                    {
-                        xtype: 'ldk-querypanel',
-                        style: 'margin-bottom: 10px;',
-                        queryConfig: LDK.Utils.getReadOnlyQWPConfig({
-                            title: 'Analysis Details',
-                            schemaName: 'sequenceanalysis',
-                            queryName: 'sequence_analyses',
-                            viewName: 'SBT Information',
-                            containerPath: Laboratory.Utils.getQueryContainerPath(),
-                            filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)],
-                            scope: this,
-                            success: this.onDataRegionLoad
-                        })
-                    },{
+                panel.add([{
+                    xtype: 'ldk-querypanel',
+                    style: 'margin-bottom: 10px;',
+                    queryConfig: LDK.Utils.getReadOnlyQWPConfig({
+                        title: 'Analysis Details',
+                        schemaName: 'sequenceanalysis',
+                        queryName: 'sequence_analyses',
+                        viewName: 'SBT Information',
+                        containerPath: Laboratory.Utils.getQueryContainerPath(),
+                        filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)],
+                        scope: this,
+                        success: this.onDataRegionLoad
+                    })
+                },{
                         xtype: 'ldk-querypanel',
                         style: 'margin-bottom: 10px;',
                         queryConfig: LDK.Utils.getReadOnlyQWPConfig({

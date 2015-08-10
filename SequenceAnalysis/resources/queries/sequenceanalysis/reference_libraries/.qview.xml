@@ -4,6 +4,7 @@
        <column name="name" />
        <column name="description" />
        <column name="fasta_file" />
+       <column name="datedisabled" />
        <column name="container" />
    </columns>
    <sorts>

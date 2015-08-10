@@ -17,6 +17,8 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.model.AdapterModel;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,8 +80,9 @@ public class CutadaptWrapper extends AbstractCommandWrapper
         {
             PreprocessingOutputImpl output = new PreprocessingOutputImpl(inputFile, inputFile2);
 
-            File output1 = new File(outputDir, FileUtil.getBaseName(inputFile) + ".adaptertrimmed.fastq");
-            File output2 = inputFile2 == null ? null : new File(outputDir, FileUtil.getBaseName(inputFile2) + ".adaptertrimmed.fastq");
+            String extention = getExtension(inputFile);
+            File output1 = new File(outputDir, SequenceTaskHelper.getUnzippedBaseName(inputFile.getName()) + ".adaptertrimmed" + extention);
+            File output2 = inputFile2 == null ? null : new File(outputDir, SequenceTaskHelper.getUnzippedBaseName(inputFile2.getName()) + ".adaptertrimmed" + extention);
 
             List<AdapterModel> adapters = TrimmomaticWrapper.AdapterTrimmingProvider.getAdapters(getPipelineCtx().getJob(), getProvider().getName());
             if (adapters.isEmpty())
@@ -89,9 +92,15 @@ public class CutadaptWrapper extends AbstractCommandWrapper
 
             getWrapper().trimAdapters(inputFile, inputFile2, output1, output2, adapters, getClientCommandArgs());
             output.setProcessedFastq(Pair.of(output1, output2));
+            output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
         }
+    }
+
+    private static String getExtension(File input)
+    {
+        return FileUtil.getExtension(input).endsWith("gz") ? ".fastq.gz" : ".fastq";
     }
 
     public void trimAdapters(File inputFile1, @Nullable File inputFile2, File outputFile1, @Nullable File outputFile2, List<AdapterModel> adapters, List<String> params) throws PipelineJobException
@@ -142,7 +151,7 @@ public class CutadaptWrapper extends AbstractCommandWrapper
             if (!fivePrimeAdapters.isEmpty())
             {
                 getLogger().info("\tTrimming 5' adapters");
-                output = new File(outputFile1.getParentFile(), FileUtil.getBaseName(inputFile1) + ".trim5.fastq");
+                output = new File(outputFile1.getParentFile(), SequenceTaskHelper.getUnzippedBaseName(inputFile1) + ".trim5" + getExtension(inputFile1));
                 trimSE(input, output, args, fivePrimeAdapters);
                 tempFiles.add(output);
                 input = output;
@@ -151,7 +160,7 @@ public class CutadaptWrapper extends AbstractCommandWrapper
             if (!threePrimeAdapters.isEmpty())
             {
                 getLogger().info("\tTrimming 3' adapters");
-                output = new File(outputFile1.getParentFile(), FileUtil.getBaseName(inputFile1) + ".trim3.fastq");
+                output = new File(outputFile1.getParentFile(), SequenceTaskHelper.getUnzippedBaseName(inputFile1) + ".trim3" + getExtension(inputFile1));
                 tempFiles.add(output);
                 trimSE(input, output, args, threePrimeAdapters);
             }
@@ -184,7 +193,7 @@ public class CutadaptWrapper extends AbstractCommandWrapper
             if (!fivePrimeAdapters.isEmpty())
             {
                 getLogger().info("\tTrimming 5' adapters");
-                outputs = Pair.of(new File(outputFile1.getParentFile(), FileUtil.getBaseName(inputFile1) + ".trim5.fastq"), new File(outputFile2.getParentFile(), FileUtil.getBaseName(inputFile2) + ".trim5.fastq"));
+                outputs = Pair.of(new File(outputFile1.getParentFile(), SequenceTaskHelper.getUnzippedBaseName(inputFile1) + ".trim5" + getExtension(inputFile1)), new File(outputFile2.getParentFile(), SequenceTaskHelper.getUnzippedBaseName(inputFile2) + ".trim5" + getExtension(inputFile2)));
                 intermediateFiles.add(outputs.first);
                 intermediateFiles.add(outputs.second);
                 trimPE(inputs, outputs, args, fivePrimeAdapters);
@@ -194,7 +203,7 @@ public class CutadaptWrapper extends AbstractCommandWrapper
             if (!threePrimeAdapters.isEmpty())
             {
                 getLogger().info("\tTrimming 3' adapters");
-                outputs = Pair.of(new File(outputFile1.getParentFile(), FileUtil.getBaseName(inputFile1) + ".trim3.fastq"), new File(outputFile2.getParentFile(), FileUtil.getBaseName(inputFile2) + ".trim3.fastq"));
+                outputs = Pair.of(new File(outputFile1.getParentFile(), SequenceTaskHelper.getUnzippedBaseName(inputFile1) + ".trim3" + getExtension(inputFile1)), new File(outputFile2.getParentFile(), SequenceTaskHelper.getUnzippedBaseName(inputFile2) + ".trim3" + getExtension(inputFile2)));
                 intermediateFiles.add(outputs.first);
                 intermediateFiles.add(outputs.second);
                 trimPE(inputs, outputs, args, threePrimeAdapters);
@@ -241,8 +250,8 @@ public class CutadaptWrapper extends AbstractCommandWrapper
     private void trimPE(Pair<File, File> inputs, Pair<File, File> outputs, List<String> baseArgs, List<String> adapterArgs) throws PipelineJobException
     {
         //trim forward reads
-        File tmpForward1 = new File(outputs.first.getParentFile(), FileUtil.getBaseName(outputs.first) + ".tmpForward.fastq");
-        File tmpForward2 = new File(outputs.first.getParentFile(), FileUtil.getBaseName(outputs.second) + ".tmpForward.fastq");
+        File tmpForward1 = new File(outputs.first.getParentFile(), SequenceTaskHelper.getUnzippedBaseName(outputs.first) + ".tmpForward" + getExtension(outputs.first));
+        File tmpForward2 = new File(outputs.first.getParentFile(), SequenceTaskHelper.getUnzippedBaseName(outputs.second) + ".tmpForward" + getExtension(outputs.second));
 
         List<String> args = new ArrayList<>();
         args.addAll(baseArgs);
@@ -261,8 +270,8 @@ public class CutadaptWrapper extends AbstractCommandWrapper
         }
 
         //then reverse reads
-        File tmpReverse1 = new File(outputs.first.getParentFile(), FileUtil.getBaseName(outputs.first) + ".tmpReverse.fastq");
-        File tmpReverse2 = new File(outputs.first.getParentFile(), FileUtil.getBaseName(outputs.second) + ".tmpReverse.fastq");
+        File tmpReverse1 = new File(outputs.first.getParentFile(), SequenceTaskHelper.getUnzippedBaseName(outputs.first) + ".tmpReverse" + getExtension(outputs.first));
+        File tmpReverse2 = new File(outputs.first.getParentFile(), SequenceTaskHelper.getUnzippedBaseName(outputs.second) + ".tmpReverse" + getExtension(outputs.second));
 
         args = new ArrayList<>();
         args.addAll(baseArgs);

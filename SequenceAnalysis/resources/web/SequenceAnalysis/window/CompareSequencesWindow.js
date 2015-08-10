@@ -82,13 +82,13 @@ Ext4.define('SequenceAnalysis.window.CompareSequencesWindow', {
     onDataLoaded: function(results){
         Ext4.Msg.hide();
 
-        var text = ['Name\tNumHits\tRefName\tRefId\tSequencesMatch\tFastaSequenceIsSubsetOfReference\tReferenceSequenceIsSubsetOfFasta'];
+        var text = ['Name\tNumHits\tRefName\tRefId\tSequencesMatch\tFastaSequenceIsSubsetOfReference\tReferenceSequenceIsSubsetOfFasta\tFastaLength\tRefLength'];
         if (results.hits){
 
             Ext4.Array.forEach(results.hits, function(h){
                 if (h.hits.length) {
                     Ext4.Array.forEach(h.hits, function (hit) {
-                        text.push([h.name, h.hits.length, hit.refName, hit.refId, hit.sequencesMatch, hit.fastaSequenceIsSubsetOfReference, hit.referenceSequenceIsSubsetOfFasta].join('\t'))
+                        text.push([h.name, h.hits.length, hit.refName, hit.refId, hit.sequencesMatch, hit.fastaSequenceIsSubsetOfReference, hit.referenceSequenceIsSubsetOfFasta, hit.fastaLength, hit.refLength].join('\t'))
                     }, this);
                 }
                 else

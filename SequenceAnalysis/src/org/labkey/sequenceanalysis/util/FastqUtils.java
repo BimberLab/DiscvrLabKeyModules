@@ -19,11 +19,13 @@ import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.util.FastqQualityFormat;
 import htsjdk.samtools.util.QualityEncodingDetector;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.Pair;
 import org.labkey.api.view.NotFoundException;
 
 import java.io.BufferedReader;
@@ -61,7 +63,7 @@ public class FastqUtils
         }
     }
 
-    public static int getSequenceCount(File inputFile) throws PipelineJobException
+    public static long getSequenceCount(File inputFile) throws PipelineJobException
     {
         FileType gz = new FileType(".gz");
         try (InputStream is = gz.isType(inputFile) ? new GZIPInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile);BufferedReader lnr = new BufferedReader(new InputStreamReader(is));)
@@ -72,7 +74,7 @@ public class FastqUtils
                 count++;
             }
 
-            return count / 4;
+            return count / 4L;
         }
         catch (IOException e)
         {
@@ -80,6 +82,40 @@ public class FastqUtils
         }
     }
 
+    public static Pair<Long, Long> logSequenceCounts(File inputFile1, File inputFile2, Logger log, @Nullable Long previousCount1, @Nullable Long previousCount2) throws PipelineJobException
+    {
+        final long bytes = 10737418240L; //10gb
+
+        Long count1 = null;
+        long size1 = FileUtils.sizeOf(inputFile1);
+        if (size1 > bytes)
+        {
+            log.info("\t" + inputFile1.getName() + ": " + FileUtils.byteCountToDisplaySize(size1));
+        }
+        else
+        {
+            count1 = FastqUtils.getSequenceCount(inputFile1);
+            log.info("\t" + inputFile1.getName() + ": " + count1 + " sequences" + (previousCount1 != null ? ", difference from initial: " + (previousCount1 - count1) : ""));
+        }
+
+        Long count2 = null;
+        if (inputFile2 != null)
+        {
+            long size2 = FileUtils.sizeOf(inputFile2);
+            if (size2 > bytes)
+            {
+                log.info("\t" + inputFile2.getName() + ": " + FileUtils.byteCountToDisplaySize(size2));
+            }
+            else
+            {
+                count2 = inputFile2 == null ? null : FastqUtils.getSequenceCount(inputFile2);
+                log.info("\t" + inputFile2.getName() + ": " + count2 + " sequences" + (previousCount2 != null ? ", difference from initial: " + (previousCount2 - count2) : ""));
+            }
+        }
+
+        return Pair.of(count1, count2);
+    }
+    
     public static Map<String, Object> getQualityMetrics(File f, @Nullable Logger log)
     {
         if (log != null)

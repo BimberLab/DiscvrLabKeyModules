@@ -76,6 +76,19 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             toolConfig: results
         });
 
+        items.push({
+            xtype: 'panel',
+            style: 'padding-bottom: 0px;',
+            width: '100%',
+            border: false,
+            items: [{
+                border: false,
+                width: '100%',
+                style: 'text-align: center',
+                html: 'Powered By DISCVR-Seq.  <a href="https://github.com/bbimber/discvr-seq/wiki">Click here to learn more.</a>'
+            }]
+        });
+
         this.remove(panel);
         this.add(items);
 

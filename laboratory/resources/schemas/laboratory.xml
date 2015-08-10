@@ -358,20 +358,6 @@
             <ns:item text="Page Size">
                 <ns:originalText>Page Size</ns:originalText>
             </ns:item>
-            <ns:item text="More Actions">
-                <ns:item text="Mark Removed">
-                    <ns:onClick>Laboratory.buttonHandlers.markSamplesRemoved(dataRegionName, arguments[0] ? arguments[0].ownerCt : null.floatParent)</ns:onClick>
-                </ns:item>
-                <!--<ns:item text="Bulk Edit">-->
-                    <!--<ns:onClick>LDK.DataRegionUtils.bulkEditHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt : null.floatParent)</ns:onClick>-->
-                <!--</ns:item>-->
-                <ns:item text="Duplicate/Derive Samples">
-                    <ns:onClick>Laboratory.buttonHandlers.deriveSamples(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null)</ns:onClick>
-                </ns:item>
-                <ns:item text="Publish Samples">
-                    <ns:onClick>Laboratory.buttonHandlers.publishSamples(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null)</ns:onClick>
-                </ns:item>
-            </ns:item>
         </ns:buttonBarOptions>
     </ns:table>
     <ns:table tableName="peptides" tableDbType="TABLE" useColumnOrder="true">

@@ -221,6 +221,11 @@ public class SequenceTaskHelper implements PipelineContext
         return (Integer)row.get("rowid");
     }
 
+    public static String getUnzippedBaseName(File file)
+    {
+        return getUnzippedBaseName(file.getName());
+    }
+
     //returns the basename of the file, automatically removing .gz, if present
     public static String getUnzippedBaseName(String filename)
     {

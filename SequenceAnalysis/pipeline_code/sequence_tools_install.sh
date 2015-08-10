@@ -299,15 +299,15 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/STAR || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf STAR_2.4.0h*
+    rm -Rf STAR_2.4*
     rm -Rf $LKTOOLS_DIR/STAR
 
-    wget --read-timeout=10 https://github.com/alexdobin/STAR/archive/STAR_2.4.0h.tar.gz
-    gunzip STAR_2.4.0h.tar.gz
-    tar -xf STAR_2.4.0h.tar
-    gzip STAR_2.4.0h.tar
+    wget --read-timeout=10 https://github.com/alexdobin/STAR/archive/STAR_2.4.2a.tar.gz
+    gunzip STAR_2.4.2a.tar.gz
+    tar -xf STAR_2.4.2a.tar
+    gzip STAR_2.4.2a.tar
 
-    install ./STAR-STAR_2.4.0h/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR/STAR
+    install ./STAR-STAR_2.4.2a/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR/STAR
 else
     echo "Already installed"
 fi
@@ -385,36 +385,6 @@ then
     cp -R ./MOSAIK-2.1.73-source/networkFile $LKTOOLS_DIR/mosaikNetworkFile
 else
     echo "Mosaik network files already downloaded"
-fi
-
-
-#
-#fastq_screen
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install fastq_screen"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/fastq_screen || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf fastq_screen_v0.4.4
-    rm -Rf $LKTOOLS_DIR/fastq_screen
-
-    wget http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/fastq_screen_v0.4.4.tar.gz
-    gunzip fastq_screen_v0.4.4.tar.gz
-    tar -xf fastq_screen_v0.4.4.tar
-    echo "Compressing TAR"
-    gzip fastq_screen_v0.4.4.tar
-    cd fastq_screen_v0.4.4
-
-    cd $LKTOOLS_DIR
-    ln -s ./src/fastq_screen_v0.4.4/fastq_screen fastq_screen
-else
-    echo "Already installed"
 fi
 
 
@@ -693,17 +663,20 @@ echo "Install picard"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e $LKTOOLS_DIR/picard-tools || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e $LKTOOLS_DIR/picard.jar || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf picard-tools-*
     rm -Rf snappy-java-1.0.3-rc3.jar
     rm -Rf $LKTOOLS_DIR/picard-tools
+    rm -Rf $LKTOOLS_DIR/picard*
+    rm -Rf $LKTOOLS_DIR/htsjdk-*
+    rm -Rf $LKTOOLS_DIR/libIntelDeflater.so
 
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/picard/picard-tools/1.119/picard-tools-1.119.zip
-    unzip picard-tools-1.119.zip
+    wget --read-timeout=10 https://github.com/broadinstitute/picard/releases/download/1.135/picard-tools-1.135.zip
+    unzip picard-tools-1.135.zip
 
-    cp -R ./picard-tools-1.119 $LKTOOLS_DIR/picard-tools
+    cp -R ./picard-tools-1.135/* $LKTOOLS_DIR/
 else
     echo "Already installed"
 fi
@@ -747,7 +720,7 @@ echo "Install cutadapt"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/cutadapt || ! -z $FORCE_REINSTALL ]];
+if [[ ! $(which cutadapt) || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf cutadapt-*
@@ -757,8 +730,11 @@ then
     gunzip cutadapt-1.8.1.tar.gz
     tar -xf cutadapt-1.8.1.tar
     gzip cutadapt-1.8.1.tar
+    cd cutadapt-1.8.1
 
-    install ./cutadapt-1.8.1/bin/cutadapt ${LKTOOLS_DIR}/cutadapt
+    #note: add --user
+    python setup.py install
+    #install ./cutadapt-1.8.1/bin/cutadapt ${LKTOOLS_DIR}/cutadapt
 
 else
     echo "Already installed"
@@ -806,32 +782,28 @@ else
     fi
 fi
 
+
 #
-#seq_crumbs
+#sff2fastq
 #
 echo ""
 echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install seq_crumbs"
+echo "Install sff2fastq"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/sff_extract || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/sff2fastq || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf seq_crumbs-0.1.6*
-    rm -Rf seq_crumbs-0.1.8*
-    rm -Rf $LKTOOLS_DIR/sff_extract
-    rm -Rf $LKTOOLS_DIR/convert_format
+    rm -Rf sff2fastq*
+    rm -Rf $LKTOOLS_DIR/sff2fastq
 
-    wget --read-timeout=10 http://bioinf.comav.upv.es/downloads/seq_crumbs-0.1.8-x64-linux.tar.gz
-    gunzip seq_crumbs-0.1.8-x64-linux.tar.gz
-    tar -xf seq_crumbs-0.1.8-x64-linux.tar
-    echo "Compressing TAR"
-    gzip seq_crumbs-0.1.8-x64-linux.tar
+    git clone https://github.com/indraniel/sff2fastq.git
+    cd sff2fastq
+    make
 
-    install ./seq_crumbs-0.1.8-x64-linux/sff_extract $LKTOOLS_DIR/sff_extract
-    install ./seq_crumbs-0.1.8-x64-linux/convert_format $LKTOOLS_DIR/convert_format
+    install ./sff2fastq $LKTOOLS_DIR/
 else
     echo "Already installed"
 fi

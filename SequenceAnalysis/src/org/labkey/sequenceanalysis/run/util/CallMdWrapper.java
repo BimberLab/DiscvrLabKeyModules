@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -58,7 +59,9 @@ public class CallMdWrapper extends SamtoolsRunner
                 {
                     getLogger().debug("deleting/recreating BAM index");
                     idx.delete();
-                    new BuildBamIndexWrapper(getLogger()).executeCommand(inputBam);
+                    BuildBamIndexWrapper buildBamIndexWrapper = new BuildBamIndexWrapper(getLogger());
+                    buildBamIndexWrapper.setStringency(ValidationStringency.SILENT);
+                    buildBamIndexWrapper.executeCommand(inputBam);
                 }
 
                 output = inputBam;

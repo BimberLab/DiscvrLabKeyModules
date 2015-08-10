@@ -5,6 +5,7 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -13,6 +14,7 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -35,6 +37,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
     {
         try
         {
+            Date start = new Date();
             getLogger().info("Running MergeBamAlignment: " + alignedBam.getPath());
             setStringency(ValidationStringency.SILENT);
 
@@ -49,13 +52,15 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             params.add("java");
             params.addAll(getBaseParams());
             params.add("-jar");
-            params.add(getJar().getPath());
+            params.add(getPicardJar().getPath());
+            params.add(getTooName());
             params.add("ALIGNED_BAM=" + alignedBam.getPath());
             params.add("MAX_INSERTIONS_OR_DELETIONS=-1");
-            params.add("MAX_RECORDS_IN_RAM=2000000");
+            inferMaxRecordsInRam(params);
 
-            getLogger().info("total alignments in starting BAM: ");
-            SequenceUtil.logAlignmentCount(alignedBam, getLogger());
+            //can take a long time to calculate
+            //getLogger().info("total alignments in starting BAM: ");
+            //SequenceUtil.logAlignmentCount(alignedBam, getLogger());
 
             File unmappedReadsBam;
             SamReaderFactory fact = SamReaderFactory.makeDefault();
@@ -127,8 +132,8 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
                 throw new PipelineJobException("Output file could not be found: " + mergedFile.getPath());
             }
 
-            getLogger().info("\ttotal alignments in unmapped reads BAM: ");
-            SequenceUtil.logAlignmentCount(unmappedReadsBam, getLogger());
+            //getLogger().info("\ttotal alignments in unmapped reads BAM: ");
+            //SequenceUtil.logAlignmentCount(unmappedReadsBam, getLogger());
             unmappedReadsBam.delete();
 
             if (outputFile == null)
@@ -146,8 +151,10 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
                 }
             }
 
-            getLogger().info("\ttotal alignments in final BAM: ");
-            SequenceUtil.logAlignmentCount(mergedFile, getLogger());
+            //getLogger().info("\ttotal alignments in final BAM: ");
+            //SequenceUtil.logAlignmentCount(mergedFile, getLogger());
+
+            getLogger().info("\tMergeBamAlignment duration: " + DurationFormatUtils.formatDurationWords((new Date()).getTime() - start.getTime(), true, true));
 
             return mergedFile;
         }
@@ -176,8 +183,8 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
         return false;
     }
 
-    protected File getJar()
+    protected String getTooName()
     {
-        return getPicardJar("MergeBamAlignment.jar");
+        return "MergeBamAlignment";
     }
 }

@@ -3880,6 +3880,8 @@ public class SequenceAnalysisController extends SpringActionController
         String _name;
         String _refName;
         int _refId;
+        int _fastaLength;
+        int _refLength;
         boolean _sequencesMatch;
         boolean _fastaSequenceIsSubsetOfReference;
         boolean _referenceSequenceIsSubsetOfFasta;
@@ -3912,6 +3914,8 @@ public class SequenceAnalysisController extends SpringActionController
                 r._sequencesMatch = sequencesMatch;
                 r._fastaSequenceIsSubsetOfReference = fastaSequenceIsSubsetOfReference;
                 r._referenceSequenceIsSubsetOfFasta = referenceSequenceIsSubsetOfFasta;
+                r._fastaLength = fastaSequence.getLength();
+                r._refLength = refSeq.length();
 
                 return r;
             }
@@ -3930,6 +3934,8 @@ public class SequenceAnalysisController extends SpringActionController
             ret.put("sequencesMatch", _sequencesMatch);
             ret.put("fastaSequenceIsSubsetOfReference", _fastaSequenceIsSubsetOfReference);
             ret.put("referenceSequenceIsSubsetOfFasta", _referenceSequenceIsSubsetOfFasta);
+            ret.put("fastaLength", _fastaLength);
+            ret.put("refLength", _refLength);
 
             return ret;
         }

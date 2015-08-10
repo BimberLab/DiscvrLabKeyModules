@@ -26,9 +26,10 @@ public class AlignmentSummaryMetricsWrapper extends PicardWrapper
         params.add("java");
         params.addAll(getBaseParams());
         params.add("-jar");
-        params.add(getJar().getPath());
+        params.add(getPicardJar().getPath());
+        params.add(getTooName());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
-        params.add("MAX_RECORDS_IN_RAM=2000000");
+        inferMaxRecordsInRam(params);
         params.add("METRIC_ACCUMULATION_LEVEL=ALL_READS");
         params.add("INPUT=" + inputFile.getPath());
         params.add("OUTPUT=" + outputFile.getPath());
@@ -43,8 +44,8 @@ public class AlignmentSummaryMetricsWrapper extends PicardWrapper
         return outputFile;
     }
 
-    protected File getJar()
+    protected String getTooName()
     {
-        return getPicardJar("CollectAlignmentSummaryMetrics.jar");
+        return "CollectAlignmentSummaryMetrics";
     }
 }

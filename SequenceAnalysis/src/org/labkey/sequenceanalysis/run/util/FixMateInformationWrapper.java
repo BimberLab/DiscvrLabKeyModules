@@ -1,12 +1,10 @@
 package org.labkey.sequenceanalysis.run.util;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,9 +31,10 @@ public class FixMateInformationWrapper extends PicardWrapper
         params.add("java");
         params.addAll(getBaseParams());
         params.add("-jar");
-        params.add(getJar().getPath());
+        params.add(getPicardJar().getPath());
+        params.add(getTooName());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
-        params.add("MAX_RECORDS_IN_RAM=2000000");
+        inferMaxRecordsInRam(params);
         params.add("INPUT=" + inputFile.getPath());
         if (outputFile != null)
             params.add("OUTPUT=" + outputFile.getPath());
@@ -51,8 +50,8 @@ public class FixMateInformationWrapper extends PicardWrapper
         return expectedOut;
     }
 
-    protected File getJar()
+    protected String getTooName()
     {
-        return getPicardJar("FixMateInformation.jar");
+        return "FixMateInformation";
     }
 }

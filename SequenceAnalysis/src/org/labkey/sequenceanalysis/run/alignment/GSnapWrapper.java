@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
@@ -47,6 +48,12 @@ public class GSnapWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean supportsGzipFastqs()
+        {
+            return true;
+        }
+
+        @Override
         public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
@@ -61,6 +68,12 @@ public class GSnapWrapper extends AbstractCommandWrapper
             {
                 args.add("-t"); //multi-threaded
                 args.add(threads.toString());
+            }
+
+            FileType gz = new FileType(".gz");
+            if (gz.isType(inputFastq1))
+            {
+                args.add("--gunzip");
             }
 
             // -d Name of genome (always the provider)
@@ -86,7 +99,6 @@ public class GSnapWrapper extends AbstractCommandWrapper
             //look for novel splicing
             args.add("-N");
             args.add("1");
-
 
             if (!StringUtils.isEmpty(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider())))
             {
@@ -208,6 +220,8 @@ public class GSnapWrapper extends AbstractCommandWrapper
                     output.addOutput(bam, AlignmentOutputImpl.ALIGNMENT_OUTPUT_ROLE);
                 }
             }
+
+            output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
         }

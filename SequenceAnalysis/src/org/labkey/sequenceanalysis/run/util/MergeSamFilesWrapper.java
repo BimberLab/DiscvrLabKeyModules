@@ -1,12 +1,15 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,6 +35,7 @@ public class MergeSamFilesWrapper extends PicardWrapper
      */
     public File execute(List<File> files, @Nullable String outputPath, boolean deleteOriginalFiles) throws PipelineJobException
     {
+        Date start = new Date();
         getLogger().info("Merging BAM files: ");
         for (File f : files)
         {
@@ -101,7 +105,11 @@ public class MergeSamFilesWrapper extends PicardWrapper
         {
             idx.delete();
         }
-        new BuildBamIndexWrapper(getLogger()).executeCommand(output);
+        BuildBamIndexWrapper buildBamIndexWrapper = new BuildBamIndexWrapper(getLogger());
+        buildBamIndexWrapper.setStringency(ValidationStringency.SILENT);
+        buildBamIndexWrapper.executeCommand(output);
+
+        getLogger().info("\tMergeSamFiles duration: " + DurationFormatUtils.formatDurationWords((new Date()).getTime() - start.getTime(), true, true));
 
         return output;
     }
@@ -112,7 +120,8 @@ public class MergeSamFilesWrapper extends PicardWrapper
         params.add("java");
         params.addAll(getBaseParams());
         params.add("-jar");
-        params.add(getJar().getPath());
+        params.add(getPicardJar().getPath());
+        params.add(getTooName());
 
         for (File f : files)
         {
@@ -120,19 +129,14 @@ public class MergeSamFilesWrapper extends PicardWrapper
         }
 
         params.add("OUTPUT=" + outputPath);
-        params.add("MAX_RECORDS_IN_RAM=2000000");
+        inferMaxRecordsInRam(params);
         //USE_THREADING=true ?
 
         return params;
     }
 
-    protected File getJar()
+    protected String getTooName()
     {
-        return getPicardJar("MergeSamFiles.jar");
-    }
-
-    public String getOutputFilename(File file)
-    {
-        throw new RuntimeException("Not supported");
+        return "MergeSamFiles";
     }
 }

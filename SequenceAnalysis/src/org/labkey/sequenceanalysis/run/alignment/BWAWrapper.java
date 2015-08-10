@@ -72,6 +72,12 @@ public class BWAWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean supportsGzipFastqs()
+        {
+            return true;
+        }
+
+        @Override
         public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             getPipelineCtx().getLogger().info("Creating BWA index");
@@ -117,7 +123,10 @@ public class BWAWrapper extends AbstractCommandWrapper
             AlignmentOutputImpl output = new AlignmentOutputImpl();
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, "bwa", referenceGenome);
 
-            return _performAlignment(output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename);
+            _performAlignment(output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename);
+            output.addCommandsExecuted(getWrapper().getCommandsExecuted());
+
+            return output;
         }
 
         @Override
@@ -178,7 +187,7 @@ public class BWAWrapper extends AbstractCommandWrapper
 
             File sam = new File(outputDirectory, basename + ".sam");
             getWrapper().execute(args, sam);
-            if (!sam.exists() || SequenceUtil.getLineCount(sam) < 2)
+            if (!sam.exists() || !SequenceUtil.hasMinLineCount(sam, 2))
             {
                 throw new PipelineJobException("SAM file doesnt exist or has too few lines: " + sam.getPath());
             }

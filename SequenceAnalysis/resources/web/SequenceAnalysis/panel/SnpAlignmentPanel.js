@@ -636,12 +636,12 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
 
         this._settings = {
             useGradient: colorPanel.down('#useGradientField').getValue(),
-            noCoverColor: colorPanel.down('#nocoverColorField').getValue(),
-            synColor: colorPanel.down('#synColorField').getValue(),
+            noCoverColor: '#' + colorPanel.down('#nocoverColorField').getValue(),
+            synColor: '#' + colorPanel.down('#synColorField').getValue(),
             synColorSteps: colorPanel.down('#synColorStepsField').getValue(),
-            fsColor: colorPanel.down('#fsColorField').getValue(),
+            fsColor: '#' + colorPanel.down('#fsColorField').getValue(),
             fsColorSteps: colorPanel.down('#fsColorStepsField').getValue(),
-            nsColor: colorPanel.down('#nsColorField').getValue(),
+            nsColor: '#' + colorPanel.down('#nsColorField').getValue(),
             nsColorSteps: colorPanel.down('#nsColorStepsField').getValue()
         };
 
@@ -931,7 +931,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         var effective_length = Math.max(stop - start + 1, feature.name.length);
 
         for(var i = start; i<(start + effective_length);i++){
-            var value = feature.name[i - start] || '&nbsp;'
+            var value = feature.name[i - start] || '&nbsp;';
             track[i] = {value: value};
 
             if(i==start){

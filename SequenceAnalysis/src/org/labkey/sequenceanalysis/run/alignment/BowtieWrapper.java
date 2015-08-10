@@ -42,6 +42,12 @@ public class BowtieWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean supportsGzipFastqs()
+        {
+            return false;
+        }
+
+        @Override
         public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
@@ -87,7 +93,8 @@ public class BowtieWrapper extends AbstractCommandWrapper
             getWrapper().execute(args);
 
             //convert to BAM
-            bam = new SamFormatConverterWrapper(getPipelineCtx().getLogger()).execute(sam, bam, true);
+            SamFormatConverterWrapper converterWrapper = new SamFormatConverterWrapper(getPipelineCtx().getLogger());
+            bam = converterWrapper.execute(sam, bam, true);
             if (!bam.exists())
             {
                 throw new PipelineJobException("Unable to find output file: " + bam.getPath());
@@ -99,6 +106,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
             }
 
             output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
+            output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
         }

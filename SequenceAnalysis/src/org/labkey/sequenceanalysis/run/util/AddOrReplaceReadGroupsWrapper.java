@@ -1,15 +1,17 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -29,6 +31,7 @@ public class AddOrReplaceReadGroupsWrapper extends PicardWrapper
      */
     public File executeCommand(File inputFile, @Nullable File outputFile, String library, String platform, String platformUnit, String sampleName) throws PipelineJobException
     {
+        Date start = new Date();
         getLogger().info("Running AddOrReplaceReadGroups: " + inputFile.getPath());
 
         File outputBam = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".readgroups.bam") : outputFile;
@@ -36,9 +39,10 @@ public class AddOrReplaceReadGroupsWrapper extends PicardWrapper
         params.add("java");
         params.addAll(getBaseParams());
         params.add("-jar");
-        params.add(getJar().getPath());
+        params.add(getPicardJar().getPath());
+        params.add(getTooName());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
-        params.add("MAX_RECORDS_IN_RAM=2000000");
+        inferMaxRecordsInRam(params);
         params.add("INPUT=" + inputFile.getPath());
 
         params.add("OUTPUT=" + outputBam.getPath());
@@ -68,8 +72,12 @@ public class AddOrReplaceReadGroupsWrapper extends PicardWrapper
                 {
                     getLogger().debug("deleting/recreating BAM index");
                     idx.delete();
-                    new BuildBamIndexWrapper(getLogger()).executeCommand(inputFile);
+                    BuildBamIndexWrapper buildBamIndexWrapper = new BuildBamIndexWrapper(getLogger());
+                    buildBamIndexWrapper.setStringency(ValidationStringency.SILENT);
+                    buildBamIndexWrapper.executeCommand(inputFile);
                 }
+
+                getLogger().info("\tAddOrReplaceReadGroups duration: " + DurationFormatUtils.formatDurationWords((new Date()).getTime() - start.getTime(), true, true));
 
                 return inputFile;
             }
@@ -80,12 +88,14 @@ public class AddOrReplaceReadGroupsWrapper extends PicardWrapper
         }
         else
         {
+            getLogger().info("\tAddOrReplaceReadGroups duration: " + DurationFormatUtils.formatDurationWords((new Date()).getTime() - start.getTime(), true, true));
+
             return outputFile;
         }
     }
 
-    protected File getJar()
+    protected String getTooName()
     {
-        return getPicardJar("AddOrReplaceReadGroups.jar");
+        return "AddOrReplaceReadGroups";
     }
 }

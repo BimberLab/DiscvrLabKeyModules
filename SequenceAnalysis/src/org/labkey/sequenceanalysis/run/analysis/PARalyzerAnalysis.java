@@ -106,7 +106,7 @@ public class PARalyzerAnalysis extends AbstractCommandPipelineStep<PARalyzerRunn
     }
 
     @Override
-    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
         return null;
     }

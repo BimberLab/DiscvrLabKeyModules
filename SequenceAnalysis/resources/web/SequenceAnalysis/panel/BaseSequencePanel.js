@@ -225,11 +225,13 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
             protocolDescription: jsonParameters.protocolDescription || jsonParameters.description,
             scope: this,
             successCallback: function() {
+                Ext4.Msg.hide();
                 Ext4.Msg.alert('Success', 'Analysis Started!', function(){
                     window.location = LABKEY.ActionURL.buildURL("pipeline-status", "showList.view", Laboratory.Utils.getQueryContainerPath(), {'StatusFiles.Status~neqornull': 'COMPLETE'});
                 });
             },
             failure: function(error){
+                Ext4.Msg.hide();
                 this.checkProtocol();
 
                 alert('There was an error: ' + error.exception);
@@ -277,6 +279,8 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
             }
         }
 
+        Ext4.Msg.wait('Submitting...');
+
         var containerPath = config.containerPath ? config.containerPath : LABKEY.ActionURL.getContainer();
         var url = LABKEY.ActionURL.buildURL(this.analysisController, "startAnalysis", containerPath);
         LABKEY.Ajax.request({
@@ -290,10 +294,6 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
     },
 
     onSubmit: function(btn){
-        //prevent double submission.  probably would be better to make a load mask, but this is quicker for now
-        btn.setDisabled(true);
-        btn.setDisabled.defer(500, btn, [false]);
-
         var json = this.getJsonParams();
         if (!json)
             return false;

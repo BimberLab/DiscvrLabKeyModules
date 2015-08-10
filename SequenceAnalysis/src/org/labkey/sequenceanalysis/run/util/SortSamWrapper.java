@@ -1,7 +1,9 @@
 package org.labkey.sequenceanalysis.run.util;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -10,6 +12,7 @@ import org.labkey.api.util.FileUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,6 +31,7 @@ public class SortSamWrapper extends PicardWrapper
     //if outputFile is null, the input will be replaced
     public File execute(File inputFile, @Nullable File outputFile, SAMFileHeader.SortOrder order) throws PipelineJobException
     {
+        Date start = new Date();
         getLogger().info("Sorting BAM: " + inputFile.getPath());
 
         File outputBam = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".sorted.bam") : outputFile;
@@ -35,13 +39,14 @@ public class SortSamWrapper extends PicardWrapper
         params.add("java");
         params.addAll(getBaseParams());
         params.add("-jar");
-        params.add(getJar().getPath());
+        params.add(getPicardJar().getPath());
+        params.add(getTooName());
 
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
         params.add("INPUT=" + inputFile.getPath());
         params.add("OUTPUT=" + outputBam.getPath());
         params.add("SORT_ORDER=" + order.name());
-        params.add("MAX_RECORDS_IN_RAM=2000000");
+        inferMaxRecordsInRam(params);
 
         execute(params);
 
@@ -63,8 +68,12 @@ public class SortSamWrapper extends PicardWrapper
                 {
                     getLogger().debug("deleting/recreating BAM index");
                     idx.delete();
-                    new BuildBamIndexWrapper(getLogger()).executeCommand(inputFile);
+                    BuildBamIndexWrapper buildBamIndexWrapper = new BuildBamIndexWrapper(getLogger());
+                    buildBamIndexWrapper.setStringency(ValidationStringency.SILENT);
+                    buildBamIndexWrapper.executeCommand(inputFile);
                 }
+
+                getLogger().info("\tSortSam duration: " + DurationFormatUtils.formatDurationWords((new Date()).getTime() - start.getTime(), true, true));
 
                 return inputFile;
             }
@@ -75,28 +84,15 @@ public class SortSamWrapper extends PicardWrapper
         }
         else
         {
+            getLogger().info("\tSortSam duration: " + DurationFormatUtils.formatDurationWords((new Date()).getTime() - start.getTime(), true, true));
+
             return outputFile;
         }
     }
 
-    private List<String> getParams(File inputFile, File outputFile) throws PipelineJobException
-    {
-        List<String> params = new LinkedList<>();
-        params.add("java");
-        params.addAll(getBaseParams());
-        params.add("-jar");
-        params.add(getJar().getPath());
-
-        params.add("VALIDATION_STRINGENCY=" + getStringency().name());
-        params.add("INPUT=" + inputFile.getPath());
-        params.add("OUTPUT=" + outputFile.getPath());
-
-        return params;
-    }
-
     @Override
-    protected File getJar()
+    protected String getTooName()
     {
-        return getPicardJar("SortSam.jar");
+        return "SortSam";
     }
 }

@@ -45,6 +45,12 @@ public class MosaikWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean supportsGzipFastqs()
+        {
+            return false;
+        }
+
+        @Override
         public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
@@ -100,6 +106,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
 
             output.setBAM(bam);
             output.addIntermediateFile(new File(outputDirectory, basename + ".stat"));
+            output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
         }

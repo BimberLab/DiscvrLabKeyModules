@@ -278,8 +278,11 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
         //special handling of adapters:
         var grid = this.down('gridpanel');
         if (val){
-            var json = Ext4.JSON.decode(val);
-            Ext4.Array.forEach(json, function(row){
+            if (!Ext4.isArray(val)){
+                val = Ext4.JSON.decode(val);
+            }
+
+            Ext4.Array.forEach(val, function(row){
                 var rec = grid.store.createModel({
                     adapterName: row[0],
                     adapterSequence: row[1],

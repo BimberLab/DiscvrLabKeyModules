@@ -11,27 +11,33 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequence.IlluminaReadHeader;
-import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.Pair;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.model.AdapterModel;
 import org.labkey.sequenceanalysis.pipeline.IlluminaFastqSplitter;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.util.FastqUtils;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -92,7 +98,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 getPipelineCtx().getLogger().info("\t" + input2.getPath());
 
             AbstractTrimmomaticProvider provider = (AbstractTrimmomaticProvider)getProvider();
-            getWrapper().execute(getWrapper().getParams(input, input2, provider.getName(), Arrays.asList(provider.getAdditionalParams(getPipelineCtx(), output))));
+            getWrapper().execute(getWrapper().getParams(input, input2, provider.getName(), Arrays.asList(provider.getAdditionalParams(getPipelineCtx(), output)), getPipelineCtx().getJob()));
 
             List<File> files = getWrapper().getExpectedOutputFilenames(input, input2, provider.getName());
             for (File f : files)
@@ -101,7 +107,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 {
                     throw new PipelineJobException("Output file could not be found: " + f.getPath());
                 }
-                else if (FileUtils.sizeOf(f) == 0)
+                else if (!SequenceUtil.hasLineCount(f))
                 {
                     getPipelineCtx().getLogger().info("\tdeleting empty file: " + f.getName());
                     f.delete();
@@ -154,6 +160,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             {
                 getWrapper().generateSummaryText(getWrapper().getTrimlog(getWrapper().getOutputDir(input)));
             }
+            output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
         }
@@ -178,7 +185,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
     {
         public AdapterTrimmingProvider()
         {
-            super("ILLUMINACLIP", "IlluminaAdapterTrimming", "Illumina Adapter Clipping", "This provides the ability to trim adapters from the 3' ends of reads, typically resulting from read-through.", Arrays.asList(
+            super("ILLUMINACLIP", "IlluminaAdapterTrimming", "Adapter Clipping (Trimmomatic)", "This provides the ability to trim adapters from the 5' or 3' ends of reads (typically resulting from read-through).", Arrays.asList(
                     ToolParameterDescriptor.create("adapters", "Adapters", "", "sequenceanalysis-adapterpanel", null, null),
                     ToolParameterDescriptor.create("seedMismatches", "Seed Mismatches", "The seed mismatch parameter is used to make alignments more efficient, specifying the maximum base mismatch count in the 16-base seed. Typical values here are 1 or 2.", "ldk-integerfield", new JSONObject()
                     {{
@@ -219,7 +226,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             File outputFile = new File(ctx.getWorkingDirectory(), "adapters.fasta");
             if (!outputFile.exists())
             {
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile)))
+                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), "UTF-8")))
                 {
                     for (AdapterModel ad : getAdapters(ctx.getJob(), getName()))
                     {
@@ -358,7 +365,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         return new File(workingDir, "trimLog.txt");
     }
 
-    private List<String> getParams(File input, @Nullable File input2, String actionName, List<String> additionalParams) throws PipelineJobException
+    private List<String> getParams(File input, @Nullable File input2, String actionName, List<String> additionalParams, PipelineJob job) throws PipelineJobException
     {
         List<String> params = new LinkedList<>();
         params.add("java");
@@ -374,6 +381,13 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         if (encoding != null)
         {
             params.add("-phred" +  FastqUtils.getQualityOffset(encoding));
+        }
+
+        Integer threads = SequenceTaskHelper.getMaxThreads(job);
+        if (threads != null)
+        {
+            params.add("-threads"); //multi-threaded
+            params.add(threads.toString());
         }
 
         params.add(input.getPath());
@@ -416,19 +430,20 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
     private List<File> getExpectedOutputFilenames(File input1, @Nullable File input2, String actionName)
     {
         List<File> fileNames = new ArrayList<>();
-        String basename = FileUtil.getBaseName(input1);
+        String basename = SequenceTaskHelper.getUnzippedBaseName(input1);
+        String extension = FileUtil.getExtension(input1).endsWith("gz") ? ".fastq.gz" : ".fastq";
 
         if (input2 != null)
         {
-            String basename2 = FileUtil.getBaseName(input2);
+            String basename2 = SequenceTaskHelper.getUnzippedBaseName(input2);
             if (basename2.equalsIgnoreCase(basename))
                 basename2 = basename2 + "-2";
 
             File workingDir = getOutputDir(input1);
-            File outputPaired1 = new File(workingDir, basename + "." + actionName + ".fastq");
-            File outputUnpaired1 = new File(workingDir, basename + "." + actionName + ".unpaired1.fastq");
-            File outputPaired2 = new File(workingDir, basename2 + "." + actionName + ".fastq");
-            File outputUnpaired2 = new File(workingDir, basename2 + "." + actionName + ".unpaired2.fastq");
+            File outputPaired1 = new File(workingDir, basename + "." + actionName + extension);
+            File outputUnpaired1 = new File(workingDir, basename + "." + actionName + ".unpaired1" + extension);
+            File outputPaired2 = new File(workingDir, basename2 + "." + actionName + extension);
+            File outputUnpaired2 = new File(workingDir, basename2 + "." + actionName + ".unpaired2" + extension);
             fileNames.add(outputPaired1);
             fileNames.add(outputUnpaired1);
             fileNames.add(outputPaired2);
@@ -436,7 +451,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
         else
         {
-            File output1 = new File(input1.getParentFile(), basename + "." + actionName + ".fastq");
+            File output1 = new File(input1.getParentFile(), basename + "." + actionName + extension);
             fileNames.add(output1);
         }
 
@@ -445,33 +460,37 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
 
     private void generateSummaryText(File logFile) throws PipelineJobException
     {
+        getLogger().debug("generating trimmomatic summary stats based on log: " + logFile.getPath());
+
         if (!logFile.exists())
         {
             getLogger().warn("Did not find expected logFile: " + logFile.getPath());
+            return;
         }
 
-        String line = null;
-        try (BufferedReader reader = new BufferedReader(new FileReader(logFile)))
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(logFile), Charset.forName("UTF-8"))))
         {
-            int totalInspected = 0;
-            int totalReadsRetained = 0;
-            int totalLength = 0;
+            long totalInspected = 0;
+            long totalReadsRetained = 0;
+            long totalLength = 0;
 
-            int totalReadsTrimmed = 0;
-            int totalBasesTrimmed = 0;
-            int totalDiscarded = 0;
+            long totalReadsTrimmed = 0;
+            long totalBasesTrimmed = 0;
+            long totalDiscarded = 0;
 
-            int totalReadsTrimmedF = 0;
-            int totalBasesTrimmedF = 0;
-            int totalDiscardedF = 0;
-            int totalReadsRetainedF = 0;
-            int totalLengthF = 0;
-            int totalReadsTrimmedR = 0;
-            int totalBasesTrimmedR = 0;
-            int totalDiscardedR = 0;
-            int totalReadsRetainedR = 0;
-            int totalLengthR = 0;
+            long totalReadsTrimmedF = 0;
+            long totalBasesTrimmedF = 0;
+            long totalDiscardedF = 0;
+            long totalReadsRetainedF = 0;
+            long totalLengthF = 0;
+            long totalReadsTrimmedR = 0;
+            long totalBasesTrimmedR = 0;
+            long totalDiscardedR = 0;
+            long totalReadsRetainedR = 0;
+            long totalLengthR = 0;
+            boolean haveReportedInvalidHeader = false;
 
+            String line;
             while ((line = reader.readLine()) != null)
             {
                 String[] cells = line.split(" ");
@@ -516,7 +535,13 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 //infer metrics for paired end data
                 //aatempt to parse illumina
                 IlluminaReadHeader header = IlluminaFastqSplitter.parseHeader(name);
-                if ((header != null && header.getPairNumber() == 1 ) || name.endsWith("/1"))
+                if (!haveReportedInvalidHeader && header == null)
+                {
+                    getLogger().info("header does not match expected format: " + name);
+                    haveReportedInvalidHeader = true;
+                }
+
+                if ((header != null && header.getPairNumber() == 1 ) || name.endsWith("/1") || header == null)
                 {
                     if (survivingLength == 0)
                     {
@@ -563,11 +588,11 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 Double avgBasesTrimmedF = (double)totalBasesTrimmedF / (double)totalReadsTrimmedF;
                 Double avgReadLengthF = (double)totalLengthF / (double)totalReadsRetainedF;
                 getLogger().info("Forward read trimming summary: ");
-                getLogger().info("\tTotal forward reads discarded: " + totalDiscardedF);
-                getLogger().info("\tTotal forward reads trimmed (includes discarded): " +  totalReadsTrimmedF);
-                getLogger().info("\tAvg bases trimmed from forward reads: " +  avgBasesTrimmedF);
-                getLogger().info("\tTotal forward reads remaining: " + totalReadsRetainedF);
-                getLogger().info("\tAvg forward read length after trimming (excludes discarded reads): " + avgReadLengthF);
+                getLogger().info("\tTotal forward reads discarded: " + NumberFormat.getInstance().format(totalDiscardedF));
+                getLogger().info("\tTotal forward reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmedF));
+                getLogger().info("\tAvg bases trimmed from forward reads: " +  NumberFormat.getInstance().format(avgBasesTrimmedF));
+                getLogger().info("\tTotal forward reads remaining: " + NumberFormat.getInstance().format(totalReadsRetainedF));
+                getLogger().info("\tAvg forward read length after trimming (excludes discarded reads): " + NumberFormat.getInstance().format(avgReadLengthF));
             }
 
             if (totalBasesTrimmedR > 0)
@@ -575,11 +600,11 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 Double avgBasesTrimmedR = (double)totalBasesTrimmedR / (double)totalReadsTrimmedR;
                 Double avgReadLengthR = (double)totalLengthR / (double)totalReadsRetainedR;
                 getLogger().info("Reverse read trimming summary: ");
-                getLogger().info("\tTotal reverse reads discarded: " + totalDiscardedR);
-                getLogger().info("\tTotal reverse reads trimmed (includes discarded): " +  totalReadsTrimmedR);
-                getLogger().info("\tAvg bases trimmed from reverse reads: " +  avgBasesTrimmedR);
-                getLogger().info("\tTotal reverse reads remaining: " + totalReadsRetainedR);
-                getLogger().info("\tAvg reverse read length after trimming (excludes discarded reads): " + avgReadLengthR);
+                getLogger().info("\tTotal reverse reads discarded: " + NumberFormat.getInstance().format(totalDiscardedR));
+                getLogger().info("\tTotal reverse reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmedR));
+                getLogger().info("\tAvg bases trimmed from reverse reads: " +  NumberFormat.getInstance().format(avgBasesTrimmedR));
+                getLogger().info("\tTotal reverse reads remaining: " + NumberFormat.getInstance().format(totalReadsRetainedR));
+                getLogger().info("\tAvg reverse read length after trimming (excludes discarded reads): " + NumberFormat.getInstance().format(avgReadLengthR));
             }
 
             //delete on success
@@ -587,7 +612,6 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
         catch (NumberFormatException | IOException e)
         {
-            getLogger().error("Problem with line: [" + line + "]");
             throw new PipelineJobException(e);
         }
     }

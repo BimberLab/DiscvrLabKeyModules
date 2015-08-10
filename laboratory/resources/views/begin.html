@@ -2,49 +2,63 @@
 
 Ext4.onReady(function(){
     var webpart = <%=webpartContext%>;
-    Ext4.get(webpart.wrapperDivId).update('Loading...');
+    Ext4.create('Ext.panel.Panel', {
+        border: false,
+        defaults: {
+            border: false
+        },
+        items: [{
+            html: 'Loading...'
+        }],
+        listeners: {
+            render: function(panel){
+                Laboratory.Utils.getDataItems({
+                    types: ['data', 'samples', 'misc'],
+                    success: function (result){
+                        var config = {
+                            renderTo: webpart.wrapperDivId,
+                            width: '100%',
+                            sections: [
+                                {header: 'Workbooks',
+                                    renderer: 'workbookRenderer',
+                                    items: [
+                                        {name: 'View and Edit Workbooks', schemaName: 'laboratory', queryName: 'Workbooks'}
+                                    ]}
+                            ]
+                        };
 
-    Laboratory.Utils.getDataItems({
-        types: ['data', 'samples', 'misc'],
-        success: function(result){
-            Ext4.get(webpart.wrapperDivId).update('');
+                        if (Ext4.isArray(result.data) && result.data.length){
+                            config.sections.push({
+                                header: 'Types of Data',
+                                items: result.data
+                            });
+                        }
 
-            var config = {
-                renderTo: webpart.wrapperDivId,
-                width: '100%',
-                sections: [
-                    {header: 'Workbooks',
-                    renderer: 'workbookRenderer',
-                    items: [
-                        {name: 'View and Edit Workbooks', schemaName: 'laboratory', queryName: 'Workbooks'}
-                    ]}
-                ]
-            };
+                        if (Ext4.isArray(result.samples) && result.samples.length){
+                            config.sections.push({
+                                header: 'Samples and Materials',
+                                items: result.samples
+                            });
+                        }
 
-            if(Ext4.isArray(result.data) && result.data.length){
-                config.sections.push({
-                    header: 'Types of Data',
-                    items: result.data
+                        if (Ext4.isArray(result.misc) && result.misc.length){
+                            config.sections.push({
+                                header: 'Miscellaneous',
+                                items: result.misc
+                            });
+                        }
+
+                        panel.removeAll();
+                        panel.add(Ext4.create('LDK.panel.NavPanel', config));
+                        panel.add({
+                            style: 'padding: 5px;padding-top: 0px;text-align: center',
+                            html: 'Powered By DISCVR.  <a href="https://github.com/bbimber/discvr/wiki">Click here to learn more.</a>'
+                        })
+                    }
                 });
             }
-
-            if(Ext4.isArray(result.samples) && result.samples.length){
-                config.sections.push({
-                    header: 'Samples and Materials',
-                    items: result.samples
-                });
-            }
-
-            if(Ext4.isArray(result.misc) && result.misc.length){
-                config.sections.push({
-                    header: 'Miscellaneous',
-                    items: result.misc
-                });
-            }
-
-            Ext4.create('LDK.panel.NavPanel', config);
         }
-    });
+    }).render(webpart.wrapperDivId);
 });
 
 </script>

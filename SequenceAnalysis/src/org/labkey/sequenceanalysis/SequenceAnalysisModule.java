@@ -102,7 +102,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.294;
+        return 12.296;
     }
 
     public boolean hasScripts()
@@ -152,6 +152,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.CropReadsProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.HeadCropReadsProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.MaxInfoTrimmingProvider());
+        SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.AdapterTrimmingProvider());
         SequencePipelineService.get().registerPipelineStep(new CutadaptWrapper.Provider());
 
         //ref library

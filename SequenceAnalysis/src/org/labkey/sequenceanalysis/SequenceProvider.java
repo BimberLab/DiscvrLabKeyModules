@@ -64,7 +64,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
 
     public ActionURL getInstructionsUrl(Container c, User u)
     {
-        return new ActionURL(SequenceAnalysisModule.CONTROLLER_NAME, "instructions", c);
+        return null;
     }
 
     public List<NavItem> getDataNavItems(Container c, User u)

@@ -17,8 +17,6 @@ Ext4.onReady(function (){
             '<div style="margin-bottom: 10px;"></div>' +
             //'<div id="analysisNav_'+webpart.wrapperDivId+'"></div>' +
             //'<br>' +
-            '<div id="fileSummary_'+webpart.wrapperDivId+'"></div>' +
-            '<br>' +
             '<div id="qualityMetrics_'+webpart.wrapperDivId+'"></div>' +
             '<div style="margin-bottom: 10px;"></div>' +
             '<div id="readsetDiv_'+webpart.wrapperDivId+'"/>'
@@ -110,6 +108,15 @@ Ext4.onReady(function (){
                 schemaName: 'sequenceanalysis',
                 queryName: 'sequence_readsets',
                 filterArray: [LABKEY.Filter.create('rowid', row.readset, LABKEY.Filter.Types.EQUAL)]
+            },
+            detailsConfig: {
+                buttons: [{
+                    text: 'More Actions',
+                    menu: [{
+                        text: 'Edit Readset Details',
+                        href: LABKEY.ActionURL.buildURL('ldk', 'manageRecord', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', keyField: 'rowid', key: row.readset}) + '&returnUrl=' + LDK.Utils.getSrcURL()
+                    }]
+                }]
             }
         });
 
@@ -129,16 +136,6 @@ Ext4.onReady(function (){
                 }
             });
         }
-
-        LDK.Utils.getReadOnlyQWP({
-            title: 'Files Created',
-            schemaName: 'exp',
-            queryName: 'datainputs',
-            maxRows: 10,
-            containerPath: Laboratory.Utils.getQueryContainerPath(),
-            columns: 'rowid,data,role,data/downloadlink',
-            filterArray: [LABKEY.Filter.create('TargetProtocolApplication/Run', row.runid, LABKEY.Filter.Types.EQUAL)]
-         }).render('fileSummary_'+webpart.wrapperDivId);
     }
 });
 

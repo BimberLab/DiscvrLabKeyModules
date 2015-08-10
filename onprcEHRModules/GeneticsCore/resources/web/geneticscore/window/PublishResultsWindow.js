@@ -12,7 +12,23 @@ Ext4.define('GeneticsCore.window.PublishResultsWindow', {
             }
 
             Ext4.create('GeneticsCore.window.PublishResultsWindow', {
-                dataRegionName: dataRegionName
+                dataRegionName: dataRegionName,
+                actionName: 'cacheAnalyses'
+            }).show();
+        },
+
+        haplotypeButtonHandler: function(dataRegionName){
+            var dr = LABKEY.DataRegions[dataRegionName];
+            LDK.Assert.assertNotEmpty('Unable to find dataregion in PublishResultsWindow', dr);
+
+            if (!dr.getChecked().length) {
+                Ext4.Msg.alert('Error', 'No rows selected');
+                return;
+            }
+
+            Ext4.create('GeneticsCore.window.PublishResultsWindow', {
+                dataRegionName: dataRegionName,
+                actionName: 'cacheHaplotypes'
             }).show();
         }
     },
@@ -28,7 +44,7 @@ Ext4.define('GeneticsCore.window.PublishResultsWindow', {
                 border: false
             },
             items: [{
-                html: 'This will take a snapshot of the selected rows and store the summary in the Genotyping assay.',
+                html: 'This will take a snapshot of the selected rows and store the summary in the Genotyping assay.  Note: this will append these results into the assay, rather than replace existing cached results.  If you want to delete these, you can do this from the assay itself.',
                 style: 'padding-bottom: 10px;'
             },{
                 xtype: 'combo',
@@ -99,7 +115,7 @@ Ext4.define('GeneticsCore.window.PublishResultsWindow', {
 
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('geneticscore', 'cacheAnalyses', null, {alleleNames: alleleNames, protocolId: protocol}),
+            url: LABKEY.ActionURL.buildURL('geneticscore', this.actionName, null, {alleleNames: alleleNames, protocolId: protocol}),
             method: 'post',
             timeout: 10000000,
             scope: this,

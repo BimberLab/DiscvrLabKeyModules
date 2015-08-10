@@ -11,6 +11,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.SamFormatConverterWrapper;
 
@@ -38,6 +39,12 @@ public class StarWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean supportsGzipFastqs()
+        {
+            return true;
+        }
+
+        @Override
         public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
@@ -52,9 +59,6 @@ public class StarWrapper extends AbstractCommandWrapper
             File indexDir = new File(referenceGenome.getWorkingFastaFile().getParentFile(), getProvider().getName());
             args1.add(indexDir.getPath());
 
-            //only applies if input if gzip
-            // --readFilesCommand zcat
-
             // --outFileNamePrefix $SAMP_DIR\_
 
             //  $RAW_DIR/$line\_R1.fastq.gz $RAW_DIR/$line\_R2.fastq.gz
@@ -63,6 +67,13 @@ public class StarWrapper extends AbstractCommandWrapper
             if (inputFastq2 != null)
             {
                 args1.add(inputFastq2.getPath());
+            }
+
+            FileType gz = new FileType(".gz");
+            if (gz.isType(inputFastq1))
+            {
+                args1.add("--readFilesCommand");
+                args1.add("zcat");
             }
 
             addThreadArgs(args1);
@@ -109,6 +120,7 @@ public class StarWrapper extends AbstractCommandWrapper
             }
 
             output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
+            output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
         }

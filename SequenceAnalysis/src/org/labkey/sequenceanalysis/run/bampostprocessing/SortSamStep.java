@@ -67,6 +67,7 @@ public class SortSamStep extends AbstractCommandPipelineStep<SortSamWrapper> imp
             }
 
             output.setBAM(sorted);
+            output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
         }

@@ -58,7 +58,7 @@ public class BWAMemWrapper extends BWAWrapper
 
             File sam = new File(outputDirectory, basename + ".sam");
             getWrapper().execute(args, sam);
-            if (!sam.exists() || SequenceUtil.getLineCount(sam) < 2)
+            if (!sam.exists() || !SequenceUtil.hasMinLineCount(sam, 2))
             {
                 throw new PipelineJobException("SAM file doesnt exist or has too few lines: " + sam.getPath());
             }

@@ -86,6 +86,13 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
             {
                 getPipelineJob().getSequenceSupport().cacheGenome(SequenceAnalysisService.get().getReferenceGenome(f.getLibrary_id(), getJob().getUser()));
             }
+            getPipelineJob().getSequenceSupport().cacheExpData(f.getExpData());
+        }
+
+        if (getPipelineJob().getJsonParams() != null)
+        {
+            getJob().getLogger().debug("job parameters:");
+            getJob().getLogger().debug(getPipelineJob().getJsonParams().toString(1));
         }
 
         handler.getProcessor().init(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);

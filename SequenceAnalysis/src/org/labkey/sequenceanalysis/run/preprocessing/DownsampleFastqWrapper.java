@@ -13,6 +13,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.DownsampleSamWrapper;
 import org.labkey.sequenceanalysis.run.util.FastqToSamWrapper;
 import org.labkey.sequenceanalysis.run.util.SamToFastqWrapper;
@@ -50,7 +51,7 @@ public class DownsampleFastqWrapper extends AbstractCommandWrapper
             Integer readNumber = extractParamValue(DownsampleReadNumber, Integer.class);
             getPipelineCtx().getLogger().info("Downsampling file to ~" + readNumber + " random reads: " + inputFile.getName());
 
-            int total = FastqUtils.getSequenceCount(inputFile);
+            long total = FastqUtils.getSequenceCount(inputFile);
             double pctRetained = readNumber / (double)total;
             pctRetained = Math.min(pctRetained, 1.0);
             getPipelineCtx().getLogger().info("\tTotal reads: " + total + ". Desired number: " + readNumber);
@@ -64,6 +65,7 @@ public class DownsampleFastqWrapper extends AbstractCommandWrapper
             {
                 getWrapper().setOutputDir(outputDir);
                 output.setProcessedFastq(getWrapper().downsampleFile(inputFile, inputFile2, pctRetained));
+                output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
                 return output;
             }
@@ -103,12 +105,13 @@ public class DownsampleFastqWrapper extends AbstractCommandWrapper
         if (!sam.delete() || sam.exists())
             throw new PipelineJobException("File exists: " + sam.getPath());
 
+        String extension = FileUtil.getExtension(inputFile).endsWith("gz") ? ".fastq.gz" : ".fastq";
         SamToFastqWrapper sam2fq = new SamToFastqWrapper(getLogger());
         sam2fq.setOutputDir(getOutputDir(null));
-        String fn1 = FileUtil.getBaseName(inputFile) + ".downsampled.fastq";
+        String fn1 = SequenceTaskHelper.getUnzippedBaseName(inputFile) + ".downsampled" + extension;
         String fn2 = null;
         if (inputFile2 != null)
-            fn2 = FileUtil.getBaseName(inputFile2) + ".downsampled.fastq";
+            fn2 = SequenceTaskHelper.getUnzippedBaseName(inputFile2) + ".downsampled" + extension;
 
         Pair<File, File> currentFiles = sam2fq.executeCommand(downsampledSam, fn1, fn2);
         getLogger().info("\tDeleting file: " + downsampledSam.getPath());

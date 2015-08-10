@@ -70,7 +70,7 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
     }
 
     @Override
-    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
         try
         {

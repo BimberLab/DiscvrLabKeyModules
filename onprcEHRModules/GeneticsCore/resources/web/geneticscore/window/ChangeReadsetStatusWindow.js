@@ -78,7 +78,7 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
             method: 'POST',
             schemaName: 'sequenceanalysis',
             queryName: 'sequence_analyses',
-            columns: 'readset/rowid,container',
+            columns: 'readset/rowid,readset/container',
             filterArray: [LABKEY.Filter.create('rowid', analysisIds.join(';'), LABKEY.Filter.Types.IN)],
             scope: this,
             failure: LDK.Utils.getErrorCallback(),
@@ -92,7 +92,7 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
                 var readsetIds = [];
                 Ext4.Array.forEach(results.rows, function(row){
                     if (row['readset/rowid']) {
-                        readsetIds.push(row['readset/rowid'] + '<>' + row.container);
+                        readsetIds.push(row['readset/rowid'] + '<>' + row['readset/container']);
                     }
                 }, this);
 

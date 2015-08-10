@@ -2513,6 +2513,7 @@ labModules/SequenceAnalysis/lib/biojava3-genome-3.0.7.jar -text
 labModules/SequenceAnalysis/lib/biojava3-phylo-3.0.7.jar -text
 labModules/SequenceAnalysis/lib/biojava3-ws-3.0.7.jar -text
 labModules/SequenceAnalysis/module.properties -text
+labModules/SequenceAnalysis/pipeline_code/cnv_tools.sh -text
 labModules/SequenceAnalysis/pipeline_code/external/picard/BuildBamIndex.jar -text
 labModules/SequenceAnalysis/pipeline_code/external/picard/DownsampleSam.jar -text
 labModules/SequenceAnalysis/pipeline_code/external/picard/FastqToSam.jar -text
@@ -2758,6 +2759,8 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.291-12.292.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.292-12.293.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.293-12.294.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.294-12.295.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.295-12.296.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -2828,6 +2831,8 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.291-12.292.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.292-12.293.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.293-12.294.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.294-12.295.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.295-12.296.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -2850,10 +2855,6 @@ labModules/SequenceAnalysis/resources/views/begin.view.xml -text
 labModules/SequenceAnalysis/resources/views/begin.webpart.xml -text
 labModules/SequenceAnalysis/resources/views/coverageDepth.html -text
 labModules/SequenceAnalysis/resources/views/coverageDepth.view.xml -text
-labModules/SequenceAnalysis/resources/views/dataAnalysisInstructions.html -text
-labModules/SequenceAnalysis/resources/views/dataAnalysisInstructions.view.xml -text
-labModules/SequenceAnalysis/resources/views/dataImportInstructions.html -text
-labModules/SequenceAnalysis/resources/views/dataImportInstructions.view.xml -text
 labModules/SequenceAnalysis/resources/views/generateSequenceGraph.html -text
 labModules/SequenceAnalysis/resources/views/generateSequenceGraph.view.xml -text
 labModules/SequenceAnalysis/resources/views/haplotypeDetails.html -text
@@ -2864,8 +2865,6 @@ labModules/SequenceAnalysis/resources/views/importReadset.html -text
 labModules/SequenceAnalysis/resources/views/importReadset.view.xml -text
 labModules/SequenceAnalysis/resources/views/insertRefSequence.html -text
 labModules/SequenceAnalysis/resources/views/insertRefSequence.view.xml -text
-labModules/SequenceAnalysis/resources/views/instructions.html -text
-labModules/SequenceAnalysis/resources/views/instructions.view.xml -text
 labModules/SequenceAnalysis/resources/views/instrumentImport.html -text
 labModules/SequenceAnalysis/resources/views/instrumentImport.view.xml -text
 labModules/SequenceAnalysis/resources/views/instrumentRunDetails.html -text
@@ -3098,7 +3097,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/bampostprocessin
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/CutadaptWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/DownsampleFastqWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/PreprocessingOutputImpl.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/SeqCrumbsRunner.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/Sff2FastqRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/TrimmomaticWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/reference/CustomReferenceLibraryStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/reference/DNAReferenceLibraryStep.java -text
@@ -3245,6 +3244,7 @@ labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.297-1
 labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.298-12.299.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.299-12.300.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.300-12.301.sql -text
+labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.301-12.302.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/obsolete/laboratory-0.00-11.00.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/obsolete/laboratory-11.00-11.01.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/obsolete/laboratory-11.01-11.12.sql -text
@@ -3301,6 +3301,7 @@ labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.297-12
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.298-12.299.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.299-12.300.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.300-12.301.sql -text
+labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.301-12.302.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/obsolete/laboratory-0.00-11.12.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/obsolete/laboratory-11.12-11.14.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/obsolete/laboratory-11.14-11.15.sql -text
@@ -3465,6 +3466,7 @@ onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreModule.java
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsTableCustomizer.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/analysis/MethylationRateComparison.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/ChangeReadsetStatusButton.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/PublishSBTHaplotypesButton.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/PublishSBTResultsButton.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/SBTReviewButton.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/notification/GeneticsCoreNotification.java -text

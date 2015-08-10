@@ -192,4 +192,47 @@ public class GeneticsCoreController extends SpringActionController
             _protocolId = protocolId;
         }
     }
+
+
+    @RequiresPermissionClass(UpdatePermission.class)
+    @CSRF
+    public class CacheHaplotypesAction extends ApiAction<CacheAnalysesForm>
+    {
+        public ApiResponse execute(CacheAnalysesForm form, BindException errors)
+        {
+            Map<String, Object> resultProperties = new HashMap<>();
+
+            //first verify permission to delete
+            if (form.getAlleleNames() != null)
+            {
+                try
+                {
+                    ExpProtocol protocol = ExperimentService.get().getExpProtocol(form.getProtocolId());
+                    if (protocol == null)
+                    {
+                        errors.reject(ERROR_MSG, "Unknown protocol: " + form.getProtocolId());
+                        return null;
+                    }
+
+                    Pair<List<Integer>, List<Integer>> ret = GeneticsCoreManager.get().cacheHaplotypes(getViewContext(), protocol, form.getAlleleNames());
+                    resultProperties.put("runsCreated", ret.first);
+                    resultProperties.put("runsDeleted", ret.second);
+                }
+                catch (IllegalArgumentException e)
+                {
+                    errors.reject(ERROR_MSG, e.getMessage());
+                    return null;
+                }
+            }
+            else
+            {
+                errors.reject(ERROR_MSG, "No alleles provided");
+                return null;
+            }
+
+            resultProperties.put("success", true);
+
+            return new ApiSimpleResponse(resultProperties);
+        }
+    }
 }

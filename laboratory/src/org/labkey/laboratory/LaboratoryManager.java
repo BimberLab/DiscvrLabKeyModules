@@ -149,49 +149,6 @@ public class LaboratoryManager
         });
     }
 
-    public Integer getNextWorkbookId(Container c)
-    {
-        Container target = c.isWorkbook() ? c.getParent() : c;
-        TableInfo ti = LaboratorySchema.getInstance().getSchema().getTable(LaboratorySchema.TABLE_WORKBOOKS);
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString(LaboratoryWorkbooksTable.PARENT_COL), target.getId(), CompareType.EQUAL);
-
-        TableSelector ts = new TableSelector(ti, Collections.singleton("workbookId"), filter, null);
-        Map<String, List<Aggregate.Result>> aggs = ts.getAggregates(Collections.singletonList(new Aggregate(FieldKey.fromString("workbookId"), Aggregate.Type.MAX)));
-        for (List<Aggregate.Result> ag : aggs.values())
-        {
-            for (Aggregate.Result r : ag)
-            {
-                //did the return type of aggregates change between 12.3 -> 13.1??
-                Integer rowId;
-                if (r.getValue() instanceof Long)
-                {
-                    Long val = (Long)r.getValue();
-                    rowId = val == null ? null : val.intValue();
-                }
-                else
-                {
-                    rowId = (Integer)r.getValue();
-                }
-
-                if (rowId == null)
-                    rowId = 0;
-
-                rowId++;
-                return rowId;
-            }
-        }
-
-        return 1;
-    }
-
-    public Integer getWorkbookId(Container c)
-    {
-        TableInfo ti = LaboratorySchema.getInstance().getSchema().getTable(LaboratorySchema.TABLE_WORKBOOKS);
-        TableSelector ts = new TableSelector(ti, Collections.singleton("workbookId"), new SimpleFilter(FieldKey.fromString(LaboratoryWorkbooksTable.WORKBOOK_COL), c.getId()), null);
-        Integer[] arr = ts.getArray(Integer.class);
-        return arr.length == 0 ? null : arr[0];
-    }
-
     public WorkbookModel getWorkbookModel(Container c)
     {
         TableInfo ti = LaboratorySchema.getInstance().getSchema().getTable(LaboratorySchema.TABLE_WORKBOOKS);

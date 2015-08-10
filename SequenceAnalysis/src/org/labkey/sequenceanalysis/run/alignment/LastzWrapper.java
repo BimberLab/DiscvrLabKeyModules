@@ -14,6 +14,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.SamFormatConverterWrapper;
 import org.labkey.sequenceanalysis.util.FastqToFastaConverter;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -43,6 +44,12 @@ public class LastzWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean supportsGzipFastqs()
+        {
+            return false;
+        }
+
+        @Override
         public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             return new IndexOutputImpl(referenceGenome);
@@ -65,6 +72,7 @@ public class LastzWrapper extends AbstractCommandWrapper
 
             File outputBam = getWrapper().doAlignment(tempFasta, referenceGenome.getWorkingFastaFile(), outputDirectory, basename, getClientCommandArgs());
             output.addOutput(outputBam, AlignmentOutputImpl.BAM_ROLE);
+            output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
         }
@@ -132,7 +140,7 @@ public class LastzWrapper extends AbstractCommandWrapper
     public File convertInputFastqToFasta(File outputDirectory, List<File> inputFastqs) throws PipelineJobException
     {
         FastqToFastaConverter converter = new FastqToFastaConverter(getLogger());
-        File output = new File(outputDirectory, FileUtil.getBaseName(inputFastqs.get(0)) + ".fasta");
+        File output = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputFastqs.get(0)) + ".fasta");
         try
         {
             converter.execute(output, inputFastqs);

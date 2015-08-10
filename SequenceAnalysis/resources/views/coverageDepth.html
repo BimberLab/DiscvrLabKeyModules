@@ -194,6 +194,12 @@ Ext4.onReady(function(){
                         defaults: {
                             border: false
                         }
+                    },{
+                        xtype: 'ldk-integerfield',
+                        fieldLabel: 'Min Mapping Quality',
+                        labelWidth: this.LABEL_WIDTH,
+                        name: 'minMappingQuality',
+                        value: 30
                     }]
                 },{
                     title: 'Step 2: Plotting Options',
@@ -238,11 +244,11 @@ Ext4.onReady(function(){
                         },
                         items: [{
                             boxLabel: 'Plot One Chromosome / Line',
-                            inputValue: 'vertical',
-                            checked: true
+                            inputValue: 'vertical'
                         },{
                             boxLabel: 'Plot All Chromosomes on Same Line',
-                            inputValue: 'horizontal'
+                            inputValue: 'horizontal',
+                            checked: true
                         }]
                     }]
                 },{

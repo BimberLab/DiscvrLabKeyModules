@@ -70,6 +70,12 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean supportsGzipFastqs()
+        {
+            return true;
+        }
+
+        @Override
         public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
@@ -125,6 +131,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
 
             output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
             output.addOutput(new File(outputDirectory, inputFastq1.getName() + "_bismark_" + (inputFastq2 == null ? "SE" : "PE") + "_report.txt"), "Bismark Summary Report");
+            output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
         }
@@ -374,7 +381,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+        public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
         {
             return null;
         }

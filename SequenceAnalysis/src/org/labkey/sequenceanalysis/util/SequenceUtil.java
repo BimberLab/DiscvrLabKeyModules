@@ -35,12 +35,15 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 /**
  * User: bimber
@@ -94,7 +97,8 @@ public class SequenceUtil
 
     public static long getLineCount(File f) throws PipelineJobException
     {
-        try (BufferedReader reader = new BufferedReader(new FileReader(f)))
+        FileType gz = new FileType(".gz");
+        try (InputStream is = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f);BufferedReader reader = new BufferedReader(new InputStreamReader(is));)
         {
             long i = 0;
             while (reader.readLine() != null)
@@ -112,16 +116,25 @@ public class SequenceUtil
 
     public static boolean hasLineCount(File f) throws PipelineJobException
     {
-        try (BufferedReader reader = new BufferedReader(new FileReader(f)))
+        return hasMinLineCount(f, 0);
+    }
+
+    public static boolean hasMinLineCount(File f, long minLines) throws PipelineJobException
+    {
+        FileType gz = new FileType(".gz");
+        try (InputStream is = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f);BufferedReader reader = new BufferedReader(new InputStreamReader(is));)
         {
-            boolean hasLine = false;
+            long lineNo = 0;
             while (reader.readLine() != null)
             {
-                hasLine = true;
-                break;
+                lineNo++;
+                if (lineNo >= minLines)
+                {
+                    return true;
+                }
             }
 
-            return hasLine;
+            return false;
         }
         catch (IOException e)
         {
@@ -219,57 +232,66 @@ public class SequenceUtil
 
     public static void logFastqBamDifferences(Logger log, File bam) throws IOException
     {
-        int totalFirstMateAlignments = 0;
-        int totalFirstMatePrimaryAlignments = 0;
-
-        int totalSecondMateAlignments = 0;
-        int totalSecondMatePrimaryAlignments = 0;
-
-        SamReaderFactory fact = SamReaderFactory.makeDefault();
-        fact.validationStringency(ValidationStringency.SILENT);
-        try (SamReader reader = fact.open(bam))
+        final long bytes = 10737418240L; //10gb
+        long size1 = FileUtils.sizeOf(bam);
+        if (size1 > bytes)
         {
-            try (SAMRecordIterator it = reader.iterator())
+            log.info("File size: " + FileUtils.byteCountToDisplaySize(size1));
+        }
+        else
+        {
+            int totalFirstMateAlignments = 0;
+            int totalFirstMatePrimaryAlignments = 0;
+
+            int totalSecondMateAlignments = 0;
+            int totalSecondMatePrimaryAlignments = 0;
+
+            SamReaderFactory fact = SamReaderFactory.makeDefault();
+            fact.validationStringency(ValidationStringency.SILENT);
+            try (SamReader reader = fact.open(bam))
             {
-                while (it.hasNext())
+                try (SAMRecordIterator it = reader.iterator())
                 {
-                    SAMRecord r = it.next();
-                    if (r.getReadUnmappedFlag())
+                    while (it.hasNext())
                     {
-                        continue;
-                    }
+                        SAMRecord r = it.next();
+                        if (r.getReadUnmappedFlag())
+                        {
+                            continue;
+                        }
 
-                    //count all alignments
-                    if (r.getReadPairedFlag() && r.getSecondOfPairFlag())
-                    {
-                        totalSecondMateAlignments++;
-                    }
-                    else
-                    {
-                        totalFirstMateAlignments++;
-                    }
-
-                    //also just primary alignments
-                    if (!r.isSecondaryOrSupplementary())
-                    {
+                        //count all alignments
                         if (r.getReadPairedFlag() && r.getSecondOfPairFlag())
                         {
-                            totalSecondMatePrimaryAlignments++;
+                            totalSecondMateAlignments++;
                         }
                         else
                         {
-                            totalFirstMatePrimaryAlignments++;
+                            totalFirstMateAlignments++;
+                        }
+
+                        //also just primary alignments
+                        if (!r.isSecondaryOrSupplementary())
+                        {
+                            if (r.getReadPairedFlag() && r.getSecondOfPairFlag())
+                            {
+                                totalSecondMatePrimaryAlignments++;
+                            }
+                            else
+                            {
+                                totalFirstMatePrimaryAlignments++;
+                            }
                         }
                     }
+
+                    log.info("File size: " + FileUtils.byteCountToDisplaySize(bam.length()));
+                    log.info("Total first mate alignments: " + totalFirstMateAlignments);
+                    log.info("Total first second mate alignments: " + totalSecondMateAlignments);
+
+                    log.info("Total first mate primary alignments: " + totalFirstMatePrimaryAlignments);
+
+                    log.info("Total second mate primary alignments: " + totalSecondMatePrimaryAlignments);
                 }
-
-                log.info("File size: " + FileUtils.byteCountToDisplaySize(bam.length()));
-                log.info("Total first mate alignments: " + totalFirstMateAlignments);
-                log.info("Total first second mate alignments: " + totalSecondMateAlignments);
-
-                log.info("Total first mate primary alignments: " + totalFirstMatePrimaryAlignments);
-
-                log.info("Total second mate primary alignments: " + totalSecondMatePrimaryAlignments);
             }
         }
     }

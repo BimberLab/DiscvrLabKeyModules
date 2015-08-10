@@ -99,7 +99,7 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         }
 
         output.addOutput(outputFile, "gVCF File");
-        output.addSequenceOutput(outputFile, rs.getName() + ": HaplotypeCaller Variants", "gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId());
+        output.addSequenceOutput(outputFile, outputFile.getName(), "gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId());
         if (idxFile.exists())
         {
             output.addOutput(idxFile, "VCF Index");
@@ -109,7 +109,7 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
     }
 
     @Override
-    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta) throws PipelineJobException
+    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
         return null;
     }

@@ -1,6 +1,7 @@
 package org.labkey.laboratory.query;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
@@ -24,6 +25,7 @@ import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
+import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.laboratory.LaboratoryManager;
 
@@ -43,6 +45,8 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
     public static final String PARENT_COL = "parentContainer";
     public static final String WORKBOOK_ID_COl = "workbookId";
     public static final String CONTAINER_ROWID_COL = "containerRowId";
+
+    private static final Logger _log = Logger.getLogger(LaboratoryWorkbooksTable.class);
 
     public LaboratoryWorkbooksTable(UserSchema us, TableInfo st)
     {
@@ -101,18 +105,30 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
         @Override
         protected Map<String, Object> insertRow(User user, Container container, Map<String, Object> row) throws DuplicateKeyException, ValidationException, QueryUpdateServiceException, SQLException
         {
-            Integer rowId = LaboratoryManager.get().getNextWorkbookId(container);
-            assert rowId != null;
+            if (container.isWorkbook())
+            {
+                Integer rowId;
+                try
+                {
+                    rowId = Integer.parseInt(container.getName());
+                }
+                catch (NumberFormatException e)
+                {
+                    ExceptionUtil.logExceptionToMothership(null, new Exception("LaboratoryWorkbookTable is being passed a workbook with a non-numeric name: " + container.getName()));
 
-            row.put(WORKBOOK_ID_COl, rowId);
-            if (!container.isWorkbook())
-                throw new ValidationException("Workbook rows can only be created for workbooks.  Container is not a workbook: " + container.getPath());
+                    rowId = -1;  //should never happen, unsure what to do
+                }
 
-            //this is cached here since we retain these rows even if the workbook is deleted.  this allows us to clean up these rows
-            //when the parent is deleted
-            row.put(LaboratoryWorkbooksTable.PARENT_COL, container.getParent().getId());
-            row.put(LaboratoryWorkbooksTable.WORKBOOK_COL, container.getId());
-            row.put(LaboratoryWorkbooksTable.CONTAINER_ROWID_COL, container.getRowId());
+                row.put(WORKBOOK_ID_COl, rowId);
+                if (!container.isWorkbook())
+                    throw new ValidationException("Workbook rows can only be created for workbooks.  Container is not a workbook: " + container.getPath());
+
+                //this is cached here since we retain these rows even if the workbook is deleted.  this allows us to clean up these rows
+                //when the parent is deleted
+                row.put(LaboratoryWorkbooksTable.PARENT_COL, container.getParent().getId());
+                row.put(LaboratoryWorkbooksTable.WORKBOOK_COL, container.getId());
+                row.put(LaboratoryWorkbooksTable.CONTAINER_ROWID_COL, container.getRowId());
+            }
 
             return super.insertRow(user, container, row);
         }
@@ -268,7 +284,9 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
                     {
                         String containerId = (String)it.get(inputColMap.get(WORKBOOK_COL));
                         if (containerId != null)
+                        {
                             workbookId = idGen.getNextId(containerId);
+                        }
                     }
 
                     return workbookId;
@@ -293,28 +311,26 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
 
         }
 
-        public int getNextId(String containerId)
+        public Integer getNextId(String containerId)
         {
             Container c = ContainerManager.getForId(containerId);
             if (c == null)
                 throw new IllegalArgumentException("Unknown container: " + containerId);
 
-            Container target = c.isWorkbook() ? c.getParent() : c;
-
-            Integer key;
-            if (_idMap.containsKey(target.getId()))
+            if (!c.isWorkbook())
             {
-                key = _idMap.get(target.getId());
-                key++;
-            }
-            else
-            {
-                key = LaboratoryManager.get().getNextWorkbookId(target);
+                return null;
             }
 
-            _idMap.put(target.getId(), key);
-
-            return key;
+            try
+            {
+                return Integer.parseInt(c.getName());
+            }
+            catch (NumberFormatException e)
+            {
+                ExceptionUtil.logExceptionToMothership(null, new Exception("LaboratoryWorkbookTable is being passed a workbook with a non-numeric name: " + c.getName()));
+                return null;
+            }
         }
     }
 }

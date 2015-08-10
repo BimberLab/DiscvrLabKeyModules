@@ -25,12 +25,10 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ConvertHelper;
-import org.labkey.api.exp.api.DataType;
-import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -176,7 +174,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                 //step 1: define windows
                 job.getLogger().info("generating windows");
                 WindowStrategy windowStrategy = settings.getWindowStrategy();
-                windowStrategy.generateWindows(inputFiles, outputDir);
+                windowStrategy.generateWindows(inputFiles, outputDir, job.getLogger());
 
                 //step 3: using windows, iterate BAMs to generate raw data
                 Map<SequenceOutputFile, File> rawDataMap = new HashMap<>();
@@ -230,7 +228,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                     Map<String, MetricLine> referenceData = readDataToMemory(rawDataMap.get(referenceSample));
 
                     //get read count for reference
-                    long refReadCount = getReadCount(referenceSample);
+                    long refReadCount = getReadCount(referenceSample, support, job.getLogger(), windowStrategy.getSettings());
                     job.getLogger().info("total reads in reference sample: " + refReadCount);
 
                     //iterate original data and augment
@@ -239,7 +237,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                         job.getLogger().info("generating reference-normalized data for: " + outputFile.getName());
                         File normalizedToReference = new File(outputDir, getBaseNameForFile(outputFile) + ".normalizedToSample.txt");
                         File rawData = rawDataMap.get(outputFile);
-                        long sampleReadCount = getReadCount(outputFile);
+                        long sampleReadCount = getReadCount(outputFile, support, job.getLogger(), windowStrategy.getSettings());
                         job.getLogger().info("total reads in BAM: " + sampleReadCount);
                         generateNormalizedDataForSample(job, rawData, normalizedToReference, referenceData, refReadCount, sampleReadCount);
                         actionMap.get(outputFile).addOutput(getFinalFilename(normalizedToReference, settings), "Coverage Data - Normalized To Reference Sample", settings.deleteRawData(), true);
@@ -445,16 +443,29 @@ public class CoverageDepthHandler implements SequenceOutputHandler
         return settings.deleteRawData() ? f : new File(f.getPath() + ".gz");
     }
 
-    private long getReadCount(SequenceOutputFile outputFile)
+    private long getReadCount(SequenceOutputFile outputFile, SequenceAnalysisJobSupport support, Logger log, CoverageSettings settings) throws PipelineJobException
     {
         long ret = 0;
-        File bam = outputFile.getExpData().getFile();
+
+        File bam = support.getCachedData(outputFile.getDataId());
+        if (bam == null)
+        {
+            throw new PipelineJobException("file not cached for output: " + outputFile.getRowid());
+        }
+        else if (!bam.exists())
+        {
+            throw new PipelineJobException("unable to find file: " + bam.getPath());
+        }
+
+        log.info("calculating read count for file: " + bam.getPath());
 
         List<SamRecordFilter> filters = Arrays.asList(
                 new AlignedFilter(true),
                 new NotPrimaryAlignmentFilter()
         );
 
+        Integer minMappingQuality = settings.getMinMappingQuality();
+        long lowQualReads = 0;
         try (SAMFileReader reader = new SAMFileReader(bam))
         {
             try (SAMRecordIterator it = reader.iterator())
@@ -468,12 +479,25 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                         {
                             if (!r.getProperPairFlag() || !r.getSecondOfPairFlag())
                             {
+                                if (minMappingQuality != null && r.getMappingQuality() < minMappingQuality)
+                                {
+                                    lowQualReads++;
+                                    continue;
+                                }
+
                                 ret++;
                             }
                         }
                     }
                 }
             }
+        }
+
+        log.info("total alignments : " + ret);
+
+        if (settings.getMinMappingQuality() != null)
+        {
+            log.info("total alignments below min quality: " + lowQualReads);
         }
 
         return ret;
@@ -854,7 +878,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
 
         public boolean deleteRawData()
         {
-            return _json.get("deleteRawData") == null ? true : ConvertHelper.convert(_json.get("deleteRawData"), Boolean.class);
+            return _json.get("deleteRawData") == null ? false : ConvertHelper.convert(_json.get("deleteRawData"), Boolean.class);
         }
 
         public List<String> getMetricNames()
@@ -883,6 +907,11 @@ public class CoverageDepthHandler implements SequenceOutputHandler
         public JSONObject getJson()
         {
             return _json;
+        }
+
+        public Integer getMinMappingQuality()
+        {
+            return _json.get("minMappingQuality") == null ? null : _json.getInt("minMappingQuality");
         }
     }
 
@@ -939,30 +968,33 @@ public class CoverageDepthHandler implements SequenceOutputHandler
             _settings = settings;
         }
 
-        public void generateWindows(List<SequenceOutputFile> outputFiles, File outputDir) throws IOException, PipelineJobException
+        public void generateWindows(List<SequenceOutputFile> outputFiles, File outputDir, Logger log) throws IOException, PipelineJobException
         {
             if (doCalculateWindowsPerSample())
             {
                 for (SequenceOutputFile outputFile : outputFiles)
                 {
-                    calculateIntervalsForFile(outputFile, outputDir);
+                    calculateIntervalsForFile(outputFile, outputDir, log);
                 }
             }
             else
             {
                 Integer rowId = getReferenceSampleForWindows();
-                calculateIntervalsForFile(getSequenceOutputByRowId(rowId, outputFiles), outputDir);
+                calculateIntervalsForFile(getSequenceOutputByRowId(rowId, outputFiles), outputDir, log);
             }
         }
 
-        private void calculateIntervalsForFile(SequenceOutputFile o, File outputDir) throws IOException, PipelineJobException
+        private void calculateIntervalsForFile(SequenceOutputFile o, File outputDir, Logger log) throws IOException, PipelineJobException
         {
+            log.info("calculating intervals based on sample: " + o.getName());
+
             File output = new File(outputDir, getBaseNameForFile(o) + ".windows.bed");
             try (CSVWriter writer = new CSVWriter(new FileWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 if ("fixedWidth".equals(_settings.getJson().getString("windowStrategy")))
                 {
                     int basesPerWindow = _settings.getJson().getInt("basesPerWindow");
+                    log.info("using fixed with of " + basesPerWindow);
 
                     SamReaderFactory fact = SamReaderFactory.makeDefault();
                     try (SamReader reader = fact.open(o.getFile()))
@@ -983,10 +1015,13 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                 else if ("fixedReadNumber".equals(_settings.getJson().getString("windowStrategy")))
                 {
                     int readNumberPerWindow = _settings.getJson().getInt("readNumberPerWindow");
+                    log.info("using variable width window based on " + readNumberPerWindow + " reads");
                     //zero-based
                     int windowStart = 0;
                     int lastReadStart = 0;
                     String refName = null;
+                    long lowQualReads = 0;
+                    long passingAlignments = 0;
 
                     // We make the assumption this BAM is sorted.
                     // TODO: this is probably not a safe assumption
@@ -995,11 +1030,19 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                     {
                         SAMFileHeader header = reader.getFileHeader();
                         Set<String> encounteredReadNames = new HashSet<>(readNumberPerWindow);
+                        Integer minMappingQuality = getSettings().getMinMappingQuality();
                         try (PeekableIterator<SAMRecord> i = getIterator(reader.iterator()))
                         {
                             while (i.hasNext())
                             {
                                 SAMRecord r = i.next();
+                                if (minMappingQuality != null && r.getMappingQuality() < minMappingQuality)
+                                {
+                                    lowQualReads++;
+                                    continue;
+                                }
+
+                                passingAlignments++;
 
                                 //if we switch reference, restart
                                 if (refName != null && !refName.equals(r.getReferenceName()))
@@ -1015,11 +1058,6 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                                     if (windowStart != r.getAlignmentStart())
                                     {
                                         writer.writeNext(new String[]{r.getReferenceName(), String.valueOf(windowStart), String.valueOf(r.getAlignmentStart())});  //end is 1-based
-                                    }
-                                    else
-                                    {
-                                        int x = 1 + 1;
-                                        x++;
                                     }
 
                                     windowStart = r.getAlignmentStart();  //start of the next window, 0-based
@@ -1037,12 +1075,20 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                             encounteredReadNames.clear();
                         }
                     }
+
+                    log.info("passing alignments: " + passingAlignments);
+                    if (getSettings().getMinMappingQuality() != null)
+                    {
+                        log.info("total alignments below min quality: " + lowQualReads);
+                    }
                 }
                 else
                 {
                     throw new PipelineJobException("Unknown window strategy: " + _settings.getJson().getString("windowStrategy"));
                 }
             }
+
+            log.info("total windows: " + (SequenceUtil.getLineCount(output) - 1));
 
             _fileMap.put(o.getRowid(), output);
         }

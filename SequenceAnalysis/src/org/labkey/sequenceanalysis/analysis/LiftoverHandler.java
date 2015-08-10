@@ -159,7 +159,7 @@ public class LiftoverHandler implements SequenceOutputHandler
                 RecordedAction action = new RecordedAction(getName());
                 action.setStartTime(new Date());
 
-                boolean isGzip = f.getFile().getPath().toLowerCase().endsWith(".gz");
+                boolean isGzip = f.getFile().getPath().toLowerCase().endsWith("gz");
                 int dots = isGzip ? 2 : 1;
                 String extension = isGzip ? FileUtil.getExtension(f.getFile().getName().replaceAll(".gz$", "")) : FileUtil.getExtension(f.getFile());
                 String baseName = FileUtil.getBaseName(f.getFile(), dots);
@@ -237,7 +237,7 @@ public class LiftoverHandler implements SequenceOutputHandler
                 {
                     job.getLogger().info("no unmapped intervals");
                 }
-                else if (SequenceUtil.getLineCount(unmappedOutput) == 0)
+                else if (!SequenceUtil.hasLineCount(unmappedOutput))
                 {
                     job.getLogger().info("no unmapped intervals");
                     unmappedOutput.delete();

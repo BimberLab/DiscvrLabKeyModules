@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.pipeline;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Table;
@@ -1022,6 +1023,10 @@ public class TaskFileManagerImpl implements TaskFileManager
         File unzipped = null;
         if (gz.isType(i))
         {
+            RecordedAction action = new RecordedAction(SequenceAlignmentTask.DECOMPRESS_ACTIONNAME);
+            Date start = new Date();
+            action.setStartTime(start);
+
             //NOTE: we use relative paths in all cases here
             _job.getLogger().info("Decompressing file: " + i.getPath());
 
@@ -1031,9 +1036,13 @@ public class TaskFileManagerImpl implements TaskFileManager
 
             _unzippedMap.put(i, unzipped);
 
-            RecordedAction action = new RecordedAction(SequenceAlignmentTask.DECOMPRESS_ACTIONNAME);
             action.addInput(i, "Compressed File");
             action.addOutput(unzipped, "Decompressed File", true, true);
+
+            Date end = new Date();
+            action.setEndTime(end);
+            _job.getLogger().info("\tCompress Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+
             actions.add(action);
 
             return unzipped;

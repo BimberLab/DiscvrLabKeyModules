@@ -41,7 +41,7 @@ import org.labkey.sequenceanalysis.FileGroup;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
-import org.labkey.sequenceanalysis.run.preprocessing.SeqCrumbsRunner;
+import org.labkey.sequenceanalysis.run.preprocessing.Sff2FastqRunner;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.run.util.SFFExtractRunner;
 import org.labkey.sequenceanalysis.run.util.SamToFastqWrapper;
@@ -698,7 +698,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         }
 
         Pair<File, File> ret = new Pair<>(null, null);
-        if (out1.exists() && SequenceUtil.getLineCount(out1) > 0)
+        if (out1.exists() && SequenceUtil.hasLineCount(out1))
         {
             ret.first = out1;
         }
@@ -707,7 +707,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             getJob().getLogger().error("Unable to find file for readgroup: " + platformUnit);
         }
 
-        if (out2.exists() && SequenceUtil.getLineCount(out2) > 0)
+        if (out2.exists() && SequenceUtil.hasLineCount(out2))
         {
             ret.second = out2;
         }
@@ -806,7 +806,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     Compress.decompressGzip(input, toConvert);
                 }
 
-                SeqCrumbsRunner runner = new SeqCrumbsRunner(getJob().getLogger());
+                Sff2FastqRunner runner = new Sff2FastqRunner(getJob().getLogger());
                 output = new File(workingDir, SequenceTaskHelper.getUnzippedBaseName(input.getName()) + ".fastq");
                 runner.convertFormat(toConvert, output);
 

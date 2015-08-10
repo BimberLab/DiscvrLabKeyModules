@@ -4,6 +4,7 @@ import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -34,7 +35,8 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         List<String> params = new LinkedList<>();
         params.add("java");
         params.add("-jar");
-        params.add(getJar().getPath());
+        params.add(getPicardJar().getPath());
+        params.add(getTooName());
         params.add("--version");
 
         boolean origWarn = isWarnNonZeroExits();
@@ -49,7 +51,7 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         return ret;
     }
 
-    public File getPicardJar(String jarName)
+    public File getPicardJar()
     {
         String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARDPATH");
         if (path != null)
@@ -63,10 +65,9 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
             path = PipelineJobService.get().getAppProperties().getToolsDirectory();
         }
 
-        String subdir = "picard-tools";
-        File baseDir = path == null ? new File(subdir) : new File(path, subdir);
+        File baseDir = path == null ? null : new File(path);
 
-        return new File(baseDir, jarName);
+        return new File(baseDir, "picard.jar");
     }
 
     public static List<String> getBaseParams()
@@ -99,5 +100,22 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         _stringency = stringency;
     }
 
-    abstract protected File getJar();
+    abstract protected String getTooName();
+
+    protected void inferMaxRecordsInRam(List<String> args)
+    {
+        for (String arg : args)
+        {
+            if (arg.startsWith("-Xmx") && arg.endsWith("g"))
+            {
+                String val = arg.substring(4, arg.length() - 1);
+                Integer gb = ConvertHelper.convert(val, Integer.class);
+
+                //A rule of thumb for reads of ~100bp is to set MAX_RECORDS_IN_RAM to be 250,000 reads per each GB given to the -Xmx
+                args.add("MAX_RECORDS_IN_RAM=" + String.valueOf(gb * 250000));
+
+                break;
+            }
+        }
+    }
 }

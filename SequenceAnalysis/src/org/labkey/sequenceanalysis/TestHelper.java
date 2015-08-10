@@ -714,8 +714,7 @@ public class TestHelper
 
             validateReadsets(job, config);
 
-            int count = FastqUtils.getSequenceCount(fq);
-            Assert.assertEquals("Incorrect read number", 3260, count);
+            Assert.assertEquals("Incorrect read number", 3260L, FastqUtils.getSequenceCount(fq));
         }
 
         private void runMergePipelineJob(String protocolName, boolean deleteIntermediates) throws Exception
@@ -811,10 +810,8 @@ public class TestHelper
             verifyFileInputs(basedir, fileNames, config);
             validateReadsets(job, config);
 
-            int count = FastqUtils.getSequenceCount(merge1);
-            int count2 = FastqUtils.getSequenceCount(merge2);
-            Assert.assertEquals("Incorrect read number", 633, count);
-            Assert.assertEquals("Incorrect read number", 633, count2);
+            Assert.assertEquals("Incorrect read number", 633L, FastqUtils.getSequenceCount(merge1));
+            Assert.assertEquals("Incorrect read number", 633L, FastqUtils.getSequenceCount(merge2));
         }
 
         /**
@@ -981,15 +978,15 @@ public class TestHelper
             for (File f : expectedOutputs)
             {
                 if (f.getName().equals("dualBarcodes_SIV_MID001_MID001.fastq.gz"))
-                    Assert.assertEquals("Incorrect read number", 303, FastqUtils.getSequenceCount(f));
+                    Assert.assertEquals("Incorrect read number", 303L, FastqUtils.getSequenceCount(f));
                 else if (f.getName().equals("dualBarcodes_SIV_MID002_MID001.fastq.gz"))
-                    Assert.assertEquals("Incorrect read number", 236, FastqUtils.getSequenceCount(f));
+                    Assert.assertEquals("Incorrect read number", 236L, FastqUtils.getSequenceCount(f));
                 else if (f.getName().equals("dualBarcodes_SIV_MID003_MID001.fastq.gz"))
-                    Assert.assertEquals("Incorrect read number", 235, FastqUtils.getSequenceCount(f));
+                    Assert.assertEquals("Incorrect read number", 235L, FastqUtils.getSequenceCount(f));
                 else if (f.getName().equals("dualBarcodes_SIV_MID004_MID001.fastq.gz"))
-                    Assert.assertEquals("Incorrect read number", 98, FastqUtils.getSequenceCount(f));
+                    Assert.assertEquals("Incorrect read number", 98L, FastqUtils.getSequenceCount(f));
                 else if (f.getName().equals("dualBarcodes_SIV_unknowns.fastq.gz"))
-                    Assert.assertEquals("Incorrect read number", 2388, FastqUtils.getSequenceCount(f));
+                    Assert.assertEquals("Incorrect read number", 2388L, FastqUtils.getSequenceCount(f));
             }
         }
 
@@ -1949,20 +1946,20 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fasta"));
 
             expectedOutputs.add(new File(basedir, "paired1/Preprocessing/"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.CropReads.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.unpaired1.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.fastq.gz"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.fastq.gz"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.fastq.gz"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.fastq.gz"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.fastq.gz"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.fastq.gz"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.fastq.gz"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.CropReads.fastq.gz"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.fastq.gz"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.fastq.gz"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.downsampled.adaptertrimmed.HeadCropReads.CropReads.SlidingWindowTrim.ReadLengthFilter.unpaired1.fastq.gz"));
 
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.preprocessed.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.preprocessed.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.preprocessed.fastq.gz"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.preprocessed.fastq.gz"));
 
             expectedOutputs.add(new File(basedir, "paired3/Preprocessing"));
             expectedOutputs.add(new File(basedir, "paired3/Preprocessing/paired3.downsampled.fastq"));
@@ -2234,8 +2231,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1"));
 
             expectedOutputs.add(new File(basedir, "paired1/Preprocessing/"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.preprocessed.fastq"));
-            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.preprocessed.fastq"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired1.preprocessed.fastq.gz"));
+            expectedOutputs.add(new File(basedir, "paired1/Preprocessing/paired2.preprocessed.fastq.gz"));
 
             expectedOutputs.add(new File(basedir, "paired1/Alignment"));
             File bam1 = new File(basedir, "paired1/Alignment/TestReadset1.bam");
@@ -2245,8 +2242,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq.sai"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired2.preprocessed.fastq.sai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq.gz.sai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired2.preprocessed.fastq.gz.sai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
 
@@ -2350,8 +2347,8 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.insertsize.metrics.pdf"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam.bai"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.fastq.sai"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired2.fastq.sai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.fastq.gz.sai"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired2.fastq.gz.sai"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));

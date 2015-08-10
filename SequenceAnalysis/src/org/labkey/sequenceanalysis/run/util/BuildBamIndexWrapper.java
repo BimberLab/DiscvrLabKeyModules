@@ -1,10 +1,12 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 
 import java.io.File;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,6 +29,7 @@ public class BuildBamIndexWrapper extends PicardWrapper
 
     public File executeCommand(File file) throws PipelineJobException
     {
+        Date start = new Date();
         getLogger().info("Creating index for file : " + file.getPath());
         getLogger().info("\tBuildBamIndex version: " + getVersion());
 
@@ -37,6 +40,9 @@ public class BuildBamIndexWrapper extends PicardWrapper
         {
             throw new PipelineJobException("Output file could not be found: " + output.getPath());
         }
+
+        getLogger().info("\tBuildBamIndex duration: " + DurationFormatUtils.formatDurationWords((new Date()).getTime() - start.getTime(), true, true));
+
         return output;
     }
 
@@ -46,15 +52,16 @@ public class BuildBamIndexWrapper extends PicardWrapper
         params.add("java");
         params.addAll(getBaseParams());
         params.add("-jar");
-        params.add(getJar().getPath());
+        params.add(getPicardJar().getPath());
+        params.add(getTooName());
         params.add("INPUT=" + file.getPath());
         params.add("OUTPUT=" + new File(getOutputDir(file), getOutputFilename(file)).getPath());
 
         return params;
     }
 
-    protected File getJar()
+    protected String getTooName()
     {
-        return getPicardJar("BuildBamIndex.jar");
+        return "BuildBamIndex";
     }
 }

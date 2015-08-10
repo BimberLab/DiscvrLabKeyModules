@@ -2,9 +2,10 @@ Ext4.define('SequenceAnalysis.window.ImportSequencesFromFastaWindow', {
     extend: 'Ext.window.Window',
 
     statics: {
-        buttonHandler: function(dataRegionName){
+        buttonHandler: function(dataRegionName, genomeChecked){
             Ext4.create('SequenceAnalysis.window.ImportSequencesFromFastaWindow', {
-                dataRegionName: dataRegionName
+                dataRegionName: dataRegionName,
+                genomeChecked: genomeChecked
             }).show();
         }
     },
@@ -57,6 +58,7 @@ Ext4.define('SequenceAnalysis.window.ImportSequencesFromFastaWindow', {
                     xtype: 'checkbox',
                     fieldLabel: 'Create Reference Genome',
                     name: 'createLibrary',
+                    checked: this.genomeChecked,
                     listeners: {
                         change: function (field, val) {
                             var target = field.up('form').down('#libraryParams');
@@ -73,6 +75,9 @@ Ext4.define('SequenceAnalysis.window.ImportSequencesFromFastaWindow', {
                                     itemId: 'libraryDescription'
                                 }]);
                             }
+                        },
+                        render: function(field){
+                            field.fireEvent('change', field, field.getValue());
                         }
                     }
                 },{

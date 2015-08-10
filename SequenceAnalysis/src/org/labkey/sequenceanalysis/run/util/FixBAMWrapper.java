@@ -4,13 +4,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -68,7 +66,7 @@ public class FixBAMWrapper extends PicardWrapper
         return cleanedFile;
     }
 
-    protected File getJar()
+    protected String getTooName()
     {
         throw new UnsupportedOperationException("This tool does not have a standalone JAR");
     }

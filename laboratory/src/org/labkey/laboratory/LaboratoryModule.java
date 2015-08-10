@@ -25,8 +25,10 @@ import org.labkey.api.laboratory.security.LaboratoryAdminPermission;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.notification.NotificationService;
+import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
@@ -68,7 +70,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.301;
+        return 12.302;
     }
 
     @NotNull
@@ -128,6 +130,21 @@ public class LaboratoryModule extends ExtendedSimpleModule
         LDKService.get().registerContainerScopedTable(SCHEMA_NAME, LaboratorySchema.TABLE_SAMPLE_TYPE, "type");
         LDKService.get().registerContainerScopedTable(SCHEMA_NAME, LaboratorySchema.TABLE_FREEZERS, "name");
         LDKService.get().registerContainerScopedTable(SCHEMA_NAME, LaboratorySchema.TABLE_SUBJECTS, "subjectname");
+
+        SimpleButtonConfigFactory btn1 = new SimpleButtonConfigFactory(this, "Mark Removed", "Laboratory.buttonHandlers.markSamplesRemoved(dataRegionName, arguments[0] ? arguments[0].ownerCt : null.floatParent)");
+        btn1.setClientDependencies(ClientDependency.fromModuleName("laboratory"));
+        btn1.setPermission(UpdatePermission.class);
+        LDKService.get().registerQueryButton(btn1, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_SAMPLES);
+
+        SimpleButtonConfigFactory btn2 = new SimpleButtonConfigFactory(this, "Duplicate/Derive Samples", "Laboratory.buttonHandlers.deriveSamples(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null)");
+        btn2.setClientDependencies(ClientDependency.fromModuleName("laboratory"));
+        btn2.setPermission(UpdatePermission.class);
+        LDKService.get().registerQueryButton(btn2, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_SAMPLES);
+
+        SimpleButtonConfigFactory btn3 = new SimpleButtonConfigFactory(this, "Publish Samples", "Laboratory.buttonHandlers.publishSamples(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null)");
+        btn3.setClientDependencies(ClientDependency.fromModuleName("laboratory"));
+        btn3.setPermission(UpdatePermission.class);
+        LDKService.get().registerQueryButton(btn3, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_SAMPLES);
     }
 
     @Override

@@ -20,12 +20,6 @@
                                 xtype: 'ldk-navpanel',
                                 width: 550,
                                 sections: [{
-                                    header: 'General Information',
-                                    items: [
-                                        {name: 'Overview and Instructions', url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'instructions')},
-                                        {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL("pipeline-status", "showList.view"), renderer: 'linkWithoutLabel'}
-                                    ]
-                                },{
                                     header: 'Data Import & Analysis',
                                     items: [
                                         {renderer: function(){
@@ -64,14 +58,15 @@
                                                     }).show();
                                                 }
                                             }
-                                        }}
+                                        }},
+                                        {name: 'View Pipeline Jobs', url: LABKEY.ActionURL.buildURL("pipeline-status", "showList.view"), renderer: 'linkWithoutLabel'}
                                     ]
                                 }]
                             };
 
                             if (items.summary.length){
                                 config.sections.push({
-                                    header: 'Summary',
+                                    header: 'Data Summary',
                                     items: items.summary
                                 });
                             }
@@ -100,10 +95,10 @@
                             Ext4.create('LDK.panel.NavPanel', config);
 
                             panel.removeAll();
-                            panel.add([{
-                                style: 'padding: 5px;padding-bottom: 20px;',
-                                html: 'There two components to the SequenceAnalysis module.  First, it can be used to manage sequence data and to connect these sequences with sample information.  This allows you to identify current or historic data based on sample attributes such as subject Id, sample date, etc.  There are many built in quality control tools, such as integration with FASTQC, that may be useful to evaluate data or track sequencer performance.  The second component of this module is data analysis.  This module provides a flexible pipeline that integrates with a wide range of analysis tools.  You can either create a new pipeline by combining tools/steps, or re-use a previously saved analysis.'
-                            }, config]);
+                            panel.add([config, {
+                                style: 'padding: 5px;padding-top: 0px;text-align: center',
+                                html: 'Powered By DISCVR-Seq.  <a href="https://github.com/bbimber/discvr-seq/wiki">Click here to learn more.</a>'
+                            }]);
                         },
                         failure: LDK.Utils.getErrorCallback(),
                         scope: this

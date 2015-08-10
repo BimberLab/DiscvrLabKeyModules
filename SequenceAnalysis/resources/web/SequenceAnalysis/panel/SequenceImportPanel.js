@@ -252,7 +252,18 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 itemId: 'runFastqc',
                 checked: true
             }]
-        },this.getReadDataSection(), this.getReadsetSection()]);
+        },this.getReadDataSection(), this.getReadsetSection(), {
+            xtype: 'panel',
+            style: 'padding-bottom: 0px;',
+            width: '100%',
+            border: false,
+            items: [{
+                border: false,
+                width: '100%',
+                style: 'text-align: center',
+                html: 'Powered By DISCVR-Seq.  <a href="https://github.com/bbimber/discvr-seq/wiki">Click here to learn more.</a>'
+            }]
+        }]);
 
         this.on('afterrender', this.updateColWidth, this, {single: true});
         this.down('#readsetGrid').on('columnresize', this.updateColWidth, this);
@@ -704,7 +715,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         }
     },
 
-    onSubmit: function(){
+    onSubmit: function(btn){
         var ret = this.getJsonParams();
         if (!ret)
             return;

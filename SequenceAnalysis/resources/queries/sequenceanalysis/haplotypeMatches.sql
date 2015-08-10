@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-PARAMETERS(MinimumPercent INTEGER default 1)
+PARAMETERS(MinimumPercent DOUBLE default 1)
 
 select
-
+(t.haplotype || CAST(t.analysis_id AS VARCHAR)) as key,
 t.*,
 t2.totalRequired as totalLineagesRequiredByHaplotype,
 t2.requiredLineages,
@@ -36,7 +36,10 @@ count(distinct asg.lineages) as totalLineagesPresent,
 
 FROM sequenceanalysis.haplotype_sequences h
 inner join sequenceanalysis.alignment_summary_grouped asg
-  ON (h.lineage = asg.lineages AND h.present = true)
+  ON (
+    (h.name = asg.lineages AND h.present = true AND h.type = 'Lineage') OR
+    (h.name = asg.alleles AND h.present = true AND h.type = 'Allele')
+  )
 
 WHERE (MinimumPercent IS NULL OR asg.percent >= MinimumPercent) and asg.total_reads > 2
 
@@ -46,10 +49,10 @@ asg.analysis_id
 
 ) t
 
-LEFT JOIN (select haplotype, count(h.required) as totalRequired, group_concat(h.lineage, chr(10)) as requiredLineages FROM sequenceanalysis.haplotype_sequences h WHERE required = true GROUP BY haplotype) t2
+LEFT JOIN (select haplotype, count(h.required) as totalRequired, group_concat(h.name, chr(10)) as requiredLineages FROM sequenceanalysis.haplotype_sequences h WHERE required = true GROUP BY haplotype) t2
 ON (t2.haplotype = t.haplotype)
 
-LEFT JOIN (select haplotype, count(*) as total, group_concat(h.lineage, chr(10)) as lineages FROM sequenceanalysis.haplotype_sequences h GROUP BY haplotype) t3
+LEFT JOIN (select haplotype, count(*) as total, group_concat(h.name, chr(10)) as lineages FROM sequenceanalysis.haplotype_sequences h GROUP BY haplotype) t3
 ON (t3.haplotype = t.haplotype)
 
 WHERE totalRequiredLineagesPresent >= totalRequired

@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.run.preprocessing.DownsampleFastqWrapper;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -45,11 +44,12 @@ public class DownsampleSamWrapper extends PicardWrapper
         params.add("java");
         params.addAll(getBaseParams());
         params.add("-jar");
-        params.add(getJar().getPath());
+        params.add(getPicardJar().getPath());
+        params.add(getTooName());
         params.add("INPUT=" + file.getPath());
         params.add("OUTPUT=" + new File(getOutputDir(file), getOutputFilename(file)).getPath());
         params.add("PROBABILITY=" + pctRetained);
-        params.add("MAX_RECORDS_IN_RAM=2000000");
+        inferMaxRecordsInRam(params);
 
         return params;
     }
@@ -60,8 +60,8 @@ public class DownsampleSamWrapper extends PicardWrapper
     }
 
     @Override
-    protected File getJar()
+    protected String getTooName()
     {
-        return getPicardJar("DownsampleSam.jar");
+        return "DownsampleSam";
     }
 }

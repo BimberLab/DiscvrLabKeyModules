@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.run.analysis;
 
+import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
@@ -43,12 +44,16 @@ import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
 import org.labkey.sequenceanalysis.run.alignment.FastqCollapser;
 import org.labkey.sequenceanalysis.run.util.FlashWrapper;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
+import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
@@ -708,10 +713,13 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     @Override
     public void writeOutput(User u, Container c, AnalysisModel model)
     {
-        try
-        {
-            Map<String, HitSet> map = writeSummary();
 
+    }
+
+    public static void processSBTSummary(User u, Container c, AnalysisModel model, File output, File refFasta) throws PipelineJobException
+    {
+        try (CSVReader reader = new CSVReader(new BufferedReader(new InputStreamReader(new FileInputStream(output), "UTF-8")), '\t'))
+        {
             try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
             {
                 //delete existing records
@@ -723,17 +731,17 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 Table.delete(ti_junction, filter);
 
                 //insert new
-                for (String key : map.keySet())
+                String[] line;
+                while ((line = reader.readNext()) != null)
                 {
                     Map<String, Object> row = new HashMap<>();
                     row.put("analysis_id", model.getAnalysisId());
                     row.put("file_id", model.getAlignmentFile());
 
-                    HitSet totals = map.get(key);
-                    row.put("total", totals.readNames.size());
-                    row.put("total_forward", totals.forward);
-                    row.put("total_reverse", totals.reverse);
-                    row.put("valid_pairs", totals.valid_pair);
+                    row.put("total", line[1]);
+                    row.put("total_forward", line[2]);
+                    row.put("total_reverse", line[3]);
+                    row.put("valid_pairs", line[4]);
 
                     row.put("container", c.getEntityId());
                     row.put("createdby", u.getUserId());
@@ -742,33 +750,53 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                     row.put("modified", new Date());
                     Map<String, Object> newRow = Table.insert(u, ti_summary, row);
 
-                    String[] names = key.split("\\|\\|");
-                    for (String refName : names)
+                    if (!StringUtils.isEmpty(line[0]))
                     {
-                        Integer refId = getReferenceLibraryHelper().resolveSequenceId(refName);
+                        String[] names = line[0].split("\\|\\|");
+                        ReferenceLibraryHelperImpl helper = new ReferenceLibraryHelperImpl(refFasta);
+                        for (String refName : names)
+                        {
+                            Integer refId = helper.resolveSequenceId(refName);
 
-                        Map<String, Object> junction_row = new HashMap<>();
-                        junction_row.put("analysis_id", model.getAnalysisId());
-                        junction_row.put("ref_nt_id", refId);
-                        junction_row.put("alignment_id", newRow.get("rowid"));
-                        junction_row.put("status", true);
-                        Table.insert(u, ti_junction, junction_row);
+                            Map<String, Object> junction_row = new HashMap<>();
+                            junction_row.put("analysis_id", model.getAnalysisId());
+                            junction_row.put("ref_nt_id", refId);
+                            junction_row.put("alignment_id", newRow.get("rowid"));
+                            junction_row.put("status", true);
+                            Table.insert(u, ti_junction, junction_row);
+                        }
                     }
                 }
-
-                //append unaligned
-                Map<String, Object> row = new HashMap<>();
-                row.put("analysis_id", model.getAnalysisId());
-                row.put("file_id", model.getAlignmentFile());
-                row.put("total", _unaligned.size());
 
                 transaction.commit();
             }
         }
         catch (IOException e)
         {
-            //TODO: can this be done better?
-            throw new RuntimeException(e);
+            throw new PipelineJobException(e);
+        }
+    }
+
+    public void writeTable(File output) throws PipelineJobException
+    {
+        try (CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(output), "UTF-8")), '\t'))
+        {
+            Map<String, HitSet> map = writeSummary();
+
+
+            //insert new
+            for (String key : map.keySet())
+            {
+                HitSet totals = map.get(key);
+                writer.writeNext(new String[]{key, String.valueOf(totals.readNames.size()), String.valueOf(totals.forward), String.valueOf(totals.reverse), String.valueOf(totals.valid_pair)});
+            }
+
+            //append unaligned
+            writer.writeNext(new String[]{"", String.valueOf(_unaligned.size()), "", "", ""});
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
         }
     }
 
@@ -878,5 +906,10 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         "\tMinPctForRef: " + _minPctForRef + "\n" +
         "\tMinPctWithinGroup: " + _minPctWithinGroup + "\n"
         ;
+    }
+
+    public Set<String> getUniqueReads()
+    {
+        return _uniqueReads;
     }
 }

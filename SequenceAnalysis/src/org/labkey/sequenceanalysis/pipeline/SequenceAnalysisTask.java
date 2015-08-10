@@ -16,7 +16,9 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import htsjdk.samtools.metrics.MetricsFile;
-import org.labkey.api.data.RuntimeSQLException;
+import org.apache.commons.beanutils.ConversionException;
+import org.apache.commons.io.Charsets;
+import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.DataType;
@@ -24,33 +26,34 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.gwt.client.util.StringUtils;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
-import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.util.FileType;
-import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.SequenceAnalysisManager;
-import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.SequenceAnalysisManager;
+import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
-import org.labkey.sequenceanalysis.run.util.BamMetricsRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import picard.analysis.AlignmentSummaryMetrics;
 import picard.analysis.InsertSizeMetrics;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -329,7 +332,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 job.getLogger().info("Importing Picard AlignmentSummaryMetricsCollector metrics for: " + d.getFile().getName());
                 TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
 
-                try (FileReader reader = new FileReader(mf))
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(mf), Charsets.UTF_8)))
                 {
                     MetricsFile metricsFile = new MetricsFile();
                     metricsFile.read(reader);
@@ -347,6 +350,29 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
                         for (String metricName : row.keySet())
                         {
+                            if (row.get(metricName) == null || StringUtils.isEmpty(String.valueOf(row.get(metricName))))
+                            {
+                                job.getLogger().debug("\tskipping empty metric: " + metricName);
+                                continue;
+                            }
+
+                            Double val;
+                            try
+                            {
+                                val = ConvertHelper.convert(row.get(metricName), Double.class);
+                            }
+                            catch (ConversionException e)
+                            {
+                                job.getLogger().debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
+                                continue;
+                            }
+
+                            if (Double.isNaN(val))
+                            {
+                                job.getLogger().debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
+                                continue;
+                            }
+
                             Map<String, Object> r = new HashMap<>();
                             r.put("category", m.CATEGORY);
                             r.put("metricname", metricName);
@@ -377,7 +403,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 job.getLogger().info("Importing Picard InsertSize metrics for: " + d.getFile().getName());
                 TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
 
-                try (FileReader reader = new FileReader(mf2))
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(mf2), Charsets.UTF_8)))
                 {
                     MetricsFile metricsFile = new MetricsFile();
                     metricsFile.read(reader);
@@ -392,10 +418,33 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
                         for (String metricName : row.keySet())
                         {
+                            if (row.get(metricName) == null || StringUtils.isEmpty(String.valueOf(row.get(metricName))))
+                            {
+                                job.getLogger().debug("\tskipping empty metric: " + metricName);
+                                continue;
+                            }
+
+                            Double val;
+                            try
+                            {
+                                val = ConvertHelper.convert(row.get(metricName), Double.class);
+                            }
+                            catch (ConversionException e)
+                            {
+                                job.getLogger().debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
+                                continue;
+                            }
+
+                            if (Double.isNaN(val))
+                            {
+                                job.getLogger().debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
+                                continue;
+                            }
+
                             Map<String, Object> r = new HashMap<>();
                             r.put("category", "Insert Size");
                             r.put("metricname", metricName);
-                            r.put("metricvalue", row.get(metricName));
+                            r.put("metricvalue", val);
                             r.put("dataid", d.getRowId());
                             r.put("analysis_id", model.getAnalysisId());
                             r.put("readset", model.getReadset());
@@ -456,8 +505,14 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             taskHelper.getFileManager().addInput(action, "Reference DB FASTA", refFasta);
             //taskHelper.getFileManager().addInput(action, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, fastqFile);
 
+            File outDir = new File(taskHelper.getSupport().getAnalysisDirectory(), FileUtil.getBaseName(inputBam));
+            if (!outDir.exists())
+            {
+                outDir.mkdirs();
+            }
+
             AnalysisStep step = provider.create(taskHelper);
-            AnalysisStep.Output o = step.performAnalysisPerSampleLocal(model, inputBam, refFasta);
+            AnalysisStep.Output o = step.performAnalysisPerSampleLocal(model, inputBam, refFasta, outDir);
             if (o != null)
             {
                 ret.add(o);

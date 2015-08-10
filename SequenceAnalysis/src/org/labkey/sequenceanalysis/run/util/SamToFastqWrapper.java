@@ -1,13 +1,14 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,7 +34,7 @@ public class SamToFastqWrapper extends PicardWrapper
         args.add("INCLUDE_NON_PF_READS=TRUE");
         args.add("OUTPUT_PER_RG=TRUE");
         args.add("OUTPUT_DIR=" + outDir.getPath());
-        args.add("MAX_RECORDS_IN_RAM=2000000");
+        inferMaxRecordsInRam(params);
 
         execute(args);
 
@@ -42,6 +43,7 @@ public class SamToFastqWrapper extends PicardWrapper
 
     public Pair<File, File> executeCommand(File file, String outputName1, @Nullable String outputName2) throws PipelineJobException
     {
+        Date start = new Date();
         getLogger().info("Converting SAM file to FASTQ: " + file.getPath());
         getLogger().info("\tSamToFastq version: " + getVersion());
 
@@ -74,6 +76,8 @@ public class SamToFastqWrapper extends PicardWrapper
             }
         }
 
+        getLogger().info("\tSamToFastq duration: " + DurationFormatUtils.formatDurationWords((new Date()).getTime() - start.getTime(), true, true));
+
         return Pair.of(output, output2);
     }
 
@@ -83,20 +87,16 @@ public class SamToFastqWrapper extends PicardWrapper
         params.add("java");
         params.addAll(super.getBaseParams());
         params.add("-jar");
-        params.add(getJar().getPath());
+        params.add(getPicardJar().getPath());
+        params.add(getTooName());
 
         params.add("INPUT=" + file.getPath());
 
         return params;
     }
 
-    protected File getJar()
+    protected String getTooName()
     {
-        return getPicardJar("SamToFastq.jar");
-    }
-
-    public String getOutputFilename(File file)
-    {
-        return FileUtil.getBaseName(file) + ".fastq";
+        return "SamToFastq";
     }
 }
