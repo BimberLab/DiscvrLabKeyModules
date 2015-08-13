@@ -224,6 +224,10 @@ then
     mkdir -p gatk
     cd gatk
 
+    if [ ! -z $JAVA_HOME ]; then
+        echo "JAVA_HOME: [${JAVA_HOME}]"
+    fi
+
     echo "Downloading GATK from GIT"
     #git clone git://github.com/broadgsa/gatk.git
     git clone git://github.com/broadgsa/gatk-protected.git
