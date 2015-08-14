@@ -312,6 +312,6 @@ public class CutadaptWrapper extends AbstractCommandWrapper
 
     public File getExe()
     {
-        return SequencePipelineService.get().getExeForPackage("CUTADAPTPATH", "cutadapt");
+        return SequencePipelineService.get().getExeForPackage("CUTADAPTPATH", "cutadapt.py");
     }
 }

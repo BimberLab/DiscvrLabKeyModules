@@ -224,7 +224,9 @@ then
     mkdir -p gatk
     cd gatk
 
-    if [ ! -z $JAVA_HOME ]; then
+    if [ ! -v JAVA_HOME ]; then
+        echo "JAVA_HOME not defined"
+    else
         echo "JAVA_HOME: [${JAVA_HOME}]"
     fi
 
@@ -724,21 +726,22 @@ echo "Install cutadapt"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! $(which cutadapt) || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/cutadapt.py || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf cutadapt-*
-    rm -Rf $LKTOOLS_DIR/cutadapt
+    rm -Rf $LKTOOLS_DIR/cutadapt*
+    rm -Rf $LKTOOLS_DIR/_preamble.py
 
     wget https://pypi.python.org/packages/source/c/cutadapt/cutadapt-1.8.1.tar.gz
     gunzip cutadapt-1.8.1.tar.gz
     tar -xf cutadapt-1.8.1.tar
     gzip cutadapt-1.8.1.tar
-    cd cutadapt-1.8.1
 
-    #note: add --user
-    python setup.py install
-    #install ./cutadapt-1.8.1/bin/cutadapt ${LKTOOLS_DIR}/cutadapt
+    #note: cutadapt expects to be installed using python's package manager; however, this should work
+    install ./cutadapt-1.8.1/bin/cutadapt ${LKTOOLS_DIR}/cutadapt.py
+    install ./cutadapt-1.8.1/bin/_preamble.py ${LKTOOLS_DIR}/_preamble.py
+    cp -R ./cutadapt-1.8.1/cutadapt ${LKTOOLS_DIR}/cutadapt
 
 else
     echo "Already installed"
