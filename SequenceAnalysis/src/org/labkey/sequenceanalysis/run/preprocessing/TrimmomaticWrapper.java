@@ -186,7 +186,10 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         public AdapterTrimmingProvider()
         {
             super("ILLUMINACLIP", "IlluminaAdapterTrimming", "Adapter Clipping (Trimmomatic)", "This provides the ability to trim adapters from the 5' or 3' ends of reads (typically resulting from read-through).", Arrays.asList(
-                    ToolParameterDescriptor.create("adapters", "Adapters", "", "sequenceanalysis-adapterpanel", null, null),
+                    ToolParameterDescriptor.create("adapters", "Adapters", "", "sequenceanalysis-adapterpanel", new JSONObject()
+                    {{
+                        put("canSpecifyEnd", false);
+                        }}, null),
                     ToolParameterDescriptor.create("seedMismatches", "Seed Mismatches", "The seed mismatch parameter is used to make alignments more efficient, specifying the maximum base mismatch count in the 16-base seed. Typical values here are 1 or 2.", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
@@ -230,6 +233,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 {
                     for (AdapterModel ad : getAdapters(ctx.getJob(), getName()))
                     {
+                        ad.setTrim3(false); //ILLUMINACLIP should handle this for us
                         writer.write(ad.getFastaLines());
                     }
                 }
@@ -471,6 +475,8 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(logFile), Charset.forName("UTF-8"))))
         {
             long totalInspected = 0;
+            long totalInspectedF = 0;
+            long totalInspectedR = 0;
             long totalReadsRetained = 0;
             long totalLength = 0;
 
@@ -488,6 +494,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             long totalDiscardedR = 0;
             long totalReadsRetainedR = 0;
             long totalLengthR = 0;
+            long unknownOrientation = 0;
             boolean haveReportedInvalidHeader = false;
 
             String line;
@@ -554,7 +561,9 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     }
 
                     totalBasesTrimmedF += basesTrimmed;
-                    totalReadsTrimmedF++;
+                    totalInspectedF++;
+                    if (basesTrimmed > 0)
+                        totalReadsTrimmedF++;
                 }
                 else if ((header != null && header.getPairNumber() == 2) || name.endsWith("/2"))
                 {
@@ -569,25 +578,41 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     }
 
                     totalBasesTrimmedR += basesTrimmed;
-                    totalReadsTrimmedR++;
+                    totalInspectedR++;
+                    if (basesTrimmed > 0)
+                        totalReadsTrimmedR++;
+                }
+                else
+                {
+                    unknownOrientation++;
+                    if (!haveReportedInvalidHeader)
+                    {
+                        getLogger().info("unable to determine if read is forward or reverse: " + name);
+                        haveReportedInvalidHeader = true;
+                    }
                 }
             }
 
             Double avgBasesTrimmed = totalReadsTrimmed == 0 ? 0 : (double)totalBasesTrimmed / (double)totalReadsTrimmed;
             Double avgReadLength = totalReadsTrimmed == 0 ? 0 : (double)totalLength / (double)totalReadsRetained;
             getLogger().info("Trimming summary:");
-            getLogger().info("\tTotal reads inspected: " + totalInspected);
-            getLogger().info("\tTotal reads discarded: " + totalDiscarded);
-            getLogger().info("\tTotal reads trimmed (includes discarded): " +  totalReadsTrimmed);
+            getLogger().info("\tTotal reads inspected: " + NumberFormat.getInstance().format(totalInspected));
+            getLogger().info("\tTotal reads discarded: " + NumberFormat.getInstance().format(totalDiscarded));
+            getLogger().info("\tTotal reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmed));
             getLogger().info("\tAvg bases trimmed: " +  avgBasesTrimmed);
-            getLogger().info("\tTotal reads remaining: " + totalReadsRetained);
+            getLogger().info("\tTotal reads remaining: " + NumberFormat.getInstance().format(totalReadsRetained));
             getLogger().info("\tAvg read length after trimming (excludes discarded reads): " + avgReadLength);
-
-            if (totalBasesTrimmedF > 0)
+            if (unknownOrientation > 0)
             {
-                Double avgBasesTrimmedF = (double)totalBasesTrimmedF / (double)totalReadsTrimmedF;
+                getLogger().info("\tReads inspected with unknown orientation: " + unknownOrientation);
+            }
+
+            if (totalInspectedF > 0)
+            {
+                Double avgBasesTrimmedF = totalBasesTrimmedF == 0 ? 0 : (double)totalBasesTrimmedF / (double)totalReadsTrimmedF;
                 Double avgReadLengthF = (double)totalLengthF / (double)totalReadsRetainedF;
                 getLogger().info("Forward read trimming summary: ");
+                getLogger().info("\tTotal forward reads inspected: " + NumberFormat.getInstance().format(totalInspectedF));
                 getLogger().info("\tTotal forward reads discarded: " + NumberFormat.getInstance().format(totalDiscardedF));
                 getLogger().info("\tTotal forward reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmedF));
                 getLogger().info("\tAvg bases trimmed from forward reads: " +  NumberFormat.getInstance().format(avgBasesTrimmedF));
@@ -595,11 +620,12 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 getLogger().info("\tAvg forward read length after trimming (excludes discarded reads): " + NumberFormat.getInstance().format(avgReadLengthF));
             }
 
-            if (totalBasesTrimmedR > 0)
+            if (totalInspectedR > 0)
             {
-                Double avgBasesTrimmedR = (double)totalBasesTrimmedR / (double)totalReadsTrimmedR;
+                Double avgBasesTrimmedR = totalBasesTrimmedR == 0 ? 0 : (double)totalBasesTrimmedR / (double)totalReadsTrimmedR;
                 Double avgReadLengthR = (double)totalLengthR / (double)totalReadsRetainedR;
                 getLogger().info("Reverse read trimming summary: ");
+                getLogger().info("\tTotal reverse reads inspected: " + NumberFormat.getInstance().format(totalInspectedR));
                 getLogger().info("\tTotal reverse reads discarded: " + NumberFormat.getInstance().format(totalDiscardedR));
                 getLogger().info("\tTotal reverse reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmedR));
                 getLogger().info("\tAvg bases trimmed from reverse reads: " +  NumberFormat.getInstance().format(avgBasesTrimmedR));

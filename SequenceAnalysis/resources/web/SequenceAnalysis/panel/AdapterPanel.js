@@ -2,6 +2,8 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
     extend: 'Ext.panel.Panel',
     alias: 'widget.sequenceanalysis-adapterpanel',
 
+    canSpecifyEnd: true,
+
     initComponent: function() {
         Ext4.apply(this, {
             width: '100%',
@@ -9,7 +11,6 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
             items: [{
                 xtype: 'grid',
                 title: 'Adapters',
-                itemId: 'adapterGrid',
                 border: true,
                 stripeRows: true,
                 helpPopup: 'These sequences will be trimmed from either one or both ends of all reads.  When trimming from the 3\' end, the adapter is automatically reverse complemented.',
@@ -25,9 +26,8 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                     text: 'Add',
                     scope: this,
                     tooltip: 'Click to add a blank record',
-                    name: 'add-record-button',
                     handler: function (btn){
-                        var grid = btn.up('sequenceanalysis-adapterpanel').down('#adapterGrid');
+                        var grid = btn.up('sequenceanalysis-adapterpanel').down('grid');
                         var store = grid.store;
                         var rec = store.createModel({});
                         store.add(rec);
@@ -38,9 +38,8 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                     text: 'Remove',
                     scope: this,
                     tooltip: 'Click to delete selected row(s)',
-                    name: 'delete-records-button',
                     handler: function(btn){
-                        var grid = btn.up('sequenceanalysis-adapterpanel').down('#adapterGrid');
+                        var grid = btn.up('sequenceanalysis-adapterpanel').down('grid');
                         grid.getPlugin('cellediting').completeEdit( );
                         var s = grid.getSelectionModel().getSelection();
                         for (var i = 0, r; r = s[i]; i++){
@@ -52,23 +51,20 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                     text: 'Move Up',
                     scope: this,
                     tooltip: 'Click to reorder selected records',
-                    name: 'move-up-button',
                     handler: function(btn){
-                        btn.up('sequenceanalysis-adapterpanel').down('#adapterGrid').moveSelectedRow(-1);
+                        btn.up('sequenceanalysis-adapterpanel').down('grid').moveSelectedRow(-1);
                     }
                 },{
                     text: 'Move Down',
                     scope: this,
                     tooltip: 'Click to reorder selected records',
-                    name: 'move-down-button',
                     handler: function(btn){
-                        btn.up('sequenceanalysis-adapterpanel').down('#adapterGrid').moveSelectedRow(1);
+                        btn.up('sequenceanalysis-adapterpanel').down('grid').moveSelectedRow(1);
                     }
                 },{
                     text: 'Common Adapters',
                     scope: this,
                     tooltip: 'Click to using common adapters',
-                    name: 'add-batch-button',
                     handler: function(btn){
                         this.adapterSelectorWin = Ext4.create('Ext.window.Window', {
                             title: 'Choose Adapters',
@@ -107,7 +103,7 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                                         scope: this,
                                         success: function(rows){
                                             Ext4.each(rows.rows, function(r){
-                                                var grid = this.down('#adapterGrid');
+                                                var grid = this.down('grid');
                                                 var rec = grid.store.create({
                                                     adapterSequence: r.sequence,
                                                     adapterName: r.name,
@@ -157,82 +153,7 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
                     this.getStore().insert(index, record);
                     this.getSelectionModel().select(index, true);
                 },
-                columns: [{
-                    name: 'adapterName',
-                    header: 'Adapter Name',
-                    width: 160,
-                    itemId: 'adapterName',
-                    dataIndex: 'adapterName',
-                    allowBlank: false,
-                    editor: {
-                        xtype: 'textfield',
-                        allowBlank: false,
-                        listeners: {
-                            scope: this,
-                            change: function(c){
-                                var grid = c.up('sequenceanalysis-adapterpanel').down('#adapterGrid');
-                                var val = c.getValue();
-                                var match = 0;
-                                grid.store.each(function(r){
-                                    if (r.get('adapterName') == val){
-                                        match++;
-                                    }
-                                }, this);
-
-                                if (match > 1){
-                                    c.markInvalid();
-                                    alert('ERROR: Adapter names must be unique');
-                                }
-                            }
-                        }
-                    }
-                },{
-                    name: 'adapterSequence',
-                    header: 'Sequence',
-                    width: 200,
-                    itemId: 'adapterSequence',
-                    allowBlank: false,
-                    dataIndex: 'adapterSequence',
-                    editor: {
-                        xtype: 'textfield',
-                        allowBlank: false,
-                        maskRe: new RegExp('[ATGCNRYSWKMBDHVN]', 'i'),
-                        listeners: {
-                            scope: this,
-                            change: function(c){
-                                var val = c.getValue();
-                                val = val.replace(/\s/g,'');
-                                c.setValue(val);
-                            }
-                        }
-                    }
-                },{
-                    name: 'trim5',
-                    header: 'Trim 5\' End',
-                    width: 80,
-                    id: 'trim5',
-                    dataIndex: 'trim5',
-                    defaultValue: true,
-                    checked: true,
-                    align: 'center',
-                    editor: {
-                        xtype: 'checkbox',
-                        checked: true,
-                        value: true
-                    }
-                },{
-                    name: 'trim3',
-                    text: 'Trim 3\' End',
-                    tooltip: 'Will automatically reverse completment the adapter sequence',
-                    width: 80,
-                    id: 'trim3',
-                    dataIndex: 'trim3',
-                    align: 'center',
-                    editor: {
-                        xtype: 'checkbox',
-                        align: 'center'
-                    }
-                }],
+                columns: this.getColumnConfig(),
                 store: Ext4.create('Ext.data.ArrayStore', {
                     fields: [
                         'adapterName',
@@ -246,6 +167,87 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
         });
 
         this.callParent(arguments);
+    },
+
+    getColumnConfig: function(){
+        var ret = [{
+            header: 'Adapter Name',
+            width: 160,
+            dataIndex: 'adapterName',
+            allowBlank: false,
+            editor: {
+                xtype: 'textfield',
+                allowBlank: false,
+                listeners: {
+                    scope: this,
+                    change: function(c){
+                        var grid = c.up('sequenceanalysis-adapterpanel').down('grid');
+                        var val = c.getValue();
+                        var match = 0;
+                        grid.store.each(function(r){
+                            if (r.get('adapterName') == val){
+                                match++;
+                            }
+                        }, this);
+
+                        if (match > 1){
+                            c.markInvalid();
+                            alert('ERROR: Adapter names must be unique');
+                        }
+                    }
+                }
+            }
+        },{
+            header: 'Sequence',
+            width: 200,
+            allowBlank: false,
+            dataIndex: 'adapterSequence',
+            editor: {
+                xtype: 'textfield',
+                allowBlank: false,
+                maskRe: new RegExp('[ATGCNRYSWKMBDHVN]', 'i'),
+                listeners: {
+                    scope: this,
+                    change: function(c){
+                        var val = c.getValue();
+                        val = val.replace(/\s/g,'');
+                        c.setValue(val);
+                    }
+                }
+            }
+        }];
+
+        if (this.canSpecifyEnd){
+            ret.push({
+                header: 'Trim 5\' End',
+                width: 80,
+                id: 'trim5',
+                dataIndex: 'trim5',
+                defaultValue: true,
+                checked: true,
+                align: 'center',
+                editor: {
+                    xtype: 'checkbox',
+                    checked: true,
+                    value: true
+                }
+            });
+
+            ret.push({
+                text: 'Trim 3\' End',
+                tooltip: 'Will automatically reverse completment the adapter sequence',
+                width: 80,
+                id: 'trim3',
+                dataIndex: 'trim3',
+                align: 'center',
+                editor: {
+                    xtype: 'checkbox',
+                    align: 'center'
+                }
+            });
+        }
+
+        return ret;
     },
 
     getValue: function(){

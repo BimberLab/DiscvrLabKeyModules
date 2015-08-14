@@ -11,6 +11,7 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
@@ -118,7 +119,13 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
                 throw new PipelineJobException("Unable to find reference FASTA for file: " + inputBam.getName());
             }
 
-            outputs.addAll(SequenceAnalysisTask.runAnalysesLocal(actions, m, inputBam, refFasta, providers, getTaskHelper()));
+            File outDir = new File(getTaskHelper().getSupport().getAnalysisDirectory(), FileUtil.getBaseName(inputBam));
+            if (!outDir.exists())
+            {
+                outDir.mkdirs();
+            }
+
+            outputs.addAll(SequenceAnalysisTask.runAnalysesLocal(actions, m, inputBam, refFasta, providers, getTaskHelper(), outDir));
         }
 
         return new RecordedActionSet(actions);

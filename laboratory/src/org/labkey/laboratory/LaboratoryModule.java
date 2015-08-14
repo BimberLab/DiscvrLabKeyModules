@@ -145,6 +145,11 @@ public class LaboratoryModule extends ExtendedSimpleModule
         btn3.setClientDependencies(ClientDependency.fromModuleName("laboratory"));
         btn3.setPermission(UpdatePermission.class);
         LDKService.get().registerQueryButton(btn3, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_SAMPLES);
+
+        SimpleButtonConfigFactory btn4 = new SimpleButtonConfigFactory(this, "Append Comment", "Laboratory.buttonHandlers.appendCommentToSamples(dataRegionName, arguments[0] ? arguments[0].ownerCt : null.floatParent)");
+        btn4.setClientDependencies(ClientDependency.fromModuleName("laboratory"));
+        btn4.setPermission(UpdatePermission.class);
+        LDKService.get().registerQueryButton(btn4, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_SAMPLES);
     }
 
     @Override

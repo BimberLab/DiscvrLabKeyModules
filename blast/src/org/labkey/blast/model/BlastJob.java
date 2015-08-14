@@ -23,13 +23,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.Set;
 
 /**
  * User: bimber
@@ -316,7 +316,39 @@ public class BlastJob
         tabular("Tabular", "7", false, null),
         alignmentSummary("Summary of perfect matches", "6 qseqid qlen sseqid slen qstart qend sstart send qseq sseq length mismatch ", true, new BlastResultProcessor()
         {
-            private Map<String, Set<String>> _perfectHitSummary;
+            class Summary
+            {
+                Map<String, List<Alignment>> hitMap = new HashMap<>();
+
+                private void addAlignment(String sname, int qLen, int sLen, int alignLen)
+                {
+                    List<Alignment> r = hitMap.get(sname);
+                    if (r == null)
+                    {
+                        r = new ArrayList<>();
+                    }
+
+                    r.add(new Alignment(qLen, sLen, alignLen));
+
+                    hitMap.put(sname, r);
+                }
+            }
+
+            class Alignment
+            {
+                int qLength;
+                int sLength;
+                int alignLength;
+
+                public Alignment(int qLength, int sLength, int alignLength)
+                {
+                    this.qLength = qLength;
+                    this.sLength = sLength;
+                    this.alignLength = alignLength;
+                }
+            }
+
+            private Map<String, Summary> _perfectHitSummary;
 
             @Override
             public void processResults(File results, Writer out) throws IOException
@@ -343,13 +375,15 @@ public class BlastJob
                             continue;
                         }
 
+                        int alignLength = Integer.parseInt(tokens[10]);
                         int mismatch = Integer.parseInt(tokens[11]);
+                        int slen = Integer.parseInt(tokens[3]);
+                        int qlen = Integer.parseInt(tokens[1]);
                         String qname = tokens[0];
                         String sname = tokens[2];
                         if (mismatch == 0)
                         {
-                            appendHit(qname, sname);
-
+                            appendHit(qname, sname, qlen, slen, alignLength);
                         }
                         else
                         {
@@ -376,24 +410,55 @@ public class BlastJob
 
                             if (qmismatch == 0)
                             {
-                                appendHit(qname, sname);
+                                appendHit(qname, sname, qlen, slen, alignLength);
                             }
                             else
                             {
-                                appendHit(qname, null);
+                                appendHit(qname, null, qlen, slen, alignLength);
                             }
                         }
                     }
                 }
 
                 out.write("<br><br><b>Summary of Perfect Hits:</b><br>");
-                out.write("<table border=1 cellpadding=\"3\" style=\"border-collapse: collapse;\"><tr><td>Query</td><td># Perfect Hits</td><td>Perfect Hits</td></tr>");
+                out.write("<table border=1 cellpadding=\"3\" style=\"border-collapse: collapse;\"><tr><td>Query</td><td># Perfect Hits</td><td>Reference Names</td><td>Alignment Length</td><td>Query Length</td><td>Reference Length</td></tr>");
                 for (String qname : _perfectHitSummary.keySet())
                 {
                     out.write("<tr>");
                     out.write("<td>" + qname + "</td>");
-                    out.write("<td>" + _perfectHitSummary.get(qname).size() + "</td>");
-                    out.write("<td>" + StringUtils.join(_perfectHitSummary.get(qname), "<br>") + "</td>");
+                    out.write("<td>" + _perfectHitSummary.get(qname).hitMap.size() + "</td>");
+
+                    StringBuilder sNameCell = new StringBuilder();
+                    StringBuilder alignLengthCell = new StringBuilder();
+                    StringBuilder qLengthCell = new StringBuilder();
+                    StringBuilder sLengthCell = new StringBuilder();
+
+                    Summary s = _perfectHitSummary.get(qname);
+                    String br = "";
+                    for (String sname : s.hitMap.keySet())
+                    {
+                        for (Alignment a : s.hitMap.get(sname))
+                        {
+                            sNameCell.append(br);
+                            sNameCell.append(sname);
+
+                            alignLengthCell.append(br);
+                            alignLengthCell.append(a.alignLength);
+
+                            qLengthCell.append(br);
+                            qLengthCell.append(a.qLength);
+
+                            sLengthCell.append(br);
+                            sLengthCell.append(a.sLength);
+
+                            br = "<br>";
+                        }
+                    }
+
+                    out.write("<td>" + sNameCell.toString() + "</td>");
+                    out.write("<td>" + alignLengthCell.toString() + "</td>");
+                    out.write("<td>" + qLengthCell.toString() + "</td>");
+                    out.write("<td>" + sLengthCell.toString() + "</td>");
 
                     out.write("</tr>");
                 }
@@ -407,20 +472,20 @@ public class BlastJob
                 out.write("</pre>");
             }
 
-            private void appendHit(String qname, String sname)
+            private void appendHit(String qname, String sname, int qLen, int sLen, int alignLen)
             {
-                Set<String> hits = _perfectHitSummary.get(qname);
-                if (hits == null)
+                Summary s = _perfectHitSummary.get(qname);
+                if (s == null)
                 {
-                    hits = new HashSet<>();
+                    s = new Summary();
                 }
 
                 if (sname != null)
                 {
-                    hits.add(sname);
+                    s.addAlignment(sname, qLen, sLen, alignLen);
                 }
 
-                _perfectHitSummary.put(qname, hits);
+                _perfectHitSummary.put(qname, s);
             }
         });
 

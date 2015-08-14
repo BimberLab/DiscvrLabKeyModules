@@ -125,6 +125,103 @@ Laboratory.buttonHandlers = new function(){
                 }
             });
         },
+        appendCommentToSamples: function(dataRegionName){
+            var dataRegion = LABKEY.DataRegions[dataRegionName];
+            var checked = dataRegion.getChecked();
+            if(!checked || !checked.length){
+                alert('No records selected');
+                return;
+            }
+
+            LABKEY.Query.selectRows({
+                schemaName: 'laboratory',
+                queryName: 'samples',
+                columns: 'rowid,container,comment',
+                filterArray: [LABKEY.Filter.create('rowid', checked.join(';'), LABKEY.Filter.Types.IN)],
+                failure: LDK.Utils.getErrorCallback(),
+                success: function(results){
+                    Ext4.create('Ext.Window', {
+                        width: 315,
+                        autoHeight: true,
+                        modal: true,
+                        bodyStyle:'padding:5px',
+                        closeAction:'hide',
+                        dataRegion: dataRegion,
+                        keys: [{
+                            key: Ext4.EventObject.ENTER,
+                            handler: this.onSubmit,
+                            scope: this
+                        }],
+                        title: 'Append Comment',
+                        items: [{
+                            xtype: 'form',
+                            fieldDefaults: {
+                                width: 290,
+                                labelAlign: 'top'
+                            },
+                            border: false,
+                            items: [{
+                                html: 'This will append the following comment to all selected samples.  If the row has an existing comment, the new one will be appended and the original comment unchanged',
+                                style: 'padding-bottom: 10px;',
+                                border: false
+                            },{
+                                xtype: 'textarea',
+                                fieldLabel: 'Comment',
+                                itemId: 'comment',
+                                height: 150
+                            }]
+                        }],
+                        buttons: [{
+                            xtype: 'button',
+                            text: 'Submit',
+                            handler: function(btn){
+                                var win = btn.up('window');
+                                var textarea = win.down('textarea');
+                                var comment = textarea.getValue();
+                                if (!comment){
+                                    Ext4.Msg.alert('Error', 'Must enter a comment');
+                                    return;
+                                }
+
+                                var rows = [];
+                                Ext4.each(results.rows, function(row){
+                                    row.comment = row.comment ? (row.comment + '\n' + comment) : comment;
+
+                                    rows.push({
+                                        rowid: row.rowid,
+                                        container: row.container,
+                                        comment: row.comment
+                                    });
+                                }, this);
+
+                                Ext4.Msg.wait('Saving...');
+
+                                LABKEY.Query.updateRows({
+                                    schemaName: dataRegion.schemaName,
+                                    queryName: dataRegion.queryName,
+                                    rows: rows,
+                                    scope: this,
+                                    success: function(){
+                                        Ext4.Msg.hide();
+
+                                        var win = this.up('window');
+                                        win.dataRegion.refresh();
+                                        win.hide();
+                                    },
+                                    failure: LDK.Utils.getErrorCallback()
+                                });
+                            }
+                        },{
+                            xtype: 'button',
+                            text: 'Cancel',
+                            handler: function(btn){
+                                btn.up('window').hide();
+                            }
+                        }]
+                    }).show();
+                }
+            });
+        },
         deriveSamples: function(dataRegionName, btn){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();

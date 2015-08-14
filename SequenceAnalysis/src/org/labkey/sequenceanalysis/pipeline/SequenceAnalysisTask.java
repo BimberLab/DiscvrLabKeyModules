@@ -301,7 +301,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
             if (!providers.isEmpty())
             {
-                outputs.addAll(runAnalysesLocal(actions, model, bam, refDB, providers, taskHelper));
+                outputs.addAll(runAnalysesLocal(actions, model, bam, refDB, providers, taskHelper, bam.getParentFile()));
             }
         }
 
@@ -491,7 +491,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         }
     }
 
-    public static List<AnalysisStep.Output> runAnalysesLocal(List<RecordedAction> actions, AnalysisModel model, File inputBam, File refFasta, List<PipelineStepProvider<AnalysisStep>> providers, SequenceTaskHelper taskHelper) throws PipelineJobException
+    public static List<AnalysisStep.Output> runAnalysesLocal(List<RecordedAction> actions, AnalysisModel model, File inputBam, File refFasta, List<PipelineStepProvider<AnalysisStep>> providers, SequenceTaskHelper taskHelper, File outDir) throws PipelineJobException
     {
         List<AnalysisStep.Output> ret = new ArrayList<>();
         for (PipelineStepProvider<AnalysisStep> provider : providers)
@@ -504,12 +504,6 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             taskHelper.getFileManager().addInput(action, "Input BAM File", inputBam);
             taskHelper.getFileManager().addInput(action, "Reference DB FASTA", refFasta);
             //taskHelper.getFileManager().addInput(action, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, fastqFile);
-
-            File outDir = new File(taskHelper.getSupport().getAnalysisDirectory(), FileUtil.getBaseName(inputBam));
-            if (!outDir.exists())
-            {
-                outDir.mkdirs();
-            }
 
             AnalysisStep step = provider.create(taskHelper);
             AnalysisStep.Output o = step.performAnalysisPerSampleLocal(model, inputBam, refFasta, outDir);
