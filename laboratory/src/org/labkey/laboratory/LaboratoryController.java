@@ -61,7 +61,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.CSRF;
-import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.User;
 import org.labkey.api.security.ValidEmail;
 import org.labkey.api.security.permissions.AdminPermission;
@@ -117,7 +117,7 @@ public class LaboratoryController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class PrepareExptRunAction extends SimpleViewAction<PlanExptRunForm>
     {
         @Override
@@ -154,7 +154,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     public class EnsureIndexesAction extends ConfirmAction<Object>
     {
         public void validateCommand(Object form, Errors errors)
@@ -207,7 +207,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     public class EnsureAssayFieldsAction extends ConfirmAction<EnsureAssayFieldsForm>
     {
         public void validateCommand(EnsureAssayFieldsForm form, Errors errors)
@@ -293,7 +293,7 @@ public class LaboratoryController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     public class SetTableIncrementValueAction extends ConfirmAction<SetTableIncrementForm>
     {
         public void validateCommand(SetTableIncrementForm form, Errors errors)
@@ -449,7 +449,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     public class InitWorkbooksAction extends ConfirmAction<Object>
     {
         public void validateCommand(Object form, Errors errors)
@@ -485,7 +485,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     public class InitContainerIncrementingTableAction extends ConfirmAction<SetTableIncrementForm>
     {
         public void validateCommand(SetTableIncrementForm form, Errors errors)
@@ -554,7 +554,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     public class ResetLaboratoryFoldersAction extends ConfirmAction<Object>
     {
         public void validateCommand(Object form, Errors errors)
@@ -590,7 +590,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class ProcessAssayDataAction extends AbstractFileUploadAction<ProcessAssayForm>
     {
         @Override
@@ -683,7 +683,7 @@ public class LaboratoryController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     @CSRF
     public class PopulateDefaultsAction extends ApiAction<PopulateDefaultsForm>
     {
@@ -722,7 +722,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(UpdatePermission.class)
+    @RequiresPermission(UpdatePermission.class)
     @CSRF
     public class UpdateWorkbookAction extends ApiAction<UpdateWorkbookForm>
     {
@@ -761,7 +761,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(UpdatePermission.class)
+    @RequiresPermission(UpdatePermission.class)
     @CSRF
     public class UpdateWorkbookTagsAction extends ApiAction<UpdateWorkbookForm>
     {
@@ -876,7 +876,7 @@ public class LaboratoryController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(UpdatePermission.class)
+    @RequiresPermission(UpdatePermission.class)
     @CSRF
     public class SaveTemplateAction extends ApiAction<SaveTemplateForm>
     {
@@ -994,7 +994,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class CreateTemplateAction extends ExportAction<ProcessAssayForm>
     {
         @Override
@@ -1061,7 +1061,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GetDemographicsSourcesAction extends ApiAction<DataSourcesForm>
     {
@@ -1138,7 +1138,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GetAdditionalDataSourcesAction extends ApiAction<DataSourcesForm>
     {
@@ -1257,7 +1257,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(LaboratoryAdminPermission.class)
+    @RequiresPermission(LaboratoryAdminPermission.class)
     @CSRF
     public class SetDemographicsSourcesAction extends ApiAction<SetDataSourcesForm>
     {
@@ -1316,7 +1316,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(LaboratoryAdminPermission.class)
+    @RequiresPermission(LaboratoryAdminPermission.class)
     @CSRF
     public class SetAdditionalDataSourcesAction extends ApiAction<SetDataSourcesForm>
     {
@@ -1398,7 +1398,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(LaboratoryAdminPermission.class)
+    @RequiresPermission(LaboratoryAdminPermission.class)
     @CSRF
     public class SetUrlDataSourcesAction extends ApiAction<SetUrlDataSourcesForm>
     {
@@ -1454,7 +1454,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GetAssayImportHeadersAction extends ApiAction<AssayImportHeadersForm>
     {
@@ -1496,7 +1496,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(LaboratoryAdminPermission.class)
+    @RequiresPermission(LaboratoryAdminPermission.class)
     @CSRF
     public class SetItemVisibilityAction extends ApiAction<JsonDataForm>
     {
@@ -1550,7 +1550,7 @@ public class LaboratoryController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(LaboratoryAdminPermission.class)
+    @RequiresPermission(LaboratoryAdminPermission.class)
     @CSRF
     public class SetItemDefaultViewAction extends ApiAction<JsonDataForm>
     {
@@ -1584,7 +1584,7 @@ public class LaboratoryController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(LaboratoryAdminPermission.class)
+    @RequiresPermission(LaboratoryAdminPermission.class)
     @CSRF
     public class SetDataBrowserSettingsAction extends ApiAction<JsonDataForm>
     {
@@ -1645,7 +1645,7 @@ public class LaboratoryController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(LaboratoryAdminPermission.class)
+    @RequiresPermission(LaboratoryAdminPermission.class)
     @CSRF
     public class SaveAssayDefaultsAction extends ApiAction<JsonDataForm>
     {
@@ -1678,7 +1678,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GetDataItemsAction extends ApiAction<GetDataItemsForm>
     {
@@ -1793,7 +1793,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GetImportMethodsAction extends ApiAction<ImportMethodsForm>
     {
@@ -1863,7 +1863,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GetDataSummaryAction extends ApiAction<DataSummaryForm>
     {
@@ -1940,7 +1940,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GetSubjectIdSummaryAction extends ApiAction<SubjectSummaryForm>
     {
@@ -2294,7 +2294,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     @CSRF
     public class MigrateWorkbooksAction extends ApiAction<Object>
     {

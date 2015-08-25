@@ -34,7 +34,7 @@ import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.CSRF;
-import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
@@ -67,7 +67,7 @@ public class ONPRC_BillingController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermissionClass(UpdatePermission.class)
+    @RequiresPermission(UpdatePermission.class)
     @CSRF
     public class RunBillingPipelineAction extends ApiAction<BillingPipelineForm>
     {
@@ -141,7 +141,7 @@ public class ONPRC_BillingController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ONPRCBillingAdminPermission.class)
+    @RequiresPermission(ONPRCBillingAdminPermission.class)
     public class DeleteBillingPeriodAction extends ConfirmAction<QueryForm>
     {
         public void validateCommand(QueryForm form, Errors errors)
@@ -184,7 +184,7 @@ public class ONPRC_BillingController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class BillingValidationAction extends SimpleViewAction<BillingValidationForm>
     {
         private String _title = null;

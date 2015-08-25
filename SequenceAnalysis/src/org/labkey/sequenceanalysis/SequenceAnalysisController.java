@@ -93,7 +93,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.IgnoresTermsOfUse;
-import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.DeletePermission;
@@ -190,7 +190,7 @@ public class SequenceAnalysisController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class FastqcReportAction extends SimpleViewAction<FastqcForm>
     {
         @Override
@@ -300,7 +300,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class QualiMapReportAction extends SimpleViewAction<FastqcForm>
     {
         @Override
@@ -386,7 +386,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class SequenceAnalysisAction extends SimpleViewAction<Object>
     {
         public void validateCommand(Object form, Errors errors)
@@ -423,7 +423,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class AlignmentAnalysisAction extends SimpleViewAction<Object>
     {
         public void validateCommand(Object form, Errors errors)
@@ -460,7 +460,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
     public class DownloadTempImageAction extends ExportAction<TempImageAction>
     {
@@ -506,7 +506,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
     public class ConvertTextToFileAction extends ExportAction<ConvertTextToFileForm>
     {
@@ -533,7 +533,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(DeletePermission.class)
+    @RequiresPermission(DeletePermission.class)
     public class DeleteRecordsAction extends ConfirmAction<QueryForm>
     {
         private TableInfo _table;
@@ -677,7 +677,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GetAnalysisToolDetailsAction extends ApiAction<Object>
     {
@@ -700,7 +700,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(UpdatePermission.class)
+    @RequiresPermission(UpdatePermission.class)
     @CSRF
     public class SaveAnalysisAsTemplateAction extends ApiAction<SaveAnalysisAsTemplateForm>
     {
@@ -794,7 +794,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class ValidateReadsetFilesAction extends ApiAction<ValidateReadsetImportForm>
     {
@@ -960,7 +960,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class AnalyzeBamAction extends ApiAction<AnalyzeBamForm>
     {
@@ -1194,7 +1194,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class GetAASnps extends ApiAction<AASNPForm>
     {
         public ApiResponse execute(AASNPForm form, BindException errors) throws Exception
@@ -1251,7 +1251,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
     public class MergeFastqFilesAction extends ExportAction<MergeFastqFilesForm>
     {
@@ -1556,7 +1556,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GenerateChartAction extends ApiAction<GenerateChartForm>
     {
@@ -1582,7 +1582,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class DownloadChartAction extends ExportAction<GenerateChartForm>
     {
         @Override
@@ -1684,7 +1684,7 @@ public class SequenceAnalysisController extends SpringActionController
     /**
      * Called from LABKEY.Pipeline.startAnalysis()
      */
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     @CSRF
     public class StartAnalysisAction extends ApiAction<AnalyzeForm>
     {
@@ -2089,7 +2089,7 @@ public class SequenceAnalysisController extends SpringActionController
         return provider.getProtocolFactory(fatp);
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     @CSRF
     public class CreateReferenceLibraryAction extends ApiAction<CreateReferenceLibraryForm>
     {
@@ -2213,7 +2213,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class ImportFastaSequencesAction extends AbstractFileUploadAction<ImportFastaSequencesForm>
     {
         @Override
@@ -2355,7 +2355,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class ImportOutputFileAction extends AbstractFileUploadAction<ImportOutputFileForm>
     {
         @Override
@@ -2491,7 +2491,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class ImportTrackAction extends AbstractFileUploadAction<ImportTrackForm>
     {
         @Override
@@ -2588,7 +2588,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class ImportChainFileAction extends AbstractFileUploadAction<ImportChainFileForm>
     {
         @Override
@@ -2698,7 +2698,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
     public class DownloadReferencesAction extends ExportAction<DownloadReferencesForm>
     {
@@ -2868,7 +2868,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     @CSRF
     public class RecreateReferenceLibraryAction extends ApiAction<RecreateReferenceLibraryForm>
     {
@@ -2931,7 +2931,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     @CSRF
     public class CheckFileStatusForHandlerAction extends ApiAction<CheckFileStatusForm>
     {
@@ -3075,7 +3075,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class ExportSequenceFilesAction extends ExportAction<ExportSequenceFilesForm>
     {
         public void export(ExportSequenceFilesForm form, HttpServletResponse response, BindException errors) throws Exception
@@ -3200,7 +3200,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GetQualiMapPathAction extends ApiAction<Object>
     {
@@ -3257,7 +3257,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GetDataItemsAction extends ApiAction<GetDataItemsForm>
     {
@@ -3332,7 +3332,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     @CSRF
     public class LoadNcbiGenomeAction extends ApiAction<LoadNcbiGenomeForm>
     {
@@ -3419,7 +3419,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     @CSRF
     public class RunSequenceHandlerAction extends ApiAction<RunSequenceHandlerForm>
     {
@@ -3496,7 +3496,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     @CSRF
     public class ImportOutputFilesAction extends ApiAction<ImportOutputFilesForm>
     {
@@ -3630,7 +3630,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
 
-//    @RequiresPermissionClass(InsertPermission.class)
+//    @RequiresPermission(InsertPermission.class)
 //    @CSRF
 //    public class RestrictionSiteAction extends ApiAction<Object>
 //    {
@@ -3681,7 +3681,7 @@ public class SequenceAnalysisController extends SpringActionController
 //        }
 //    }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     @CSRF
     public class GetAvailableHandlersAction extends ApiAction<GetAvailableHandlersForm>
     {
@@ -3787,7 +3787,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class CompareFastaSequencesAction extends ApiAction<CompareFastaSequencesForm>
     {

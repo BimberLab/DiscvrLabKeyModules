@@ -42,7 +42,7 @@ import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.IgnoresTermsOfUse;
-import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
@@ -83,7 +83,7 @@ public class BLASTController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermissionClass(AdminPermission.class) @CSRF
+    @RequiresPermission(AdminPermission.class) @CSRF
     public class GetSettingsAction extends ApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
@@ -156,7 +156,7 @@ public class BLASTController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class) @CSRF
+    @RequiresPermission(InsertPermission.class) @CSRF
     public class CreateDatabaseAction extends ApiAction<DatabaseForm>
     {
         public ApiResponse execute(DatabaseForm form, BindException errors)
@@ -184,7 +184,7 @@ public class BLASTController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class RunBlastAction extends AbstractFileUploadAction<RunBlastForm>
     {
         @Override
@@ -483,7 +483,7 @@ public class BLASTController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class) @CSRF
+    @RequiresPermission(AdminPermission.class) @CSRF
     public class RecreateDatabaseAction extends ApiAction<RecreateDatabaseForm>
     {
         public ApiResponse execute(RecreateDatabaseForm form, BindException errors)
@@ -545,7 +545,7 @@ public class BLASTController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class JobDetailsAction extends SimpleViewAction<BlastResultForm>
     {
         @Override
@@ -586,7 +586,7 @@ public class BLASTController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
     public class DownloadBlastResultsAction extends ExportAction<DownloadBlastResultsForm>
     {

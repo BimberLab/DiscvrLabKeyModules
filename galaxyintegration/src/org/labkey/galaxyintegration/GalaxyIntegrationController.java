@@ -26,7 +26,7 @@ import org.labkey.api.action.SpringActionController;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.security.CSRF;
-import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.galaxyintegration.api.GalaxyService;
@@ -48,7 +48,7 @@ public class GalaxyIntegrationController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermissionClass(UpdatePermission.class)
+    @RequiresPermission(UpdatePermission.class)
     @CSRF
     public class SetApiKeyAction extends ApiAction<SetApiKeyForm>
     {
@@ -93,7 +93,7 @@ public class GalaxyIntegrationController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GetApiKeysAction extends ApiAction<Object>
     {
@@ -114,7 +114,7 @@ public class GalaxyIntegrationController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     //NOTE: disabled or calls from galaxy will fail
     //@CSRF
     public class ImportDatasetAction extends ApiAction<GetProvenanceForm>

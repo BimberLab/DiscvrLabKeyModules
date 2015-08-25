@@ -32,7 +32,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.CSRF;
-import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.ValidEmail;
 import org.labkey.api.security.permissions.AdminPermission;
@@ -60,7 +60,7 @@ public class OGASyncController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     public class RunEtlAction extends RedirectAction<Object>
     {
         public boolean doAction(Object form, BindException errors) throws Exception
@@ -101,7 +101,7 @@ public class OGASyncController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     @CSRF
     public class SetEtlDetailsAction extends ApiAction<EtlAdminForm>
     {
@@ -259,7 +259,7 @@ public class OGASyncController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     @CSRF
     public class GetEtlDetailsAction extends ApiAction<Object>
     {

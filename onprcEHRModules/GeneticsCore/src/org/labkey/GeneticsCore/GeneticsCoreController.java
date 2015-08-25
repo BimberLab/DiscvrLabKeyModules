@@ -11,7 +11,7 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.security.CSRF;
-import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.util.Pair;
@@ -41,7 +41,7 @@ public class GeneticsCoreController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @CSRF
     public class GetNavItemsAction extends ApiAction<Object>
     {
@@ -125,7 +125,7 @@ public class GeneticsCoreController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(UpdatePermission.class)
+    @RequiresPermission(UpdatePermission.class)
     @CSRF
     public class CacheAnalysesAction extends ApiAction<CacheAnalysesForm>
     {
@@ -194,7 +194,7 @@ public class GeneticsCoreController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(UpdatePermission.class)
+    @RequiresPermission(UpdatePermission.class)
     @CSRF
     public class CacheHaplotypesAction extends ApiAction<CacheAnalysesForm>
     {
