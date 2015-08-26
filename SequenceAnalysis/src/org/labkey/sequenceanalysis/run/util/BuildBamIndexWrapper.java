@@ -54,6 +54,7 @@ public class BuildBamIndexWrapper extends PicardWrapper
         params.add("-jar");
         params.add(getPicardJar().getPath());
         params.add(getTooName());
+        params.add("VALIDATION_STRINGENCY=" + getStringency().name());
         params.add("INPUT=" + file.getPath());
         params.add("OUTPUT=" + new File(getOutputDir(file), getOutputFilename(file)).getPath());
 
