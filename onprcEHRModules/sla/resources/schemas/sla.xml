@@ -21,37 +21,65 @@
         <tableTitle>SLA Census</tableTitle>
         <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
         <columns>
-            <column columnName="project" />
+
             <column columnName="date">
+                <columnTitle>Census Date</columnTitle>
                 <formatString>yyyy-MM-dd HH:mm</formatString>
             </column>
             <column columnName="investigatorid">
                 <columnTitle>Investigator</columnTitle>
                 <isHidden>true</isHidden>
                 <fk>
+                    <fkFolderPath>/ONPRC/EHR</fkFolderPath>
                     <fkDbSchema>onprc_ehr</fkDbSchema>
                     <fkTable>investigators</fkTable>
                     <fkColumnName>objectid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="project" >
+                <fk>
+                    <fkFolderPath>/ONPRC/EHR</fkFolderPath>
+                    <fkDbSchema>ehr</fkDbSchema>
+                    <fkTable>project</fkTable>
+                    <fkColumnName>name</fkColumnName>
                 </fk>
             </column>
             <column columnName="room" />
             <column columnName="species">
                 <columnTitle>Species</columnTitle>
                 <fk>
+                    <fkFolderPath>/ONPRC/EHR</fkFolderPath>
                     <fkDbSchema>sla</fkDbSchema>
                     <fkTable>species</fkTable>
                     <fkColumnName>species</fkColumnName>
                 </fk>
             </column>
-            <column columnName="cagetype">
+            <column columnName="cagetype">               <!--Blasa 2-13-2015 converted this into combo box   -->
                 <columnTitle>Cage Type</columnTitle>
+                <fk>
+                    <fkFolderPath>/ONPRC/EHR</fkFolderPath>
+                    <fkDbSchema>sla</fkDbSchema>
+                   <fkTable>SLACageType</fkTable>
+                    <fkColumnName>cagetype</fkColumnName>
+
+                </fk>
             </column>
-            <column columnName="cageSize" />
-            <column columnName="countType" />
+            <column columnName="cageSize" >              <!--Blasa 2-13-2015 converted this into combo box   -->
+            <columnTitle>Cage Size</columnTitle>
+                <fk>
+                    <fkFolderPath>/ONPRC/EHR</fkFolderPath>
+                    <fkDbSchema>sla</fkDbSchema>
+                    <fkTable>SLACageSize</fkTable>
+                    <fkColumnName>cagesize</fkColumnName>
+                </fk>
+            </column>
             <column columnName="animalCount" />
             <column columnName="cageCount" />
             <column columnName="dlaminventory">
                 <columnTitle>DLAM Inventory</columnTitle>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="counttype">
                 <isHidden>true</isHidden>
             </column>
             <column columnName="taskid" />

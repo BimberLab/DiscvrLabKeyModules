@@ -57,7 +57,7 @@ public class SLAModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 13.26;
+        return 13.27;
     }
 
     @Override

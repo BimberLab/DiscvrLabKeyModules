@@ -6,6 +6,17 @@
 /**
  * This is the default metadata applied to records in SLA forms
  */
+
+Ext4.define('SLA.form.field.RodentRoomField', {
+    extend: 'EHR.form.field.RoomField',
+    alias: 'widget.sla-rodentroomfield',
+
+    getStoreFilterArray : function() {
+        var ret = this.callParent();
+        ret.push(LABKEY.Filter.create('housingType/value', 'Rodent Location'));
+        return ret;
+    }
+});
 EHR.model.DataModelManager.registerMetadata('SLA', {
     allQueries: {
 
@@ -18,7 +29,26 @@ EHR.model.DataModelManager.registerMetadata('SLA', {
             },
             date: {
 
+            },
+                 /* Added 3-12-2015 Blasa */
+            room: {
+                xtype: 'sla-rodentroomfield',
+                columnConfig: {
+                    width: 200
+                }
+            },
+            cageSize: {
+                columnConfig: {
+                    width: 200
+                }
+            },
+            cagetype: {
+                columnConfig: {
+                    width: 200
+                }
             }
+
         }
     }
 });
+

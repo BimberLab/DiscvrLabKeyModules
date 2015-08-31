@@ -179,7 +179,7 @@ SELECT
   coalesce(alias.investigatorId, p.project.investigatorId) as investigatorId,
   CASE
     WHEN (e.rowid IS NOT NULL OR e2.rowid IS NOT NULL OR e3.rowid IS NOT NULL) THEN 'Y'
-    WHEN (pm.multiplier IS NOT NULL) THEN 'Multiplier'
+    WHEN (pm.multiplier IS NOT NULL) THEN ('Multiplier: ' || CAST(pm.multiplier AS varchar(100)))
     ELSE null
   END as isExemption,
   CASE

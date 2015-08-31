@@ -1,8 +1,6 @@
-
 Select
 rf.ProjectID as Project,
-CountDate as date,
---NOTE: this should be translated into the LK investigator ID, not the IRIS ID
+ CountDate as date,
 (select max(cast(i.objectid as varchar(36))) from labkey.onprc_ehr.investigators i where i.firstname = ri.firstname and i.lastname = ri.lastname group by i.LastName, i.firstname having count(*) <= 1) as InvestigatorId,
 
 rl.Location as Room,
@@ -13,7 +11,8 @@ afs.CountType,
 afs.AnimalCount,
 afs.CageCount,
 afs.DLAMInventory,
-cast(afs.objectid as varchar(36)) as objectid
+cast(afs.objectid as varchar(36)) as objectid ,
+18   as QCState
 
 From Af_SmallLabAnimals afs
 LEFT JOIN vw_SLAProjects rf ON (rf.ProjectID = afs.IACUCID )

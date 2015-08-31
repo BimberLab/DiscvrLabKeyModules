@@ -29,6 +29,7 @@ SELECT
     WHEN (f.flags LIKE '%Parentage Blood Draw Needed%') THEN 1
     WHEN (f.flags LIKE '%Parentage Blood Draw Collected%') THEN 0
     WHEN (gp.Id IS NOT NULL) THEN 0
+    WHEN (snpData.subjectId IS NOT NULL) THEN 0
     WHEN (pd.subjectId IS NOT NULL) THEN 0
     ELSE 1
   END as parentageBloodDrawVol,
@@ -58,6 +59,15 @@ LEFT JOIN (
     WHERE pd.method = 'UC Davis'
     GROUP BY pd.subjectId
 ) pd ON (d.Id = pd.subjectId)
+
+--determine if animal has raw SNP data
+LEFT JOIN (
+    SELECT
+      snpData.subjectId
+      --count(pd.subjectId) as total
+    FROM Parentage_SNP_Data.data snpData
+    GROUP BY snpData.subjectId
+) snpData ON (d.Id = snpData.subjectId)
 
 --determine if we have actual genetic parentage calls
 LEFT JOIN (

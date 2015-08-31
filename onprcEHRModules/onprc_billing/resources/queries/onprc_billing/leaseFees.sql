@@ -35,6 +35,7 @@ END as chargeId,
 --special case one-day lease rates.  note: if enddate is null, these cannot be a one-day lease
 CASE
   WHEN (a.duration = 0 AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN 1
+  WHEN (fl.id Is Not Null) THEN 0
   WHEN (a.duration <= CAST(javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.DAY_LEASE_MAX_DURATION') as INTEGER) AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN a.duration
   ELSE 1
 END as quantity,
@@ -63,6 +64,11 @@ LEFT JOIN onprc_billing.leaseFeeDefinition lf ON (
   AND (a.ageAtTime.AgeAtTimeYearsRounded < lf.maxAge OR lf.maxAge IS NULL)
   AND lf.active = true
 )
+--adds the reasearch owned animal exemption
+Left JOIN study.flags fl on
+	(a.id = fl.id
+	and fl.flag.code = 4034
+	and (a.date >= fl.date and a.date <=COALESCE(fl.enddate,Now()) ))
 
 WHERE CAST(a.datefinalized AS DATE) >= CAST(STARTDATE as DATE) AND CAST(a.datefinalized AS DATE) <= CAST(ENDDATE as DATE)
 AND a.qcstate.publicdata = true
@@ -114,7 +120,10 @@ a.releaseType,
 a.ageAtTime.AgeAtTimeYearsRounded as ageAtTime,
 'Lease Fees' as category,
 (SELECT max(rowid) as rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.LEASE_FEE_ADJUSTMENT') and ci.active = true) as chargeId,
-1 as quantity,
+CASE
+  when (fl.id Is Not Null) then 0
+  else 1
+  end as quantity,
 lf2.chargeId as leaseCharge1,
 lf.chargeId as leaseCharge2,
 a.objectid as sourceRecord,
@@ -144,7 +153,14 @@ LEFT JOIN onprc_billing.leaseFeeDefinition lf2
     AND a2.dateOnly <= a.dateOnly
     AND a2.endDateCoalesced >= a.dateOnly
     AND a2.project.name = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.TMB_PROJECT')
+
+
   )
+--adds the reasearch owned animal exemption
+Left JOIN study.flags fl on
+	(a.id = fl.id
+	and fl.flag.code = 4034
+	and (a.date >= fl.date and a.date <=COALESCE(fl.enddate,Now()) ))
 
 WHERE a.releaseCondition != a.projectedReleaseCondition
 AND a.enddatefinalized is not null AND CAST(a.enddatefinalized AS DATE) >= CAST(STARTDATE AS DATE) AND CAST(a.enddatefinalized AS DATE) <= CAST(EndDate as DATE)

@@ -56,6 +56,13 @@ Ext4.define('SLA.window.AddCensusWindow', {
                     showOccupiedOnly: true,
                     fieldLabel: 'Room(s)',
                     itemId: 'roomField',
+                    getStoreFilterArray: function(){
+                         var ret = [
+                              LABKEY.Filter.create('datedisabled', null, LABKEY.Filter.Types.ISBLANK),
+                              LABKEY.Filter.create('housingType/value', 'Rodent Location', LABKEY.Filter.Types.EQUAL)
+                              ];
+                        return ret;
+                     },
                     listeners: {
                         change: function (field) {
                             var areaField = field.up('panel').down('#areaField');
@@ -105,16 +112,21 @@ Ext4.define('SLA.window.AddCensusWindow', {
         this.close();
     },
 
+
+
+
     doQuery: function(){
         var room = this.down('#roomField').getValue();
         room = !room || Ext4.isArray(room) ? room : [room];
 
-        var filterArray = [LABKEY.Filter.create('isActive', true, LABKEY.Filter.Types.EQUAL)];
+        //var filterArray = [LABKEY.Filter.create('room', room.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)];
 
-        if (!Ext4.isEmpty(room))
-            filterArray.push(LABKEY.Filter.create('room', room.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF));
+        if (!Ext4.isEmpty(room))  {
+            var filterArray = [LABKEY.Filter.create('room', room.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)];
 
-        if (filterArray.length == 1){
+
+        }
+        if (filterArray.length == 0){
             Ext4.Msg.alert('Error', 'Must choose a location');
             return;
         }
@@ -124,8 +136,8 @@ Ext4.define('SLA.window.AddCensusWindow', {
 
         LABKEY.Query.selectRows({
             schemaName: 'sla',
-            queryName: 'mostRecentCensus',
-            sort: 'room,project/displayName',
+            queryName:  'SLAMostRecentCensus',                     //'mostRecentCensus',
+             sort:     'room,project/displayName,date desc',
             filterArray: filterArray,
             scope: this,
             success: this.onSuccess,
@@ -142,10 +154,21 @@ Ext4.define('SLA.window.AddCensusWindow', {
 
         var records = [];
         Ext4.Array.forEach(results.rows, function(row){
-            if(row.Id){
+            if(row.project){
                 //TODO: set correct rows
+
                 var obj = {
-                    Id: row.Id
+                    date: row.Date,
+                    project: row.project,
+                    room: row.room,
+                    species: row.Species,
+                    cagetype: row.Cage_Type,
+                    cageSize: row.Cage_Size,
+                    countType: row.countType,
+                    animalCount: row.Animal_Count,
+                    cageCount: row.Cage_Count
+
+
                 };
 
                 records.push(obj);
