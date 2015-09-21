@@ -1,4 +1,4 @@
-ALTER TABLE sequenceanalysis.barcodes DROP CONSTRAINT UNIQUE_barcodes;
+SELECT core.fn_dropifexists('sequenceanalysis', 'barcodes', 'CONSTRAINT', 'UNIQUE_barcodes');
 
 CREATE TABLE sequenceanalysis.genomeAliases (
   rowid serial,
