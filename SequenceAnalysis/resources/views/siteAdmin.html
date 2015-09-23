@@ -1,6 +1,6 @@
 <script type="text/javascript">
     Ext4.onReady(function(){
-        if (LABKEY.Security.currentContainer.path != '/'){
+        if (LABKEY.Security.currentContainer.path != '/' && LABKEY.Security.currentContainer.path != '/Shared'){
             Ext4.Msg.alert('Error', 'This page can only be viewed from the site root', function(){
                 window.location = LABKEY.ActionURL.buildURL('project', 'home');
             }, this);
@@ -31,12 +31,12 @@
                     xtype: 'ldk-linkbutton',
                     linkCls: 'labkey-text-link',
                     text: 'Run Sequence Analysis Test',
-                    href: LABKEY.ActionURL.buildURL('junit', 'run', null, {testCase: 'org.labkey.sequenceanalysis.TestHelper$SequenceAnalysisPipelineTestCase'})
+                    href: LABKEY.ActionURL.buildURL('junit', 'run', '/', {testCase: 'org.labkey.sequenceanalysis.TestHelper$SequenceAnalysisPipelineTestCase'})
                 },{
                     xtype: 'ldk-linkbutton',
                     linkCls: 'labkey-text-link',
                     text: 'Run Sequence Import Test',
-                    href: LABKEY.ActionURL.buildURL('junit', 'run', null, {testCase: 'org.labkey.sequenceanalysis.TestHelper$SequenceImportPipelineTestCase'})
+                    href: LABKEY.ActionURL.buildURL('junit', 'run', '/', {testCase: 'org.labkey.sequenceanalysis.TestHelper$SequenceImportPipelineTestCase'})
                 },{
                     style: 'margin-top:10px;margin-bottom:10px;',
                     html: 'If tests fail, please check your site log file for additional information.  Note: if you did not enable the startup param, the tests will pass without actually exercising the pipeline (this is by design).  However, your site log file should contain the line "Sequence pipeline is not enabled on this server, so some tests will be skipped"<br>'
@@ -64,7 +64,7 @@
                         },
                         loadServerValue: function(){
                             LABKEY.Ajax.request({
-                                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getQualiMapPath', null),
+                                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getQualiMapPath', '/'),
                                 method: 'POST',
                                 scope: this,
                                 failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback(), this),
@@ -82,7 +82,7 @@
                         border: true,
                         handler: function (btn) {
                             LABKEY.Ajax.request({
-                                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'setQualiMapPath', null),
+                                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'setQualiMapPath', '/'),
                                 method: 'POST',
                                 params: {
                                     path: btn.up('panel').down('#qualimapPath').getValue()

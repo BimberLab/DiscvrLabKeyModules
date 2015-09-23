@@ -95,11 +95,11 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
             aggregators.add(coverage);
 
             NtSnpByPosAggregator ntSnp = new NtSnpByPosAggregator(getPipelineCtx().getLogger(), referenceFasta, avgBaseQualityAggregator, toolParams);
-            ntSnp.setCoverageAggregator(coverage);
+            ntSnp.setCoverageAggregator(coverage, true);
             aggregators.add(ntSnp);
 
             AASnpByCodonAggregator aaSnp = new AASnpByCodonAggregator(getPipelineCtx().getLogger(), referenceFasta, avgBaseQualityAggregator, toolParams);
-            aaSnp.setCoverageAggregator(coverage);
+            aaSnp.setCoverageAggregator(coverage, true);
             aggregators.add(aaSnp);
 
             bi.addAggregators(aggregators);

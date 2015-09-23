@@ -242,10 +242,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
             }
         });
 
-        DetailsURL details = DetailsURL.fromString("/sequenceAnalysis/siteAdmin.view");
-        details.setContainerContext(ContainerManager.getRoot());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "discvr-seq admin", details.getActionURL());
-
         PipelineService.get().registerPipelineProvider(new ReferenceLibraryPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new NcbiGenomeImportPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new SequenceOutputHandlerPipelineProvider(this));

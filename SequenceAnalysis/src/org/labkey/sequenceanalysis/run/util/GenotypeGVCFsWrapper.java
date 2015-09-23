@@ -1,10 +1,14 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import htsjdk.tribble.index.Index;
+import htsjdk.tribble.index.IndexFactory;
+import htsjdk.variant.vcf.VCFCodec;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +32,31 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
         {
             getLogger().info("merging gVCF files prior to genotyping");
             //TODO
+        }
+
+        //ensure indexes
+        for (File gvcf : inputGVCFs)
+        {
+            File expectedIdx = new File(gvcf.getPath() + ".tbi");
+            if (!expectedIdx.exists())
+            {
+                expectedIdx = new File(gvcf.getPath() + ".idx");
+                if (!expectedIdx.exists())
+                {
+                    try
+                    {
+                        getLogger().info("index not found, creating: " + gvcf);
+                        Index idx = IndexFactory.createIndex(gvcf, new VCFCodec(), IndexFactory.IndexType.LINEAR);
+                        IndexFactory.writeIndex(idx, expectedIdx);
+                        //TabixRunner r = new TabixRunner(getLogger());
+                        //r.execute(gvcf);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+            }
         }
 
         List<String> args = new ArrayList<>();

@@ -50,7 +50,8 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
         super(SequenceOutputHandlerPipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
         _support = new SequenceJobSupportImpl();
         _name = handler.getName();
-        _protocolName = handler.getName() + "_" + FileUtil.getTimestamp();
+        String timestamp = FileUtil.getTimestamp();
+        _protocolName = handler.getName() + "_" + timestamp;
         _handlerClassName = handler.getClass().getName();
         _jsonParams = jsonParams;
         _files = files;
@@ -62,7 +63,7 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
         }
 
         AssayFileWriter writer = new AssayFileWriter();
-        String protocolName = FileUtil.makeLegalName("sequenceOutput_" + FileUtil.getTimestamp());
+        String protocolName = FileUtil.makeLegalName("sequenceOutput_" + timestamp);
 
         _outDir = writer.findUniqueFileName(protocolName, _outDir);
         if (!_outDir.exists())

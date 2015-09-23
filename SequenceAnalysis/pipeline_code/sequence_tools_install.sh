@@ -234,7 +234,8 @@ then
     #git clone git://github.com/broadgsa/gatk.git
     git clone git://github.com/broadgsa/gatk-protected.git
     cd gatk-protected
-    git checkout tags/3.4
+    #git checkout tags/3.4
+    git checkout
     cd ../
 
     #this is a custom extension
@@ -255,8 +256,8 @@ then
 
     mvn verify
     mvn package
-    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.4.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
-    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.4.jar ${LKTOOLS_DIR}/Queue.jar
+    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.5-SNAPSHOT.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
+    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.5-SNAPSHOT.jar ${LKTOOLS_DIR}/Queue.jar
 fi
 
 
@@ -275,18 +276,27 @@ then
     echo "Cleaning up previous installs"
     rm -Rf gmap-gsnap-2014-12-16*
     rm -Rf gmap-2014-12-16*
+    rm -Rf gmap-gsnap-2015-09-10*
+    rm -Rf gmap-2015-09-10*
     rm -Rf $LKTOOLS_DIR/gsnap
     rm -Rf $LKTOOLS_DIR/gmap
     rm -Rf $LKTOOLS_DIR/gmap_build
 
-    wget --read-timeout=10 http://research-pub.gene.com/gmap/src/gmap-gsnap-2014-12-16.v2.tar.gz
-    gunzip gmap-gsnap-2014-12-16.v2.tar.gz
-    tar -xf gmap-gsnap-2014-12-16.v2.tar
-    gzip gmap-gsnap-2014-12-16.v2.tar
-    cd gmap-2014-12-16
+    wget --read-timeout=10 http://research-pub.gene.com/gmap/src/gmap-gsnap-2015-09-10.tar.gz
+    gunzip gmap-gsnap-2015-09-10.tar.gz
+    tar -xf gmap-gsnap-2015-09-10.tar
+    gzip gmap-gsnap-2015-09-10.tar
+    cd gmap-2015-09-10
+
     ./configure --prefix=${LK_HOME}
     make
     make install
+
+    #note: there was a bug in gmap if your input has a space in the filepath
+    #cd "$LKTOOLS_DIR"
+    #sed -i 's/-o $coordsfile/-o \\"$coordsfile\\"/' gmap_build
+    #sed -i 's/-c $coordsfile/-c \\"$coordsfile\\"/' gmap_build
+    #sed -i 's/-f $fasta_sources/-c \\"$fasta_sources\\"/' gmap_build
 else
     echo "Already installed"
 fi

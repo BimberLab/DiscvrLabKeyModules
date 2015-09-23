@@ -34,7 +34,7 @@ public class SamToFastqWrapper extends PicardWrapper
         args.add("INCLUDE_NON_PF_READS=TRUE");
         args.add("OUTPUT_PER_RG=TRUE");
         args.add("OUTPUT_DIR=" + outDir.getPath());
-        inferMaxRecordsInRam(params);
+        inferMaxRecordsInRam(args);
 
         execute(args);
 

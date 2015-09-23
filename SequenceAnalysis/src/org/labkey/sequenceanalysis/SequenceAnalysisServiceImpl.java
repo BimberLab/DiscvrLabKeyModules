@@ -188,6 +188,11 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     @Override
     public File ensureVcfIndex(File vcf, Logger log) throws IOException
     {
+        if (vcf == null || !vcf.exists())
+        {
+            throw new IOException("VCF does not exist: " + (vcf == null ? null : vcf.getPath()));
+        }
+
         try
         {
             FileType gz = new FileType(".gz");

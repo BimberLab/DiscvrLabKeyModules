@@ -876,7 +876,7 @@ public class JBrowseRoot
 
         outDir.mkdirs();
 
-        JSONObject ret = processFlatFile(c, aaFeaturesOutFile, outDir, "--gff", featureName, "Coding Regions", null, "Reference Annotations");
+        JSONObject ret = processFlatFile(c, aaFeaturesOutFile, outDir, "--gff", featureName, "Coding Regions", null, "Reference Annotations", "JBrowse/View/Track/CanvasFeatures");
 
         //move file, so name parsing works properly
         File source = new File(databaseTrackDir, "tmpTrackDir/data/tracks/" + featureName);
@@ -940,7 +940,7 @@ public class JBrowseRoot
 
         outDir.mkdirs();
 
-        JSONObject ret = processFlatFile(c, aaFeaturesOutFile, outDir, "--gff", featureName, "Coding Regions", null, "Reference Annotations");
+        JSONObject ret = processFlatFile(c, aaFeaturesOutFile, outDir, "--gff", featureName, "Coding Regions", null, "Reference Annotations", "JBrowse/View/Track/CanvasFeatures");
 
         //move file, so name parsing works properly
         File source = new File(databaseTrackDir, "tmpTrackDir/data/tracks/" + featureName);
@@ -1129,19 +1129,19 @@ public class JBrowseRoot
         String ext = FileUtil.getExtension(data.getFile());
         if ("gff3".equalsIgnoreCase(ext) || "gff".equalsIgnoreCase(ext) || "gtf".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--gff", featureName, featureLabel, metadata, category);
+            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--gff", featureName, featureLabel, metadata, category, "JBrowse/View/Track/CanvasFeatures");
             writeTrackList(outDir, ret);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("bed".equalsIgnoreCase(ext) || "bedgraph".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--bed", featureName, featureLabel, metadata, category);
+            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--bed", featureName, featureLabel, metadata, category, null);
             writeTrackList(outDir, ret);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("gbk".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--gbk", featureName, featureLabel, metadata, category);
+            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--gbk", featureName, featureLabel, metadata, category, null);
             writeTrackList(outDir, ret);
             return ret == null ? null : Arrays.asList(ret);
         }
@@ -1364,7 +1364,7 @@ public class JBrowseRoot
         return o;
     }
 
-    private JSONObject processFlatFile(Container c, File inputFile, File outDir, String typeArg, String featureName, String featureLabel, Map<String, Object> metadata, String category) throws IOException
+    private JSONObject processFlatFile(Container c, File inputFile, File outDir, String typeArg, String featureName, String featureLabel, Map<String, Object> metadata, String category, String trackType) throws IOException
     {
         List<String> args = new ArrayList<>();
 
@@ -1377,11 +1377,6 @@ public class JBrowseRoot
 
         args.add("--key");
         args.add(featureLabel);
-
-        //TODO
-        //args.add("--trackType");
-        //args.add("--className");
-        //args.add("--type");
 
         if (JBrowseManager.get().compressJSON())
         {
@@ -1414,6 +1409,12 @@ public class JBrowseRoot
 
             if (category != null)
                 obj.getJSONArray("tracks").getJSONObject(0).put("category", category);
+
+            if (trackType != null)
+            {
+                obj.getJSONArray("tracks").getJSONObject(0).put("trackType", trackType);
+                obj.getJSONArray("tracks").getJSONObject(0).put("type", trackType);
+            }
 
             writeJsonToFile(trackList, obj.toString(1));
 
@@ -1461,6 +1462,7 @@ public class JBrowseRoot
 
     private void writeJsonToFile(File output, String json) throws IOException
     {
+        getLogger().debug("writing json to file: " + output.getPath());
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(output)))
         {
             writer.write(json.equals("{}") ? "" : json);

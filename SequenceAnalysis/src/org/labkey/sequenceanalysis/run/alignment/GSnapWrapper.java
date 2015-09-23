@@ -112,7 +112,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
                     File spliceSitesExe = SequencePipelineService.get().getExeForPackage("GSNAPPATH", "gtf_splicesites");
                     params.add("/bin/sh");
                     params.add("-c");
-                    params.add("cat " + gtf.getPath() + " | " + spliceSitesExe.getPath());
+                    params.add("cat \"" + gtf.getPath() + "\" | \"" + spliceSitesExe.getPath() + "\"");
 
                     File spliceOutput1 = new File(outputDirectory, FileUtil.getBaseName(gtf) + "_splicesites");
                     if (spliceOutput1.exists())
@@ -134,7 +134,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
                     File storeExe = SequencePipelineService.get().getExeForPackage("GSNAPPATH", "iit_store");
                     params2.add("/bin/sh");
                     params2.add("-c");
-                    params2.add("cat " + spliceOutput1.getPath() + " | " + storeExe.getPath() + " -o " + spliceOutput2.getPath());
+                    params2.add("cat \"" + spliceOutput1.getPath() + "\" | \"" + storeExe.getPath() + "\" -o \"" + spliceOutput2.getPath() + "\"");
                     getWrapper().execute(params2);
 
                     spliceOutput2 = new File(spliceOutput2.getPath() + ".iit");
@@ -263,6 +263,8 @@ public class GSnapWrapper extends AbstractCommandWrapper
 
                 args.add("-D");
                 args.add(indexDir.getPath());
+                getWrapper().setWorkingDir(indexDir);
+
                 args.add("-d");
                 args.add(getProvider().getName());
                 args.add(referenceGenome.getWorkingFastaFile().getPath());

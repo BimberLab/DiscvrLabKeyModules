@@ -104,6 +104,11 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
 
     protected void inferMaxRecordsInRam(List<String> args)
     {
+        if (args == null)
+        {
+            return;
+        }
+
         for (String arg : args)
         {
             if (arg.startsWith("-Xmx") && arg.endsWith("g"))

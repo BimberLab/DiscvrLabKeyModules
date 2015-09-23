@@ -136,6 +136,8 @@ Ext4.define('SequenceAnalysis.window.ImportSequencesFromFastaWindow', {
                 Ext4.Msg.hide();
                 if (action && action.result){
                     Ext4.Msg.alert('Error', action.result.exception);
+                    LDK.Utils.logError('Problem uploading FASTA sequences: ' + Ext4.encode(action.result));
+                    console.error(action.result);
                 }
             }
         });

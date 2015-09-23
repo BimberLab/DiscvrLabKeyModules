@@ -30,9 +30,11 @@ import org.labkey.api.laboratory.TabbedReportItem;
 import org.labkey.api.ldk.NavItem;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.AbstractSequenceDataProvider;
+import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
@@ -92,6 +94,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         List<NavItem> items = new ArrayList<>();
         if (ContainerManager.getSharedContainer().equals(c))
         {
+            items.add(new DetailsUrlWithoutLabelNavItem(this, "DISCVR-Seq Admin", DetailsURL.fromString("/sequenceAnalysis/siteAdmin.view", ContainerManager.getRoot()), LaboratoryService.NavItemCategory.settings, "DISCVR-Seq"));
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "Barcodes", categoryName, "Allowable Barcodes"));
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "DNA_Adapters", categoryName, "DNA Adapter Sequences"));
 

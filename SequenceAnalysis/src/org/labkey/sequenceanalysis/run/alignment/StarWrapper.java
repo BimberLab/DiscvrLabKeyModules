@@ -1,7 +1,9 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
@@ -9,6 +11,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileType;
@@ -17,6 +20,7 @@ import org.labkey.sequenceanalysis.run.util.SamFormatConverterWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -51,15 +55,33 @@ public class StarWrapper extends AbstractCommandWrapper
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName(), referenceGenome);
             StarWrapper wrapper = getWrapper();
 
-            getPipelineCtx().getLogger().info("Aligning sample with STAR... 1st pass");
+            getPipelineCtx().getLogger().info("Aligning sample with STAR using two pass mode");
             List<String> args1 = new ArrayList<>();
             args1.add(wrapper.getExe().getPath());
+
+            if (!basename.endsWith("."))
+            {
+                basename = basename + ".";
+            }
+
+            args1.add("--outSAMtype");
+            args1.add("BAM");
+            args1.add("SortedByCoordinate");  //optional
+
+            //args1.add("--outSAMunmapped");
 
             args1.add("--genomeDir");
             File indexDir = new File(referenceGenome.getWorkingFastaFile().getParentFile(), getProvider().getName());
             args1.add(indexDir.getPath());
 
-            // --outFileNamePrefix $SAMP_DIR\_
+            args1.add("--twopassMode");
+            args1.add("Basic");
+
+            args1.add("--outFileNamePrefix");
+            args1.add((new File(outputDirectory, basename)).getPath());
+
+            args1.add("--outReadsUnmapped");
+            args1.add("Fastq");
 
             //  $RAW_DIR/$line\_R1.fastq.gz $RAW_DIR/$line\_R2.fastq.gz
             args1.add("--readFilesIn");
@@ -76,50 +98,36 @@ public class StarWrapper extends AbstractCommandWrapper
                 args1.add("zcat");
             }
 
+            //GTF
+            if (!StringUtils.isEmpty(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider())))
+            {
+                getPipelineCtx().getLogger().debug("using splice sites file");
+                File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class));
+                if (gtf.exists())
+                {
+                    args1.add("--sjdbGTFfile");
+                    args1.add(gtf.getPath());
+                }
+            }
+
+            args1.add("--quantMode");
+            args1.add("GeneCounts");
+
             addThreadArgs(args1);
             getWrapper().execute(args1);
 
-            //TODO: check for output
-
-            getPipelineCtx().getLogger().info("Creating new index based off of found splice junctions");
-            //STAR
-            // --runMode genomeGenerate
-            // --genomeDir $STAR_GEN_1
-            // --genomeFastaFiles $REF_FASTA
-            // --sjdbFileChrStartEnd $SAMP_DIR\_SJ.out.tab
-            // --sjdbOverhang 75
-            // --runThreadN $THREADS
-
-            getPipelineCtx().getLogger().info("Running final STAR alignment");
-            //STAR
-            // --genomeDir $STAR_GEN_1
-            // --readFilesCommand zcat
-            // --outFileNamePrefix $SAMP_DIR\_
-            // --readFilesIn $RAW_DIR/$line\_R1.fastq.gz $RAW_DIR/$line\_R2.fastq.gz
-            // --runThreadN $THREADS
-
-
-            //make sure SAM exists
-            File sam = new File(outputDirectory, basename + ".sam");
-            if (!sam.exists())
+            //check for output
+            File out = new File(outputDirectory, basename + "Aligned.sortedByCoord.out.bam");
+            if (!out.exists())
             {
-                throw new PipelineJobException("Unable to find output file: " + sam.getPath());
+                throw new PipelineJobException("Unable to find output file: " + out.getPath());
             }
 
-            //convert to BAM
-            File bam = new File(outputDirectory, basename + ".bam");
-            bam = new SamFormatConverterWrapper(getPipelineCtx().getLogger()).execute(sam, bam, true);
-            if (!bam.exists())
-            {
-                throw new PipelineJobException("Unable to find output file: " + bam.getPath());
-            }
-            else
-            {
-                getPipelineCtx().getLogger().info("deleting intermediate SAM file");
-                sam.delete();
-            }
+            output.addOutput(out, AlignmentOutputImpl.BAM_ROLE);
 
-            output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
+            File readCounts = new File(outputDirectory, basename + "ReadsPerGene.out.tab");
+            output.addOutput(readCounts, "Reads Per Gene");
+
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
@@ -144,7 +152,7 @@ public class StarWrapper extends AbstractCommandWrapper
         @Override
         public boolean doSortIndexBam()
         {
-            return true;
+            return false;
         }
 
         @Override
@@ -169,12 +177,13 @@ public class StarWrapper extends AbstractCommandWrapper
                 args.add("genomeGenerate");
 
                 args.add("--genomeDir");
-                args.add(outputDir.getPath());
+                args.add(indexDir.getPath());
 
                 args.add("--genomeFastaFiles");
                 args.add(referenceGenome.getWorkingFastaFile().getPath());
 
                 addThreadArgs(args);
+                getWrapper().setWorkingDir(indexDir);
 
                 getWrapper().execute(args);
             }
@@ -192,7 +201,14 @@ public class StarWrapper extends AbstractCommandWrapper
     {
         public Provider()
         {
-            super("STAR", "STAR is a splice aware aligner, suitable for RNA-Seq.", null, null, "https://github.com/alexdobin/STAR/", true, true);
+            super("STAR", "STAR is a splice aware aligner, suitable for RNA-Seq.", Arrays.asList(
+                ToolParameterDescriptor.createExpDataParam("splice_sites_file", "Gene File", "This is the ID of a GTF file containing genes from this genome.  It will be used to identify splice sites.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
+                {{
+                    put("extensions", Arrays.asList("gtf"));
+                    put("width", 400);
+                    put("allowBlank", false);
+                }}, null)
+            ), null, "https://github.com/alexdobin/STAR/", true, true);
         }
 
         public StarAlignmentStep create(PipelineContext context)

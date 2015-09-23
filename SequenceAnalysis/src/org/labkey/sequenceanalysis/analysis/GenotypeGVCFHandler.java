@@ -34,6 +34,7 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
     public GenotypeGVCFHandler()
     {
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "GATK Genotype GVCFs", "This will run GATK\'s GenotypeGVCF on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK\'s HaplotypeCaller.  ", null, Arrays.asList(
+                ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", null, "CombinedGenotypes"),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-stand_call_conf"), "stand_call_conf", "Threshold For Calling Variants", "The minimum phred-scaled confidence threshold at which variants should be called", "ldk-numberfield", null, 20),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-stand_emit_conf"), "stand_emit_conf", "Threshold For Emitting Variants", "The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold)", "ldk-numberfield", null, 20)
         ));
@@ -106,7 +107,11 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
             }
 
             File outDir = ((FileAnalysisJobSupport) job).getAnalysisDirectory();
-            File outputVcf = new File(outDir, "CombinedGenotypes.vcf.gz");
+            String basename = params.get("fileBaseName") != null ? params.getString("fileBaseName") : "CombinedGenotypes";
+            basename.replaceAll(".vcf.gz$", "");
+            basename.replaceAll(".vcf$", "");
+
+            File outputVcf = new File(outDir, basename + ".vcf.gz");
             List<String> toolParams = new ArrayList<>();
             if (params.get("stand_call_conf") != null)
             {

@@ -85,6 +85,7 @@
             <column columnName="taskid" />
             <column columnName="formsort" />
             <column columnName="objectid" />
+            <column columnName="qcstate" />
             <column columnName="container" />
             <column columnName="createdby" />
             <column columnName="created" />

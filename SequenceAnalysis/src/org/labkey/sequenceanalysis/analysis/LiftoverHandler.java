@@ -161,7 +161,6 @@ public class LiftoverHandler implements SequenceOutputHandler
 
                 boolean isGzip = f.getFile().getPath().toLowerCase().endsWith("gz");
                 int dots = isGzip ? 2 : 1;
-                String extension = isGzip ? FileUtil.getExtension(f.getFile().getName().replaceAll(".gz$", "")) : FileUtil.getExtension(f.getFile());
                 String baseName = FileUtil.getBaseName(f.getFile(), dots);
 
                 Integer chainRowId = params.getInt("chainRowId");
@@ -181,8 +180,8 @@ public class LiftoverHandler implements SequenceOutputHandler
                 action.addInput(chainData.getFile(), "Chain File");
 
                 File outDir = ((FileAnalysisJobSupport) job).getAnalysisDirectory();
-                File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + "." + extension);
-                File unmappedOutput = new File(outDir, baseName + ".unmapped-" + targetGenomeId + "." + extension);
+                File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + ".vcf.gz");
+                File unmappedOutput = new File(outDir, baseName + ".unmapped-" + targetGenomeId + ".vcf.gz");
 
                 try
                 {

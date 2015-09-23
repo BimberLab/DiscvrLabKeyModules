@@ -45,6 +45,7 @@ import java.util.Map;
 public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
 {
     private NtCoverageAggregator _coverageAggregator = null;
+    private boolean _coverageTrackedExternally;
     private Map<String, Integer> _snps = new HashMap<>();
     private Map<String, String> _settings;
 
@@ -72,7 +73,10 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
         }
 
         //NOTE: depth is handled by superclass
-        getCoverageAggregator().inspectAlignment(record, ref, snps, cpi);
+        if (!_coverageTrackedExternally)
+        {
+            getCoverageAggregator().inspectAlignment(record, ref, snps, cpi);
+        }
 
         if (record.getReadUnmappedFlag())
             return;
@@ -201,9 +205,10 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
         }
     }
 
-    public void setCoverageAggregator(NtCoverageAggregator coverageAggregator)
+    public void setCoverageAggregator(NtCoverageAggregator coverageAggregator, boolean coverageTrackedExternally)
     {
         _coverageAggregator = coverageAggregator;
+        _coverageTrackedExternally = coverageTrackedExternally;
     }
 
     @Override

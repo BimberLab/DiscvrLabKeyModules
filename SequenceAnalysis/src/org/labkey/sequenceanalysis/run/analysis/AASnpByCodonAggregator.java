@@ -228,7 +228,9 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
 
         private Set<Pair<Integer, Integer>> _ntPositions = new HashSet<>();
         private Map<String, Integer> _ntPositionStrings = new HashMap<>();
+        private Map<String, Set<String>> _readnamesByPos = new HashMap<>();
         private Set<String> _readnames = new HashSet<>();
+        private Set<String> _dupReadnames = new HashSet<>();
 
         public CacheKeyInfo(AASnp snp)
         {
@@ -303,16 +305,26 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
         public void addSNP(AASnp snp)
         {
             _ntPositions.add(Pair.of(snp.getNtSnp().getLastRefPosition(), snp.getNtSnp().getInsertIndex()));
+            _readnames.add(snp.getNtSnp().getReadname());
 
-            if (!_readnames.contains(snp.getNtSnp().getReadname()))
+            //calculate display string for SNP
+            String ntPosString = snp.getNtPositionString();
+            if (!_readnamesByPos.containsKey(ntPosString))
             {
-                //calculate display string for SNP
-                String ntPosString = snp.getNtPositionString();
+                _readnamesByPos.put(ntPosString, new HashSet<String>());
+            }
+
+            if (_readnamesByPos.get(ntPosString).contains(snp.getNtSnp().getReadname()))
+            {
+                _dupReadnames.add(snp.getNtSnp().getReadname());
+            }
+            else
+            {
                 Integer count = _ntPositionStrings.containsKey(ntPosString) ? _ntPositionStrings.get(ntPosString) : 0;
                 count++;
                 _ntPositionStrings.put(ntPosString, count);
 
-                _readnames.add(snp.getNtSnp().getReadname());
+                _readnamesByPos.get(ntPosString).add(snp.getNtSnp().getReadname());
             }
         }
 

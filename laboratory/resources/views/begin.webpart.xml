@@ -4,4 +4,5 @@
 		<location name="body"/>
 		<location name="menu"/>
    </locations>
+   <customizeHandler>LDK.Utils.customizeWebpartTitle(webPartRowId, webPartProperties, 'Lab Home');</customizeHandler>
 </webpart>

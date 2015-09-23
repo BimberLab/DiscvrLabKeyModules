@@ -43,6 +43,7 @@ import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -1043,7 +1044,7 @@ public class SequenceAnalysisController extends SpringActionController
                     if (coverage == null)
                         coverage = new NtCoverageAggregator(log, refFile, avg, params);
 
-                    ntSnp.setCoverageAggregator(coverage);
+                    ntSnp.setCoverageAggregator(coverage, aggregatorTypes.contains("coverage"));
                     aggregators.add(ntSnp);
                 }
 
@@ -1053,7 +1054,7 @@ public class SequenceAnalysisController extends SpringActionController
                     if (coverage == null)
                         coverage = new NtCoverageAggregator(log, refFile, avg, params);
 
-                    aaCodon.setCoverageAggregator(coverage);
+                    aaCodon.setCoverageAggregator(coverage, aggregatorTypes.contains("coverage"));
                     aggregators.add(aaCodon);
                 }
 
@@ -3096,7 +3097,7 @@ public class SequenceAnalysisController extends SpringActionController
                 filename += ".zip";
             }
 
-            List<File> files = new ArrayList<>();
+            Set<File> files = new HashSet<>();
             FileType bamFileType = new FileType("bam");
             FileType fastaFileType = new FileType("fasta", FileType.gzSupportLevel.SUPPORT_GZ);
             FileType gzFileType = new FileType("gz");
@@ -3143,6 +3144,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             try (ZipOutputStream zOut = new ZipOutputStream(response.getOutputStream()))
             {
+                Set<String> fileNames = new CaseInsensitiveHashSet();
                 for (File f : files)
                 {
                     if (!f.exists())
@@ -3150,12 +3152,27 @@ public class SequenceAnalysisController extends SpringActionController
                         throw new NotFoundException("File " + f.getPath() + " does not exist");
                     }
 
-                    ZipEntry fileEntry = new ZipEntry(f.getName());
+                    String name = f.getName();
+                    if (fileNames.contains(name))
+                    {
+                        int i = 1;
+                        String newName = name;
+                        while (fileNames.contains(newName))
+                        {
+                            newName = FileUtil.getBaseName(name) + "." + i + "." + FileUtil.getExtension(name);
+                            i++;
+                        }
+
+                        name = newName;
+                    }
+                    fileNames.add(name);
+
+                    ZipEntry fileEntry = new ZipEntry(name);
                     zOut.putNextEntry(fileEntry);
 
                     try (FileInputStream in = new FileInputStream(f))
                     {
-                        IOUtils.copy(new FileInputStream(f), zOut);
+                        IOUtils.copy(in, zOut);
                         zOut.closeEntry();
                     }
                     catch (Exception e)
