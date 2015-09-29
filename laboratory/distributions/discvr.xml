@@ -3,7 +3,7 @@
 <project default="usage">
 
     <target name="distribution">
-        <antcall target="prepare_dist_files" />
+        <antcall target="gather_modules" />
         <ant antfile="${basedir}/build.xml" target="package_redistributables">
             <property name="dist_sub.dir" value="discvr" />
             <property name="skip.windowsInstaller" value="true" />
@@ -11,10 +11,6 @@
             <property name="skip.tarGZDistribution" value="true" />
             <property name="package.modules" value="true"/>
         </ant>
-    </target>
-
-    <target name="prepare_dist_files">
-        <antcall target="gather_modules" />
     </target>
 
     <target name="gather_modules">
