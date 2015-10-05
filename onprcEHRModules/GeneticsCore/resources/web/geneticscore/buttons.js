@@ -21,6 +21,7 @@ GeneticsCore.buttons = new function(){
             LABKEY.Query.selectRows({
                 method: 'POST',
                 requiredVersion: 9.1,
+                containerPath: dataRegion.containerPath,
                 schemaName: 'laboratory',
                 queryName: 'samples',
                 columns: 'rowid,subjectid,container',
@@ -28,6 +29,11 @@ GeneticsCore.buttons = new function(){
                 failure: LDK.Utils.getErrorCallback(),
                 success: function(results){
                     Ext4.Msg.hide();
+
+                    if (!results.rows || !results.rows.length){
+                        Ext4.Msg.alert('Error', 'No rows found');
+                        return;
+                    }
 
                     var hasError = false;
                     Ext4.each(results.rows, function(r){
@@ -43,6 +49,11 @@ GeneticsCore.buttons = new function(){
 
                     if (hasError)
                         return;
+
+                    if (!subjects.length){
+                        Ext4.Msg.alert('Error', 'No subject IDs provided');
+                        return;
+                    }
 
                     Ext4.create('GeneticsCore.window.ManageFlagsWindow', {
                         mode: (mode || 'add'),
