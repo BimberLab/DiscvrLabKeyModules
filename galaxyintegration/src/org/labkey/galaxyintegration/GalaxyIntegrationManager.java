@@ -18,10 +18,12 @@ package org.labkey.galaxyintegration;
 
 import com.drew.lang.annotations.Nullable;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.security.User;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class GalaxyIntegrationManager
@@ -46,12 +48,16 @@ public class GalaxyIntegrationManager
      * @param hostName
      * @param apiKey Use NULL to clear this hostName
      */
-    public void saveApiKey(User user, String hostName, @Nullable String apiKey)
+    public void saveApiKey(User user, String hostName, @Nullable String url, @Nullable String apiKey)
     {
         PropertyManager.PropertyMap map = PropertyManager.getWritableProperties(user, ContainerManager.getRoot(), GALAXY_KEY, true);
-        if (StringUtils.trimToNull(apiKey) != null)
+        if (StringUtils.trimToNull(url) != null)
         {
-            map.put(hostName, apiKey);
+            JSONObject props = new JSONObject();
+            props.put("url", url);
+            props.put("apiKey", apiKey);
+
+            map.put(hostName, props.toString());
         }
         else
         {
@@ -61,10 +67,15 @@ public class GalaxyIntegrationManager
         map.save();
     }
 
-    public String getUserApiKey(User user, String hostName)
+    @Nullable
+    public JSONObject getServerSettings(User user, String hostName)
     {
         Map<String, String> map = PropertyManager.getProperties(user, ContainerManager.getRoot(), GALAXY_KEY);
+        if (map == null || map.get(hostName) == null)
+        {
+            return null;
+        }
 
-        return map.get(hostName);
+        return new JSONObject(map.get(hostName));
     }
 }

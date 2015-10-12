@@ -51,6 +51,18 @@
             <ns:column columnName="comments">
                 <ns:columnTitle>Comments</ns:columnTitle>
             </ns:column>
+            <ns:column columnName="lsid">
+                <ns:datatype>lsidtype</ns:datatype>
+                <ns:isReadOnly>true</ns:isReadOnly>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:isUnselectable>true</ns:isUnselectable>
+                <ns:fk>
+                    <ns:fkColumnName>ObjectUri</ns:fkColumnName>
+                    <ns:fkTable>Object</ns:fkTable>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="container">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
@@ -93,6 +105,18 @@
                 <ns:shownInInsertView>false</ns:shownInInsertView>
                 <ns:shownInUpdateView>false</ns:shownInUpdateView>
                 <ns:isUserEditable>false</ns:isUserEditable>
+            </ns:column>
+            <ns:column columnName="lsid">
+                <ns:datatype>lsidtype</ns:datatype>
+                <ns:isReadOnly>true</ns:isReadOnly>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:isUnselectable>true</ns:isUnselectable>
+                <ns:fk>
+                    <ns:fkColumnName>ObjectUri</ns:fkColumnName>
+                    <ns:fkTable>Object</ns:fkTable>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                </ns:fk>
             </ns:column>
             <ns:column columnName="freezerid">
                 <ns:columnTitle>Sample Id</ns:columnTitle>
@@ -518,6 +542,18 @@
                 <ns:nullable>true</ns:nullable>
                 <ns:inputType>textarea</ns:inputType>
             </ns:column>
+            <ns:column columnName="lsid">
+                <ns:datatype>lsidtype</ns:datatype>
+                <ns:isReadOnly>true</ns:isReadOnly>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:isUnselectable>true</ns:isUnselectable>
+                <ns:fk>
+                    <ns:fkColumnName>ObjectUri</ns:fkColumnName>
+                    <ns:fkTable>Object</ns:fkTable>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="container">
             </ns:column>
             <ns:column columnName="createdby">
@@ -754,6 +790,18 @@
             </ns:column>
             <ns:column columnName="comments">
                 <ns:nullable>true</ns:nullable>
+            </ns:column>
+            <ns:column columnName="lsid">
+                <ns:datatype>lsidtype</ns:datatype>
+                <ns:isReadOnly>true</ns:isReadOnly>
+                <ns:isHidden>true</ns:isHidden>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:isUnselectable>true</ns:isUnselectable>
+                <ns:fk>
+                    <ns:fkColumnName>ObjectUri</ns:fkColumnName>
+                    <ns:fkTable>Object</ns:fkTable>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                </ns:fk>
             </ns:column>
             <ns:column columnName="container">
                 <ns:isHidden>true</ns:isHidden>

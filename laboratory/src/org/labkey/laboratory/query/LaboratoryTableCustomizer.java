@@ -843,7 +843,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
             SQLFragment containerSql = ContainerFilter.CURRENT.getSQLFragment(LaboratorySchema.getInstance().getSchema(), new SQLFragment(ti.getContainerFieldKey().toString()), c);
 
             SQLFragment sql = new SQLFragment("(SELECT count(*) as _expr FROM laboratory.samples s WHERE " +
-                    " (s." + containerSql + ")" +
+                    " (s.").append(containerSql).append(")" +
                     " AND " + getNullSafeEqual("s.subjectid", ExprColumn.STR_TABLE_ALIAS + ".subjectid") +
                     " AND " + getNullSafeEqual("CAST(s.sampledate as DATE)", "CAST(" + ExprColumn.STR_TABLE_ALIAS + ".sampledate as DATE)") +
                     " AND " + getNullSafeEqual("s.sampletype", ExprColumn.STR_TABLE_ALIAS + ".sampletype") +

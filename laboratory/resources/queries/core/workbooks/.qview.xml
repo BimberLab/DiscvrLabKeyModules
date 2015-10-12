@@ -6,4 +6,7 @@
         <column name="createdBy"/>
         <column name="created"/>
     </columns>
+    <sorts>
+        <sort column="workbookId" descending="true"/>
+    </sorts>
 </customView>

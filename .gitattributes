@@ -2523,6 +2523,7 @@ labModules/SequenceAnalysis/pipeline_code/external/picard/SamToFastq.jar -text
 labModules/SequenceAnalysis/pipeline_code/external/trimmomatic/LICENSE -text
 labModules/SequenceAnalysis/pipeline_code/external/trimmomatic/trimmomatic-0.22.jar -text
 labModules/SequenceAnalysis/pipeline_code/extra_tools_install.sh -text
+labModules/SequenceAnalysis/pipeline_code/gatk/MendelianViolationCount.java -text
 labModules/SequenceAnalysis/pipeline_code/sequence_tools_install.sh -text
 labModules/SequenceAnalysis/resources/credits/executables.txt -text
 labModules/SequenceAnalysis/resources/credits/jars.txt -text
@@ -2761,6 +2762,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.293-12.294.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.294-12.295.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.295-12.296.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.296-12.297.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -2833,6 +2835,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.293-12.294.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.294-12.295.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.295-12.296.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.296-12.297.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -3245,6 +3248,7 @@ labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.298-1
 labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.299-12.300.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.300-12.301.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.301-12.302.sql -text
+labModules/laboratory/resources/schemas/dbscripts/postgresql/laboratory-12.302-12.303.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/obsolete/laboratory-0.00-11.00.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/obsolete/laboratory-11.00-11.01.sql -text
 labModules/laboratory/resources/schemas/dbscripts/postgresql/obsolete/laboratory-11.01-11.12.sql -text
@@ -3302,6 +3306,7 @@ labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.298-12
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.299-12.300.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.300-12.301.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.301-12.302.sql -text
+labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.302-12.303.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/obsolete/laboratory-0.00-11.12.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/obsolete/laboratory-11.12-11.14.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/obsolete/laboratory-11.14-11.15.sql -text

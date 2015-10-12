@@ -16,6 +16,7 @@
 
 package org.labkey.galaxyintegration;
 
+import com.github.jmchilton.blend4j.galaxy.GalaxyInstance;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
@@ -57,11 +58,11 @@ public class GalaxyIntegrationController extends SpringActionController
         {
             if (StringUtils.trimToNull(form.getHostName()) == null)
             {
-                errors.reject(ERROR_MSG, "Must provide the host name for the key");
+                errors.reject(ERROR_MSG, "Must provide the host name");
                 return null;
             }
 
-            GalaxyIntegrationManager.get().saveApiKey(getUser(), form.getHostName(), form.getApiKey());
+            GalaxyIntegrationManager.get().saveApiKey(getUser(), form.getHostName(), form.getUrl(), form.getApiKey());
 
             return new ApiSimpleResponse("success", true);
         }
@@ -71,6 +72,7 @@ public class GalaxyIntegrationController extends SpringActionController
     {
         private String _apiKey;
         private String _hostName;
+        private String _url;
 
         public String getApiKey()
         {
@@ -91,6 +93,16 @@ public class GalaxyIntegrationController extends SpringActionController
         {
             _hostName = hostName;
         }
+
+        public String getUrl()
+        {
+            return _url;
+        }
+
+        public void setUrl(String url)
+        {
+            _url = url;
+        }
     }
 
     @RequiresPermission(ReadPermission.class)
@@ -100,10 +112,10 @@ public class GalaxyIntegrationController extends SpringActionController
         @Override
         public ApiResponse execute(Object form, BindException errors) throws Exception
         {
-            Map<String, String> hosts = new HashMap<>();
+            Map<String, JSONObject> hosts = new HashMap<>();
             for (String hostName : GalaxyService.get().getServerHostNames(getUser()))
             {
-                hosts.put(hostName, GalaxyIntegrationManager.get().getUserApiKey(getUser(), hostName));
+                hosts.put(hostName, GalaxyIntegrationManager.get().getServerSettings(getUser(), hostName));
             }
 
             Map<String, Object> ret = new HashMap<>();
@@ -128,13 +140,20 @@ public class GalaxyIntegrationController extends SpringActionController
                 return null;
             }
 
+            GalaxyInstance gi = GalaxyService.get().getGalaxyInstance(getUser(), form.getHostName());
+            if (gi == null)
+            {
+                errors.reject(ERROR_MSG, "Unknown galaxy host: " + form.getHostName() + ", must register this galaxy instance with your server");
+                return null;
+            }
+
             if (StringUtils.isEmpty(form.getRunName()))
             {
                 errors.reject(ERROR_MSG, "Run name not provided");
                 return null;
             }
 
-            GalaxyProvenanceImporterTask task = new GalaxyProvenanceImporterTask(getUser(), getContainer(), form.getHostName(), form.getApiKey(), form.getHistoryId(), form.getDatasetId(), form.getRunName());
+            GalaxyProvenanceImporterTask task = new GalaxyProvenanceImporterTask(getUser(), getContainer(), gi.getGalaxyUrl(), form.getApiKey(), form.getHistoryId(), form.getDatasetId(), form.getRunName());
             RecordedActionSet actions = task.run();
             ExpRun run = new ExpRunCreator().createRun(actions, getContainer(), getUser(), form.getRunName(), form.getDescription());
 

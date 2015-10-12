@@ -12,7 +12,7 @@
                     Ext4.apply(this, {
                         border: false,
                         items: [{
-                            html: 'In order to interact with a Galaxy Server, you must register the host name and API key for your Galaxy user.  Use the table below to manage or add servers and keys:',
+                            html: 'In order to interact with a Galaxy Server, you must register that server using a short name and the URL.  You can optionally save an API key.  Note: these settings are linked to the currently logged in user.  Use the table below to manage or add servers and keys:',
                             border: false,
                             style: 'padding-bottom: 20px;'
                         },{
@@ -49,9 +49,18 @@
 
                         toAdd.push({
                             xtype: 'textfield',
-                            width: 550,
+                            width: 450,
                             hostName: hostName,
-                            value: json.hosts[hostName]
+                            fieldName: 'url',
+                            value: json.hosts[hostName].url
+                        });
+
+                        toAdd.push({
+                            xtype: 'textfield',
+                            width: 450,
+                            hostName: hostName,
+                            fieldName: 'apiKey',
+                            value: json.hosts[hostName].apiKey
                         });
 
                         toAdd.push({
@@ -60,14 +69,16 @@
                             text: 'Update',
                             hostName: hostName,
                             handler: function(btn){
-                                var apiKey = btn.up('panel').down('textfield[hostName=' + btn.hostName + ']').getValue();
+                                var apiKey = btn.up('panel').down('textfield[hostName=' + btn.hostName + '][fieldName=apiKey]').getValue();
+                                var url = btn.up('panel').down('textfield[hostName=' + btn.hostName + '][fieldName=url]').getValue();
 
                                 LABKEY.Ajax.request({
                                     url: LABKEY.ActionURL.buildURL('galaxyintegration', 'setApiKey', null),
                                     method : 'POST',
                                     params: {
                                         hostName: btn.hostName,
-                                        apiKey: apiKey
+                                        apiKey: apiKey,
+                                        url: url
                                     },
                                     scope: this,
                                     failure: LDK.Utils.getErrorCallback(),
@@ -91,7 +102,8 @@
                                     method : 'POST',
                                     params: {
                                         hostName: btn.hostName,
-                                        apiKey: null
+                                        apiKey: null,
+                                        url: null
                                     },
                                     scope: this,
                                     failure: LDK.Utils.getErrorCallback(),
@@ -122,7 +134,7 @@
                         },
                         layout: {
                             type: 'table',
-                            columns: 4
+                            columns: 5
                         },
                         items: toAdd,
                         buttonAlign: 'left',
@@ -169,23 +181,30 @@
                         }],
                         items: [{
                             xtype: 'textfield',
-                            fieldLabel: 'Host Name',
+                            fieldLabel: 'Short Name',
                             itemId: 'hostName',
+                            allowBlank: false,
+                            width: 450
+                        },{
+                            xtype: 'textfield',
+                            fieldLabel: 'Server URL',
+                            itemId: 'url',
                             allowBlank: false,
                             width: 450
                         },{
                             xtype: 'textfield',
                             fieldLabel: 'API Key',
                             itemId: 'apiKey',
-                            allowBlank: false,
+                            allowBlank: true,
                             width: 450
                         }],
                         onFormSubmit: function(btn){
                             var win = btn.up('window');
                             var hostName = win.down('#hostName').getValue();
                             var apiKey = win.down('#apiKey').getValue();
-                            if (!hostName || !apiKey){
-                                Ext4.Msg.alert('Error', 'Must provide the hostname and API key');
+                            var url = win.down('#url').getValue();
+                            if (!hostName || !url){
+                                Ext4.Msg.alert('Error', 'Must provide the short name and URL');
                                 return;
                             }
 
@@ -194,7 +213,8 @@
                                 method : 'POST',
                                 params: {
                                     hostName: hostName,
-                                    apiKey: apiKey
+                                    apiKey: apiKey,
+                                    url: url
                                 },
                                 scope: this,
                                 failure: LDK.Utils.getErrorCallback(),
