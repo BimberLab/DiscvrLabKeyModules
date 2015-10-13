@@ -15,6 +15,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.PageFlowUtil;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -54,7 +55,7 @@ public class LaboratoryUpgradeCode implements UpgradeCode
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("quantity_string"), null, CompareType.NONBLANK);
             filter.addCondition(FieldKey.fromString("quantity"), null, CompareType.ISBLANK);
 
-            TableSelector ts = new TableSelector(ti, filter, null);
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid", "quantity_string"), filter, null);
             ts.forEach(new Selector.ForEachBlock<ResultSet>()
             {
                 @Override
