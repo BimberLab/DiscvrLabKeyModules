@@ -13,16 +13,19 @@
                     reportNamespace: Laboratory.tabbedReports
                 });
 
+                Ext4.Msg.wait('Loading...');
                 Laboratory.Utils.getDataItems({
                     types: ['tabbedReports'],
                     scope: this,
-                    success: this.onDataLoad
+                    success: this.onDataLoad,
+                    failure: LDK.Utils.getErrorCallback()
                 });
 
                 this.callParent();
             },
 
             onDataLoad: function(results){
+                Ext4.Msg.hide();
                 this.reports = [];
                 Ext4.each(results.tabbedReports, function(report){
                     LDK.Assert.assertNotEmpty('Tabbed Report is null', report);

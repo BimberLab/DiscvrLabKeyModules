@@ -333,7 +333,7 @@ public class ContainerIncrementingTable extends SimpleUserSchema.SimpleTable
                                 rowId = (Integer)selfAssignedId;
 
                                 if (idGen.hasRowWithId(c, rowId))
-                                    throw new ValidationException("A record is already present with ID: " + rowId);
+                                    _context.getErrors().addRowError(new ValidationException("A record is already present with ID: " + rowId));
 
                                 //NOTE: if the self-assigned ID is higher than the existing value we have for this table, we increment to that value
                                 idGen.incrementId(c, rowId);
