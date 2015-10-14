@@ -1,4 +1,4 @@
-<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All">
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="All" canOverride="true">
    <columns>
        <column name="rowid" />
        <column name="name" />

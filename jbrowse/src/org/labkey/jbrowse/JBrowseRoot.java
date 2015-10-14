@@ -700,6 +700,11 @@ public class JBrowseRoot
             trackList.put("tracks", existingTracks2);
         }
 
+        JSONObject nameJson = new JSONObject();
+        nameJson.put("url", "names/");
+        nameJson.put("type", "Hash");
+        trackList.put("names", nameJson);
+
         writeJsonToFile(new File(seqDir, "refSeqs.json"), refSeq.toString(1));
         writeJsonToFile(new File(outDir, "trackList.json"), trackList.toString(1));
         writeJsonToFile(new File(outDir, "tracks.json"), tracks.toString(1));

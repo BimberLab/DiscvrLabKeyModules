@@ -2275,7 +2275,6 @@ public class SequenceAnalysisController extends SpringActionController
             }
             catch (Exception e)
             {
-                ExceptionUtil.logExceptionToMothership(getViewContext().getRequest(), e);
                 getViewContext().getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 logger.error(e.getMessage(), e);
                 resp.put("success", false);
