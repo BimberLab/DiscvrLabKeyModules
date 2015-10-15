@@ -6,8 +6,8 @@ Ext4.define('Laboratory.button.IconButton', {
     alias: 'widget.laboratory-iconbutton',
 
     renderTpl: [
-        '<div id="{id}-wrap" class="tool-icon" style="margin-left:auto;margin-right:auto;">',
-        '<a ' +
+        '<div id="{id}-wrap" class="tool-icon">',
+        '<a style="display: block" ' +
         '<tpl if="href">href="{href}"</tpl>' +
         '<tpl if="!href">href="javascript:void(0)"</tpl>' +
         '<tpl if="tooltip"> data-qtip="{tooltip}"</tpl>' +

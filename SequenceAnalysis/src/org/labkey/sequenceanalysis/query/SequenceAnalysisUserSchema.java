@@ -13,10 +13,10 @@ import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.ldk.table.ContainerScopedTable;
 import org.labkey.api.ldk.table.SharedDataTable;
 import org.labkey.api.module.Module;
-import org.labkey.api.query.AliasedColumn;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
@@ -135,12 +135,16 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
     private TableInfo createReadsetsTable(TableInfo sourceTable)
     {
         SimpleTable ret = new SimpleTable(this, sourceTable).init();
-        if (ret.getColumn("names") == null)
+        if (ret.getColumn("files") == null)
         {
-            AliasedColumn newCol = new AliasedColumn(ret, "files", ret.getColumn("rowid"));
+            WrappedColumn newCol = new WrappedColumn(ret.getColumn("rowid"), "files");
             newCol.setLabel("File(s)");
             newCol.setKeyField(false);
             newCol.setHidden(true);
+            newCol.setUserEditable(false);
+            newCol.setShownInInsertView(false);
+            newCol.setShownInUpdateView(false);
+            newCol.setCalculated(true);
             newCol.setDisplayColumnFactory(new DisplayColumnFactory()
             {
                 @Override
@@ -197,7 +201,8 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             ExprColumn newCol = new ExprColumn(ret, "totalOutputs", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
             newCol.setLabel("Output Files From This Readset");
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=outputfiles&query.readset~eq=${rowid}"));
-
+            newCol.setUserEditable(false);
+            newCol.setCalculated(true);
             ret.addColumn(newCol);
         }
 
