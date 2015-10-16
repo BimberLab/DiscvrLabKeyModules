@@ -175,6 +175,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 rd.setCreatedBy(getJob().getUser().getUserId());
                 rd.setModified(new Date());
                 rd.setModifiedBy(getJob().getUser().getUserId());
+                rd.setPlatformUnit(readsetId.toString());  //this isnt quite correct, but we dont have much else to work with
 
                 if (fileMap.containsKey(pair))
                 {
