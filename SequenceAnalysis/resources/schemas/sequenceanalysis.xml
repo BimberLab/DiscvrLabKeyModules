@@ -766,6 +766,16 @@
                     <ns:fkColumnName>RowId</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
+            <ns:column columnName="datedisabled">
+                <ns:columnTitle>Date Disabled</ns:columnTitle>
+                <ns:nullable>true</ns:nullable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+            </ns:column>
+            <ns:column columnName="disabledby">
+                <ns:columnTitle>Disabled By</ns:columnTitle>
+                <ns:nullable>true</ns:nullable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+            </ns:column>
             <ns:column columnName="downloadSequence" wrappedColumnName="rowid">
                 <ns:columnTitle>Download Sequence</ns:columnTitle>
                 <ns:shownInDetailsView>true</ns:shownInDetailsView>
@@ -814,6 +824,7 @@
             <ns:includeScript>SequenceAnalysis/window/ImportSequencesFromFastaWindow.js</ns:includeScript>
             <ns:includeScript>SequenceAnalysis/window/DownloadSequencesWindow.js</ns:includeScript>
             <ns:includeScript>SequenceAnalysis/window/CompareSequencesWindow.js</ns:includeScript>
+            <ns:includeScript>SequenceAnalysis/window/MarkDisabledWindow.js</ns:includeScript>
             <ns:item text="Views">
                 <ns:originalText>Views</ns:originalText>
             </ns:item>
@@ -838,6 +849,9 @@
                 </ns:item>
                 <ns:item text="Compare FASTA Against Database">
                     <ns:onClick>SequenceAnalysis.window.CompareSequencesWindow.buttonHandler(dataRegionName)</ns:onClick>
+                </ns:item>
+                <ns:item text="Mark Disabled">
+                    <ns:onClick>SequenceAnalysis.window.MarkDisabledWindow.buttonHandler(dataRegionName)</ns:onClick>
                 </ns:item>
             </ns:item>
         </ns:buttonBarOptions>        

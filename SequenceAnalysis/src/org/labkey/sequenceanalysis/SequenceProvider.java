@@ -27,14 +27,13 @@ import org.labkey.api.laboratory.QueryTabbedReportItem;
 import org.labkey.api.laboratory.SimpleSettingsItem;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
-import org.labkey.api.ldk.NavItem;
+import org.labkey.api.laboratory.NavItem;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.AbstractSequenceDataProvider;
-import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
@@ -189,6 +188,10 @@ public class SequenceProvider extends AbstractSequenceDataProvider
             QueryCountNavItem item2 = new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Readsets");
             item2.setFilter(new SimpleFilter(FieldKey.fromString("subjectId"), subjectId));
             items.add(item2);
+
+            QueryCountNavItem item3 = new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Outputs");
+            item3.setFilter(new SimpleFilter(FieldKey.fromString("readset/subjectId"), subjectId));
+            items.add(item3);
         }
 
         return items;
@@ -211,6 +214,12 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         analyses.setSampleDateFieldKey(FieldKey.fromString("readset/sampledate"));
         analyses.setOwnerKey(owner.getPropertyManagerKey());
         items.add(analyses);
+
+        TabbedReportItem outputs = new QueryTabbedReportItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Sequence Outputs", category);
+        outputs.setSubjectIdFieldKey(FieldKey.fromString("readset/subjectid"));
+        outputs.setSampleDateFieldKey(FieldKey.fromString("readset/sampledate"));
+        outputs.setOwnerKey(owner.getPropertyManagerKey());
+        items.add(outputs);
 
         return items;
     }

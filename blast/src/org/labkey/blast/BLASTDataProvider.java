@@ -10,7 +10,7 @@ import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.SimpleSettingsItem;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
-import org.labkey.api.ldk.NavItem;
+import org.labkey.api.laboratory.NavItem;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.DetailsURL;
@@ -19,7 +19,6 @@ import org.labkey.api.sequenceanalysis.AbstractSequenceDataProvider;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
-import org.labkey.blast.BLASTSchema;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -157,7 +157,7 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
 
             if (depth != null && !info.getReadResidue().equals(":"))
             {
-                double pct = ((double) readCount / depth ) * 100.0;
+                double pct = depth == 0 ? 0 : ((double) readCount / depth ) * 100.0;
                 row.put("adj_depth", depth);
                 row.put("pct", pct);
             }

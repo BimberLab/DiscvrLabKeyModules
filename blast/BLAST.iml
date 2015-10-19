@@ -10,6 +10,9 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="API" />
     <orderEntry type="module" module-name="Internal" />
+    <orderEntry type="module" module-name="Laboratory-API" />
+    <orderEntry type="module" module-name="LDK-API" />
+    <orderEntry type="module" module-name="SequenceAnalysis-API" />
   </component>
 </module>
 

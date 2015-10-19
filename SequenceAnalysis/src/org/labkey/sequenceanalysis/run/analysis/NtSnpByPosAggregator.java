@@ -166,7 +166,7 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
                     Integer adj_depth = getCoverageAggregator().getHcDepthAtPosition(info.getRefName(), info.getRefPosition(), 0); //always use depth at last non-indel position
                     if (adj_depth != null)
                     {
-                        Double pct = ((double) _snps.get(key) / adj_depth ) * 100.0;
+                        Double pct = adj_depth == 0 ? 0 : ((double) _snps.get(key) / adj_depth ) * 100.0;
                         row.put("adj_depth", adj_depth);
                         row.put("pct", pct);
                     }

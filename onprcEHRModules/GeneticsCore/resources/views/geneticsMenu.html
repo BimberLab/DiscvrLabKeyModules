@@ -27,7 +27,7 @@
                         '<tpl for=".">',
                             '<tpl if="publicUrl">',
                                 '<div style="width: 300px;font-weight: bold;" class="thumb-wrap thumb-wrap-side">',
-                                    '<span style="float: left;position: relative;">{name:htmlEncode}:</span>',
+                                    '<span style="float: left;position: relative;">{title:htmlEncode}:</span>',
                                     '<span style="float: right;position: relative;margin-right: 5px;">',
                                     '<tpl if="!canReadPublic"><span data-qtip="You do not have permission to view this page"> [Public] </a>',
                                     '<tpl else><a href="{publicUrl}"> [Public] </a>',
@@ -43,7 +43,7 @@
                                 '<tpl if="!canRead">data-qtip="You do not have permission to view this page"</tpl>',
                                 'style="width: 300px;" class="thumb-wrap thumb-wrap-side">',
                                 '<tpl if="url"><a href="{url}"></tpl>',
-                                    '<span style="font-weight: bold" class="thumb-label-side">{name:htmlEncode}</span>',
+                                    '<span style="font-weight: bold" class="thumb-label-side">{title:htmlEncode}</span>',
                                 '<tpl if="url"></a></tpl>',
                                 '</div>',
                             '</tpl>',
@@ -52,7 +52,7 @@
                     ],
                     store: {
                         proxy: 'memory',
-                        fields: ['name', 'url', 'canRead', 'publicUrl', 'canReadPublic']
+                        fields: ['name', 'title', 'url', 'canRead', 'publicUrl', 'canReadPublic']
                     }
                 }],
                 border: true,
@@ -113,6 +113,7 @@
                         Ext4.each(results[name], function(item){
                             toAdd.push(LDK.StoreUtils.createModelInstance(section.store, {
                                 name: item.name,
+                                title: item.title || item.name,
                                 url: item.canRead ? item.url : null,
                                 canRead: item.canRead,
                                 publicUrl: item.publicContainer ? item.publicContainer.url : null,

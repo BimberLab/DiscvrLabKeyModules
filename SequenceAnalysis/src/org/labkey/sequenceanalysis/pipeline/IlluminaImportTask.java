@@ -334,6 +334,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 Integer readsetId;
                 try
                 {
+                    //TODO: consider allowing out of order lines
                     sampleIdx++;
                     readsetId = Integer.parseInt(nextLine[0]);
                     if (validateReadsetId(readsetId))

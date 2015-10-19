@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.query;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.DisplayColumn;
@@ -11,9 +12,13 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.util.StringExpressionFactory;
 import org.labkey.api.util.URLHelper;
+import org.labkey.api.view.template.ClientDependency;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -54,6 +59,12 @@ public class DownloadSequenceDisplayColumnFactory implements DisplayColumnFactor
             public boolean isEditable()
             {
                 return false;
+            }
+
+            @Override
+            public @NotNull Set<ClientDependency> getClientDependencies()
+            {
+                return new LinkedHashSet<ClientDependency>(Arrays.asList(ClientDependency.fromPath("sequenceanalysis/window/DownloadSequencesWindow.js")));
             }
         };
 

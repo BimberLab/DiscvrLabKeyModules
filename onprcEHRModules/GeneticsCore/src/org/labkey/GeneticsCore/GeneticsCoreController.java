@@ -114,6 +114,7 @@ public class GeneticsCoreController extends SpringActionController
 
                     JSONObject json = new JSONObject();
                     json.put("name", c.getName());
+                    json.put("title", c.getTitle());
                     json.put("path", c.getPath());
                     json.put("url", c.getStartURL(getUser()));
                     json.put("canRead", c.hasPermission(getUser(), ReadPermission.class));

@@ -15,12 +15,10 @@ import org.labkey.api.laboratory.DataProvider;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.ldk.LDKService;
-import org.labkey.api.ldk.NavItem;
+import org.labkey.api.laboratory.NavItem;
 import org.labkey.api.ldk.notification.Notification;
-import org.labkey.api.ldk.notification.NotificationSection;
 import org.labkey.api.module.Module;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
 
 import java.text.NumberFormat;

@@ -19,4 +19,7 @@
    <sorts>
        <sort column="name"/>
    </sorts>
+    <filters>
+        <filter column="datedisabled" operator="isblank"/>
+    </filters>
 </customView>
