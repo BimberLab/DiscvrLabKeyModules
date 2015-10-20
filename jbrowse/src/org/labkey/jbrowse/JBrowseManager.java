@@ -18,6 +18,7 @@ package org.labkey.jbrowse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
@@ -27,8 +28,11 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.view.UnauthorizedException;
+import org.labkey.jbrowse.model.Database;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 
 import java.io.File;
@@ -125,15 +129,22 @@ public class JBrowseManager
     {
         //make sure this is a valid database
         TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
-        if (!ts.exists())
+        Database db = ts.getObject(Database.class);
+        if (db == null)
         {
             throw new IllegalArgumentException("Unknown database: " + databaseGuid);
         }
 
+        Container targetContainer = ContainerManager.getForId(db.getContainer());
+        if (!targetContainer.hasPermission(u, InsertPermission.class))
+        {
+            throw new UnauthorizedException("Insufficient permissions to edit folder: " + targetContainer.getName());
+        }
+
         try
         {
-            PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            PipelineService.get().queueJob(JBrowseSessionPipelineJob.addMembers(c, u, root, databaseGuid, trackIds, outputFileIds));
+            PipeRoot root = PipelineService.get().getPipelineRootSetting(targetContainer);
+            PipelineService.get().queueJob(JBrowseSessionPipelineJob.addMembers(targetContainer, u, root, databaseGuid, trackIds, outputFileIds));
         }
         catch (PipelineValidationException e)
         {

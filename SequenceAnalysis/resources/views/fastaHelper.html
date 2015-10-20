@@ -1,0 +1,55 @@
+<script type="text/javascript">
+
+function whitelist(){
+    var names = document.getElementById('whitelistNames').value;
+    names = Ext4.String.trim(names);
+    names = names.split(/\r?\n/);
+    for (var i=0;i<names.length;i++){
+        names[i] = Ext4.String.trim(names[i]);
+    }
+
+    var fasta = document.getElementById('whitelistFasta').value;
+    fasta = Ext4.String.trim(fasta);
+    fasta = fasta.split('>');
+
+    var asCsv = document.getElementById('whitelistCheckBox').checked;
+
+    var toKeep = [];
+    Ext4.Array.forEach(fasta, function(seq){
+        var lines = seq.split(/\r?\n/);
+        var label = lines.shift();
+        label = Ext4.String.trim(label);
+        if (names.indexOf(label) > -1){
+            lines = lines.join('');
+            lines = lines.replace(/[\s]+/g, '');
+            if (asCsv){
+                toKeep.push(label + '\t' + lines);
+            }
+            else {
+                toKeep.push('>' + label + '\n' + lines);
+            }
+        }
+    }, this);
+
+    document.getElementById('whitelistTarget').value = toKeep.join('\n');
+}
+
+
+</script>
+
+This page contains an several basic utilities to process FASTA files.  See the instructions above each item for more information.
+
+<p/>
+<h3>1) Subset FASTA Based on List</h3>
+To use, simply cut/paste the FASTA contents into the box on the left.  Paste a list of allowable sequence names into the middle box, and hit the arrow to process.  Results will appear on the right.
+<p></p>
+<input type="checkbox" id="whitelistCheckBox"><label>Ouput As Table</label>
+<p></p>
+<table>
+    <tr>
+        <td>FASTA Contents:<span></span><br><textarea rows="10" cols="30" id="whitelistFasta"></textarea></td>
+        <td>Allowable Names:<span></span><br><textarea rows="10" cols="30" id="whitelistNames"></textarea></td>
+        <td><button id="whitelistButton" onclick=whitelist()>--></button></td>
+        <td>Matching Entries:<span></span><br><textarea rows="10" cols="30" id="whitelistTarget"></textarea></td>
+    </tr>
+</table>

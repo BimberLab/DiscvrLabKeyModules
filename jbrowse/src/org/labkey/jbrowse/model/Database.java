@@ -83,6 +83,11 @@ public class Database
         _container = container;
     }
 
+    public Container getContainerObj()
+    {
+        return _container == null ? null : ContainerManager.getForId(_container);
+    }
+
     public String getObjectId()
     {
         return _objectId;

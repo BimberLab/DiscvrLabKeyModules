@@ -19,6 +19,8 @@ import org.apache.commons.io.FileUtils;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
@@ -37,6 +39,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseRoot;
 import org.labkey.jbrowse.JBrowseSchema;
+import org.labkey.jbrowse.model.Database;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
@@ -125,7 +128,14 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         try
         {
             getJob().getLogger().info("preparing session JSON files");
-            root.prepareDatabase(getJob().getContainer(), getJob().getUser(), databaseGuid);
+            TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
+            Database db = ts.getObject(Database.class);
+            if (db == null)
+            {
+                throw new IllegalArgumentException("Unknown database: " + databaseGuid);
+            }
+
+            root.prepareDatabase(db, getJob().getUser());
         }
         catch (IOException e)
         {
@@ -149,17 +159,17 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
             {
                 if (f.getSequenceId() != null)
                 {
-                    root.prepareRefSeq(getJob().getContainer(), getJob().getUser(), f.getSequenceId(), true);
+                    root.prepareRefSeq(getJob().getUser(), f.getSequenceId(), true);
                     sequenceIds.add(f.getSequenceId());
                 }
                 else if (f.getTrackId() != null)
                 {
-                    root.prepareFeatureTrack(getJob().getContainer(), getJob().getUser(), f.getTrackId(), null, true);
+                    root.prepareFeatureTrack(getJob().getUser(), f.getTrackId(), null, true);
                     trackIds.add(f.getTrackId());
                 }
                 else if (f.getOutputFile() != null)
                 {
-                    root.prepareOutputFile(getJob().getContainer(), getJob().getUser(), f.getOutputFile(), true);
+                    root.prepareOutputFile(getJob().getUser(), f.getOutputFile(), true);
                 }
                 else
                 {
@@ -234,6 +244,13 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                 Table.insert(getJob().getUser(), databases, databaseRecord);
             }
 
+            TableSelector dbTs = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
+            Database db = dbTs.getObject(Database.class);
+            if (db == null)
+            {
+                throw new IllegalArgumentException("Unknown database: " + databaseGuid);
+            }
+
             List<Integer> trackIdList = new ArrayList<>();
             if (getPipelineJob().getTrackIds() != null)
                 trackIdList.addAll(getPipelineJob().getTrackIds());
@@ -255,7 +272,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
 
                 for (Integer trackId : trackIdList)
                 {
-                    JsonFile json = root.prepareFeatureTrack(getJob().getContainer(), getJob().getUser(), trackId, null, false);
+                    JsonFile json = root.prepareFeatureTrack(getJob().getUser(), trackId, null, false);
                     //this could indicate a non-supported filetype
                     if (json == null)
                         continue;
@@ -312,7 +329,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                         continue;
                     }
 
-                    JsonFile json = root.prepareOutputFile(getJob().getContainer(), getJob().getUser(), outputFileId, false);
+                    JsonFile json = root.prepareOutputFile(getJob().getUser(), outputFileId, false);
                     //this could indicate a non-supported filetype
                     if (json == null)
                         continue;
@@ -337,7 +354,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
             }
 
             getJob().getLogger().info("preparing session JSON files");
-            root.prepareDatabase(getJob().getContainer(), getJob().getUser(), databaseGuid);
+            root.prepareDatabase(db, getJob().getUser());
 
             getJob().getLogger().info("complete");
             success = true;

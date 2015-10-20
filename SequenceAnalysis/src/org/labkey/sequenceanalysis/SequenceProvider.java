@@ -167,7 +167,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         {
             items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Readsets"));
             items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Analyses"));
-            items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Outputs"));
+            items.add(new SequenceOutputsNavItem(this));
             items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSIS_SETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "File Sets"));
         }
 
@@ -234,7 +234,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
             ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, LaboratoryService.NavItemCategory.data, "Sequence", "Readsets"));
             //ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ALIGNMENTS, LaboratoryService.NavItemCategory.data, "Sequence", "Alignments"));
             ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, "Sequence", "Analyses"));
-            ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES, LaboratoryService.NavItemCategory.data, "Sequence", "Output Files"));
+            ret.add(new SequenceOutputsNavItem(this));
             //ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSIS_SETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "File Groups"));
         }
         else if (category == SequenceNavItemCategory.references)

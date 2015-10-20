@@ -76,6 +76,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
 
         args.add("-o");
         args.add(outputFile.getPath());
+        args.add("-nda");
 
         if (options != null)
         {

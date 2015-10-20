@@ -41,6 +41,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.jbrowse.model.Database;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.BufferedReader;
@@ -189,7 +190,7 @@ public class JBrowseRoot
         return true;
     }
 
-    public JsonFile prepareOutputFile(Container c, User u, Integer outputFileId, boolean forceRecreateJson) throws IOException
+    public JsonFile prepareOutputFile(User u, Integer outputFileId, boolean forceRecreateJson) throws IOException
     {
         //find existing resource
         TableInfo jsonFiles = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
@@ -246,10 +247,10 @@ public class JBrowseRoot
         return jsonFile;
     }
 
-    public JsonFile prepareRefSeq(Container c, User u, Integer ntId, boolean forceRecreateJson) throws IOException
+    public JsonFile prepareRefSeq(User u, Integer ntId, boolean forceRecreateJson) throws IOException
     {
         //validate
-        TableInfo ti = QueryService.get().getUserSchema(u, c, JBrowseManager.SEQUENCE_ANALYSIS).getTable("ref_nt_sequences");
+        TableInfo ti = DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("ref_nt_sequences");
         TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("rowid"), ntId), null);
         RefNtSequenceModel model = ts.getObject(RefNtSequenceModel.class);
 
@@ -283,7 +284,7 @@ public class JBrowseRoot
         {
             Map<String, Object> jsonRecord = new CaseInsensitiveHashMap();
             jsonRecord.put("sequenceid", ntId);
-            jsonRecord.put("relPath", FileUtil.relativePath(getBaseDir(c).getPath(), outDir.getPath()));
+            jsonRecord.put("relPath", FileUtil.relativePath(getBaseDir(ContainerManager.getForId(model.getContainer())).getPath(), outDir.getPath()));
             jsonRecord.put("container", model.getContainer());
             jsonRecord.put("created", new Date());
             jsonRecord.put("createdby", u.getUserId());
@@ -351,9 +352,9 @@ public class JBrowseRoot
         return jsonFile;
     }
 
-    public void prepareDatabase(Container c, User u, String databaseId) throws IOException
+    public void prepareDatabase(Database database, User u) throws IOException
     {
-        File outDir = new File(getDatabaseDir(c), databaseId);
+        File outDir = new File(getDatabaseDir(database.getContainerObj()), database.getObjectId());
 
         //Note: delete entire directory to ensure we recreate symlinks, etc.
         if (outDir.exists())
@@ -371,7 +372,7 @@ public class JBrowseRoot
         trackDir.mkdirs();
 
         TableInfo tableMembers = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
-        TableSelector ts = new TableSelector(tableMembers, new SimpleFilter(FieldKey.fromString("database"), databaseId), null);
+        TableSelector ts = new TableSelector(tableMembers, new SimpleFilter(FieldKey.fromString("database"), database.getObjectId()), null);
         final List<String> jsonGuids = new ArrayList<>();
         ts.forEach(new Selector.ForEachBlock<ResultSet>()
         {
@@ -393,16 +394,16 @@ public class JBrowseRoot
         jsonFiles.addAll(ts2.getArrayList(JsonFile.class));
 
         //also add library members:
-        Integer libraryId = new TableSelector(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("libraryId"), new SimpleFilter(FieldKey.fromString("objectid"), databaseId), null).getObject(Integer.class);
-        if (libraryId != null)
+        Database db = new TableSelector(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), database.getObjectId()), null).getObject(Database.class);
+        if (db != null)
         {
-            getLogger().info("adding library: " + libraryId);
-            List<Integer> refNts = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_library_members"), PageFlowUtil.set("ref_nt_id"), new SimpleFilter(FieldKey.fromString("library_id"), libraryId), null).getArrayList(Integer.class);
+            getLogger().info("adding library: " + db.getLibraryId());
+            List<Integer> refNts = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_library_members"), PageFlowUtil.set("ref_nt_id"), new SimpleFilter(FieldKey.fromString("library_id"), db.getLibraryId()), null).getArrayList(Integer.class);
 
             getLogger().info("total ref sequences: " + refNts.size());
             for (Integer refNtId : refNts)
             {
-                JsonFile f = prepareRefSeq(c, u, refNtId, false);
+                JsonFile f = prepareRefSeq(u, refNtId, false);
                 if (f != null && !jsonGuids.contains(f.getObjectId()))
                 {
                     jsonFiles.add(f);
@@ -410,11 +411,11 @@ public class JBrowseRoot
                 }
             }
 
-            List<Integer> trackIds = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_library_tracks"), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("library_id"), libraryId), null).getArrayList(Integer.class);
+            List<Integer> trackIds = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_library_tracks"), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("library_id"), db.getLibraryId()), null).getArrayList(Integer.class);
             getLogger().info("total tracks: " + trackIds.size());
             for (Integer trackId : trackIds)
             {
-                JsonFile f = prepareFeatureTrack(c, u, trackId, "Reference Annotations", false);
+                JsonFile f = prepareFeatureTrack(u, trackId, "Reference Annotations", false);
                 if (f != null && !jsonGuids.contains(f.getObjectId()))
                 {
                     f.setCategory("Reference Annotations");
@@ -457,7 +458,7 @@ public class JBrowseRoot
                 getLogger().info("adding ref seq: " + f.getSequenceId());
                 if (f.getRefSeqsFile() == null)
                 {
-                    prepareRefSeq(f.getContainerObj(), u, f.getSequenceId(), true);
+                    prepareRefSeq(u, f.getSequenceId(), true);
                 }
 
                 if (f.getRefSeqsFile() == null)
@@ -493,7 +494,7 @@ public class JBrowseRoot
                 //try to recreate if it does not exist
                 if (f.getTrackListFile() == null)
                 {
-                    prepareFeatureTrack(f.getContainerObj(), u, f.getTrackId(), f.getCategory(), true);
+                    prepareFeatureTrack(u, f.getTrackId(), f.getCategory(), true);
                     if (f.getTrackListFile() == null)
                     {
                         getLogger().error("this track lacks a trackList.conf file.  this probably indicates a problem when this resource was originally processed.  you should try to re-process it." + (f.getTrackRootDir() == null ? "" : "  expected to find file in: " + f.getTrackRootDir()));
@@ -543,7 +544,9 @@ public class JBrowseRoot
             {
                 getLogger().info("processing output file: " + f.getOutputFile());
 
-                TableInfo ti = QueryService.get().getUserSchema(u, c, JBrowseManager.SEQUENCE_ANALYSIS).getTable("outputfiles");
+                Container target = f.getContainerObj();
+                target = target.isWorkbook() ? target.getParent() : target;
+                TableInfo ti = QueryService.get().getUserSchema(u, target, JBrowseManager.SEQUENCE_ANALYSIS).getTable("outputfiles");
                 Set<FieldKey> keys = PageFlowUtil.set(
                         FieldKey.fromString("description"),
                         FieldKey.fromString("analysis_id"),
@@ -560,7 +563,7 @@ public class JBrowseRoot
                 TableSelector outputFileTs = new TableSelector(ti, cols.values(), new SimpleFilter(FieldKey.fromString("rowid"), f.getOutputFile()), null);
                 if (!outputFileTs.exists())
                 {
-                    _log.error("unable to find outputfile: " + f.getOutputFile());
+                    _log.error("unable to find outputfile: " + f.getOutputFile() + " in container: " + ti.getUserSchema().getContainer().getPath());
                     continue;
                 }
 
@@ -683,7 +686,7 @@ public class JBrowseRoot
         trackList.put("tracks", existingTracks);
 
         //look in reference_aa_sequences and ref_nt_features and create track of these if they exist
-        JSONObject codingRegionTrack = createCodingRegionTrack(c, referenceIds, trackDir);
+        JSONObject codingRegionTrack = createCodingRegionTrack(db.getContainerObj(), referenceIds, trackDir);
         if (codingRegionTrack != null)
         {
             JSONArray existingTracks2 = trackList.containsKey("tracks") ? trackList.getJSONArray("tracks") : new JSONArray();
@@ -692,7 +695,7 @@ public class JBrowseRoot
         }
 
 
-        JSONObject featureTrack = createFeatureTrack(c, referenceIds, trackDir);
+        JSONObject featureTrack = createFeatureTrack(db.getContainerObj(), referenceIds, trackDir);
         if (featureTrack != null)
         {
             JSONArray existingTracks2 = trackList.containsKey("tracks") ? trackList.getJSONArray("tracks") : new JSONArray();
@@ -711,7 +714,7 @@ public class JBrowseRoot
         writeJsonToFile(new File(outDir, "tracks.conf"), "");
 
         File namesDir = new File(outDir, "names");
-        File existingNamesDir = getExistingNamesDir(databaseId);
+        File existingNamesDir = getExistingNamesDir(database.getObjectId());
         if (existingNamesDir != null)
         {
             getLogger().info("reusing existing search index: " + existingNamesDir.getPath());
@@ -1060,10 +1063,10 @@ public class JBrowseRoot
         }
     }
 
-    public JsonFile prepareFeatureTrack(Container c, User u, Integer trackId, @Nullable String category, boolean forceRecreateJson) throws IOException
+    public JsonFile prepareFeatureTrack(User u, Integer trackId, @Nullable String category, boolean forceRecreateJson) throws IOException
     {
         //validate track exists
-        TableInfo ti = QueryService.get().getUserSchema(u, c, JBrowseManager.SEQUENCE_ANALYSIS).getTable("reference_library_tracks");
+        TableInfo ti = DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("reference_library_tracks");
         TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("rowid"), trackId), null);
         Map<String, Object> trackRowMap = ts.getMap();
 
@@ -1327,6 +1330,11 @@ public class JBrowseRoot
 
         String relPath = FileUtil.relativePath(getBaseDir(data.getContainer()).getPath(), outDir.getPath());
         getLogger().debug("using relative path: " + relPath);
+        if (relPath == null)
+        {
+            getLogger().debug("source container: " + data.getContainer().getPath());
+            getLogger().debug("outDir: " + outDir.getPath());
+        }
         o.put("urlTemplate", relPath + "/" + targetFile.getName());
 
         if (metadata != null)
