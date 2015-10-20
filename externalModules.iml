@@ -7,11 +7,9 @@
       <sourceFolder url="file://$MODULE_DIR$/labModules/flowassays/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/onprcEHRModules/onprc_billing/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/onprcEHRModules/onprc_ssu/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/labModules/laboratory/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/labModules/Viral_Load_Assay/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/scharp/peptide/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/labModules/HormoneAssay/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/labModules/LDK/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/scharp/pepdb/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/scharp/elispot/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/onprcEHRModules/onprc_billingpublic/src" isTestSource="false" />
@@ -105,4 +103,3 @@
     <orderEntry type="module" module-name="LDK-API" />
   </component>
 </module>
-
