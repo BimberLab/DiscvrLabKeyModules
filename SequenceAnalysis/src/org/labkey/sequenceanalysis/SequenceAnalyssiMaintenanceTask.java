@@ -16,6 +16,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
+import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,10 +69,69 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
         try
         {
             processContainer(ContainerManager.getRoot());
+            verifySequenceDataPresent();
         }
         catch (Exception e)
         {
             _log.error(e.getMessage(), e);
+        }
+    }
+
+    private void verifySequenceDataPresent()
+    {
+        TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
+        TableSelector ts = new TableSelector(ti);
+        List<ReadDataImpl> readDatas = ts.getArrayList(ReadDataImpl.class);
+        for (ReadDataImpl rd : readDatas)
+        {
+            if (rd.getFileId1() != null)
+            {
+                ExpData d = ExperimentService.get().getExpData(rd.getFileId1());
+                Container c = ContainerManager.getForId(rd.getContainer());
+                if (d == null || d.getFile() == null)
+                {
+                    _log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId1() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                }
+                else if (!d.getFile().exists())
+                {
+                    _log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                }
+            }
+
+            if (rd.getFileId2() != null)
+            {
+                ExpData d = ExperimentService.get().getExpData(rd.getFileId2());
+                Container c = ContainerManager.getForId(rd.getContainer());
+                if (d == null || d.getFile() == null)
+                {
+                    _log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId2() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                }
+                else if (!d.getFile().exists())
+                {
+                    _log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId2() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                }
+            }
+        }
+
+        //also check analyses
+        TableInfo analysesTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
+        TableSelector tsAnalyses = new TableSelector(analysesTable);
+        List<AnalysisModelImpl> analyses = tsAnalyses.getArrayList(AnalysisModelImpl.class);
+        for (AnalysisModelImpl m : analyses)
+        {
+            if (m.getAlignmentFile() != null)
+            {
+                ExpData d = m.getAlignmentData();
+                Container c = ContainerManager.getForId(m.getContainer());
+                if (d == null || d.getFile() == null)
+                {
+                    _log.error("Unable to find file associated with analysis: " + m.getAnalysisId() + ", " + m.getAlignmentFile() + " for container: " + (c == null ? m.getContainer() : c.getPath()));
+                }
+                else if (!d.getFile().exists())
+                {
+                    _log.error("Unable to find file associated with analysis: " + m.getAnalysisId() + ", " + m.getAlignmentFile() + ", " + d.getFile().getPath() + " for container: " + (c == null ? m.getContainer() : c.getPath()));
+                }
+            }
         }
     }
 

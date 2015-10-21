@@ -127,7 +127,7 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
             }
 
             wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcfs.toArray(new File[inputVcfs.size()]));
-            action.addOutput(outputVcf, "Combined VCF", outputVcf.exists(), true);
+            action.addOutput(outputVcf, "VCF", outputVcf.exists(), true);
 
             if (outputVcf.exists())
             {
@@ -136,7 +136,7 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
                 so1.setDescription("GATK GenotypeGVCF output");
                 so1.setFile(outputVcf);
                 so1.setLibrary_id(genomeId);
-                so1.setCategory("Combined VCF");
+                so1.setCategory("VCF");
                 so1.setContainer(job.getContainerId());
                 so1.setCreated(new Date());
                 so1.setModified(new Date());

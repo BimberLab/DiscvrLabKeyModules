@@ -65,7 +65,7 @@ SELECT
   count(*) as total,
   sum(coalesce(s.quantity, 0)) as totalQuantity
 FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.DNA_Bank.samples s
-WHERE s.dateremoved is null and sampleType = 'Whole Blood' and s.workbook = '029AF07C-CB06-1030-8D66-5107380A00F7'
+WHERE s.dateremoved is null and sampleType = 'Whole Blood'
 GROUP BY s.subjectId
 ) s1 ON (s1.subjectId = d.Id)
 
@@ -77,7 +77,7 @@ SELECT
   sum(coalesce(s.quantity, 0)) as totalQuantity
 FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.DNA_Bank.samples s
 --include DNA Bank workbook only
-WHERE s.dateremoved is null and sampleType = 'Buffy Coat' and s.workbook = '029AF07C-CB06-1030-8D66-5107380A00F7'
+WHERE s.dateremoved is null and sampleType = 'Buffy Coat'
 GROUP BY s.subjectId
 ) s2 ON (s2.subjectId = d.Id)
 
@@ -88,7 +88,7 @@ SELECT
   count(*) as total
 FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.DNA_Bank.samples s
 --include DNA Bank workbook only
-WHERE s.dateremoved is null and s.sampleType = 'gDNA' and s.workbook = '029AF07C-CB06-1030-8D66-5107380A00F7'
+WHERE s.dateremoved is null and s.sampleType = 'gDNA'
 GROUP BY s.subjectId
 ) s3 ON (s3.subjectId = d.Id)
 

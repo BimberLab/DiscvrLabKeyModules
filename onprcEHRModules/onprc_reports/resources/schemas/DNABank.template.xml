@@ -6,8 +6,8 @@
         <ns:tables xmlns:ns="http://labkey.org/data/xml">
             <ns:table tableName="samples" tableDbType="NOT_IN_DB">
                 <ns:filters>
-                    <!--The DNA Bank workbook (029AF07C-CB06-1030-8D66-5107380A00F7) and National Bank workbook (95B8D683-CB07-1030-8D66-5107380A00F7)-->
-                    <cv:filter column="container" operator="in" value="029AF07C-CB06-1030-8D66-5107380A00F7;95B8D683-CB07-1030-8D66-5107380A00F7"/>
+                    <!--This is the non-ONPRC workbook-->
+                    <cv:filter column="container" operator="neq" value="4696C825-CB09-1030-8D66-5107380A00F7"/>
                 </ns:filters>
             </ns:table>
         </ns:tables>
