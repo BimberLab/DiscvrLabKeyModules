@@ -1,0 +1,141 @@
+<script type="text/javascript">
+
+Ext4.onReady(function (){
+
+    if (LABKEY.Security.currentUser.isAdmin){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.define('SettingsPanel', {
+            extend: 'Ext.form.Panel',
+            initComponent: function(){
+                Ext4.apply(this, {
+                    border: false,
+                    items: [{
+                        html: 'In order to register an OMERO server with this site, you must provide the base URL of this server and a valid username/password.  The latter should ideally be a service account specifically for viewing images/thumbnails.',
+                        border: false,
+                        style: 'padding-bottom: 20px;'
+                    },{
+                        border: false,
+                        itemId: 'settings',
+                        items: [{
+                            border: false,
+                            html: 'Loading...'
+                        }]
+                    }]
+                });
+
+                this.loadData();
+                this.callParent();
+            },
+
+            loadData: function(){
+                LABKEY.Ajax.request({
+                    url: LABKEY.ActionURL.buildURL('omerointegration', 'getSettings', null),
+                    method : 'GET',
+                    scope: this,
+                    failure: LABKEY.Utils.getCallbackWrapper(function(response){
+                        Ext4.Msg.alert('Error', response.exception || 'There was an error with this request');
+                    }, this),
+                    success: this.onLoad
+                });
+            },
+
+            onLoad: function(results){
+                var json = this.decodeHttpResponseJson(results);
+                console.log(json)
+                var labelWidth = 160;
+                var width = 550;
+
+                var toAdd = [{
+                    xtype: 'textfield',
+                    labelWidth: labelWidth,
+                    width: width,
+                    itemId: 'omeroUrl',
+                    fieldLabel: 'Omero Url',
+                    value: json.properties['omeroUrl']
+                },{
+                    xtype: 'textfield',
+                    labelWidth: labelWidth,
+                    width: width,
+                    itemId: 'omeroUserName',
+                    fieldLabel: 'OMERO Username',
+                    value: json.properties['omeroUserName']
+                },{
+                    xtype: 'textfield',
+                    inputType: 'password',
+                    labelWidth: labelWidth,
+                    width: width,
+                    itemId: 'omeroPassword',
+                    fieldLabel: 'OMERO Password',
+                    value: json.properties['omeroPassword']
+                }];
+
+                var target = this.down('#settings');
+                target.removeAll();
+                target.add({
+                    xtype: 'form',
+                    border: false,
+                    bodyStyle: 'padding: 5px;',
+                    items: toAdd,
+                    buttons: [{
+                        text: 'Save Settings',
+                        itemId: 'saveBtn',
+                        handler: this.onSubmit
+                    }]
+                });
+            },
+
+            onSubmit: function(btn){
+                var form = btn.up('form');
+                var fields = form.getForm().getFields();
+
+                var json = {};
+
+                fields.each(function(field){
+                    if (field.itemId)
+                        json[field.itemId] = field.getValue();
+                }, this);
+
+                LABKEY.Ajax.request({
+                    url: LABKEY.ActionURL.buildURL('omerointegration', 'setSettings'),
+                    method : 'POST',
+                    params: json,
+                    scope: this,
+                    failure: LABKEY.Utils.getCallbackWrapper(function(response){
+                        Ext4.Msg.alert('Error', response.exception || 'There was an error with this request');
+                    }, this),
+                    success: function(response){
+                        Ext4.Msg.alert('Success', 'Save Successful', function(){
+                            window.location.reload();
+                        });
+                    }
+                });
+            },
+
+            decodeHttpResponseJson: function(response){
+                var json = response.responseJSON;
+                if (!json)
+                {
+                    //ensure response is JSON before trying to decode
+                    if(response && response.getResponseHeader && response.getResponseHeader('Content-Type')
+                            && response.getResponseHeader('Content-Type').indexOf('application/json') >= 0){
+                        try {
+                            json = Ext4.decode(response.responseText);
+                        }
+                        catch (error){
+                            //we still want to proceed even if we cannot decode the JSON
+                        }
+
+                    }
+
+                    response.responseJSON = json;
+                }
+                return response.responseJSON;
+            }
+        });
+
+        Ext4.create('SettingsPanel', {}).render(webpart.wrapperDivId);
+    }
+});
+
+</script>

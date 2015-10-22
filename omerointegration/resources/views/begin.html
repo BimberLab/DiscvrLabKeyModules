@@ -1,0 +1,24 @@
+This module provides the ability to integrate LabKey with an OMERO Server.  The primary benefit is that
+you can tag specific columns that hold an OMERO ID such that they render a thumbnail and allow you to load the image viewer.
+For this to work, you need to configure a service account on the OMERO server that is able to read all the images you plan to use.  Use the link below for this.
+<br><br>
+<b>Settings:</b>
+<ul>
+    <li><a href="<%=contextPath%>/omerointegration<%=containerPath%>/settings.view">Register Server</a></li>
+</ul>
+
+Next, you will need to configure specific columns to render as OMERO data.  The column should be in integer column holding the OMERO ID for the image in question.
+On that column, you will need to specify a custom DisplayColumnFactory.  You can do this in the query XML, along the lines of:
+
+<pre><code>
+    &lt;table tableName="" tableDbType="NOT_IN_DB"&gt;
+        &lt;columns&gt;
+            &lt;column columnName="omeroId"&gt;
+                &lt;!--This is the property that is required to render as OMERO data--&gt;
+                &lt;displayColumnFactory&gt;
+                    &lt;className&gt;org.labkey.omerointegration.OmeroDisplayColumFactory&lt;/className&gt;
+                &lt;/displayColumnFactory&gt;
+            &lt;/column&gt;
+        &lt;/columns&gt;
+    &lt;/table&gt;
+</code></pre>
