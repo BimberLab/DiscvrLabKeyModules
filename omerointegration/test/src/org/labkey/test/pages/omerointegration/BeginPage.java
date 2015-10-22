@@ -40,9 +40,10 @@ public class BeginPage extends LabKeyPage
 
     private class Elements extends ComponentElements
     {
-        private Elements()
+        @Override
+        protected SearchContext getContext()
         {
-            super(_test.getDriver());
+            return getDriver();
         }
     }
 }
