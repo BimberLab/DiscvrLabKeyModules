@@ -12,6 +12,7 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.DefaultSystemMaintenanceTask;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.jbrowse.model.JsonFile;
 
@@ -27,7 +28,7 @@ import java.util.Set;
  * Date: 7/20/2014
  * Time: 3:34 PM
  */
-public class JBrowseMaintenanceTask implements SystemMaintenance.MaintenanceTask
+public class JBrowseMaintenanceTask extends DefaultSystemMaintenanceTask
 {
     private static Logger _log = Logger.getLogger(JBrowseMaintenanceTask.class);
 
@@ -47,15 +48,6 @@ public class JBrowseMaintenanceTask implements SystemMaintenance.MaintenanceTask
     {
         return "DeleteJBrowseArtifacts";
     }
-
-    @Override
-    public boolean canDisable()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean hideFromAdminPage() { return false; }
 
     @Override
     public void run()

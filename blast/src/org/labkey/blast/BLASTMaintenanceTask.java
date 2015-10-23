@@ -12,6 +12,7 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.util.DefaultSystemMaintenanceTask;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
@@ -30,7 +31,7 @@ import java.util.Set;
  * Date: 7/20/2014
  * Time: 3:34 PM
  */
-public class BLASTMaintenanceTask implements SystemMaintenance.MaintenanceTask
+public class BLASTMaintenanceTask extends DefaultSystemMaintenanceTask
 {
     private static Logger _log = Logger.getLogger(BLASTMaintenanceTask.class);
 
@@ -50,15 +51,6 @@ public class BLASTMaintenanceTask implements SystemMaintenance.MaintenanceTask
     {
         return "DeleteBlastArtifacts";
     }
-
-    @Override
-    public boolean canDisable()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean hideFromAdminPage() { return false; }
 
     @Override
     public void run()
