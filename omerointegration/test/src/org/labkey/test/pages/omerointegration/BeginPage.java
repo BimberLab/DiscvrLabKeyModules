@@ -5,6 +5,7 @@ import org.labkey.test.Locator;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.components.ComponentElements;
 import org.labkey.test.pages.LabKeyPage;
+import org.openqa.selenium.SearchContext;
 
 public class BeginPage extends LabKeyPage
 {
