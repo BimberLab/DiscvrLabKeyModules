@@ -12,6 +12,7 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.DefaultSystemMaintenanceTask;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -29,7 +30,7 @@ import java.util.Set;
 /**
  * Created by bimber on 9/15/2014.
  */
-public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.MaintenanceTask
+public class SequenceAnalyssiMaintenanceTask extends DefaultSystemMaintenanceTask
 {
     private static Logger _log = Logger.getLogger(SequenceAnalyssiMaintenanceTask.class);
 
@@ -48,18 +49,6 @@ public class SequenceAnalyssiMaintenanceTask implements SystemMaintenance.Mainte
     public String getName()
     {
         return "DeleteSequenceAnalysisArtifacts";
-    }
-
-    @Override
-    public boolean canDisable()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean hideFromAdminPage()
-    {
-        return false;
     }
 
     @Override
