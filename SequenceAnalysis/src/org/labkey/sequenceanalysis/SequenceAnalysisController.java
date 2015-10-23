@@ -3819,11 +3819,27 @@ public class SequenceAnalysisController extends SpringActionController
 
             List<JSONObject> allHits = new ArrayList<>();
 
-            List<RefNtSequenceModel> references = null;
+            List<RefNtSequenceModel> allowedReferences = null;
             TableInfo ti = QueryService.get().getUserSchema(getUser(), getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
+            SimpleFilter filter = new SimpleFilter();
             if (!StringUtils.isEmpty(form.getCategory()))
             {
-                references = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("category"), form.getCategory(), CompareType.EQUAL), null).getArrayList(RefNtSequenceModel.class);
+                filter.addCondition(FieldKey.fromString("category"), form.getCategory(), CompareType.EQUAL);
+            }
+
+            if (!StringUtils.isEmpty(form.getSpecies()))
+            {
+                filter.addCondition(FieldKey.fromString("species"), form.getSpecies(), CompareType.EQUAL);
+            }
+
+            if (form.getIncludeDisabled() != false)
+            {
+                filter.addCondition(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK);
+            }
+
+            if (!filter.isEmpty())
+            {
+                allowedReferences = new TableSelector(ti, filter, null).getArrayList(RefNtSequenceModel.class);
             }
 
             InputStream is = null;
@@ -3854,9 +3870,9 @@ public class SequenceAnalysisController extends SpringActionController
                         }
                     }
 
-                    if (references != null)
+                    if (allowedReferences != null)
                     {
-                        for (RefNtSequenceModel m : references)
+                        for (RefNtSequenceModel m : allowedReferences)
                         {
                             if (hitNames.contains(m.getName()))
                             {
@@ -3961,6 +3977,8 @@ public class SequenceAnalysisController extends SpringActionController
     {
         String _fasta;
         String _category;
+        String _species;
+        Boolean _includeDisabled;
 
         public String getFasta()
         {
@@ -3980,6 +3998,26 @@ public class SequenceAnalysisController extends SpringActionController
         public void setCategory(String category)
         {
             _category = category;
+        }
+
+        public String getSpecies()
+        {
+            return _species;
+        }
+
+        public void setSpecies(String species)
+        {
+            _species = species;
+        }
+
+        public Boolean getIncludeDisabled()
+        {
+            return _includeDisabled;
+        }
+
+        public void setIncludeDisabled(Boolean includeDisabled)
+        {
+            _includeDisabled = includeDisabled;
         }
     }
 }

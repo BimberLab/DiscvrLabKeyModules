@@ -40,6 +40,25 @@ Ext4.define('SequenceAnalysis.window.CompareSequencesWindow', {
                     sql: 'SELECT DISTINCT category from sequenceanalysis.ref_nt_sequences',
                     autoLoad: true
                 }
+            },{
+                xtype: 'labkey-combo',
+                fieldLabel: 'Species (for comparisons)',
+                width: 400,
+                itemId: 'species',
+                displayField: 'species',
+                valueField: 'species',
+                store: {
+                    type: 'labkey-store',
+                    schemaName: 'sequenceanalysis',
+                    sql: 'SELECT DISTINCT species from sequenceanalysis.ref_nt_sequences',
+                    autoLoad: true
+                }
+            },{
+                xtype: 'checkbox',
+                fieldLabel: 'Include Disabled Sequence?',
+                width: 400,
+                itemId: 'includeDisabled',
+                checked: false
             }],
             buttons: [{
                 text: 'Submit',
@@ -59,6 +78,8 @@ Ext4.define('SequenceAnalysis.window.CompareSequencesWindow', {
     onSubmit: function(){
         var fasta = this.down('#fasta').getValue();
         var category = this.down('#category').getValue();
+        var species = this.down('#species').getValue();
+        var includeDisabled = this.down('#includeDisabled').getValue();
 
         if (!fasta){
             Ext4.Msg.alert('Error', 'Must provide the FASTA sequence');
@@ -71,7 +92,9 @@ Ext4.define('SequenceAnalysis.window.CompareSequencesWindow', {
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'compareFastaSequences'),
             jsonData: {
                 fasta: fasta,
-                category: category
+                category: category,
+                species: species,
+                includeDisabled: includeDisabled
             },
             scope: this,
             failure: LDK.Utils.getErrorCallback(),

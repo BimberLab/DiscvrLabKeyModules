@@ -9,13 +9,16 @@ import com.github.jmchilton.blend4j.galaxy.beans.JobDetails;
 import com.github.jmchilton.blend4j.galaxy.beans.JobInputOutput;
 import com.github.jmchilton.blend4j.galaxy.beans.Tool;
 import com.github.jmchilton.blend4j.galaxy.beans.ToolSection;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.exp.PropertyType;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.security.User;
+import org.labkey.galaxyintegration.GalaxyIntegrationManager;
 
 import java.io.File;
 import java.net.URI;
@@ -62,7 +65,20 @@ public class GalaxyProvenanceImporterTask
 
     public RecordedActionSet run() throws PipelineJobException
     {
-        _gi = GalaxyInstanceFactory.get(_galaxyHost, _apiKey);
+        _log.info("using galaxy host: [" + _galaxyHost + "]");
+        JSONObject json = GalaxyIntegrationManager.get().getServerSettings(_user, _galaxyHost);
+        if (json == null)
+        {
+            throw new PipelineJobException("Unable to find saved information for host: " +  _galaxyHost + " for user: " + _user.getDisplayName(_user));
+        }
+
+        String url = json.getString("url");
+        if (StringUtils.trimToNull(url) == null)
+        {
+            throw new PipelineJobException("No url saved for host: " +  _galaxyHost + " for user: " + _user.getDisplayName(_user));
+        }
+
+        _gi = GalaxyInstanceFactory.get(url, _apiKey);
 
         LinkedHashSet<JobDetails> jobs = getJobsToImport();
         List<RecordedAction> actions = convertJobsToActions(jobs);

@@ -2586,6 +2586,7 @@ labModules/SequenceAnalysis/pipeline_code/external/trimmomatic/LICENSE -text
 labModules/SequenceAnalysis/pipeline_code/external/trimmomatic/trimmomatic-0.22.jar -text
 labModules/SequenceAnalysis/pipeline_code/extra_tools_install.sh -text
 labModules/SequenceAnalysis/pipeline_code/gatk/ConflictingReadCount.java -text
+labModules/SequenceAnalysis/pipeline_code/gatk/ConflictingReadCountBySample.java -text
 labModules/SequenceAnalysis/pipeline_code/gatk/MendelianViolationCount.java -text
 labModules/SequenceAnalysis/pipeline_code/sequence_tools_install.sh -text
 labModules/SequenceAnalysis/resources/credits/executables.txt -text

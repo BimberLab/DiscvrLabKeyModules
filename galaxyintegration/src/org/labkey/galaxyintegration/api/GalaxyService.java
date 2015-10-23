@@ -22,7 +22,7 @@ abstract public class GalaxyService
         _instance = instance;
     }
 
-    abstract public GalaxyInstance getGalaxyInstance(User u, String hostName);
+    //abstract public GalaxyInstance getGalaxyInstance(User u, String hostName);
 
     /**
      * returns the host names of all servers with API keys registered for the provided user

@@ -25,6 +25,7 @@ import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
@@ -140,11 +141,17 @@ public class GalaxyIntegrationController extends SpringActionController
                 return null;
             }
 
-            GalaxyInstance gi = GalaxyService.get().getGalaxyInstance(getUser(), form.getHostName());
-            if (gi == null)
+            JSONObject json = GalaxyIntegrationManager.get().getServerSettings(getUser(), form.getHostName());
+            if (json == null)
             {
-                errors.reject(ERROR_MSG, "Unknown galaxy host: " + form.getHostName() + ", must register this galaxy instance with your server");
+                errors.reject(ERROR_MSG, "Unknown galaxy host: " + form.getHostName() + ", must register this galaxy instance with your server for the user: " + getUser().getDisplayName(getUser()));
                 return null;
+            }
+
+            String url = json.getString("url");
+            if (StringUtils.trimToNull(url) == null)
+            {
+                errors.reject(ERROR_MSG, "No url saved for host: " +  form.getHostName() + " for user: " + getUser().getDisplayName(getUser()));
             }
 
             if (StringUtils.isEmpty(form.getRunName()))
@@ -153,7 +160,7 @@ public class GalaxyIntegrationController extends SpringActionController
                 return null;
             }
 
-            GalaxyProvenanceImporterTask task = new GalaxyProvenanceImporterTask(getUser(), getContainer(), gi.getGalaxyUrl(), form.getApiKey(), form.getHistoryId(), form.getDatasetId(), form.getRunName());
+            GalaxyProvenanceImporterTask task = new GalaxyProvenanceImporterTask(getUser(), getContainer(), form.getHostName(), form.getApiKey(), form.getHistoryId(), form.getDatasetId(), form.getRunName());
             RecordedActionSet actions = task.run();
             ExpRun run = new ExpRunCreator().createRun(actions, getContainer(), getUser(), form.getRunName(), form.getDescription());
 
