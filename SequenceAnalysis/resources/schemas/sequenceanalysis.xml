@@ -1179,7 +1179,7 @@
             </ns:column>
             <ns:column columnName="platformUnit">
                 <ns:columnTitle>Platform Unit</ns:columnTitle>
-                <ns:nullable>false</ns:nullable>
+                <ns:nullable>true</ns:nullable>
             </ns:column>
             <ns:column columnName="centerName">
                 <ns:columnTitle>Center Name</ns:columnTitle>

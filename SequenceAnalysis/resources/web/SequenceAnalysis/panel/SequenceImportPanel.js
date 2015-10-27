@@ -419,6 +419,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     fileArr.pop();
                     var fileGroupId = fileArr.length == 1 ? fileArr[0] : fileArr.join('.');
                     m.set('fileGroupId', fileGroupId);
+                    //m.set('platformUnit', fileGroupId);
 
                     map[rec.get('fileName')] = map[rec.get('fileName')] || [];
                     map[rec.get('fileName')].push(m);
