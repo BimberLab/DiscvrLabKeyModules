@@ -403,7 +403,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
 
                 getWrapper().execute(params);
 
-                File siteReportPng = new File(FileUtil.getBaseName(siteReport.getPath()) + ".png");
+                File siteReportPng = new File(FileUtil.getBaseName(siteReport.getPath()) + ".txt.png");
                 if (siteReportPng.exists())
                 {
                     return siteReportPng;

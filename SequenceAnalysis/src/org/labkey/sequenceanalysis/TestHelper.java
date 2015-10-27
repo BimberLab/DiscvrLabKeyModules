@@ -2742,11 +2742,11 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam_splitting_report.txt"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.gff"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.methylation.txt"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.methylation.png"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.methylation.txt.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias.txt"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias_R2.png"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq_bismark_PE.alignment_overview.png"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq.gz_bismark_PE.alignment_overview.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq_bismark_PE_report.txt"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
@@ -2767,7 +2767,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam_splitting_report.txt"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.gff"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.methylation.txt"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.methylation.png"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.methylation.txt.png"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.M-bias.txt"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fastq_bismark_SE.alignment_overview.png"));
@@ -2790,7 +2790,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam_splitting_report.txt"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.gff"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.methylation.txt"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.methylation.png"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.methylation.txt.png"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.M-bias.txt"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fastq_bismark_SE.alignment_overview.png"));
@@ -2867,11 +2867,11 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.bam_splitting_report.txt"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.gff"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.methylation.txt"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.methylation.png"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.CpG_Site_Summary.methylation.txt.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias.txt"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias_R2.png"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq_bismark_PE.alignment_overview.png"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq.gz_bismark_PE.alignment_overview.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq_bismark_PE_report.txt"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
@@ -2888,7 +2888,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam_splitting_report.txt"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.gff"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.methylation.txt"));
-            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.methylation.png"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.CpG_Site_Summary.methylation.txt.png"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.M-bias.txt"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.preprocessed.fastq_bismark_SE.alignment_overview.png"));
@@ -2908,7 +2908,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam_splitting_report.txt"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.gff"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.methylation.txt"));
-            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.methylation.png"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.CpG_Site_Summary.methylation.txt.png"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.M-bias.txt"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.preprocessed.fastq_bismark_SE.alignment_overview.png"));
