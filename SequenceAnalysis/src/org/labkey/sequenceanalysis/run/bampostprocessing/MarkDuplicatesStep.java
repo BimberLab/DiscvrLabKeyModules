@@ -52,9 +52,27 @@ public class MarkDuplicatesStep extends AbstractCommandPipelineStep<MarkDuplicat
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".markduplicates.bam");
         output.addIntermediateFile(outputBam);
-        output.addIntermediateFile(getWrapper().getMetricsFile(inputBam));
+
+        File sortedBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".sorted.bam");
+        boolean sortedPreexisting = sortedBam.exists();
 
         output.setBAM(getWrapper().executeCommand(inputBam, outputBam, getClientCommandArgs("=")));
+
+
+        if (sortedBam.exists() && !sortedPreexisting)
+        {
+            output.addIntermediateFile(sortedBam);
+        }
+
+        //NOTE: depending on whether the BAM is sorted by the wrapper, the metrics file name will differ
+        if (getWrapper().getMetricsFile(sortedBam).exists())
+        {
+            output.addIntermediateFile(getWrapper().getMetricsFile(sortedBam));
+        }
+        else if (getWrapper().getMetricsFile(inputBam).exists())
+        {
+            output.addIntermediateFile(getWrapper().getMetricsFile(inputBam));
+        }
 
         return output;
     }

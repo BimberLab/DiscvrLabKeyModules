@@ -41,79 +41,83 @@
 
                 onLoad: function(json){
                     var toAdd = [];
-                    Ext4.each(Ext4.Object.getKeys(json.hosts), function(hostName){
-                        toAdd.push({
-                            html: hostName,
-                            itemId: hostName,
-                        });
+                    if (json && json.hosts){
+                        Ext4.each(Ext4.Object.getKeys(json.hosts), function(hostName){
+                            json.hosts[hostName] = json.hosts[hostName] || {};
 
-                        toAdd.push({
-                            xtype: 'textfield',
-                            width: 450,
-                            hostName: hostName,
-                            fieldName: 'url',
-                            value: json.hosts[hostName].url
-                        });
+                            toAdd.push({
+                                html: hostName,
+                                itemId: hostName,
+                            });
 
-                        toAdd.push({
-                            xtype: 'textfield',
-                            width: 450,
-                            hostName: hostName,
-                            fieldName: 'apiKey',
-                            value: json.hosts[hostName].apiKey
-                        });
+                            toAdd.push({
+                                xtype: 'textfield',
+                                width: 450,
+                                hostName: hostName,
+                                fieldName: 'url',
+                                value: json.hosts[hostName].url
+                            });
 
-                        toAdd.push({
-                            xtype: 'button',
-                            border: true,
-                            text: 'Update',
-                            hostName: hostName,
-                            handler: function(btn){
-                                var apiKey = btn.up('panel').down('textfield[hostName=' + btn.hostName + '][fieldName=apiKey]').getValue();
-                                var url = btn.up('panel').down('textfield[hostName=' + btn.hostName + '][fieldName=url]').getValue();
+                            toAdd.push({
+                                xtype: 'textfield',
+                                width: 450,
+                                hostName: hostName,
+                                fieldName: 'apiKey',
+                                value: json.hosts[hostName].apiKey
+                            });
 
-                                LABKEY.Ajax.request({
-                                    url: LABKEY.ActionURL.buildURL('galaxyintegration', 'setApiKey', null),
-                                    method : 'POST',
-                                    params: {
-                                        hostName: btn.hostName,
-                                        apiKey: apiKey,
-                                        url: url
-                                    },
-                                    scope: this,
-                                    failure: LDK.Utils.getErrorCallback(),
-                                    success: function(response){
-                                        Ext4.Msg.alert('Success', 'Save Successful', function(){
+                            toAdd.push({
+                                xtype: 'button',
+                                border: true,
+                                text: 'Update',
+                                hostName: hostName,
+                                handler: function(btn){
+                                    var apiKey = btn.up('panel').down('textfield[hostName=' + btn.hostName + '][fieldName=apiKey]').getValue();
+                                    var url = btn.up('panel').down('textfield[hostName=' + btn.hostName + '][fieldName=url]').getValue();
+
+                                    LABKEY.Ajax.request({
+                                        url: LABKEY.ActionURL.buildURL('galaxyintegration', 'setApiKey', null),
+                                        method: 'POST',
+                                        params: {
+                                            hostName: btn.hostName,
+                                            apiKey: apiKey,
+                                            url: url
+                                        },
+                                        scope: this,
+                                        failure: LDK.Utils.getErrorCallback(),
+                                        success: function(response){
+                                            Ext4.Msg.alert('Success', 'Save Successful', function(){
+                                                btn.up('galaxy-settingspanel').loadData();
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+
+                            toAdd.push({
+                                xtype: 'button',
+                                border: true,
+                                text: 'Remove',
+                                hostName: hostName,
+                                handler: function(btn){
+                                    LABKEY.Ajax.request({
+                                        url: LABKEY.ActionURL.buildURL('galaxyintegration', 'setApiKey', null),
+                                        method: 'POST',
+                                        params: {
+                                            hostName: btn.hostName,
+                                            apiKey: null,
+                                            url: null
+                                        },
+                                        scope: this,
+                                        failure: LDK.Utils.getErrorCallback(),
+                                        success: LABKEY.Utils.getCallbackWrapper(function(){
                                             btn.up('galaxy-settingspanel').loadData();
-                                        });
-                                    }
-                                });
-                            }
-                        });
-
-                        toAdd.push({
-                            xtype: 'button',
-                            border: true,
-                            text: 'Remove',
-                            hostName: hostName,
-                            handler: function(btn){
-                                LABKEY.Ajax.request({
-                                    url: LABKEY.ActionURL.buildURL('galaxyintegration', 'setApiKey', null),
-                                    method : 'POST',
-                                    params: {
-                                        hostName: btn.hostName,
-                                        apiKey: null,
-                                        url: null
-                                    },
-                                    scope: this,
-                                    failure: LDK.Utils.getErrorCallback(),
-                                    success: LABKEY.Utils.getCallbackWrapper(function(){
-                                        btn.up('galaxy-settingspanel').loadData();
-                                    }, this, false)
-                                });
-                            }
-                        });
-                    }, this);
+                                        }, this, false)
+                                    });
+                                }
+                            });
+                        }, this);
+                    }
 
                     if (!toAdd.length){
                         toAdd.push({

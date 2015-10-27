@@ -37,10 +37,10 @@ public class FixBAMWrapper extends PicardWrapper
         params.add(SequenceAnalysisManager.getHtsJdkJar().getPath());
         params.add("htsjdk.samtools.FixBAMFile");
 
-        params.add("INPUT=" + inputFile.getPath());
+        params.add(inputFile.getPath());
 
         File cleanedFile = new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".cleaned.bam");
-        params.add("OUTPUT=" + cleanedFile.getPath());
+        params.add(cleanedFile.getPath());
 
         execute(params);
 

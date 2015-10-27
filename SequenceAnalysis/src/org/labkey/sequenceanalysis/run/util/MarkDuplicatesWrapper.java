@@ -141,7 +141,7 @@ public class MarkDuplicatesWrapper extends PicardWrapper
 
     public File getMetricsFile(File inputFile)
     {
-        return new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".metrics");
+        return new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".markduplicates.metrics");
     }
 
     protected String getTooName()

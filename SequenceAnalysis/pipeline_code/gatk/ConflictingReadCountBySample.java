@@ -9,6 +9,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import org.apache.log4j.Logger;
 import org.broadinstitute.gatk.tools.walkers.annotator.interfaces.AnnotatorCompatible;
 import org.broadinstitute.gatk.tools.walkers.annotator.interfaces.GenotypeAnnotation;
 import org.broadinstitute.gatk.tools.walkers.annotator.interfaces.InfoFieldAnnotation;
@@ -18,6 +19,7 @@ import org.broadinstitute.gatk.utils.Utils;
 import org.broadinstitute.gatk.utils.contexts.AlignmentContext;
 import org.broadinstitute.gatk.utils.contexts.ReferenceContext;
 import org.broadinstitute.gatk.utils.genotyper.PerReadAlleleLikelihoodMap;
+import org.broadinstitute.gatk.utils.pileup.ReadBackedPileup;
 import org.broadinstitute.gatk.utils.refdata.RefMetaDataTracker;
 
 import java.util.*;
@@ -35,6 +37,7 @@ public class ConflictingReadCountBySample extends GenotypeAnnotation implements 
 
     public static final String CR_KEY = "GCR";
     public static final String CR_PCT_KEY = "GCR_PCT";
+    private static final Logger _log = Logger.getLogger(ConflictingReadCountBySample.class);
 
     @Override
     public void annotate(final RefMetaDataTracker tracker,
@@ -46,11 +49,24 @@ public class ConflictingReadCountBySample extends GenotypeAnnotation implements 
                                   final GenotypeBuilder gb,
                                   final PerReadAlleleLikelihoodMap alleleLikelihoodMap){
 
-        if (g.isNoCall())
+        if (g == null || g.isNoCall() || stratifiedContext == null)
             return;
 
+        if (stratifiedContext.getBasePileup() == null)
+        {
+            _log.warn("stratifiedContext.getBasePileup() is null: " + vc.getStart());
+            return;
+        }
+
+        ReadBackedPileup p = stratifiedContext.getBasePileup().getMappingFilteredPileup(20);
+        if (p == null)
+        {
+            _log.warn("stratifiedContext.getBasePileup().getMappingFilteredPileup() is null: " + vc.getStart());
+            return;
+        }
+
         int totalMismatched = 0;
-        int[] bases = stratifiedContext.getBasePileup().getMappingFilteredPileup(20).getBaseCounts();
+        int[] bases = p.getBaseCounts();
 
         int totalForSample = 0;
         for (int i=0;i<bases.length;i++){
@@ -84,6 +100,6 @@ public class ConflictingReadCountBySample extends GenotypeAnnotation implements 
 
     public List<VCFFormatHeaderLine> getDescriptions() { return Arrays.asList(
             new VCFFormatHeaderLine(CR_KEY, 1, VCFHeaderLineType.Integer, "Number of reads, across all samples, that do not match the genotype called for a given sample."),
-            new VCFFormatHeaderLine(CR_PCT_KEY, 1, VCFHeaderLineType.String, "A list of the percent of reads that conflict with the called genotypes for each sample."));
+            new VCFFormatHeaderLine(CR_PCT_KEY, 1, VCFHeaderLineType.Float, "The percent of reads that conflict with the called genotypes for the sample."));
     }
 }

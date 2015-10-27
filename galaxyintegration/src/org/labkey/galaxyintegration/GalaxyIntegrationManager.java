@@ -18,6 +18,7 @@ package org.labkey.galaxyintegration;
 
 import com.drew.lang.annotations.Nullable;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.PropertyManager;
@@ -76,6 +77,15 @@ public class GalaxyIntegrationManager
             return null;
         }
 
-        return new JSONObject(map.get(hostName));
+        try
+        {
+            return new JSONObject(map.get(hostName));
+        }
+        catch (JSONException e)
+        {
+            //ignore
+        }
+
+        return null;
     }
 }

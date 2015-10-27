@@ -17,6 +17,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
+import org.labkey.sequenceanalysis.run.util.FixBAMWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -103,6 +104,10 @@ public class MosaikWrapper extends AbstractCommandWrapper
             {
                 throw new PipelineJobException("BAM not created, expected: " + bam.getPath());
             }
+
+            //Note: mosaik has started to give errors about
+            FixBAMWrapper fixBam = new FixBAMWrapper(getPipelineCtx().getLogger());
+            fixBam.executeCommand(bam, null);
 
             output.setBAM(bam);
             output.addIntermediateFile(new File(outputDirectory, basename + ".stat"));

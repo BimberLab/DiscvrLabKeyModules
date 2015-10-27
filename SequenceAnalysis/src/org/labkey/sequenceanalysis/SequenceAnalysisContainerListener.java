@@ -17,13 +17,38 @@
 package org.labkey.sequenceanalysis;
 
 import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbScope;
+import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.module.Module;
+import org.labkey.api.module.SimpleModuleContainerListener;
 import org.labkey.api.security.User;
 
-public class SequenceAnalysisContainerListener extends ContainerManager.AbstractContainerListener
+public class SequenceAnalysisContainerListener extends SimpleModuleContainerListener
 {
-    public void containerDeleted(Container c, User user)
+    public SequenceAnalysisContainerListener(Module owner)
     {
-        SequenceAnalysisManager.get().deleteContainer(c);
+        super(owner);
+    }
+
+    @Override
+    public void containerDeleted(Container c, User u)
+    {
+        //note: this schema has several FKs, so the delete order is important.  to get around this, first delete from those tables:
+        SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
+
+        try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
+        {
+            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION + " WHERE alignment_id IN (select rowid from " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY + " WHERE container = ?)", c.getEntityId()));
+            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY + " WHERE container = ?", c.getEntityId()));
+            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON + " WHERE container = ?", c.getEntityId()));
+            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS + " WHERE container = ?", c.getEntityId()));
+            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_COVERAGE + " WHERE container = ?", c.getEntityId()));
+
+            transaction.commit();
+        }
+
+        //now run the core listener to make sure we delete any new tables
+        super.containerDeleted(c, u);
     }
 }

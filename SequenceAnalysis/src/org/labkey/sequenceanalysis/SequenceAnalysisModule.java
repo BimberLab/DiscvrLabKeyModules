@@ -102,7 +102,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.298;
+        return 12.299;
     }
 
     public boolean hasScripts()
@@ -257,7 +257,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     protected void registerContainerListeners()
     {
         // add a container listener so we'll know when our container is deleted.  override the default to ensure correct order
-        ContainerManager.addContainerListener(new SequenceAnalysisContainerListener());
+        ContainerManager.addContainerListener(new SequenceAnalysisContainerListener(this));
     }
 
     @Override

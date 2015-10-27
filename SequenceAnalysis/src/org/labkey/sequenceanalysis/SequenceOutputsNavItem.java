@@ -17,37 +17,26 @@ package org.labkey.sequenceanalysis;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
-import org.labkey.api.laboratory.AbstractImportingNavItem;
 import org.labkey.api.laboratory.AbstractNavItem;
 import org.labkey.api.laboratory.DataProvider;
 import org.labkey.api.laboratory.DetailsUrlWithLabelNavItem;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.module.ModuleLoader;
-import org.labkey.api.pipeline.PipelineUrls;
 import org.labkey.api.query.DetailsURL;
-import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.view.ActionURL;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
  * User: bimber

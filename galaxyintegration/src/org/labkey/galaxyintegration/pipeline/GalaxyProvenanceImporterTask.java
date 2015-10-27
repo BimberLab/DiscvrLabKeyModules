@@ -78,6 +78,8 @@ public class GalaxyProvenanceImporterTask
             throw new PipelineJobException("No url saved for host: " +  _galaxyHost + " for user: " + _user.getDisplayName(_user));
         }
 
+        _log.info("generating server with baseUrl: " + url);
+
         _gi = GalaxyInstanceFactory.get(url, _apiKey);
 
         LinkedHashSet<JobDetails> jobs = getJobsToImport();

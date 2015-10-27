@@ -267,25 +267,6 @@ public class SequenceAnalysisManager
         }
     }
 
-    public void deleteContainer(Container c)
-    {
-        SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
-
-        try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
-        {
-            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION + " WHERE alignment_id IN (select rowid from " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY + " WHERE container = ?)", c.getEntityId()));
-            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY + " WHERE container = ?", c.getEntityId()));
-            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON + " WHERE container = ?", c.getEntityId()));
-            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS + " WHERE container = ?", c.getEntityId()));
-            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_COVERAGE + " WHERE container = ?", c.getEntityId()));
-            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " WHERE container = ?", c.getEntityId()));
-            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_INSTRUMENT_RUNS + " WHERE container = ?", c.getEntityId()));
-            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " WHERE container = ?", c.getEntityId()));
-            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READSETS + " WHERE container = ?", c.getEntityId()));
-            transaction.commit();
-        }
-    }
-
     public static File getHtsJdkJar()
     {
         File webappDir = ModuleLoader.getInstance().getWebappDir();
@@ -301,7 +282,7 @@ public class SequenceAnalysisManager
         }
 
         File samJar = new File(webappDir, "WEB-INF/lib");
-        samJar = new File(samJar, "htsjdk-1.118.jar");
+        samJar = new File(samJar, "htsjdk-1.138.jar");
         if (!samJar.exists())
             throw new RuntimeException("Not found: " + samJar.getPath());
 
