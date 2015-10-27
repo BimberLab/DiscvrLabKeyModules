@@ -385,11 +385,6 @@ public class TestHelper
 
         protected void verifyFileOutputs(File basedir, Set<File> expectedOutputs)
         {
-            for (File f : expectedOutputs)
-            {
-                Assert.assertTrue("Output file not found, expected: " + f.getPath(), f.exists());
-            }
-
             IOFileFilter filter = new IOFileFilter(){
                 public boolean accept(File file){
                     return true;
@@ -416,7 +411,7 @@ public class TestHelper
             Collection<File> diff = CollectionUtils.disjunction(expectedOutputs, files);
             if (!diff.isEmpty())
             {
-                for (File f: diff)
+                for (File f : diff)
                 {
                     if (expectedOutputs.contains(f))
                     {
@@ -427,6 +422,17 @@ public class TestHelper
                         _log.error("unexpected output found: " + f.getPath());
                     }
                 }
+
+                _log.error("files present: ");
+                for (File f : files)
+                {
+                    _log.error(f.getPath());
+                }
+            }
+
+            for (File f : expectedOutputs)
+            {
+                Assert.assertTrue("Output file not found, expected: " + f.getPath(), f.exists());
             }
 
             Assert.assertEquals("Incorrect number of outputs created", expectedOutputs.size(), files.size());
