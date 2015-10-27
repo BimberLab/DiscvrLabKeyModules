@@ -2747,7 +2747,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias_R2.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq.gz_bismark_PE.alignment_overview.png"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq_bismark_PE_report.txt"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq.gz_bismark_PE_report.txt"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Preprocessing"));
@@ -2872,7 +2872,7 @@ public class TestHelper
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias_R1.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/TestReadset1.M-bias_R2.png"));
             expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq.gz_bismark_PE.alignment_overview.png"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq_bismark_PE_report.txt"));
+            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired1.preprocessed.fastq.gz_bismark_PE_report.txt"));
 
             expectedOutputs.add(new File(basedir, "paired3"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment"));
