@@ -433,7 +433,7 @@
             <ns:column columnName="library_id">
                 <ns:columnTitle>Reference Genome</ns:columnTitle>
                 <ns:isHidden>true</ns:isHidden>
-                <ns:nullable>false</ns:nullable>
+                <ns:nullable>true</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
                     <ns:fkTable>reference_libraries</ns:fkTable>
