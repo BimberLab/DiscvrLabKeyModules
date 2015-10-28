@@ -30,6 +30,7 @@ import java.util.List;
 abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentStep> extends AbstractPipelineStepProvider<StepType>
 {
     public static String SUPPORT_MERGED_UNALIGNED = "supportsMergeUnaligned";
+    public static String COLLECT_WGS_METRICS = "collectWgsMetrics";
 
     private boolean _supportsPairedEnd;
     private boolean _supportsMergeUnaligned;
@@ -60,6 +61,10 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
         {
             parameters.add(ToolParameterDescriptor.create(SUPPORT_MERGED_UNALIGNED, "Merge Unaligned Reads", "If checked, the pipeline will attempt to merge unaligned reads into the final BAM file.  This is generally a good idea since it ensures information is not lost; however, in some situations you may know upfront that you do not need these reads.", "hidden", null, false));
         }
+
+        parameters.add(ToolParameterDescriptor.create(COLLECT_WGS_METRICS, "Collect WGS Metrics", "If checked, the pipeline will run Picard tool CollectWgsMetrics, which gathers various metrics including coverage depth.", "checkbox", new JSONObject(){{
+            put("checked", true);
+        }}, true));
 
         return parameters;
     }

@@ -40,6 +40,7 @@ import org.labkey.sequenceanalysis.analysis.AlignmentMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.CoverageDepthHandler;
 import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
+import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.GenomeLoadButton;
 import org.labkey.sequenceanalysis.button.QualiMapButton;
@@ -198,6 +199,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new GenotypeGVCFHandler());
         SequenceAnalysisService.get().registerFileHandler(new AlignmentMetricsHandler());
         SequenceAnalysisService.get().registerFileHandler(new UnmappedSequenceBasedGenotypeHandler());
+        SequenceAnalysisService.get().registerFileHandler(new PicardAlignmentMetricsHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));

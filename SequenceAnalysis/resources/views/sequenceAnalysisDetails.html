@@ -56,7 +56,7 @@ Ext4.onReady(function (){
         title: 'Quality Metrics',
         schemaName: 'sequenceanalysis',
         queryName: 'quality_metrics',
-        maxRows: 10,
+        maxRows: 20,
         containerPath: Laboratory.Utils.getQueryContainerPath(),
         columns: 'fileid,metricname,metricvalue,qualvalue,comment,workbook,readset,runid',
         filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)]

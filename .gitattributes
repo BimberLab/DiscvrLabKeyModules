@@ -3072,6 +3072,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CompareVari
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CoverageDepthHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/GenotypeGVCFHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/LiftoverHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/PicardAlignmentMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/UnmappedSequenceBasedGenotypeHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/picard/CigarPositionIterable.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/GenomeLoadButton.java -text
@@ -3189,6 +3190,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/BuildBamInd
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CallMdWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CleanSamWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CollectInsertSizeMetricsWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CollectWgsMetricsWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CreateSequenceDictionaryWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/DownsampleSamWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FastaIndexer.java -text

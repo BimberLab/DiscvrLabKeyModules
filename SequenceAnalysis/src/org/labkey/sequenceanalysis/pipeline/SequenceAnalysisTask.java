@@ -15,9 +15,12 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import com.drew.lang.annotations.Nullable;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.io.Charsets;
+import org.apache.log4j.Logger;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -32,6 +35,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -47,6 +51,7 @@ import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import picard.analysis.AlignmentSummaryMetrics;
+import picard.analysis.CollectWgsMetrics;
 import picard.analysis.InsertSizeMetrics;
 
 import java.io.BufferedReader;
@@ -297,7 +302,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
             Table.insert(getJob().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), so);
 
-            addMetricsForAnalysis(model, getJob());
+            addMetricsForAnalysis(model, getJob().getLogger(), getJob().getContainer(), getJob().getUser(), null);
 
             if (!providers.isEmpty())
             {
@@ -310,7 +315,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         return new RecordedActionSet();
     }
 
-    public static void addMetricsForAnalysis(AnalysisModel model, PipelineJob job) throws PipelineJobException
+    public static void addMetricsForAnalysis(AnalysisModel model, Logger log, Container c, User u, @Nullable File baseDir) throws PipelineJobException
     {
         if (model.getAlignmentFile() != null && model.getReferenceLibraryFile() != null && model.getReferenceLibraryFile().exists())
         {
@@ -320,16 +325,21 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 return;
             }
 
+            if (baseDir == null)
+            {
+                baseDir = model.getAlignmentFileObject().getParentFile();
+            }
+
             File fai = new File(model.getReferenceLibraryFile().getPath() + ".fai");
             if (!fai.exists())
             {
-                job.getLogger().error("missing FASTA index, cannot calculate BAM metrics");
+                log.error("missing FASTA index, cannot calculate BAM metrics");
             }
 
-            File mf = new File(model.getAlignmentFileObject().getParentFile(), FileUtil.getBaseName(model.getAlignmentFileObject()) + ".summary.metrics");
+            File mf = new File(baseDir, FileUtil.getBaseName(model.getAlignmentFileObject()) + ".summary.metrics");
             if (mf.exists())
             {
-                job.getLogger().info("Importing Picard AlignmentSummaryMetricsCollector metrics for: " + d.getFile().getName());
+                log.info("Importing Picard AlignmentSummaryMetricsCollector metrics for: " + d.getFile().getName());
                 TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
 
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(mf), Charsets.UTF_8)))
@@ -352,7 +362,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                         {
                             if (row.get(metricName) == null || StringUtils.isEmpty(String.valueOf(row.get(metricName))))
                             {
-                                job.getLogger().debug("\tskipping empty metric: " + metricName);
+                                log.debug("\tskipping empty metric: " + metricName);
                                 continue;
                             }
 
@@ -363,13 +373,13 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                             }
                             catch (ConversionException e)
                             {
-                                job.getLogger().debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
+                                log.debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
                                 continue;
                             }
 
                             if (Double.isNaN(val))
                             {
-                                job.getLogger().debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
+                                log.debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
                                 continue;
                             }
 
@@ -380,10 +390,10 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                             r.put("dataid", d.getRowId());
                             r.put("analysis_id", model.getAnalysisId());
                             r.put("readset", model.getReadset());
-                            r.put("container", job.getContainer().getEntityId());
-                            r.put("createdby", job.getUser().getUserId());
+                            r.put("container", c.getEntityId());
+                            r.put("createdby", u.getUserId());
 
-                            Table.insert(job.getUser(), ti, r);
+                            Table.insert(u, ti, r);
                         }
                     }
                 }
@@ -394,13 +404,13 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             }
             else
             {
-                job.getLogger().info("alignment summary metrics file not found, skipping");
+                log.info("alignment summary metrics file not found, skipping");
             }
 
-            File mf2 = new File(model.getAlignmentFileObject().getParentFile(), FileUtil.getBaseName(model.getAlignmentFileObject()) + ".insertsize.metrics");
+            File mf2 = new File(baseDir, FileUtil.getBaseName(model.getAlignmentFileObject()) + ".insertsize.metrics");
             if (mf2.exists())
             {
-                job.getLogger().info("Importing Picard InsertSize metrics for: " + d.getFile().getName());
+                log.info("Importing Picard InsertSize metrics for: " + d.getFile().getName());
                 TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
 
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(mf2), Charsets.UTF_8)))
@@ -420,7 +430,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                         {
                             if (row.get(metricName) == null || StringUtils.isEmpty(String.valueOf(row.get(metricName))))
                             {
-                                job.getLogger().debug("\tskipping empty metric: " + metricName);
+                                log.debug("\tskipping empty metric: " + metricName);
                                 continue;
                             }
 
@@ -431,13 +441,13 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                             }
                             catch (ConversionException e)
                             {
-                                job.getLogger().debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
+                                log.debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
                                 continue;
                             }
 
                             if (Double.isNaN(val))
                             {
-                                job.getLogger().debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
+                                log.debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
                                 continue;
                             }
 
@@ -448,10 +458,10 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                             r.put("dataid", d.getRowId());
                             r.put("analysis_id", model.getAnalysisId());
                             r.put("readset", model.getReadset());
-                            r.put("container", job.getContainer().getEntityId());
-                            r.put("createdby", job.getUser().getUserId());
+                            r.put("container", c.getEntityId());
+                            r.put("createdby", u.getUserId());
 
-                            Table.insert(job.getUser(), ti, r);
+                            Table.insert(u, ti, r);
                         }
                     }
                 }
@@ -462,7 +472,80 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             }
             else
             {
-                job.getLogger().info("insert size metrics file not found, skipping");
+                log.info("insert size metrics file not found, skipping");
+            }
+
+            File mf3 = new File(baseDir, FileUtil.getBaseName(model.getAlignmentFileObject()) + ".wgs.metrics");
+            if (mf3.exists())
+            {
+                log.info("Importing Picard WgsMetrics for: " + d.getFile().getName());
+                TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
+
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(mf3), Charsets.UTF_8)))
+                {
+                    MetricsFile metricsFile = new MetricsFile();
+                    metricsFile.read(reader);
+
+                    List<CollectWgsMetrics.WgsMetrics> metrics = metricsFile.getMetrics();
+                    for (CollectWgsMetrics.WgsMetrics m : metrics)
+                    {
+                        Map<String, Object> row = new HashMap<>();
+                        row.put("Mean Covergae", m.MEAN_COVERAGE);
+                        row.put("Median Coverage", m.MEDIAN_COVERAGE);
+                        row.put("Pct 10X", m.PCT_10X);
+                        row.put("Pct 20X", m.PCT_20X);
+                        row.put("Pct 30X", m.PCT_30X);
+                        row.put("Pct 40X", m.PCT_40X);
+                        row.put("Pct 50X", m.PCT_50X);
+                        row.put("SD Coverage", m.SD_COVERAGE);
+
+                        for (String metricName : row.keySet())
+                        {
+                            if (row.get(metricName) == null || StringUtils.isEmpty(String.valueOf(row.get(metricName))))
+                            {
+                                log.debug("\tskipping empty metric: " + metricName);
+                                continue;
+                            }
+
+                            Double val;
+                            try
+                            {
+                                val = ConvertHelper.convert(row.get(metricName), Double.class);
+                            }
+                            catch (ConversionException e)
+                            {
+                                log.debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
+                                continue;
+                            }
+
+                            if (Double.isNaN(val))
+                            {
+                                log.debug("\tmetric value not numeric: " + metricName + " [" + row.get(metricName) + "]");
+                                continue;
+                            }
+
+                            Map<String, Object> r = new HashMap<>();
+                            r.put("category", "WGS Metrics");
+                            r.put("metricname", metricName);
+                            r.put("metricvalue", val);
+                            r.put("dataid", d.getRowId());
+                            r.put("analysis_id", model.getAnalysisId());
+                            r.put("readset", model.getReadset());
+                            r.put("container", c.getEntityId());
+                            r.put("createdby", u.getUserId());
+
+                            Table.insert(u, ti, r);
+                        }
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+            else
+            {
+                log.info("wgs metrics file not found, skipping");
             }
         }
     }

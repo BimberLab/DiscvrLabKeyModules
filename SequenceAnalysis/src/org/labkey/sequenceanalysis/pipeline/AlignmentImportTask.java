@@ -175,7 +175,7 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
 
             for (AnalysisModel m : ret)
             {
-                SequenceAnalysisTask.addMetricsForAnalysis(m, getJob());
+                SequenceAnalysisTask.addMetricsForAnalysis(m, getJob().getLogger(), getJob().getContainer(), getJob().getUser(), null);
             }
 
             return ret;

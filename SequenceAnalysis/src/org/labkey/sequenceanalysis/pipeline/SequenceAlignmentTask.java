@@ -52,6 +52,7 @@ import org.labkey.sequenceanalysis.run.util.AddOrReplaceReadGroupsWrapper;
 import org.labkey.sequenceanalysis.run.util.AlignmentSummaryMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
+import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.FlagStatRunner;
 import org.labkey.sequenceanalysis.run.util.MergeBamAlignmentWrapper;
@@ -708,6 +709,21 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         getHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
         commands.addAll(wrapper.getCommandsExecuted());
 
+        //wgs metrics
+        ToolParameterDescriptor wgsParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.COLLECT_WGS_METRICS);
+        boolean doCollectWgsMetrics = wgsParam == null ? false : wgsParam.extractValue(getJob(), alignmentStep.getProvider(), Boolean.class, false);
+
+        if (doCollectWgsMetrics)
+        {
+            getJob().getLogger().info("calculating wgs metrics");
+            getJob().setStatus("CALCULATING WGS METRICS");
+            File wgsMetricsFile = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".wgs.metrics");
+            CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
+            wgsWrapper.executeCommand(finalBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
+            getHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
+            commands.addAll(wgsWrapper.getCommandsExecuted());
+        }
+
         //and insert size metrics
         if (rs.hasPairedData())
         {
@@ -719,7 +735,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             if (collectInsertSizeMetricsWrapper.executeCommand(finalBam, metricsFile2, metricsHistogram) != null)
             {
                 getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
-                getHelper().getFileManager().addOutput(metricsAction, "Insert Size  Metrics Histogram", metricsHistogram);
+                getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics Histogram", metricsHistogram);
 
                 commands.addAll(collectInsertSizeMetricsWrapper.getCommandsExecuted());
             }
