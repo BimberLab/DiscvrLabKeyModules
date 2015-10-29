@@ -4,6 +4,7 @@
         <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
         <ns:pkColumnName>rowid</ns:pkColumnName>
+        <ns:titleColumn>oligo_id</ns:titleColumn>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:columnTitle>Row Id</ns:columnTitle>
@@ -97,7 +98,7 @@
             <ns:template label="DNA Samples Template" url="/query/exportExcelTemplate.view?schemaName=laboratory&amp;query.queryName=samples&amp;captionType=Label&amp;filenamePrefix=samples&amp;query.viewName=DNA Samples"/>
         </ns:importTemplates>
         <ns:pkColumnName>rowid</ns:pkColumnName>
-        <ns:titleColumn>rowid</ns:titleColumn>
+        <ns:titleColumn>freezerid</ns:titleColumn>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:isAutoInc>true</ns:isAutoInc>
@@ -389,6 +390,7 @@
         <ns:tableTitle>Peptides</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.laboratory.query.ReagentTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:titleColumn>peptideId</ns:titleColumn>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:isAutoInc>true</ns:isAutoInc>
@@ -471,6 +473,7 @@
         <ns:tableTitle>Antibodies</ns:tableTitle>
         <ns:javaCustomizer>org.labkey.laboratory.query.ReagentTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
+        <ns:titleColumn>antibodyId</ns:titleColumn>
         <ns:columns>
             <ns:column columnName="rowid">
                 <ns:isAutoInc>true</ns:isAutoInc>

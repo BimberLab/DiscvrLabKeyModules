@@ -60,8 +60,9 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
 
         this.callParent(arguments);
 
-        if((LABKEY.container && LABKEY.container.type == 'workbook')){
-            this.doLoad(LABKEY.ActionURL.getContainer());
+        //skip if owned by a window, which will handle this for us
+        if (LABKEY.container && LABKEY.container.type == 'workbook' && !this.skipInitialDoLoad){
+                this.doLoad(LABKEY.ActionURL.getContainer());
         }
     },
 
@@ -224,6 +225,7 @@ Ext4.define('Laboratory.window.WorkbookCreationWindow', {
                 bubbleEvents: ['uploadexception', 'uploadcomplete'],
                 frame: false,
                 itemId: 'theForm',
+                skipInitialDoLoad: true,
                 title: null,
                 action: this.action,
                 urlParams: this.urlParams,
@@ -270,7 +272,7 @@ Ext4.define('Laboratory.window.WorkbookCreationWindow', {
 
         this.addEvents('uploadexception', 'uploadcomplete');
 
-        if((LABKEY.container && LABKEY.container.type == 'workbook')){
+        if ((LABKEY.container && LABKEY.container.type == 'workbook')){
             this.on('beforeshow', function(){return false});
             var form = this.down('#theForm');
             form.doLoad.call(form, LABKEY.ActionURL.getContainer());

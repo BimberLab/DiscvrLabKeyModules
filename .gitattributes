@@ -3267,6 +3267,7 @@ labModules/laboratory/api-src/org/labkey/api/laboratory/assay/SimpleAssayDataPro
 labModules/laboratory/api-src/org/labkey/api/laboratory/button/ChangeAssayResultStatusBtn.java -text
 labModules/laboratory/api-src/org/labkey/api/laboratory/security/LaboratoryAdminPermission.java -text
 labModules/laboratory/distributions/discvr.xml -text
+labModules/laboratory/distributions/discvr_modules.xml -text
 labModules/laboratory/module.properties -text
 labModules/laboratory/resources/folderTypes/Expt[!!-~]Workbook.folderType.xml -text
 labModules/laboratory/resources/folderTypes/Laboratory.folderType.xml -text

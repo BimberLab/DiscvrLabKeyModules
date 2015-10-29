@@ -5,19 +5,16 @@
     <target name="distribution">
         <antcall target="prepare_dist_files" />
         <ant antfile="${basedir}/build.xml" target="package_redistributables">
-            <property name="dist_sub.dir" value="discvr" />
+            <property name="dist_sub.dir" value="discvr_modules" />
+            <property name="skip.windowsInstaller" value="true" />
             <property name="skip.zipDistribution" value="true" />
-            <property name="extraFileIdentifier" value="-discvr" />
+            <property name="skip.tarGZDistribution" value="true" />
+            <property name="package.modules" value="true"/>
         </ant>
     </target>
 
     <target name="prepare_dist_files">
-        <antcall target="gather_extended_distributions_modules" />
         <antcall target="gather_modules" />
-    </target>
-
-    <target name="gather_extended_distributions_modules">
-        <ant antfile="${basedir}/distributions/standard.xml" target="gather_modules" />
     </target>
 
     <target name="gather_modules">

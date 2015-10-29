@@ -6,9 +6,9 @@ OMERO.Utils = new function(){
         renderViewer: function(viewerUrl){
             Ext4.create('Ext.Window', {
                 title : 'OMERO Viewer',
-                //width : 300,
-                //height: 300,
-                layout : 'fit',
+                width: '90%',
+                height: '90%',
+                //minWidth: 1750,
                 modal: true,
                 items : [{
                     xtype : 'component',
@@ -16,6 +16,12 @@ OMERO.Utils = new function(){
                         tag : 'iframe',
                         src : viewerUrl
                     }
+                }],
+                bbar: [{
+                    xtype: 'component',
+                    width: '100%',
+                    style: 'padding: 5px;padding-top: 0px;text-align: center',
+                    html: 'Powered By DISCVR.  <a target="_blank" href="https://github.com/bbimber/discvr/wiki">Click here to learn more.</a>'
                 }],
                 initEvents: function () {
                     //make sure your window is rendered and have sizes and position

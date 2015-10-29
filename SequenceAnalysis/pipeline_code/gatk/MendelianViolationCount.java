@@ -68,7 +68,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
             }
 
             attributeMap.put(MVLR_KEY, totalViolations);
-            attributeMap.put(MVLR_SN_KEY, Utils.join(";", violations.toArray(new String[violations.size()])));
+            attributeMap.put(MVLR_SN_KEY, Utils.join(",", violations.toArray(new String[violations.size()])));
         }
 
         return attributeMap;

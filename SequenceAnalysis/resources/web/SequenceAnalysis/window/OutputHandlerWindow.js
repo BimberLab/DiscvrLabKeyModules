@@ -49,8 +49,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                         errors = Ext4.Array.unique(errors);
                         Ext4.Msg.alert('Error', errors.join('<br>'));
                     }
-                    else if (distinctGenomes.length > 1)
-                    {
+                    else if (distinctGenomes.length > 1){
                         Ext4.Msg.alert('Error', 'The selected files use more than one genome.  This step requires all files be based on the same genome.');
                     }
                     else {

@@ -6,6 +6,7 @@ import htsjdk.variant.vcf.VCFCodec;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -77,6 +78,13 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
         args.add("-o");
         args.add(outputFile.getPath());
         args.add("-nda");
+
+        Integer maxThreads = SequenceTaskHelper.getMaxThreads(getLogger());
+        if (maxThreads != null)
+        {
+            args.add("-nt");
+            args.add(maxThreads.toString());
+        }
 
         if (options != null)
         {
