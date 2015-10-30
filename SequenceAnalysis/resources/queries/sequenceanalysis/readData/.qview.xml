@@ -4,7 +4,9 @@
        <column name="readset/rowid" />
        <column name="readset" />
        <column name="fileid1"/>
+       <column name="totalForwardReads"/>
        <column name="fileid2" />
+       <column name="totalReverseReads"/>
        <column name="platformunit" />
        <column name="centerName" />
        <column name="date" />

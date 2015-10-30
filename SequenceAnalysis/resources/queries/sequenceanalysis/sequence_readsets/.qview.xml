@@ -22,6 +22,8 @@
        </column>
        <column name="created" />
        <column name="status" />
+       <column name="totalForwardReads"/>
+       <column name="totalReverseReads"/>
        <column name="workbook" />
        <column name="files" />
    </columns>

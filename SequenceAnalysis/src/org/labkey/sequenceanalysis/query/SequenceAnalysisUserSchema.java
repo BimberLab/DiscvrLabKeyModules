@@ -73,6 +73,10 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         {
             return createReadsetsTable(sourceTable);
         }
+        else if (SequenceAnalysisSchema.TABLE_READ_DATA.equalsIgnoreCase(name))
+        {
+            return createReadDataTable(sourceTable);
+        }
         else if (SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES.equalsIgnoreCase(name))
             return new SharedDataTable(this, sourceTable, true).init();
         else if (SequenceAnalysisSchema.TABLE_REF_LIBRARIES.equalsIgnoreCase(name))
@@ -126,6 +130,37 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             ExprColumn newCol = new ExprColumn(ret, "analysisSets", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=analysisSetMembers&query.dataid~eq=${dataid}"));
             newCol.setLabel("Analyses Using This File");
+            ret.addColumn(newCol);
+        }
+
+        return ret;
+    }
+
+    private TableInfo createReadDataTable(TableInfo sourceTable)
+    {
+        SimpleTable ret = new SimpleTable(this, sourceTable).init();
+
+        if (ret.getColumn("totalForwardReads") == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT SUM(q.metricvalue) as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd " +
+                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid1 = q.dataid AND q.metricname = 'Total Sequences') " +
+                    " WHERE rd.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol = new ExprColumn(ret, "totalForwardReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.dataid~eq=${fileid1}&query.metricname~eq=Total Sequences"));
+            newCol.setLabel("Total Forward Reads");
+
+            ret.addColumn(newCol);
+        }
+
+        if (ret.getColumn("totalReverseReads") == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT SUM(q.metricvalue) as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd " +
+                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid2 = q.dataid AND q.metricname = 'Total Sequences') " +
+                    " WHERE rd.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol = new ExprColumn(ret, "totalReverseReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.dataid~eq=${fileid2}&query.metricname~eq=Total Sequences"));
+            newCol.setLabel("Total Reverse Reads");
+
             ret.addColumn(newCol);
         }
 
@@ -203,6 +238,30 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=outputfiles&query.readset~eq=${rowid}"));
             newCol.setUserEditable(false);
             newCol.setCalculated(true);
+            ret.addColumn(newCol);
+        }
+
+        if (ret.getColumn("totalForwardReads") == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT SUM(q.metricvalue) as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd " +
+                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid1 = q.dataid AND rd.readset = q.readset AND q.metricname = 'Total Sequences') " +
+                    " WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol = new ExprColumn(ret, "totalForwardReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.readset~eq=${rowid}&query.metricname~eq=Total Sequences"));
+            newCol.setLabel("Total Forward Reads");
+
+            ret.addColumn(newCol);
+        }
+
+        if (ret.getColumn("totalReverseReads") == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT SUM(q.metricvalue) as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd " +
+                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid2 = q.dataid AND rd.readset = q.readset AND q.metricname = 'Total Sequences') " +
+                    " WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol = new ExprColumn(ret, "totalReverseReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.readset~eq=${rowid}&query.metricname~eq=Total Sequences"));
+            newCol.setLabel("Total Reverse Reads");
+
             ret.addColumn(newCol);
         }
 

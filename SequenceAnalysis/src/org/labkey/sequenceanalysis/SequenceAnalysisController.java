@@ -3741,7 +3741,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
 
             List<JSONObject> partialHandlers = new ArrayList<>();
-            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers())
+            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(getContainer()))
             {
                 boolean available = true;
                 JSONObject json = new JSONObject();

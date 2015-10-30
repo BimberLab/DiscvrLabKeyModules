@@ -94,6 +94,19 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
 //        return new TabixRunner(log).execute(input);
 //    }
 
+    public Set<SequenceOutputHandler> getFileHandlers(Container c)
+    {
+        Set<SequenceOutputHandler> ret = new HashSet<>();
+        for (SequenceOutputHandler h : _fileHandlers)
+        {
+            if (c.getActiveModules().contains(h.getOwningModule()))
+            {
+                ret.add(h);
+            }
+        }
+        return Collections.unmodifiableSet(ret);
+    }
+
     public Set<SequenceOutputHandler> getFileHandlers()
     {
         return Collections.unmodifiableSet(_fileHandlers);
