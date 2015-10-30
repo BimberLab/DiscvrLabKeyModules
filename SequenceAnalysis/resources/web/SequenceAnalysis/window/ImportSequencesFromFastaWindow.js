@@ -134,11 +134,25 @@ Ext4.define('SequenceAnalysis.window.ImportSequencesFromFastaWindow', {
             },
             failure: function(form, action){
                 Ext4.Msg.hide();
-                if (action && action.result){
-                    Ext4.Msg.alert('Error', action.result.exception);
-                    LDK.Utils.logError('Problem uploading FASTA sequences: ' + Ext4.encode(action.result));
-                    console.error(action.result);
+                var msg;
+                var serverMsg = [];
+                if (action && action.response && action.response.responseText){
+                    msg = action.response.responseText;
+                    serverMsg.push(action.response.responseText);
                 }
+
+                if (!msg && action && action.result && action.result.exception){
+                    msg = action.result.exception;
+                    serverMsg.push(Ext4.encode(action.result));
+                }
+
+                if (!msg){
+                    msg = 'There was an error uploading these sequences';
+                }
+
+                Ext4.Msg.alert('Error', msg);
+                LDK.Utils.logError('Problem uploading FASTA sequences: ' + serverMsg.join(';'));
+                console.error(serverMsg);
             }
         });
     }

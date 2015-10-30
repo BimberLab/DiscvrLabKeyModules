@@ -162,6 +162,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.net.URL;
 import java.sql.ResultSet;
@@ -2273,12 +2275,30 @@ public class SequenceAnalysisController extends SpringActionController
                     resp.put("success", true);
                 }
             }
-            catch (Exception e)
+            catch (Throwable e)
             {
-                getViewContext().getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                logger.error(e.getMessage(), e);
-                resp.put("success", false);
-                resp.put("exception", e.getMessage());
+                try (OutputStream out = getViewContext().getResponse().getOutputStream(); OutputStreamWriter writer = new OutputStreamWriter(out))
+                {
+                    logger.error(e.getMessage(), e);
+
+                    getViewContext().getResponse().reset();
+                    getViewContext().getResponse().setContentType("text/plain");
+                    getViewContext().getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    if (e instanceof OutOfMemoryError)
+                    {
+                        writer.write(PageFlowUtil.jsString("Your server ran out of memory when processing this file.  You may want to contact your admin and consider increasing the tomcat heap size."));
+                    }
+                    else
+                    {
+                        writer.write(PageFlowUtil.jsString(e.getMessage()));
+                    }
+
+                    writer.flush();
+                }
+                catch (IOException err)
+                {
+                    //ignore
+                }
             }
 
             return resp.toString();
