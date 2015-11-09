@@ -682,7 +682,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     {{
                         put("checked", true);
                     }}, true),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--report"), "report", "Produce Report", "Prints out a short methylation summary as well as the paramaters used to run this script.", "checkbox", new JSONObject()
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--report"), "report", "Produce Report", "Prints out a short methylation summary as well as the parameters used to run this script.", "checkbox", new JSONObject()
                     {{
                         put("checked", true);
                     }}, true),
