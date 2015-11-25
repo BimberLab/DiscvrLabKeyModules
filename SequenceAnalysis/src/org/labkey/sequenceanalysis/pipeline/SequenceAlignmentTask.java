@@ -704,7 +704,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         getJob().setStatus("CALCULATING ALIGNMENT SUMMARY METRICS");
         File metricsFile = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".summary.metrics");
         AlignmentSummaryMetricsWrapper wrapper = new AlignmentSummaryMetricsWrapper(getJob().getLogger());
-        wrapper.executeCommand(finalBam, metricsFile);
+        wrapper.executeCommand(finalBam, referenceGenome.getWorkingFastaFile(), metricsFile);
         getHelper().getFileManager().addInput(metricsAction, "BAM File", finalBam);
         getHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
         commands.addAll(wrapper.getCommandsExecuted());

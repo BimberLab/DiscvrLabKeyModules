@@ -31,6 +31,7 @@ public class OmeroDisplayColum extends DataColumn
     public OmeroDisplayColum(ColumnInfo col)
     {
         super(col);
+        _textAlign = "left";
     }
 
     public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException

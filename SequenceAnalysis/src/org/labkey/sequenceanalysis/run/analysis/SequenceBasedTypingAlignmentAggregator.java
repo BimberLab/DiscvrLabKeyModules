@@ -716,9 +716,9 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
     }
 
-    public static void processSBTSummary(User u, Container c, AnalysisModel model, File output, File refFasta) throws PipelineJobException
+    public static void processSBTSummary(User u, Container c, AnalysisModel model, File output, File refFasta, Logger log) throws PipelineJobException
     {
-        try (CSVReader reader = new CSVReader(new BufferedReader(new InputStreamReader(new FileInputStream(output), "UTF-8")), '\t'))
+        try (CSVReader reader = new CSVReader(new BufferedReader(new InputStreamReader(new FileInputStream(output), "UTF-8")), '\t', CSVWriter.DEFAULT_QUOTE_CHARACTER))
         {
             try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
             {
@@ -753,10 +753,14 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                     if (!StringUtils.isEmpty(line[0]))
                     {
                         String[] names = line[0].split("\\|\\|");
-                        ReferenceLibraryHelperImpl helper = new ReferenceLibraryHelperImpl(refFasta);
+                        ReferenceLibraryHelperImpl helper = new ReferenceLibraryHelperImpl(refFasta, log);
                         for (String refName : names)
                         {
                             Integer refId = helper.resolveSequenceId(refName);
+                            if (refId == null)
+                            {
+                                log.error("unknown reference id: [" + refName + "]");
+                            }
 
                             Map<String, Object> junction_row = new HashMap<>();
                             junction_row.put("analysis_id", model.getAnalysisId());

@@ -28,6 +28,7 @@ import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -362,7 +363,7 @@ public class SequenceUtil
         }
     }
 
-    public static void recreateOldBamIndex(File bam, boolean forceRecreate, @Nullable Logger log)
+    public static void recreateOldBamIndex(File bam, boolean forceRecreate, @Nullable Logger log) throws PipelineJobException
     {
         File idx = new File(bam.getPath() + ".bai");
 
@@ -377,16 +378,7 @@ public class SequenceUtil
 
         if (!idx.exists())
         {
-            //TODO: SamReaderFactory fact = SamReaderFactory.make();
-            try (SAMFileReader reader = new SAMFileReader(bam))
-            {
-                reader.setValidationStringency(ValidationStringency.SILENT);
-
-                if (log != null)
-                    log.info("creating BAM index");
-
-                BAMIndexer.createIndex(reader, bam);
-            }
+            new BuildBamIndexWrapper(log).executeCommand(bam);
         }
     }
 }

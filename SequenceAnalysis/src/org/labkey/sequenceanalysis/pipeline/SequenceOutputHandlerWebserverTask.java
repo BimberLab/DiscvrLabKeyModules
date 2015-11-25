@@ -34,7 +34,7 @@ public class SequenceOutputHandlerWebserverTask extends PipelineJob.Task<Sequenc
         public Factory()
         {
             super(SequenceOutputHandlerWebserverTask.class);
-            setLocation("webserver-high-priority");
+            setLocation("webserver");
         }
 
         public List<FileType> getInputTypes()

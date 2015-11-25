@@ -28,7 +28,7 @@ SequenceAnalysis.Buttons = new function(){
             changeLocation(LABKEY.ActionURL.buildURL(
                     'query',
                     'executeQuery.view',
-                    LABKEY.ActionURL.getContainer(),
+                    dataRegion.containerPath,
                     params
             ));
 
@@ -116,7 +116,7 @@ SequenceAnalysis.Buttons = new function(){
             LABKEY.Query.selectRows({
                 schemaName: 'sequenceanalysis',
                 queryName: 'sequence_analyses',
-                filters: [
+                filterArray: [
                     LABKEY.Filter.create('rowid', checked.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
                 ],
                 columns: 'runid',
@@ -141,7 +141,7 @@ SequenceAnalysis.Buttons = new function(){
                     changeLocation(LABKEY.ActionURL.buildURL(
                             'query',
                             'executeQuery.view',
-                            LABKEY.ActionURL.getContainer(),
+                            dataRegion.containerPath,
                             params
                         ));
 
@@ -169,8 +169,24 @@ SequenceAnalysis.Buttons = new function(){
             window.location = LABKEY.ActionURL.buildURL(
                 'sequenceanalysis',
                 'snp_viewer.view',
-                LABKEY.ActionURL.getContainer(),
+                dataRegion.containerPath,
                 {analysisIds: checked.join(';')}
+            );
+        },
+
+        viewAlignmentsPivoted: function(dataRegionName){
+            var dataRegion = LABKEY.DataRegions[dataRegionName];
+            var checked = dataRegion.getChecked();
+            if (!checked.length){
+                alert('Must select one or more rows');
+                return;
+            }
+
+            window.location = LABKEY.ActionURL.buildURL(
+                    'sequenceanalysis',
+                    'lineagePivot',
+                    dataRegion.containerPath,
+                    {analysisIds: checked.join(';')}
             );
         },
 
@@ -526,7 +542,7 @@ SequenceAnalysis.Buttons = new function(){
                 window.location = LABKEY.ActionURL.buildURL(
                     'sequenceanalysis',
                     'fastqcReport',
-                    LABKEY.ActionURL.getContainer(),
+                    dataRegion.containerPath,
                     params
                 );
             }, this);
@@ -548,7 +564,7 @@ SequenceAnalysis.Buttons = new function(){
                 window.location = LABKEY.ActionURL.buildURL(
                         'sequenceanalysis',
                         'qualiMapReport',
-                        LABKEY.ActionURL.getContainer(),
+                        dataRegion.containerPath,
                         params
                 );
             }, this);
@@ -567,7 +583,7 @@ SequenceAnalysis.Buttons = new function(){
                 window.location = LABKEY.ActionURL.buildURL(
                         'sequenceanalysis',
                         'fastqcReport',
-                        LABKEY.ActionURL.getContainer(),
+                        dataRegion.containerPath,
                         {analysisIds: checked}
                 );
             }, this);
@@ -687,6 +703,52 @@ SequenceAnalysis.Buttons = new function(){
             params['query.' + fieldName + '~in'] = checked.join(';');
 
             window.location = LABKEY.ActionURL.buildURL('query', 'executeQuery', null, params);
+        },
+
+        viewQualityMetricsForOutputFiles: function(dataRegionName){
+            var dataRegion = LABKEY.DataRegions[dataRegionName];
+            var checked = dataRegion.getChecked();
+
+            if (!checked.length){
+                Ext4.Msg.alert('Error', 'Must select one or more rows');
+                return;
+            }
+
+            checked = checked.sort();
+            Ext4.Msg.wait('Loading...');
+            LABKEY.Query.selectRows({
+                schemaName: 'sequenceanalysis',
+                queryName: 'outputfiles',
+                filterArray: [
+                    LABKEY.Filter.create('rowid', checked.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
+                ],
+                columns: 'dataid',
+                scope: this,
+                success: function (data){
+                    Ext4.Msg.hide();
+
+                    if (!data || !data.rows){
+                        Ext4.Msg.alert('Error', 'No matching rows found');
+                        return;
+                    }
+
+                    var dataIds = [];
+                    Ext4.each(data.rows, function (row){
+                        dataIds.push(row.dataid);
+                    }, this);
+
+                    var params = {
+                        schemaName: 'sequenceanalysis',
+                        'query.queryName': 'quality_metrics'
+                    };
+
+                    params['query.dataid~in'] = dataIds.join(';');
+
+                    window.location = LABKEY.ActionURL.buildURL('query', 'executeQuery.view', dataRegion.containerPath, params);
+                },
+                failure: LDK.Utils.getErrorCallback()
+            });
+
         }
     }
 };

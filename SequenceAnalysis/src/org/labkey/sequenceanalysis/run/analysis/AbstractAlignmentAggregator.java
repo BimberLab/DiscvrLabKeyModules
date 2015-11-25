@@ -69,7 +69,7 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
     {
         if (_libraryHelper == null)
         {
-            _libraryHelper = new ReferenceLibraryHelperImpl(_refFasta);
+            _libraryHelper = new ReferenceLibraryHelperImpl(_refFasta, _log);
         }
 
         return _libraryHelper;

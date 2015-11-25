@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.run.util;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
 
 import java.io.File;

@@ -37,7 +37,8 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
                 ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", null, "CombinedGenotypes"),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-stand_call_conf"), "stand_call_conf", "Threshold For Calling Variants", "The minimum phred-scaled confidence threshold at which variants should be called", "ldk-numberfield", null, 20),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-stand_emit_conf"), "stand_emit_conf", "Threshold For Emitting Variants", "The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold)", "ldk-numberfield", null, 20),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--max_alternate_alleles"), "max_alternate_alleles", "Max Alternate Alleles", "Maximum number of alternate alleles to genotype", "ldk-integerfield", null, 8)
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--max_alternate_alleles"), "max_alternate_alleles", "Max Alternate Alleles", "Maximum number of alternate alleles to genotype", "ldk-integerfield", null, 8),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--includeNonVariantSites"), "includeNonVariantSites", "Include Non-Variant Sites", "If checked, all sites will be output into the VCF, instead of just those where variants are detected.  This can dramatically increase the site of the VCF.", "checkbox", null, false)
         ));
     }
 
@@ -126,6 +127,17 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
                 toolParams.add(params.get("stand_emit_conf").toString());
             }
 
+            if (params.get("max_alternate_alleles") != null)
+            {
+                toolParams.add("--max_alternate_alleles");
+                toolParams.add(params.get("max_alternate_alleles").toString());
+            }
+
+            if (params.get("includeNonVariantSites") != null)
+            {
+                toolParams.add("--includeNonVariantSites");
+            }
+
             wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcfs.toArray(new File[inputVcfs.size()]));
             action.addOutput(outputVcf, "VCF", outputVcf.exists(), true);
 
@@ -136,7 +148,7 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
                 so1.setDescription("GATK GenotypeGVCF output");
                 so1.setFile(outputVcf);
                 so1.setLibrary_id(genomeId);
-                so1.setCategory("VCF");
+                so1.setCategory("VCF File");
                 so1.setContainer(job.getContainerId());
                 so1.setCreated(new Date());
                 so1.setModified(new Date());

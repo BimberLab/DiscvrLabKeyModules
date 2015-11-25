@@ -9,6 +9,7 @@ import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.resource.FileResource;
+import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;

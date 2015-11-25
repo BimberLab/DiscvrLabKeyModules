@@ -45,7 +45,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
-import org.labkey.sequenceanalysis.run.util.CreateSequenceDictionaryWrapper;
+import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.BufferedWriter;

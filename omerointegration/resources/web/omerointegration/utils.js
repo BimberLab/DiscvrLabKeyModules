@@ -9,6 +9,7 @@ OMERO.Utils = new function(){
                 width: '90%',
                 height: '90%',
                 //minWidth: 1750,
+                layout: 'fit',
                 modal: true,
                 items : [{
                     xtype : 'component',

@@ -1,44 +1,63 @@
 package org.labkey.omerointegration;
 
+import omero.api.IContainerPrx;
+import omero.api.ServiceFactoryPrx;
+import omero.api.ThumbnailStorePrx;
+import omero.client;
+import omero.model.Image;
+import omero.sys.ParametersI;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.AuthenticationException;
+import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContextBuilder;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.protocol.HttpContext;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.PropertyManager;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
+import pojos.ImageData;
+import pojos.PixelsData;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by bimber on 10/21/2015.
  */
 public class OmeroServer
 {
-    private final HttpClient _client;
     private static final Logger _log = Logger.getLogger(OmeroServer.class);
     private Container _container;
+    private static final HttpClientConnectionManager _connectionManager = new PoolingHttpClientConnectionManager();
 
     public OmeroServer(Container c)
     {
-        _client = new DefaultHttpClient();
         _container = c;
     }
 
@@ -76,7 +95,7 @@ public class OmeroServer
         }
     }
 
-    private String getThumbnailUrl(String omeroId)
+    private URL getThumbnailUrl(String omeroId)
     {
         String serverUrl = getOmeroUrl();
         if (serverUrl == null)
@@ -87,7 +106,16 @@ public class OmeroServer
         Path url = Path.parse(serverUrl);
         url = url.append("webclient/render_thumbnail/size/96/" + omeroId);
 
-        return url.toString();
+        try
+        {
+            URL ret = new URL(url.toString());
+
+            return ret;
+        }
+        catch (MalformedURLException e)
+        {
+            throw new IllegalArgumentException(e.getMessage());
+        }
     }
 
     public String getViewerUrl(String omeroId)
@@ -126,43 +154,98 @@ public class OmeroServer
         return map == null ? null : map.get(name);
     }
 
-    private HttpContext getContext(HttpRequestBase request)
+    private CloseableHttpResponse getResponse(String urlString)
     {
-        if (getOmeroPassword() != null)
+        try
         {
-            _log.info("using basic auth for central function request");
+            HttpClientContext httpClientContext = HttpClientContext.create();
+            httpClientContext.setCookieStore(new BasicCookieStore());
+            HttpRequestBase request = new HttpGet(urlString);
+            URL url = new URL(urlString);
 
-            CredentialsProvider credsProvider = new BasicCredentialsProvider();
-            credsProvider.setCredentials(
-                    new AuthScope(request.getURI().getHost(), request.getURI().getPort()),
-                    new UsernamePasswordCredentials(getOmeroUser(), getOmeroPassword()));
+            //if a user name was specified, set the credentials
+            if (getOmeroPassword() != null)
+            {
+                AuthScope scope = new AuthScope(url.getHost(), AuthScope.ANY_PORT, AuthScope.ANY_REALM);
+                BasicCredentialsProvider provider = new BasicCredentialsProvider();
+                Credentials credentials = new UsernamePasswordCredentials(getOmeroUser(), getOmeroPassword());
+                provider.setCredentials(scope, credentials);
 
-            HttpClientContext localContext = HttpClientContext.create();
-            localContext.setCredentialsProvider(credsProvider);
+                httpClientContext.setCredentialsProvider(provider);
+                request.addHeader(new BasicScheme().authenticate(credentials, request, httpClientContext));
+            }
+            else
+            {
+                httpClientContext.setCredentialsProvider(null);
+                request.removeHeaders("Authenticate");
+            }
 
-            return localContext;
+            HttpClientBuilder builder = HttpClientBuilder.create()
+                    .setConnectionManager(new PoolingHttpClientConnectionManager())
+                    .setDefaultRequestConfig(RequestConfig.custom().setSocketTimeout(60000).build())
+                    .setDefaultCookieStore(httpClientContext.getCookieStore());
+            try
+            {
+                SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
+                sslContextBuilder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+                SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContextBuilder.build());
+                builder.setSSLSocketFactory(sslConnectionSocketFactory);
+            }
+            catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e)
+            {
+                throw new RuntimeException(e);
+            }
+
+            try (CloseableHttpClient client = builder.build())
+            {
+                return client.execute(request, httpClientContext);
+            }
         }
-
-        return null;
+        catch (AuthenticationException | IOException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
-    private HttpEntity getHttpEntity(HttpRequestBase request) throws IOException, ClientProtocolException
+    public void getThumbnail(String omeroId, HttpServletResponse response) throws Exception
     {
-        HttpContext ctx = getContext(request);
+        Long imageId = Long.parseLong(omeroId);
 
-        //TODO: remove after debugging
-        _log.info("omero request: " + request.getURI().toString());
-
-        HttpResponse response = ctx == null ? _client.execute(request) : _client.execute(request, ctx);
-        return response.getEntity();
-    }
-
-    public HttpEntity getThumbnail(String omeroId) throws IOException, ClientProtocolException
-    {
-        String url = getThumbnailUrl(omeroId);
+        URL url = getThumbnailUrl(omeroId);
         if (url == null)
-            return null;
+            return;
 
-        return getHttpEntity(new HttpGet(url));
+        client client = new client(url.getHost());
+        ServiceFactoryPrx entry = client.createSession(getOmeroUser(), getOmeroPassword());
+
+        client unsecureClient = client.createClient(false);
+        IContainerPrx proxy = entry.getContainerService();
+
+        List<Image> results = proxy.getImages(Image.class.getName(), Arrays.asList(imageId), new ParametersI());
+
+        if (results.size() == 0)
+            return;
+
+        //You can directly interact with the IObject or the Pojos object.
+        //Follow interaction with the Pojos.
+        ImageData image = new ImageData(results.get(0));
+
+        //See above how to load the image.
+        PixelsData pixels = image.getDefaultPixels();
+        ThumbnailStorePrx store = entry.createThumbnailStore();
+        Map<Long, byte[]> map = store.getThumbnailByLongestSideSet(omero.rtypes.rint(96), Arrays.asList(pixels.getId()));
+
+        //Convert the byte array
+        Iterator i = map.entrySet().iterator();
+
+        //Create a buffered image to display
+        if (i.hasNext())
+        {
+            Map.Entry mapEntry = (Map.Entry) i.next();
+            try (ByteArrayInputStream stream = new ByteArrayInputStream((byte[]) mapEntry.getValue()))
+            {
+                IOUtils.copy(stream, response.getOutputStream());
+            }
+        }
     }
 }

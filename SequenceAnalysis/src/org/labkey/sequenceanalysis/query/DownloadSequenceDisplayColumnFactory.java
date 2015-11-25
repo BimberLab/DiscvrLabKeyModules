@@ -8,6 +8,7 @@ import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.Sort;
 import org.labkey.api.data.UrlColumn;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.util.StringExpressionFactory;
@@ -40,7 +41,8 @@ public class DownloadSequenceDisplayColumnFactory implements DisplayColumnFactor
             @Override
             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
             {
-                out.write(PageFlowUtil.textLink("Download Sequence", "javascript:void(0);", "SequenceAnalysis.window.DownloadSequencesWindow.downloadSingle(" + ctx.get("rowId") + ")", null));
+                Object val = ctx.get(FieldKey.fromString(getBoundColumn().getFieldKey().getParent(), "rowId"));
+                out.write(PageFlowUtil.textLink("Download Sequence", "javascript:void(0);", "SequenceAnalysis.window.DownloadSequencesWindow.downloadSingle(" + val + ")", null));
             }
 
             @Override
@@ -65,6 +67,14 @@ public class DownloadSequenceDisplayColumnFactory implements DisplayColumnFactor
             public @NotNull Set<ClientDependency> getClientDependencies()
             {
                 return new LinkedHashSet<ClientDependency>(Arrays.asList(ClientDependency.fromPath("sequenceanalysis/window/DownloadSequencesWindow.js")));
+            }
+
+            @Override
+            public void addQueryFieldKeys(Set<FieldKey> keys)
+            {
+                super.addQueryFieldKeys(keys);
+
+                keys.add(FieldKey.fromString(getBoundColumn().getFieldKey().getParent(), "rowId"));
             }
         };
 

@@ -89,12 +89,6 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
             args.add("--emitRefConfidence");
             args.add("GVCF");
 
-            args.add("--variant_index_type");
-            args.add("LINEAR");
-
-            args.add("--variant_index_parameter");
-            args.add("128000");
-
             getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, args);
         }
 

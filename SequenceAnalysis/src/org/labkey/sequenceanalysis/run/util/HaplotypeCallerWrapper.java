@@ -8,6 +8,7 @@ import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.resource.FileResource;
+import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
 import org.labkey.api.util.Path;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -46,12 +47,7 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
         if (!expectedIndex.exists())
         {
             getLogger().debug("\tcreating temp index for BAM: " + inputBam.getName());
-            //TODO: SamReaderFactory fact = SamReaderFactory.make();
-            try (SAMFileReader reader = new SAMFileReader(inputBam))
-            {
-                reader.setValidationStringency(ValidationStringency.SILENT);
-                BAMIndexer.createIndex(reader, expectedIndex);
-            }
+            new BuildBamIndexWrapper(getLogger()).executeCommand(inputBam);
 
             doDeleteIndex = true;
         }
@@ -112,12 +108,7 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
         if (!expectedIndex.exists())
         {
             getLogger().debug("\tcreating temp index for BAM: " + inputBam.getName());
-            //TODO: SamReaderFactory fact = SamReaderFactory.make();
-            try (SAMFileReader reader = new SAMFileReader(inputBam))
-            {
-                reader.setValidationStringency(ValidationStringency.SILENT);
-                BAMIndexer.createIndex(reader, expectedIndex);
-            }
+            new BuildBamIndexWrapper(getLogger()).executeCommand(inputBam);
 
             doDeleteIndex = true;
         }

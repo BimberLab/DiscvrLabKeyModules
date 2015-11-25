@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.run.util;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -18,7 +19,7 @@ public class AlignmentSummaryMetricsWrapper extends PicardWrapper
         super(logger);
     }
 
-    public File executeCommand(File inputFile, @Nullable File outputFile) throws PipelineJobException
+    public File executeCommand(File inputFile, File reference, @Nullable File outputFile) throws PipelineJobException
     {
         getLogger().info("Running AlignmentSummaryMetrics: " + inputFile.getPath());
 
@@ -32,6 +33,7 @@ public class AlignmentSummaryMetricsWrapper extends PicardWrapper
         inferMaxRecordsInRam(params);
         params.add("METRIC_ACCUMULATION_LEVEL=ALL_READS");
         params.add("INPUT=" + inputFile.getPath());
+        params.add("R=" + reference.getPath());
         params.add("OUTPUT=" + outputFile.getPath());
 
         execute(params);

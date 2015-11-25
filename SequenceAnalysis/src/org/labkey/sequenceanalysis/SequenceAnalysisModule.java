@@ -72,7 +72,9 @@ import org.labkey.sequenceanalysis.run.bampostprocessing.CleanSamStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.FixMateInformationStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.IndelRealignerStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.MarkDuplicatesStep;
+import org.labkey.sequenceanalysis.run.bampostprocessing.RecalibrateBamStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
+import org.labkey.sequenceanalysis.run.bampostprocessing.SplitNCigarReadsStep;
 import org.labkey.sequenceanalysis.run.preprocessing.CutadaptWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.DownsampleFastqWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
@@ -167,7 +169,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new BWAMemWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new BWAWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new BWASWWrapper.Provider());
-        SequencePipelineService.get().registerPipelineStep(new LastzWrapper.Provider());
+        //not compatible with CollectAlignmentSummaryMetrics, so deprecate
+        //SequencePipelineService.get().registerPipelineStep(new LastzWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new MosaikWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new GSnapWrapper.Provider());
@@ -180,8 +183,9 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new FixMateInformationStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new IndelRealignerStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MarkDuplicatesStep.Provider());
-        //SequencePipelineService.get().registerPipelineStep(new RecalibrateBamStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RecalibrateBamStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SortSamStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SplitNCigarReadsStep.Provider());
 
         //analysis
         SequencePipelineService.get().registerPipelineStep(new SequenceBasedTypingAnalysis.Provider());

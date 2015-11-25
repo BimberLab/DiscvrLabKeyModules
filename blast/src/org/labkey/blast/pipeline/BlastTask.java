@@ -47,7 +47,8 @@ public class BlastTask extends PipelineJob.Task<BlastTask.Factory>
         public Factory()
         {
             super(BlastTask.class);
-            setLocation("webserver-high-priority");
+            //this is an ms2 queue; however, should put BLAST jobs into their own dedicated queue
+            setLocation("webserver-fasta-check");
         }
 
         public List<FileType> getInputTypes()

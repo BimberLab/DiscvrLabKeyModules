@@ -1,0 +1,6 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Alignment By Lineage, Pivoted">
+    <dependencies>
+        <dependency path="sequenceanalysis.context" />
+        <dependency path="ux/CheckCombo/CheckCombo.css"/>
+    </dependencies>
+</view>

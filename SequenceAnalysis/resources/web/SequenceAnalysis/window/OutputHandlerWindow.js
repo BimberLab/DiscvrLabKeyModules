@@ -80,6 +80,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
 
     initComponent: function(){
         this.handlerConfig = this.handlerConfig || {};
+        Ext4.QuickTips.init();
 
         Ext4.apply(this, {
             bodyStyle: 'padding: 5px;',

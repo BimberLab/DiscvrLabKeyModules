@@ -6,6 +6,7 @@ import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -22,7 +23,9 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.run.util.AlignmentSummaryMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.BamMetricsRunner;
+import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
+import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -200,15 +203,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 File finalIndexFile = new File(finalDestination.getPath() + ".bai");
                 if (!finalIndexFile.exists())
                 {
-                    getJob().getLogger().info("creating BAM index");
-                    //TODO: SamReaderFactory fact = SamReaderFactory.make();
-                    try (SAMFileReader reader = new SAMFileReader(finalDestination))
-                    {
-                        reader.setValidationStringency(ValidationStringency.SILENT);
-
-                        getJob().getLogger().info("\tcreating BAM index");
-                        BAMIndexer.createIndex(reader, finalIndexFile);
-                    }
+                    new BuildBamIndexWrapper(getJob().getLogger()).executeCommand(finalDestination);
                 }
 
                 getTaskHelper().getFileManager().addOutput(moveAction, SequenceAlignmentTask.FINAL_BAM_INDEX_ROLE, finalIndexFile);
@@ -220,7 +215,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 getJob().getLogger().info("calculating alignment metrics");
                 getJob().setStatus("CALCULATING ALIGNMENT SUMMARY METRICS");
                 File metricsFile = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".summary.metrics");
-                new AlignmentSummaryMetricsWrapper(getJob().getLogger()).executeCommand(finalDestination, metricsFile);
+                new AlignmentSummaryMetricsWrapper(getJob().getLogger()).executeCommand(finalDestination, referenceGenome.getWorkingFastaFile(), metricsFile);
                 getTaskHelper().getFileManager().addInput(metricsAction, "BAM File", finalDestination);
                 getTaskHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
 
@@ -233,6 +228,16 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 {
                     getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
                     getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size  Metrics Histogram", metricsHistogram);
+                }
+
+                if (getTaskHelper().getSettings().doCollectWgsMetrics())
+                {
+                    getJob().getLogger().info("calculating wgs metrics");
+                    getJob().setStatus("CALCULATING WGS METRICS");
+                    File wgsMetricsFile = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".wgs.metrics");
+                    CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
+                    wgsWrapper.executeCommand(finalDestination, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
+                    getTaskHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
                 }
 
                 metricsAction.setEndTime(new Date());

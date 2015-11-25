@@ -1,0 +1,139 @@
+<script type="text/javascript">
+
+Ext4.onReady(function(){
+    var webpart = <%=webpartContext%>;
+
+    var qwpDiv = Ext4.DomHelper.insertAfter(webpart.wrapperDivId, {
+        tag: 'div',
+        id: 'qwp_' + Ext4.id()
+    });
+
+    var analysisIds = LABKEY.ActionURL.getParameter('analysisIds');
+    if (!analysisIds){
+        Ext4.Msg.alert('Error', 'No analysis IDs provided');
+        return;
+    }
+
+    analysisIds = analysisIds.split(';');
+
+    Ext4.QuickTips.init();
+    Ext4.create('Ext.form.Panel', {
+        border: false,
+        width: 550,
+        qwpDiv: qwpDiv,
+        style: 'margin-bottom: 20px;',
+        defaults: {
+            border: false,
+            labelWidth: 180,
+            width: 550
+        },
+        items: [{
+            html: 'This page allows you to build a pivot table of allele results for the selected analyses, by lineage.  You can use the fields below to limit the lineages that are shown.',
+            style: 'padding-bottom: 10px'
+        },{
+            xtype: 'checkcombo',
+            fieldLabel: 'Category',
+            multiSelect: true,
+            itemId: 'category',
+            store:  {
+                type: 'labkey-store',
+                schemaName: 'sequenceanalysis',
+                sql: 'SELECT distinct category as expr FROM sequenceanalysis.ref_nt_sequences WHERE category is not null',
+                autoLoad: true
+            },
+            displayField: 'expr',
+            valueField: 'expr'
+        },{
+            xtype: 'checkcombo',
+            fieldLabel: 'Species',
+            multiSelect: true,
+            itemId: 'species',
+            store:  {
+                type: 'labkey-store',
+                schemaName: 'sequenceanalysis',
+                sql: 'SELECT distinct species as expr FROM sequenceanalysis.ref_nt_sequences WHERE species is not null',
+                autoLoad: true
+            },
+            displayField: 'expr',
+            valueField: 'expr'
+        },{
+            xtype: 'checkcombo',
+            fieldLabel: 'Locus',
+            multiSelect: true,
+            itemId: 'locus',
+            store:  {
+                type: 'labkey-store',
+                schemaName: 'sequenceanalysis',
+                sql: 'SELECT distinct locus as expr FROM sequenceanalysis.ref_nt_sequences WHERE locus is not null',
+                autoLoad: true
+            },
+            displayField: 'expr',
+            valueField: 'expr'
+        },{
+            xtype: 'ldk-numberfield',
+            fieldLabel: 'Min Pct',
+            minValue: 0,
+            maxValue: 100,
+            itemId: 'minPct',
+        },{
+            xtype: 'checkbox',
+            fieldLabel: 'Restrict To Lineages Present In Animals?',
+            checked: false,
+            itemId: 'restrict',
+        }],
+        dockedItems: {
+            xtype: 'toolbar',
+            dock: 'bottom',
+            ui: 'footer',
+            items: [{
+                xtype: 'tbfill'
+            },{
+                xtype: 'button',
+                text: 'Submit',
+                handler: function(btn){
+                    btn.up('panel').onSubmit();
+                }
+            }]
+        },
+        onSubmit: function(){
+            var category = this.down('#category').getValue();
+            var species = this.down('#species').getValue();
+            var locus = this.down('#locus').getValue();
+            var minPct = this.down('#minPct').getValue();
+            var restrict = this.down('#restrict').getValue();
+
+            var title = 'Results';
+            var sql = 'SELECT a.analysis_id, a.lineages, sum(a.percent) as percent ' +
+                'FROM sequenceanalysis.alignment_summary_by_lineage a ' +
+                //'WHERE a.analysis_id IN (' + analysisIds.join(',') + ') ' +
+                'GROUP BY a.analysis_id, a.lineages ' +
+                (minPct ? ' HAVING sum(a.percent) > ' + minPct : '') +
+                'PIVOT percent BY lineages in (SELECT DISTINCT r.lineage FROM sequenceanalysis.ref_nt_sequences r ' +
+                'WHERE r.lineage is not null ' +
+                    (species ? 'AND (r.species IN (\'' + species.join('\',\'') + '\')) ' : '') +
+                    (locus ? 'AND (r.locus IN (\'' + locus.join('\',\'') + '\')) ' : '') +
+                    (category ? 'AND (r.category IN (\'' + category.join('\',\'') + '\')) ' : '') +
+                    (restrict ? 'AND (r.lineage IN (' +
+                            'SELECT DISTINCT s.lineages FROM sequenceanalysis.alignment_summary_by_lineage s ' +
+                            'WHERE s.analysis_id IN (' + analysisIds.join(',') + ')' +
+                            (minPct ? ' GROUP BY s.analysis_id, s.lineages HAVING sum(s.percent) > ' + minPct : '') +
+                            '))' : '') +
+                ' ORDER BY r.lineage) ';
+
+            var config = {
+                frame: 'portal',
+                renderTo: this.qwpDiv.id,
+                schemaName: 'sequenceanalysis',
+                sql: sql,
+                filterArray: [LABKEY.Filter.create('analysis_id', analysisIds.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)],
+                title: title
+            };
+
+            LDK.Utils.getReadOnlyQWP(config).render(this.qwpDiv.id);
+        }
+
+    }).render(webpart.wrapperDivId);
+
+});
+
+</script>

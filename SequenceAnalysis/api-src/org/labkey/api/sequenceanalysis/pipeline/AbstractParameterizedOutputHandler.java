@@ -91,4 +91,10 @@ abstract public class AbstractParameterizedOutputHandler implements Parameterize
     {
         return _parameters;
     }
+
+    @Override
+    public boolean doSplitJobs()
+    {
+        return false;
+    }
 }

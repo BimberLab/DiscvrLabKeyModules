@@ -6,6 +6,7 @@ import htsjdk.variant.vcf.VCFCodec;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import java.io.File;

@@ -9,7 +9,7 @@ import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.run.util.CreateSequenceDictionaryWrapper;
+import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 
 import java.io.File;
 import java.lang.reflect.ParameterizedType;

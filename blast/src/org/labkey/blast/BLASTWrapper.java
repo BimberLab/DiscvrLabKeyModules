@@ -145,13 +145,13 @@ public class BLASTWrapper
         File exe = new File(binDir, "makeblastdb" + getExtension());
         if (!exe.exists())
         {
-            throw new IllegalArgumentException("Unable to find makeblastdb executable");
+            throw new IllegalArgumentException("Unable to find makeblastdb executable.  This location is defined through the admin console.");
         }
 
         File dbDir = BLASTManager.get().getDatabaseDir();
         if (dbDir == null || !dbDir.exists())
         {
-            throw new IllegalArgumentException("BLAST database dir does not exist");
+            throw new IllegalArgumentException("BLAST database dir does not exist.  This filepath is defined through the admin console.");
         }
 
         List<String> args = new ArrayList<>();
@@ -191,7 +191,7 @@ public class BLASTWrapper
         File indexExe = new File(binDir, "makembindex" + getExtension());
         if (!indexExe.exists())
         {
-            throw new IllegalArgumentException("Unable to find makembindex executable");
+            throw new IllegalArgumentException("Unable to find makembindex executable.  This location is defined through the admin console.");
         }
 
         List<String> indexArgs = new ArrayList<>();

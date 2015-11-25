@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.util;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.reference.FastaSequenceIndex;
+import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.api.util.FileUtil;
@@ -22,12 +23,14 @@ import java.util.Map;
 public class ReferenceLibraryHelperImpl implements ReferenceLibraryHelper
 {
     private File _refFasta;
+    private Logger _log = null;
     private Map<String, Integer> _cachedIds = new HashMap<>();
     private Map<String, String> _cachedAccessions = new HashMap<>();
 
-    public ReferenceLibraryHelperImpl(File refFasta)
+    public ReferenceLibraryHelperImpl(File refFasta, Logger log)
     {
         _refFasta = refFasta;
+        _log = log;
     }
 
     @Override
@@ -39,7 +42,7 @@ public class ReferenceLibraryHelperImpl implements ReferenceLibraryHelper
     @Override
     public File getIdKeyFile()
     {
-        return new File(getReferenceFasta().getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(getReferenceFasta())) + ".idKey.txt");
+        return new File(getReferenceFasta().getParentFile(), FileUtil.getBaseName(getReferenceFasta().getName()) + ".idKey.txt");
     }
 
     @Override
@@ -55,7 +58,10 @@ public class ReferenceLibraryHelperImpl implements ReferenceLibraryHelper
             }
             catch (PipelineJobException e)
             {
-                //TODO
+                if (_log != null)
+                {
+                    _log.error(e.getMessage(), e);
+                }
             }
         }
 
@@ -64,7 +70,7 @@ public class ReferenceLibraryHelperImpl implements ReferenceLibraryHelper
 
     public File getSequenceDictionaryFile(boolean createIfDoesntExist)
     {
-        File ret = new File(getReferenceFasta().getParentFile(), getReferenceFasta().getName() + ".dict");
+        File ret = new File(getReferenceFasta().getParentFile(), FileUtil.getBaseName(getReferenceFasta().getName()) + ".dict");
         if (!ret.exists() && createIfDoesntExist)
         {
             CreateSequenceDictionary.main(new String[]{"REFERENCE=" + _refFasta.getPath(), "OUTPUT=" + ret.getPath()});
@@ -140,6 +146,11 @@ public class ReferenceLibraryHelperImpl implements ReferenceLibraryHelper
             {
                 throw new RuntimeException(e);
             }
+        }
+        else
+        {
+            if (_log != null)
+                _log.warn("ID Key file not found associated with library: " + _refFasta.getName() + ", expected: " + idKey.getPath());
         }
 
         //for legacy libraries...

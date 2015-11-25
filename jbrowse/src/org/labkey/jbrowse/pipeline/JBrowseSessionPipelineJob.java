@@ -2,8 +2,10 @@ package org.labkey.jbrowse.pipeline;
 
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
@@ -15,6 +17,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.GUID;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.jbrowse.JBrowseRoot;
@@ -41,6 +44,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
     private boolean _primaryDb;
     private boolean _createOwnIndex;
     private boolean _isTemporarySession;
+    private String _sourceContainerId = null;
 
     public static JBrowseSessionPipelineJob addMembers(Container c, User user, PipeRoot pipeRoot, String databaseGuid, List<Integer> trackIds, List<Integer> outputFileIds)
     {
@@ -75,6 +79,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         super(JBrowseSessionPipelineProvider.NAME, new ViewBackgroundInfo(c, user, null), pipeRoot);
         _jsonFiles = jsonFiles;
         _databaseGuid = databaseGuid;
+        _sourceContainerId = databaseGuid == null ? getContainerId() : getSourceContainerId(databaseGuid);
         _mode = mode;
 
         AssayFileWriter writer = new AssayFileWriter();
@@ -93,6 +98,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         _description = description;
         _mode = existingDatabaseGuid == null ? Mode.CreateNew : Mode.AddToExisting;
         _databaseGuid = existingDatabaseGuid == null ? new GUID().toString().toUpperCase() : existingDatabaseGuid;
+        _sourceContainerId = existingDatabaseGuid == null ? getContainerId() : getSourceContainerId(existingDatabaseGuid);
         _createOwnIndex = shouldCreateOwnIndex;
         _primaryDb = isPrimaryDb;
         _isTemporarySession = isTemporarySession;
@@ -100,6 +106,12 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         AssayFileWriter writer = new AssayFileWriter();
         JBrowseRoot root = new JBrowseRoot(getLogger());
         setLogFile(writer.findUniqueFileName("jbrowse-" + _databaseGuid + ".log", root.getBaseDir(c)));
+    }
+
+    private String getSourceContainerId(String databaseGuid)
+    {
+        TableInfo ti = JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES);
+        return new TableSelector(ti, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null).getObject(String.class);
     }
 
     @Override
@@ -114,7 +126,13 @@ public class JBrowseSessionPipelineJob extends PipelineJob
     {
         if (getDatabaseGuid() != null)
         {
-            return DetailsURL.fromString("jbrowse/browser.view?database=" + getDatabaseGuid(), getContainer()).getActionURL();
+            Container c = null;
+            if (_sourceContainerId != null)
+            {
+                c = ContainerManager.getForId(_sourceContainerId);
+            }
+
+            return DetailsURL.fromString("jbrowse/browser.view?database=" + getDatabaseGuid(), (c == null ? getContainer() : c)).getActionURL();
         }
 
         return null;

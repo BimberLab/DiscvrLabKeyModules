@@ -2780,6 +2780,12 @@ public class SequenceAnalysisController extends SpringActionController
                         if (intervalMap.containsKey(rowId.toString()))
                         {
                             String wholeSequence = model.getSequence();
+                            if (wholeSequence == null)
+                            {
+                                errors.reject("Unable to find sequence for: " + rowId);
+                                return;
+                            }
+
                             for (String t : intervalMap.getString(rowId.toString()).split(","))
                             {
                                 String[] coordinates = t.split("-");
@@ -2790,7 +2796,18 @@ public class SequenceAnalysisController extends SpringActionController
                                 }
 
                                 Integer start = StringUtils.trimToNull(coordinates[0]) == null ? null : ConvertHelper.convert(coordinates[0], Integer.class);
+                                if (wholeSequence.length() < start)
+                                {
+                                    errors.reject("Start is beyond the length of the sequence.  Length: " + wholeSequence.length());
+                                    return;
+                                }
+
                                 Integer stop = StringUtils.trimToNull(coordinates[1]) == null ? null : ConvertHelper.convert(coordinates[1], Integer.class);
+                                if (wholeSequence.length() < stop)
+                                {
+                                    errors.reject("Stop is beyond the length of the sequence.  Length: " + wholeSequence.length());
+                                    return;
+                                }
 
                                 response.getWriter().write(">" + header + "_" + start + "-" + stop + "\n");
 
@@ -3502,10 +3519,27 @@ public class SequenceAnalysisController extends SpringActionController
 
             try
             {
-                JSONObject json = new JSONObject(form.getParams());
+                if (handler.doSplitJobs())
+                {
+                    for (SequenceOutputFile o : files)
+                    {
+                        JSONObject json = new JSONObject(form.getParams());
+                        String jobName = form.getJobName();
+                        if (jobName != null)
+                        {
+                            jobName = jobName + "." + o.getRowid();
+                        }
+                        SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(getContainer(), getUser(), getViewContext().getActionURL(), jobName, pr, handler, Arrays.asList(o), json);
+                        PipelineService.get().queueJob(job);
+                    }
+                }
+                else
+                {
+                    JSONObject json = new JSONObject(form.getParams());
 
-                SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(getContainer(), getUser(), getViewContext().getActionURL(), pr, handler, files, json);
-                PipelineService.get().queueJob(job);
+                    SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(getContainer(), getUser(), getViewContext().getActionURL(), form.getJobName(), pr, handler, files, json);
+                    PipelineService.get().queueJob(job);
+                }
 
                 return new ApiSimpleResponse("success", true);
             }
@@ -3519,7 +3553,18 @@ public class SequenceAnalysisController extends SpringActionController
 
     public static class RunSequenceHandlerForm extends CheckFileStatusForm
     {
+        private String _jobName;
         private String _params;
+
+        public String getJobName()
+        {
+            return _jobName;
+        }
+
+        public void setJobName(String jobName)
+        {
+            _jobName = jobName;
+        }
 
         public String getParams()
         {
@@ -3619,6 +3664,23 @@ public class SequenceAnalysisController extends SpringActionController
 
                     Map<String, Object> params = toCreate.get(file);
                     params.put("dataid", data.getRowId());
+
+                    //check for index, also move
+                    List<String> expected = SequenceAnalyssiMaintenanceTask.getAssociatedFiles(file, false);
+                    for (String fn : expected)
+                    {
+                        File idx = new File(file.getParent(), fn);
+                        if (idx.exists())
+                        {
+                            File idxTarget = writer.findUniqueFileName(idx.getName(), targetDirectory);
+                            FileUtils.moveFile(idx, idxTarget);
+
+                            ExpData idxData = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
+                            data.setName(idx.getName());
+                            data.setDataFileURI(idxTarget.toURI());
+                            data.save(getUser());
+                        }
+                    }
 
                     Table.insert(getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), params);
                 }

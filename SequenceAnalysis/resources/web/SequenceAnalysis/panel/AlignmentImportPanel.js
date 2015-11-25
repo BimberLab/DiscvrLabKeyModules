@@ -121,6 +121,13 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                         ['Leave originals alone', 'none']
                     ]
                 }
+            },{
+                fieldLabel: 'Collect WGS Metrics',
+                helpPopup: 'Check to run Picard tools CollectWGSMetrics, which will generate and save various metrics, including coverage.',
+                name: 'collectWgsMetrics',
+                inputValue: true,
+                checked: true,
+                xtype: 'checkbox'
             }, this.getSaveTemplateCfg()]
         }
     },

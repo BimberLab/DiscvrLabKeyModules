@@ -36,7 +36,6 @@ import java.util.List;
 public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysisJobSupport
 {
     private String _handlerClassName;
-    private String _name;
     private String _protocolName;
     private JSONObject _jsonParams;
     private List<SequenceOutputFile> _files;
@@ -45,13 +44,12 @@ public class SequenceOutputHandlerJob extends PipelineJob implements FileAnalysi
     private Integer _experimentRunRowId;
     private SequenceJobSupportImpl _support;
 
-    public SequenceOutputHandlerJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, SequenceOutputHandler handler, List<SequenceOutputFile> files, JSONObject jsonParams)
+    public SequenceOutputHandlerJob(Container c, User user, ActionURL url, @Nullable String jobName, PipeRoot pipeRoot, SequenceOutputHandler handler, List<SequenceOutputFile> files, JSONObject jsonParams)
     {
         super(SequenceOutputHandlerPipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
         _support = new SequenceJobSupportImpl();
-        _name = handler.getName();
         String timestamp = FileUtil.getTimestamp();
-        _protocolName = handler.getName() + "_" + timestamp;
+        _protocolName = (jobName == null ? handler.getName() : jobName) + "_" + timestamp;
         _handlerClassName = handler.getClass().getName();
         _jsonParams = jsonParams;
         _files = files;

@@ -4,6 +4,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 
 import java.io.File;
 import java.util.Date;

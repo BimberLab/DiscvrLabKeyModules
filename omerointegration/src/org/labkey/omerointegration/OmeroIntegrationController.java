@@ -160,7 +160,7 @@ public class OmeroIntegrationController extends SpringActionController
                 return;
             }
 
-            s.getThumbnail(form.getOmeroId()).writeTo(response.getOutputStream());
+            s.getThumbnail(form.getOmeroId(), response);
         }
     }
 }

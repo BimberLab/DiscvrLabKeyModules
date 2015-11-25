@@ -95,6 +95,11 @@ public interface SequenceOutputHandler
 
     public OutputProcessor getProcessor();
 
+    /**
+     * If true, a separate job will be queued per file.  If not, a single job will run for all files.
+     */
+    public boolean doSplitJobs();
+
     public interface OutputProcessor
     {
         /**

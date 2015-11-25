@@ -50,6 +50,7 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -139,6 +140,12 @@ public class LiftoverHandler implements SequenceOutputHandler
     public OutputProcessor getProcessor()
     {
         return new Processor();
+    }
+
+    @Override
+    public boolean doSplitJobs()
+    {
+        return false;
     }
 
     public class Processor implements OutputProcessor
@@ -344,7 +351,7 @@ public class LiftoverHandler implements SequenceOutputHandler
                         count++;
                         if (count % 20000 == 0)
                         {
-                            job.getLogger().info("processed " + count + " variants.  successful: " + successfulIntervals + ", unsuccessful: " + failedIntervals);
+                            job.getLogger().info("processed " + NumberFormat.getInstance().format(count) + " variants.  successful: " + NumberFormat.getInstance().format(successfulIntervals) + ", unsuccessful: " + NumberFormat.getInstance().format(failedIntervals));
                         }
                     }
                 }
@@ -352,7 +359,10 @@ public class LiftoverHandler implements SequenceOutputHandler
         }
 
         //TODO: sort resulting file
-        job.getLogger().info("liftover complete.  successful variants: " + successfulIntervals + ", unsuccessful: " + failedIntervals);
+        NumberFormat pctFormat = NumberFormat.getPercentInstance();
+        pctFormat.setMaximumFractionDigits(1);
+        double pctPass = (double)successfulIntervals / (double)count;
+        job.getLogger().info("liftover complete.  successful variants: " + NumberFormat.getInstance().format(successfulIntervals) + ", unsuccessful: " + NumberFormat.getInstance().format(failedIntervals) + " (" + pctFormat.format(pctPass) + ")");
     }
 
     private byte[] simpleReverseComplement(byte[] bases)

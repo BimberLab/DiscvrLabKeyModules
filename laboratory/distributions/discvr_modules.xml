@@ -25,6 +25,7 @@
                 <include name="SequenceAnalysis.module" />
                 <include name="jbrowse.module" />
                 <include name="blast.module" />
+                <include name="omerointegration.module" />
             </fileset>
         </copy>
     </target>

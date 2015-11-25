@@ -6,6 +6,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 

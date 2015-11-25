@@ -265,6 +265,11 @@ public class SequencePipelineSettings
         return "true".equals(_params.get("autoCreateReadsets"));
     }
 
+    public boolean doCollectWgsMetrics()
+    {
+        return "true".equals(_params.get("collectWgsMetrics"));
+    }
+
     public String getProtocolDescription()
     {
         return _params.get("protocolDescription");

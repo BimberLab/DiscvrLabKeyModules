@@ -39,7 +39,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         public Factory()
         {
             super(SequenceOutputHandlerFinalTask.class);
-            setLocation("webserver-high-priority");
+            setLocation("webserver");
         }
 
         public List<FileType> getInputTypes()

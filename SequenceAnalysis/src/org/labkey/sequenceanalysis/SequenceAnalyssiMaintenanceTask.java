@@ -289,7 +289,7 @@ public class SequenceAnalyssiMaintenanceTask extends DefaultSystemMaintenanceTas
                     if (d != null)
                     {
                         expectedFileNames.add(d.getFile().getName());
-                        expectedFileNames.addAll(appendExtraFiles(d.getFile()));
+                        expectedFileNames.addAll(getAssociatedFiles(d.getFile(), true));
 
                         if (!d.getFile().exists())
                         {
@@ -331,7 +331,10 @@ public class SequenceAnalyssiMaintenanceTask extends DefaultSystemMaintenanceTas
     private static FileType _vcfFileType = new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ);
     private static FileType _bedFileType = new FileType("bed");
 
-    private List<String> appendExtraFiles(File f)
+    /**
+     * This is intended to return any files associated with an input, which is primarily designed to pick up index files
+     */
+    public static List<String> getAssociatedFiles(File f, boolean includeGz)
     {
         List<String> ret = new ArrayList<>();
 
@@ -346,9 +349,12 @@ public class SequenceAnalyssiMaintenanceTask extends DefaultSystemMaintenanceTas
             ret.add(f.getName() + ".idx");
             ret.add(f.getName() + ".bgz");
 
-            ret.add(f.getName() + ".gz");
-            ret.add(f.getName() + ".gz.tbi");
-            ret.add(f.getName() + ".gz.idx");
+            if (includeGz)
+            {
+                ret.add(f.getName() + ".gz");
+                ret.add(f.getName() + ".gz.tbi");
+                ret.add(f.getName() + ".gz.idx");
+            }
         }
         else if (_bedFileType.isType(f))
         {

@@ -186,7 +186,7 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
             wrapper.createDatabase(getPipelineJob().getDatabaseGuid(), null, fastaCopy);
             success = true;
         }
-        catch (IOException e)
+        catch (IOException | IllegalArgumentException e)
         {
             throw new PipelineJobException(e);
         }

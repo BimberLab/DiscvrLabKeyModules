@@ -105,7 +105,9 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
         File expectedTxt = getSBTSummaryFile(outDir, inputBam);
         if (expectedTxt.exists())
         {
-            SequenceBasedTypingAlignmentAggregator.processSBTSummary(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), model, expectedTxt, referenceFasta);
+            getPipelineCtx().getLogger().info("Processing SBT output: " + expectedTxt.getPath());
+
+            SequenceBasedTypingAlignmentAggregator.processSBTSummary(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), model, expectedTxt, referenceFasta, getPipelineCtx().getLogger());
 
             File compressed = Compress.compressGzip(expectedTxt);
             if (compressed.exists() && expectedTxt.exists())

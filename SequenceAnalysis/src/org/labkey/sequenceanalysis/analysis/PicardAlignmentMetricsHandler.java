@@ -91,6 +91,12 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
         return new Processor();
     }
 
+    @Override
+    public boolean doSplitJobs()
+    {
+        return true;
+    }
+
     public class Processor implements OutputProcessor
     {
         @Override
@@ -98,7 +104,10 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
         {
             for (SequenceOutputFile o : inputFiles)
             {
-                support.cacheGenome(SequenceAnalysisService.get().getReferenceGenome(o.getLibrary_id(), job.getUser()));
+                if (o.getLibrary_id() != null)
+                {
+                    support.cacheGenome(SequenceAnalysisService.get().getReferenceGenome(o.getLibrary_id(), job.getUser()));
+                }
             }
         }
 
@@ -113,10 +122,38 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     continue;
                 }
 
+                if (o.getLibrary_id() == null)
+                {
+                    job.getLogger().warn("no genome associated with file: " + o.getName());
+                    continue;
+                }
+
                 AnalysisModel m = AnalysisModelImpl.getFromDb(o.getAnalysis_id(), job.getUser());
                 if (m != null)
                 {
                     SequenceAnalysisTask.addMetricsForAnalysis(m, job.getLogger(), job.getContainer(), job.getUser(), outputDir);
+                    RecordedAction action = new RecordedAction(getName());
+                    action.addInput(o.getFile(), "Input BAM");
+
+                    File mf = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".summary.metrics");
+                    if (mf.exists())
+                    {
+                        action.addOutput(mf, "Alignment Summary Metrics", false);
+                    }
+
+                    File mf2 = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics");
+                    if (mf2.exists())
+                    {
+                        action.addOutput(mf2, "InsertSize Metrics", false);
+                    }
+
+                    File mf3 = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".wgs.metrics");
+                    if (mf3.exists())
+                    {
+                        action.addOutput(mf3, "WGS Metrics", false);
+                    }
+
+                    actions.add(action);
                 }
                 else
                 {
@@ -135,15 +172,25 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
             boolean collectInsertSize = params.containsKey("collectInsertSize") && params.get("collectInsertSize") != null ? "on".equals(params.getString("collectInsertSize")) : false;
             boolean collectWgs = params.containsKey("collectWgs") && params.get("collectWgs") != null ? "on".equals(params.getString("collectWgs")) : false;
 
+            int i = 1;
             for (SequenceOutputFile o : inputFiles)
             {
+                job.getLogger().info("processing file " + i + " of " + inputFiles.size());
+                i++;
+
+                if (o.getLibrary_id() == null)
+                {
+                    job.getLogger().warn("no genome associated with file: " + o.getName());
+                    continue;
+                }
+
                 if (collectSummary)
                 {
                     job.getLogger().info("calculating summary metrics");
                     job.setStatus("CALCULATING SUMMARY METRICS");
                     File metricsFile = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".summary.metrics");
                     AlignmentSummaryMetricsWrapper wrapper = new AlignmentSummaryMetricsWrapper(job.getLogger());
-                    wrapper.executeCommand(o.getFile(), metricsFile);
+                    wrapper.executeCommand(o.getFile(), support.getCachedGenome(o.getLibrary_id()).getWorkingFastaFile(), metricsFile);
                 }
 
                 if (collectWgs)

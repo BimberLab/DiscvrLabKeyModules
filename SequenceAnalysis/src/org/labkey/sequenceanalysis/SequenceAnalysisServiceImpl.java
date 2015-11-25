@@ -68,7 +68,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     @Override
     public ReferenceLibraryHelper getLibraryHelper(File refFasta)
     {
-        return new ReferenceLibraryHelperImpl(refFasta);
+        return new ReferenceLibraryHelperImpl(refFasta, _log);
     }
 
     @Override

@@ -161,13 +161,14 @@ then
     echo "Cleaning up previous installs"
     rm -Rf bwa-0.6.2*
     rm -Rf bwa-0.7.9a*
+    rm -Rf bwa-0.7.12*
     rm -Rf $LKTOOLS_DIR/bwa
 
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/bio-bwa/bwa-0.7.9a.tar.bz2
-    bunzip2 bwa-0.7.9a.tar.bz2
-    tar -xf bwa-0.7.9a.tar
-    bzip2 bwa-0.7.9a.tar
-    cd bwa-0.7.9a
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/bio-bwa/bwa-0.7.12.tar.bz2
+    bunzip2 bwa-0.7.12.tar.bz2
+    tar -xf bwa-0.7.12.tar
+    bzip2 bwa-0.7.12.tar
+    cd bwa-0.7.12
     make CFLAGS=-msse2
     install bwa $LKTOOLS_DIR/
 else

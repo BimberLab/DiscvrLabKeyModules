@@ -503,7 +503,7 @@
                         <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'alignment_summary_by_lineage'})</ns:onClick>
                     </ns:item>
                     <ns:item text="Alignment Summary, Pivoted By Lineage">
-                        <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'alignment_summary_by_lineage_pivoted'})</ns:onClick>
+                        <ns:onClick>SequenceAnalysis.Buttons.viewAlignmentsPivoted(dataRegionName)</ns:onClick>
                     </ns:item>
                     <ns:item text="Matching Haplotypes">
                         <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'haplotypeMatches'})</ns:onClick>
@@ -1267,6 +1267,7 @@
                     <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
                     <ns:fkTable>haplotypes</ns:fkTable>
                     <ns:fkColumnName>name</ns:fkColumnName>
+                    <ns:fkDisplayColumnName useRawValue="true"/>
                 </ns:fk>
             </ns:column>
             <ns:column columnName="name"/>
@@ -2354,6 +2355,9 @@
             </ns:item>
             <ns:item hidden="true">
                 <ns:originalText>Charts</ns:originalText>
+            </ns:item>
+            <ns:item text="View Quality Metrics" insertPosition="end">
+                <ns:onClick>SequenceAnalysis.Buttons.viewQualityMetricsForOutputFiles(dataRegionName, 'analysis_id');</ns:onClick>
             </ns:item>
             <ns:item text="Visualize/Analyze Data" insertPosition="end">
                 <ns:onClick>SequenceAnalysis.window.VisualizeDataWindow.buttonHandler(dataRegionName);</ns:onClick>

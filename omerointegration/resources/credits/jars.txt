@@ -1,0 +1,4 @@
+{table}
+Filename|Component|Version|Source|License|LabKey Dev|Purpose
+omero_client.jar|OMERO Client|5.1|{link:OMERO Client|https://www.openmicroscopy.org/site/support/omero5.1/developers/Java.html}|{link:GNU GPL, version 2|https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html}|bbimber|Used to interact with OMERO Servers
+{table}

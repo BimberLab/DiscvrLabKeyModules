@@ -490,7 +490,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                     for (CollectWgsMetrics.WgsMetrics m : metrics)
                     {
                         Map<String, Object> row = new HashMap<>();
-                        row.put("Mean Covergae", m.MEAN_COVERAGE);
+                        row.put("Mean Coverage", m.MEAN_COVERAGE);
                         row.put("Median Coverage", m.MEDIAN_COVERAGE);
                         row.put("Pct 10X", m.PCT_10X);
                         row.put("Pct 20X", m.PCT_20X);
