@@ -232,19 +232,13 @@ then
     fi
 
     echo "Downloading GATK from GIT"
-    #git clone git://github.com/broadgsa/gatk.git
     git clone git://github.com/broadgsa/gatk-protected.git
     cd gatk-protected
-    #git checkout tags/3.4
-    git checkout
+    git checkout tags/3.5
+    #git checkout
     cd ../
 
-    #this is a custom extension
-    svn export https://github.com/NationalGenomicsInfrastructure/piper/trunk/src/main/scala/molmed/queue/engine/parallelshell
-    sed -i 's/molmed.queue.engine.parallelshell/org.broadinstitute.gatk.queue.engine.parallelshell/' parallelshell/*
-    mv parallelshell ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/
-
-    #another one: https://github.com/biodev/HTCondor_drivers
+    #this is a custom extension: https://github.com/biodev/HTCondor_drivers
     git clone https://github.com/biodev/HTCondor_drivers.git
     mkdir ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/condor
     cp ./HTCondor_drivers/Queue/CondorJob* ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/condor/
