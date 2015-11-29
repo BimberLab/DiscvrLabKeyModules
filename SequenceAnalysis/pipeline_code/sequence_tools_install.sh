@@ -258,8 +258,8 @@ then
 
     mvn verify
     mvn package
-    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.5-SNAPSHOT.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
-    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.5-SNAPSHOT.jar ${LKTOOLS_DIR}/Queue.jar
+    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.5.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
+    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.5.jar ${LKTOOLS_DIR}/Queue.jar
 fi
 
 
