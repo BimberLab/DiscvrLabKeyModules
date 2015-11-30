@@ -1,5 +1,6 @@
 package org.labkey.mergesync;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveTreeSet;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
@@ -89,6 +90,7 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 setupColumns();
             }
 
+            @NotNull
             @Override
             public SQLFragment getFromSQL()
             {
@@ -236,6 +238,7 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 setupColumns();
             }
 
+            @NotNull
             @Override
             public SQLFragment getFromSQL()
             {
