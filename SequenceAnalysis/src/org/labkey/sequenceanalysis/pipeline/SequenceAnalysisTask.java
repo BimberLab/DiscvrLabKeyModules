@@ -20,6 +20,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.io.Charsets;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.Table;
@@ -120,6 +121,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         }
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();

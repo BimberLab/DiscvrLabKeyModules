@@ -16,6 +16,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.SimpleFilter;
@@ -106,6 +107,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
         }
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         TableInfo libraryTable = QueryService.get().getUserSchema(getJob().getUser(), getJob().getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);

@@ -17,6 +17,7 @@ package org.labkey.onprc_billing.pipeline;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.lang3.time.DateUtils;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
@@ -113,6 +114,7 @@ public class BillingTask extends PipelineJob.Task<BillingTask.Factory>
         }
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         RecordedAction action = new RecordedAction();

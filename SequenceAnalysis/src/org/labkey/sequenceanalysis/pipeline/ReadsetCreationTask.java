@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.Table;
@@ -101,6 +102,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         }
     }
 
+    @NotNull
     @Override
     public RecordedActionSet run() throws PipelineJobException
     {

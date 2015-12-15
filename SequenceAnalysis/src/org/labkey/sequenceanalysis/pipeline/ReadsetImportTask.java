@@ -17,6 +17,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
@@ -120,6 +121,7 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
         return _taskHelper;
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();

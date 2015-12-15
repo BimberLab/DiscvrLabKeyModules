@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
@@ -70,6 +71,7 @@ public class FileCleanupTask extends WorkDirectoryTask<FileCleanupTask.Factory>
         return _taskHelper;
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();

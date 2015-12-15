@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -73,6 +74,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         return (SequenceOutputHandlerJob)getJob();
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());

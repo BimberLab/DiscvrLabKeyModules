@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
@@ -70,6 +71,7 @@ public class AlignmentImportInitTask extends WorkDirectoryTask<AlignmentImportIn
         }
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         //create analysis records

@@ -7,6 +7,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -94,6 +95,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
         }
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         try

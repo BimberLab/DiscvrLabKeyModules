@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
@@ -75,6 +76,7 @@ public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReads
         }
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();

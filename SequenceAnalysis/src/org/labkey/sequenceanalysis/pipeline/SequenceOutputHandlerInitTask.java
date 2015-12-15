@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
@@ -72,6 +73,7 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
         return (SequenceOutputHandlerJob)getJob();
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         List<RecordedAction> actions = new ArrayList<>();

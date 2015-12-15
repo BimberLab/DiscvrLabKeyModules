@@ -265,6 +265,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         return _taskHelper;
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         _taskHelper = new SequenceTaskHelper(getJob(), _wd);

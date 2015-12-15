@@ -8,6 +8,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.http.client.utils.URIBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
@@ -80,6 +81,7 @@ public class NcbiGenomeImportTask extends PipelineJob.Task<NcbiGenomeImportTask.
         }
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         List<RecordedAction> actions = new ArrayList<>();

@@ -21,6 +21,7 @@ import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.exp.PropertyType;
 import org.labkey.api.pipeline.PipelineJob;
@@ -176,6 +177,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         return new File(dirAnalysis, name);
     }
 
+    @NotNull
     @Override
     public RecordedActionSet run() throws PipelineJobException
     {

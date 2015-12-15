@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
@@ -63,6 +64,7 @@ public class AlignmentAnalysisCleanupTask extends WorkDirectoryTask<AlignmentAna
         }
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         SequenceTaskHelper taskHelper = new SequenceTaskHelper(getJob(), _wd);
