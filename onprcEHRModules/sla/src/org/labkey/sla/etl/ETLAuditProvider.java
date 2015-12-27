@@ -16,17 +16,15 @@
 package org.labkey.sla.etl;
 
 import org.labkey.api.audit.AbstractAuditTypeProvider;
-import org.labkey.api.audit.AuditLogEvent;
+import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.audit.AuditTypeEvent;
 import org.labkey.api.audit.AuditTypeProvider;
 import org.labkey.api.audit.query.AbstractAuditDomainKind;
-import org.labkey.api.audit.query.DefaultAuditTypeTable;
-import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.Container;
 import org.labkey.api.exp.PropertyDescriptor;
 import org.labkey.api.exp.PropertyType;
-import org.labkey.api.exp.property.Domain;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.UserSchema;
+import org.labkey.api.security.User;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -83,24 +81,6 @@ public class ETLAuditProvider extends AbstractAuditTypeProvider implements Audit
     }
 
     @Override
-    public <K extends AuditTypeEvent> K convertEvent(AuditLogEvent event)
-    {
-        ETLAuditEvent bean = new ETLAuditEvent();
-        copyStandardFields(bean, event);
-
-        bean.setType(event.getKey1());
-
-        if (event.getIntKey1() != null)
-            bean.setEhrErrors(event.getIntKey1());
-        if (event.getIntKey2() != null)
-            bean.setDatasetErrors(event.getIntKey2());
-        if (event.getIntKey3() != null)
-            bean.setEhrLookupErrors(event.getIntKey3());
-
-        return (K)bean;
-    }
-
-    @Override
     public Map<FieldKey, String> legacyNameMap()
     {
         Map<FieldKey, String> legacyNames = super.legacyNameMap();
@@ -108,7 +88,6 @@ public class ETLAuditProvider extends AbstractAuditTypeProvider implements Audit
         legacyNames.put(FieldKey.fromParts("intKey1"), COLUMN_NAME_SLA_ERRORS);
         return legacyNames;
     }
-
 
     @Override
     public List<FieldKey> getDefaultVisibleColumns()
@@ -120,6 +99,16 @@ public class ETLAuditProvider extends AbstractAuditTypeProvider implements Audit
     public <K extends AuditTypeEvent> Class<K> getEventClass()
     {
         return (Class<K>)ETLAuditEvent.class;
+    }
+
+    public static void addAuditEntry(Container container, User user, String type, String comment, int slaErrors)
+    {
+        ETLAuditProvider.ETLAuditEvent event = new ETLAuditProvider.ETLAuditEvent(container.getId(), comment);
+
+        event.setType(type);
+        event.setEhrErrors(slaErrors);
+
+        AuditLogService.get().addEvent(user, event);
     }
 
     public static class ETLAuditEvent extends AuditTypeEvent

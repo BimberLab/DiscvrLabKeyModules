@@ -32,11 +32,9 @@ import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.settings.AdminConsole;
-import org.labkey.api.view.WebPartFactory;
 import org.labkey.sla.dataentry.CensusFormType;
 import org.labkey.sla.etl.ETL;
 import org.labkey.sla.etl.ETLAuditProvider;
-import org.labkey.sla.etl.ETLAuditViewFactory;
 import org.labkey.sla.security.SLAEntryRole;
 
 import java.util.Collection;
@@ -78,7 +76,6 @@ public class SLAModule extends ExtendedSimpleModule
     protected void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
         ETL.init(1);
-        AuditLogService.get().addAuditViewFactory(ETLAuditViewFactory.getInstance());
         AuditLogService.registerAuditType(new ETLAuditProvider());
 
         DetailsURL details = DetailsURL.fromString("/sla/etlAdmin.view", ContainerManager.getSharedContainer());

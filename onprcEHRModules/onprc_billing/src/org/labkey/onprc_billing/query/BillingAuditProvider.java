@@ -1,17 +1,15 @@
 package org.labkey.onprc_billing.query;
 
 import org.labkey.api.audit.AbstractAuditTypeProvider;
-import org.labkey.api.audit.AuditLogEvent;
+import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.audit.AuditTypeEvent;
 import org.labkey.api.audit.AuditTypeProvider;
 import org.labkey.api.audit.query.AbstractAuditDomainKind;
-import org.labkey.api.audit.query.DefaultAuditTypeTable;
-import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.Container;
 import org.labkey.api.exp.PropertyDescriptor;
 import org.labkey.api.exp.PropertyType;
-import org.labkey.api.exp.property.Domain;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.UserSchema;
+import org.labkey.api.security.User;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -69,20 +67,6 @@ public class BillingAuditProvider extends AbstractAuditTypeProvider implements A
     }
     
     @Override
-    public <K extends AuditTypeEvent> K convertEvent(AuditLogEvent event)
-    {
-        BillingAuditEvent bean = new BillingAuditEvent();
-        copyStandardFields(bean, event);
-
-        if (event.getKey1() != null)
-            bean.setTableName(event.getKey1());
-        if (event.getKey2() != null)
-            bean.setObjectId(event.getKey2());
-
-        return (K)bean;
-    }
-
-    @Override
     public Map<FieldKey, String> legacyNameMap()
     {
         Map<FieldKey, String> legacyNames = super.legacyNameMap();
@@ -102,6 +86,16 @@ public class BillingAuditProvider extends AbstractAuditTypeProvider implements A
     public <K extends AuditTypeEvent> Class<K> getEventClass()
     {
         return (Class<K>)BillingAuditEvent.class;
+    }
+
+    public static void addAuditEntry(Container container, User user, String tableName, String objectId, String comment)
+    {
+        BillingAuditProvider.BillingAuditEvent event = new BillingAuditProvider.BillingAuditEvent(container.getId(), comment);
+
+        event.setTableName(tableName);
+        event.setObjectId(objectId);
+
+        AuditLogService.get().addEvent(user, event);
     }
 
     public static class BillingAuditEvent extends AuditTypeEvent

@@ -46,7 +46,6 @@ import org.labkey.onprc_billing.notification.DCMFinanceNotification;
 import org.labkey.onprc_billing.notification.FinanceNotification;
 import org.labkey.onprc_billing.pipeline.BillingPipelineProvider;
 import org.labkey.onprc_billing.query.BillingAuditProvider;
-import org.labkey.onprc_billing.query.BillingAuditViewFactory;
 import org.labkey.onprc_billing.query.ONPRC_EHRBillingUserSchema;
 import org.labkey.onprc_billing.security.ONPRCAliasEditorPermission;
 import org.labkey.onprc_billing.security.ONPRCAliasEditorRole;
@@ -103,7 +102,6 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     protected void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
         AuditLogService.registerAuditType(new BillingAuditProvider());
-        AuditLogService.get().addAuditViewFactory(BillingAuditViewFactory.getInstance());
 
         PipelineService.get().registerPipelineProvider(new BillingPipelineProvider(this));
 

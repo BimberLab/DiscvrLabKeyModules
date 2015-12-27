@@ -147,7 +147,7 @@ public class ETLRunnable implements Runnable
                 log.info("Begin incremental sync from external datasource.");
 
                 QueryService.get().setEnvironment(QueryService.Environment.USER, user);
-                ETLAuditViewFactory.addAuditEntry(container, user, "START", "Starting SLA synchronization", 0);
+                ETLAuditProvider.addAuditEntry(container, user, "START", "Starting SLA synchronization", 0);
 
                 for (String tableName : slaQueries.keySet())
                 {
@@ -168,7 +168,7 @@ public class ETLRunnable implements Runnable
 
                     log.info("End incremental sync run.");
 
-                    ETLAuditViewFactory.addAuditEntry(container, user, "FINISH", "Finishing SLA synchronization", slaErrors);
+                    ETLAuditProvider.addAuditEntry(container, user, "FINISH", "Finishing SLA synchronization", slaErrors);
                 }
                 catch (BatchValidationException e)
                 {
@@ -184,7 +184,7 @@ public class ETLRunnable implements Runnable
                 // to smooth over any transient issues like the remote datasource
                 // being temporarily unavailable.
                 log.error("Fatal incremental sync error", x);
-                ETLAuditViewFactory.addAuditEntry(container, user, "FATAL ERROR", "Fatal error during SLA synchronization", 0);
+                ETLAuditProvider.addAuditEntry(container, user, "FATAL ERROR", "Fatal error during SLA synchronization", 0);
 
             }
             finally

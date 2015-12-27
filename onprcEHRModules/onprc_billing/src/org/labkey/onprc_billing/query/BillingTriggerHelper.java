@@ -117,7 +117,7 @@ public class BillingTriggerHelper
 
     public void addAuditEntry(String tableName, String objectId, String msg)
     {
-        BillingAuditViewFactory.addAuditEntry(getContainer(), getUser(), tableName, objectId, msg);
+        BillingAuditProvider.addAuditEntry(getContainer(), getUser(), tableName, objectId, msg);
     }
 
     public boolean supportsCustomUnitCost(int chargeId)
