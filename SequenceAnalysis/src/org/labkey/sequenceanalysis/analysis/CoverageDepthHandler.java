@@ -36,6 +36,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.reports.ExternalScriptEngineDefinition;
 import org.labkey.api.reports.LabkeyScriptEngineManager;
 import org.labkey.api.reports.RScriptEngineFactory;
@@ -50,6 +51,7 @@ import org.labkey.api.util.Compress;
 import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -418,7 +420,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
                     String containerPath = job.getContainer().getPath();
                     try (FileInputStream is = new FileInputStream(html))
                     {
-                        htmlContents = IOUtils.toString(is);
+                        htmlContents = PageFlowUtil.getStreamContentsAsString(is);
                         htmlContents = htmlContents.replaceAll(URL_BASE, urlBase);
                         htmlContents = htmlContents.replaceAll(CONTAINER_PATH, containerPath);
                     }
@@ -649,7 +651,7 @@ public class CoverageDepthHandler implements SequenceOutputHandler
         Map<String, CoverageTracker> coverageTrackerMap = new HashMap<>();
 
         int lineNumber = 0;
-        try (CSVReader reader = new CSVReader(new FileReader(originalRawData), '\t'))
+        try (CSVReader reader = new CSVReader(Readers.getReader(originalRawData), '\t'))
         {
             String[] line;
             while ((line = reader.readNext()) != null)

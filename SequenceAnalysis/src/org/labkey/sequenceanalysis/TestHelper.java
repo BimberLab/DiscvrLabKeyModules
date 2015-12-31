@@ -40,6 +40,7 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.MergedDirectoryResource;
 import org.labkey.api.resource.Resource;
@@ -68,7 +69,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -548,7 +548,7 @@ public class TestHelper
                 if (job != null && job.getLogFile() != null)
                 {
                     StringBuilder sb = new StringBuilder();
-                    try (BufferedReader reader = new BufferedReader(new FileReader(job.getLogFile())))
+                    try (BufferedReader reader = Readers.getReader(job.getLogFile()))
                     {
                         sb.append("*******************\n");
                         sb.append("Error running sequence junit tests.  Pipeline log:\n");
