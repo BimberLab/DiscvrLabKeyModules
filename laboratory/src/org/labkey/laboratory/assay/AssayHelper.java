@@ -124,7 +124,7 @@ public class AssayHelper
             row.put("assayId", protocol.getRowId());
             row.put("title", title);
             row.put("importMethod", importMethod);
-            row.put("json", json);
+            row.put("json", json.toString());
             row.put("container", c.getId());
 
             if (templateId == null)
