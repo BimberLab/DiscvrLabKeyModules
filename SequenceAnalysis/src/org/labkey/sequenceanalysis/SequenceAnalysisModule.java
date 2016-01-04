@@ -29,10 +29,8 @@ import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
-import org.labkey.api.query.DetailsURL;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
@@ -55,11 +53,9 @@ import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BismarkWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
 import org.labkey.sequenceanalysis.run.alignment.GSnapWrapper;
-import org.labkey.sequenceanalysis.run.alignment.LastzWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
 import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
-import org.labkey.sequenceanalysis.run.analysis.BlastUnmappedReadAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.PARalyzerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
@@ -256,7 +252,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         LDKService.get().registerQueryButton(new GenomeLoadButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
 
-        SystemMaintenance.addTask(new SequenceAnalyssiMaintenanceTask());
+        SystemMaintenance.addTask(new SequenceAnalysisMaintenanceTask());
     }
 
     @Override

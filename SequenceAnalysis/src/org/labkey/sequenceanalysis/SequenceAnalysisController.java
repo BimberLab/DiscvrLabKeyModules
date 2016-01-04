@@ -3666,7 +3666,7 @@ public class SequenceAnalysisController extends SpringActionController
                     params.put("dataid", data.getRowId());
 
                     //check for index, also move
-                    List<String> expected = SequenceAnalyssiMaintenanceTask.getAssociatedFiles(file, false);
+                    List<String> expected = SequenceAnalysisMaintenanceTask.getAssociatedFiles(file, false);
                     for (String fn : expected)
                     {
                         File idx = new File(file.getParent(), fn);

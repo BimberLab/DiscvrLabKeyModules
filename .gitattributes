@@ -3072,12 +3072,12 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/ReadDataImpl.java -t
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisContainerListener.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisController.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisExperimentRunType.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisMaintenanceTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisManager.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisModule.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisSchema.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisServiceImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisUpgradeCode.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalyssiMaintenanceTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceNavItem.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceOutputsNavItem.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequencePipelineServiceImpl.java -text
