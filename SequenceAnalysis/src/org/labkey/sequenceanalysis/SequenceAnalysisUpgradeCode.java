@@ -57,6 +57,9 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
     @SuppressWarnings({"UnusedDeclaration"})
     public void migrateLibraryTracks(final ModuleContext moduleContext)
     {
+        if (moduleContext.isNewInstall())
+            return;
+
         try
         {
             TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS);
