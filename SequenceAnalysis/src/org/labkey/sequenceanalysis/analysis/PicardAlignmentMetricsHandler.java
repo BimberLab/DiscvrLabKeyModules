@@ -131,6 +131,8 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                 AnalysisModel m = AnalysisModelImpl.getFromDb(o.getAnalysis_id(), job.getUser());
                 if (m != null)
                 {
+                    job.getLogger().warn("processing analysis: " + m.getRowId());
+
                     SequenceAnalysisTask.addMetricsForAnalysis(m, job.getLogger(), job.getContainer(), job.getUser(), outputDir);
                     RecordedAction action = new RecordedAction(getName());
                     action.addInput(o.getFile(), "Input BAM");

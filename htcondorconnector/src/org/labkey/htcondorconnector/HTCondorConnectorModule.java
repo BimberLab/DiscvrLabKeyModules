@@ -22,12 +22,16 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.htcondorconnector.pipeline.HTCondorExecutionEngine;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 public class HTCondorConnectorModule extends ExtendedSimpleModule
@@ -43,7 +47,7 @@ public class HTCondorConnectorModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 15.21;
+        return 15.22;
     }
 
     @Override
@@ -68,8 +72,7 @@ public class HTCondorConnectorModule extends ExtendedSimpleModule
     @Override
     public void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
-        DetailsURL details = DetailsURL.fromString("/htcondorconnector/siteSettings.view", ContainerManager.getSharedContainer());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "htcondor settings", details.getActionURL());
+        HTCondorConnectorManager.get().schedule();
     }
 
     @Override
@@ -84,5 +87,17 @@ public class HTCondorConnectorModule extends ExtendedSimpleModule
     public Set<String> getSchemaNames()
     {
         return Collections.singleton(HTCondorConnectorSchema.NAME);
+    }
+
+    @Override
+    @NotNull
+    public Set<Class> getIntegrationTests()
+    {
+        @SuppressWarnings({"unchecked"})
+        Set<Class> testClasses = new HashSet<>(Arrays.asList(
+                HTCondorExecutionEngine.TestCase.class
+        ));
+
+        return testClasses;
     }
 }

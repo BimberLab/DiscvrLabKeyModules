@@ -319,11 +319,12 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
     public static void addMetricsForAnalysis(AnalysisModel model, Logger log, Container c, User u, @Nullable File baseDir) throws PipelineJobException
     {
-        if (model.getAlignmentFile() != null && model.getReferenceLibraryFile() != null && model.getReferenceLibraryFile().exists())
+        if (model.getAlignmentFile() != null && model.getLibraryId() != null)
         {
             ExpData d = ExperimentService.get().getExpData(model.getAlignmentFile());
             if (!d.getFile().exists())
             {
+                log.error("unable to find file associated with ExpData: " + model.getAlignmentFile());
                 return;
             }
 
@@ -332,7 +333,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 baseDir = model.getAlignmentFileObject().getParentFile();
             }
 
-            File fai = new File(model.getReferenceLibraryFile().getPath() + ".fai");
+            File fai = new File(model.getReferenceLibraryFile(u).getPath() + ".fai");
             if (!fai.exists())
             {
                 log.error("missing FASTA index, cannot calculate BAM metrics");
@@ -549,6 +550,10 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             {
                 log.info("wgs metrics file not found, skipping");
             }
+        }
+        else
+        {
+            log.warn("unable to find alignment or reference library files for analysis: " + model.getRowId());
         }
     }
 

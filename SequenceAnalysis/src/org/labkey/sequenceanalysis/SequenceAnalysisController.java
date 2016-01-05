@@ -999,7 +999,7 @@ public class SequenceAnalysisController extends SpringActionController
             for (AnalysisModel m : models)
             {
                 File inputFile = m.getAlignmentData().getFile();
-                File refFile = m.getReferenceLibraryData().getFile();
+                File refFile = m.getReferenceLibraryData(getUser()).getFile();
                 Container c = ContainerManager.getForId(m.getContainer());
 
                 log.info("Calculating avg quality scores");
@@ -1230,7 +1230,7 @@ public class SequenceAnalysisController extends SpringActionController
                 return new ApiSimpleResponse(resultProperties);
             }
 
-            ExpData ref = model.getReferenceLibraryData();
+            ExpData ref = model.getReferenceLibraryData(getUser());
             if (ref == null || !ref.getFile().exists())
             {
                 resultProperties.put("success", false);
@@ -3672,6 +3672,7 @@ public class SequenceAnalysisController extends SpringActionController
                         File idx = new File(file.getParent(), fn);
                         if (idx.exists())
                         {
+                            //TODO: match against primary file
                             File idxTarget = writer.findUniqueFileName(idx.getName(), targetDirectory);
                             FileUtils.moveFile(idx, idxTarget);
 

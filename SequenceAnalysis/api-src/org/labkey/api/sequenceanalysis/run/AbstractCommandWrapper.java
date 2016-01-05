@@ -44,6 +44,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     private Level _logLevel = Level.DEBUG;
     private boolean _warnNonZeroExits = true;
     private boolean _throwNonZeroExits = true;
+    private Integer _lastReturnCode = null;
     private Map<String, String> _environment = new HashMap<>();
     protected List<String> _commandsExecuted = new ArrayList<>();
 
@@ -118,15 +119,15 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
                 }
             }
 
-            int returnCode = p.waitFor();
-            if (returnCode != 0 && _warnNonZeroExits)
+            _lastReturnCode = p.waitFor();
+            if (_lastReturnCode != 0 && _warnNonZeroExits)
             {
-                getLogger().warn("\tprocess exited with non-zero value: " + returnCode);
+                getLogger().warn("\tprocess exited with non-zero value: " + _lastReturnCode);
             }
 
-            if (returnCode != 0 && _throwNonZeroExits)
+            if (_lastReturnCode != 0 && _throwNonZeroExits)
             {
-                throw new PipelineJobException("process exited with non-zero value: " + returnCode);
+                throw new PipelineJobException("process exited with non-zero value: " + _lastReturnCode);
             }
         }
         catch (IOException | InterruptedException e)
@@ -142,6 +143,11 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         }
 
         return output.toString();
+    }
+
+    public Integer getLastReturnCode()
+    {
+        return _lastReturnCode;
     }
 
     private void setPath(ProcessBuilder pb)

@@ -31,7 +31,7 @@ SELECT
 h.haplotype,
 asg.analysis_id,
 group_concat(distinct asg.lineages, chr(10)) as lineagesPresent,
-sum(cast(h.required as integer)) as totalRequiredLineagesPresent,
+count(distinct (CASE WHEN h.required = true THEN asg.lineages ELSE NULL END)) as totalRequiredLineagesPresent,
 count(distinct asg.lineages) as totalLineagesPresent,
 
 FROM sequenceanalysis.haplotype_sequences h

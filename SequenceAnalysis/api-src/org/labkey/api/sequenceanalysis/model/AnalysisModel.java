@@ -17,6 +17,8 @@ package org.labkey.api.sequenceanalysis.model;
 
 import org.json.JSONObject;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.security.User;
 
 import java.io.File;
 import java.io.Serializable;
@@ -48,9 +50,9 @@ public interface AnalysisModel extends Serializable
 
     public void setReferenceLibrary(Integer libraryId);
 
-    public ExpData getReferenceLibraryData();
+    public ExpData getReferenceLibraryData(User u) throws PipelineJobException;
 
-    public File getReferenceLibraryFile();
+    public File getReferenceLibraryFile(User u) throws PipelineJobException;
 
     public String getType();
 

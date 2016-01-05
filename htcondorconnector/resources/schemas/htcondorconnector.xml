@@ -18,23 +18,31 @@
  -->
 <ns:tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd" xmlns:ns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ns:table tableName="condorJobs" tableDbType="TABLE" useColumnOrder="true">
+        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>Condor Submissions</ns:tableTitle>
         <ns:columns>
             <ns:column columnName="rowId"/>
             <ns:column columnName="condorId"/>
             <ns:column columnName="jobId">
                 <ns:fk>
                     <ns:fkDbSchema>pipeline</ns:fkDbSchema>
-                    <ns:fkTable>jobs</ns:fkTable>
-                    <ns:fkColumnName>JobId</ns:fkColumnName>
+                    <ns:fkTable>Job</ns:fkTable>
+                    <ns:fkColumnName>Job</ns:fkColumnName>
                     <ns:fkDisplayColumnName>RowId</ns:fkDisplayColumnName>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="isActive"/>
-            <ns:column columnName="hadError"/>
+            <ns:column columnName="location"/>
+            <ns:column columnName="activeTaskId"/>
+            <!--TODO: remove-->
+            <ns:column columnName="hasStarted">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="status"/>
             <ns:column columnName="clusterId"/>
             <ns:column columnName="processId"/>
-            <ns:column columnName="nodeId"/>
-            <ns:column columnName="lastStatusCheck"/>
+            <ns:column columnName="lastStatusCheck">
+                <ns:formatString>yyyy-MM-dd HH:mm</ns:formatString>
+            </ns:column>
             <ns:column columnName="container"/>
             <ns:column columnName="created"/>
             <ns:column columnName="createdBy"/>

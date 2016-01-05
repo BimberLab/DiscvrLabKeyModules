@@ -130,7 +130,7 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
         for (AnalysisModel m : ret)
         {
             getTaskHelper().getSequenceSupport().cacheExpData(m.getAlignmentData());
-            getTaskHelper().getSequenceSupport().cacheExpData(m.getReferenceLibraryData());
+            getTaskHelper().getSequenceSupport().cacheExpData(m.getReferenceLibraryData(getJob().getUser()));
             ((SequenceAnalysisJob)getTaskHelper().getSequenceSupport()).cacheAnalysis(m);
 
             SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(m.getReadset(), getJob().getUser());

@@ -175,7 +175,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public ReferenceGenomeImpl getReferenceGenome(int genomeId, User u)
+    public ReferenceGenomeImpl getReferenceGenome(int genomeId, User u) throws PipelineJobException
     {
         TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), genomeId);
@@ -193,6 +193,10 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         }
 
         ExpData d = ExperimentService.get().getExpData((Integer)map.get("fasta_file"));
+        if (d.getFile() == null)
+        {
+            throw new PipelineJobException("No FASTA file found for genome: " + genomeId);
+        }
 
         return new ReferenceGenomeImpl(d.getFile(), d, genomeId);
     }

@@ -2292,9 +2292,9 @@ public class LaboratoryController extends SpringActionController
 
     @RequiresPermission(AdminPermission.class)
     @CSRF
-    public class MigrateWorkbooksAction extends ApiAction<Object>
+    public class MigrateWorkbooksAction extends ApiAction<MigrateWorkbooksForm>
     {
-        public ApiResponse execute(Object form, BindException errors) throws Exception
+        public ApiResponse execute(MigrateWorkbooksForm form, BindException errors) throws Exception
         {
             if (getContainer().isWorkbook())
             {
@@ -2312,7 +2312,11 @@ public class LaboratoryController extends SpringActionController
                 if (c.isWorkbook())
                 {
                     WorkbookModel w = LaboratoryManager.get().getWorkbookModel(c);
-                    if (w != null && !c.getName().equals(w.getWorkbookId().toString()))
+                    if (w != null)
+                    {
+                        _log.warn("workbook model not found for: " + c.getName());
+                    }
+                    else if (!c.getName().equals(w.getWorkbookId().toString()))
                     {
                         toFix.put(w.getWorkbookId(), c);
                     }
@@ -2320,15 +2324,37 @@ public class LaboratoryController extends SpringActionController
             }
 
             _log.info("workbooks to migrate: " + toFix.size());
-            for (Integer id : toFix.descendingKeySet())
+            Set<Integer> list = form.getReverseOrder() == true ? toFix.keySet() : toFix.descendingKeySet();
+            for (Integer id : list)
             {
                 Container wb = toFix.get(id);
-                ContainerManager.rename(wb, getUser(), id.toString());
+                Container target = ContainerManager.getChild(wb.getParent(), id.toString());
+                if (target != null)
+                {
+                    _log.warn("target workbook exists, skipping: " + id);
+                }
+                else
+                {
+                    ContainerManager.rename(wb, getUser(), id.toString());
+                }
             }
 
-
-
             return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    public static class MigrateWorkbooksForm
+    {
+        private Boolean reverseOrder = false;
+
+        public Boolean getReverseOrder()
+        {
+            return reverseOrder;
+        }
+
+        public void setReverseOrder(Boolean reverseOrder)
+        {
+            this.reverseOrder = reverseOrder;
         }
     }
 }

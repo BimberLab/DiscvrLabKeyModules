@@ -8,11 +8,14 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
@@ -183,6 +186,7 @@ public class AnalysisModelImpl implements AnalysisModel
         return null;
     }
 
+    @Override
     public Integer getReferenceLibrary()
     {
         return _reference_library;
@@ -193,14 +197,28 @@ public class AnalysisModelImpl implements AnalysisModel
         return _reference_library;
     }
 
-    public ExpData getReferenceLibraryData()
+    @Override
+    public ExpData getReferenceLibraryData(User u) throws PipelineJobException
     {
-        return getData(_reference_library);
+        //preferentially use library_id
+        Integer dataId = null;
+        if (_library_id != null && PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
+        {
+            ReferenceGenome g = SequenceAnalysisService.get().getReferenceGenome(_library_id, u);
+            dataId = g.getFastaExpDataId();
+        }
+        else if (_reference_library != null)
+        {
+            dataId = _reference_library;
+        }
+
+        return getData(dataId);
     }
 
-    public File getReferenceLibraryFile()
+    @Override
+    public File getReferenceLibraryFile(User u) throws PipelineJobException
     {
-        ExpData d = getReferenceLibraryData();
+        ExpData d = getReferenceLibraryData(u);
         if (d != null)
         {
             return d.getFile();

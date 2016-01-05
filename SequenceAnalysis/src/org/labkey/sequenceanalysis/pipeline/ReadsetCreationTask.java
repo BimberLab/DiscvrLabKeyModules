@@ -258,6 +258,15 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                     newRow = Table.update(getJob().getUser(), readsetTable, row, pks);
                     newReadsets.add(newRow);
                     getJob().getLogger().info("Updated readset: " + newRow.getReadsetId());
+                    if (newRow.getReadsetId() == null)
+                    {
+                        getJob().getLogger().warn("no readsetId found after creating readset: " + r.getName());
+                        if (r.getReadsetId() != null)
+                        {
+                            getJob().getLogger().warn("using rowId from original model");
+                            newRow.setRowId(newRow.getReadsetId());
+                        }
+                    }
                 }
 
                 //create ReadData
@@ -265,6 +274,10 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 for (ReadDataImpl rd : readDatas)
                 {
                     getJob().getLogger().debug("creating read data for readset: " + newRow.getReadsetId());
+                    if (newRow.getReadsetId() == null)
+                    {
+                        throw new PipelineJobException("no readsetId found for: " + newRow.getName());
+                    }
                     rd.setReadset(newRow.getReadsetId());
                     rd.setContainer(getJob().getContainer().getId());
                     rd.setCreatedBy(getJob().getUser().getUserId());

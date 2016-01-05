@@ -74,12 +74,25 @@ Ext4.onReady(function(){
             fieldLabel: 'Min Pct',
             minValue: 0,
             maxValue: 100,
-            itemId: 'minPct',
+            itemId: 'minPct'
         },{
             xtype: 'checkbox',
             fieldLabel: 'Restrict To Lineages Present In Animals?',
             checked: false,
-            itemId: 'restrict',
+            itemId: 'restrict'
+        },{
+            itemId: 'appendHaplotypes',
+            xtype: 'checkcombo',
+            fieldLabel: 'Append Haplotype Definitions?',
+            multiSelect: true,
+            store:  {
+                type: 'labkey-store',
+                schemaName: 'sequenceanalysis',
+                sql: 'SELECT distinct haplotype.type as expr FROM sequenceanalysis.haplotype_sequences WHERE haplotype.type is not null',
+                autoLoad: true
+            },
+            displayField: 'expr',
+            valueField: 'expr'
         }],
         dockedItems: {
             xtype: 'toolbar',
@@ -101,31 +114,38 @@ Ext4.onReady(function(){
             var locus = this.down('#locus').getValue();
             var minPct = this.down('#minPct').getValue();
             var restrict = this.down('#restrict').getValue();
+            var appendHaplotypes = this.down('#appendHaplotypes').getValue();
+
+            var lineageSql = '(SELECT DISTINCT s.lineages FROM sequenceanalysis.alignment_summary_by_lineage s ' +
+                    'WHERE s.analysis_id IN (' + analysisIds.join(',') + ')' +
+                    (minPct ? ' GROUP BY s.analysis_id, s.lineages HAVING sum(s.percent) > ' + minPct : '') + ')';
 
             var title = 'Results';
-            var sql = 'SELECT a.analysis_id, a.lineages, sum(a.percent) as percent ' +
+            var sql = 'SELECT t.analysis_id, t.readset, t.lineages, CASE WHEN analysis_id IS NULL THEN \'X\' WHEN sum(t.percent) = 0 THEN null ELSE CAST(sum(t.percent) AS VARCHAR) END as percent FROM (SELECT a.analysis_id, a.analysis_id.readset.name as readset, a.lineages, a.percent ' +
                 'FROM sequenceanalysis.alignment_summary_by_lineage a ' +
                 //'WHERE a.analysis_id IN (' + analysisIds.join(',') + ') ' +
-                'GROUP BY a.analysis_id, a.lineages ' +
-                (minPct ? ' HAVING sum(a.percent) > ' + minPct : '') +
+                (appendHaplotypes ? ' UNION ALL ' +
+                        ' SELECT null as analysis_id, hs.haplotype as readset, hs.name as lineages, 1.0 as percent ' +
+                        ' FROM sequenceanalysis.haplotype_sequences hs WHERE hs.haplotype IN (SELECT distinct hs2.haplotype FROM sequenceanalysis.haplotype_sequences hs2 WHERE hs2.type = \'Lineage\' AND hs2.name IN (' + lineageSql + ') AND (hs2.haplotype.type IN (\'' + appendHaplotypes.join('\',\'') + '\')) ' + ')'
+                : '') +
+                ') t ' +
+                'GROUP BY t.analysis_id, t.readset, t.lineages ' +
+                (minPct ? ' HAVING sum(t.percent) > ' + minPct : '') +
                 'PIVOT percent BY lineages in (SELECT DISTINCT r.lineage FROM sequenceanalysis.ref_nt_sequences r ' +
                 'WHERE r.lineage is not null ' +
                     (species ? 'AND (r.species IN (\'' + species.join('\',\'') + '\')) ' : '') +
                     (locus ? 'AND (r.locus IN (\'' + locus.join('\',\'') + '\')) ' : '') +
                     (category ? 'AND (r.category IN (\'' + category.join('\',\'') + '\')) ' : '') +
-                    (restrict ? 'AND (r.lineage IN (' +
-                            'SELECT DISTINCT s.lineages FROM sequenceanalysis.alignment_summary_by_lineage s ' +
-                            'WHERE s.analysis_id IN (' + analysisIds.join(',') + ')' +
-                            (minPct ? ' GROUP BY s.analysis_id, s.lineages HAVING sum(s.percent) > ' + minPct : '') +
-                            '))' : '') +
+                    (restrict ? 'AND (r.lineage IN ' + lineageSql + ')' : '') +
                 ' ORDER BY r.lineage) ';
 
+            //console.log(sql);
             var config = {
                 frame: 'portal',
                 renderTo: this.qwpDiv.id,
                 schemaName: 'sequenceanalysis',
                 sql: sql,
-                filterArray: [LABKEY.Filter.create('analysis_id', analysisIds.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)],
+                filterArray: [LABKEY.Filter.create('analysis_id', [''].concat(analysisIds).join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)],
                 title: title
             };
 

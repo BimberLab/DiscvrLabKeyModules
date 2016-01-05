@@ -235,7 +235,6 @@ then
     git clone git://github.com/broadgsa/gatk-protected.git
     cd gatk-protected
     git checkout tags/3.5
-    #git checkout
     cd ../
 
     #this is a custom extension: https://github.com/biodev/HTCondor_drivers

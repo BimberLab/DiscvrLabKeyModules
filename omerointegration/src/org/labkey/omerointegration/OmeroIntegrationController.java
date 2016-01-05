@@ -16,6 +16,7 @@
 
 package org.labkey.omerointegration;
 
+import org.apache.log4j.Logger;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
@@ -41,6 +42,7 @@ import java.util.Map;
 
 public class OmeroIntegrationController extends SpringActionController
 {
+    private final static Logger _log = Logger.getLogger(OmeroIntegrationController.class);
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(OmeroIntegrationController.class);
     public static final String NAME = "omerointegration";
 
@@ -160,7 +162,15 @@ public class OmeroIntegrationController extends SpringActionController
                 return;
             }
 
-            s.getThumbnail(form.getOmeroId(), response);
+            try
+            {
+                s.getThumbnail(form.getOmeroId(), response);
+            }
+            catch (Exception e)
+            {
+                _log.error(e.getMessage(), e);
+                errors.reject(ERROR_MSG, e.getMessage());
+            }
         }
     }
 }

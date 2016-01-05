@@ -34,6 +34,7 @@ Laboratory.buttonHandlers = new function(){
             }
 
             LABKEY.Query.selectRows({
+                containerPath: dataRegion.containerPath,
                 schemaName: 'laboratory',
                 queryName: 'samples',
                 columns: 'rowid,container',
@@ -100,6 +101,7 @@ Laboratory.buttonHandlers = new function(){
                                 Ext4.Msg.wait('Saving...');
 
                                 LABKEY.Query.updateRows({
+                                    containerPath: dataRegion.containerPath,
                                     schemaName: dataRegion.schemaName,
                                     queryName: dataRegion.queryName,
                                     rows: rows,
@@ -134,6 +136,7 @@ Laboratory.buttonHandlers = new function(){
             }
 
             LABKEY.Query.selectRows({
+                containerPath: dataRegion.containerPath,
                 schemaName: 'laboratory',
                 queryName: 'samples',
                 columns: 'rowid,container,comment',
@@ -197,6 +200,7 @@ Laboratory.buttonHandlers = new function(){
                                 Ext4.Msg.wait('Saving...');
 
                                 LABKEY.Query.updateRows({
+                                    containerPath: dataRegion.containerPath,
                                     schemaName: dataRegion.schemaName,
                                     queryName: dataRegion.queryName,
                                     rows: rows,
@@ -242,6 +246,7 @@ Laboratory.buttonHandlers = new function(){
 
             Ext4.QuickTips.init();
             Ext4.create('LABKEY.ext4.data.Store', {
+                containerPath: dataRegion.containerPath,
                 schemaName: dataRegion.schemaName,
                 queryName: dataRegion.queryName,
                 autoLoad: true,
@@ -401,11 +406,13 @@ Laboratory.buttonHandlers = new function(){
                 }],
                 buttons: [{
                     text: 'Submit',
+                    scope: this,
                     handler: function(btn){
                         Ext4.Msg.wait('Saving...');
 
                         //b/c these records might be of different containers, we select to get containerId, then update
                         LABKEY.Query.selectRows({
+                            containerPath: LABKEY.DataRegions[dataRegionName].containerPath,
                             schemaName: 'laboratory',
                             queryName: 'samples',
                             columns: 'rowid,container',
@@ -428,6 +435,7 @@ Laboratory.buttonHandlers = new function(){
 
                                     if (rows.length){
                                         LABKEY.Query.updateRows({
+                                            containerPath: LABKEY.DataRegions[dataRegionName].containerPath,
                                             schemaName: 'laboratory',
                                             queryName: 'samples',
                                             rows: rows,

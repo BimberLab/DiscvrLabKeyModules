@@ -19,6 +19,7 @@ package org.labkey.api.sequenceanalysis;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.laboratory.NavItem;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -64,7 +65,7 @@ abstract public class SequenceAnalysisService
 
     abstract public Readset getReadset(int readsetId, User u);
 
-    abstract public ReferenceGenome getReferenceGenome(int rowId, User u);
+    abstract public ReferenceGenome getReferenceGenome(int rowId, User u) throws PipelineJobException;
 
     abstract public File ensureVcfIndex(File vcf, Logger log) throws IOException;
 }

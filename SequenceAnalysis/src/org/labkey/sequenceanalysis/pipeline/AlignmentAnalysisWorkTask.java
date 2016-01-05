@@ -104,7 +104,7 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
                 throw new PipelineJobException("Unable to find analysis details for file: " + inputBam.getName());
             }
 
-            File refFasta = m.getReferenceLibraryFile();
+            File refFasta = m.getReferenceLibraryFile(getJob().getUser());
             if (refFasta == null)
             {
                 TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);

@@ -15,6 +15,7 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.util.MemTracker;
+import org.labkey.api.util.PageFlowUtil;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -116,7 +117,7 @@ public class FreezerTriggerHelper
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("freezer"), freezer, CompareType.EQUAL);
         filter.addCondition(FieldKey.fromString("dateremoved"), null, CompareType.ISBLANK);
 
-        TableSelector ts = new TableSelector(_table, filter, null);
+        TableSelector ts = new TableSelector(_table, PageFlowUtil.set("location", "freezer", "cane", "box", "box_row", "box_column", "rowid"), filter, null);
 
         final Map<String, Integer> keys = new HashMap<String, Integer>();
         ts.forEach(new Selector.ForEachBlock<ResultSet>()

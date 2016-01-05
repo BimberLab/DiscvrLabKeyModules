@@ -72,12 +72,14 @@ DISCVR/galaxyintegration/src/org/labkey/galaxyintegration/pipeline/GalaxyProvena
 DISCVR/htcondorconnector/HTCondorConnector.iml -text
 DISCVR/htcondorconnector/module.properties -text
 DISCVR/htcondorconnector/resources/schemas/dbscripts/postgresql/htcondorconnector-15.20-15.21.sql -text
+DISCVR/htcondorconnector/resources/schemas/dbscripts/postgresql/htcondorconnector-15.21-15.22.sql -text
 DISCVR/htcondorconnector/resources/schemas/dbscripts/sqlserver/htcondorconnector-15.20-15.21.sql -text
+DISCVR/htcondorconnector/resources/schemas/dbscripts/sqlserver/htcondorconnector-15.21-15.22.sql -text
 DISCVR/htcondorconnector/resources/schemas/htcondorconnector.xml -text
 DISCVR/htcondorconnector/resources/views/begin.html -text
 DISCVR/htcondorconnector/resources/views/begin.view.xml -text
-DISCVR/htcondorconnector/resources/views/siteSettings.html -text
-DISCVR/htcondorconnector/resources/views/siteSettings.view.xml -text
+DISCVR/htcondorconnector/resources/web/htcondorconnector/pipelineConfig.xml -text
+DISCVR/htcondorconnector/resources/web/htcondorconnector/pipelineConfig_cluster.xml -text
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/HTCondorConnectorController.java -text
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/HTCondorConnectorManager.java -text
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/HTCondorConnectorModule.java -text
@@ -3560,6 +3562,7 @@ labModules/laboratory/src/org/labkey/laboratory/table/WrappingTableCustomizer.ja
 labModules/laboratory/src/org/labkey/laboratory/view/workbookHeader.jsp -text
 onprcEHRModules/GeneticsCore/GeneticsCore.iml -text
 onprcEHRModules/GeneticsCore/build.xml -text
+onprcEHRModules/GeneticsCore/distributions/prime-seq-modules.xml -text
 onprcEHRModules/GeneticsCore/module.properties -text
 onprcEHRModules/GeneticsCore/resources/external/amplicon_standard_curve.R -text
 onprcEHRModules/GeneticsCore/resources/module.xml -text
@@ -3594,6 +3597,7 @@ onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/PublishSBTHaplot
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/PublishSBTResultsButton.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/SBTReviewButton.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/notification/GeneticsCoreNotification.java -text
+onprcEHRModules/GeneticsCore/tools/installLabkey.sh -text
 onprcEHRModules/GeneticsCore/tools/pipelineConfig/fergie2/pipelineConfig.xml -text
 onprcEHRModules/GeneticsCore/tools/pipelineConfig/fergie2/remoteMuleConfig.xml -text
 onprcEHRModules/GeneticsCore/tools/pipelineConfig/hoolock/pipelineConfig.xml -text

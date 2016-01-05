@@ -8,19 +8,19 @@ import java.util.Date;
 public class HTCondorJob
 {
     private int _rowId;
-    private String _condorId;
     private String _jobId;
-    private Boolean _isActive;
-    private Boolean _hadError;
+    private String _status;
+    private Boolean _hasStarted;
     private String _clusterId;
     private String _processId;
-    private String _nodeId;
     private Date _lastStatusCheck;
     private String _container;
     private Date _created;
     private Integer _createdBy;
     private Date _modified;
     private Integer _modifiedBy;
+    private String _location;
+    private String _activeTaskId;
 
     public int getRowId()
     {
@@ -34,12 +34,7 @@ public class HTCondorJob
 
     public String getCondorId()
     {
-        return _condorId;
-    }
-
-    public void setCondorId(String condorId)
-    {
-        _condorId = condorId;
+        return _clusterId == null ? null : (_clusterId + "." + (_processId == null ? "0" : _processId));
     }
 
     public String getJobId()
@@ -52,24 +47,24 @@ public class HTCondorJob
         _jobId = jobId;
     }
 
-    public Boolean getIsActive()
+    public String getStatus()
     {
-        return _isActive;
+        return _status;
     }
 
-    public void setIsActive(Boolean isActive)
+    public void setStatus(String status)
     {
-        _isActive = isActive;
+        _status = status;
     }
 
-    public Boolean getHadError()
+    public Boolean getHasStarted()
     {
-        return _hadError;
+        return _hasStarted;
     }
 
-    public void setHadError(Boolean hadError)
+    public void setHasStarted(Boolean hasStarted)
     {
-        _hadError = hadError;
+        _hasStarted = hasStarted;
     }
 
     public String getClusterId()
@@ -90,16 +85,6 @@ public class HTCondorJob
     public void setProcessId(String processId)
     {
         _processId = processId;
-    }
-
-    public String getNodeId()
-    {
-        return _nodeId;
-    }
-
-    public void setNodeId(String nodeId)
-    {
-        _nodeId = nodeId;
     }
 
     public Date getLastStatusCheck()
@@ -160,5 +145,25 @@ public class HTCondorJob
     public void setModifiedBy(Integer modifiedBy)
     {
         _modifiedBy = modifiedBy;
+    }
+
+    public String getLocation()
+    {
+        return _location;
+    }
+
+    public void setLocation(String location)
+    {
+        _location = location;
+    }
+
+    public String getActiveTaskId()
+    {
+        return _activeTaskId;
+    }
+
+    public void setActiveTaskId(String activeTaskId)
+    {
+        _activeTaskId = activeTaskId;
     }
 }

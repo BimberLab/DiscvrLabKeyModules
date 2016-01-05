@@ -29,6 +29,7 @@
                 <include name="jbrowse.module" />
                 <include name="blast.module" />
                 <include name="htcondorconnector.module" />
+                <include name="variantdb.module" />
                 <include name="omerointegration.module" />
             </fileset>
         </copy>
