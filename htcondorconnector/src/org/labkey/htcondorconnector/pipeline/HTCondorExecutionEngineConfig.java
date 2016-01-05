@@ -74,14 +74,6 @@ public class HTCondorExecutionEngineConfig implements PipelineJobService.RemoteE
         return HTCondorExecutionEngine.TYPE;
     }
 
-    @NotNull
-    @Override
-    public Set<String> getAvailableQueues()
-    {
-        return Collections.emptySet();
-    }
-
-    @NotNull
     @Override
     public PathMapper getPathMapper()
     {
