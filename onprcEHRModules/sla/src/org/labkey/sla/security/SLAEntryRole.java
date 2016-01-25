@@ -25,6 +25,7 @@ import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
+import org.labkey.api.security.roles.AbstractModuleScopedRole;
 import org.labkey.api.security.roles.AbstractRole;
 import org.labkey.sla.SLAModule;
 
@@ -33,7 +34,7 @@ import org.labkey.sla.SLAModule;
  * Date: 1/17/13
  * Time: 7:42 PM
  */
-public class SLAEntryRole extends AbstractRole
+public class SLAEntryRole extends AbstractModuleScopedRole
 {
     public SLAEntryRole()
     {
@@ -44,11 +45,5 @@ public class SLAEntryRole extends AbstractRole
             DeletePermission.class,
             SLAEntryPermission.class
         );
-    }
-
-    @Override
-    public boolean isApplicable(SecurityPolicy policy, SecurableResource resource)
-    {
-        return resource instanceof Container ? ((Container)resource).getActiveModules().contains(ModuleLoader.getInstance().getModule(SLAModule.class)) : false;
     }
 }

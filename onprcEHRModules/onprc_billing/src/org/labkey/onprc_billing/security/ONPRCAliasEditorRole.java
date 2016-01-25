@@ -24,6 +24,7 @@ import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
+import org.labkey.api.security.roles.AbstractModuleScopedRole;
 import org.labkey.api.security.roles.AbstractRole;
 import org.labkey.onprc_billing.ONPRC_BillingModule;
 
@@ -32,7 +33,7 @@ import org.labkey.onprc_billing.ONPRC_BillingModule;
  * Date: 1/7/13
  * Time: 4:53 PM
  */
-public class ONPRCAliasEditorRole extends AbstractRole
+public class ONPRCAliasEditorRole extends AbstractModuleScopedRole
 {
     public ONPRCAliasEditorRole()
     {
@@ -44,11 +45,5 @@ public class ONPRCAliasEditorRole extends AbstractRole
             ONPRCAliasEditorPermission.class,
             EHRProjectEditPermission.class
         );
-    }
-
-    @Override
-    public boolean isApplicable(SecurityPolicy policy, SecurableResource resource)
-    {
-        return resource instanceof Container ? ((Container)resource).getActiveModules().contains(ModuleLoader.getInstance().getModule(ONPRC_BillingModule.class)) : false;
     }
 }

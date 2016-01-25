@@ -20,6 +20,7 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.security.SecurableResource;
 import org.labkey.api.security.SecurityPolicy;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.security.roles.AbstractModuleScopedRole;
 import org.labkey.api.security.roles.AbstractRole;
 import org.labkey.onprc_billing.ONPRC_BillingModule;
 
@@ -28,7 +29,7 @@ import org.labkey.onprc_billing.ONPRC_BillingModule;
  * Date: 1/7/13
  * Time: 4:53 PM
  */
-public class ONPRCChargesEntryRole extends AbstractRole
+public class ONPRCChargesEntryRole extends AbstractModuleScopedRole
 {
     public ONPRCChargesEntryRole()
     {
@@ -36,11 +37,5 @@ public class ONPRCChargesEntryRole extends AbstractRole
             ReadPermission.class,
             ONPRCChargeEntryPermission.class
         );
-    }
-
-    @Override
-    public boolean isApplicable(SecurityPolicy policy, SecurableResource resource)
-    {
-        return resource instanceof Container ? ((Container)resource).getActiveModules().contains(ModuleLoader.getInstance().getModule(ONPRC_BillingModule.class)) : false;
     }
 }
