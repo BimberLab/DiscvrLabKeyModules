@@ -1,0 +1,38 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <columns>
+       <column name="analysis_id" />
+       <!--<column name="rowids"/>-->
+       <column name="analysis_id/readset">
+           <properties>
+               <property name="columnTitle" value="Readset Name"/>
+           </properties>
+       </column>
+       <column name="loci"/>
+       <column name="lineages">
+           <properties>
+               <property name="columnTitle" value="Lineages"/>
+           </properties>
+       </column>
+       <column name="totalLineages" />
+       <column name="total" />
+       <column name="total_reads" />
+       <column name="percent"/>
+       <column name="total_reads_from_locus" />
+       <column name="percent_from_locus"/>
+       <column name="haplotypesWithAllele"/>
+       <column name="numCachedResults"/>
+       <column name="cachedHaplotypes"/>
+       <column name="analysis_id/workbook">
+           <properties>
+               <property name="columnTitle" value="Workbook"/>
+           </properties>
+       </column>
+   </columns>
+   <sorts>
+       <sort column="analysis_id/readset"/>
+       <sort column="analysis_id"/>
+       <sort column="loci"/>
+       <sort column="-percent_from_locus"/>
+       <sort column="lineages"/>
+   </sorts>
+</customView>

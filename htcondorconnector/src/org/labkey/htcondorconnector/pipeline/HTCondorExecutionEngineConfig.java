@@ -34,6 +34,8 @@ public class HTCondorExecutionEngineConfig implements PipelineJobService.RemoteE
     protected String _location = "cluster";
     protected String _javaHome = null;
     protected List<String> _javaOpts = null;
+    protected List<String> _extraSubmitScriptLines = null;
+    protected List<String> _environmentVars = null;
 
     public StringExpression getSubmitCommandExpr()
     {
@@ -107,7 +109,13 @@ public class HTCondorExecutionEngineConfig implements PipelineJobService.RemoteE
 
     public List<String> getExtraSubmitLines()
     {
-        return Collections.emptyList();
+        List<String> ret = new ArrayList<>();
+        if (_extraSubmitScriptLines != null)
+        {
+            ret.addAll(_extraSubmitScriptLines);
+        }
+
+        return ret;
     }
 
     public List<String> getJobArgs(File localPipelineDir, File localSerializedJobXmlFile)
@@ -227,5 +235,20 @@ public class HTCondorExecutionEngineConfig implements PipelineJobService.RemoteE
     public void setJavaOpts(List<String> javaOpts)
     {
         _javaOpts = javaOpts;
+    }
+
+    public void setExtraSubmitScriptLines(List<String> extraSubmitScriptLines)
+    {
+        _extraSubmitScriptLines = extraSubmitScriptLines;
+    }
+
+    public List<String> getEnvironmentVars()
+    {
+        return _environmentVars;
+    }
+
+    public void setEnvironmentVars(List<String> environmentVars)
+    {
+        _environmentVars = environmentVars;
     }
 }

@@ -15,20 +15,11 @@
  */
 package org.labkey.api.laboratory;
 
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.query.QueryDefinition;
-import org.labkey.api.query.QueryException;
-import org.labkey.api.query.QueryService;
-import org.labkey.api.query.UserSchema;
+import org.labkey.api.ldk.table.QueryCache;
 import org.labkey.api.security.User;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * User: bimber
@@ -37,52 +28,27 @@ import java.util.Map;
  */
 public class QueryTabbedReportItem extends TabbedReportItem
 {
-    private Map<String, UserSchema> _cachedUserSchemas = new HashMap<>();
-    private Map<String, TableInfo> _cachedQueries = new HashMap<>();
-
     private String _schemaName;
     private String _queryName;
 
-    public QueryTabbedReportItem(DataProvider provider, String schemaName, String queryName, String label, String reportCategory)
+    public QueryTabbedReportItem(QueryCache cache, DataProvider provider, String schemaName, String queryName, String label, String reportCategory)
     {
         super(provider, queryName, label, reportCategory);
+        _queryCache = cache;
         _schemaName = schemaName;
         _queryName = queryName;
     }
 
-    public QueryTabbedReportItem(DataProvider provider, String label, String reportCategory, TableInfo ti)
+    public QueryTabbedReportItem(QueryCache cache, DataProvider provider, String label, String reportCategory, TableInfo ti)
     {
-        this(provider, ti.getUserSchema().getSchemaName(), ti.getName(), label, reportCategory);
-        if (ti.getUserSchema() != null)
-        {
-            _cachedUserSchemas.put(getUserSchemaKey(ti.getUserSchema().getContainer(), ti.getUserSchema().getUser(), ti.getUserSchema().getName()), ti.getUserSchema());
-        }
+        this(cache, provider, ti.getUserSchema().getSchemaName(), ti.getName(), label, reportCategory);
 
-        _cachedQueries.put(getQueryKey(ti.getUserSchema().getContainer(), ti.getUserSchema().getUser()), ti);
+        _queryCache.cache(ti);
     }
 
     public String getSchemaName()
     {
         return _schemaName;
-    }
-
-    private String getUserSchemaKey(Container c, User u, String name)
-    {
-        return c.getId() + "||" + u.getUserId() + "||" + name;
-    }
-
-    private UserSchema getUserSchema(Container targetContainer, User u)
-    {
-        String key = getUserSchemaKey(targetContainer, u, getSchemaName());
-        if (_cachedUserSchemas.containsKey(key))
-        {
-            return _cachedUserSchemas.get(key);
-        }
-
-        UserSchema ret = QueryService.get().getUserSchema(u, targetContainer, getSchemaName());
-        _cachedUserSchemas.put(key, ret);
-
-        return ret;
     }
 
     public void setSchemaName(String schemaName)
@@ -100,46 +66,11 @@ public class QueryTabbedReportItem extends TabbedReportItem
         _queryName = queryName;
     }
 
-    private String getQueryKey(Container targetContainer, User u)
-    {
-        return targetContainer.getId() + "||" + u.getUserId() + "||" + getSchemaName() + "||" + getQueryName();
-    }
-
     @Override
     public JSONObject toJSON(Container c, User u)
     {
         Container targetContainer = getTargetContainer(c) == null ? c : getTargetContainer(c);
-        String key = getQueryKey(targetContainer, u);
-        TableInfo ti;
-        if (_cachedQueries.containsKey(key))
-        {
-            ti = _cachedQueries.get(key);
-        }
-        else
-        {
-            UserSchema us = getUserSchema(targetContainer, u);
-            if (us == null)
-                return null;
-
-            QueryDefinition qd = us.getQueryDefForTable(getQueryName());
-            if (qd == null)
-                return null;
-
-            List<QueryException> errors = new ArrayList<>();
-            ti = qd.getTable(errors, true);
-            if (errors.size() > 0)
-            {
-                _log.error("Unable to create tabbed report item for query: " + getSchemaName() + "." + getQueryName());
-                for (QueryException e : errors)
-                {
-                    _log.error(e.getMessage(), e);
-                }
-                return null;
-            }
-
-            _cachedQueries.put(key, ti);
-        }
-
+        TableInfo ti = _queryCache.getTableInfo(targetContainer, u, getSchemaName(), getQueryName());
         if (ti == null)
         {
             return null;

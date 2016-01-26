@@ -189,86 +189,86 @@ public class GeneticsCoreManager
         final List<Integer> runsCreated = new ArrayList<>();
         final List<Integer> runsDeleted = new ArrayList<>();
 
-        try (DbScope.Transaction transaction = DbScope.getLabKeyScope().ensureTransaction())
+        //next identify a build up the results
+        TableInfo tableAlignments = QueryService.get().getUserSchema(u, ctx.getContainer(), SEQUENCEANALYSIS_SCHEMA).getTable("haplotypeMatches");
+        if (tableAlignments == null)
         {
-            //next identify a build up the results
-            TableInfo tableAlignments = QueryService.get().getUserSchema(u, ctx.getContainer(), SEQUENCEANALYSIS_SCHEMA).getTable("haplotypeMatches");
-            if (tableAlignments == null)
+            throw new IllegalArgumentException("Unable to find haplotypeMatches query");
+        }
+
+        Set<FieldKey> fieldKeys = new HashSet<>();
+        fieldKeys.add(FieldKey.fromString("key"));
+        fieldKeys.add(FieldKey.fromString("analysis_id"));
+        fieldKeys.add(FieldKey.fromString("analysis_id/readset/subjectid"));
+        fieldKeys.add(FieldKey.fromString("analysis_id/readset/sampledate"));
+        fieldKeys.add(FieldKey.fromString("haplotype"));
+
+        final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(tableAlignments, fieldKeys);
+
+        final AssayProvider ap = AssayService.get().getProvider(GENOTYPE_ASSAY_PROVIDER);
+        AssayProtocolSchema schema = ap.createProtocolSchema(u, ctx.getContainer(), protocol, null);
+        final TableInfo assayDataTable = schema.getTable(AssayProtocolSchema.DATA_TABLE_NAME);
+
+        final Map<Integer, List<Map<String, Object>>> rowHash = new HashMap<>();
+        final Map<Integer, Set<Integer>> toDeleteByAnalysis = new HashMap<>();
+
+        TableSelector tsAlignments = new TableSelector(tableAlignments, cols.values(), new SimpleFilter(FieldKey.fromString("key"), Arrays.asList(pks), CompareType.IN), null);
+        final String runType = "SBT Haplotypes";
+        tsAlignments.forEach(new Selector.ForEachBlock<ResultSet>()
+        {
+            @Override
+            public void exec(ResultSet object) throws SQLException
             {
-                throw new IllegalArgumentException("Unable to find haplotypeMatches query");
-            }
+                Results rs = new ResultsImpl(object, cols);
 
-            Set<FieldKey> fieldKeys = new HashSet<>();
-            fieldKeys.add(FieldKey.fromString("key"));
-            fieldKeys.add(FieldKey.fromString("analysis_id"));
-            fieldKeys.add(FieldKey.fromString("analysis_id/readset/subjectid"));
-            fieldKeys.add(FieldKey.fromString("analysis_id/readset/sampledate"));
-            fieldKeys.add(FieldKey.fromString("haplotype"));
+                int analysisId = rs.getInt(FieldKey.fromString("analysis_id"));
+                String haplotype = rs.getString(FieldKey.fromString("haplotype"));
 
-            final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(tableAlignments, fieldKeys);
+                //identify existing rows in this assay
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("analysisId"), analysisId);
+                filter.addCondition(FieldKey.fromString("marker"), haplotype);
+                filter.addCondition(FieldKey.fromString("analysisId"), null, CompareType.NONBLANK);
+                filter.addCondition(FieldKey.fromString("Run/assayType"), runType);
 
-            final AssayProvider ap = AssayService.get().getProvider(GENOTYPE_ASSAY_PROVIDER);
-            AssayProtocolSchema schema = ap.createProtocolSchema(u, ctx.getContainer(), protocol, null);
-            final TableInfo assayDataTable = schema.getTable(AssayProtocolSchema.DATA_TABLE_NAME);
-
-            final Map<Integer, List<Map<String, Object>>> rowHash = new HashMap<>();
-            final Map<Integer, Set<Integer>> toDeleteByAnalysis = new HashMap<>();
-
-            TableSelector tsAlignments = new TableSelector(tableAlignments, cols.values(), new SimpleFilter(FieldKey.fromString("key"), Arrays.asList(pks), CompareType.IN), null);
-            final String runType = "SBT Haplotypes";
-            tsAlignments.forEach(new Selector.ForEachBlock<ResultSet>()
-            {
-                @Override
-                public void exec(ResultSet object) throws SQLException
+                TableSelector ts = new TableSelector(assayDataTable, PageFlowUtil.set("RowId"), filter, null);
+                Set<Integer> existing = new HashSet<>(ts.getArrayList(Integer.class));
+                if (!existing.isEmpty())
                 {
-                    Results rs = new ResultsImpl(object, cols);
-
-                    int analysisId = rs.getInt(FieldKey.fromString("analysis_id"));
-                    String haplotype = rs.getString(FieldKey.fromString("haplotype"));
-
-                    //identify existing rows in this assay
-                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("analysisId"), analysisId);
-                    filter.addCondition(FieldKey.fromString("marker"), haplotype);
-                    filter.addCondition(FieldKey.fromString("analysisId"), null, CompareType.NONBLANK);
-                    filter.addCondition(FieldKey.fromString("Run/assayType"), runType);
-
-                    TableSelector ts = new TableSelector(assayDataTable, PageFlowUtil.set("analysisId"), filter, null);
-                    Set<Integer> existing = new HashSet<>(ts.getArrayList(Integer.class));
-                    if (!existing.isEmpty())
-                    {
-                        Set<Integer> toDelete = toDeleteByAnalysis.containsKey(analysisId) ? toDeleteByAnalysis.get(analysisId) : new HashSet<Integer>();
-                        toDelete.addAll(existing);
-                        toDeleteByAnalysis.put(analysisId, toDelete);
-                    }
-
-                    Map<String, Object> rowMap = new CaseInsensitiveHashMap<>();
-                    rowMap.put("subjectid", rs.getString(FieldKey.fromString("analysis_id/readset/subjectid")));
-                    rowMap.put("date", rs.getDate(FieldKey.fromString("analysis_id/readset/sampledate")));
-                    rowMap.put("marker", rs.getString(FieldKey.fromString("haplotype")));
-                    rowMap.put("qual_result", "POS");
-                    rowMap.put("analysisid", rs.getInt(FieldKey.fromString("analysis_id")));
-
-                    if (rowMap.get("subjectid") == null)
-                    {
-                        throw new IllegalArgumentException("One or more rows is missing a subjectId");
-                    }
-
-                    List<Map<String, Object>> rows = rowHash.containsKey(analysisId) ? rowHash.get(analysisId) : new ArrayList<Map<String, Object>>();
-                    rows.add(rowMap);
-
-                    rowHash.put(analysisId, rows);
+                    Set<Integer> toDelete = toDeleteByAnalysis.containsKey(analysisId) ? toDeleteByAnalysis.get(analysisId) : new HashSet<>();
+                    toDelete.addAll(existing);
+                    toDeleteByAnalysis.put(analysisId, toDelete);
                 }
-            });
 
-            if (!rowHash.isEmpty())
+                Map<String, Object> rowMap = new CaseInsensitiveHashMap<>();
+                rowMap.put("subjectid", rs.getString(FieldKey.fromString("analysis_id/readset/subjectid")));
+                rowMap.put("date", rs.getDate(FieldKey.fromString("analysis_id/readset/sampledate")));
+                rowMap.put("marker", rs.getString(FieldKey.fromString("haplotype")));
+                rowMap.put("qual_result", "POS");
+                rowMap.put("analysisid", rs.getInt(FieldKey.fromString("analysis_id")));
+
+                if (rowMap.get("subjectid") == null)
+                {
+                    throw new IllegalArgumentException("One or more rows is missing a subjectId");
+                }
+
+                List<Map<String, Object>> rows = rowHash.containsKey(analysisId) ? rowHash.get(analysisId) : new ArrayList<Map<String, Object>>();
+                rows.add(rowMap);
+
+                rowHash.put(analysisId, rows);
+            }
+        });
+
+        if (!rowHash.isEmpty())
+        {
+            try (DbScope.Transaction transaction = DbScope.getLabKeyScope().ensureTransaction())
             {
                 processSet(runType, rowHash, assayDataTable, u, ctx, toDeleteByAnalysis, ap, protocol, runsCreated);
+
+                transaction.commit();
             }
-
-            transaction.commit();
-
-            return Pair.of(runsCreated, runsDeleted);
         }
+
+        return Pair.of(runsCreated, runsDeleted);
     }
 
     private void processSet(String assayType, Map<Integer, List<Map<String, Object>>> rowHash, TableInfo assayDataTable, User u, ViewContext ctx, Map<Integer, Set<Integer>> toDeleteByAnalysis, AssayProvider ap, ExpProtocol protocol, List<Integer> runsCreated)
@@ -289,7 +289,7 @@ public class GeneticsCoreManager
 
                 try
                 {
-                    assayDataTable.getUpdateService().deleteRows(u, analysisContainer, rowsToDelete, null, new HashMap<String, Object>());
+                    assayDataTable.getUpdateService().deleteRows(u, analysisContainer, rowsToDelete, null, new HashMap<>());
                 }
                 catch (Exception e)
                 {

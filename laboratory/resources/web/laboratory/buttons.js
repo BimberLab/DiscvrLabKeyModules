@@ -343,7 +343,7 @@ Laboratory.buttonHandlers = new function(){
                                 store.each(function(sourceRec){
                                     var newRow = [];
                                     Ext4.each(columns, function(colName){
-                                        if (colName == 'rowid')
+                                        if (colName == 'rowid' || colName == 'freezerid')
                                             return;
 
                                         //if the user selected

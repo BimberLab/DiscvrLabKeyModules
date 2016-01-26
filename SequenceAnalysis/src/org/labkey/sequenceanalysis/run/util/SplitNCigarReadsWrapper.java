@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
 
 import java.io.File;
@@ -25,8 +26,8 @@ public class SplitNCigarReadsWrapper extends AbstractGatkWrapper
         ensureDictionary(referenceFasta);
 
         List<String> args = new ArrayList<>();
-        args.add("java");
-        args.addAll(getBaseParams());
+        args.add(SequencePipelineService.get().getJavaFilepath());
+        args.addAll(SequencePipelineService.get().getJavaOpts());
         args.add("-jar");
         args.add(getJAR().getPath());
         args.add("-T");

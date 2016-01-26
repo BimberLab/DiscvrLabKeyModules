@@ -6,6 +6,7 @@ import htsjdk.variant.vcf.VCFCodec;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
@@ -62,8 +63,8 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
         }
 
         List<String> args = new ArrayList<>();
-        args.add("java");
-        args.addAll(getBaseParams());
+        args.add(SequencePipelineService.get().getJavaFilepath());
+        args.addAll(SequencePipelineService.get().getJavaOpts());
         args.add("-jar");
         args.add(getJAR().getPath());
         args.add("-T");

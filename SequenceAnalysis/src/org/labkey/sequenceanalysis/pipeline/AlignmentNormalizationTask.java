@@ -153,7 +153,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 {
                     File workDir = new File(getTaskHelper().getWorkingDirectory(), FileUtil.getBaseName(originalFile.getName()));
                     getJob().getLogger().info("***Starting BAM Post processing");
-                    getJob().setStatus("BAM POST-PROCESSING");
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "BAM POST-PROCESSING");
                     if (!workDir.exists())
                         workDir.mkdirs();
 
@@ -165,7 +165,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                         _taskHelper.getFileManager().addInput(action, "Input BAM", bam);
 
                         BamProcessingStep step = provider.create(_taskHelper);
-                        getJob().setStatus("RUNNING: " + provider.getLabel().toUpperCase());
+                        getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + provider.getLabel().toUpperCase());
                         BamProcessingStep.Output output = step.processBam(rs, bam, referenceGenome, workDir);
                         _taskHelper.getFileManager().addStepOutputs(action, output);
 
@@ -181,7 +181,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 }
 
                 //first copy the end product to the final location
-                getJob().setStatus("MOVING BAM");
+                getJob().setStatus(PipelineJob.TaskStatus.running, "MOVING BAM");
                 File finalDestination = new File(getTaskHelper().getSupport().getAnalysisDirectory(), originalFile.getName());
                 RecordedAction moveAction = new RecordedAction(ACTION_NAME);
                 getTaskHelper().getFileManager().addInput(moveAction, "Input BAM", bam);
@@ -201,7 +201,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 }
                 getTaskHelper().getFileManager().addOutput(moveAction, SequenceAlignmentTask.FINAL_BAM_ROLE, finalDestination);
 
-                getJob().setStatus("INDEXING BAM");
+                getJob().setStatus(PipelineJob.TaskStatus.running, "INDEXING BAM");
                 File finalIndexFile = new File(finalDestination.getPath() + ".bai");
                 if (!finalIndexFile.exists())
                 {
@@ -215,7 +215,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 metricsAction.setStartTime(new Date());
 
                 getJob().getLogger().info("calculating alignment metrics");
-                getJob().setStatus("CALCULATING ALIGNMENT SUMMARY METRICS");
+                getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING ALIGNMENT SUMMARY METRICS");
                 File metricsFile = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".summary.metrics");
                 new AlignmentSummaryMetricsWrapper(getJob().getLogger()).executeCommand(finalDestination, referenceGenome.getWorkingFastaFile(), metricsFile);
                 getTaskHelper().getFileManager().addInput(metricsAction, "BAM File", finalDestination);
@@ -223,7 +223,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
 
                 //and insert size metrics
                 getJob().getLogger().info("calculating insert size metrics");
-                getJob().setStatus("CALCULATING INSERT SIZE METRICS");
+                getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING INSERT SIZE METRICS");
                 File metricsFile2 = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".insertsize.metrics");
                 File metricsHistogram = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".insertsize.metrics.pdf");
                 if (new CollectInsertSizeMetricsWrapper(getJob().getLogger()).executeCommand(finalDestination, metricsFile2, metricsHistogram) != null)
@@ -235,7 +235,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 if (getTaskHelper().getSettings().doCollectWgsMetrics())
                 {
                     getJob().getLogger().info("calculating wgs metrics");
-                    getJob().setStatus("CALCULATING WGS METRICS");
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
                     File wgsMetricsFile = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".wgs.metrics");
                     CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
                     wgsWrapper.executeCommand(finalDestination, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
@@ -246,7 +246,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 actions.add(metricsAction);
 
                 //delete original, if required
-                getJob().setStatus("PERFORMING CLEANUP");
+                getJob().setStatus(PipelineJob.TaskStatus.running, "PERFORMING CLEANUP");
                 String handling = getTaskHelper().getFileManager().getInputfileTreatment();
                 if ("delete".equals(handling))
                 {

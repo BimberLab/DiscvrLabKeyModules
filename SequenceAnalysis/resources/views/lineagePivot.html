@@ -71,7 +71,7 @@ Ext4.onReady(function(){
             valueField: 'expr'
         },{
             xtype: 'ldk-numberfield',
-            fieldLabel: 'Min Pct',
+            fieldLabel: 'Min Pct From Locus',
             minValue: 0,
             maxValue: 100,
             itemId: 'minPct'
@@ -130,7 +130,7 @@ Ext4.onReady(function(){
                 : '') +
                 ') t ' +
                 'GROUP BY t.analysis_id, t.readset, t.lineages ' +
-                (minPct ? ' HAVING sum(t.percent) > ' + minPct : '') +
+                (minPct ? ' HAVING sum(t.percent_from_locus) > ' + minPct : '') +
                 'PIVOT percent BY lineages in (SELECT DISTINCT r.lineage FROM sequenceanalysis.ref_nt_sequences r ' +
                 'WHERE r.lineage is not null ' +
                     (species ? 'AND (r.species IN (\'' + species.join('\',\'') + '\')) ' : '') +

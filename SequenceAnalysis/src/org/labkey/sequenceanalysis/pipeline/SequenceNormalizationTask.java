@@ -587,7 +587,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     fqAction.setStartTime(new Date());
                     _taskHelper.getFileManager().addInput(fqAction, "FASTQ File", f);
 
-                    getJob().setStatus("RUNNING FASTQC");
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING FASTQC");
                     getJob().getLogger().info("running FastQC for file: " + f);
                     FastqcRunner runner = new FastqcRunner(getJob().getLogger());
                     runner.execute(Arrays.asList(f));
@@ -604,7 +604,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 FileUtils.deleteDirectory(baseDirectory);
             }
 
-            getJob().setStatus("CLEANUP FILES");
+            getJob().setStatus(PipelineJob.TaskStatus.running, "CLEANUP FILES");
             getHelper().getFileManager().handleInputs();
             getHelper().getFileManager().cleanup();
         }
@@ -732,7 +732,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         }
 
         PipelineJob job = getJob();
-        job.setStatus(PREPARE_INPUT_STATUS);
+        job.setStatus(PipelineJob.TaskStatus.running, PREPARE_INPUT_STATUS);
 
         RecordedAction action = new RecordedAction(PREPARE_INPUT_ACTIONNAME);
         action.setStartTime(new Date());

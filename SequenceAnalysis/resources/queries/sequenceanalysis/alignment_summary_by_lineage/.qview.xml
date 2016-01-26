@@ -12,11 +12,7 @@
                <property name="columnTitle" value="Subject Id"/>
            </properties>
        </column>
-       <column name="analysis_id/readset/sampledate">
-           <properties>
-               <property name="columnTitle" value="Sample Date"/>
-           </properties>
-       </column>
+       <column name="loci"/>
        <column name="lineages">
            <properties>
                <property name="columnTitle" value="Lineages"/>
@@ -26,18 +22,19 @@
        <column name="total" />
        <column name="total_reads" />
        <column name="percent"/>
+       <column name="total_reads_from_locus" />
+       <column name="percent_from_locus"/>
        <column name="analysis_id/workbook">
            <properties>
                <property name="columnTitle" value="Workbook"/>
            </properties>
        </column>
    </columns>
-    <!--<aggregates>-->
-        <!--<aggregate column="total" type="SUM"/>-->
-    <!--</aggregates>-->
    <sorts>
        <sort column="analysis_id/readset"/>
        <sort column="analysis_id"/>
+       <sort column="loci"/>
+       <sort column="-percent_from_locus"/>
        <sort column="lineages"/>
    </sorts>
 </customView>

@@ -54,9 +54,18 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     }
 
     @Override
-    public String execute(List<String> params) throws PipelineJobException
+    public void execute(List<String> params) throws PipelineJobException
     {
-        return execute(params, null);
+        execute(params, null);
+    }
+
+    @Override
+    public String executeWithOutput(List<String> params) throws PipelineJobException
+    {
+        StringBuffer ret = new StringBuffer();
+        execute(params, null, ret);
+
+        return ret.toString();
     }
 
     protected void addToEnvironment(String key, String value)
@@ -71,9 +80,13 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     }
 
     @Override
-    public String execute(List<String> params, File stdout) throws PipelineJobException
+    public void execute(List<String> params, File stdout) throws PipelineJobException
     {
-        StringBuffer output = new StringBuffer();
+        execute(params, stdout, null);
+    }
+
+    private void execute(List<String> params, File stdout, @Nullable StringBuffer output) throws PipelineJobException
+    {
         getLogger().info("\t" + StringUtils.join(params, " "));
         _commandsExecuted.add(StringUtils.join(params, " "));
 
@@ -106,14 +119,16 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         try
         {
             p = pb.start();
-
             try (BufferedReader procReader = new BufferedReader(new InputStreamReader(stdout == null ? p.getInputStream() : p.getErrorStream())))
             {
                 String line;
                 while ((line = procReader.readLine()) != null)
                 {
-                    output.append(line);
-                    output.append(System.getProperty("line.separator"));
+                    if (output != null)
+                    {
+                        output.append(line);
+                        output.append(System.getProperty("line.separator"));
+                    }
 
                     getLogger().log(_logLevel, "\t" + line);
                 }
@@ -141,8 +156,6 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
                 p.destroy();
             }
         }
-
-        return output.toString();
     }
 
     public Integer getLastReturnCode()

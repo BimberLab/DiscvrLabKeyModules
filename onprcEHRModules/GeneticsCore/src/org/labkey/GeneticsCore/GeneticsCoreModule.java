@@ -72,6 +72,10 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
         btn2.setClientDependencies(ClientDependency.fromModuleName("laboratory"), ClientDependency.fromModuleName("ehr"), ClientDependency.fromPath("geneticscore/window/ManageFlagsWindow.js"), ClientDependency.fromPath("geneticscore/buttons.js"));
         LDKService.get().registerQueryButton(btn2, "laboratory", "samples");
 
+        SimpleButtonConfigFactory btn3 = new SimpleButtonConfigFactory(this, "Edit Alignments", "GeneticsCore.window.EditAlignmentsWindow.buttonHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt : null)");
+        btn3.setClientDependencies(ClientDependency.fromModuleName("laboratory"), ClientDependency.fromModuleName("sequenceanalysis"), ClientDependency.fromPath("geneticscore/window/EditAlignmentsWindow.js"));
+        LDKService.get().registerQueryButton(btn3, "sequenceanalysis", "alignment_summary_grouped");
+
         NotificationService.get().registerNotification(new GeneticsCoreNotification());
 
         LDKService.get().registerQueryButton(new SBTReviewButton(), "sequenceanalysis", "sequence_analyses");
@@ -79,6 +83,8 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(new PublishSBTResultsButton(), "sequenceanalysis", "alignment_summary_by_lineage");
         LDKService.get().registerQueryButton(new PublishSBTHaplotypesButton(), "sequenceanalysis", "haplotypeMatches");
         LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "sequence_analyses");
+        LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "alignment_summary_by_lineage");
+        LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "alignment_summary_grouped");
 
         SequenceAnalysisService.get().registerFileHandler(new MethylationRateComparison());
     }

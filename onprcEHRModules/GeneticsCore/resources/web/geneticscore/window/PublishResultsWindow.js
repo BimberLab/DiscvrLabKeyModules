@@ -126,7 +126,16 @@ Ext4.define('GeneticsCore.window.PublishResultsWindow', {
 
                 if (results){
                     Ext4.Msg.alert('Success', 'Success!  The results have been cached.');
-                    window.location.reload();
+                    Ext4.each(Ext4.Object.getKeys(LABKEY.DataRegions), function(name){
+                        var dr = LABKEY.DataRegions[name];
+                        if (dr.schemaName.match(/^assay.GenotypeAssay/g) || dr.queryName.match(/^alignment_summary/g)){
+                            dr.clearSelected();
+                            dr.refresh();
+                        }
+                    }, this);
+
+                    LABKEY.DataRegions[this.dataRegionName].clearSelected();
+                    LABKEY.DataRegions[this.dataRegionName].refresh();
                 }
                 else {
                     Ext4.Msg.alert('Error', 'Something may have gone wrong');

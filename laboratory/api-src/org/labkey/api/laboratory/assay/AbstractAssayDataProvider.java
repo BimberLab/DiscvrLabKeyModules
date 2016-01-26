@@ -33,6 +33,7 @@ import org.labkey.api.laboratory.ReportItem;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
 import org.labkey.api.laboratory.NavItem;
+import org.labkey.api.ldk.table.QueryCache;
 import org.labkey.api.module.Module;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryDefinition;
@@ -219,11 +220,13 @@ abstract public class AbstractAssayDataProvider extends AbstractDataProvider imp
     public List<NavItem> getReportItems(Container c, User u)
     {
         List<NavItem> items = new ArrayList<>();
+        QueryCache cache = new QueryCache();
         for (ExpProtocol p : getProtocols(c))
         {
             AssayNavItem nav = new AssayNavItem(this, p);
-            AssayProtocolSchema schema = getAssayProvider().createProtocolSchema(u, c, p, null);
+            AssayProtocolSchema schema = cache.getAssaySchema(c, u, _providerName, p);
             QueryImportNavItem item = new QueryImportNavItem(this, schema.getSchemaName(), AssayProtocolSchema.DATA_TABLE_NAME, LaboratoryService.NavItemCategory.reports, p.getName() + ": Raw Data", _providerName);
+            item.setQueryCache(cache);
             item.setVisible(nav.isVisible(c, u));
             item.setOwnerKey(nav.getPropertyManagerKey());
             items.add(item);
@@ -258,12 +261,14 @@ abstract public class AbstractAssayDataProvider extends AbstractDataProvider imp
     public List<TabbedReportItem> getTabbedReportItems(Container c, User u)
     {
         List<TabbedReportItem> items = new ArrayList<>();
+        QueryCache cache = new QueryCache();
         for (ExpProtocol p : getProtocols(c))
         {
             AssayNavItem nav = new AssayNavItem(this, p);
-            AssayProtocolSchema schema = getAssayProvider().createProtocolSchema(u, c, p, null);
+            AssayProtocolSchema schema = cache.getAssaySchema(c, u, _providerName, p);
             TableInfo table = schema.getTable(AssayProtocolSchema.DATA_TABLE_NAME);
-            TabbedReportItem item = new QueryTabbedReportItem(this, p.getName() + ": Raw Data", _providerName, table);
+            cache.cache(table);
+            TabbedReportItem item = new QueryTabbedReportItem(cache, this, p.getName() + ": Raw Data", _providerName, table);
             item.setVisible(nav.isVisible(c, u));
             item.setOwnerKey(nav.getPropertyManagerKey());
             items.add(item);
@@ -285,7 +290,7 @@ abstract public class AbstractAssayDataProvider extends AbstractDataProvider imp
                     continue;
                 }
 
-                TabbedReportItem qItem = new QueryTabbedReportItem(this, p.getName() + ": " + query.getTitle(), _providerName, query);
+                TabbedReportItem qItem = new QueryTabbedReportItem(cache, this, p.getName() + ": " + query.getTitle(), _providerName, query);
                 qItem.setVisible(nav.isVisible(c, u));
                 qItem.setOwnerKey(nav.getPropertyManagerKey());
                 items.add(qItem);
@@ -333,18 +338,20 @@ abstract public class AbstractAssayDataProvider extends AbstractDataProvider imp
     public List<NavItem> getSubjectIdSummary(Container c, User u, String subjectId)
     {
         List<NavItem> items = new ArrayList<>();
-
+        QueryCache cache = new QueryCache();
         for (ExpProtocol p : getProtocols(c))
         {
             boolean visible = new AssayNavItem(this, p).isVisible(c, u);
             if (visible)
             {
-                AssayProtocolSchema schema = getAssayProvider().createProtocolSchema(u, c, p, null);
+                AssayProtocolSchema schema = cache.getAssaySchema(c, u, _providerName, p);
                 TableInfo ti = schema.getTable(AssayProtocolSchema.DATA_TABLE_NAME);
+                cache.cache(ti);
                 ColumnInfo ci = getSubjectColumn(ti);
                 if (ci != null)
                 {
                     QueryCountNavItem item = new QueryCountNavItem(this, schema.getSchemaName(), ti.getName(), LaboratoryService.NavItemCategory.reports, LaboratoryService.NavItemCategory.data.name(), p.getName());
+                    item.setQueryCache(cache);
                     item.setFilter(new SimpleFilter(FieldKey.fromString(ci.getName()), subjectId));
                     items.add(item);
                 }

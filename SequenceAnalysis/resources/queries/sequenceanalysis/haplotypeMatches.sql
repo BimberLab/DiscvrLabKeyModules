@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-PARAMETERS(MinimumPercent DOUBLE default 1)
+PARAMETERS(MinimumPercent DOUBLE default 0)
 
 select
-(t.haplotype || CAST(t.analysis_id AS VARCHAR)) as key,
+(t.haplotype || ';' || CAST(t.analysis_id AS VARCHAR)) as key,
 t.*,
 t2.totalRequired as totalLineagesRequiredByHaplotype,
 t2.requiredLineages,
@@ -41,7 +41,7 @@ inner join sequenceanalysis.alignment_summary_grouped asg
     (h.name = asg.alleles AND h.present = true AND h.type = 'Allele')
   )
 
-WHERE (MinimumPercent IS NULL OR asg.percent >= MinimumPercent) and asg.total_reads > 2
+WHERE (MinimumPercent IS NULL OR asg.percent_from_locus >= MinimumPercent)
 
 group by
 h.haplotype,

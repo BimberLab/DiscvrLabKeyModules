@@ -37,6 +37,14 @@ public class ONPRC_ReportsCustomizer implements TableCustomizer
             col.setLabel("MHC Test Summary");
             ti.addColumn(col);
         }
+
+        String name2 = "dnaBank";
+        if (ti.getColumn(name2) == null)
+        {
+            ColumnInfo col = getWrappedIdCol(ti.getUserSchema(), ti, name2, "demographicsDNABank");
+            col.setLabel("DNA Bank Summary");
+            ti.addColumn(col);
+        }
     }
 
     private ColumnInfo getWrappedIdCol(UserSchema us, AbstractTableInfo ds, String name, String queryName)

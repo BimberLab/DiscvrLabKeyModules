@@ -164,4 +164,10 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
         ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
         return (Class) parameterizedType.getActualTypeArguments()[0];
     }
+
+    @Override
+    public PipelineStepProvider<StepType> combineSteps(PipelineStepProvider provider)
+    {
+        return null;
+    }
 }

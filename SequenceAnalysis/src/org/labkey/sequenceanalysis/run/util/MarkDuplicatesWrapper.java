@@ -6,6 +6,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -73,8 +74,8 @@ public class MarkDuplicatesWrapper extends PicardWrapper
         }
 
         List<String> params = new LinkedList<>();
-        params.add("java");
-        params.addAll(getBaseParams());
+        params.add(SequencePipelineService.get().getJavaFilepath());
+        params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getPicardJar().getPath());
         params.add(getTooName());

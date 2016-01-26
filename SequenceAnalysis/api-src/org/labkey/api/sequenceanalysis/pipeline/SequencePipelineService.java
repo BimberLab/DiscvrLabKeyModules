@@ -61,4 +61,8 @@ abstract public class SequencePipelineService
     abstract public void ensureSequenceDictionaryExists(File referenceFasta, Logger log, boolean forceRecreate) throws PipelineJobException;
 
     abstract public String getUnzippedBaseName(String filename);
+
+    abstract public String getJavaFilepath();
+
+    abstract public List<String> getJavaOpts();
 }

@@ -114,7 +114,7 @@ GeneticsCore.buttons = new function(){
                 return;
             }
 
-            window.location = LABKEY.ActionURL.buildURL('geneticscore', 'sbtReview', null, {analysisIds: checked});
+            window.location = LABKEY.ActionURL.buildURL('geneticscore', 'sbtReview', null, {analysisIds: checked.join(';')});
         }
     }
 };

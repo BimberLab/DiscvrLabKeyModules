@@ -49,8 +49,20 @@
         <!--Additional arguments passed to java.  Typically would be memory, etc: -Xmx=4g-->
         <!--<property name="javaOpts">-->
             <!--<list>-->
-                <!--<value>-Xmx=4g</value>-->
+                <!--<value>-Xmx4g</value>-->
             <!--</list>-->
+        <!--</property>-->
+        <!--Additional lines passed verbatim into the condor submit script-->
+        <!--<property name="extraSubmitScriptLines">-->
+        <!--<list>-->
+        <!--<value>requirements = myRequirement</value>-->
+        <!--</list>-->
+        <!--</property>-->
+        <!--Environment variables to include the in submit script.  These are joined together with spaces, but otherwise passed as-is, so please refer to condor docs on use of space and quotes-->
+        <!--<property name="environmentVars">-->
+        <!--<list>-->
+        <!--<value>variableName=value</value>-->
+        <!--</list>-->
         <!--</property>-->
 
         <!--It is common to need path mapping between the local and remote servers-->
@@ -99,4 +111,15 @@
         <!--You do not necessarily need to base of this image, but it will have matching LabKey code.  XX.X should match your server's version-->
         <!--<property name="dockerImageName" value="bbimber/discvr-seq:XX.X"/>-->
     </bean>
+
+    <!--Note: A another route that might be useful for some clusters is to wrap java with a simple bash script.  This can be useful if you need to set aspects of the environment-->
+    <!--and do not have enough control over the cluster to do this directly.  For example, we needed to set 'umask 0002' on one cluster, and this was the best route we found-->
+    <!--The rough pattern would involve changing the remoteExecutable to point to your wrapper: -->
+    <!--<property name="remoteExecutable" value="javaWrapper.sh" />-->
+    <!--and within this script, do something like:-->
+    <!--#!/bin/bash-->
+    <!--#put any commands you need here:-->
+    <!--umask 0002-->
+    <!--#then run java, passing through the arguments:-->
+    <!--java "$@"-->
 </beans>

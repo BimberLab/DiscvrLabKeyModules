@@ -28,8 +28,8 @@ public class VariantAnnotatorWrapper extends AbstractGatkWrapper
         ensureDictionary(referenceFasta);
 
         List<String> args = new ArrayList<>();
-        args.add("java");
-        args.addAll(getBaseParams());
+        args.add(SequencePipelineService.get().getJavaFilepath());
+        args.addAll(SequencePipelineService.get().getJavaOpts());
         args.add("-jar");
         args.add(getJAR().getPath());
         args.add("-T");

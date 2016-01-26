@@ -596,6 +596,7 @@ public class SequenceAnalysisController extends SpringActionController
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "analysis_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "analysis_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_QUALITY_METRICS, "Quality Metrics", keys, "analysis_id");
             }
             else if (SequenceAnalysisSchema.TABLE_READSETS.equals(_table.getName()))
             {
@@ -606,6 +607,7 @@ public class SequenceAnalysisController extends SpringActionController
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "analysis_id/readset");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_QUALITY_METRICS, "Quality Metrics", keys, "readset");
             }
             else if (SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES.equals(_table.getName()))
             {

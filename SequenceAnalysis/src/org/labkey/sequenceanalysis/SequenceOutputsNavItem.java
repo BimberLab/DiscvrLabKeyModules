@@ -29,7 +29,6 @@ import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.DetailsURL;
-import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 
@@ -82,11 +81,11 @@ public class SequenceOutputsNavItem extends AbstractNavItem implements SummaryNa
     {
         if (_categories == null)
         {
-            UserSchema us = QueryService.get().getUserSchema(u, c, SequenceAnalysisSchema.SCHEMA_NAME);
+            UserSchema us = _queryCache.getUserSchema(getTargetContainer(c), u, SequenceAnalysisSchema.SCHEMA_NAME);
             if (us == null)
                 return null;
 
-            TableInfo ti = us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+            TableInfo ti = _queryCache.getTableInfo(us.getContainer(), u, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES);
             SQLFragment sql = new SQLFragment("SELECT t.category, count(*) as total FROM ").append(ti.getFromSQL("t")).append(" GROUP BY t.category");
             SqlSelector ss = new SqlSelector(ti.getSchema(), sql);
             final TreeMap<String, Long> categories = new TreeMap<>();

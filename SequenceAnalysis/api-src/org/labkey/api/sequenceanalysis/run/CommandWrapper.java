@@ -33,9 +33,11 @@ public interface CommandWrapper
      * @return The output of this command.
      * @throws PipelineJobException
      */
-    String execute(List<String> params) throws PipelineJobException;
+    public void execute(List<String> params) throws PipelineJobException;
 
-    String execute(List<String> params, File stdout) throws PipelineJobException;
+    public String executeWithOutput(List<String> params) throws PipelineJobException;
 
-    List<String> getCommandsExecuted();
+    public void execute(List<String> params, File stdout) throws PipelineJobException;
+
+    public List<String> getCommandsExecuted();
 }

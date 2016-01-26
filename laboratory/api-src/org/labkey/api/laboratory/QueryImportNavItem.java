@@ -18,6 +18,7 @@ package org.labkey.api.laboratory;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.ldk.table.QueryCache;
 import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.query.QueryParseException;
@@ -42,6 +43,12 @@ public class QueryImportNavItem extends AbstractImportingNavItem
     public QueryImportNavItem(DataProvider provider, String schema, String query, LaboratoryService.NavItemCategory itemType, String reportCategory)
     {
         this(provider, schema, query, itemType, query, reportCategory);
+    }
+
+    public QueryImportNavItem(DataProvider provider, String schema, String query, LaboratoryService.NavItemCategory itemType, String reportCategory, QueryCache cache)
+    {
+        this(provider, schema, query, itemType, query, reportCategory);
+        _queryCache = cache;
     }
 
     public QueryImportNavItem(DataProvider provider, String schema, String query, LaboratoryService.NavItemCategory itemType, String label, String reportCategory)
@@ -76,25 +83,9 @@ public class QueryImportNavItem extends AbstractImportingNavItem
         return super.isVisible(c, u);
     }
 
-    protected QueryDefinition getQueryDef(Container c, User u)
-    {
-        UserSchema us = QueryService.get().getUserSchema(u, getTargetContainer(c), _schema);
-        if (us == null)
-            return null;
-
-        return us.getQueryDefForTable(getQuery());
-    }
-
     protected TableInfo getTableInfo(Container c, User u)
     {
-        UserSchema us = QueryService.get().getUserSchema(u, getTargetContainer(c), _schema);
-        if (us == null)
-        {
-            _log.error("Unable to find schema: " + _schema + " in container: " + getTargetContainer(c).getPath(), new Exception());
-            return null;
-        }
-
-        return us.getTable(_query);
+        return _queryCache.getTableInfo(getTargetContainer(c), u, _schema, _query);
     }
 
     @Override
@@ -144,11 +135,6 @@ public class QueryImportNavItem extends AbstractImportingNavItem
     public void setVisible(boolean visible)
     {
         _visible = visible;
-    }
-
-    protected boolean isAvailable(Container c, User u)
-    {
-        return QueryService.get().getQueryDef(u, getTargetContainer(c), getSchema(), getQuery()) != null;
     }
 
     @Override

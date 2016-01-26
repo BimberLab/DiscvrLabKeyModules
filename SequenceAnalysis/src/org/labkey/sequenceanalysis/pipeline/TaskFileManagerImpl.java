@@ -16,6 +16,9 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.sequenceanalysis.run.CommandWrapper;
+import org.labkey.api.util.BreakpointThread;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -31,7 +34,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -543,6 +548,15 @@ public class TaskFileManagerImpl implements TaskFileManager
 
         _job.getLogger().info("Cleaning up input files");
 
+        try
+        {
+            Thread.sleep(1000);
+        }
+        catch (InterruptedException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
         String handling = getInputfileTreatment();
         if ("delete".equals(handling))
         {
@@ -834,7 +848,7 @@ public class TaskFileManagerImpl implements TaskFileManager
     public void cleanup() throws PipelineJobException
     {
         _job.getLogger().debug("performing file cleanup");
-        _job.setStatus("PERFORMING FILE CLEANUP");
+        _job.setStatus(PipelineJob.TaskStatus.running, "PERFORMING FILE CLEANUP");
 
         try
         {
@@ -883,7 +897,39 @@ public class TaskFileManagerImpl implements TaskFileManager
 
     private void copyFile(File input) throws IOException
     {
+        try
+        {
+            doCopyFile(input);
+        }
+        catch (IOException e)
+        {
+            _job.getLogger().error(e.getMessage(), e);
+            _job.getLogger().error("pid: " + ManagementFactory.getRuntimeMXBean().getName());
+
+            try
+            {
+                runLsof(input);
+            }
+            catch (PipelineJobException ex)
+            {
+                _job.getLogger().error(ex.getMessage(), ex);
+            }
+
+            BreakpointThread.dumpThreads(_job.getLogger());
+
+            throw e;
+        }
+    }
+
+    private void doCopyFile(File input) throws IOException
+    {
         _job.getLogger().debug("copying file: " + input.getPath());
+
+        if (!input.exists())
+        {
+            _job.getLogger().debug("file does not exists: " + input.getPath());
+            return;
+        }
 
         if (input.isDirectory() && input.list().length == 0)
         {
@@ -902,7 +948,8 @@ public class TaskFileManagerImpl implements TaskFileManager
             if (input.isDirectory())
             {
                 _job.getLogger().debug("attempting to copy a directory that already exists in destination.  will try to merge");
-                for (File child : input.listFiles())
+                File[] children = input.listFiles();
+                for (File child : children)
                 {
                     copyFile(child);
                 }
@@ -928,6 +975,19 @@ public class TaskFileManagerImpl implements TaskFileManager
             dest = _wd.outputFile(input, dest);
             processCopiedFile(dest);
         }
+    }
+
+    //TODO: debugging only
+    private void runLsof(File input) throws PipelineJobException
+    {
+        boolean isDir = input.isDirectory();
+        AbstractCommandWrapper wrapper = new AbstractCommandWrapper(_job.getLogger()){};
+        wrapper.setThrowNonZeroExits(false);
+        wrapper.setWarnNonZeroExits(false);
+        if (isDir)
+            _job.error(wrapper.executeWithOutput(Arrays.asList("/usr/sbin/lsof", "+D", input.getPath())));
+        else
+            _job.error(wrapper.executeWithOutput(Arrays.asList("lsof", input.getPath())));
     }
 
     @Override

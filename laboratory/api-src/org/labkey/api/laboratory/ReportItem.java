@@ -17,6 +17,7 @@ package org.labkey.api.laboratory;
 
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
+import org.labkey.api.ldk.table.QueryCache;
 import org.labkey.api.security.User;
 
 /**
@@ -29,15 +30,17 @@ public class ReportItem extends AbstractQueryNavItem
     private String _subjectFieldKey;
     private String _sampleDateFieldKey;
 
-    public ReportItem(DataProvider provider, Container targetContainer, String schema, String query, String reportCategory, String label)
+    public ReportItem(DataProvider provider, Container targetContainer, String schema, String query, String reportCategory, String label, QueryCache cache)
     {
         super(provider, schema, query, LaboratoryService.NavItemCategory.reports, reportCategory, label);
         setTargetContainer(targetContainer);
+        if (cache != null)
+            _queryCache = cache;
     }
 
-    public ReportItem(DataProvider provider, String schema, String query, String reportCategory)
+    public ReportItem(DataProvider provider, Container targetContainer, String schema, String query, String reportCategory, String label)
     {
-        super(provider, schema, query, LaboratoryService.NavItemCategory.reports, reportCategory, query);
+        this(provider, targetContainer, schema, query, reportCategory, label, null);
     }
 
     @Override

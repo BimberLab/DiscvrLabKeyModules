@@ -1,0 +1,15 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="rowid"/>
+        <column name="haplotype/type"/>
+        <column name="haplotype"/>
+        <column name="name"/>
+        <column name="type"/>
+        <column name="present"/>
+        <column name="required"/>
+    </columns>
+    <sorts>
+        <sort column="haplotype"/>
+        <sort column="name"/>
+    </sorts>
+</customView>

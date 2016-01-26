@@ -92,6 +92,8 @@ public class HTCondorConnectorManager
 
     public static class Runner implements Job
     {
+        private static boolean isRunning = false;
+
         public Runner()
         {
 
@@ -100,19 +102,34 @@ public class HTCondorConnectorManager
         @Override
         public void execute(JobExecutionContext context) throws JobExecutionException
         {
-            for (RemoteExecutionEngine e : PipelineJobService.get().getRemoteExecutionEngines())
+            if (isRunning)
             {
-                if (e.getType().equals(HTCondorExecutionEngine.TYPE) && e instanceof HTCondorExecutionEngine)
+                _log.warn("HTCondor task update is already running, aborting duplicate check");
+                return;
+            }
+
+            try
+            {
+                isRunning = true;
+
+                for (RemoteExecutionEngine e : PipelineJobService.get().getRemoteExecutionEngines())
                 {
-                    try
+                    if (e.getType().equals(HTCondorExecutionEngine.TYPE) && e instanceof HTCondorExecutionEngine)
                     {
-                        ((HTCondorExecutionEngine) e).updateStatusForAll();
-                    }
-                    catch (PipelineJobException ex)
-                    {
-                        throw new JobExecutionException(ex.getMessage(), ex);
+                        try
+                        {
+                            ((HTCondorExecutionEngine) e).updateStatusForAll();
+                        }
+                        catch (PipelineJobException ex)
+                        {
+                            throw new JobExecutionException(ex.getMessage(), ex);
+                        }
                     }
                 }
+            }
+            finally
+            {
+                isRunning = false;
             }
         }
     }

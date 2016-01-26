@@ -14,6 +14,7 @@ import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import java.io.File;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -146,5 +147,41 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     {
         filename = filename.replaceAll("\\.gz$", "");
         return FilenameUtils.getBaseName(filename);
+    }
+
+    @Override
+    public String getJavaFilepath()
+    {
+        String javaDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_HOME");
+        if (javaDir != null)
+        {
+            File ret = new File(javaDir, "bin");
+            ret = new File(ret, "java");
+            return ret.getPath();
+        }
+        else
+        {
+            return "java";
+        }
+    }
+
+    public List<String> getJavaOpts()
+    {
+        List<String> params = new ArrayList<>();
+
+        String tmpDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_TMP_DIR");
+        if (StringUtils.trimToNull(tmpDir) != null)
+        {
+            params.add("-Djava.io.tmpdir=" + tmpDir);
+        }
+
+        String xmx = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_MEMORY");
+        if (StringUtils.trimToNull(xmx) != null)
+        {
+            String[] tokens = xmx.split(" ");
+            params.addAll(Arrays.asList(tokens));
+        }
+
+        return params;
     }
 }

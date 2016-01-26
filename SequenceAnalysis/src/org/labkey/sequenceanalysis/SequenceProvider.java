@@ -28,6 +28,7 @@ import org.labkey.api.laboratory.SimpleSettingsItem;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
 import org.labkey.api.laboratory.NavItem;
+import org.labkey.api.ldk.table.QueryCache;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.DetailsURL;
@@ -204,18 +205,19 @@ public class SequenceProvider extends AbstractSequenceDataProvider
 
         NavItem owner = getDataNavItems(c, u).get(0);
         String category = "Sequence Data";
+        QueryCache cache = new QueryCache();
 
-        TabbedReportItem readsets = new QueryTabbedReportItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, "Sequence Readsets", category);
+        TabbedReportItem readsets = new QueryTabbedReportItem(cache, this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, "Sequence Readsets", category);
         readsets.setOwnerKey(owner.getPropertyManagerKey());
         items.add(readsets);
 
-        TabbedReportItem analyses = new QueryTabbedReportItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, "Sequence Analyses", category);
+        TabbedReportItem analyses = new QueryTabbedReportItem(cache, this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, "Sequence Analyses", category);
         analyses.setSubjectIdFieldKey(FieldKey.fromString("readset/subjectid"));
         analyses.setSampleDateFieldKey(FieldKey.fromString("readset/sampledate"));
         analyses.setOwnerKey(owner.getPropertyManagerKey());
         items.add(analyses);
 
-        TabbedReportItem outputs = new QueryTabbedReportItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Sequence Outputs", category);
+        TabbedReportItem outputs = new QueryTabbedReportItem(cache, this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Sequence Outputs", category);
         outputs.setSubjectIdFieldKey(FieldKey.fromString("readset/subjectid"));
         outputs.setSampleDateFieldKey(FieldKey.fromString("readset/sampledate"));
         outputs.setOwnerKey(owner.getPropertyManagerKey());

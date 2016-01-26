@@ -2,6 +2,7 @@
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="alignment_summary_grouped" tableDbType="TABLE">
+                <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
                 <tableTitle>Alignment Summary</tableTitle>
                 <pkColumnName>rowids</pkColumnName>
                 <columns>
@@ -26,14 +27,30 @@
                         <columnTitle>Total Valid Pairs</columnTitle>
                         <description>The column shows the number of alignments that contain valid paired reads (both forward and reverse)</description>
                     </column>
+                    <column columnName="percent_from_locus">
+                        <conditionalFormats>
+                            <conditionalFormat>
+                                <filters>
+                                    <filter operator="lte" value="1.0"/>
+                                </filters>
+                                <backgroundColor>FF6666</backgroundColor>
+                            </conditionalFormat>
+                            <conditionalFormat>
+                                <filters>
+                                    <filter operator="gt" value="1.0"/>
+                                    <filter operator="lt" value="7.0"/>
+                                </filters>
+                                <backgroundColor>FFFF00</backgroundColor>
+                            </conditionalFormat>
+                            <conditionalFormat>
+                                <filters>
+                                    <filter operator="gte" value="7.0"/>
+                                </filters>
+                                <backgroundColor>00CC33</backgroundColor>
+                            </conditionalFormat>
+                        </conditionalFormats>
+                    </column>
                 </columns>
-                <buttonBarOptions includeStandardButtons="true">
-                    <includeScript>laboratory.context</includeScript>
-                    <includeScript>sequenceanalysis/sequenceAnalysis</includeScript>
-                    <item requiresSelection="true" text="Edit Alignments" insertPosition="end" permission="UPDATE">
-                        <onClick>SequenceAnalysis.Buttons.deactivateAlignments(dataRegionName)</onClick>
-                    </item>
-                </buttonBarOptions>
             </table>
         </tables>
     </metadata>

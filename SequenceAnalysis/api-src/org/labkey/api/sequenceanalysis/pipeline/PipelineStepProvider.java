@@ -89,4 +89,10 @@ public interface PipelineStepProvider<StepType extends PipelineStep>
     public JSONObject toJSON();
 
     public Class<StepType> getStepClass();
+
+    /**
+     * Allows a given step to combine itself w/ a neighboring step to save compute time.  Should return a new provider, which will
+     * replace both original provider.  Return null for no changes.
+     */
+    public PipelineStepProvider<StepType> combineSteps(PipelineStepProvider<StepType> provider);
 }

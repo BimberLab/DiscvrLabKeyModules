@@ -27,6 +27,7 @@
                 <!--onprc_ehr depends on this-->
                 <include name="mergesync.module" />
                 <include name="GenotypeAssays.module" />
+                <include name="galaxyintegration.module" />
             </fileset>
         </copy>
     </target>

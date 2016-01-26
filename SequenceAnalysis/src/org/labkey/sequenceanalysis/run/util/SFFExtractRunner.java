@@ -80,7 +80,7 @@ public class SFFExtractRunner extends AbstractCommandWrapper
         params.add(getExePath());
         params.add("--version");
 
-        String output = execute(params);
+        String output = executeWithOutput(params);
         Pattern pattern = Pattern.compile("([.|\\d]+)", Pattern.MULTILINE);
         Matcher m = pattern.matcher(output);
         if (m.find())

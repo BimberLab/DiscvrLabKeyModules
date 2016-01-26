@@ -2750,6 +2750,7 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/drug_resistance_s
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/haplotypeMatches.query.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/haplotypeMatches.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/haplotypeMatches/.qview.xml -text
+labModules/SequenceAnalysis/resources/queries/sequenceanalysis/haplotype_sequences/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/nt_snps_by_pos/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/nt_snps_by_pos/Greater[!!-~]Than[!!-~]1[!!-~]Pct.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfile_categories.sql -text
@@ -3113,7 +3114,6 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentIm
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentImportTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentNormalizationTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/CreateReferenceLibraryTask.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/FileCleanupTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaFastqSplitter.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaImportTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaReadsetCreationTask.java -text
@@ -3566,6 +3566,11 @@ onprcEHRModules/GeneticsCore/distributions/prime-seq-modules.xml -text
 onprcEHRModules/GeneticsCore/module.properties -text
 onprcEHRModules/GeneticsCore/resources/external/amplicon_standard_curve.R -text
 onprcEHRModules/GeneticsCore/resources/module.xml -text
+onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/alignment_summary_by_lineage/.qview.xml -text
+onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/alignment_summary_by_lineage/With[!!-~]Haplotype[!!-~]Matches.qview.xml -text
+onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/alignment_summary_grouped/.qview.xml -text
+onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/alignment_summary_grouped/With[!!-~]Haplotype[!!-~]Matches.qview.xml -text
+onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/sequence_analyses/.qview.xml -text
 onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/sequence_analyses/SBT[!!-~]Information.qview.xml -text
 onprcEHRModules/GeneticsCore/resources/queries/study/dnaFlagSummary.query.xml -text
 onprcEHRModules/GeneticsCore/resources/queries/study/dnaFlagSummary.sql -text
@@ -3585,6 +3590,7 @@ onprcEHRModules/GeneticsCore/resources/views/sbtReview.html -text
 onprcEHRModules/GeneticsCore/resources/views/sbtReview.view.xml -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/buttons.js -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/window/ChangeReadsetStatusWindow.js -text
+onprcEHRModules/GeneticsCore/resources/web/geneticscore/window/EditAlignmentsWindow.js -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/window/ManageFlagsWindow.js -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/window/PublishResultsWindow.js -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreController.java -text
@@ -4079,6 +4085,8 @@ onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Unifie
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/MHC_Data_Unified.sql -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/mhcSamples.query.xml -text
 onprcEHRModules/onprc_reports/resources/queries/sequenceanalysis/mhcSamples.sql -text
+onprcEHRModules/onprc_reports/resources/queries/study/demographicsDNABank.query.xml -text
+onprcEHRModules/onprc_reports/resources/queries/study/demographicsDNABank.sql -text
 onprcEHRModules/onprc_reports/resources/queries/study/demographicsMHCTests.sql -text
 onprcEHRModules/onprc_reports/resources/queries/study/processingBloodDraws.query.xml -text
 onprcEHRModules/onprc_reports/resources/queries/study/processingBloodDraws.sql -text
@@ -4087,6 +4095,8 @@ onprcEHRModules/onprc_reports/resources/queries/study/processingGeneticsBloodDra
 onprcEHRModules/onprc_reports/resources/queries/study/processingGeneticsBloodDraws.sql -text
 onprcEHRModules/onprc_reports/resources/queries/study/processingGeneticsBloodDraws/.qview.xml -text
 onprcEHRModules/onprc_reports/resources/queries/study/processingGeneticsBloodDraws/Need[!!-~]Blood[!!-~]Draws.qview.xml -text
+onprcEHRModules/onprc_reports/resources/queries/study/samples.query.xml -text
+onprcEHRModules/onprc_reports/resources/queries/study/samples.sql -text
 onprcEHRModules/onprc_reports/resources/schemas/DNABank.template.xml -text
 onprcEHRModules/onprc_reports/resources/schemas/MHCResults.template.xml -text
 onprcEHRModules/onprc_reports/resources/schemas/ParentageResults.template.xml -text

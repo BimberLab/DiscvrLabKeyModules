@@ -85,14 +85,7 @@ abstract public class AbstractQueryNavItem extends AbstractNavItem
 
     protected TableInfo getTableInfo(Container c, User u)
     {
-        UserSchema us = QueryService.get().getUserSchema(u, getTargetContainer(c), _schema);
-        if (us == null)
-        {
-            _log.error("Unable to find schema: " + _schema + " in container: " + getTargetContainer(c).getPath(), new Exception());
-            return null;
-        }
-
-        return us.getTable(_query);
+        return _queryCache.getTableInfo(getTargetContainer(c), u, _schema, _query);
     }
 
     protected ActionURL getActionURL(Container c, User u)

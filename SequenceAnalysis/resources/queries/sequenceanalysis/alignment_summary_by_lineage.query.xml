@@ -15,6 +15,29 @@
                     <column columnName="totalLineages">
                         <columnTitle>Total Lineages</columnTitle>
                     </column>
+                    <column columnName="percent_from_locus">
+                        <conditionalFormats>
+                            <conditionalFormat>
+                                <filters>
+                                    <filter operator="lte" value="1.0"/>
+                                </filters>
+                                <backgroundColor>FF6666</backgroundColor>
+                            </conditionalFormat>
+                            <conditionalFormat>
+                                <filters>
+                                    <filter operator="gt" value="1.0"/>
+                                    <filter operator="lt" value="7.0"/>
+                                </filters>
+                                <backgroundColor>FFFF00</backgroundColor>
+                            </conditionalFormat>
+                            <conditionalFormat>
+                                <filters>
+                                    <filter operator="gte" value="7.0"/>
+                                </filters>
+                                <backgroundColor>00CC33</backgroundColor>
+                            </conditionalFormat>
+                        </conditionalFormats>
+                    </column>
                 </columns>
             </table>
         </tables>

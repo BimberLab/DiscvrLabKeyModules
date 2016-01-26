@@ -25,6 +25,7 @@ import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.MergedDirectoryResource;
 import org.labkey.api.resource.Resource;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
@@ -310,7 +311,7 @@ public class FastqcRunner
     private List<String> getBaseParams() throws FileNotFoundException
     {
         List<String> params = new LinkedList<>();
-        params.add("java");
+        params.add(SequencePipelineService.get().getJavaFilepath());
 
         int threads = getThreads();
         params.add("-Xmx" + (250 * threads) + "m");

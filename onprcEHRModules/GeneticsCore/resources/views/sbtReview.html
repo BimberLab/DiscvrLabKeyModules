@@ -1,9 +1,9 @@
 <script type="text/javascript">
 
     Ext4.onReady(function () {
-        var analysisIds = LABKEY.ActionURL.getParameterArray('analysisIds');
+        var analysisIds = LABKEY.ActionURL.getParameter('analysisIds');
 
-        if (!analysisIds.length) {
+        if (!analysisIds) {
             alert('Must Provide At Least One Analysis Id');
             return;
         }
@@ -22,7 +22,7 @@
                     },
                     items: [{
                         xtype: 'ldk-webpartpanel',
-                        style: 'margin-bottom: 10px;',
+                        style: 'margin-bottom: 30px;',
                         items: [{
                             html: 'This page is designed to help review the results of sequence based genotyping data.  Use the buttons below to scroll between the analyses you selected.',
                             border: false,
@@ -37,6 +37,7 @@
                                 style: 'margin-right: 10px;',
                                 forceSelection: true,
                                 showValueInList: true,
+                                queryMode: 'local',
                                 labelWidth: 150,
                                 valueField: 'rowid',
                                 displayField: 'readset/name',
@@ -115,7 +116,7 @@
 
             changeAnalysis: function(analysisId){
                 window.location = LABKEY.ActionURL.buildURL('geneticscore', 'sbtReview', null, {
-                    analysisIds: this.analysisIds,
+                    analysisIds: this.analysisIds.join(';'),
                     analysisId: analysisId
                 });
             },
@@ -125,10 +126,11 @@
                 this.down('#analysisCombo').setValue(analysisId);
 
                 var panel = this.down('#sbtPanel');
+                this.pendingLoads = 5;
                 panel.removeAll();
                 panel.add([{
                     xtype: 'ldk-querypanel',
-                    style: 'margin-bottom: 10px;',
+                    style: 'margin-bottom: 30px;',
                     queryConfig: LDK.Utils.getReadOnlyQWPConfig({
                         title: 'Analysis Details',
                         schemaName: 'sequenceanalysis',
@@ -141,42 +143,50 @@
                     })
                 },{
                         xtype: 'ldk-querypanel',
-                        style: 'margin-bottom: 10px;',
+                        style: 'margin-bottom: 30px;',
                         queryConfig: LDK.Utils.getReadOnlyQWPConfig({
                             title: 'Alignments, By Allele',
+                            allowHeaderLock: false,
                             schemaName: 'sequenceanalysis',
                             queryName: 'alignment_summary_grouped',
-                            viewName: 'With Haplotype Matches',
-                            sort: '-percent',
-                            maxRows: 30,
+                            //viewName: 'With Haplotype Matches',
+                            //sort: '-percent',
                             containerPath: Laboratory.Utils.getQueryContainerPath(),
                             filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)],
+                            removeableFilters: [
+                                LABKEY.Filter.create('percent_from_locus', 0.25, LABKEY.Filter.Types.GTE)
+                            ],
                             scope: this,
                             success: this.onDataRegionLoad
                         })
                     },{
                         xtype: 'ldk-querypanel',
-                        style: 'margin-bottom: 10px;',
+                        style: 'margin-bottom: 30px;',
                         queryConfig: LDK.Utils.getReadOnlyQWPConfig({
                             title: 'Alignments, By Lineage',
+                            allowHeaderLock: false,
                             schemaName: 'sequenceanalysis',
                             queryName: 'alignment_summary_by_lineage',
-                            viewName: 'With Haplotype Matches',
+                            //viewName: 'With Haplotype Matches',
                             sort: '-percent',
                             containerPath: Laboratory.Utils.getQueryContainerPath(),
                             filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)],
+                            removeableFilters: [
+                                LABKEY.Filter.create('percent_from_locus', 0.25, LABKEY.Filter.Types.GTE)
+                            ],
                             scope: this,
                             success: this.onDataRegionLoad
                         })
                     },{
                         xtype: 'ldk-querypanel',
-                        style: 'margin-bottom: 10px;',
+                        style: 'margin-bottom: 30px;',
                         queryConfig: LDK.Utils.getReadOnlyQWPConfig({
                             title: 'Matching Haplotypes',
+                            allowHeaderLock: false,
                             schemaName: 'sequenceanalysis',
                             queryName: 'haplotypeMatches',
                             parameters: {
-                                MinimumPercent: 1
+                                MinimumPercent: 0.1
                             },
                             containerPath: Laboratory.Utils.getQueryContainerPath(),
                             filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)],
@@ -185,9 +195,10 @@
                         })
                     },{
                         xtype: 'ldk-querypanel',
-                        style: 'margin-bottom: 10px;',
+                        style: 'margin-bottom: 30px;',
                         queryConfig: LDK.Utils.getReadOnlyQWPConfig({
                             title: 'Published Results',
+                            allowHeaderLock: false,
                             schemaName: 'assay.GenotypeAssay.Genotype',
                             queryName: 'Data',
                             containerPath: Laboratory.Utils.getQueryContainerPath(),
@@ -196,7 +207,9 @@
                                 console.log(arguments);
                             },
                             scope: this,
-                            success: this.onDataRegionLoad
+                            success: this.onDataRegionLoad,
+                            showUpdateColumn: true,
+                            showDeleteButton: true
                         })
                     }
                 ]);
@@ -205,6 +218,14 @@
             onDataRegionLoad: function(dr){
                 var itemWidth = Ext4.get('dataregion_'+dr.id).getSize().width + 150;
                 this.doResize(itemWidth);
+
+                if (this.pendingLoads > 0){
+                    this.pendingLoads--;
+                    if (this.pendingLoads == 0){
+                        this.doLayout.defer(200, this);
+                        this.pendingLoads = -1;
+                    }
+                }
             },
 
             doResize: function(itemWidth){
@@ -225,7 +246,7 @@
         var webpart = <%=webpartContext%>;
 
         Ext4.create('GeneticsCore.panel.SBTReviewPanel', {
-            analysisIds: analysisIds
+            analysisIds: analysisIds.split(';')
         }).render(webpart.wrapperDivId);
 
     });

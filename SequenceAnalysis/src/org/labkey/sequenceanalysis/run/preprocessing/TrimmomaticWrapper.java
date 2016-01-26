@@ -67,7 +67,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             _stepName = stepName;
         }
 
-        public String getAdditionalParams(PipelineContext ctx, PreprocessingOutputImpl output) throws PipelineJobException
+        public List<String> getAdditionalParams(PipelineContext ctx, PreprocessingOutputImpl output) throws PipelineJobException
         {
             List<String> params = new ArrayList<>();
             for (ToolParameterDescriptor desc : getParameters())
@@ -75,7 +75,77 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 params.add(desc.extractValue(ctx.getJob(), this));
             }
 
-            return _stepName + ":" + StringUtils.join(params, ":");
+            return Collections.singletonList(_stepName + ":" + StringUtils.join(params, ":"));
+        }
+
+        @Override
+        public PipelineStepProvider<StepType> combineSteps(PipelineStepProvider provider)
+        {
+            if (provider instanceof AbstractTrimmomaticProvider)
+            {
+                MultiStepTrimmomaticProvider multi = new MultiStepTrimmomaticProvider();
+                multi.addProvider(this);
+                multi.addProvider((AbstractTrimmomaticProvider)provider);
+
+                return multi;
+            }
+
+            return null;
+        }
+
+        @Override
+        public TrimmomaticPipelineStep create(PipelineContext context)
+        {
+            return new TrimmomaticPipelineStep(this, context);
+        }
+    }
+
+    //NOTE: for internal use only, this should not be registered
+    public static class MultiStepTrimmomaticProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    {
+        private List<AbstractTrimmomaticProvider> _providers = new ArrayList<>();
+        public static final String NAME = "Trimmomatic";
+
+        public MultiStepTrimmomaticProvider()
+        {
+            super(NAME, NAME, NAME, "Combined Trimmomatic Steps", null, null);
+        }
+
+        public void addProvider(AbstractTrimmomaticProvider provider)
+        {
+            _providers.add(provider);
+        }
+
+        @Override
+        public String getName()
+        {
+            return NAME;
+        }
+
+        @Override
+        public List<String> getAdditionalParams(PipelineContext ctx, PreprocessingOutputImpl output) throws PipelineJobException
+        {
+
+            List<String> additionalParams = new ArrayList<>();
+            for (AbstractTrimmomaticProvider provider : _providers)
+            {
+                additionalParams.addAll(provider.getAdditionalParams(ctx, output));
+            }
+
+            return additionalParams;
+        }
+
+        @Override
+        public PipelineStepProvider combineSteps(PipelineStepProvider provider)
+        {
+            if (provider instanceof AbstractTrimmomaticProvider)
+            {
+                this.addProvider((AbstractTrimmomaticProvider)provider);
+
+                return this;
+            }
+
+            return null;
         }
     }
 
@@ -98,7 +168,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 getPipelineCtx().getLogger().info("\t" + input2.getPath());
 
             AbstractTrimmomaticProvider provider = (AbstractTrimmomaticProvider)getProvider();
-            getWrapper().execute(getWrapper().getParams(input, input2, provider.getName(), Arrays.asList(provider.getAdditionalParams(getPipelineCtx(), output)), getPipelineCtx().getJob()));
+            getWrapper().execute(getWrapper().getParams(input, input2, provider.getName(), provider.getAdditionalParams(getPipelineCtx(), output), getPipelineCtx().getJob()));
 
             List<File> files = getWrapper().getExpectedOutputFilenames(input, input2, provider.getName());
             for (File f : files)
@@ -118,7 +188,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 }
             }
 
-            //a single input file reuslts in only 1 output
+            //a single input file results in only 1 output
             if (files.size() == 1)
             {
 
@@ -174,11 +244,6 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.create("minLength", "Minimum Read Length", "Reads shorter than this value will be discarded", "ldk-integerfield", null, null)
             ), null);
         }
-
-        public TrimmomaticPipelineStep create(PipelineContext context)
-        {
-            return new TrimmomaticPipelineStep(this, context);
-        }
     }
 
     public static class AdapterTrimmingProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
@@ -206,7 +271,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public String getAdditionalParams(PipelineContext ctx, PreprocessingOutputImpl output) throws PipelineJobException
+        public List<String> getAdditionalParams(PipelineContext ctx, PreprocessingOutputImpl output) throws PipelineJobException
         {
             List<String> params = new ArrayList<>();
 
@@ -221,7 +286,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 params.add(getParameterByName(name).extractValue(ctx.getJob(), this));
             }
 
-            return _stepName + ":" + StringUtils.join(params, ":");
+            return Collections.singletonList(_stepName + ":" + StringUtils.join(params, ":"));
         }
 
         private File createAdapterFasta(PipelineContext ctx) throws PipelineJobException
@@ -276,11 +341,6 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
 
             return adapters;
         }
-
-        public TrimmomaticPipelineStep create(PipelineContext context)
-        {
-            return new TrimmomaticPipelineStep(this, context);
-        }
     }
 
     public static class SlidingWindowTrimmingProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
@@ -297,11 +357,6 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                             put("minValue", 0);
                         }}, 15)
             ), null);
-        }
-
-        public TrimmomaticPipelineStep create(PipelineContext context)
-        {
-            return new TrimmomaticPipelineStep(this, context);
         }
     }
 
@@ -321,11 +376,6 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     }}, 0.9)
             ), null);
         }
-
-        public TrimmomaticPipelineStep create(PipelineContext context)
-        {
-            return new TrimmomaticPipelineStep(this, context);
-        }
     }
 
     public static class CropReadsProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
@@ -338,11 +388,6 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                             put("minValue", 0);
                         }}, 250)
             ), null);
-        }
-
-        public TrimmomaticPipelineStep create(PipelineContext context)
-        {
-            return new TrimmomaticPipelineStep(this, context);
         }
     }
 
@@ -357,11 +402,6 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                         }}, null)
             ), null);
         }
-
-        public TrimmomaticPipelineStep create(PipelineContext context)
-        {
-            return new TrimmomaticPipelineStep(this, context);
-        }
     }
 
     private File getTrimlog(File workingDir)
@@ -372,7 +412,8 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
     private List<String> getParams(File input, @Nullable File input2, String actionName, List<String> additionalParams, PipelineJob job) throws PipelineJobException
     {
         List<String> params = new LinkedList<>();
-        params.add("java");
+        params.add(SequencePipelineService.get().getJavaFilepath());
+        params.addAll(SequencePipelineService.get().getJavaOpts());
 
         params.add("-jar");
         params.add(getJar().getPath());
@@ -387,12 +428,13 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             params.add("-phred" +  FastqUtils.getQualityOffset(encoding));
         }
 
-        Integer threads = SequenceTaskHelper.getMaxThreads(job);
-        if (threads != null)
-        {
-            params.add("-threads"); //multi-threaded
-            params.add(threads.toString());
-        }
+        //NOTE: the tool auto-detects
+        //Integer threads = SequenceTaskHelper.getMaxThreads(job);
+        //if (threads != null)
+        //{
+        //    params.add("-threads"); //multi-threaded
+        //    params.add(threads.toString());
+        //}
 
         params.add(input.getPath());
         if (input2 != null)

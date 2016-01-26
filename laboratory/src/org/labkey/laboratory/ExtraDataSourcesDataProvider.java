@@ -19,6 +19,7 @@ import org.labkey.api.laboratory.StaticURLNavItem;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
 import org.labkey.api.laboratory.NavItem;
+import org.labkey.api.ldk.table.QueryCache;
 import org.labkey.api.module.Module;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
@@ -58,7 +59,8 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
 
     private List<NavItem> getItems(Container c, User u, LaboratoryService.NavItemCategory itemType)
     {
-        List<NavItem> items = new ArrayList<NavItem>();
+        QueryCache cache = new QueryCache();
+        List<NavItem> items = new ArrayList<>();
         if (c.getActiveModules().contains(getOwningModule()))
         {
             LaboratoryServiceImpl service = (LaboratoryServiceImpl)LaboratoryServiceImpl.get();
@@ -77,7 +79,7 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
                     }
                     else if (itemType.equals(LaboratoryService.NavItemCategory.reports))
                     {
-                        ReportItem item = new ReportItem(this, source.getTargetContainer(null), source.getSchemaName(), source.getQueryName(), source.getReportCategory(), source.getLabel());
+                        ReportItem item = new ReportItem(this, source.getTargetContainer(null), source.getSchemaName(), source.getQueryName(), source.getReportCategory(), source.getLabel(), cache);
                         if (source.getTargetContainer(null) != null)
                             item.setTargetContainer(source.getTargetContainer(null));
                         if (source.getSubjectFieldKey() != null)
@@ -129,18 +131,17 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
 
     public List<NavItem> getReportItems(Container c, User u)
     {
-        List<NavItem> items = new ArrayList<NavItem>();
+        List<NavItem> items = new ArrayList<>();
         List<NavItem> dataItems = getItems(c, u, LaboratoryService.NavItemCategory.data);
         for (NavItem owner : dataItems)
         {
             if (owner instanceof ExtraDataSourceImportNavItem)
             {
                 ExtraDataSourceImportNavItem sq = (ExtraDataSourceImportNavItem)owner;
-                ReportItem reportItem = new ReportItem(this, sq.getTargetContainer(null), sq.getSchema(), sq.getQuery(), owner.getReportCategory(), sq.getLabel());
+                ReportItem reportItem = new ReportItem(this, sq.getTargetContainer(null), sq.getSchema(), sq.getQuery(), owner.getReportCategory(), sq.getLabel(), sq.getQueryCache());
                 reportItem.setOwnerKey(owner.getPropertyManagerKey());
 
-                if (sq.getTargetContainer(c) != null)
-                    reportItem.setTargetContainer(sq.getTargetContainer(c));
+                reportItem.setTargetContainer(sq.getTargetContainer(c));
                 if (sq.getSource().getSubjectFieldKey() != null)
                     reportItem.setSubjectFieldKey(sq.getSource().getSubjectFieldKey());
                 if (sq.getSource().getSampleDateFieldKey() != null)
@@ -220,15 +221,15 @@ public class ExtraDataSourcesDataProvider extends AbstractDataProvider
     @Override
     public List<TabbedReportItem> getTabbedReportItems(Container c, User u)
     {
-        List<TabbedReportItem> items = new ArrayList<TabbedReportItem>();
-
+        List<TabbedReportItem> items = new ArrayList<>();
         List<NavItem> reportItems = getReportItems(c, u);
         for (NavItem owner : reportItems)
         {
             if (owner instanceof ReportItem)
             {
                 ReportItem sq = (ReportItem)owner;
-                TabbedReportItem reportItem = new QueryTabbedReportItem(this, sq.getSchema(), sq.getQuery(), sq.getLabel(), owner.getReportCategory());
+                QueryCache cache = ((ReportItem) owner).getQueryCache();
+                TabbedReportItem reportItem = new QueryTabbedReportItem(cache, this, sq.getSchema(), sq.getQuery(), sq.getLabel(), owner.getReportCategory());
                 if (sq.getTargetContainer(c) != null)
                     reportItem.setTargetContainer(sq.getTargetContainer(c));
                 if (sq.getSubjectFieldKey() != null)

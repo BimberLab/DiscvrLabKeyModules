@@ -208,7 +208,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     j++;
                     String msg = "processing file: " + so.getFile().getName() + ", " + j + " of " + inputFiles.size();
                     job.getLogger().info(msg);
-                    job.setStatus(msg);
+                    job.setStatus(PipelineJob.TaskStatus.running, msg);
 
                     action.addInput(so.getFile(), "Input BAM");
 

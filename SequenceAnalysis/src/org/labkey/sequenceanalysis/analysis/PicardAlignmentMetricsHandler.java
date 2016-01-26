@@ -189,7 +189,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                 if (collectSummary)
                 {
                     job.getLogger().info("calculating summary metrics");
-                    job.setStatus("CALCULATING SUMMARY METRICS");
+                    job.setStatus(PipelineJob.TaskStatus.running, "CALCULATING SUMMARY METRICS");
                     File metricsFile = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".summary.metrics");
                     AlignmentSummaryMetricsWrapper wrapper = new AlignmentSummaryMetricsWrapper(job.getLogger());
                     wrapper.executeCommand(o.getFile(), support.getCachedGenome(o.getLibrary_id()).getWorkingFastaFile(), metricsFile);
@@ -198,7 +198,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                 if (collectWgs)
                 {
                     job.getLogger().info("calculating wgs metrics");
-                    job.setStatus("CALCULATING WGS METRICS");
+                    job.setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
                     File wgsMetricsFile = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".wgs.metrics");
                     CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(job.getLogger());
                     wgsWrapper.executeCommand(o.getFile(), wgsMetricsFile, support.getCachedGenome(o.getLibrary_id()).getWorkingFastaFile());
@@ -207,7 +207,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                 if (collectInsertSize)
                 {
                     job.getLogger().info("calculating insert size metrics");
-                    job.setStatus("CALCULATING INSERT SIZE METRICS");
+                    job.setStatus(PipelineJob.TaskStatus.running, "CALCULATING INSERT SIZE METRICS");
                     File metricsFile = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics");
                     File metricsHistogram = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics.pdf");
                     CollectInsertSizeMetricsWrapper wrapper = new CollectInsertSizeMetricsWrapper(job.getLogger());

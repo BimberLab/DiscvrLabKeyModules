@@ -161,14 +161,23 @@ public class GalaxyProvenanceImporterTask
         for (String name : inputs.keySet())
         {
             JobInputOutput jio = inputs.get(name);
-            Dataset dataset = getGalaxyInstance().getHistoriesClient().showDataset(getHistoryId(), jio.getId());
-            if (dataset == null)
+            try
             {
-                _log.error("unable to find dataset for jobId: " + jio.getId() + ", with source: " + jio.getSource());
-                continue;
-            }
+                Dataset dataset = getGalaxyInstance().getHistoriesClient().showDataset(getHistoryId(), jio.getId());
+                if (dataset == null)
+                {
+                    _log.error("unable to find dataset for jobId: " + jio.getId() + ", with source: " + jio.getSource());
+                    continue;
+                }
 
-            appendJob(dataset, jobs);
+                appendJob(dataset, jobs);
+            }
+            catch (Exception e)
+            {
+                _log.error("unable to retrieve dataset from job input/output: " + jio.getId() + ", url: [" + jio.getUrl() + "]");
+
+                throw e;
+            }
         }
 
         Map<String, JobInputOutput> outputs = job.getOutputs();

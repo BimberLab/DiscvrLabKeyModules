@@ -27,7 +27,10 @@ public class DockerHTCondorExecutionEngineConfig extends HTCondorExecutionEngine
     @Override
     public List<String> getExtraSubmitLines()
     {
-        return Arrays.asList("requirements = (TARGET.IsDockerComputeNode =?= True)");
+        List<String> ret = super.getExtraSubmitLines();
+        ret.add("requirements = (TARGET.IsDockerComputeNode =?= True)");
+
+        return ret;
     }
 
     @Override

@@ -6,6 +6,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.PropertyManager;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.FileUtil;
@@ -190,7 +191,7 @@ public class QualiMapRunner
     private List<String> getParams(File inputFile) throws FileNotFoundException
     {
         List<String> params = new LinkedList<>();
-        params.add("java");
+        params.add(SequencePipelineService.get().getJavaFilepath());
         params.add("-Xms32m");
         params.add("-Xmx1g");
 

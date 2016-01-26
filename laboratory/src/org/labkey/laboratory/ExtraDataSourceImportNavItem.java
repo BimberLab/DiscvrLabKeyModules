@@ -1,9 +1,7 @@
 package org.labkey.laboratory;
 
 import org.labkey.api.data.Container;
-import org.labkey.api.data.TableInfo;
 import org.labkey.api.laboratory.DataProvider;
-import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.QueryImportNavItem;
 import org.labkey.api.security.User;
 

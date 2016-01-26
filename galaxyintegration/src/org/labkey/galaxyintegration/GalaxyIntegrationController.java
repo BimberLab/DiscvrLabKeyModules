@@ -23,19 +23,25 @@ import org.json.JSONObject;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
+import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
+import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
+import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
+import org.labkey.api.settings.AppProps;
+import org.labkey.api.view.template.PageConfig;
 import org.labkey.galaxyintegration.api.GalaxyService;
 import org.labkey.galaxyintegration.pipeline.ExpRunCreator;
 import org.labkey.galaxyintegration.pipeline.GalaxyProvenanceImporterTask;
 import org.springframework.validation.BindException;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,7 +56,7 @@ public class GalaxyIntegrationController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermission(UpdatePermission.class)
+    @RequiresPermissionClass(UpdatePermission.class)
     @CSRF
     public class SetApiKeyAction extends ApiAction<SetApiKeyForm>
     {
@@ -130,48 +136,66 @@ public class GalaxyIntegrationController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     //NOTE: disabled or calls from galaxy will fail
     //@CSRF
-    public class ImportDatasetAction extends ApiAction<GetProvenanceForm>
+    public class ImportDatasetAction extends ExportAction<GetProvenanceForm>
     {
         @Override
-        public ApiResponse execute(GetProvenanceForm form, BindException errors) throws Exception
+        public void export(GetProvenanceForm form, HttpServletResponse response, BindException errors) throws Exception
         {
+            getPageConfig().setTemplate(PageConfig.Template.Print);
+            getPageConfig().setShowHeader(false);
+            getPageConfig().setNavTrail(null);
+            getPageConfig().setTitle(null);
+
             if (StringUtils.isEmpty(form.getHostName()) || StringUtils.isEmpty(form.getApiKey()))
             {
-                errors.reject(ERROR_MSG, "Must provide hostName and API Key");
-                return null;
+                response.getWriter().write("Error: Must provide hostName and API Key");
+                return;
             }
 
             JSONObject json = GalaxyIntegrationManager.get().getServerSettings(getUser(), form.getHostName());
             if (json == null)
             {
-                errors.reject(ERROR_MSG, "Unknown galaxy host: " + form.getHostName() + ", must register this galaxy instance with your server for the user: " + getUser().getDisplayName(getUser()));
-                return null;
+                response.getWriter().write("Error: Unknown galaxy host: " + form.getHostName() + ", must register this galaxy instance with your server for the user: " + getUser().getDisplayName(getUser()));
+                return;
             }
 
             String url = json.getString("url");
             if (StringUtils.trimToNull(url) == null)
             {
-                errors.reject(ERROR_MSG, "No url saved for host: " +  form.getHostName() + " for user: " + getUser().getDisplayName(getUser()));
+                response.getWriter().write("Error: No url saved for host: " +  form.getHostName() + " for user: " + getUser().getDisplayName(getUser()));
+                return;
             }
 
             if (StringUtils.isEmpty(form.getRunName()))
             {
-                errors.reject(ERROR_MSG, "Run name not provided");
-                return null;
+                response.getWriter().write("Error: Run name not provided");
+                return;
             }
 
             GalaxyProvenanceImporterTask task = new GalaxyProvenanceImporterTask(getUser(), getContainer(), form.getHostName(), form.getApiKey(), form.getHistoryId(), form.getDatasetId(), form.getRunName());
             RecordedActionSet actions = task.run();
             ExpRun run = new ExpRunCreator().createRun(actions, getContainer(), getUser(), form.getRunName(), form.getDescription());
 
-            JSONObject j = new JSONObject();
-            j.put("success", true);
-            if (run != null)
+            StringBuilder html = new StringBuilder();
+            if ("json".equals(form.getOutputFormat()))
             {
-                j.put("runId", run.getRowId());
+                JSONObject j = new JSONObject();
+                j.put("success", true);
+                if (run != null)
+                {
+                    j.put("runId", run.getRowId());
+                }
+
+                html.append(j.toString());
+            }
+            else
+            {
+                DetailsURL runUrl = DetailsURL.fromString("/experiment/showRunGraphDetail.view", getContainer());
+                html.append("<h3>A record of the provenance of the selected dataset has been imported into LabKey.  <a href=\"" + AppProps.getInstance().getBaseServerUrl() + runUrl.getActionURL().toString() + "rowId=" + run.getRowId() + "\">Click here to view this information</a> (login may be required)</h3>");
             }
 
-            return new ApiSimpleResponse(j);
+
+            response.getWriter().write(html.toString());
         }
     }
 
@@ -183,6 +207,7 @@ public class GalaxyIntegrationController extends SpringActionController
         private String _runName;
         private String _description;
         private String _apiKey;
+        private String _outputFormat;
 
         public String getDatasetId()
         {
@@ -242,6 +267,16 @@ public class GalaxyIntegrationController extends SpringActionController
         public void setApiKey(String apiKey)
         {
             _apiKey = apiKey;
+        }
+
+        public String getOutputFormat()
+        {
+            return _outputFormat;
+        }
+
+        public void setOutputFormat(String outputFormat)
+        {
+            _outputFormat = outputFormat;
         }
     }
 }

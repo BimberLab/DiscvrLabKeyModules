@@ -63,9 +63,4 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
         getLogger().info("\tensure dictionary exists");
         new CreateSequenceDictionaryWrapper(getLogger()).execute(referenceFasta, false);
     }
-
-    protected List<String> getBaseParams()
-    {
-        return PicardWrapper.getBaseParams();
-    }
 }

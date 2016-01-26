@@ -110,18 +110,18 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
         try
         {
-            getJob().setStatus("IMPORTING READS");
+            getJob().setStatus(PipelineJob.TaskStatus.running, "IMPORTING READS");
             List<RecordedAction> actions = new ArrayList<>();
 
             //NOTE: this runs after XARgenerator, so it cannot create or modify any additional files
             importReadsets();
 
-            getJob().setStatus("COMPLETE");
+            getJob().setStatus(PipelineJob.TaskStatus.complete);
             return new RecordedActionSet(actions);
         }
         catch (Exception e)
         {
-            getJob().setStatus("ERROR");
+            getJob().setStatus(PipelineJob.TaskStatus.error);
             throw new PipelineJobException(e);
         }
     }
@@ -300,7 +300,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             getJob().getLogger().info("calculating quality metrics for readset: " + model.getName() + ", " + idx + " of " + newReadsets.size());
             for (ReadDataImpl d : model.getReadData())
             {
-                getJob().setStatus("CALCULATING QUALITY METRICS");
+                getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING QUALITY METRICS");
                 addQualityMetricsForReadset(model, d.getFileId1());
                 if (d.getFileId2() != null)
                 {
@@ -309,7 +309,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
                 if (settings.isRunFastqc())
                 {
-                    getJob().setStatus("RUNNING FASTQC");
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING FASTQC");
                     runFastqcForFile(d.getFileId1());
                     if (d.getFileId2() != null)
                     {

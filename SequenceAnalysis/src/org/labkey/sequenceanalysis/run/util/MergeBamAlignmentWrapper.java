@@ -9,6 +9,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
@@ -51,8 +52,8 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             }
 
             List<String> params = new LinkedList<>();
-            params.add("java");
-            params.addAll(getBaseParams());
+            params.add(SequencePipelineService.get().getJavaFilepath());
+            params.addAll(SequencePipelineService.get().getJavaOpts());
             params.add("-jar");
             params.add(getPicardJar().getPath());
             params.add(getTooName());

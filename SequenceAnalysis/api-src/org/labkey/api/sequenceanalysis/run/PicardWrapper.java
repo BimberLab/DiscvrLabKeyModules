@@ -44,7 +44,7 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         setWarnNonZeroExits(false);
         setThrowNonZeroExits(false);
 
-        String ret = StringUtils.trim(execute(params));
+        String ret = StringUtils.trim(executeWithOutput(params));
         setWarnNonZeroExits(origWarn);
         setThrowNonZeroExits(origThrow);
 
@@ -68,26 +68,6 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         File baseDir = path == null ? null : new File(path);
 
         return new File(baseDir, "picard.jar");
-    }
-
-    public static List<String> getBaseParams()
-    {
-        List<String> ret = new ArrayList<>();
-
-        String tmpDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_TMP_DIR");
-        if (StringUtils.trimToNull(tmpDir) != null)
-        {
-            ret.add("-Djava.io.tmpdir=" + tmpDir);
-        }
-
-        String xmx = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_MEMORY");
-        if (StringUtils.trimToNull(xmx) != null)
-        {
-            String[] tokens = xmx.split(" ");
-            ret.addAll(Arrays.asList(tokens));
-        }
-
-        return ret;
     }
 
     public ValidationStringency getStringency()

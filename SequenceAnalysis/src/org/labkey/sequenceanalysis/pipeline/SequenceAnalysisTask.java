@@ -301,6 +301,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             }
             so.setDataId(d.getRowId());
             so.setContainer(getJob().getContainerId());
+            so.setRunId(runId);
 
             Table.insert(getJob().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), so);
 
@@ -587,7 +588,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         for (PipelineStepProvider<AnalysisStep> provider : providers)
         {
             taskHelper.getJob().getLogger().info("Running " + provider.getLabel() + " for analysis: " + model.getRowId());
-            taskHelper.getJob().setStatus(("Running: " + provider.getLabel()).toUpperCase());
+            taskHelper.getJob().setStatus(PipelineJob.TaskStatus.running, ("Running: " + provider.getLabel()).toUpperCase());
             taskHelper.getJob().getLogger().info("\tUsing alignment: " + inputBam.getPath());
 
             RecordedAction action = new RecordedAction(provider.getLabel());
@@ -615,7 +616,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         for (PipelineStepProvider<AnalysisStep> provider : providers)
         {
             taskHelper.getJob().getLogger().info("Running " + provider.getLabel() + " for BAM: " + inputBam.getPath());
-            taskHelper.getJob().setStatus(("Running: " + provider.getLabel()).toUpperCase());
+            taskHelper.getJob().setStatus(PipelineJob.TaskStatus.running, ("Running: " + provider.getLabel()).toUpperCase());
 
             RecordedAction action = new RecordedAction(provider.getLabel());
             taskHelper.getFileManager().addInput(action, "Input BAM File", inputBam);

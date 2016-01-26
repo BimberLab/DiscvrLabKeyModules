@@ -233,19 +233,30 @@ public class OmeroServer
         //See above how to load the image.
         PixelsData pixels = image.getDefaultPixels();
         ThumbnailStorePrx store = entry.createThumbnailStore();
-        Map<Long, byte[]> map = store.getThumbnailByLongestSideSet(omero.rtypes.rint(96), Arrays.asList(pixels.getId()));
-
-        //Convert the byte array
-        Iterator i = map.entrySet().iterator();
-
-        //Create a buffered image to display
-        if (i.hasNext())
+        try
         {
-            Map.Entry mapEntry = (Map.Entry) i.next();
-            try (ByteArrayInputStream stream = new ByteArrayInputStream((byte[]) mapEntry.getValue()))
+            Map<Long, byte[]> map = store.getThumbnailByLongestSideSet(omero.rtypes.rint(96), Arrays.asList(pixels.getId()));
+
+            //Convert the byte array
+            Iterator i = map.entrySet().iterator();
+
+            //Create a buffered image to display
+            if (i.hasNext())
             {
-                IOUtils.copy(stream, response.getOutputStream());
+                Map.Entry mapEntry = (Map.Entry) i.next();
+                try (ByteArrayInputStream stream = new ByteArrayInputStream((byte[]) mapEntry.getValue()))
+                {
+                    IOUtils.copy(stream, response.getOutputStream());
+                }
             }
+        }
+        catch (ome.conditions.SecurityViolation | omero.SecurityViolation e)
+        {
+//            "/internal/webapp/gxt/images/gray/window/icon-error.gif";
+//            Resource r =
+//            //TODO: consider streaming error icon??
+
+            throw new IOException("unable to download omero image: " + omeroId, e);
         }
     }
 }

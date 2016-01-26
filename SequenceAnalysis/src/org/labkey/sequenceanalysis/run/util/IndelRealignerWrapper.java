@@ -9,6 +9,7 @@ import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.resource.FileResource;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
@@ -50,8 +51,8 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
         //then run realigner
         getLogger().info("\trunning IndelRealigner");
         List<String> realignerArgs = new ArrayList<>();
-        realignerArgs.add("java");
-        realignerArgs.addAll(getBaseParams());
+        realignerArgs.add(SequencePipelineService.get().getJavaFilepath());
+        realignerArgs.addAll(SequencePipelineService.get().getJavaOpts());
         realignerArgs.add("-jar");
         realignerArgs.add(getJAR().getPath());
         realignerArgs.add("-T");
@@ -107,8 +108,8 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
                 throw new FileNotFoundException("Not found: " + scalaScript.getPath());
 
             List<String> args = new ArrayList<>();
-            args.add("java");
-            args.addAll(getBaseParams());
+            args.add(SequencePipelineService.get().getJavaFilepath());
+            args.addAll(SequencePipelineService.get().getJavaOpts());
             args.add("-classpath");
             args.add(getJAR().getPath());
 
@@ -194,8 +195,8 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
     {
         getLogger().info("building target intervals");
         List<String> args = new ArrayList<>();
-        args.add("java");
-        args.addAll(getBaseParams());
+        args.add(SequencePipelineService.get().getJavaFilepath());
+        args.addAll(SequencePipelineService.get().getJavaOpts());
         args.add("-jar");
         args.add(getJAR().getPath());
         args.add("-T");
