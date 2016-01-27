@@ -16,17 +16,16 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
-import org.labkey.api.sequenceanalysis.run.CommandWrapper;
-import org.labkey.api.util.BreakpointThread;
 import org.labkey.api.util.Compress;
+import org.labkey.api.util.DebugInfoDumper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
-import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
-import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -915,7 +914,7 @@ public class TaskFileManagerImpl implements TaskFileManager
                 _job.getLogger().error(ex.getMessage(), ex);
             }
 
-            BreakpointThread.dumpThreads(_job.getLogger());
+            DebugInfoDumper.dumpThreads(_job.getLogger());
 
             throw e;
         }
