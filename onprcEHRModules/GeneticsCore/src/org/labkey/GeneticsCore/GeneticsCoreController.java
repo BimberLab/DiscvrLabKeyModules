@@ -73,7 +73,7 @@ public class GeneticsCoreController extends SpringActionController
                 publicJson.add(json);
 
                 json = new JSONObject();
-                Container publicBlast = ContainerManager.getForPath("/Public/Public BLAST");
+                Container publicBlast = ContainerManager.getForPath("/Public/PublicBLAST");
                 if (publicBlast != null)
                 {
                     json.put("name", "BLAST");

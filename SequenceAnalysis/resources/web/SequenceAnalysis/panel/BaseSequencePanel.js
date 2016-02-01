@@ -126,7 +126,8 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
 
             LABKEY.Pipeline.getFileStatus({
                 taskId: this.taskId,
-                path: this.path,
+                //always check the root path, since we expect to create/save here
+                path: '/',
                 files: this.fileNames,
                 scope: this,
                 success: this.validateProtocol,

@@ -194,6 +194,7 @@ public class LabSummaryNotification implements Notification
         {
             String key = folderPath;
             Long total = totals.get(folderPath);
+            total = total == null ? 0L : total;
 
             newValueMap.put(key, total.toString());
             Long previousCount = null;
@@ -239,6 +240,7 @@ public class LabSummaryNotification implements Notification
         {
             String key = item.getPropertyManagerKey();
             Long total = item.getRowCount(c, u);
+            total = total == null ? 0L : total;
 
             newValueMap.put(key, total.toString());
             Long previousCount = null;

@@ -157,7 +157,7 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
         boolean success = false;
         try
         {
-            fastaCopy = new File(BLASTManager.get().getDatabaseDir(), getPipelineJob().getDatabaseGuid() + ".fasta");
+            fastaCopy = new File(getPipelineJob().getDatabaseDir(), getPipelineJob().getDatabaseGuid() + ".fasta");
 
             //decompress file and also touch up filenames to keep BLAST happier
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(data.getFile())));BufferedWriter writer = new BufferedWriter(new FileWriter(fastaCopy)))
@@ -183,7 +183,7 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
 
             BLASTWrapper wrapper = new BLASTWrapper();
             wrapper.setLog(getJob().getLogger());
-            wrapper.createDatabase(getPipelineJob().getDatabaseGuid(), null, fastaCopy);
+            wrapper.createDatabase(getPipelineJob().getDatabaseGuid(), null, fastaCopy, BLASTManager.get().getDatabaseDir(getJob().getContainer(), true));
             success = true;
         }
         catch (IOException | IllegalArgumentException e)

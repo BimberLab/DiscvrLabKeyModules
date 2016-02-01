@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.pipeline;
 import com.drew.lang.annotations.Nullable;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -113,14 +114,31 @@ public class NcbiGenomeImportTask extends PipelineJob.Task<NcbiGenomeImportTask.
             ftpClient.login("anonymous", "");
 
             String target = "/genomes/" + getPipelineJob().getRemoteDirName() + "/Assembled_chromosomes/seq";
-            ftpClient.changeWorkingDirectory(target);
+            getJob().getLogger().debug("changing to folder: " + target);
+            boolean success = ftpClient.changeWorkingDirectory(target);
+            if (!success)
+            {
+                getJob().getLogger().warn("unable to change to folder: " + target);
+            }
+            ftpClient.setDefaultTimeout(200);
+            ftpClient.setConnectTimeout(200);
+            ftpClient.setDataTimeout(200);
+
             List<Integer> sequenceIds = new ArrayList<>();
             FTPFile[] files = ftpClient.listFiles();
+            if (files.length == 0)
+            {
+                getJob().getLogger().warn("no files found under: " + target);
+                getJob().getLogger().warn(ftpClient.getReplyString());
+            }
+
+            List<String> fileNames = new ArrayList<>();
             for (FTPFile child : files)
             {
+                fileNames.add(child.getName());
                 if (child.getName().endsWith(".fa.gz"))
                 {
-                    if ((getPipelineJob().getGenomePrefix() == null || child.getName().startsWith(getPipelineJob().getGenomePrefix())) && child.getName().contains("_chr"))
+                    if ((StringUtils.trimToNull(getPipelineJob().getGenomePrefix()) == null || child.getName().startsWith(getPipelineJob().getGenomePrefix())) && child.getName().contains("_chr"))
                     {
                         getJob().getLogger().info("processing file: " + child.getName());
 
@@ -136,7 +154,18 @@ public class NcbiGenomeImportTask extends PipelineJob.Task<NcbiGenomeImportTask.
 
             ftpClient.logout();
 
-            SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, getJob().getContainer(), getJob().getUser(), getPipelineJob().getGenomeName(), "Created automatically from an NCBI download");
+            if (sequenceIds.isEmpty())
+            {
+                getJob().getLogger().info("no sequences found.  this might mean there are no .fa.gz files.  files found:");
+                for (String fn : fileNames)
+                {
+                    getJob().getLogger().info(fn);
+                }
+            }
+            else
+            {
+                SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, getJob().getContainer(), getJob().getUser(), getPipelineJob().getGenomeName(), "Created automatically from an NCBI download");
+            }
         }
         catch (Exception e)
         {

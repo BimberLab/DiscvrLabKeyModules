@@ -263,28 +263,6 @@ SequenceAnalysis.Buttons = new function(){
             }, this);
         },
 
-        generateQualiMapReport: function(dataRegionName, pkName){
-            var dataRegion = LABKEY.DataRegions[dataRegionName];
-            var checked = dataRegion.getChecked();
-            pkName = pkName || 'dataIds';
-            var params = {};
-            params[pkName] = checked;
-
-            if (!checked.length){
-                alert('Must select one or more rows');
-                return;
-            }
-
-            Ext4.Msg.alert('QualiMap', 'You are about to run QualiMap, an external tool that generates QC reports on the selected BAM files.  Note: this tool runs on the fly, meaning it may take time for the page to load, depending on the size of your input files.<p>QualiMap is a third party tool, not written by the authors of this module.', function(){
-                window.location = LABKEY.ActionURL.buildURL(
-                        'sequenceanalysis',
-                        'qualiMapReport',
-                        dataRegion.containerPath,
-                        params
-                );
-            }, this);
-        },
-
         generateFastQcForAnalysis: function(dataRegionName, btnEl){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();

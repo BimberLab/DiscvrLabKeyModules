@@ -8,6 +8,7 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import org.apache.log4j.Logger;
 import org.broadinstitute.gatk.engine.samples.Sample;
 import org.broadinstitute.gatk.engine.samples.SampleDB;
 import org.broadinstitute.gatk.engine.walkers.Walker;
@@ -38,10 +39,12 @@ import java.util.*;
 
 public class MendelianViolationCount extends InfoFieldAnnotation implements RodRequiringAnnotation {
 
+    private final static Logger logger = Logger.getLogger(MendelianViolationCount.class);
     public static final String MVLR_KEY = "MV_NUM";
     public static final String MVLR_SN_KEY = "MV_SAMPLLES";
-    private double minGenotypeQuality = 10;
+    private double minGenotypeQuality = 10.0;
     private SampleDB sampleDB = null;
+    private boolean walkerIdentityCheckWarningLogged = false;
 
     public Map<String, Object> annotate(final RefMetaDataTracker tracker,
                                         final AnnotatorCompatible walker,
@@ -49,6 +52,23 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
                                         final Map<String, AlignmentContext> stratifiedContexts,
                                         final VariantContext vc,
                                         final Map<String, PerReadAlleleLikelihoodMap> stratifiedPerReadAlleleLikelihoodMap) {
+
+        // Can only be called from VariantAnnotator
+        if ( !(walker instanceof VariantAnnotator) ) {
+            if ( !walkerIdentityCheckWarningLogged ) {
+                if ( walker != null )
+                    logger.warn("Annotation will not be calculated, must be called from VariantAnnotator, not " + walker.getClass().getName());
+                else
+                    logger.warn("Annotation will not be calculated, must be called from VariantAnnotator");
+                walkerIdentityCheckWarningLogged = true;
+            }
+            return null;
+        }
+
+        if (((VariantAnnotator)walker).minGenotypeQualityP > 0)
+        {
+            minGenotypeQuality = ((VariantAnnotator)walker).minGenotypeQualityP;
+        }
 
         Map<String,Object> attributeMap = new HashMap<String,Object>(1);
         if ( sampleDB == null ) {

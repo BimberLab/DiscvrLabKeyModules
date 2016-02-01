@@ -89,7 +89,7 @@ public class BLASTController extends SpringActionController
         public ApiResponse execute(Object form, BindException errors)
         {
             Map<String, Object> resultProperties = new HashMap<>();
-            String[] configKeys = {BLASTManager.BLAST_BIN_DIR, BLASTManager.BLAST_DB_DIR};
+            String[] configKeys = {BLASTManager.BLAST_BIN_DIR};
 
             resultProperties.put("configKeys", configKeys);
             resultProperties.put("config", PropertyManager.getProperties(BLASTManager.CONFIG_PROPERTY_DOMAIN));
@@ -112,9 +112,6 @@ public class BLASTController extends SpringActionController
             Map<String, String> configMap = new HashMap<>();
             if (form.getBlastBinDir() != null)
                 configMap.put(BLASTManager.BLAST_BIN_DIR, form.getBlastBinDir());
-
-            if (form.getBlastDbDir() != null)
-                configMap.put(BLASTManager.BLAST_DB_DIR, form.getBlastDbDir());
 
             try
             {
@@ -143,16 +140,6 @@ public class BLASTController extends SpringActionController
         public void setBlastBinDir(String blastBinDir)
         {
             _blastBinDir = blastBinDir;
-        }
-
-        public String getBlastDbDir()
-        {
-            return _blastDbDir;
-        }
-
-        public void setBlastDbDir(String blastDbDir)
-        {
-            _blastDbDir = blastDbDir;
         }
     }
 
@@ -201,14 +188,11 @@ public class BLASTController extends SpringActionController
         @Override
         public void validate(RunBlastForm form, BindException errors)
         {
-            if (BLASTManager.get().getDatabaseDir() == null)
-                errors.reject(ERROR_MSG, "BLAST DB folder has not been set or is not valid");
+            if (BLASTManager.get().getBinDir() == null)
+                errors.reject(ERROR_MSG, "BLAST bin folder has not been set or is not valid");
 
             if (form.getDatabase() == null)
                 errors.reject(ERROR_MSG, "No BLAST DB provided");
-
-            if (BLASTManager.get().getDatabaseDir() == null)
-                errors.reject(ERROR_MSG, "BLAST DB folder has not been set or is not valid");
 
             boolean hasSequence = !StringUtils.isEmpty(form.getQuery());
             if (!hasSequence)

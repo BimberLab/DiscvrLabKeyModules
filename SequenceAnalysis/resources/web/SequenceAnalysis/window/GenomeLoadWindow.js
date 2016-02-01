@@ -23,8 +23,8 @@ Ext4.define('SequenceAnalysis.window.GenomeLoadWindow', {
             items: [{
                 html: 'This will load a reference genome from NCBI\'s FTP site, which is <a style="font-weight: bold;" href="ftp://ftp.ncbi.nlm.nih.gov/genomes/README.txt" target="_blank">described here</a>.<br><br>' +
                         'You need to supply the name of the genome directory to load.  To view available directories, <a style="font-weight: bold;" href="ftp://ftp.ncbi.nlm.nih.gov/genomes/" target="_blank">click here</a>.<br><br>' +
-                        'This import is highly experimental and only tested on human.  It expects the supplied genome to have one subdirectory per chromosome, starting with \'CHR_\'.  Within each chromosome directory, there must be a file ' +
-                        'with the extension \'.fa.gz\'.  If the organism you provided has more than 1 genome in the folder (which is the case for human), you must also provide the prefix for the FASTA file names.   ',
+                        'This import is highly experimental and only tested on human.  It expects the supplied genome to have the subdirectory: /Assembled_chromosomes/seq/.  Within this folder, it will look for files with the extension .fa.gz.  To process a file, it must have "_chr" in the name.  ' +
+                        'If a genome prefix is supplied, the .fa.gz file must start with this prefix as well.  If blank, any prefix is allowed.  ',
                 style: 'padding-bottom: 10px;'
             },{
                 xtype: 'textfield',

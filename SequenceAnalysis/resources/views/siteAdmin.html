@@ -62,63 +62,6 @@
                 },{
                     style: 'margin-top:10px;margin-bottom:10px;',
                     html: 'If tests fail, please check your site log file for additional information.  Note: if you did not enable the startup param, the tests will pass without actually exercising the pipeline (this is by design).  However, your site log file should contain the line "Sequence pipeline is not enabled on this server, so some tests will be skipped"<br>'
-                },{
-                    html: '<hr>'
-                },{
-                    html: '<h3>QualiMap Configuration</h3>'
-                },{
-                    defaults: {
-                        border: false
-                    },
-                    items: [{
-                        html: 'Note: this is likely going to be removed, as the module already integrates with FASTQC, which provides similar features as QualiMap.  However, this module integrates with QualiMap, an external tool used to generate BAM file QC reports.  To enable this feature, you need to <a href="http://qualimap.bioinfo.cipf.es/">download QualiMap to your server</a>, and provide the path below.  The module currently supports QualiMap 2.0',
-                        style: 'padding-bottom: 10px;'
-                    },{
-                        xtype: 'textfield',
-                        width: 500,
-                        fieldLabel: 'QualiMap Path',
-                        itemId: 'qualimapPath',
-                        style: 'margin-bottom: 10px;',
-                        listeners: {
-                            render: function(field){
-                                field.loadServerValue();
-                            }
-                        },
-                        loadServerValue: function(){
-                            LABKEY.Ajax.request({
-                                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getQualiMapPath', '/'),
-                                method: 'POST',
-                                scope: this,
-                                failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback(), this),
-                                success: LABKEY.Utils.getCallbackWrapper(function (response) {
-                                    this.setValue(response.qualiMapDir);
-                                    if (response.qualiMapDir && !response.isValid){
-                                        this.markInvalid(response.validationMessage);
-                                    }
-                                }, this)
-                            });
-                        }
-                    },{
-                        xtype: 'button',
-                        text: 'Save',
-                        border: true,
-                        handler: function (btn) {
-                            LABKEY.Ajax.request({
-                                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'setQualiMapPath', '/'),
-                                method: 'POST',
-                                params: {
-                                    path: btn.up('panel').down('#qualimapPath').getValue()
-                                },
-                                scope: this,
-                                failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback(), this),
-                                success: LABKEY.Utils.getCallbackWrapper(function (response) {
-                                    Ext4.Msg.alert('Success', 'Save Successful', function () {
-                                        window.location.reload();
-                                    });
-                                }, this)
-                            });
-                        }
-                    }]
                 }]
             }).render(webpart.wrapperDivId);
         }

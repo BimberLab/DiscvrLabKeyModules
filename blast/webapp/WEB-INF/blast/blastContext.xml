@@ -6,7 +6,12 @@
     <bean id="blastPipelineRegistry" class="org.labkey.api.pipeline.TaskPipelineRegistrar">
         <property name="factoryImpls">
             <list>
-                <bean class="org.labkey.blast.pipeline.BlastTask$Factory"/>
+                <bean class="org.labkey.blast.pipeline.BlastWorkTask$Factory">
+                    <property name="location" value="webserver" />
+                </bean>
+                <bean class="org.labkey.blast.pipeline.BlastFinalTask$Factory">
+                    <property name="location" value="webserver-fasta-check" />
+                </bean>
                 <bean class="org.labkey.blast.pipeline.BlastDatabaseTask$Factory"/>
             </list>
         </property>
@@ -16,7 +21,8 @@
                     <constructor-arg type="java.lang.Class" value="org.labkey.blast.pipeline.BlastPipelineJob"/>
                     <property name="taskProgressionSpec">
                         <list>
-                            <value type="java.lang.Class">org.labkey.blast.pipeline.BlastTask</value>
+                            <value type="java.lang.Class">org.labkey.blast.pipeline.BlastWorkTask</value>
+                            <value type="java.lang.Class">org.labkey.blast.pipeline.BlastFinalTask</value>
                         </list>
                     </property>
                 </bean>

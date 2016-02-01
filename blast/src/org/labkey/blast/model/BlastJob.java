@@ -12,6 +12,8 @@ import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.security.User;
@@ -21,6 +23,7 @@ import org.labkey.blast.BLASTWrapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -36,7 +39,7 @@ import java.util.Scanner;
  * Date: 7/20/2014
  * Time: 3:51 PM
  */
-public class BlastJob    
+public class BlastJob implements Serializable
 {
     private int _rowid;
     private String _databaseId;
@@ -52,6 +55,7 @@ public class BlastJob
     private Date _modified;
     private String _jobId;
     private Integer _htmlFile;
+    private File _outputDir = null;
     
     public BlastJob()
     {
@@ -227,6 +231,16 @@ public class BlastJob
 
     public File getOutputDir()
     {
+        if (_outputDir != null)
+        {
+            return _outputDir;
+        }
+
+        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+        {
+            throw new UnsupportedOperationException("this can only be called from the webserver");
+        }
+
         Container c = ContainerManager.getForId(_container);
         if (c == null)
         {
@@ -238,6 +252,8 @@ public class BlastJob
         {
             outputDir.mkdirs();
         }
+
+        _outputDir = outputDir;
 
         return outputDir;
     }
@@ -252,8 +268,13 @@ public class BlastJob
         return new File(getOutputDir(), "blast-" + _objectid + ".input");
     }
 
-    public void setComplete(User u, @Nullable PipelineJob job)
+    public void setComplete(User u, @Nullable PipelineJob job) throws PipelineJobException
     {
+        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+        {
+            throw new PipelineJobException("this can only be called from the webserver");
+        }
+
         setHasRun(true);
 
         if (!isSaveResults())

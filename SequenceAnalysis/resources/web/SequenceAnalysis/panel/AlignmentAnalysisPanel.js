@@ -96,7 +96,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
                 store: this.analysesStore,
                 itemSelector: 'tr.file_list',
                 tpl: [
-                    '<table class="fileNames"><tr class="fileNames"><td>Analysis Id</td><td>Description</td><td>Readset Name</td><td>Platform</td><td>Alignment File</td><td>Folder</td><td></td><td></td></tr>',
+                    '<table class="fileNames"><tr class="fileNames"><td>Analysis Id</td><td>Description</td><td>Readset Name</td><td>Platform</td><td>Alignment File</td><td>Folder</td><td></td></tr>',
                     '<tpl for=".">',
                     '<tr class="file_list">',
                     '<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "sequenceanalysis", "query.queryName":"sequence_analyses", "query.rowId~eq": values.rowid})]}" target="_blank">{rowid:htmlEncode}</a></td>',
@@ -109,7 +109,6 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
 
                     '<td><a href="{[LABKEY.ActionURL.buildURL("project", "start", values["container/path"], {})]}" target="_blank">{[Ext4.htmlEncode(values["container/displayName"])]}</a></td>',
                     '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "fastqcReport", values["container/path"], {dataIds: values.alignmentfile})]}" target="_blank">FASTQC Report</a></td>',
-                    '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "qualiMapReport", values["container/path"], {analysisIds: values.rowid})]}" target="_blank">QualiMap Report</a></td>',
                     '</tr>',
                     '</tpl>',
                     '</table>'

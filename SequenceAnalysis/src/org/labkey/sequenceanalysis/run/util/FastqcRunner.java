@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
@@ -80,7 +81,7 @@ public class FastqcRunner
         _cacheResults = cacheResults;
     }
 
-    public String execute(List<File> sequenceFiles) throws FileNotFoundException
+    public String execute(List<File> sequenceFiles, @Nullable Map<File, String> fileLabels) throws FileNotFoundException
     {
         //remove duplicates
         List<File> uniqueFiles = new ArrayList<>();
@@ -116,7 +117,7 @@ public class FastqcRunner
             }
         }
 
-        return processOutput(uniqueFiles, filesCreated);
+        return processOutput(uniqueFiles, filesCreated, fileLabels);
     }
 
     private void runForFile(File f)
@@ -187,7 +188,7 @@ public class FastqcRunner
         return compressed;
     }
 
-    private String processOutput(List<File> inputFiles, Set<File> filesCreated)
+    private String processOutput(List<File> inputFiles, Set<File> filesCreated, @Nullable Map<File, String> fileLabels)
     {
         //NOTE: this allows remote servers to run/cache the data.  AppProps.getContextPath() will fail remotely, so abort.
         if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
@@ -221,7 +222,16 @@ public class FastqcRunner
 
                 //update IDs so links will point to correct file after concatenated:
                 String suffix = f.getName().replaceAll("\\.", "_");
-                html = html.replaceAll("<h2>Summary</h2>", "<h2 id=\"report_" + suffix + "\">Overview: " + f.getName() + "</h2>");
+                String title;
+                if (fileLabels == null || !fileLabels.containsKey(f))
+                {
+                    title = f.getName();
+                }
+                else
+                {
+                    title = fileLabels.get(f) + " (" + f.getName() + ")";
+                }
+                html = html.replaceAll("<h2>Summary</h2>", "<h2 id=\"report_" + suffix + "\">Overview: " + title + "</h2>");
 
                 for (int i=0;i < 10;i++)
                 {
@@ -238,7 +248,7 @@ public class FastqcRunner
                 delim = "<hr>";
 
                 //also build a header:
-                header += "<li><a href=\"#report_" + suffix + "\">" + f.getName() + "</a></li>";
+                header += "<li><a href=\"#report_" + suffix + "\">" + title + "</a></li>";
 
                 //remove footer except on final file
                 if (counter < inputFiles.size() - 1)

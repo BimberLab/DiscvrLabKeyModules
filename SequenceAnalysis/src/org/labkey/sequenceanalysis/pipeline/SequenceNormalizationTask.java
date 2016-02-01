@@ -24,6 +24,7 @@ import htsjdk.samtools.util.QualityEncodingDetector;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.labkey.api.pipeline.PipelineJob;
@@ -102,7 +103,8 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         {
             try
             {
-                boolean isParticipant = getFilesToNormalize(job, ((FileAnalysisJobSupport) job).getInputFiles(), true).size() > 0;
+                SequencePipelineSettings settings = new SequencePipelineSettings(job.getParameters());
+                boolean isParticipant = getFilesToNormalize(job, ((FileAnalysisJobSupport) job).getInputFiles(), true).size() > 0 || settings.isRunFastqc();
                 if (!isParticipant)
                     job.getLogger().debug("Skipping sequence normalization step on remove server since there are no files to normalize");
 
@@ -327,10 +329,13 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     if (lane.size() > 1)
                     {
                         RecordedAction mergeAction = new RecordedAction(MERGE_ACTIONNAME);
-                        mergeAction.setStartTime(new Date());
+                        Date start = new Date();
+                        mergeAction.setStartTime(start);
 
                         String platformUnit = lane.get(0).platformUnit == null ? "" : lane.get(0).platformUnit;
-                        getJob().getLogger().info("merging lane: " + fg.name + " / " + platformUnit);
+                        String status = "Merging lane: " + fg.name + " / " + platformUnit;
+                        getJob().getLogger().info(status);
+                        getJob().setStatus(PipelineJob.TaskStatus.running, status);
 
                         File merged1 = new File(normalizationDir, SequenceTaskHelper.getUnzippedBaseName(fg.filePairs.get(0).file1.getName()) + ".merged.fastq.gz");
                         getJob().getLogger().debug("\tto: " + merged1.getPath());
@@ -370,7 +375,10 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                             getHelper().getFileManager().addOutput(mergeAction, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, merged2);
                         }
 
-                        mergeAction.setEndTime(new Date());
+                        Date end = new Date();
+                        getJob().getLogger().info("Merge Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+
+                        mergeAction.setEndTime(end);
                         actions.add(mergeAction);
                     }
                     else if (lane.isEmpty())
@@ -590,7 +598,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING FASTQC");
                     getJob().getLogger().info("running FastQC for file: " + f);
                     FastqcRunner runner = new FastqcRunner(getJob().getLogger());
-                    runner.execute(Arrays.asList(f));
+                    runner.execute(Arrays.asList(f), null);
 
                     _taskHelper.getFileManager().addOutput(fqAction, "FASTQC Output", new File(f.getParentFile(), runner.getExpectedBasename(f) + "_fastqc.html.gz"));
                     fqAction.setEndTime(new Date());

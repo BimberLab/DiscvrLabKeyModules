@@ -6,23 +6,17 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.Selector;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.pipeline.PipeRoot;
-import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.DefaultSystemMaintenanceTask;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.SystemMaintenance;
 import org.labkey.blast.model.BlastJob;
 
 import java.io.File;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -114,13 +108,24 @@ public class BLASTMaintenanceTask extends DefaultSystemMaintenanceTask
         SQLFragment sql = new SQLFragment("DELETE FROM blast." + BLASTSchema.TABLE_BLAST_JOBS + " WHERE saveResults = ?", false);
         new SqlExecutor(blastJobs.getSchema()).execute(sql);
 
+        processContainerDB(ContainerManager.getRoot());
+    }
+
+    private void processContainerDB(Container c)
+    {
         //delete blast databases not connected to a known record
-        File dbDir = BLASTManager.get().getDatabaseDir();
+        File dbDir = BLASTManager.get().getDatabaseDir(c, false);
         if (dbDir != null && dbDir.exists())
         {
             TableInfo databases = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_DATABASES);
-            TableSelector databaseTs = new TableSelector(databases, PageFlowUtil.set("objectid"));
+            TableSelector databaseTs = new TableSelector(databases, PageFlowUtil.set("objectid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
             List<String> dbNames = databaseTs.getArrayList(String.class);
+            if (dbDir.list() == null || dbDir.list().length == 0)
+            {
+                _log.info("empty directory: " + dbDir.getPath());
+                return;
+            }
+
             for (File f : dbDir.listFiles())
             {
                 if (BLASTWrapper.DB_TYPE.isType(f))
@@ -141,6 +146,11 @@ public class BLASTMaintenanceTask extends DefaultSystemMaintenanceTask
                     _log.error("BLAST db does not exist: " + expected.getPath());
                 }
             }
+        }
+
+        for (Container child : c.getChildren())
+        {
+            processContainerDB(child);
         }
     }
 

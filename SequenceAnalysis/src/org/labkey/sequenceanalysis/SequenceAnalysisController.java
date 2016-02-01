@@ -52,7 +52,6 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DataRegionSelection;
 import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.ResultsImpl;
 import org.labkey.api.data.SQLFragment;
@@ -95,7 +94,6 @@ import org.labkey.api.resource.Resource;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.IgnoresTermsOfUse;
 import org.labkey.api.security.RequiresPermission;
-import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
@@ -114,7 +112,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.study.assay.AssayFileWriter;
-import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -147,7 +144,6 @@ import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.NtCoverageAggregator;
 import org.labkey.sequenceanalysis.run.analysis.NtSnpByPosAggregator;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
-import org.labkey.sequenceanalysis.run.util.QualiMapRunner;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -204,6 +200,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             //resolve files
             List<File> files = new ArrayList<>();
+            Map<File, String> labels = new HashMap<>();
 
             if (form.getFilenames() != null)
             {
@@ -253,11 +250,13 @@ public class SequenceAnalysisController extends SpringActionController
                         if (d.getFile1() != null)
                         {
                             files.add(d.getFile1());
+                            labels.put(d.getFile1(), "Readset " + rs.getName());
                         }
 
                         if (d.getFile2() != null)
                         {
                             files.add(d.getFile2());
+                            labels.put(d.getFile2(), "Readset " + rs.getName());
                         }
                     }
                 }
@@ -271,6 +270,7 @@ public class SequenceAnalysisController extends SpringActionController
                     if (m != null && m.getAlignmentFileObject() != null)
                     {
                         files.add(m.getAlignmentFileObject());
+                        labels.put(m.getAlignmentFileObject(), "Analysis " + m.getRowId());
                     }
                 }
             }
@@ -287,7 +287,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
             try
             {
-                String html = runner.execute(files);
+                String html = runner.execute(files, labels);
                 return new HtmlView("FastQC Report", html);
             }
             catch (FileNotFoundException e)
@@ -299,92 +299,6 @@ public class SequenceAnalysisController extends SpringActionController
         public NavTree appendNavTrail(NavTree root)
         {
             root.addChild("FastQC Report"); //necessary to set page title, it seems
-            return root;
-        }
-    }
-
-    @RequiresPermission(ReadPermission.class)
-    public class QualiMapReportAction extends SimpleViewAction<FastqcForm>
-    {
-        @Override
-        public ModelAndView getView(FastqcForm form, BindException errors) throws Exception
-        {
-            if (form.getFilenames() == null && form.getDataIds() == null)
-                errors.reject("Must provide a filename or Exp data Ids");
-
-            //resolve files
-            List<File> files = new ArrayList<>();
-
-            if (form.getFilenames() != null)
-            {
-                for (String fn : form.getFilenames())
-                {
-                    File root = ServiceRegistry.get().getService(FileContentService.class).getFileRoot(getContainer(), FileContentService.ContentType.files);
-                    File target = new File (root, fn);
-                    if (target.exists())
-                    {
-                        files.add(target);
-                    }
-                }
-            }
-
-            if (form.getDataIds() != null)
-            {
-                for (int id : form.getDataIds())
-                {
-                    ExpData data = ExperimentService.get().getExpData(id);
-                    if (data != null && data.getContainer().hasPermission(getUser(), ReadPermission.class))
-                    {
-                        if (data.getFile().exists())
-                            files.add(data.getFile());
-                    }
-                }
-            }
-
-            if (form.getAnalysisIds() != null)
-            {
-                for (int id : form.getAnalysisIds())
-                {
-                    AnalysisModel m = AnalysisModelImpl.getFromDb(id, getUser());
-                    if (m != null && m.getAlignmentFile() != null)
-                    {
-                        ExpData data = ExperimentService.get().getExpData(m.getAlignmentFile());
-                        if (data != null && data.getContainer().hasPermission(getUser(), ReadPermission.class))
-                        {
-                            if (data.getFile().exists())
-                                files.add(data.getFile());
-                        }
-                    }
-                }
-            }
-
-            if (files.size() == 0)
-            {
-                return new HtmlView("Error: either no files provided or the files did not exist on the server");
-            }
-
-            QualiMapRunner runner = new QualiMapRunner();
-            if (!form.isCacheResults())
-            {
-                runner.setCacheResults(false);
-            }
-
-            try
-            {
-                HtmlView view = new HtmlView("QualiMap Report", runner.execute(files));
-                view.setHidePageTitle(true);
-
-                return view;
-            }
-            catch (Exception e)
-            {
-                return new HtmlView("Error: " + e.getMessage());
-            }
-        }
-
-        public NavTree appendNavTrail(NavTree root)
-        {
-            root.addChild("QualiMap Report"); //necessary to set page title, it seems
             return root;
         }
     }
@@ -1711,10 +1625,10 @@ public class SequenceAnalysisController extends SpringActionController
             TaskPipeline taskPipeline = PipelineJobService.get().getTaskPipeline(taskId);
 
             AbstractFileAnalysisProtocolFactory factory = getProtocolFactory(taskPipeline);
-            return execute(form, pr, dirData, factory);
+            return execute(form, pr, factory);
         }
 
-        protected ApiResponse execute(AnalyzeForm form, PipeRoot root, File dirData, AbstractFileAnalysisProtocolFactory factory) throws IOException, PipelineValidationException, PipelineJobException
+        protected ApiResponse execute(AnalyzeForm form, PipeRoot root, AbstractFileAnalysisProtocolFactory factory) throws IOException, PipelineValidationException, PipelineJobException
         {
             try
             {
@@ -1781,10 +1695,10 @@ public class SequenceAnalysisController extends SpringActionController
                         }
 
                         String protocolName = form.getProtocolName() + "_" + (readsetIdx + 1);
-                        AbstractFileAnalysisProtocol protocol = getFileAnalysisProtocol(form, taskPipeline, paramsCopy, root, dirData, factory, protocolName);
+                        AbstractFileAnalysisProtocol protocol = getFileAnalysisProtocol(form, taskPipeline, paramsCopy, root, root.getRootPath(), factory, protocolName);
                         protocol.getFactory().ensureDefaultParameters(root);
 
-                        File fileParameters = factory.getParametersFile(dirData, protocolName, root);
+                        File fileParameters = factory.getParametersFile(root.getRootPath(), protocolName, root);
                         // Make sure configure.xml file exists for the job when it runs.
                         if (fileParameters != null && !fileParameters.exists())
                         {
@@ -1802,10 +1716,10 @@ public class SequenceAnalysisController extends SpringActionController
                 }
                 else
                 {
-                    AbstractFileAnalysisProtocol protocol = getFileAnalysisProtocol(form, taskPipeline, params, root, dirData, factory, form.getProtocolName());
+                    AbstractFileAnalysisProtocol protocol = getFileAnalysisProtocol(form, taskPipeline, params, root, root.getRootPath(), factory, form.getProtocolName());
                     protocol.getFactory().ensureDefaultParameters(root);
 
-                    File fileParameters = protocol.getParametersFile(dirData, root);
+                    File fileParameters = protocol.getParametersFile(root.getRootPath(), root);
                     // Make sure configure.xml file exists for the job when it runs.
                     if (fileParameters != null && !fileParameters.exists())
                     {
@@ -3257,63 +3171,6 @@ public class SequenceAnalysisController extends SpringActionController
 
     @RequiresPermission(ReadPermission.class)
     @CSRF
-    public class GetQualiMapPathAction extends ApiAction<Object>
-    {
-        public ApiResponse execute(Object form, BindException errors)
-        {
-            PropertyManager.PropertyMap configMap = PropertyManager.getWritableProperties(QualiMapRunner.CONFIG_PROPERTY_DOMAIN, true);
-
-            Map<String, Object> props = new HashMap<>();
-            props.put(QualiMapRunner.QUALIMAP_DIR, configMap.get(QualiMapRunner.QUALIMAP_DIR));
-            try
-            {
-                QualiMapRunner.isQualiMapDirValid();
-                props.put("isValid", true);
-            }
-            catch (ConfigurationException e)
-            {
-                props.put("validationMessage", e.getMessage());
-                props.put("isValid", false);
-            }
-
-            return new ApiSimpleResponse(props);
-        }
-    }
-
-    @RequiresSiteAdmin
-    @CSRF
-    public class SetQualiMapPathAction extends ApiAction<SetQualiMapForm>
-    {
-        public ApiResponse execute(SetQualiMapForm form, BindException errors)
-        {
-            PropertyManager.PropertyMap configMap = PropertyManager.getWritableProperties(QualiMapRunner.CONFIG_PROPERTY_DOMAIN, true);
-
-            String path = StringUtils.trimToNull(form.getPath());
-            configMap.put(QualiMapRunner.QUALIMAP_DIR, path);
-
-            configMap.save();
-
-            return new ApiSimpleResponse("success", true);
-        }
-    }
-
-    public static class SetQualiMapForm
-    {
-        private String _path;
-
-        public String getPath()
-        {
-            return _path;
-        }
-
-        public void setPath(String path)
-        {
-            _path = path;
-        }
-    }
-
-    @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetDataItemsAction extends ApiAction<GetDataItemsForm>
     {
         public ApiResponse execute(GetDataItemsForm form, BindException errors)
@@ -4105,4 +3962,77 @@ public class SequenceAnalysisController extends SpringActionController
             _includeDisabled = includeDisabled;
         }
     }
+
+//    @IgnoresTermsOfUse
+//    @RequiresNoPermission
+//    public class ExternalLinkAction extends ExportAction<ExternalLinkForm>
+//    {
+//        public void export(ExternalLinkForm form, HttpServletResponse response, BindException errors) throws Exception
+//        {
+//            if (form.getRowId() == 0 || form.getContainer() == null)
+//            {
+//                errors.reject(ERROR_MSG, "Must provide the rowid and container");
+//                return;
+//            }
+//
+//            try
+//            {
+//                SequenceOutputFile so = SequenceOutputFile.getForId(form.getRowId());
+//                if (so == null)
+//                {
+//                    errors.reject(ERROR_MSG, "Sequence output not found");
+//                    return;
+//                }
+//
+//                if (!form.getContainer().equals(so.getContainer()))
+//                {
+//                    errors.reject(ERROR_MSG, "Sequence output not found in this folder");
+//                    return;
+//                }
+//
+//                File f = so.getExpData().getFile();
+//                if (f == null || !f.exists())
+//                {
+//                    errors.reject(ERROR_MSG, "File not found");
+//                    return;
+//                }
+//
+//                try (BufferedInputStream stream = new BufferedInputStream(new FileInputStream(f)))
+//                {
+//                    IOUtils.copy(stream, response.getOutputStream());
+//                }
+//            }
+//            catch (Exception e)
+//            {
+//                _log.error(e.getMessage(), e);
+//                errors.reject(ERROR_MSG, e.getMessage());
+//            }
+//        }
+//    }
+//
+//    public static class ExternalLinkForm
+//    {
+//        private int _rowId;
+//        private String _container;
+//
+//        public int getRowId()
+//        {
+//            return _rowId;
+//        }
+//
+//        public void setRowId(int rowId)
+//        {
+//            _rowId = rowId;
+//        }
+//
+//        public String getContainer()
+//        {
+//            return _container;
+//        }
+//
+//        public void setContainer(String container)
+//        {
+//            _container = container;
+//        }
+//    }
 }

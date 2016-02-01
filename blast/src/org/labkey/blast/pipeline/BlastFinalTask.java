@@ -22,7 +22,6 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.util.FileType;
-import org.labkey.blast.BLASTManager;
 import org.labkey.blast.BLASTWrapper;
 
 import java.io.IOException;
@@ -35,9 +34,9 @@ import java.util.List;
  * Date: 8/6/12
  * Time: 12:57 PM
  */
-public class BlastTask extends PipelineJob.Task<BlastTask.Factory>
+public class BlastFinalTask extends PipelineJob.Task<BlastFinalTask.Factory>
 {
-    protected BlastTask(Factory factory, PipelineJob job)
+    protected BlastFinalTask(Factory factory, PipelineJob job)
     {
         super(factory, job);
     }
@@ -46,7 +45,7 @@ public class BlastTask extends PipelineJob.Task<BlastTask.Factory>
     {
         public Factory()
         {
-            super(BlastTask.class);
+            super(BlastFinalTask.class);
             //this is an ms2 queue; however, should put BLAST jobs into their own dedicated queue
             setLocation("webserver-fasta-check");
         }
@@ -68,7 +67,7 @@ public class BlastTask extends PipelineJob.Task<BlastTask.Factory>
 
         public PipelineJob.Task createTask(PipelineJob job)
         {
-            BlastTask task = new BlastTask(this, job);
+            BlastFinalTask task = new BlastFinalTask(this, job);
 
             return task;
         }
@@ -81,29 +80,9 @@ public class BlastTask extends PipelineJob.Task<BlastTask.Factory>
 
     public RecordedActionSet run() throws PipelineJobException
     {
-        try
-        {
-            if (!getPipelineJob().getBlastJob().getExpectedInputFile().exists())
-            {
-                throw new PipelineJobException("Unable to find input file: " + getPipelineJob().getBlastJob().getExpectedInputFile().getPath());
-            }
+        getPipelineJob().getBlastJob().setComplete(getJob().getUser(), getJob());
 
-            if (BLASTManager.get().getBinDir() == null || BLASTManager.get().getDatabaseDir() == null)
-            {
-                throw new PipelineJobException("Either the BLAST bin or BLAST database directories have not been set.  Please have you site administrator configure these through the admin console.");
-            }
-
-            BLASTWrapper wrapper = new BLASTWrapper();
-            wrapper.setLog(getJob().getLogger());
-            wrapper.runBlastN(getPipelineJob().getBlastJob().getDatabaseId(), getPipelineJob().getBlastJob().getExpectedInputFile(), getPipelineJob().getBlastJob().getExpectedOutputFile(), getPipelineJob().getBlastJob().getParamMap());
-            getPipelineJob().getBlastJob().setComplete(getJob().getUser(), getJob());
-
-            return new RecordedActionSet(Collections.singleton(new RecordedAction()));
-        }
-        catch (IOException | IllegalArgumentException e)
-        {
-            throw new PipelineJobException(e);
-        }
+        return new RecordedActionSet();
     }
 
     private BlastPipelineJob getPipelineJob()

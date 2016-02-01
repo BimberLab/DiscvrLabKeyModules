@@ -329,7 +329,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             {
                 getJob().getLogger().info("running FastQC for file: " + d1.getFile().getName());
                 FastqcRunner runner = new FastqcRunner(getJob().getLogger());
-                runner.execute(Arrays.asList(d1.getFile()));
+                runner.execute(Arrays.asList(d1.getFile()), null);
                 getJob().getLogger().info("done");
             }
             catch (FileNotFoundException e)

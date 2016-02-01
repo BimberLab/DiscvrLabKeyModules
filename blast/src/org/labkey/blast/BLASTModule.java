@@ -18,6 +18,7 @@ package org.labkey.blast;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
@@ -50,7 +51,7 @@ public class BLASTModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 13.32;
+        return 13.33;
     }
 
     @Override
@@ -101,4 +102,11 @@ public class BLASTModule extends ExtendedSimpleModule
     {
         return Collections.singleton(BLASTSchema.NAME);
     }
+
+    @Override
+    public UpgradeCode getUpgradeCode()
+    {
+        return new BLASTUpgradeCode();
+    }
+
 }

@@ -817,7 +817,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         });
 
         this.fileNames.sort();
+        Ext4.Msg.wait('Loading...');
         LABKEY.Ajax.request({
+            method: 'POST',
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'validateReadsetFiles'),
             params: {
                 path: LABKEY.ActionURL.getParameter('path'),
@@ -835,6 +837,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
         if (response.responseJSON.validationErrors.length){
             response.responseJSON.validationErrors = Ext4.unique(response.responseJSON.validationErrors);
+            Ext4.Msg.hide();
             Ext4.Msg.alert('Error', 'There are errors with the input files.  Please backup, remove these files, and then retry import:<br>' + response.responseJSON.validationErrors.join('<br>'));
             return;
         }
@@ -874,6 +877,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         this.down('#fileListView').refresh();
         this.checkProtocol();
         this.populateSamples();
+
+        Ext4.Msg.hide();
     },
 
     getReadDataSection: function(){

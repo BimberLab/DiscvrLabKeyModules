@@ -21,18 +21,22 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.files.FileContentService;
 import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
+import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.blast.model.BlastJob;
@@ -49,8 +53,7 @@ public class BLASTManager
     private static final BLASTManager _instance = new BLASTManager();
     public final static String CONFIG_PROPERTY_DOMAIN = "org.labkey.blast.settings";
     public final static String BLAST_BIN_DIR = "blastBinDir";
-    public final static String BLAST_DB_DIR = "blastDbDir";
-    
+
     public final static String SEQUENCE_ANALYSIS = "sequenceanalysis";
 
     private BLASTManager()
@@ -84,23 +87,6 @@ public class BLASTManager
         }
         configMap.put(BLAST_BIN_DIR, binDir);
 
-        //validate db dir
-        String dbDir = StringUtils.trimToNull(props.get(BLAST_DB_DIR));
-        if (dbDir != null)
-        {
-            File dbFolder = new File(dbDir);
-            if (!dbFolder.exists())
-            {
-                throw new IllegalArgumentException("BLAST database folder does not exist or is not acessible: " + dbFolder.getPath());
-            }
-
-            if (!dbFolder.canWrite() || !dbFolder.canRead())
-            {
-                throw new IllegalArgumentException("The user running tomcat must have read/write access to the database file root: " + dbFolder.getPath());
-            }
-        }
-        configMap.put(BLAST_DB_DIR, dbDir);
-
         configMap.save();
     }
 
@@ -115,12 +101,31 @@ public class BLASTManager
         return null;
     }
 
-    public File getDatabaseDir()
+    public File getDatabaseDir(Container c, boolean createIfDoesntExist)
     {
-        Map<String, String> props = PropertyManager.getProperties(CONFIG_PROPERTY_DOMAIN);
-        if (props.containsKey(BLAST_DB_DIR))
+        FileContentService fileService = ServiceRegistry.get().getService(FileContentService.class);
+        File fileRoot = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);
+        if (fileRoot == null || !fileRoot.exists())
         {
-            return new File(props.get(BLAST_DB_DIR));
+            return null;
+        }
+
+        File ret = new File(fileRoot, ".blastDB");
+        if (createIfDoesntExist && !ret.exists())
+        {
+            ret.mkdirs();
+        }
+
+        return ret;
+    }
+
+    public Container getContainerForDatabase(String databaseId)
+    {
+        TableInfo databases = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_DATABASES);
+        String containerId = new TableSelector(databases, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("objectid"), databaseId), null).getObject(String.class);
+        if (containerId != null)
+        {
+            return ContainerManager.getForId(containerId);
         }
 
         return null;
@@ -206,15 +211,24 @@ public class BLASTManager
         {
             BLASTWrapper wrapper = new BLASTWrapper();
             wrapper.setLog(Logger.getLogger(BLASTManager.class));
-            wrapper.runBlastN(job.getDatabaseId(), job.getExpectedInputFile(), job.getExpectedOutputFile(), job.getParamMap());
-            job.setComplete(u, null);
+            Container dbContainer = getContainerForDatabase(job.getDatabaseId());
+            wrapper.runBlastN(job.getDatabaseId(), job.getExpectedInputFile(), job.getExpectedOutputFile(), job.getParamMap(), BLASTManager.get().getBinDir(), BLASTManager.get().getDatabaseDir(dbContainer, false));
+            try
+            {
+                job.setComplete(u, null);
+            }
+            catch (PipelineJobException e)
+            {
+                throw new IllegalArgumentException(e);
+            }
         }
         else
         {
             try
             {
                 PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-                PipelineService.get().queueJob(new BlastPipelineJob(c, u, null, root, job));
+                Container dbContainer = getContainerForDatabase(job.getDatabaseId());
+                PipelineService.get().queueJob(new BlastPipelineJob(c, u, null, root, job, BLASTManager.get().getDatabaseDir(dbContainer, false), null));
             }
             catch (PipelineValidationException e)
             {

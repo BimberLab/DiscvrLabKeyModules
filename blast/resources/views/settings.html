@@ -13,14 +13,11 @@ Ext4.onReady(function (){
                     items: [{
                         html: 'In order to use this module, you must install BLAST+ on your server.  To do this, download the program from NCBI and follow their instructions.  <a href="http://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download">Click here to download BLAST+</a>' +
                             '<p></p>' +
-                                'Once you have installed BLAST+, you will need to create a folder to hold the custom BLAST databases.  This does not necessarily need to be below the LabKey file root, but the user running tomcat needs r/w access to it.  Once complete, use the fields below to set the values for these properties:' +
+                                'Once complete, use the fields below to set the values for these properties:' +
                             '<p></p>' +
                             '<ul>' +
                                 '<li>' +
                                     'blastBinDir: the path to the BLAST++ bin directory, where the executables are located.' +
-                                '</li>' +
-                                '<li>' +
-                                    'blastDbDir: the path where BLAST databases will be created.' +
                                 '</li>' +
                             '</ul>',
                         border: false,

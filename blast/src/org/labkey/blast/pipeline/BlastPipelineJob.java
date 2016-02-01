@@ -27,11 +27,16 @@ import java.io.File;
 public class BlastPipelineJob extends PipelineJob
 {
     private BlastJob _blastJob;
+    private File _dbDir;
+    private File _binDir;
 
-    public BlastPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, BlastJob blastJob)
+    public BlastPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, BlastJob blastJob, File dbDir, File binDir)
     {
         super(BlastPipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
         _blastJob = blastJob;
+        _dbDir = dbDir;
+        _binDir = binDir;
+        //NOTE: it is imported to call blastJob.getOutputDir() so this value is cached for remote servers
         setLogFile(new File(blastJob.getOutputDir(), "blast-" + getBlastJob().getObjectid() + ".log"));
     }
 
@@ -63,5 +68,22 @@ public class BlastPipelineJob extends PipelineJob
     public BlastJob getBlastJob()
     {
         return _blastJob;
+    }
+
+    public File getDbDir()
+    {
+        return _dbDir;
+    }
+
+    public File getBinDir()
+    {
+        if (_binDir != null)
+        {
+            return _binDir;
+        }
+        else
+        {
+            return new File(PipelineJobService.get().getAppProperties().getToolsDirectory());
+        }
     }
 }

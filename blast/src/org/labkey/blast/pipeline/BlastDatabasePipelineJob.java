@@ -38,7 +38,7 @@ public class BlastDatabasePipelineJob extends PipelineJob
         super(BlastDatabasePipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
         _libraryId = libraryId;
         _databaseGuid = new GUID().toString().toUpperCase();
-        setLogFile(new File(BLASTManager.get().getDatabaseDir(), "blast-" + _databaseGuid + ".log"));
+        setLogFile(new File(BLASTManager.get().getDatabaseDir(c, true), "blast-" + _databaseGuid + ".log"));
     }
 
     public BlastDatabasePipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, String databaseGuid) throws PipelineValidationException
@@ -54,7 +54,7 @@ public class BlastDatabasePipelineJob extends PipelineJob
         }
 
         _databaseGuid = databaseGuid;
-        setLogFile(new File(BLASTManager.get().getDatabaseDir(), "blast-" + _databaseGuid + ".log"));
+        setLogFile(new File(BLASTManager.get().getDatabaseDir(c, true), "blast-" + _databaseGuid + ".log"));
     }
 
     @Override
@@ -83,5 +83,10 @@ public class BlastDatabasePipelineJob extends PipelineJob
     public String getDatabaseGuid()
     {
         return _databaseGuid;
+    }
+
+    public File getDatabaseDir()
+    {
+        return BLASTManager.get().getDatabaseDir(getContainer(), true);
     }
 }

@@ -39,9 +39,8 @@ public class BLASTWrapper
         _log = log;
     }
 
-    public File runBlastN(String blastDbGuid, File input, File outputFile, Map<String, Object> params) throws IllegalArgumentException, IOException
+    public File runBlastN(String blastDbGuid, File input, File outputFile, Map<String, Object> params, File binDir, File dbDir) throws IllegalArgumentException, IOException
     {
-        File binDir = BLASTManager.get().getBinDir();
         if (binDir == null || !binDir.exists())
         {
             throw new IllegalArgumentException("BLAST bin dir does not exist: " + binDir);
@@ -53,10 +52,9 @@ public class BLASTWrapper
             throw new IllegalArgumentException("Unable to find blastn executable");
         }
 
-        File dbDir = BLASTManager.get().getDatabaseDir();
         if (dbDir == null || !dbDir.exists())
         {
-            throw new IllegalArgumentException("BLAST database dir does not exist");
+            throw new IllegalArgumentException("BLAST database dir does not exist: " + dbDir);
         }
 
         File db = new File(dbDir, blastDbGuid);
@@ -130,7 +128,7 @@ public class BLASTWrapper
         execute(args, out);
     }
 
-    public File createDatabase(String dbName, String title, File fastaFile) throws IllegalArgumentException, IOException
+    public File createDatabase(String dbName, String title, File fastaFile, File dbDir) throws IllegalArgumentException, IOException
     {
         File binDir = BLASTManager.get().getBinDir();
         if (binDir == null)
@@ -148,7 +146,6 @@ public class BLASTWrapper
             throw new IllegalArgumentException("Unable to find makeblastdb executable.  This location is defined through the admin console.");
         }
 
-        File dbDir = BLASTManager.get().getDatabaseDir();
         if (dbDir == null || !dbDir.exists())
         {
             throw new IllegalArgumentException("BLAST database dir does not exist.  This filepath is defined through the admin console.");
@@ -232,9 +229,6 @@ public class BLASTWrapper
         {
             pb.redirectErrorStream(true);
         }
-
-        //Map<String, String> env = pb.environment();
-        //env.put("BLASTDB", BLASTManager.get().getDatabaseDir().getPath());
 
         Process p = null;
         try
