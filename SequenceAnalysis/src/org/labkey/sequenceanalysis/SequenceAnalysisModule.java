@@ -35,8 +35,11 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.sequenceanalysis.analysis.AlignmentMetricsHandler;
+import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
+import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
 import org.labkey.sequenceanalysis.analysis.CoverageDepthHandler;
 import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
+import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
 import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
@@ -199,6 +202,9 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new AlignmentMetricsHandler());
         SequenceAnalysisService.get().registerFileHandler(new UnmappedSequenceBasedGenotypeHandler());
         SequenceAnalysisService.get().registerFileHandler(new PicardAlignmentMetricsHandler());
+        SequenceAnalysisService.get().registerFileHandler(new BamHaplotypeHandler());
+        SequenceAnalysisService.get().registerFileHandler(new BamCleanupHandler());
+        SequenceAnalysisService.get().registerFileHandler(new HaplotypeCallerHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));

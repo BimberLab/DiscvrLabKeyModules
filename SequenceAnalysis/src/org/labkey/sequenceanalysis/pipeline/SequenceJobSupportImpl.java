@@ -1,11 +1,12 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 
 import java.io.File;
@@ -59,6 +60,15 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     public AnalysisModel getCachedAnalysis(int rowId)
     {
         return _cachedAnalyses.get(rowId);
+    }
+
+    public void cacheReadset(int readsetId, User u)
+    {
+        SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(readsetId, u);
+        if (rs != null)
+        {
+            cacheReadset(rs);
+        }
     }
 
     public void cacheReadset(SequenceReadsetImpl m)

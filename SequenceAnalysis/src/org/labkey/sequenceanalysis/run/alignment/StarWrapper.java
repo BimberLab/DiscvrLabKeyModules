@@ -16,7 +16,6 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
-import org.labkey.sequenceanalysis.run.util.SamFormatConverterWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -98,6 +97,16 @@ public class StarWrapper extends AbstractCommandWrapper
                 args1.add("zcat");
             }
 
+            Boolean stranded = getProvider().getParameterByName("stranded").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
+            if (stranded)
+            {
+                args1.add("--outSAMstrandField");
+                args1.add("intronMotif");
+
+                args1.add("--outFilterIntronMotifs");
+                args1.add("RemoveNoncanonicalUnannotated");
+            }
+
             //GTF
             if (!StringUtils.isEmpty(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider())))
             {
@@ -107,6 +116,26 @@ public class StarWrapper extends AbstractCommandWrapper
                 {
                     args1.add("--sjdbGTFfile");
                     args1.add(gtf.getPath());
+
+                    FileType gtfType = new FileType("gtf");
+                    if (!gtfType.isType(gtf))
+                    {
+                        String parentTranscript = StringUtils.trimToNull(getProvider().getParameterByName("sjdbGTFtagExonParentTranscript").extractValue(getPipelineCtx().getJob(), getProvider(), String.class));
+                        if (parentTranscript != null)
+                        {
+                            args1.add("sjdbGTFtagExonParentTranscript");
+                            args1.add(parentTranscript);
+                        }
+                        else
+                        {
+                            throw new PipelineJobException("When selecting a GFF file, you must provide the ID of the annotation that provides parent/child information");
+                        }
+                    }
+
+                }
+                else
+                {
+                    getPipelineCtx().getLogger().error("Unable to find GTF/GFF file: " + gtf.getPath());
                 }
             }
 
@@ -202,12 +231,16 @@ public class StarWrapper extends AbstractCommandWrapper
         public Provider()
         {
             super("STAR", "STAR is a splice aware aligner, suitable for RNA-Seq.", Arrays.asList(
-                ToolParameterDescriptor.createExpDataParam("splice_sites_file", "Gene File", "This is the ID of a GTF file containing genes from this genome.  It will be used to identify splice sites.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
+                ToolParameterDescriptor.createExpDataParam("splice_sites_file", "Gene File", "This is the ID of a GTF or GFF3 file containing genes from this genome.  It will be used to identify splice sites.  If a GFF3 file is selected, you must also provide the ID used to specify parent features.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                 {{
-                    put("extensions", Arrays.asList("gtf"));
+                    put("extensions", Arrays.asList("gtf", "gff"));
                     put("width", 400);
                     put("allowBlank", false);
-                }}, null)
+                }}, null),
+                ToolParameterDescriptor.create("sjdbGTFtagExonParentTranscript", "Exon Parent Transcript", "This is only required for GFF3 files.  It is the annotation used to assign exons to transcripts.  For GFF3 files this is usually Parent.  It will be ignored if a GTF file is used.", "textfield", null, "Parent"),
+                ToolParameterDescriptor.create("stranded", "Data Are Stranded?", "If checked, the following arguments will be added: --outSAMstrandField=intronMotif and --outFilterIntronMotifs=RemoveNoncanonicalUnannotated.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true)
             ), null, "https://github.com/alexdobin/STAR/", true, true);
         }
 

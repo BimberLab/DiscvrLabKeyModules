@@ -2943,6 +2943,8 @@ labModules/SequenceAnalysis/resources/views/alignmentAnalysis.html -text
 labModules/SequenceAnalysis/resources/views/alignmentAnalysis.view.xml -text
 labModules/SequenceAnalysis/resources/views/alignmentImport.html -text
 labModules/SequenceAnalysis/resources/views/alignmentImport.view.xml -text
+labModules/SequenceAnalysis/resources/views/bamHaplotype.html -text
+labModules/SequenceAnalysis/resources/views/bamHaplotype.view.xml -text
 labModules/SequenceAnalysis/resources/views/begin.html -text
 labModules/SequenceAnalysis/resources/views/begin.view.xml -text
 labModules/SequenceAnalysis/resources/views/begin.webpart.xml -text
@@ -3019,6 +3021,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/AlignmentAnalys
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/AlignmentImportPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/AlignmentPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/AnalysisSectionPanel.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/BamHaplotypePanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/BaseSequencePanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/IlluminaSampleExportPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/InstrumentImportPanel.js -text
@@ -3069,9 +3072,12 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceProvider.jav
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceReadsetImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/TestHelper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/AlignmentMetricsHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/BamCleanupHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/BamHaplotypeHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CompareVariantsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CoverageDepthHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/GenotypeGVCFHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/HaplotypeCallerHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/LiftoverHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/PicardAlignmentMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/UnmappedSequenceBasedGenotypeHandler.java -text
@@ -3128,6 +3134,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/JobsTableCusto
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceAnalysisCustomizer.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceAnalysisUserSchema.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceTriggerHelper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/BamHaplotyper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/AlignerIndexUtil.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/AlignmentOutputImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BWAMemWrapper.java -text

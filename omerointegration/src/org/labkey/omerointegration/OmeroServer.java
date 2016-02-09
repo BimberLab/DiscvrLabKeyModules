@@ -215,48 +215,67 @@ public class OmeroServer
         if (url == null)
             return;
 
-        client client = new client(url.getHost());
-        ServiceFactoryPrx entry = client.createSession(getOmeroUser(), getOmeroPassword());
-
-        client unsecureClient = client.createClient(false);
-        IContainerPrx proxy = entry.getContainerService();
-
-        List<Image> results = proxy.getImages(Image.class.getName(), Arrays.asList(imageId), new ParametersI());
-
-        if (results.size() == 0)
-            return;
-
-        //You can directly interact with the IObject or the Pojos object.
-        //Follow interaction with the Pojos.
-        ImageData image = new ImageData(results.get(0));
-
-        //See above how to load the image.
-        PixelsData pixels = image.getDefaultPixels();
-        ThumbnailStorePrx store = entry.createThumbnailStore();
+        client client = null;
+        //client unsecureClient = null;
         try
         {
-            Map<Long, byte[]> map = store.getThumbnailByLongestSideSet(omero.rtypes.rint(96), Arrays.asList(pixels.getId()));
+            client = new client(url.getHost());
+            ServiceFactoryPrx entry = client.createSession(getOmeroUser(), getOmeroPassword());
 
-            //Convert the byte array
-            Iterator i = map.entrySet().iterator();
+            //unsecureClient = client.createClient(false);
+            IContainerPrx proxy = entry.getContainerService();
 
-            //Create a buffered image to display
-            if (i.hasNext())
+            List<Image> results = proxy.getImages(Image.class.getName(), Arrays.asList(imageId), new ParametersI());
+
+            if (results.size() == 0)
+                return;
+
+            //You can directly interact with the IObject or the Pojos object.
+            //Follow interaction with the Pojos.
+            ImageData image = new ImageData(results.get(0));
+
+            //See above how to load the image.
+            PixelsData pixels = image.getDefaultPixels();
+            ThumbnailStorePrx store = entry.createThumbnailStore();
+            try
             {
-                Map.Entry mapEntry = (Map.Entry) i.next();
-                try (ByteArrayInputStream stream = new ByteArrayInputStream((byte[]) mapEntry.getValue()))
+                Map<Long, byte[]> map = store.getThumbnailByLongestSideSet(omero.rtypes.rint(96), Arrays.asList(pixels.getId()));
+
+                //Convert the byte array
+                Iterator i = map.entrySet().iterator();
+
+                //Create a buffered image to display
+                if (i.hasNext())
                 {
-                    IOUtils.copy(stream, response.getOutputStream());
+                    Map.Entry mapEntry = (Map.Entry) i.next();
+                    try (ByteArrayInputStream stream = new ByteArrayInputStream((byte[]) mapEntry.getValue()))
+                    {
+                        IOUtils.copy(stream, response.getOutputStream());
+                    }
+                }
+            }
+            catch (ome.conditions.SecurityViolation | omero.SecurityViolation e)
+            {
+                //            "/internal/webapp/gxt/images/gray/window/icon-error.gif";
+                //            Resource r =
+                //            //TODO: consider streaming error icon??
+
+                throw new IOException("unable to download omero image: " + omeroId, e);
+            }
+            finally
+            {
+                if (store != null)
+                {
+                    store.close();
                 }
             }
         }
-        catch (ome.conditions.SecurityViolation | omero.SecurityViolation e)
+        finally
         {
-//            "/internal/webapp/gxt/images/gray/window/icon-error.gif";
-//            Resource r =
-//            //TODO: consider streaming error icon??
-
-            throw new IOException("unable to download omero image: " + omeroId, e);
+            if (client != null)
+            {
+                client.closeSession();
+            }
         }
     }
 }

@@ -57,6 +57,7 @@ import org.labkey.api.data.ResultsImpl;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Sort;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -136,6 +137,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
+import org.labkey.sequenceanalysis.run.BamHaplotyper;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByCodonAggregator;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByReadAggregator;
 import org.labkey.sequenceanalysis.run.analysis.AlignmentAggregator;
@@ -207,7 +209,7 @@ public class SequenceAnalysisController extends SpringActionController
                 for (String fn : form.getFilenames())
                 {
                     File root = ServiceRegistry.get().getService(FileContentService.class).getFileRoot(getContainer(), FileContentService.ContentType.files);
-                    File target = new File (root, fn);
+                    File target = new File(root, fn);
                     if (target.exists())
                     {
                         files.add(target);
@@ -2032,9 +2034,18 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
+            //always sort by name
+            TableInfo refNtTable = QueryService.get().getUserSchema(getUser(), getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
+            List<Integer> sequenceIds = new TableSelector(refNtTable, PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("rowid"), new ArrayList<>(Arrays.asList(form.getSequenceIds())), CompareType.IN), new Sort("name")).getArrayList(Integer.class);
+            if (form.getSequenceIds().length != sequenceIds.size())
+            {
+                errors.reject(ERROR_MSG, "One or more sequence IDs not found.  Ids found in the database were: " + StringUtils.join(sequenceIds, ";"));
+                return null;
+            }
+
             List<ReferenceLibraryMember> members = new ArrayList<>();
             int idx = 0;
-            for (Integer seqId : form.getSequenceIds())
+            for (Integer seqId : sequenceIds)
             {
                 if (form.getIntervals() != null)
                 {
@@ -2908,7 +2919,7 @@ public class SequenceAnalysisController extends SpringActionController
             if (handler instanceof ParameterizedOutputHandler)
             {
                 JSONArray toolArr = new JSONArray();
-                for (ToolParameterDescriptor pd : ((ParameterizedOutputHandler)handler).getParameters())
+                for (ToolParameterDescriptor pd : ((ParameterizedOutputHandler) handler).getParameters())
                 {
                     toolArr.put(pd.toJSON());
                 }
@@ -2937,7 +2948,7 @@ public class SequenceAnalysisController extends SpringActionController
                     {
                         JSONObject o = new JSONObject();
                         o.put("outputFileId", outputFileId);
-                        o.put("fileName", (String)null);
+                        o.put("fileName", (String) null);
                         o.put("fileExists", false);
                         o.put("error", true);
                         arr.put(o);
@@ -3266,7 +3277,7 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            URL url = new URL(NcbiGenomeImportPipelineProvider.URL_BASE + "/" + form.getFolder() + "/") ;
+            URL url = new URL(NcbiGenomeImportPipelineProvider.URL_BASE + "/" + form.getFolder() + "/");
             try (InputStream inputStream = url.openConnection().getInputStream())
             {
                 //just open to test if file exists
@@ -3536,9 +3547,9 @@ public class SequenceAnalysisController extends SpringActionController
                             FileUtils.moveFile(idx, idxTarget);
 
                             ExpData idxData = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
-                            data.setName(idx.getName());
-                            data.setDataFileURI(idxTarget.toURI());
-                            data.save(getUser());
+                            idxData.setName(idx.getName());
+                            idxData.setDataFileURI(idxTarget.toURI());
+                            idxData.save(getUser());
                         }
                     }
 
@@ -4035,4 +4046,97 @@ public class SequenceAnalysisController extends SpringActionController
 //            _container = container;
 //        }
 //    }
+
+    @RequiresPermission(ReadPermission.class)
+    @CSRF
+    public class GetBamHaplotypesAction extends ApiAction<GetBamHaplotypesForm>
+    {
+        public ApiResponse execute(GetBamHaplotypesForm form, BindException errors) throws Exception
+        {
+            try
+            {
+                JSONObject ret;
+                if ("nt".equalsIgnoreCase(form.getMode()))
+                {
+                    ret = new BamHaplotyper(getUser()).calculateNTHaplotypes(form.getOutputFileIds(), form.getRegions(), form.getMinQual() == null ? 0 : form.getMinQual(), form.isRequireCompleteCoverage());
+                }
+                else if ("aa".equalsIgnoreCase(form.getMode()))
+                {
+                    ret = new BamHaplotyper(getUser()).calculateAAHaplotypes(form.getOutputFileIds());
+                }
+                else
+                {
+                    errors.reject(ERROR_MSG, "Invalid mode: " + form.getMode());
+                    return null;
+                }
+
+                return new ApiSimpleResponse(ret);
+            }
+            catch (IOException e)
+            {
+                _log.error(e.getMessage(), e);
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+        }
+    }
+
+    public static class GetBamHaplotypesForm
+    {
+        int[] _outputFileIds;
+        String[] _regions;
+        Integer _minQual;
+        String _mode;
+        boolean _requireCompleteCoverage = false;
+
+        public int[] getOutputFileIds()
+        {
+            return _outputFileIds;
+        }
+
+        public void setOutputFileIds(int[] outputFileIds)
+        {
+            _outputFileIds = outputFileIds;
+        }
+
+        public String[] getRegions()
+        {
+            return _regions;
+        }
+
+        public void setRegions(String[] regions)
+        {
+            _regions = regions;
+        }
+
+        public Integer getMinQual()
+        {
+            return _minQual;
+        }
+
+        public void setMinQual(Integer minQual)
+        {
+            _minQual = minQual;
+        }
+
+        public String getMode()
+        {
+            return _mode;
+        }
+
+        public void setMode(String mode)
+        {
+            _mode = mode;
+        }
+
+        public boolean isRequireCompleteCoverage()
+        {
+            return _requireCompleteCoverage;
+        }
+
+        public void setRequireCompleteCoverage(boolean requireCompleteCoverage)
+        {
+            _requireCompleteCoverage = requireCompleteCoverage;
+        }
+    }
 }

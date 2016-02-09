@@ -91,6 +91,8 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
             getPipelineJob().getSequenceSupport().cacheExpData(f.getExpData());
         }
 
+        getJob().getLogger().info("total inputs: " + getPipelineJob().getFiles().size());
+
         if (getPipelineJob().getJsonParams() != null)
         {
             getJob().getLogger().debug("job parameters:");

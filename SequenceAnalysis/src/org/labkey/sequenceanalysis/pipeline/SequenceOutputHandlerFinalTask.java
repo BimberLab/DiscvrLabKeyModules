@@ -108,6 +108,10 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
                 o.setAnalysis_id(analysisId);
                 o.setCreatedby(getJob().getUser().getUserId());
                 o.setModifiedby(getJob().getUser().getUserId());
+                if (o.getContainer() == null)
+                {
+                    o.setContainer(getJob().getContainerId());
+                }
 
                 if (o.getDataId() == null && o.getFile() != null)
                 {

@@ -307,6 +307,10 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("jobId"), jobId);
         filter.addCondition(FieldKey.fromString("location"), getConfig().getLocation());
         filter.addCondition(FieldKey.fromString("clusterId"), null, CompareType.NONBLANK);
+        filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.cancelled.name().toUpperCase(), CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.error.name().toUpperCase(), CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.complete.name().toUpperCase(), CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("status"), PREPARING, CompareType.NEQ_OR_NULL);
 
         List<HTCondorJob> condorJobs = new TableSelector(ti, filter, new Sort("-created")).getArrayList(HTCondorJob.class);
         if (condorJobs.isEmpty())

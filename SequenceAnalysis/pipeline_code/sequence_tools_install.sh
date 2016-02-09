@@ -319,34 +319,36 @@ then
     rm -Rf STAR_2.4*
     rm -Rf $LKTOOLS_DIR/STAR
 
-    wget --read-timeout=10 https://github.com/alexdobin/STAR/archive/STAR_2.4.2a.tar.gz
-    gunzip STAR_2.4.2a.tar.gz
-    tar -xf STAR_2.4.2a.tar
-    gzip STAR_2.4.2a.tar
+    wget --read-timeout=10 https://github.com/alexdobin/STAR/archive/2.5.1b.tar.gz
+    gunzip 2.5.1b.tar.gz
+    tar -xf 2.5.1b.tar
+    gzip 2.5.1b.tar
 
-    install ./STAR-STAR_2.4.2a/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR/STAR
+    install ./STAR-2.5.1b/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR/STAR
 else
     echo "Already installed"
 fi
 
 
 #
-# qualimap
+# RNA-SeQC
 #
 echo ""
 echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install qualimap"
+echo "Install RNA-SeQC"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKSRC_DIR}/qualimap_v2.0 || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/RNA-SeQC.jar || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf qualimap_v2.0*
+    rm -Rf RNA-SeQC*
+    rm -Rf $LKTOOLS_DIR/RNA-SeQC.jar
 
-    wget --read-timeout=10 http://qualimap.bioinfo.cipf.es/release/qualimap_v2.0.zip
-    unzip qualimap_v2.0.zip
+    wget --read-timeout=10 http://www.broadinstitute.org/cancer/cga/tools/rnaseqc/RNA-SeQC_v1.1.8.jar
+
+    install ./RNA-SeQC_v1.1.8.jar $LKTOOLS_DIR/RNA-SeQC.jar
 else
     echo "Already installed"
 fi
@@ -418,7 +420,7 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/bismark || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf bismark_v0.12.5*
+    rm -Rf bismark_*
     rm -Rf $LKTOOLS_DIR/bismark
     rm -Rf $LKTOOLS_DIR/bismark2bedGraph
     rm -Rf $LKTOOLS_DIR/bismark2report
@@ -427,12 +429,12 @@ then
     rm -Rf $LKTOOLS_DIR/coverage2cytosine
     rm -Rf $LKTOOLS_DIR/deduplicate_bismark
 
-    wget --read-timeout=10 http://www.bioinformatics.babraham.ac.uk/projects/bismark/bismark_v0.12.5.tar.gz
-    gunzip bismark_v0.12.5.tar.gz
-    tar -xf bismark_v0.12.5.tar
+    wget --read-timeout=10 http://www.bioinformatics.babraham.ac.uk/projects/bismark/bismark_v0.14.5.tar.gz
+    gunzip bismark_v0.14.5.tar.gz
+    tar -xf bismark_v0.14.5.tar
     echo "Compressing TAR"
-    gzip bismark_v0.12.5.tar
-    cd bismark_v0.12.5
+    gzip bismark_v0.14.5.tar
+    cd bismark_v0.14.5
 
     install ./bismark $LKTOOLS_DIR/bismark
     install ./bismark2bedGraph $LKTOOLS_DIR/bismark2bedGraph

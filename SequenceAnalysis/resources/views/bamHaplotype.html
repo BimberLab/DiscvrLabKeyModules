@@ -1,0 +1,20 @@
+<script type="text/javascript">
+
+Ext4.onReady(function (){
+    var outputFileIds = LABKEY.ActionURL.getParameter('outputFileIds');
+
+    if (!outputFileIds){
+        Ext4.Msg.alert('Error', 'Must Provide The File IDs');
+        return;
+    }
+
+    outputFileIds = outputFileIds.split(';');
+
+    var webpart = <%=webpartContext%>;
+    Ext4.create('SequenceAnalysis.panel.BamHaplotypePanel', {
+        outputFileIds: outputFileIds
+    }).render(webpart.wrapperDivId);
+
+});
+
+</script>
