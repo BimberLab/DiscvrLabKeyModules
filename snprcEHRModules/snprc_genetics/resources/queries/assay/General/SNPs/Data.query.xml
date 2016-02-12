@@ -1,0 +1,26 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="Data" tableDbType="NOT_IN_DB">
+                <javaCustomizer>org.labkey.laboratory.query.DefaultAssayCustomizer</javaCustomizer>
+                <columns>
+                    <column columnName="subjectId">
+                        <fk>
+                            <fkFolderPath>/SNPRC</fkFolderPath>
+                            <fkDbSchema>study</fkDbSchema>
+                            <fkTable>animal</fkTable>
+                            <fkColumnName>Id</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="snp">
+                        <fk>
+                            <fkDbSchema>lists</fkDbSchema>
+                            <fkTable>BAB_SNP_Annotation</fkTable>
+                            <fkColumnName>SNP</fkColumnName>
+                        </fk>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

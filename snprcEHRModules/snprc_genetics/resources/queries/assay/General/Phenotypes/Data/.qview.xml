@@ -1,0 +1,11 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="subjectId"/>
+        <column name="subjectId/Demographics/species"/>
+        <column name="SAMPLE_ID"/>
+        <column name="BLEED_DATE"/>
+        <column name="ASSAY"/>
+        <column name="VALUE"/>
+        <column name="ageAtTimeQuery/ageAtTime"/>
+    </columns>
+</customView>

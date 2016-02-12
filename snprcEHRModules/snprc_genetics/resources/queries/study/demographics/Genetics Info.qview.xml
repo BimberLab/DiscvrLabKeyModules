@@ -1,0 +1,34 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="Id"/>
+        <column name="species"/>
+        <!--<column name="geographic_origin"/>-->
+        <column name="gender"/>
+        <column name="calculated_status">
+            <properties>
+                <property name="columnTitle" value="Status"/>
+            </properties>
+        </column>
+        <column name="dam"/>
+        <column name="sire"/>
+        <column name="birth"/>
+        <column name="death"/>
+        <column name="Id/MostRecentWeight/MostRecentWeight">
+            <properties>
+                <property name="columnTitle" value="Current Weight (kg)"/>
+            </properties>
+        </column>
+        <column name="Id/MostRecentWeight/MostRecentWeightDate">
+            <properties>
+                <property name="columnTitle" value="Weight Date"/>
+            </properties>
+        </column>
+        <column name="Id/geneticAssays/hasGenexData"/>
+        <column name="Id/geneticAssays/hasMicrosatData"/>
+        <column name="Id/geneticAssays/hasPhenoData"/>
+        <column name="Id/geneticAssays/hasSNPData"/>
+    </columns>
+    <sorts>
+        <sort column="Id" descending="false"/>
+    </sorts>
+</customView>

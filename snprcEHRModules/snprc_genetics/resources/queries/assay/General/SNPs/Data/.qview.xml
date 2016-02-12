@@ -1,0 +1,10 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="subjectId"/>
+        <column name="subjectId/Demographics/species"/>
+        <column name="snp"/>
+        <column name="snp/Hsa_chromosome"/>
+        <column name="snp/coordinate"/>
+        <column name="value"/>
+    </columns>
+</customView>

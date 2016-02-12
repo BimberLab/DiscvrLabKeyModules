@@ -1,0 +1,24 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="total_assays" tableDbType="NOT_IN_DB">
+                <tableTitle>Genetics Assays Summary</tableTitle>
+                <columns>
+                    <column columnName="hasGenexData">
+                        <columnTitle>Has Gene Expression Data?</columnTitle>
+                        <!--TODO: consider adding URL to raw data-->
+                    </column>
+                    <column columnName="hasMicrosatData">
+                        <columnTitle>Has Microsatellite Data?</columnTitle>
+                    </column>
+                    <column columnName="hasPhenoData">
+                        <columnTitle>Has Phenotype Data?</columnTitle>
+                    </column>
+                    <column columnName="hasSNPData">
+                        <columnTitle>Has SNP Data?</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

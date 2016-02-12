@@ -1,0 +1,17 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="summary" tableDbType="TABLE">
+                <tableTitle>Microsatellite Result Summary</tableTitle>
+                <columns>
+                    <column columnName="folder">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="run">
+                        <isHidden>true</isHidden>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

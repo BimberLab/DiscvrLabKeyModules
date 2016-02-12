@@ -1,0 +1,9 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="subjectId"/>
+        <column name="subjectId/Demographics/species"/>
+        <column name="marker"/>
+        <column name="marker/Hsa_Chrom_Number"/>
+        <column name="result"/>
+    </columns>
+</customView>
