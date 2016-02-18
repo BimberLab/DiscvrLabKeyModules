@@ -113,7 +113,7 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
         {
             throw new PipelineJobException("Reference fasta does not exist: " + refFasta.getPath());
         }
-        getHelper().getFileManager().addInput(action, ReferenceLibraryTask.REFERENCE_DB_FASTA, refFasta);
+        getHelper().getFileManager().addInput(action, AlignmentInitTask.REFERENCE_DB_FASTA, refFasta);
 
         FastaIndexer indexer = new FastaIndexer(getJob().getLogger());
         File refFastaIndex = indexer.getExpectedIndexName(refFasta);

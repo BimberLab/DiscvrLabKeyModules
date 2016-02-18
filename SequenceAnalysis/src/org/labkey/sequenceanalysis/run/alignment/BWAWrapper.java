@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
@@ -118,7 +119,7 @@ public class BWAWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public final AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
+        public final AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, "bwa", referenceGenome);
@@ -141,6 +142,11 @@ public class BWAWrapper extends AbstractCommandWrapper
             return true;
         }
 
+        @Override
+        public boolean alwaysCopyIndexToWorkingDir()
+        {
+            return false;
+        }
 
         protected AlignmentOutput _performAlignment(AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {

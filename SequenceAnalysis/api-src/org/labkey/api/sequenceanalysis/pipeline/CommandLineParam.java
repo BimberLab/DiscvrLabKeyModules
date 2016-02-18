@@ -58,7 +58,7 @@ public class CommandLineParam
         if (_isSwitch)
         {
             //use true as a proxy for include or not
-            if ("true".equals(value))
+            if ("true".equals(value) || "on".equals(value))
             {
                 return Collections.singletonList(ret);
             }

@@ -27,6 +27,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     private List<SequenceReadsetImpl> _cachedReadsets = new ArrayList<>();
     private Map<Integer, AnalysisModel> _cachedAnalyses = new HashMap<>();
     private Map<Integer, ReferenceGenome> _cachedGenomes = new HashMap<>();
+    private Map<String, Serializable> _cachedObjects = new HashMap<>();
 
     public SequenceJobSupportImpl()
     {
@@ -133,5 +134,17 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     public void setReferenceGenome(ReferenceGenome referenceGenome)
     {
         _referenceGenome = referenceGenome;
+    }
+
+    @Override
+    public void cacheObject(String key, Serializable object)
+    {
+        _cachedObjects.put(key, object);
+    }
+
+    @Override
+    public Object getCachedObject(String key)
+    {
+        return _cachedObjects.get(key);
     }
 }

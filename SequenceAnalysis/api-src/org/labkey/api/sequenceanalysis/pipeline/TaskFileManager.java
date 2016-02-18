@@ -52,6 +52,8 @@ public interface TaskFileManager
 
     public boolean isDeleteIntermediateFiles();
 
+    public boolean isCopyInputsLocally();
+
     public void addIntermediateFile(File f);
 
     public void addIntermediateFiles(Collection<File> files);

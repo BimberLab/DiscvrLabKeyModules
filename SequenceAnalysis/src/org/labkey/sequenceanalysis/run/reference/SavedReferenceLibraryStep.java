@@ -22,8 +22,8 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
-import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -158,7 +158,7 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
         File originalFasta = getOriginalFastaFile();
         ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(originalFasta, getLibraryExpData(), getLibraryId()));
         output.addOutput(outputDirectory, "Reference Genome Folder");
-        output.addInput(originalFasta, ReferenceLibraryTask.REFERENCE_DB_FASTA);
+        output.addInput(originalFasta, AlignmentInitTask.REFERENCE_DB_FASTA);
 
         return output;
     }

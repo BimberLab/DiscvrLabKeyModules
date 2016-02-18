@@ -56,7 +56,18 @@ Ext4.define('SequenceAnalysis.panel.AlignmentPanel', {
                 comboLabel: 'Reference Genome Type',
                 singleTool: true,
                 toolConfig: this.toolConfig,
-                comboValue: 'SavedLibrary'
+                comboValue: 'SavedLibrary',
+                getItems: function(toolConfig){
+                    var items = SequenceAnalysis.panel.AnalysisSectionPanel.prototype.getItems.call(this, toolConfig);
+                    items = Ext4.Array.insert(items, 1, [{
+                        xtype: 'checkbox',
+                        fieldLabel: 'Copy Files To Working Directory?',
+                        checked: true,
+                        name: 'copyGenomeLocally'
+                    }]);
+
+                    return items;
+                }
             },{
                 xtype: 'displayfield',
                 style: 'margin-top: 10px;',

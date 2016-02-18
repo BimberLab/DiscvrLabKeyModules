@@ -36,7 +36,8 @@ Ext4.define('SequenceAnalysis.window.GenomeFileSelectorField', {
         this.callParent(arguments);
 
         this.on('afterrender', function() {
-            var parent = this.up('sequenceanalysis-basesequencepanel');
+            var parent = this.up('sequenceanalysis-basesequencepanel');  //Alignment panels
+            var window = this.up('window'); //OutputHandlerWindow
             if (parent) {
                 var field = parent.down('field[name=referenceLibraryCreation.SavedLibrary.libraryId]');
                 if (field) {
@@ -45,12 +46,27 @@ Ext4.define('SequenceAnalysis.window.GenomeFileSelectorField', {
                         this.updateStoreFilters(field.getValue());
                     }
                 }
+                else if (parent.libraryIds){
+                    if (parent.libraryIds.length == 1){
+                        this.updateStoreFilters(parent.libraryIds[0]);
+                    }
+                    else if (!parent.libraryIds.length){
+                        Ext4.Msg.alert('Genome Error', 'There are no reference genomes associated with these samples');
+                    }
+                    else if (parent.libraryIds.length > 1){
+                        Ext4.Msg.alert('Genome Error', 'More than one reference genome associated with these samples.  They must all use the same genome.');
+                    }
+                }
                 else {
                     LDK.Utils.logError('unable to find library field in GenomeFileSelectorField');
                 }
             }
+            else if (window && window.libraryId){
+                this.updateStoreFilters(window.libraryId);
+            }
             else {
                 LDK.Utils.logError('unable to find basesequencepanel in GenomeFileSelectorField');
+                Ext4.Msg.alert('Error', 'There is no genome ID provided to this field.  This indicates an error in how the module was developed - please contact your administrator.');
             }
         }, this);
     },

@@ -1,7 +1,5 @@
 package org.labkey.sequenceanalysis.pipeline;
 
-import org.jetbrains.annotations.NotNull;
-import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.DataType;
@@ -13,7 +11,6 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
@@ -21,7 +18,6 @@ import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by bimber on 1/16/2015.
@@ -74,7 +70,6 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         return (SequenceOutputHandlerJob)getJob();
     }
 
-    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
@@ -107,7 +102,17 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
                 o.setRunId(runId);
                 o.setAnalysis_id(analysisId);
                 o.setCreatedby(getJob().getUser().getUserId());
+                if (o.getCreated() == null)
+                {
+                    o.setCreated(new Date());
+                }
+
                 o.setModifiedby(getJob().getUser().getUserId());
+                if (o.getModified() == null)
+                {
+                    o.setModified(new Date());
+                }
+
                 if (o.getContainer() == null)
                 {
                     o.setContainer(getJob().getContainerId());

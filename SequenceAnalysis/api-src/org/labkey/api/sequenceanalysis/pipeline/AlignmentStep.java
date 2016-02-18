@@ -17,6 +17,7 @@ package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.model.Readset;
 
 import java.io.File;
 
@@ -40,11 +41,13 @@ public interface AlignmentStep extends PipelineStep
      * @param basename The basename to use as the output
      * @throws PipelineJobException
      */
-    public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException;
+    public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException;
 
     public boolean doAddReadGroups();
 
     public boolean doSortIndexBam();
+
+    public boolean alwaysCopyIndexToWorkingDir();
 
     public boolean supportsGzipFastqs();
 

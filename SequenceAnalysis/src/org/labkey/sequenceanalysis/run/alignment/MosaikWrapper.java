@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
@@ -71,7 +72,6 @@ public class MosaikWrapper extends AbstractCommandWrapper
             }
 
             output.addOutput(outputFile, IndexOutputImpl.PRIMARY_ALIGNER_INDEX_FILE);
-            output.addDeferredDeleteIntermediateFile(outputFile);
             output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
 
             //recache if not already
@@ -81,7 +81,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
+        public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName(), referenceGenome);
@@ -126,6 +126,12 @@ public class MosaikWrapper extends AbstractCommandWrapper
         public boolean doSortIndexBam()
         {
             return true;
+        }
+
+        @Override
+        public boolean alwaysCopyIndexToWorkingDir()
+        {
+            return false;
         }
     }
 

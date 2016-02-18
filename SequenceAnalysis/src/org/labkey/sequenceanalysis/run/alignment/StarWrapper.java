@@ -1,10 +1,12 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
@@ -18,6 +20,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,7 +51,7 @@ public class StarWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
+        public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName(), referenceGenome);
@@ -123,7 +126,7 @@ public class StarWrapper extends AbstractCommandWrapper
                         String parentTranscript = StringUtils.trimToNull(getProvider().getParameterByName("sjdbGTFtagExonParentTranscript").extractValue(getPipelineCtx().getJob(), getProvider(), String.class));
                         if (parentTranscript != null)
                         {
-                            args1.add("sjdbGTFtagExonParentTranscript");
+                            args1.add("--sjdbGTFtagExonParentTranscript");
                             args1.add(parentTranscript);
                         }
                         else
@@ -155,9 +158,41 @@ public class StarWrapper extends AbstractCommandWrapper
             output.addOutput(out, AlignmentOutputImpl.BAM_ROLE);
 
             File readCounts = new File(outputDirectory, basename + "ReadsPerGene.out.tab");
+            if (!readCounts.exists())
+            {
+                throw new PipelineJobException("Unable to find expected output: " + readCounts.getPath());
+            }
+
             output.addOutput(readCounts, "Reads Per Gene");
 
+            output.addSequenceOutput(readCounts, rs.getName() + " Gene Counts (STAR)", "Reads Per Gene", rs.getRowId(), null, referenceGenome.getGenomeId());
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
+
+            //set permissions on directories.  it is possible we actually want to delete these
+            if (SystemUtils.IS_OS_LINUX)
+            {
+                List<String> dirs = Arrays.asList("genome", "pass1", "tmp");
+                for (String name : dirs)
+                {
+                    File f = new File(outputDirectory, basename + name);
+                    if (f.exists())
+                    {
+                        try
+                        {
+                            getPipelineCtx().getLogger().debug("changing permissions on directory: " + f.getPath());
+                            Runtime.getRuntime().exec(new String[]{"chmod", "775", f.getPath()});
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
+                    }
+                    else
+                    {
+                        getPipelineCtx().getLogger().debug("directory not found, skipping: " + f.getPath());
+                    }
+                }
+            }
 
             return output;
         }
@@ -180,6 +215,12 @@ public class StarWrapper extends AbstractCommandWrapper
 
         @Override
         public boolean doSortIndexBam()
+        {
+            return true;
+        }
+
+        @Override
+        public boolean alwaysCopyIndexToWorkingDir()
         {
             return false;
         }

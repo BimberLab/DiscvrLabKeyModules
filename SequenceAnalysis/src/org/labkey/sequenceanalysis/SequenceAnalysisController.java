@@ -3795,10 +3795,8 @@ public class SequenceAnalysisController extends SpringActionController
                 allowedReferences = new TableSelector(ti, filter, null).getArrayList(RefNtSequenceModel.class);
             }
 
-            InputStream is = null;
-            try
+            try (InputStream is = IOUtils.toInputStream(form.getFasta()))
             {
-                is = IOUtils.toInputStream(form.getFasta());
                 FastaReader<DNASequence, NucleotideCompound> fastaReader = new FastaReader<>(is, new GenericFastaHeaderParser<DNASequence, NucleotideCompound>(), new DNASequenceCreator(AmbiguityDNACompoundSet.getDNACompoundSet()));
                 LinkedHashMap<String, DNASequence> fastaData = fastaReader.process();
 
@@ -3847,10 +3845,6 @@ public class SequenceAnalysisController extends SpringActionController
 
                     allHits.add(o);
                 }
-            }
-            finally
-            {
-                IOUtils.closeQuietly(is);
             }
 
             ret.put("hits", allHits);

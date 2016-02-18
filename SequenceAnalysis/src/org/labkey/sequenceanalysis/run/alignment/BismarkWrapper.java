@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +32,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.analysis.AnalysisOutputImpl;
 import org.labkey.sequenceanalysis.run.util.SamtoolsRunner;
 
@@ -39,6 +41,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -55,7 +58,8 @@ import java.util.zip.GZIPInputStream;
  */
 public class BismarkWrapper extends AbstractCommandWrapper
 {
-    private static String CACHED_NAME = "Bisulfite_Genome";
+    private static String WORKING_GENOME_NAME = "Bisulfite_Genome";
+    private static String CACHED_NAME_BOWTIE2 = "Bisulfite_Genome_Bowtie2";
 
     public BismarkWrapper(@Nullable Logger logger)
     {
@@ -76,11 +80,11 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
+        public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, CACHED_NAME, referenceGenome);
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, WORKING_GENOME_NAME, CACHED_NAME_BOWTIE2, referenceGenome);
             BismarkWrapper wrapper = getWrapper();
 
             List<String> args = new ArrayList<>();
@@ -90,7 +94,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
             args.add("--samtools_path");
             args.add(new SamtoolsRunner(getPipelineCtx().getLogger()).getSamtoolsPath().getParentFile().getPath());
             args.add("--path_to_bowtie");
-            args.add(new BowtieWrapper(getPipelineCtx().getLogger()).getExe().getParentFile().getPath());
+            args.add(new Bowtie2Wrapper(getPipelineCtx().getLogger()).getExe().getParentFile().getPath());
 
             if (getClientCommandArgs() != null)
             {
@@ -101,13 +105,12 @@ public class BismarkWrapper extends AbstractCommandWrapper
             args.add("-o");
             args.add(outputDirectory.getPath());
 
-            //NOTE: only works for bowtie2
-//            Integer threads = SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob());
-//            if (threads != null)
-//            {
-//                args.add("-p"); //multi-threaded
-//                args.add(threads.toString());
-//            }
+            Integer threads = SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob());
+            if (threads != null)
+            {
+                args.add("--multicore"); //multi-threaded
+                args.add(threads.toString());
+            }
 
             args.add("--bam"); //BAM output
 
@@ -124,10 +127,15 @@ public class BismarkWrapper extends AbstractCommandWrapper
                 args.add(inputFastq1.getPath());
             }
 
-            String outputBasename = inputFastq1.getName() + "_bismark" + (inputFastq2 == null ? "" : "_pe");
+            String outputBasename = inputFastq1.getName() + "_bismark_bt2" + (inputFastq2 == null ? "" : "_pe");
             File bam = new File(outputDirectory, outputBasename + ".bam");
             getWrapper().setWorkingDir(outputDirectory);
             getWrapper().execute(args);
+
+            if (!bam.exists())
+            {
+                throw new PipelineJobException("Unable to find BAM: " + bam.getPath());
+            }
 
             output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
             output.addOutput(new File(outputDirectory, inputFastq1.getName() + "_bismark_" + (inputFastq2 == null ? "SE" : "PE") + "_report.txt"), "Bismark Summary Report");
@@ -149,27 +157,54 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean alwaysCopyIndexToWorkingDir()
+        {
+            return true;
+        }
+
+        @Override
         public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             getPipelineCtx().getLogger().info("Preparing reference for bismark");
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
-            File indexOutputDir = outputDir;
-            File fastaParentDir = referenceGenome.getWorkingFastaFile().getParentFile();
-            if (!fastaParentDir.equals(outputDir))
-            {
-                indexOutputDir = referenceGenome.getWorkingFastaFile().getParentFile();
-            }
+            //always make sure FASTA is in analysis directory
+            File localFasta = new File(outputDir, referenceGenome.getWorkingFastaFile().getName());
+            File indexOutputDir = localFasta.getParentFile();
+            File genomeBuild = new File(indexOutputDir, WORKING_GENOME_NAME);
 
-
-            File genomeBuild = new File(indexOutputDir, CACHED_NAME);
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), CACHED_NAME, referenceGenome);
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), CACHED_NAME_BOWTIE2, referenceGenome);
             if (!hasCachedIndex)
             {
+                if (!localFasta.exists())
+                {
+                    try
+                    {
+                        FileUtils.copyFile(referenceGenome.getWorkingFastaFile(), localFasta);
+                        output.addIntermediateFile(localFasta);
+
+                        for (String ext : Arrays.asList("dict", "fai"))
+                        {
+                            File source = new File(referenceGenome.getWorkingFastaFile().getPath() + "." + ext);
+                            File dest = new File(localFasta.getPath() + "." + ext);
+                            if (source.exists())
+                            {
+                                FileUtils.copyFile(source, dest);
+                                output.addIntermediateFile(dest);
+                            }
+                        }
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+
                 List<String> args = new ArrayList<>();
                 args.add(getWrapper().getBuildExe().getPath());
+                args.add("--bowtie2");
                 args.add("--path_to_bowtie");
-                args.add(new BowtieWrapper(getPipelineCtx().getLogger()).getExe().getParentFile().getPath());
+                args.add(new Bowtie2Wrapper(getPipelineCtx().getLogger()).getExe().getParentFile().getPath());
 
                 //args.add("--verbose");
                 if (!indexOutputDir.exists())
@@ -185,12 +220,26 @@ public class BismarkWrapper extends AbstractCommandWrapper
                 {
                     throw new PipelineJobException("Unable to find file, expected: " + genomeBuild.getPath());
                 }
+
+                //rename this to be unique to bowtie2 for caching.  will be renamed when we use it
+                File renamedDir = new File(indexOutputDir, CACHED_NAME_BOWTIE2);
+                try
+                {
+                    FileUtils.moveDirectory(genomeBuild, renamedDir);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+                genomeBuild = renamedDir;
+
+                output.appendOutputs(referenceGenome.getWorkingFastaFile(), genomeBuild, true);
+
+                //recache if not already
+                AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), genomeBuild, CACHED_NAME_BOWTIE2, referenceGenome);
+
             }
-
-            output.appendOutputs(referenceGenome.getWorkingFastaFile(), genomeBuild, !(fastaParentDir.equals(outputDir)));
-
-            //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), genomeBuild, CACHED_NAME, referenceGenome);
 
             return output;
         }
@@ -201,9 +250,8 @@ public class BismarkWrapper extends AbstractCommandWrapper
         public Provider()
         {
             super("Bismark", "Bismark is a tool to map bisulfite converted sequence reads and determine cytosine methylation states.  It will use bowtie for the alignment itself.", Arrays.asList(
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-l"), "seed_length", "Seed Length", "The 'seed length'; i.e., the number of bases of the high quality end of the read to which the -n ceiling applies. The default is 28. Bowtie (and thus Bismark) is faster for larger values of -l. This option is only available for Bowtie 1 (for Bowtie 2 see -L).", "ldk-numberfield", null, 65),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), "max_seed_mismatches", "Max Seed Mismatches", "The maximum number of mismatches permitted in the 'seed', i.e. the first L base pairs of the read (where L is set with -l/--seedlen). This may be 0, 1, 2 or 3 and the default is 1. This option is only available for Bowtie 1 (for Bowtie 2 see -N).", "ldk-numberfield", null, 3),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-e"), "maqerr", "Max Errors", "Maximum permitted total of quality values at all mismatched read positions throughout the entire alignment, not just in the 'seed'. The default is 70. Like Maq, bowtie rounds quality values to the nearest 10 and saturates at 30. This value is not relevant for Bowtie 2.", "ldk-numberfield", null, 240)
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-L"), "seed_length", "Seed Length", "Sets the length of the seed substrings to align during multiseed alignment. Smaller values make alignment slower but more sensitive.", "ldk-numberfield", null, 30),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-N"), "max_seed_mismatches", "Max Seed Mismatches", "Sets the number of mismatches to be allowed in a seed alignment during multiseed alignment. Can be set to 0 or 1. Setting this higher makes alignment slower (often much slower) but increases sensitivity. Default: 0.", "ldk-numberfield", null, 1)
             ), null, "http://www.bioinformatics.babraham.ac.uk/projects/bismark/", true, false);
         }
 
@@ -235,6 +283,13 @@ public class BismarkWrapper extends AbstractCommandWrapper
             List<String> args = new ArrayList<>();
             args.add(wrapper.getMethylationExtractorExe().getPath());
             args.add(inputBam.getPath());
+
+            Integer threads = SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob());
+            if (threads != null)
+            {
+                args.add("--multicore"); //multi-threaded
+                args.add(threads.toString());
+            }
 
             args.add("--samtools_path");
             args.add(new SamtoolsRunner(getPipelineCtx().getLogger()).getSamtoolsPath().getParentFile().getPath());

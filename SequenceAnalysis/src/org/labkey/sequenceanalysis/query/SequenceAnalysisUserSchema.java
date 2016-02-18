@@ -14,6 +14,7 @@ import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.table.ContainerScopedTable;
 import org.labkey.api.ldk.table.SharedDataTable;
 import org.labkey.api.module.Module;
@@ -264,6 +265,9 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
             ret.addColumn(newCol);
         }
+
+        LDKService.get().applyNaturalSort(ret, "name");
+        LDKService.get().applyNaturalSort(ret, "subjectid");
 
         return ret;
     }

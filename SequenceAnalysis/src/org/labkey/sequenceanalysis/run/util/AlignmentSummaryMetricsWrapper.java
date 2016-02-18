@@ -26,10 +26,15 @@ public class AlignmentSummaryMetricsWrapper extends PicardWrapper
     public File executeCommand(File inputFile, File reference, @Nullable File outputFile) throws PipelineJobException
     {
         getLogger().info("Running AlignmentSummaryMetrics: " + inputFile.getPath());
+        File idx = new File(inputFile.getPath() + ".bai");
+        if (!idx.exists())
+        {
+            new BuildBamIndexWrapper(getLogger()).executeCommand(inputFile);
+        }
 
         try
         {
-            if (SequenceUtil.getBamSortOrder(inputFile) != SAMFileHeader.SortOrder.coordinate)
+            if (SequenceUtil.getBamSortOrder(inputFile) == SAMFileHeader.SortOrder.coordinate)
             {
                 List<String> params = new LinkedList<>();
                 params.add(SequencePipelineService.get().getJavaFilepath());

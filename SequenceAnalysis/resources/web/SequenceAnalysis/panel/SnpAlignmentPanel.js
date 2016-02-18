@@ -7,7 +7,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
     extend: 'Ext.panel.Panel',
     alias: 'widget.alignmentpanel',
 
-    MAX_ROWS: 200000,
+    MAX_ROWS: 300000,
     FEATURE_COLOR_MAP: {
         'CTL Epitope': 'yellow',
         'Protein Domain': 'cyan'
@@ -145,6 +145,10 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                     Ext4.Array.forEach(data.rows, function(r){
                         if(r.readset)
                             sampleIds.push(r.readset);
+
+                        if (r['readset/sampledate']){
+                            r['readset/sampledate'] = LDK.ConvertUtils.parseDate(r['readset/sampledate']);
+                        }
                         this.analysesRecords[r.rowid] = r;
 
                         sortedIds.push(r.rowid);
@@ -788,7 +792,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         if(this.analysesRecords[analysisId]['readset/subjectid'])
             qtip.push('Subject Id: ' + this.analysesRecords[analysisId]['readset/subjectid']);
         if(this.analysesRecords[analysisId]['readset/sampledate'])
-            qtip.push('Sample Date: ' + this.analysesRecords[analysisId]['readset/sampledate']);
+            qtip.push('Sample Date: ' + this.analysesRecords[analysisId]['readset/sampledate'].format('Y-m-d'));
         if(this.analysesRecords[analysisId]['readset/comment'])
             qtip.push('Readset Comments: ' + this.analysesRecords[analysisId]['readset/comment']);
 

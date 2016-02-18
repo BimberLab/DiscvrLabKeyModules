@@ -4,6 +4,8 @@ import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.SamRecordIntervalIteratorFactory;
@@ -17,11 +19,10 @@ import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
-import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
+import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -61,13 +62,13 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler
     @Override
     public boolean doRunRemote()
     {
-        return false;
+        return true;
     }
 
     @Override
     public boolean doRunLocal()
     {
-        return true;
+        return false;
     }
 
     @Override
@@ -85,7 +86,7 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler
         }
 
         @Override
-        public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
@@ -111,13 +112,23 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler
                 action.addInput(bam, "BAM File");
 
                 File bai = new File(bam.getPath() + ".bai");
-                try (SAMFileReader reader = new SAMFileReader(bam, bai))
+                if (!bai.exists())
+                {
+                    new BuildBamIndexWrapper(job.getLogger()).executeCommand(bam);
+                }
+
+                SamReaderFactory fact = SamReaderFactory.makeDefault();
+                try (SamReader reader = fact.open(bam))
                 {
                     SAMSequenceDictionary dict = reader.getFileHeader().getSequenceDictionary();
                     for (SAMSequenceRecord s : dict.getSequences())
                     {
                         distinctReferences.add(s);
                     }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
                 }
             }
 
@@ -243,7 +254,7 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler
         }
 
         @Override
-        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
 
         }

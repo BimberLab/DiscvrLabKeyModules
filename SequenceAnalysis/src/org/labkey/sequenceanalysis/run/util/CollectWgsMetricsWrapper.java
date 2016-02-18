@@ -23,6 +23,11 @@ public class CollectWgsMetricsWrapper extends PicardWrapper
     public File executeCommand(File inputFile, File outputFile, File refFasta) throws PipelineJobException
     {
         getLogger().info("Running CollectWgsMetrics: " + inputFile.getPath());
+        File idx = new File(inputFile.getPath() + ".bai");
+        if (!idx.exists())
+        {
+            new BuildBamIndexWrapper(getLogger()).executeCommand(inputFile);
+        }
 
         List<String> params = new LinkedList<>();
         params.add(SequencePipelineService.get().getJavaFilepath());

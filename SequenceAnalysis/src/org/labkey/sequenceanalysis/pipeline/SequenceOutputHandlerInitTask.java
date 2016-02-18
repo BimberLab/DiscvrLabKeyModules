@@ -9,7 +9,9 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.ParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 
@@ -97,6 +99,18 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
         {
             getJob().getLogger().debug("job parameters:");
             getJob().getLogger().debug(getPipelineJob().getJsonParams().toString(1));
+        }
+
+        if (handler instanceof ParameterizedOutputHandler)
+        {
+            for (ToolParameterDescriptor pd : ((ParameterizedOutputHandler)handler).getParameters())
+            {
+                if (pd instanceof ToolParameterDescriptor.CachableParam)
+                {
+                    Object val = getPipelineJob().getJsonParams().opt(pd.getName());
+                    ((ToolParameterDescriptor.CachableParam)pd).doCache(getJob(), val, getPipelineJob().getSequenceSupport());
+                }
+            }
         }
 
         handler.getProcessor().init(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);

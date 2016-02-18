@@ -58,8 +58,6 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     @Override
     public <StepType extends PipelineStep> Set<PipelineStepProvider<StepType>> getProviders(Class<? extends StepType> stepType)
     {
-        Logger.getRootLogger().info("registering pipeline step: " + stepType.getName());
-
         Set<PipelineStepProvider<StepType>> ret = new HashSet<>();
         for (PipelineStepProvider provider : _providers)
         {
@@ -106,12 +104,22 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         {
             path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SEQUENCE_TOOLS_PARAM);
             path = StringUtils.trimToNull(path);
-
             if (path != null)
             {
                 File ret = new File(path, exe);
                 if (ret.exists())
                     return ret;
+            }
+            else
+            {
+                path = PipelineJobService.get().getAppProperties().getToolsDirectory();
+                path = StringUtils.trimToNull(path);
+                if (path != null)
+                {
+                    File ret = new File(path, exe);
+                    if (ret.exists())
+                        return ret;
+                }
             }
 
             return new File(exe);

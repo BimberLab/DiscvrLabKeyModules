@@ -1,10 +1,6 @@
 package org.labkey.sequenceanalysis.run;
 
-import htsjdk.samtools.BAMIndexer;
-import htsjdk.samtools.BamFileIoUtils;
-import htsjdk.samtools.QueryInterval;
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;

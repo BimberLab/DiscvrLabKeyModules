@@ -298,10 +298,20 @@ public class TaskFileManagerImpl implements TaskFileManager
 
                 for (String line : toDelete)
                 {
+                    _job.getLogger().debug("attempting to delete deferred file: [" + line + "]");
                     File f = new File(_workLocation, line);
                     if (!f.exists())
                     {
                         File test = new File(getSupport().getAnalysisDirectory(), line);
+                        if (test.exists())
+                        {
+                            f = test;
+                        }
+                    }
+
+                    if (!f.exists())
+                    {
+                        File test = new File(line);
                         if (test.exists())
                         {
                             f = test;
@@ -621,6 +631,12 @@ public class TaskFileManagerImpl implements TaskFileManager
     public boolean isDeleteIntermediateFiles()
     {
         return "true".equals(_job.getParameters().get("deleteIntermediateFiles"));
+    }
+
+    @Override
+    public boolean isCopyInputsLocally()
+    {
+        return "true".equals(_job.getParameters().get("copyInputsLocally"));
     }
 
     private Set<String> getInputPaths()

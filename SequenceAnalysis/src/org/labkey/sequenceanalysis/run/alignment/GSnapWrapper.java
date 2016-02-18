@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -54,7 +55,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public AlignmentOutput performAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
+        public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName(), referenceGenome);
@@ -239,6 +240,12 @@ public class GSnapWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public boolean alwaysCopyIndexToWorkingDir()
+        {
+            return false;
+        }
+
+        @Override
         public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             getPipelineCtx().getLogger().info("Creating GSnap/GMap index");
@@ -302,7 +309,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
                     new ToolParameterDescriptor(CommandLineParam.create("-N"), "allow_novel_splicing", "Allow Novel Splicing", null, "checkbox", true, new JSONObject()
                     {{
                         put("checked", true);
-                    }}, false)
+                    }})
                     {
                         @Override
                         public String extractValueForCommandLine(PipelineJob job, PipelineStepProvider provider) throws PipelineJobException

@@ -18,10 +18,10 @@ package org.labkey.sequenceanalysis.pipeline;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.exp.PropertyType;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -40,7 +40,6 @@ import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
@@ -62,12 +61,9 @@ import org.labkey.sequenceanalysis.run.util.MergeSamFilesWrapper;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -235,26 +231,33 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         Pair<File, File> pair = Pair.of(d.getFile1(), d.getFile2());
 
                         //copy to work dir
-                        getJob().getLogger().info("copying files to work directory");
-                        getJob().setStatus(PipelineJob.TaskStatus.running, "Copying Files to Work Directory: " + suffix);
-
-                        RecordedAction copyAction = new RecordedAction(COPY_INPUTS_ACTIONNAME);
-                        actions.add(copyAction);
-                        File target = new File(getHelper().getWorkingDirectory(), pair.first.getName());
-                        _wd.inputFile(pair.first, target, false);
-                        getHelper().getFileManager().addInput(copyAction, "Input FASTQ", pair.first);
-                        getHelper().getFileManager().addOutput(copyAction, "Copied FASTQ", target);
-                        pair.first = target;
-
-                        if (pair.second != null)
+                        if (getHelper().getFileManager().isCopyInputsLocally())
                         {
-                            File target2 = new File(getHelper().getWorkingDirectory(), pair.second.getName());
-                            _wd.inputFile(pair.second, target2, false);
-                            getHelper().getFileManager().addInput(copyAction, "Input FASTQ", pair.second);
-                            getHelper().getFileManager().addOutput(copyAction, "Copied FASTQ", target2);
-                            pair.second = target2;
+                            getJob().getLogger().info("copying files to work directory");
+                            getJob().setStatus(PipelineJob.TaskStatus.running, "Copying Files to Work Directory: " + suffix);
+
+                            RecordedAction copyAction = new RecordedAction(COPY_INPUTS_ACTIONNAME);
+                            actions.add(copyAction);
+                            File target = new File(getHelper().getWorkingDirectory(), pair.first.getName());
+                            _wd.inputFile(pair.first, target, false);
+                            getHelper().getFileManager().addInput(copyAction, "Input FASTQ", pair.first);
+                            getHelper().getFileManager().addOutput(copyAction, "Copied FASTQ", target);
+                            pair.first = target;
+
+                            if (pair.second != null)
+                            {
+                                File target2 = new File(getHelper().getWorkingDirectory(), pair.second.getName());
+                                _wd.inputFile(pair.second, target2, false);
+                                getHelper().getFileManager().addInput(copyAction, "Input FASTQ", pair.second);
+                                getHelper().getFileManager().addOutput(copyAction, "Copied FASTQ", target2);
+                                pair.second = target2;
+                            }
+                            getJob().getLogger().info("copy done");
                         }
-                        getJob().getLogger().info("copy done");
+                        else
+                        {
+                            getJob().getLogger().debug("Will not copy inputs to working directory");
+                        }
 
                         pair = preprocessFastq(pair.first, pair.second, actions, suffix);
                         toAlign.put(d, pair);
@@ -351,36 +354,55 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             new FastaIndexer(getJob().getLogger()).execute(refFasta);
         }
 
-        try
+        //check client-supplied params
+        String val = getJob().getParameters().get(AlignmentInitTask.COPY_LOCALLY);
+        boolean doCopy = val == null ? true : ConvertHelper.convert(val, Boolean.class);
+
+        //but let aligners override this.
+        AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
+        if (alignmentStep.alwaysCopyIndexToWorkingDir())
         {
-            RecordedAction action = new RecordedAction(COPY_REFERENCE_LIBRARY_ACTIONNAME);
-            Date start = new Date();
-            action.setStartTime(start);
-
-            String basename = FileUtil.getBaseName(refFasta);
-            File targetDir = new File(_wd.getDir(), "Shared");
-            for (File f : refFasta.getParentFile().listFiles())
-            {
-                if (f.getName().startsWith(basename))
-                {
-                    getJob().getLogger().debug("copying reference file: " + f.getPath());
-                    File movedFile = _wd.inputFile(f, new File(targetDir, f.getName()), true);
-
-                    action.addInput(f, "Reference File");
-                    action.addOutput(movedFile, "Copied Reference File", true, true);
-                }
-            }
-
-            Date end = new Date();
-            action.setEndTime(end);
-            getJob().getLogger().info("Copy Reference Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-            actions.add(action);
-
-            referenceGenome.setWorkingFasta(new File(targetDir, refFasta.getName()));
+            getJob().getLogger().info("The selected aligner requires a local copy of the FASTA, so it will be copied");
+            doCopy = true;
         }
-        catch (IOException e)
+
+        if (doCopy)
         {
-            throw new PipelineJobException(e);
+            try
+            {
+                RecordedAction action = new RecordedAction(COPY_REFERENCE_LIBRARY_ACTIONNAME);
+                Date start = new Date();
+                action.setStartTime(start);
+
+                String basename = FileUtil.getBaseName(refFasta);
+                File targetDir = new File(_wd.getDir(), "Shared");
+                for (File f : refFasta.getParentFile().listFiles())
+                {
+                    if (f.getName().startsWith(basename))
+                    {
+                        getJob().getLogger().debug("copying reference file: " + f.getPath());
+                        File movedFile = _wd.inputFile(f, new File(targetDir, f.getName()), true);
+
+                        action.addInput(f, "Reference File");
+                        action.addOutput(movedFile, "Copied Reference File", true, true);
+                    }
+                }
+
+                Date end = new Date();
+                action.setEndTime(end);
+                getJob().getLogger().info("Copy Reference Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+                actions.add(action);
+
+                referenceGenome.setWorkingFasta(new File(targetDir, refFasta.getName()));
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            getJob().getLogger().debug("Will not copy reference library locally");
         }
     }
 
@@ -903,7 +925,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             getHelper().getFileManager().addInput(alignmentAction, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, inputFiles.second);
         }
 
-        getHelper().getFileManager().addInput(alignmentAction, ReferenceLibraryTask.REFERENCE_DB_FASTA, referenceGenome.getSourceFastaFile());
+        getHelper().getFileManager().addInput(alignmentAction, AlignmentInitTask.REFERENCE_DB_FASTA, referenceGenome.getSourceFastaFile());
         getJob().getLogger().info("Beginning alignment for: " + inputFiles.first.getName() + (inputFiles.second == null ? "" : " and " + inputFiles.second.getName()) + msgSuffix);
 
         File outputDirectory = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(inputFiles.first.getName()));
@@ -915,13 +937,13 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
 
         getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + alignmentStep.getProvider().getLabel().toUpperCase() + msgSuffix);
-        AlignmentStep.AlignmentOutput alignmentOutput = alignmentStep.performAlignment(inputFiles.first, inputFiles.second, outputDirectory, referenceGenome, SequenceTaskHelper.getUnzippedBaseName(inputFiles.first.getName()) + "." + alignmentStep.getProvider().getName().toLowerCase());
+        AlignmentStep.AlignmentOutput alignmentOutput = alignmentStep.performAlignment(rs, inputFiles.first, inputFiles.second, outputDirectory, referenceGenome, SequenceTaskHelper.getUnzippedBaseName(inputFiles.first.getName()) + "." + alignmentStep.getProvider().getName().toLowerCase());
         commands.addAll(alignmentOutput.getCommandsExecuted());
         getHelper().getFileManager().addStepOutputs(alignmentAction, alignmentOutput);
 
         if (alignmentOutput.getBAM() == null || !alignmentOutput.getBAM().exists())
         {
-            throw new PipelineJobException("Unable to find BAM file after alignment");
+            throw new PipelineJobException("Unable to find BAM file after alignment: " + alignmentOutput.getBAM());
         }
         Date end = new Date();
         alignmentAction.setEndTime(end);

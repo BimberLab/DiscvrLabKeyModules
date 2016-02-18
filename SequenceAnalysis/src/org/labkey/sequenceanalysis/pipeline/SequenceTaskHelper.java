@@ -293,22 +293,16 @@ public class SequenceTaskHelper implements PipelineContext
 
     public void cacheExpDatasForParams() throws PipelineJobException
     {
-        //cache ExpDatas as needed:
+        //cache params, as needed:
         for (PipelineStep.StepType stepType : PipelineStep.StepType.values())
         {
             for (PipelineStepProvider fact : SequencePipelineService.get().getProviders(stepType.getStepClass()))
             {
-                for (Object o : fact.getParameters())
+                for (ToolParameterDescriptor pd : (List<ToolParameterDescriptor>)fact.getParameters())
                 {
-                    ToolParameterDescriptor pd = (ToolParameterDescriptor)o;
-                    if (pd.isExpData() && !org.labkey.api.gwt.client.util.StringUtils.isEmpty(pd.extractValue(getJob(), fact)))
+                    if (pd instanceof ToolParameterDescriptor.CachableParam)
                     {
-                        Integer dataId = pd.extractValue(getJob(), fact, Integer.class);
-                        ExpData d = ExperimentService.get().getExpData(dataId);
-                        if (d != null)
-                        {
-                            getSequenceSupport().cacheExpData(d);
-                        }
+                        ((ToolParameterDescriptor.CachableParam)pd).doCache(getJob(), pd.extractValue(getJob(), fact), getSequenceSupport());
                     }
                 }
             }

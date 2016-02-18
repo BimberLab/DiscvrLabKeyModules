@@ -201,7 +201,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 }
                 else
                 {
-                    List<? extends ExpData> fastaDatas = run.getInputDatas(ReferenceLibraryTask.REFERENCE_DB_FASTA, null);
+                    List<? extends ExpData> fastaDatas = run.getInputDatas(AlignmentInitTask.REFERENCE_DB_FASTA, null);
                     if (fastaDatas.size() > 0)
                     {
                         for (ExpData d : fastaDatas)

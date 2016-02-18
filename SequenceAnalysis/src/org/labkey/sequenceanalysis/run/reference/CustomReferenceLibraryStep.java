@@ -9,8 +9,8 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
-import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -89,7 +89,7 @@ public class CustomReferenceLibraryStep extends AbstractPipelineStep implements 
 
 
         ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(refFasta, null, null));
-        output.addOutput(refFasta, ReferenceLibraryTask.REFERENCE_DB_FASTA);
+        output.addOutput(refFasta, AlignmentInitTask.REFERENCE_DB_FASTA);
         output.addOutput(outputDirectory, "Reference Genome Folder");
 
         return output;

@@ -30,7 +30,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
             containerPath: this.queryContainer,
             schemaName: 'sequenceanalysis',
             queryName: 'sequence_analyses',
-            columns: 'rowid,description,readset,readset/name,readset/platform,container,container/displayName,container/path,alignmentfile,alignmentfile/name,alignmentfile/fileexists,readset/subjectid,readset/sampleid',
+            columns: 'rowid,description,readset,readset/name,readset/platform,container,container/displayName,container/path,alignmentfile,alignmentfile/name,alignmentfile/fileexists,readset/subjectid,readset/sampleid,library_id,library_id/name',
             metadata: {
                 queryContainerPath: {
                     createIfDoesNotExist: true,
@@ -50,6 +50,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
                     this.fileIds = [];
                     var errors = [];
                     var errorNames = [];
+                    var libraryIds = [];
                     store.each(function(rec){
                         if (rec.get('alignmentfile')){
                             if (!rec.get('alignmentfile/fileexists')){
@@ -65,11 +66,17 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
                             errors.push(rec);
                             errorNames.push(rec.get('readset/name'))
                         }
+
+                        if (rec.get('library_id')){
+                            libraryIds.push(rec.get('library_id'));
+                        }
                     }, this);
 
                     if (errors.length){
                         alert('The following alignments lack a file and will be skipped: ' + errorNames.join(', '));
                     }
+
+                    this.libraryIds = Ext4.unique(libraryIds);
 
                     this.checkProtocol();
                 }
@@ -96,7 +103,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
                 store: this.analysesStore,
                 itemSelector: 'tr.file_list',
                 tpl: [
-                    '<table class="fileNames"><tr class="fileNames"><td>Analysis Id</td><td>Description</td><td>Readset Name</td><td>Platform</td><td>Alignment File</td><td>Folder</td><td></td></tr>',
+                    '<table class="fileNames"><tr class="fileNames"><td>Analysis Id</td><td>Description</td><td>Readset Name</td><td>Platform</td><td>Alignment File</td><td>Genome</td><td>Folder</td><td></td></tr>',
                     '<tpl for=".">',
                     '<tr class="file_list">',
                     '<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "sequenceanalysis", "query.queryName":"sequence_analyses", "query.rowId~eq": values.rowid})]}" target="_blank">{rowid:htmlEncode}</a></td>',
@@ -107,6 +114,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
                     '<tpl if="values.alignmentfile && !values[\'alignmentfile/fileexists\']"> style="background: red;" data-qtip="File does not exist"</tpl>',
                     '><a href="{[LABKEY.ActionURL.buildURL("experiment", "showData", values.queryContainerPath, {rowId: values.alignmentfile})]}" target="_blank">{[Ext4.htmlEncode(values["alignmentfile/name"])]}</a></td>',
 
+                    '<td>{[Ext4.htmlEncode(values["library_id/name"])]}</td>',
                     '<td><a href="{[LABKEY.ActionURL.buildURL("project", "start", values["container/path"], {})]}" target="_blank">{[Ext4.htmlEncode(values["container/displayName"])]}</a></td>',
                     '<td><a href="{[LABKEY.ActionURL.buildURL("sequenceanalysis", "fastqcReport", values["container/path"], {dataIds: values.alignmentfile})]}" target="_blank">FASTQC Report</a></td>',
                     '</tr>',
@@ -137,7 +145,6 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
                 analysisid: rec.get('rowid'),
                 readset: rec.get('readset/rowid'),
                 alignmentfile: rec.get('alignmentfile'),
-                alignmentfileName: rec.get('alignmentfile/name'),
                 alignmentfileName: rec.get('alignmentfile/name')
             };
         }, this);

@@ -16,7 +16,6 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 
@@ -49,6 +48,10 @@ public interface SequenceAnalysisJobSupport extends Serializable
     public void cacheGenome(ReferenceGenome m);
 
     public ReferenceGenome getCachedGenome(int genomeId);
+
+    public void cacheObject(String key, Serializable object);
+
+    public Object getCachedObject(String key);
 
     //public PipelineJob getJob();
 }

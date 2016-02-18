@@ -108,7 +108,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
         }
 
         Genotype gChild = vc.getGenotype(subject.getID());
-        if (gChild == null){
+        if (gChild == null || !gChild.isCalled()){
             return 0;  //cant make call
         }
 

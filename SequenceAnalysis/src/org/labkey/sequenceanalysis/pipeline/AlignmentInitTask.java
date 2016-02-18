@@ -1,6 +1,5 @@
 package org.labkey.sequenceanalysis.pipeline;
 
-import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
@@ -25,17 +24,17 @@ import java.util.List;
  * This task is designed to create the reference FASTA, which requires the DB.  this task will run
  * on the webserver
  */
-public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask.Factory>
+public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Factory>
 {
-    private static final String ACTIONNAME = "Creating Reference FASTA";
+    private static final String ACTIONNAME = "Preparing Run";
     public static final String REFERENCE_DB_FASTA = "Reference FASTA";
-    public static final String REFERENCE_DB_FASTA_IDX = "Reference FASTA Index";
     public static final String ID_KEY_FILE = "Reference Id Key";
     public static final String REFERENCE_DB_FASTA_OUTPUT = "Reference Output";
+    public static final String COPY_LOCALLY = "copyGenomeLocally";
 
     private SequenceTaskHelper _taskHelper;
 
-    protected ReferenceLibraryTask(Factory factory, PipelineJob job)
+    protected AlignmentInitTask(Factory factory, PipelineJob job)
     {
         super(factory, job);
     }
@@ -44,7 +43,7 @@ public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask
     {
         public Factory()
         {
-            super(ReferenceLibraryTask.class);
+            super(AlignmentInitTask.class);
             setJoin(true);
         }
 
@@ -73,7 +72,7 @@ public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask
 
         public PipelineJob.Task createTask(PipelineJob job)
         {
-            ReferenceLibraryTask task = new ReferenceLibraryTask(this, job);
+            AlignmentInitTask task = new AlignmentInitTask(this, job);
 
             return task;
         }
@@ -89,7 +88,6 @@ public class ReferenceLibraryTask extends WorkDirectoryTask<ReferenceLibraryTask
         return _taskHelper;
     }
 
-    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         SequenceAnalysisJob pipelineJob = getJob().getJobSupport(SequenceAnalysisJob.class);

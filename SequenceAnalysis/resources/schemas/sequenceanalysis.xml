@@ -354,7 +354,7 @@
     <ns:table tableName="sequence_analyses" tableDbType="TABLE" useColumnOrder="true">
         <ns:javaCustomizer>org.labkey.sequenceanalysis.query.AnalysesTableCustomizer</ns:javaCustomizer>
         <ns:auditLogging>DETAILED</ns:auditLogging>
-        <ns:tableTitle>Sequence Analyses</ns:tableTitle>
+        <ns:tableTitle>Sequence Analysis Runs</ns:tableTitle>
         <ns:pkColumnName>rowid</ns:pkColumnName>
         <ns:titleColumn>rowid</ns:titleColumn>
         <ns:tableUrl>/sequenceanalysis/sequenceAnalysisDetails.view?id=${rowid}</ns:tableUrl>

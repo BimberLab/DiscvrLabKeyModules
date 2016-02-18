@@ -20,6 +20,47 @@ public class BlastNWrapper extends AbstractCommandWrapper
         super(logger);
     }
 
+    public File runBlastN(File dbDir, String blastDbGuid, File input, File outputFile, List<String> params) throws PipelineJobException
+    {
+        if (dbDir == null || !dbDir.exists())
+        {
+            throw new IllegalArgumentException("BLAST database dir does not exist: " + dbDir);
+        }
+
+        File db = new File(dbDir, blastDbGuid);
+
+        List<String> args = new ArrayList<>();
+        args.add(getExe().getPath());
+
+        args.add("-db");
+        args.add(db.getPath());
+
+        args.add("-query");
+        args.add(input.getPath());
+
+        args.add("-use_index");
+        args.add("true");
+
+        args.add("-index_name");
+        args.add(db.getPath());
+
+        args.add("-out");
+        args.add(outputFile.getPath());
+
+        if (params != null)
+        {
+            args.addAll(params);
+        }
+
+        execute(args);
+        if (!outputFile.exists())
+        {
+            throw new PipelineJobException("Expected file not created: " + outputFile.getPath());
+        }
+
+        return outputFile;
+    }
+
     public void doRemoteBlast(File fasta, File output, @Nullable List<String> extraParams, @Nullable File blastdbDir) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();

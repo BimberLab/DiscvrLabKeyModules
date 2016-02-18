@@ -15,14 +15,14 @@
  */
 package org.labkey.api.sequenceanalysis.pipeline;
 
+import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.security.User;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.template.ClientDependency;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -96,5 +96,30 @@ abstract public class AbstractParameterizedOutputHandler implements Parameterize
     public boolean doSplitJobs()
     {
         return false;
+    }
+
+    public List<String> getClientCommandArgs(JSONObject params) throws PipelineJobException
+    {
+        return getClientCommandArgs(" ", params);
+    }
+
+    public List<String> getClientCommandArgs(String separator, JSONObject params) throws PipelineJobException
+    {
+        List<String> ret = new ArrayList<>();
+        List<ToolParameterDescriptor> toolParameterDescriptors = getParameters();
+        for (ToolParameterDescriptor desc : toolParameterDescriptors)
+        {
+            if (desc.getCommandLineParam() != null)
+            {
+                String key = desc.getName();
+                String val = params.optString(key);
+                if (val != null)
+                {
+                    ret.addAll(desc.getCommandLineParam().getArguments(separator, val));
+                }
+            }
+        }
+
+        return ret;
     }
 }

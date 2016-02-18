@@ -14,7 +14,7 @@
                     <!--<property name="location" value="sequenceAnalysis" />-->
                     <property name="join" value="true" />
                 </bean>
-                <bean class="org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask$Factory">
+                <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentInitTask$Factory">
                     <property name="location" value="webserver" />
                     <property name="join" value="true" />
                 </bean>
@@ -102,7 +102,7 @@
                     <property name="initialInputExt" ref="fastqFileType" />
                     <property name="taskProgressionSpec">
                         <list>
-                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.ReferenceLibraryTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentInitTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.PrepareAlignerIndexesTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask</value>
                             <ref bean="xarGeneratorJoin"/>

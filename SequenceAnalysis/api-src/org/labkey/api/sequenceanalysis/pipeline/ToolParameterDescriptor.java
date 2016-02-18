@@ -16,8 +16,11 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import com.drew.lang.annotations.Nullable;
+import org.apache.commons.beanutils.ConversionException;
 import org.json.JSONObject;
 import org.labkey.api.data.ConvertHelper;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 
@@ -35,9 +38,8 @@ public class ToolParameterDescriptor
     private String _fieldXtype;
     private JSONObject _additionalExtConfig;
     private Object _defaultValue;
-    private boolean _isExpData;
 
-    public ToolParameterDescriptor(CommandLineParam ca, String name, String label, String description, String fieldXtype, @Nullable Object defaultValue, @Nullable JSONObject additionalExtConfig, boolean isExpData)
+    public ToolParameterDescriptor(CommandLineParam ca, String name, String label, String description, String fieldXtype, @Nullable Object defaultValue, @Nullable JSONObject additionalExtConfig)
     {
         _ca = ca;
         _name = name;
@@ -46,22 +48,21 @@ public class ToolParameterDescriptor
         _fieldXtype = fieldXtype;
         _defaultValue = defaultValue;
         _additionalExtConfig = additionalExtConfig;
-        _isExpData = isExpData;
     }
 
     public static ToolParameterDescriptor create(String name, String label, String description, String fieldXtype, @Nullable JSONObject additionalExtConfig, @Nullable Object defaultValue)
     {
-        return new ToolParameterDescriptor(null, name, label, description, fieldXtype, defaultValue, additionalExtConfig, false);
+        return new ToolParameterDescriptor(null, name, label, description, fieldXtype, defaultValue, additionalExtConfig);
     }
 
     public static ToolParameterDescriptor createExpDataParam(String name, String label, String description, String fieldXtype, @Nullable JSONObject additionalExtConfig, @Nullable Object defaultValue)
     {
-        return new ToolParameterDescriptor(null, name, label, description, fieldXtype, defaultValue, additionalExtConfig, true);
+        return new ExpDataToolParameterDescriptor(null, name, label, description, fieldXtype, defaultValue, additionalExtConfig);
     }
 
     public static ToolParameterDescriptor createCommandLineParam(CommandLineParam ca, String name, String label, String description, String fieldXtype, @Nullable JSONObject additionalExtConfig, @Nullable Object defaultValue)
     {
-        return new ToolParameterDescriptor(ca, name, label, description, fieldXtype, defaultValue, additionalExtConfig, false);
+        return new ToolParameterDescriptor(ca, name, label, description, fieldXtype, defaultValue, additionalExtConfig);
     }
 
     public String getName()
@@ -94,16 +95,6 @@ public class ToolParameterDescriptor
         _description = description;
     }
 
-    public boolean isExpData()
-    {
-        return _isExpData;
-    }
-
-    public void setExpData(boolean isExpData)
-    {
-        _isExpData = isExpData;
-    }
-
     public CommandLineParam getCommandLineParam()
     {
         return _ca;
@@ -133,7 +124,6 @@ public class ToolParameterDescriptor
         ret.put("fieldXtype", _fieldXtype);
         ret.put("additionalExtConfig", _additionalExtConfig);
         ret.put("defaultValue", _defaultValue);
-        ret.put("isExpData", _isExpData);
         ret.put("commandLineParam", _ca == null ? null : _ca.getArgName());
 
         return ret;
@@ -177,5 +167,39 @@ public class ToolParameterDescriptor
         }
 
         return defaultValue;
+    }
+
+    public interface CachableParam
+    {
+        public void doCache(PipelineJob job, Object value, SequenceAnalysisJobSupport support) throws PipelineJobException;
+    }
+
+    public static class ExpDataToolParameterDescriptor extends ToolParameterDescriptor implements CachableParam
+    {
+        public ExpDataToolParameterDescriptor(CommandLineParam ca, String name, String label, String description, String fieldXtype, @Nullable Object defaultValue, @Nullable JSONObject additionalExtConfig)
+        {
+            super(ca, name, label, description, fieldXtype, defaultValue, additionalExtConfig);
+        }
+
+        @Override
+        public void doCache(PipelineJob job, Object value, SequenceAnalysisJobSupport support) throws PipelineJobException
+        {
+            if (value != null)
+            {
+                try
+                {
+                    Integer dataId = ConvertHelper.convert(value, Integer.class);
+                    ExpData d = ExperimentService.get().getExpData(dataId);
+                    if (d != null)
+                    {
+                        support.cacheExpData(d);
+                    }
+                }
+                catch (ConversionException e)
+                {
+                    throw new PipelineJobException("Unable to convert to integer: [" + value + "]", e);
+                }
+            }
+        }
     }
 }

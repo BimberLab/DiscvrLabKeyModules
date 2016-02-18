@@ -306,6 +306,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 inputValue: true,
                 checked: true,
                 xtype: 'checkbox'
+            },{
+                fieldLabel: 'Copy Inputs To Working Directory?',
+                helpPopup: 'Check to copy the input files to the working directory.  Depending on your environment, this may or may not help performance.',
+                name: 'copyInputsLocally',
+                inputValue: true,
+                checked: false,
+                xtype: 'checkbox'
             }, this.getSaveTemplateCfg()]
         };
     },

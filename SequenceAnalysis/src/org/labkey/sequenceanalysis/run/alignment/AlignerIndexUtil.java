@@ -2,10 +2,12 @@ package org.labkey.sequenceanalysis.run.alignment;
 
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,30 +23,40 @@ public class AlignerIndexUtil
     {
         ctx.getLogger().debug("checking whether cached index exists: " + name);
 
-        return verifyOrCreateCachedIndex(ctx, null, null, name, genome);
+        return verifyOrCreateCachedIndex(ctx, null, null, name, name, genome);
     }
 
     public static boolean copyIndexIfExists(PipelineContext ctx, AlignmentOutputImpl output, String name, ReferenceGenome genome) throws PipelineJobException
     {
-        ctx.getLogger().debug("copying index to shared dir if exists: " + name);
+        return copyIndexIfExists(ctx, output, name, name, genome);
+    }
+
+    public static boolean copyIndexIfExists(PipelineContext ctx, AlignmentOutputImpl output, String localName, String webserverName, ReferenceGenome genome) throws PipelineJobException
+    {
+        ctx.getLogger().debug("copying index to shared dir if exists: " + localName);
         if (ctx.getWorkDir() == null)
         {
             throw new PipelineJobException("PipelineContext.getWorkDir() is null");
         }
 
-        return verifyOrCreateCachedIndex(ctx, ctx.getWorkDir(), output, name, genome);
+        return verifyOrCreateCachedIndex(ctx, ctx.getWorkDir(), output, localName, webserverName, genome);
+    }
+
+    public static File getWebserverIndexDir(ReferenceGenome genome, String name)
+    {
+        return new File(genome.getSourceFastaFile().getParentFile(), (genome.getGenomeId() == null ? "" : INDEX_DIR + "/") + name);
     }
 
     /**
-     * If outputDir is null, files will not be copied.  Otherwise files be be copied to this destination.
+     * If WorkDirectory is null, files will not be copied.  Otherwise files be be copied to this destination.
      */
-    private static boolean verifyOrCreateCachedIndex(PipelineContext ctx, @Nullable WorkDirectory wd, @Nullable AlignmentOutputImpl output, String name, ReferenceGenome genome) throws PipelineJobException
+    private static boolean verifyOrCreateCachedIndex(PipelineContext ctx, @Nullable WorkDirectory wd, @Nullable AlignmentOutputImpl output, String localName, String webserverName, ReferenceGenome genome) throws PipelineJobException
     {
         boolean hasCachedIndex = false;
         if (genome != null)
         {
             //NOTE: when we cache the indexes with the source FASTA genome, we store all aligners under the folder /alignerIndexes.  When these are temporary genomes, they're top-level
-            File webserverIndexDir = new File(genome.getSourceFastaFile().getParentFile(), (genome.getGenomeId() == null ? "" : INDEX_DIR + "/") + name);
+            File webserverIndexDir = getWebserverIndexDir(genome, webserverName);
             if (webserverIndexDir.exists())
             {
                 ctx.getLogger().info("previously created index found, no need to recreate");
@@ -55,20 +67,31 @@ public class AlignerIndexUtil
                 {
                     if (wd != null)
                     {
-                        ctx.getLogger().info("copying index files to work location");
-                        File localSharedDir = new File(wd.getDir(), "Shared");
-                        File destination = new File(localSharedDir, name);
-                        ctx.getLogger().debug(destination.getPath());
-                        File[] files = webserverIndexDir.listFiles();
-                        if (files == null)
+                        String val = ctx.getJob().getParameters().get(AlignmentInitTask.COPY_LOCALLY);
+                        boolean doCopy = val == null ? true : ConvertHelper.convert(val, Boolean.class);
+
+                        if (doCopy)
                         {
-                            return false;
+                            ctx.getLogger().info("copying index files to work location");
+                            File localSharedDir = new File(wd.getDir(), "Shared");
+                            File destination = new File(localSharedDir, localName);
+                            ctx.getLogger().debug(destination.getPath());
+                            File[] files = webserverIndexDir.listFiles();
+                            if (files == null)
+                            {
+                                return false;
+                            }
+
+                            wd.inputFile(webserverIndexDir, destination, true);
+                            if (output != null)
+                                output.addDeferredDeleteIntermediateFile(destination);
+
+                            ctx.getLogger().info("finished copying files");
                         }
-
-                        wd.inputFile(webserverIndexDir, destination, true);
-                        output.addDeferredDeleteIntermediateFile(destination);
-
-                        ctx.getLogger().info("finished copying files");
+                        else
+                        {
+                            ctx.getLogger().debug("index files will not be copied to the work directory");
+                        }
                     }
                     else
                     {
@@ -97,7 +120,7 @@ public class AlignerIndexUtil
     {
         if (!hasCachedIndex && genome != null && genome.getGenomeId() != null)
         {
-            File cachingDir = new File(genome.getSourceFastaFile().getParentFile(), (genome.getGenomeId() == null ? "" : INDEX_DIR + "/") + name);
+            File cachingDir = new File(genome.getSourceFastaFile().getParentFile(), INDEX_DIR + "/" + name);
             ctx.getLogger().info("caching index files for future use");
             ctx.getLogger().debug(cachingDir.getPath());
 

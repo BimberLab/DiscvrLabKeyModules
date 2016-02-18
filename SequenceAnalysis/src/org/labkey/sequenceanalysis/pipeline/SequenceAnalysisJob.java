@@ -12,25 +12,23 @@ import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisJob;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocol;
 import org.labkey.api.pipeline.file.FileAnalysisTaskPipeline;
-import org.labkey.api.sequenceanalysis.model.ReadData;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.Pair;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
-import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -336,5 +334,17 @@ public class SequenceAnalysisJob extends AbstractFileAnalysisJob implements Sequ
     public List<Integer> getReadsetIdToProcesss()
     {
         return _readsetIdsToProcess;
+    }
+
+    @Override
+    public void cacheObject(String key, Serializable object)
+    {
+        _support.cacheObject(key, object);
+    }
+
+    @Override
+    public Object getCachedObject(String key)
+    {
+        return _support.getCachedObject(key);
     }
 }

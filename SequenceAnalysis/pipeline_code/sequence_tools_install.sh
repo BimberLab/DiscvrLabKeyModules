@@ -134,7 +134,7 @@ elif [ $(which apt-get) ]; then
     #update-alternatives --config java
     #update-alternatives --config javac
 
-    apt-get -q -y install libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven r-base
+    apt-get -q -y install libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven r-base r-cran-rcpp
 else
     echo "No known package manager present, aborting"
     exit 1
@@ -728,6 +728,75 @@ then
 else
     echo "Already installed"
 fi
+
+
+#
+#bowtie2
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install bowtie2"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/bowtie2 || ! -e ${LKTOOLS_DIR}/bowtie2-build || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+
+    #old version
+    rm -Rf bowtie2-*
+    rm -Rf $LKTOOLS_DIR/bowtie2
+    rm -Rf $LKTOOLS_DIR/bowtie2-*
+
+    wget --read-timeout=10 http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.2.6/bowtie2-2.2.6-linux-x86_64.zip
+    unzip bowtie2-2.2.6-linux-x86_64.zip
+
+    install ./bowtie2-2.2.6/bowtie2 $LKTOOLS_DIR/bowtie2
+    install ./bowtie2-2.2.6/bowtie2-build $LKTOOLS_DIR/bowtie2-build
+
+    install ./bowtie2-2.2.6/bowtie2-align-s $LKTOOLS_DIR/bowtie2-align-s
+    install ./bowtie2-2.2.6/bowtie2-align-l $LKTOOLS_DIR/bowtie2-align-l
+    install ./bowtie2-2.2.6/bowtie2-build-s $LKTOOLS_DIR/bowtie2-build-s
+    install ./bowtie2-2.2.6/bowtie2-build-l $LKTOOLS_DIR/bowtie2-build-l
+    install ./bowtie2-2.2.6/bowtie2-inspect $LKTOOLS_DIR/bowtie2-inspect
+    install ./bowtie2-2.2.6/bowtie2-inspect-s $LKTOOLS_DIR/bowtie2-inspect-s
+    install ./bowtie2-2.2.6/bowtie2-inspect-l $LKTOOLS_DIR/bowtie2-inspect-l
+else
+    echo "Already installed"
+fi
+
+
+#
+#trinity
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install trinity"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/Trinity || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+
+    #old version
+    rm -Rf v2.1.1*
+    rm -Rf trinityrnaseq-*
+    rm -Rf $LKTOOLS_DIR/Trinity
+
+    wget --read-timeout=10 https://github.com/trinityrnaseq/trinityrnaseq/archive/v2.1.1.tar.gz
+    gunzip v2.1.1.tar.gz
+    tar -xf v2.1.1.tar
+    cd trinityrnaseq-2.1.1
+    make
+
+    install ./Trinity $LKTOOLS_DIR/Trinity
+else
+    echo "Already installed"
+fi
+
 
 #
 #cutadapt

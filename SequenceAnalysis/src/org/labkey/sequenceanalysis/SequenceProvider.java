@@ -167,7 +167,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         if (nav.isVisible(c, u))
         {
             items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Readsets"));
-            items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Analyses"));
+            items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Analysis Runs"));
             items.add(new SequenceOutputsNavItem(this));
             items.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSIS_SETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "File Sets"));
         }
@@ -182,7 +182,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         NavItem nav = new SequenceNavItem(this, LaboratoryService.NavItemCategory.tabbedReports);
         if (nav.isVisible(c, u))
         {
-            QueryCountNavItem item1 = new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Analyses");
+            QueryCountNavItem item1 = new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "Sequence Analysis Runs");
             item1.setFilter(new SimpleFilter(FieldKey.fromString("readset/subjectId"), subjectId));
             items.add(item1);
 
@@ -211,7 +211,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         readsets.setOwnerKey(owner.getPropertyManagerKey());
         items.add(readsets);
 
-        TabbedReportItem analyses = new QueryTabbedReportItem(cache, this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, "Sequence Analyses", category);
+        TabbedReportItem analyses = new QueryTabbedReportItem(cache, this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, "Sequence Analysis Runs", category);
         analyses.setSubjectIdFieldKey(FieldKey.fromString("readset/subjectid"));
         analyses.setSampleDateFieldKey(FieldKey.fromString("readset/sampledate"));
         analyses.setOwnerKey(owner.getPropertyManagerKey());
@@ -235,7 +235,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         {
             ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, LaboratoryService.NavItemCategory.data, "Sequence", "Readsets"));
             //ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ALIGNMENTS, LaboratoryService.NavItemCategory.data, "Sequence", "Alignments"));
-            ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, "Sequence", "Analyses"));
+            ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, LaboratoryService.NavItemCategory.data, "Sequence", "Analysis Runs"));
             ret.add(new SequenceOutputsNavItem(this));
             //ret.add(new QueryCountNavItem(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSIS_SETS, LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), "File Groups"));
         }

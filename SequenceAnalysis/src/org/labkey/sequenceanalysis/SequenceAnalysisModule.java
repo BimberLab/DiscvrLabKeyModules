@@ -34,7 +34,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
-import org.labkey.sequenceanalysis.analysis.AlignmentMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
 import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
 import org.labkey.sequenceanalysis.analysis.CoverageDepthHandler;
@@ -42,6 +41,7 @@ import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
 import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
+import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.GenomeLoadButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
@@ -53,6 +53,7 @@ import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BismarkWrapper;
+import org.labkey.sequenceanalysis.run.alignment.Bowtie2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
 import org.labkey.sequenceanalysis.run.alignment.GSnapWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
@@ -64,6 +65,7 @@ import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.UnmappedReadExportAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.ViralAnalysis;
+import org.labkey.sequenceanalysis.run.assembly.TrinityRunner;
 import org.labkey.sequenceanalysis.run.bampostprocessing.AddOrReplaceReadGroupsStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.CallMdTagsStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.CleanSamStep;
@@ -71,8 +73,10 @@ import org.labkey.sequenceanalysis.run.bampostprocessing.FixMateInformationStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.IndelRealignerStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.MarkDuplicatesStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.RecalibrateBamStep;
+import org.labkey.sequenceanalysis.run.bampostprocessing.RnaSeQCStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SplitNCigarReadsStep;
+import org.labkey.sequenceanalysis.run.preprocessing.BlastFilterPipelineStep;
 import org.labkey.sequenceanalysis.run.preprocessing.CutadaptWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.DownsampleFastqWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
@@ -155,6 +159,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.MaxInfoTrimmingProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.AdapterTrimmingProvider());
         SequencePipelineService.get().registerPipelineStep(new CutadaptWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BlastFilterPipelineStep.Provider());
 
         //ref library
         SequencePipelineService.get().registerPipelineStep(new DNAReferenceLibraryStep.Provider());
@@ -164,6 +169,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         //aligners
         SequencePipelineService.get().registerPipelineStep(new BowtieWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new Bowtie2Wrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new BWAMemWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new BWAWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new BWASWWrapper.Provider());
@@ -173,6 +179,9 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new GSnapWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new StarWrapper.Provider());
+
+        //de novo assembly
+        SequencePipelineService.get().registerPipelineStep(new TrinityRunner.Provider());
 
         //bam postprocessing
         SequencePipelineService.get().registerPipelineStep(new AddOrReplaceReadGroupsStep.Provider());
@@ -194,17 +203,19 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new UnmappedReadExportAnalysis.Provider());
         //SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RnaSeQCStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
         SequenceAnalysisService.get().registerFileHandler(new CoverageDepthHandler());
         SequenceAnalysisService.get().registerFileHandler(new GenotypeGVCFHandler());
-        SequenceAnalysisService.get().registerFileHandler(new AlignmentMetricsHandler());
+        //SequenceAnalysisService.get().registerFileHandler(new AlignmentMetricsHandler());
         SequenceAnalysisService.get().registerFileHandler(new UnmappedSequenceBasedGenotypeHandler());
         SequenceAnalysisService.get().registerFileHandler(new PicardAlignmentMetricsHandler());
         SequenceAnalysisService.get().registerFileHandler(new BamHaplotypeHandler());
         SequenceAnalysisService.get().registerFileHandler(new BamCleanupHandler());
         SequenceAnalysisService.get().registerFileHandler(new HaplotypeCallerHandler());
+        SequenceAnalysisService.get().registerFileHandler(new RnaSeqcHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));

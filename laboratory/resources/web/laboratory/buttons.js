@@ -38,6 +38,7 @@ Laboratory.buttonHandlers = new function(){
                 schemaName: 'laboratory',
                 queryName: 'samples',
                 columns: 'rowid,container',
+                ignoreFilter: 1,
                 filterArray: [LABKEY.Filter.create('rowid', checked.join(';'), LABKEY.Filter.Types.IN)],
                 failure: LDK.Utils.getErrorCallback(),
                 success: function(results){
@@ -140,9 +141,12 @@ Laboratory.buttonHandlers = new function(){
                 schemaName: 'laboratory',
                 queryName: 'samples',
                 columns: 'rowid,container,comment',
+                ignoreFilter: 1,
                 filterArray: [LABKEY.Filter.create('rowid', checked.join(';'), LABKEY.Filter.Types.IN)],
                 failure: LDK.Utils.getErrorCallback(),
                 success: function(results){
+                    LDK.Assert.assertTrue('no results after selecting rows for appendCommentToSamples()', results && results.rows && results.rows.length);
+
                     Ext4.create('Ext.Window', {
                         width: 315,
                         autoHeight: true,
@@ -177,6 +181,7 @@ Laboratory.buttonHandlers = new function(){
                         buttons: [{
                             xtype: 'button',
                             text: 'Submit',
+                            scope: this,
                             handler: function(btn){
                                 var win = btn.up('window');
                                 var textarea = win.down('textarea');
@@ -416,6 +421,7 @@ Laboratory.buttonHandlers = new function(){
                             schemaName: 'laboratory',
                             queryName: 'samples',
                             columns: 'rowid,container',
+                            ignoreFilter: 1,
                             filterArray: [LABKEY.Filter.create('rowid', checked.join(';'), LABKEY.Filter.Types.IN)],
                             scope: this,
                             failure: LDK.Utils.getErrorCallback(),
