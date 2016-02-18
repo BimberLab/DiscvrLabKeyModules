@@ -239,7 +239,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                             RecordedAction copyAction = new RecordedAction(COPY_INPUTS_ACTIONNAME);
                             actions.add(copyAction);
                             File target = new File(getHelper().getWorkingDirectory(), pair.first.getName());
-                            _wd.inputFile(pair.first, target, false);
+                            target = _wd.inputFile(pair.first, target, false);
                             getHelper().getFileManager().addInput(copyAction, "Input FASTQ", pair.first);
                             getHelper().getFileManager().addOutput(copyAction, "Copied FASTQ", target);
                             pair.first = target;
@@ -247,7 +247,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                             if (pair.second != null)
                             {
                                 File target2 = new File(getHelper().getWorkingDirectory(), pair.second.getName());
-                                _wd.inputFile(pair.second, target2, false);
+                                target2 = _wd.inputFile(pair.second, target2, false);
                                 getHelper().getFileManager().addInput(copyAction, "Input FASTQ", pair.second);
                                 getHelper().getFileManager().addOutput(copyAction, "Copied FASTQ", target2);
                                 pair.second = target2;

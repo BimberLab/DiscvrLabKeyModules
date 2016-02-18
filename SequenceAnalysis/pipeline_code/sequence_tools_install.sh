@@ -225,12 +225,6 @@ then
     mkdir -p gatk
     cd gatk
 
-    if [ ! -v JAVA_HOME ]; then
-        echo "JAVA_HOME not defined"
-    else
-        echo "JAVA_HOME: [${JAVA_HOME}]"
-    fi
-
     echo "Downloading GATK from GIT"
     git clone git://github.com/broadgsa/gatk-protected.git
     cd gatk-protected
