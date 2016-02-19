@@ -9,6 +9,7 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
@@ -19,6 +20,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -30,7 +32,7 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
 
     public RnaSeqcHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "RNA-SeQC", "This will run RNA-SeQC on the selected BAMs, which produces quality metric reports.", null, Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "RNA-SeQC", "This will run RNA-SeQC on the selected BAMs, which produces quality metric reports.", new LinkedHashSet<>(Arrays.asList("sequenceanalysis/field/GenomeFileSelectorField.js")), Arrays.asList(
                 ToolParameterDescriptor.create("name", "Output Name", "This is the name that will be used to describe the output.", "textfield", new JSONObject(){{
                     put("allowBlank", false);
                 }}, null),
@@ -79,7 +81,7 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
     @Override
     public boolean doSplitJobs()
     {
-        return true;
+        return false;
     }
 
     public class Processor implements OutputProcessor
@@ -161,7 +163,8 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
             List<String> extraParams = getClientCommandArgs(params);
 
             RnaSeQCWrapper wrapper = new RnaSeQCWrapper(job.getLogger());
-            File outputReport = wrapper.execute(bams, sampleIds, notes, support.getReferenceGenome().getWorkingFastaFile(), outputDir, name, extraParams);
+            ReferenceGenome g = support.getCachedGenome(inputFiles.get(0).getLibrary_id());
+            File outputReport = wrapper.execute(bams, sampleIds, notes, g.getWorkingFastaFile(), gtfFile, outputDir, name, extraParams);
 
             File indexHtml = new File(outputReport, "index.html");
             SequenceOutputFile so = new SequenceOutputFile();

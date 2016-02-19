@@ -1,4 +1,4 @@
-Ext4.define('SequenceAnalysis.window.GenomeFileSelectorField', {
+Ext4.define('SequenceAnalysis.field.GenomeFileSelectorField', {
     extend: 'LABKEY.ext4.ComboBox',
     alias: 'widget.sequenceanalysis-genomefileselectorfield',
 

@@ -153,6 +153,11 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
     },
 
     onSubmit: function() {
+        if (!this.down('form').getForm().isValid()){
+            Ext4.Msg.alert('Error', 'There are one or more errors in the fields');
+            return;
+        }
+
         var params = this.down('form').getForm().getValues();
 
         Ext4.Msg.wait('Saving...');

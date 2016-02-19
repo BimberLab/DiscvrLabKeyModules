@@ -13,6 +13,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.run.util.RnaSeQCWrapper;
 
 import java.io.File;
@@ -46,7 +47,7 @@ public class RnaSeQCStep extends AbstractCommandPipelineStep<RnaSeQCWrapper> imp
                             put("allowBlank", false);
                         }}, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ttype"), "ttype", "Transcript Column", "The column in GTF to use to look for rRNA transcript type. Mainly used for running on Ensembl GTF (specify '-ttype 2'). Otherwise, for spec-conforming GTF files, disregard.", "ldk-integerfield", null, 2)
-            ), null, "https://www.broadinstitute.org/cancer/cga/rna-seqc");
+            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://www.broadinstitute.org/cancer/cga/rna-seqc");
         }
 
         @Override
@@ -68,17 +69,13 @@ public class RnaSeQCStep extends AbstractCommandPipelineStep<RnaSeQCWrapper> imp
         List<String> extraParams = new ArrayList<>();
         extraParams.addAll(getClientCommandArgs());
 
+        File gtf;
         if (!StringUtils.isEmpty(getProvider().getParameterByName("gtf").extractValue(getPipelineCtx().getJob(), getProvider())))
         {
-            File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("gtf").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class));
-            if (gtf.exists())
+            gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("gtf").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class));
+            if (!gtf.exists())
             {
-                extraParams.add("-t");
-                extraParams.add(gtf.getPath());
-            }
-            else
-            {
-                getPipelineCtx().getLogger().error("Unable to find GTF file: " + gtf.getPath());
+                throw new PipelineJobException("Unable to find GTF file: " + gtf.getPath());
             }
         }
         else
@@ -86,7 +83,7 @@ public class RnaSeQCStep extends AbstractCommandPipelineStep<RnaSeQCWrapper> imp
             throw new PipelineJobException("No GTF file provided");
         }
 
-        getWrapper().execute(Arrays.asList(inputBam), Arrays.asList(rs.getRowId() + ":" + rs.getName()), null, referenceGenome.getWorkingFastaFile(), outputDir, "rna-seqc", extraParams);
+        getWrapper().execute(Arrays.asList(inputBam), Arrays.asList(rs.getRowId() + ":" + rs.getName()), null, referenceGenome.getWorkingFastaFile(), gtf, outputDir, "rna-seqc", extraParams);
 
         return null;
     }

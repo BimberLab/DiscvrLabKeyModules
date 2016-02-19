@@ -227,6 +227,8 @@ public class SequenceAnalysisMaintenanceTask extends DefaultSystemMaintenanceTas
                                     {
                                         _log.error("expected track file does not exist: " + trackData.getFile().getPath());
                                     }
+
+                                    expectedTracks.addAll(getAssociatedFiles(trackData.getFile(), true));
                                 }
                                 else
                                 {
@@ -337,7 +339,7 @@ public class SequenceAnalysisMaintenanceTask extends DefaultSystemMaintenanceTas
     {
         List<String> ret = new ArrayList<>();
 
-        //TODO: this is sort of a hack.  certaion file types can get gzipped or indexed, so add those variants:
+        //TODO: this is sort of a hack.  certain file types can get gzipped or indexed, so add those variants:
         if (_bamFileType.isType(f))
         {
             ret.add(f.getName() + ".bai");

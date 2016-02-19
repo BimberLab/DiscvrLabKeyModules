@@ -14,6 +14,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.run.util.BaseRecalibratorWrapper;
 
 import java.io.File;
@@ -42,7 +43,7 @@ public class RecalibrateBamStep extends AbstractCommandPipelineStep<BaseRecalibr
                     put("width", 400);
                     put("allowBlank", false);
                 }}, null)
-            ), null, "https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_bqsr_BaseRecalibrator.php");
+            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_bqsr_BaseRecalibrator.php");
         }
 
         @Override

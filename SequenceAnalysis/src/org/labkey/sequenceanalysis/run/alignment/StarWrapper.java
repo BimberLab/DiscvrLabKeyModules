@@ -17,6 +17,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import java.io.File;
@@ -282,7 +283,7 @@ public class StarWrapper extends AbstractCommandWrapper
                 ToolParameterDescriptor.create("stranded", "Data Are Stranded?", "If checked, the following arguments will be added: --outSAMstrandField=intronMotif and --outFilterIntronMotifs=RemoveNoncanonicalUnannotated.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true)
-            ), null, "https://github.com/alexdobin/STAR/", true, true);
+            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://github.com/alexdobin/STAR/", true, true);
         }
 
         public StarAlignmentStep create(PipelineContext context)

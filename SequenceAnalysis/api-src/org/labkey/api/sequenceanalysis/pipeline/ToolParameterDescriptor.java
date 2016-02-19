@@ -17,6 +17,7 @@ package org.labkey.api.sequenceanalysis.pipeline;
 
 import com.drew.lang.annotations.Nullable;
 import org.apache.commons.beanutils.ConversionException;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.exp.api.ExpData;
@@ -184,7 +185,7 @@ public class ToolParameterDescriptor
         @Override
         public void doCache(PipelineJob job, Object value, SequenceAnalysisJobSupport support) throws PipelineJobException
         {
-            if (value != null)
+            if (value != null && !StringUtils.isEmpty(String.valueOf(value)))
             {
                 try
                 {

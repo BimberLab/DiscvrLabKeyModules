@@ -3056,6 +3056,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/RunExportWindo
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/VisualizeDataWindow.js -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/FileGroup.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/HtmlExpDataHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/PipelineStartup.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/ReadDataImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceAnalysisContainerListener.java -text

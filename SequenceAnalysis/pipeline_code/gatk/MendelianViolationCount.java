@@ -121,8 +121,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
             //If the family is all homref, not too interesting
             if (!(gMom.isHomRef() && gDad.isHomRef() && gChild.isHomRef()))
             {
-                if (!gMom.isCalled() && !gDad.isCalled())
-                {
+                if (!gMom.isCalled() && !gDad.isCalled()) {
                     return 0;
                 }
                 else if (isViolation(gMom, gDad, gChild)){
@@ -142,7 +141,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
                 return false;
             }
 
-            if ((gDad.isHomRef() && gChild.isHomVar()) || (gDad.isHomVar() && gChild.isHomRef()) || (gChild.isHomVar() && !gDad.getAlleles().contains(gChild.getAllele(0))))
+            if ((gDad.isHomRef() && gChild.isHomVar()) || (gDad.isHomVar() && gChild.isHomRef()) || (countAllelesShared(gChild, gDad) == 0))
             {
                 return true;
             }
@@ -155,7 +154,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
                 return false;
             }
 
-            if ((gMom.isHomRef() && gChild.isHomVar()) || (gMom.isHomVar() && gChild.isHomRef()) || (gChild.isHomVar() && !gMom.getAlleles().contains(gChild.getAllele(0))))
+            if ((gMom.isHomRef() && gChild.isHomVar()) || (gMom.isHomVar() && gChild.isHomRef()) || (countAllelesShared(gChild, gMom) == 0)))
             {
                 return true;
             }
@@ -165,6 +164,20 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
         //Both parents have genotype information
         return !(gMom.getAlleles().contains(gChild.getAlleles().get(0)) && gDad.getAlleles().contains(gChild.getAlleles().get(1)) ||
                 gMom.getAlleles().contains(gChild.getAlleles().get(1)) && gDad.getAlleles().contains(gChild.getAlleles().get(0)));
+    }
+
+    private int countAllelesShared(Genotype g1, Genotype g2)
+    {
+        int shared = 0;
+        for (Allele a : g1.getAlleles())
+        {
+            if (a.isCalled() && !a.isSymbolic() && g2.getAlleles().contains(a))
+            {
+                shared++;
+            }
+        }
+
+        return shared;
     }
 
     // return the descriptions used for the VCF INFO meta field

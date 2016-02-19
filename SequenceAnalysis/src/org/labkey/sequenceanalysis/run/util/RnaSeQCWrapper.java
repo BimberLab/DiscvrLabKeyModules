@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.util.FileUtil;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -26,7 +27,7 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
         super(logger);
     }
 
-    public File execute(List<File> inputBams, List<String> sampleIds, @Nullable List<String> notes, File referenceFasta, File outputDir, String name, @Nullable List<String> extraParams) throws PipelineJobException
+    public File execute(List<File> inputBams, List<String> sampleIds, @Nullable List<String> notes, File referenceFasta, File gtfFile, File outputDir, String name, @Nullable List<String> extraParams) throws PipelineJobException
     {
         getLogger().info("Running RNA-SeQC on BAM: ");
         for (File f : inputBams)
@@ -48,19 +49,21 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
 
         //write sample file
         File sampleFile = new File(outputDir, "samples.txt");
-        try (CSVWriter writer = new CSVWriter(new FileWriter(sampleFile), '\t'))
+        try (CSVWriter writer = new CSVWriter(new FileWriter(sampleFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
+            writer.writeNext(new String[]{"Sample ID", "Bam File", "Notes"});
+
             int i = 0;
             for (File f : inputBams)
             {
-                String note = notes == null || notes.size() <= i || notes.get(i) == null ? "" : notes.get(i).replaceAll("\\|", ";");
+                String note = notes == null || notes.size() <= i || notes.get(i) == null ? "N/A" : notes.get(i);
                 String sampleId = sampleIds == null || sampleIds.size() <= i || sampleIds.get(i) == null ? null : StringUtils.trimToNull(sampleIds.get(i));
                 if (sampleId == null)
                 {
                     throw new PipelineJobException("No sampleID provided for file: " + f.getPath());
                 }
 
-                writer.writeNext(new String[]{sampleId + "|" + f.getPath() + "|" + note});
+                writer.writeNext(new String[]{sampleId, f.getPath(), note});
                 i++;
             }
         }
@@ -75,7 +78,11 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
         params.add("-r");
         params.add(referenceFasta.getPath());
 
-        File output = new File(outputDir, name);
+        params.add("-t");
+        params.add(gtfFile.getPath());
+
+        String fn = FileUtil.makeLegalName(name).replaceAll(" ", "_");
+        File output = new File(outputDir, fn);
         params.add("-o");
         params.add(output.getPath());
 
