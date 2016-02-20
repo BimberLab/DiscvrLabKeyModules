@@ -154,7 +154,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
                 return false;
             }
 
-            if ((gMom.isHomRef() && gChild.isHomVar()) || (gMom.isHomVar() && gChild.isHomRef()) || (countAllelesShared(gChild, gMom) == 0)))
+            if ((gMom.isHomRef() && gChild.isHomVar()) || (gMom.isHomVar() && gChild.isHomRef()) || (countAllelesShared(gChild, gMom) == 0))
             {
                 return true;
             }
