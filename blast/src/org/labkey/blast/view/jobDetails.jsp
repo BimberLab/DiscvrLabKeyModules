@@ -95,7 +95,7 @@
                             valueField: 'id',
                             labelWidth: 150,
                             width: 600,
-                            value: '<%=text(outputFormat.name())%>',
+                            value: <%=q(outputFormat == null ? null : outputFormat.name())%>,
                             store: {
                                 type: 'array',
                                 fields: ['label', 'id'],

@@ -598,9 +598,20 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING FASTQC");
                     getJob().getLogger().info("running FastQC for file: " + f);
                     FastqcRunner runner = new FastqcRunner(getJob().getLogger());
+                    Integer threads = SequenceTaskHelper.getMaxThreads(getJob());
+                    if (threads != null)
+                    {
+                        runner.setThreads(threads);
+                    }
+
                     runner.execute(Arrays.asList(f), null);
 
-                    _taskHelper.getFileManager().addOutput(fqAction, "FASTQC Output", new File(f.getParentFile(), runner.getExpectedBasename(f) + "_fastqc.html.gz"));
+                    File fq = new File(f.getParentFile(), runner.getExpectedBasename(f) + "_fastqc.html.gz");
+                    File zip = new File(f.getParentFile(), runner.getExpectedBasename(f) + "fastqc.zip");
+
+                    _taskHelper.getFileManager().addOutput(fqAction, "FASTQC Report", fq);
+                    _taskHelper.getFileManager().addOutput(fqAction, "FASTQC Output", zip);
+
                     fqAction.setEndTime(new Date());
                     actions.add(fqAction);
                 }

@@ -218,8 +218,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new HaplotypeCallerHandler());
         SequenceAnalysisService.get().registerFileHandler(new RnaSeqcHandler());
 
-        ExperimentService.get().registerExperimentDataHandler(new HtmlExpDataHandler());
-
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));
     }
@@ -272,6 +270,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(new GenomeLoadButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
 
         SystemMaintenance.addTask(new SequenceAnalysisMaintenanceTask());
+
+        ExperimentService.get().registerExperimentDataHandler(new HtmlExpDataHandler());
     }
 
     @Override

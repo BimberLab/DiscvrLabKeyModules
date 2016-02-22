@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.run.util;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -81,7 +82,7 @@ public class FastqcRunner
         _cacheResults = cacheResults;
     }
 
-    public String execute(List<File> sequenceFiles, @Nullable Map<File, String> fileLabels) throws FileNotFoundException
+    public String execute(List<File> sequenceFiles, @Nullable Map<File, String> fileLabels) throws IOException
     {
         //remove duplicates
         List<File> uniqueFiles = new ArrayList<>();
@@ -104,10 +105,8 @@ public class FastqcRunner
                 File zip = new File(expectedHtml.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(expectedHtml)) + ".zip");
                 if (zip.exists())
                 {
-                    if (!zip.delete())
-                    {
-                        throw new RuntimeException("Unable to delete ZIP file: " + zip.getPath());
-                    }
+                    File moved = new File(zip.getParentFile(), FileUtil.getBaseName(zip) + ".fastqc.zip");
+                    FileUtils.moveFile(zip, moved);
                 }
 
                 //force compression
@@ -368,7 +367,7 @@ public class FastqcRunner
         return _threads;
     }
 
-    private void setThreads(int threads)
+    public void setThreads(int threads)
     {
         _threads = threads;
     }

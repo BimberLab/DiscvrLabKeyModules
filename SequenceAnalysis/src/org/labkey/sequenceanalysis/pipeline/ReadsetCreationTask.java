@@ -328,11 +328,13 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             try
             {
                 getJob().getLogger().info("running FastQC for file: " + d1.getFile().getName());
+
+                //NOTE: task is on webserver, so use single thread only
                 FastqcRunner runner = new FastqcRunner(getJob().getLogger());
                 runner.execute(Arrays.asList(d1.getFile()), null);
                 getJob().getLogger().info("done");
             }
-            catch (FileNotFoundException e)
+            catch (IOException e)
             {
                 throw new PipelineJobException(e);
             }
