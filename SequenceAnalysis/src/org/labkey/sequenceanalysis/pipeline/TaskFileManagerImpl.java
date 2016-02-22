@@ -174,7 +174,14 @@ public class TaskFileManagerImpl implements TaskFileManager
         {
             if (!target.containsKey(relPath))
             {
-                target.put(relPath, new ArrayList<Object[]>());
+                if (relPath == null)
+                {
+                    _job.getLogger().warn("file is not a child of the work location: " + file.getPath());
+                }
+                else
+                {
+                    target.put(relPath, new ArrayList<Object[]>());
+                }
             }
 
             // verify we dont have duplicate file/actions.
