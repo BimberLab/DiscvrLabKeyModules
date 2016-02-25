@@ -153,6 +153,7 @@ public class TaskFileManagerImpl implements TaskFileManager
             else
             {
                 _job.getLogger().warn("File not found: " + path);
+                return;
             }
         }
 
