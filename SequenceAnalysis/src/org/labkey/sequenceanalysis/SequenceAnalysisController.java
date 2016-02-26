@@ -130,6 +130,7 @@ import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
+import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
@@ -2160,15 +2161,11 @@ public class SequenceAnalysisController extends SpringActionController
                 throw new UploadException("Pipeline root must be configured before uploading FASTA files", HttpServletResponse.SC_NOT_FOUND);
 
             AssayFileWriter writer = new AssayFileWriter();
-            try
-            {
-                File targetDirectory = writer.ensureUploadDirectory(getContainer());
-                return writer.findUniqueFileName(filename, targetDirectory);
-            }
-            catch (ExperimentException e)
-            {
-                throw new UploadException(e.getMessage(), HttpServletResponse.SC_NOT_FOUND);
-            }
+            PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
+
+            File targetDirectory = root.getRootPath();
+
+            return writer.findUniqueFileName(filename, targetDirectory);
         }
 
         protected String getResponse(Map<String, Pair<File, String>> files, ImportFastaSequencesForm form) throws UploadException
@@ -2180,23 +2177,23 @@ public class SequenceAnalysisController extends SpringActionController
                 {
                     File file = entry.getValue().getKey();
 
-                    Map<String, String> params = new HashMap<>();
-                    if (form.getSpecies() != null)
+                    Map<String, String> params = form.getNtParams();
+                    Map<String, String> libraryParams = form.getLibraryParams();
+
+                    try
                     {
-                        params.put("species", form.getSpecies());
+                        Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
+                        PipeRoot root = PipelineService.get().getPipelineRootSetting(target);
+
+                        ImportFastaSequencesPipelineJob job = new ImportFastaSequencesPipelineJob(target, getUser(), null, root, Arrays.asList(file), params, form.isSplitWhitespace(), form.isCreateLibrary(), libraryParams);
+                        job.setDeleteInputs(true);
+                        PipelineService.get().queueJob(job);
+
+                        resp.put("jobId", job.getJobGUID());
                     }
-
-                    if (form.getMolType() != null)
+                    catch (PipelineValidationException e)
                     {
-                        params.put("mol_type", form.getMolType());
-                    }
-
-                    List<Integer> sequenceIds = SequenceAnalysisManager.get().importRefSequencesFromFasta(getContainer(), getUser(), file, params);
-                    file.delete();
-
-                    if (form.isCreateLibrary())
-                    {
-                        SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, getContainer(), getUser(), form.getLibraryName(), form.getLibraryDescription());
+                        throw new IllegalArgumentException(e);
                     }
 
                     resp.put("success", true);
@@ -2232,14 +2229,78 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
+    @RequiresPermission(InsertPermission.class)
+    public class ImportReferenceSequencesAction extends ApiAction<ImportFastaSequencesForm>
+    {
+        @Override
+        public Object execute(ImportFastaSequencesForm form, BindException errors) throws Exception
+        {
+            //resolve files
+            List<File> files = new ArrayList<>();
+            PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
+            File baseDir = StringUtils.trimToNull(form.getPath()) == null ? root.getRootPath() : new File(root.getRootPath(), form.getPath());
+            if (!baseDir.exists())
+            {
+                errors.reject(ERROR_MSG, "Unable to find directory: " + baseDir.getPath());
+                return null;
+            }
+
+            if (form.getFileNames() == null || form.getFileNames().length == 0)
+            {
+                errors.reject(ERROR_MSG, "No file names provided");
+                return null;
+            }
+
+            for (String fn : form.getFileNames())
+            {
+                File f = new File(baseDir, fn);
+                if (f.exists())
+                {
+                    files.add(f);
+                }
+                else
+                {
+                    errors.reject(ERROR_MSG, "Unable to find file: " + f.getPath());
+                    return null;
+                }
+            }
+
+            Map<String, String> params = form.getNtParams();
+            Map<String, String> libraryParams = form.getLibraryParams();
+            JSONObject resp = new JSONObject();
+
+            try
+            {
+                Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
+                PipeRoot pr = PipelineService.get().getPipelineRootSetting(target);
+
+                ImportFastaSequencesPipelineJob job = new ImportFastaSequencesPipelineJob(target, getUser(), null, pr, files, params, form.isSplitWhitespace(), form.isCreateLibrary(), libraryParams);
+                PipelineService.get().queueJob(job);
+
+                resp.put("jobId", job.getJobGUID());
+            }
+            catch (PipelineValidationException e)
+            {
+                throw new IllegalArgumentException(e);
+            }
+
+            resp.put("success", true);
+
+            return new ApiSimpleResponse(resp);
+        }
+    }
+
     public static class ImportFastaSequencesForm extends AbstractFileUploadAction.FileUploadForm
     {
         private String _jsonData;
         private String _species;
         private String _molType;
+        private boolean _splitWhitespace = false;
         private boolean _createLibrary = false;
         private String _libraryName;
         private String _libraryDescription;
+        private String _path;
+        private String[] _fileNames;
 
         public String getJsonData()
         {
@@ -2300,6 +2361,64 @@ public class SequenceAnalysisController extends SpringActionController
         {
             _libraryDescription = libraryDescription;
         }
+
+        public boolean isSplitWhitespace()
+        {
+            return _splitWhitespace;
+        }
+
+        public void setSplitWhitespace(boolean splitWhitespace)
+        {
+            _splitWhitespace = splitWhitespace;
+        }
+
+        public String getPath()
+        {
+            return _path;
+        }
+
+        public void setPath(String path)
+        {
+            _path = path;
+        }
+
+        public String[] getFileNames()
+        {
+            return _fileNames;
+        }
+
+        public void setFileNames(String[] fileNames)
+        {
+            _fileNames = fileNames;
+        }
+
+        public Map<String, String> getNtParams()
+        {
+            Map<String, String> params = new HashMap<>();
+            if (getSpecies() != null)
+            {
+                params.put("species", getSpecies());
+            }
+
+            if (getMolType() != null)
+            {
+                params.put("mol_type", getMolType());
+            }
+
+            return params;
+        }
+
+        public Map<String, String> getLibraryParams()
+        {
+            Map<String, String> libraryParams = new HashMap<>();
+            if (isCreateLibrary())
+            {
+                libraryParams.put("name", getLibraryName());
+                libraryParams.put("description", getLibraryDescription());
+            }
+
+            return libraryParams;
+        }
     }
 
     @RequiresPermission(InsertPermission.class)
@@ -2338,8 +2457,6 @@ public class SequenceAnalysisController extends SpringActionController
                 for (Map.Entry<String, Pair<File, String>> entry : files.entrySet())
                 {
                     File file = entry.getValue().getKey();
-
-                    //TODO: consider automatically processing certain types, such as gzipping VCFs, etc.
 
                     Map<String, Object> params = new CaseInsensitiveHashMap<>();
                     params.put("name", form.getName());
@@ -3542,14 +3659,33 @@ public class SequenceAnalysisController extends SpringActionController
                         File idx = new File(file.getParent(), fn);
                         if (idx.exists())
                         {
-                            //TODO: match against primary file
-                            File idxTarget = writer.findUniqueFileName(idx.getName(), targetDirectory);
-                            FileUtils.moveFile(idx, idxTarget);
+                            //note: match against potentially renamed file
+                            String targetName;
+                            if (idx.getName().contains(fn))
+                            {
+                                String suffix = idx.getName().replaceFirst(fn, "");
+                                targetName = target.getName() + suffix;
+                            }
+                            else
+                            {
+                                targetName = idx.getName();
+                            }
 
-                            ExpData idxData = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
-                            idxData.setName(idx.getName());
-                            idxData.setDataFileURI(idxTarget.toURI());
-                            idxData.save(getUser());
+                            _log.info("moving associated file: " + idx.getPath() + ", to: " + targetName);
+                            File idxTarget = writer.findUniqueFileName(targetName, targetDirectory);
+                            if (idxTarget.exists())
+                            {
+                                _log.error("target already exists");
+                            }
+                            else
+                            {
+                                FileUtils.moveFile(idx, idxTarget);
+
+                                ExpData idxData = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
+                                idxData.setName(idx.getName());
+                                idxData.setDataFileURI(idxTarget.toURI());
+                                idxData.save(getUser());
+                            }
                         }
                     }
 

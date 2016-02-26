@@ -35,7 +35,6 @@ import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.iterator.CloseableIterator;
-import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
@@ -44,9 +43,6 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.FastaDataLoader;
 import org.labkey.api.reader.FastaLoader;
-import org.labkey.api.resource.FileResource;
-import org.labkey.api.resource.MergedDirectoryResource;
-import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.permissions.DeletePermission;
@@ -54,13 +50,11 @@ import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -362,7 +356,7 @@ public class SequenceAnalysisManager
         return new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), sql).getObject(String.class);
     }
 
-    public ReferenceLibraryPipelineJob createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String description) throws Exception
+    public ReferenceLibraryPipelineJob createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String description) throws IOException
     {
         List<ReferenceLibraryMember> libraryMembers = new ArrayList<>();
         for (Integer sequenceId : sequenceIds)
@@ -375,7 +369,7 @@ public class SequenceAnalysisManager
         return createReferenceLibrary(c, u, name, description, libraryMembers);
     }
 
-    public ReferenceLibraryPipelineJob createReferenceLibrary(Container c, User u, String name, String description, List<ReferenceLibraryMember> libraryMembers) throws Exception
+    public ReferenceLibraryPipelineJob createReferenceLibrary(Container c, User u, String name, String description, List<ReferenceLibraryMember> libraryMembers) throws IOException
     {
         try
         {
@@ -391,7 +385,7 @@ public class SequenceAnalysisManager
         }
     }
 
-    public List<Integer> importRefSequencesFromFasta(Container c, User u, File file, Map<String, String> params) throws Exception
+    public List<Integer> importRefSequencesFromFasta(Container c, User u, File file, boolean splitWhitespace, Map<String, String> params, Logger log) throws IOException
     {
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root == null)
@@ -401,6 +395,7 @@ public class SequenceAnalysisManager
 
         TableInfo dnaTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
         List<Integer> sequenceIds = new ArrayList<>();
+        int processed = 0;
         try (FastaDataLoader loader = new FastaDataLoader(file, false))
         {
             loader.setCharacterFilter(new FastaLoader.UpperAndLowercaseCharacterFilter());
@@ -409,6 +404,12 @@ public class SequenceAnalysisManager
             {
                 while (i.hasNext())
                 {
+                    processed++;
+                    if (log != null && processed % 100 == 0)
+                    {
+                        log.info("processed " + processed + " sequences");
+                    }
+
                     Map<String, Object> fastaRecord = i.next();
                     CaseInsensitiveHashMap map = new CaseInsensitiveHashMap();
                     if (params != null)
@@ -416,8 +417,19 @@ public class SequenceAnalysisManager
 
                     if (!map.containsKey("name"))
                     {
-                        map.put("name", fastaRecord.get("header"));
+                        String header = (String)fastaRecord.get("header");
+                        if (splitWhitespace && header.contains(" "))
+                        {
+                            int idx = header.indexOf(" ");
+                            map.put("comments", header.substring(idx + 1));
+                            map.put("name", header.substring(0, idx));
+                        }
+                        else
+                        {
+                            map.put("name", header);
+                        }
                     }
+
                     map.put("container", c.getId());
                     map.put("created", new Date());
                     map.put("createdby", u.getUserId());
@@ -535,9 +547,8 @@ public class SequenceAnalysisManager
         map = Table.insert(u, trackTable, map);
 
         //create file
-        String expectedName = map.get("rowid") + "_" + trackName + "." + FileUtil.getExtension(file);
         AssayFileWriter writer = new AssayFileWriter();
-        File outputFile = writer.findUniqueFileName(expectedName, targetDir);
+        File outputFile = writer.findUniqueFileName(file.getName().replaceAll(" ", "_"), targetDir);
 
         FileUtils.moveFile(file, outputFile);
         ExpData trackData = ExperimentService.get().createData(c, new DataType("Sequence Track"));

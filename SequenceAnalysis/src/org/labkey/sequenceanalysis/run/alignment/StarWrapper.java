@@ -172,7 +172,7 @@ public class StarWrapper extends AbstractCommandWrapper
             //set permissions on directories.  it is possible we actually want to delete these
             if (SystemUtils.IS_OS_LINUX)
             {
-                List<String> dirs = Arrays.asList("genome", "pass1", "tmp");
+                List<String> dirs = Arrays.asList("._STARgenome", "._STARpass1", "._STARtmp");
                 for (String name : dirs)
                 {
                     File f = new File(outputDirectory, basename + name);
@@ -193,6 +193,10 @@ public class StarWrapper extends AbstractCommandWrapper
                         getPipelineCtx().getLogger().debug("directory not found, skipping: " + f.getPath());
                     }
                 }
+            }
+            else
+            {
+                getPipelineCtx().getLogger().debug("OS is not linux, no need to change permissions");
             }
 
             return output;

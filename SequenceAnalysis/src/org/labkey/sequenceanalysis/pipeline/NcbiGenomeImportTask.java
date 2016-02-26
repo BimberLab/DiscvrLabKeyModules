@@ -228,7 +228,7 @@ public class NcbiGenomeImportTask extends PipelineJob.Task<NcbiGenomeImportTask.
         params.put("species", getPipelineJob().getSpecies());
         params.put("name", name);
 
-        List<Integer> seqIds = SequenceAnalysisManager.get().importRefSequencesFromFasta(getJob().getContainer(), getJob().getUser(), decompressed, params);
+        List<Integer> seqIds = SequenceAnalysisManager.get().importRefSequencesFromFasta(getJob().getContainer(), getJob().getUser(), decompressed, true, params);
         decompressed.delete();
         if (seqIds.size() == 1)
         {

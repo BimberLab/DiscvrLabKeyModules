@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileUtil;
@@ -37,7 +38,7 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
 
         List<String> params = new ArrayList<>();
 
-        params.add(SequencePipelineService.get().getJavaFilepath());
+        params.add(getJava7Filepath());
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getJar().getPath());
@@ -103,5 +104,27 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
     private File getJar()
     {
         return SequencePipelineService.get().getExeForPackage("RNASEQCPATH", "RNA-SeQC.jar");
+    }
+
+    private String getJava7Filepath()
+    {
+        String javaDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_HOME_7");
+        if (javaDir != null)
+        {
+            File ret = new File(javaDir, "bin");
+            ret = new File(ret, "java");
+            return ret.getPath();
+        }
+
+        //if not explicitly found, try the default
+        javaDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_HOME");
+        if (javaDir != null)
+        {
+            File ret = new File(javaDir, "bin");
+            ret = new File(ret, "java");
+            return ret.getPath();
+        }
+
+        return "java";
     }
 }

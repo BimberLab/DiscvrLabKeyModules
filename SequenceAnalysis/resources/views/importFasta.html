@@ -1,0 +1,23 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function (){
+        var path = LABKEY.ActionURL.getParameter("path");
+        var fileNames = LABKEY.ActionURL.getParameterArray("file") || [];
+
+        if (!fileNames.length){
+            Ext4.Msg.alert('Error', 'Must provide the file names');
+            return;
+        }
+
+        var webpart = <%=webpartContext%>;
+
+        Ext4.create('SequenceAnalysis.panel.ImportSequencesFromFastaPanel', {
+            path: path || '/',
+            fileNames: fileNames,
+            suppressTitle: true,
+            border: false
+        }).render(webpart.wrapperDivId);
+
+    });
+
+</script>

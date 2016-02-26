@@ -19,6 +19,7 @@ package org.labkey.blast;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.UpgradeCode;
+import org.labkey.api.htcondorconnector.HTCondorService;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
@@ -31,6 +32,7 @@ import org.labkey.blast.button.BlastOligosButton;
 import org.labkey.blast.button.CreateDatabaseButton;
 import org.labkey.blast.button.ReprocessDatabaseButton;
 import org.labkey.blast.pipeline.BlastDatabasePipelineProvider;
+import org.labkey.blast.pipeline.BlastPipelineJob;
 import org.labkey.blast.pipeline.BlastPipelineProvider;
 import org.labkey.blast.query.BlastUserSchema;
 
@@ -78,6 +80,8 @@ public class BLASTModule extends ExtendedSimpleModule
     {
         LaboratoryService.get().registerDataProvider(new BLASTDataProvider(this));
         SequenceAnalysisService.get().registerDataProvider(new BLASTDataProvider(this));
+        HTCondorService.get().registerResourceAllocator(new BlastPipelineJob.ResourceAllocator());
+
         LDKService.get().registerQueryButton(new CreateDatabaseButton(), "sequenceanalysis", "reference_libraries");
         LDKService.get().registerQueryButton(new BlastOligosButton(), "laboratory", "dna_oligos");
         LDKService.get().registerQueryButton(new ReprocessDatabaseButton(), BLASTSchema.NAME, BLASTSchema.TABLE_DATABASES);

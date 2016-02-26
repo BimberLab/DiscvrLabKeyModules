@@ -105,8 +105,7 @@ public class FastqcRunner
                 File zip = new File(expectedHtml.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(expectedHtml)) + ".zip");
                 if (zip.exists())
                 {
-                    File moved = new File(zip.getParentFile(), FileUtil.getBaseName(zip) + ".fastqc.zip");
-                    FileUtils.moveFile(zip, moved);
+                    filesCreated.add(zip);
                 }
 
                 //force compression

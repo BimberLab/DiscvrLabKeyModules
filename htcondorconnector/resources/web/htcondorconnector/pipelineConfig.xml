@@ -38,8 +38,8 @@
         <!--<property name="labKeyDir" value="/usr/local/labkey/" />-->
         <!--The path to the executable on the cluster.  Normally this would be the desired java; however, see example below for docker.-->
         <!--<property name="remoteExecutable" value="java" />-->
-        <!--This is placed in the submit script-->
-        <!--<property name="requestMemory" value="48GB" />-->
+        <!--This is placed in the submit script.  It is the value in GBs-->
+        <!--<property name="requestMemory" value="48" />-->
         <!--This is placed in the submit script-->
         <!--<property name="requestCpus" value="24" />-->
         <!--This is the cluster path there a working directory will be created.-->

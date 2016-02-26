@@ -837,6 +837,12 @@ public class TaskFileManagerImpl implements TaskFileManager
                 _job.getLogger().debug("File not associated as an input: " + file.getPath());
                 for (String fn : _inputFiles.keySet())
                 {
+                    if (fn == null)
+                    {
+                        _job.getLogger().error("null filename", new Exception());
+                        continue;
+                    }
+
                     if (fn.contains(file.getName()))
                     {
                         _job.getLogger().debug("Found possible match in inputs: " + fn);
@@ -852,6 +858,12 @@ public class TaskFileManagerImpl implements TaskFileManager
 
                 for (String fn : _outputFiles.keySet())
                 {
+                    if (fn == null)
+                    {
+                        _job.getLogger().error("null filename", new Exception());
+                        continue;
+                    }
+
                     if (fn.contains(file.getName()))
                     {
                         _job.getLogger().debug("Found possible match in outputs: " + fn);

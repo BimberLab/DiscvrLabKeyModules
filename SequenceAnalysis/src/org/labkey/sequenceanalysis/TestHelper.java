@@ -787,14 +787,18 @@ public class TestHelper
             File merge1 = new File(basedir, "Normalization/" + SequenceTaskHelper.getUnzippedBaseName(PAIRED_FILENAME_L1a) + ".merged.fastq.gz");
             expectedOutputs.add(merge1);
             expectedOutputs.add(new File(merge1.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(merge1)) + "_fastqc.html.gz"));
+            expectedOutputs.add(new File(merge1.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(merge1)) + "_fastqc.zip"));
             File merge2 = new File(basedir, "Normalization/" + SequenceTaskHelper.getUnzippedBaseName(PAIRED_FILENAME2_L1a) + ".merged.fastq.gz");
             expectedOutputs.add(merge2);
             expectedOutputs.add(new File(merge2.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(merge2)) + "_fastqc.html.gz"));
+            expectedOutputs.add(new File(merge2.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(merge2)) + "_fastqc.zip"));
 
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME1));
             expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME1)) + "_fastqc.html.gz"));
+            expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME1)) + "_fastqc.zip"));
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME2));
             expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2)) + "_fastqc.html.gz"));
+            expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2)) + "_fastqc.zip"));
 
             //these will be merged
             if (!deleteIntermediates)
@@ -807,10 +811,13 @@ public class TestHelper
 
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME_L2));
             expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME_L2)) + "_fastqc.html.gz"));
+            expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME_L2)) + "_fastqc.zip"));
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME2_L2));
             expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2_L2)) + "_fastqc.html.gz"));
+            expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2_L2)) + "_fastqc.zip"));
             expectedOutputs.add(new File(basedir, UNPAIRED_FILENAME));
             expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(UNPAIRED_FILENAME)) + "_fastqc.html.gz"));
+            expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(UNPAIRED_FILENAME)) + "_fastqc.zip"));
 
             verifyFileOutputs(basedir, expectedOutputs);
             verifyFileInputs(basedir, fileNames, config);

@@ -73,7 +73,10 @@ DISCVR/galaxyintegration/src/org/labkey/galaxyintegration/GalaxyServiceImpl.java
 DISCVR/galaxyintegration/src/org/labkey/galaxyintegration/api/GalaxyService.java -text
 DISCVR/galaxyintegration/src/org/labkey/galaxyintegration/pipeline/ExpRunCreator.java -text
 DISCVR/galaxyintegration/src/org/labkey/galaxyintegration/pipeline/GalaxyProvenanceImporterTask.java -text
+DISCVR/htcondorconnector/HTCondorConnector-API.iml -text
 DISCVR/htcondorconnector/HTCondorConnector.iml -text
+DISCVR/htcondorconnector/api-src/org/labkey/api/htcondorconnector/HTCondorJobResourceAllocator.java -text
+DISCVR/htcondorconnector/api-src/org/labkey/api/htcondorconnector/HTCondorService.java -text
 DISCVR/htcondorconnector/module.properties -text
 DISCVR/htcondorconnector/resources/schemas/dbscripts/postgresql/htcondorconnector-15.20-15.21.sql -text
 DISCVR/htcondorconnector/resources/schemas/dbscripts/postgresql/htcondorconnector-15.21-15.22.sql -text
@@ -88,6 +91,7 @@ DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/HTCondorConnectorContr
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/HTCondorConnectorManager.java -text
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/HTCondorConnectorModule.java -text
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/HTCondorConnectorSchema.java -text
+DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/HTCondorServiceImpl.java -text
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/pipeline/DockerHTCondorExecutionEngineConfig.java -text
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/pipeline/HTCondorExecutionEngine.java -text
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/pipeline/HTCondorExecutionEngineConfig.java -text
@@ -2960,6 +2964,8 @@ labModules/SequenceAnalysis/resources/views/haplotypeDetails.html -text
 labModules/SequenceAnalysis/resources/views/haplotypeDetails.view.xml -text
 labModules/SequenceAnalysis/resources/views/illuminaSampleSheetExport.html -text
 labModules/SequenceAnalysis/resources/views/illuminaSampleSheetExport.view.xml -text
+labModules/SequenceAnalysis/resources/views/importFasta.html -text
+labModules/SequenceAnalysis/resources/views/importFasta.view.xml -text
 labModules/SequenceAnalysis/resources/views/importReadset.html -text
 labModules/SequenceAnalysis/resources/views/importReadset.view.xml -text
 labModules/SequenceAnalysis/resources/views/insertRefSequence.html -text
@@ -3026,6 +3032,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/AnalysisSection
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/BamHaplotypePanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/BaseSequencePanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/IlluminaSampleExportPanel.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/ImportSequencesFromFastaPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/InstrumentImportPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SequenceAnalysisPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SequenceImportPanel.js -text
@@ -3108,6 +3115,8 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/CreateRefer
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaFastqSplitter.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaImportTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaReadsetCreationTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ImportFastaSequencesPipelineJob.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ImportFastaSequencesTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeImportPipelineJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeImportPipelineProvider.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeImportTask.java -text

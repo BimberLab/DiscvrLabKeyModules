@@ -45,6 +45,7 @@ import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.GenomeLoadButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
+import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerPipelineProvider;
@@ -264,6 +265,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         PipelineService.get().registerPipelineProvider(new ReferenceLibraryPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new NcbiGenomeImportPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new SequenceOutputHandlerPipelineProvider(this));
+        PipelineService.get().registerPipelineProvider(new ImportFastaSequencesPipelineJob.Provider(this));
         //PipelineService.get().registerPipelineProvider(new SequencePipelineProvider(this));
 
         LDKService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);

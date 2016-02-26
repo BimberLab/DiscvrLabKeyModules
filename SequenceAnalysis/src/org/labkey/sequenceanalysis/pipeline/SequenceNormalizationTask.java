@@ -607,7 +607,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     runner.execute(Arrays.asList(f), null);
 
                     File fq = new File(f.getParentFile(), runner.getExpectedBasename(f) + "_fastqc.html.gz");
-                    File zip = new File(f.getParentFile(), runner.getExpectedBasename(f) + "fastqc.zip");
+                    File zip = new File(f.getParentFile(), runner.getExpectedBasename(f) + "_fastqc.zip");
 
                     _taskHelper.getFileManager().addOutput(fqAction, "FASTQC Report", fq);
                     _taskHelper.getFileManager().addOutput(fqAction, "FASTQC Output", zip);

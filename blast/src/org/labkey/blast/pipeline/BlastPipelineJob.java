@@ -1,7 +1,7 @@
 package org.labkey.blast.pipeline;
 
 import org.labkey.api.data.Container;
-import org.labkey.api.files.FileUrls;
+import org.labkey.api.htcondorconnector.HTCondorJobResourceAllocator;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -10,14 +10,13 @@ import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
-import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.blast.BLASTSchema;
 import org.labkey.blast.model.BlastJob;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * User: bimber
@@ -84,6 +83,33 @@ public class BlastPipelineJob extends PipelineJob
         else
         {
             return new File(PipelineJobService.get().getAppProperties().getToolsDirectory());
+        }
+    }
+
+    public static class ResourceAllocator implements HTCondorJobResourceAllocator
+    {
+        @Override
+        public Integer getPriority(TaskId taskId)
+        {
+            return (new TaskId(BlastWorkTask.class)).equals(taskId) ? 50 : null;
+        }
+
+        @Override
+        public Integer getMaxRequestCpus()
+        {
+            return 2;
+        }
+
+        @Override
+        public Integer getMaxRequestMemory()
+        {
+            return null;
+        }
+
+        @Override
+        public List<String> getExtraSubmitScriptLines()
+        {
+            return null;
         }
     }
 }

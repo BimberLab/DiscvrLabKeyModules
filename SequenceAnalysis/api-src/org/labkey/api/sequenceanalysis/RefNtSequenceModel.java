@@ -374,7 +374,7 @@ public class RefNtSequenceModel
         try (Writer writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(output))))
         {
             writer.write(sequence);
-            writer.close();
+            writer.flush();
         }
 
         Container c = getLabKeyContainer();
@@ -409,6 +409,17 @@ public class RefNtSequenceModel
     private File getSequenceDir(boolean create) throws IllegalArgumentException
     {
         Container c = getLabKeyContainer();
+        File ret = getReferenceSequenceDir(c);
+        if (create && !ret.exists())
+        {
+            ret.mkdirs();
+        }
+
+        return ret;
+    }
+
+    public static File getReferenceSequenceDir(Container c) throws IllegalArgumentException
+    {
         FileContentService fileService = ServiceRegistry.get().getService(FileContentService.class);
         File root = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);
         if (root == null)
@@ -416,13 +427,7 @@ public class RefNtSequenceModel
             throw new IllegalArgumentException("File root not defined for container: " + c.getPath());
         }
 
-        File ret = new File(root, ".sequences");
-        if (create && !ret.exists())
-        {
-            ret.mkdirs();
-        }
-
-        return ret;
+        return new File(root, ".sequences");
     }
 
     public void writeSequence(Writer writer, int lineLength) throws IOException

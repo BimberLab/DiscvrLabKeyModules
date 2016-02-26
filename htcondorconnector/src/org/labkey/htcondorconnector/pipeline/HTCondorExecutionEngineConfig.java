@@ -29,7 +29,7 @@ public class HTCondorExecutionEngineConfig implements PipelineJobService.RemoteE
     protected String _remoteExecutable = "/usr/local/java_current/bin/java";
     protected String _workingDir = "/pipeline";
     protected Integer _requestCpus = 24;
-    protected String _requestMemory = "48 GB";
+    protected Integer _requestMemory = 48;
     protected String _labKeyDir = "/labkey";
     protected String _location = "cluster";
     protected String _javaHome = null;
@@ -97,7 +97,7 @@ public class HTCondorExecutionEngineConfig implements PipelineJobService.RemoteE
         return _requestCpus;
     }
 
-    public String getRequestMemory()
+    public Integer getRequestMemory()
     {
         return _requestMemory;
     }
@@ -178,7 +178,7 @@ public class HTCondorExecutionEngineConfig implements PipelineJobService.RemoteE
         _requestCpus = requestCpus;
     }
 
-    public void setRequestMemory(String requestMemory)
+    public void setRequestMemory(Integer requestMemory)
     {
         _requestMemory = requestMemory;
     }

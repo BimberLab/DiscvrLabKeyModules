@@ -18,6 +18,7 @@ import org.labkey.api.data.Sort;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.htcondorconnector.HTCondorJobResourceAllocator;
 import org.labkey.api.module.FolderTypeManager;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
@@ -42,6 +43,7 @@ import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.htcondorconnector.HTCondorConnectorModule;
 import org.labkey.htcondorconnector.HTCondorConnectorSchema;
+import org.labkey.htcondorconnector.HTCondorServiceImpl;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -241,10 +243,34 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
                 writer.write("error=" + getConfig().getClusterPath(new File(outDir, basename + "-$(Cluster).$(Process).java.log")) + "\n");
                 writer.write("log=" + getConfig().getClusterPath(new File(outDir, basename + "-$(Cluster).$(Process).condor.log")) + "\n");
 
+                // This allows modules to register code to modify resource usage per task.
+                Integer maxCpus = null;
+                Integer maxRam = null;
+                List<String> extraLines = null;
+
+                if (job.getActiveTaskId() != null)
+                {
+                    HTCondorJobResourceAllocator allocator = HTCondorServiceImpl.get().getAllocator(job.getActiveTaskId());
+                    if (allocator != null)
+                    {
+                        job.getLogger().debug("using resource allocator: " + allocator.getClass().getName());
+                        maxCpus = allocator.getMaxRequestCpus();
+                        maxRam = allocator.getMaxRequestMemory();
+                        extraLines = allocator.getExtraSubmitScriptLines();
+                    }
+                }
+
                 if (getConfig().getRequestCpus() != null)
-                    writer.write("request_cpus = " + getConfig().getRequestCpus() + "\n");
+                {
+                    Integer cpus = maxCpus != null ? Math.min(maxCpus, getConfig().getRequestCpus()) : getConfig().getRequestCpus();
+                    writer.write("request_cpus = " + cpus + "\n");
+                }
+
                 if (getConfig().getRequestMemory() != null)
-                    writer.write("request_memory = " + getConfig().getRequestMemory() + "\n");
+                {
+                    Integer ram = maxRam != null ? Math.min(maxRam, getConfig().getRequestMemory()) : getConfig().getRequestMemory();
+                    writer.write("request_memory = " + ram + " GB\n");
+                }
 
                 if (StringUtils.trimToNull(getConfig().getJavaHome()) != null)
                 {
@@ -260,6 +286,14 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
                 for (String line : getConfig().getExtraSubmitLines())
                 {
                     writer.write(line + "\n");
+                }
+
+                if (extraLines != null)
+                {
+                    for (String line : extraLines)
+                    {
+                        writer.write(line + "\n");
+                    }
                 }
 
                 writer.write("arguments = \"'" + StringUtils.join(getConfig().getJobArgs(outDir, serializedJobFile), "' '").replaceAll("\"", "\"\"") + "'\"\n");

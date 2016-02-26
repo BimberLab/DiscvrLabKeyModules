@@ -18,13 +18,9 @@ package org.labkey.htcondorconnector;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager;
+import org.labkey.api.htcondorconnector.HTCondorService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
-import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
-import org.labkey.api.pipeline.PipelineJobService;
-import org.labkey.api.query.DetailsURL;
-import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.htcondorconnector.pipeline.HTCondorExecutionEngine;
 
@@ -67,6 +63,8 @@ public class HTCondorConnectorModule extends ExtendedSimpleModule
     protected void init()
     {
         addController(HTCondorConnectorController.NAME, HTCondorConnectorController.class);
+
+        HTCondorService.setInstance(new HTCondorServiceImpl());
     }
 
     @Override

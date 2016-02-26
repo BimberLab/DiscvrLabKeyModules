@@ -821,6 +821,7 @@
             <ns:includeScript>laboratory.context</ns:includeScript>
             <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
             <ns:includeScript>SequenceAnalysis/window/CreateReferenceLibraryWindow.js</ns:includeScript>
+            <ns:includeScript>SequenceAnalysis/panel/ImportSequencesFromFastaPanel.js</ns:includeScript>
             <ns:includeScript>SequenceAnalysis/window/ImportSequencesFromFastaWindow.js</ns:includeScript>
             <ns:includeScript>SequenceAnalysis/window/DownloadSequencesWindow.js</ns:includeScript>
             <ns:includeScript>SequenceAnalysis/window/CompareSequencesWindow.js</ns:includeScript>
@@ -2028,6 +2029,7 @@
             </ns:column>
         </ns:columns>
         <ns:buttonBarOptions includeStandardButtons="true">
+            <ns:includeScript>SequenceAnalysis/panel/ImportSequencesFromFastaPanel.js</ns:includeScript>
             <ns:includeScript>SequenceAnalysis/window/ImportSequencesFromFastaWindow.js</ns:includeScript>
             <ns:item hidden="true">
                 <ns:originalText>Charts</ns:originalText>
