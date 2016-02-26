@@ -15,6 +15,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="API" />
     <orderEntry type="module" module-name="LDK-API" />
+    <orderEntry type="module" module-name="HTCondorConnector-API" />
   </component>
 </module>
 
