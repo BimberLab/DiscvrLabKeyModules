@@ -199,7 +199,7 @@ Ext4.onReady(function(){
                                 border: false
                             },
                             onDataRegionLoad: function(dr){
-                                var itemWidth = Ext4.get('dataregion_'+dr.id).getSize().width + 150;
+                                var itemWidth = Ext4.get(dr.domId).getSize().width + 150;
                                 this.down('ldk-querytabpanel').doResize(itemWidth);
                             }
                         });
