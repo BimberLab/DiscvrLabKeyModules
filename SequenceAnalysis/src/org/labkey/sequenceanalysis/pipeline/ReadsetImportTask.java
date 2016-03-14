@@ -146,11 +146,10 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
 
         try
         {
-            List<File> needsNormalization = SequenceNormalizationTask.getFilesToNormalize(getJob(), _support.getInputFiles());
             List<FileGroup> fileGroups = getHelper().getSettings().getFileGroups(getJob().getJobSupport(SequenceAnalysisJob.class));
             List<SequenceReadsetImpl> readsets = getHelper().getSettings().getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class));
 
-            if (needsNormalization.size() == 0)
+            if (SequenceNormalizationTask.shouldRunRemote(getJob()))
             {
                 getJob().getLogger().info("No files required external normalization, processing inputs locally");
                 for (FileGroup fg : fileGroups)

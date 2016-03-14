@@ -103,8 +103,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         {
             try
             {
-                SequencePipelineSettings settings = new SequencePipelineSettings(job.getParameters());
-                boolean isParticipant = getFilesToNormalize(job, ((FileAnalysisJobSupport) job).getInputFiles(), true).size() > 0 || settings.isRunFastqc();
+                boolean isParticipant = shouldRunRemote(job);
                 if (!isParticipant)
                     job.getLogger().debug("Skipping sequence normalization step on remove server since there are no files to normalize");
 
@@ -145,6 +144,13 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         {
             return false;
         }
+    }
+
+    public static boolean shouldRunRemote(PipelineJob job) throws FileNotFoundException
+    {
+        SequencePipelineSettings settings = new SequencePipelineSettings(job.getParameters());
+
+        return getFilesToNormalize(job, ((FileAnalysisJobSupport) job).getInputFiles(), true).size() > 0 || settings.isRunFastqc();
     }
 
     public static List<File> getFilesToNormalize(PipelineJob job, List<File> files) throws FileNotFoundException
