@@ -153,11 +153,11 @@ public class BWAWrapper extends AbstractCommandWrapper
             getWrapper().setOutputDir(outputDirectory);
 
             getPipelineCtx().getLogger().info("Running BWA");
-            File sai1 = getWrapper().runBWAAln(getPipelineCtx().getJob(), referenceGenome.getWorkingFastaFile(), inputFastq1);
+            File sai1 = getWrapper().runBWAAln(getPipelineCtx().getJob(), referenceGenome, inputFastq1);
             File sai2 = null;
             if (inputFastq2 != null)
             {
-                sai2 = getWrapper().runBWAAln(getPipelineCtx().getJob(), referenceGenome.getWorkingFastaFile(), inputFastq2);
+                sai2 = getWrapper().runBWAAln(getPipelineCtx().getJob(), referenceGenome, inputFastq2);
             }
 
             List<String> args = new ArrayList<>();
@@ -170,12 +170,12 @@ public class BWAWrapper extends AbstractCommandWrapper
                 throw new PipelineJobException("Reference FASTA does not exist: " + referenceGenome.getWorkingFastaFile().getPath());
             }
 
-            File expectedIndex = new File(referenceGenome.getWorkingFastaFile().getParentFile() + "/bwa", FileUtil.getBaseName(referenceGenome.getWorkingFastaFile()) + ".bwa.index.sa");
+            File expectedIndex = new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile()) + ".bwa.index.sa");
             if (!expectedIndex.exists())
             {
                 throw new PipelineJobException("Expected index does not exist: " + expectedIndex);
             }
-            args.add(new File(referenceGenome.getWorkingFastaFile().getParentFile() + "/bwa", FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
+            args.add(new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
 
             //add SAI
             args.add(sai1.getPath());
@@ -212,13 +212,13 @@ public class BWAWrapper extends AbstractCommandWrapper
         }
     }
 
-    public File runBWAAln(PipelineJob job, File refFasta, File inputFile) throws PipelineJobException
+    public File runBWAAln(PipelineJob job, ReferenceGenome referenceGenome, File inputFile) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
         args.add(getExe().getPath());
         args.add("aln");
         appendThreads(job, args);
-        args.add(new File(refFasta.getParentFile() + "/bwa", FileUtil.getBaseName(refFasta.getName()) + ".bwa.index").getPath());
+        args.add(new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
         args.add(inputFile.getPath());
 
         File output = new File(getOutputDir(inputFile), inputFile.getName() + ".sai");

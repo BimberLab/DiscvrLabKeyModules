@@ -2,23 +2,11 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.query.FieldKey;
-import org.labkey.api.security.User;
-import org.labkey.api.security.permissions.ReadPermission;
-import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.view.UnauthorizedException;
-import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.sequenceanalysis.run.alignment.AlignerIndexUtil;
 
 import java.io.File;
-import java.util.Map;
 
 /**
  * Created by bimber on 9/15/2014.
@@ -71,5 +59,20 @@ public class ReferenceGenomeImpl implements ReferenceGenome
     public Integer getFastaExpDataId()
     {
         return _expDataId;
+    }
+
+    public File getAlignerIndexDir(String name)
+    {
+        //if _workingFasta is null, we are working on the primary webserver dir
+        if (_workingFasta == null)
+        {
+            File ret = new File(_sourceFasta.getParentFile(), AlignerIndexUtil.INDEX_DIR);
+
+            return new File(ret, name);
+        }
+        else
+        {
+            return new File(_workingFasta.getParentFile(), name);
+        }
     }
 }

@@ -89,6 +89,8 @@ public class BismarkWrapper extends AbstractCommandWrapper
 
             List<String> args = new ArrayList<>();
             args.add(wrapper.getExe().getPath());
+
+            //NOTE: this currently will only work when copied to remote server
             args.add(referenceGenome.getWorkingFastaFile().getParentFile().getPath());
 
             args.add("--samtools_path");

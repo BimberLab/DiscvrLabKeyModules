@@ -83,7 +83,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
 
             // -D <GSNAP DB dir>
             args.add("-D");
-            File indexDir = new File(referenceGenome.getWorkingFastaFile().getParentFile(), getProvider().getName());
+            File indexDir = referenceGenome.getAlignerIndexDir(getProvider().getName());
             args.add(indexDir.getPath());
 
             args.add("-A"); //SAM output

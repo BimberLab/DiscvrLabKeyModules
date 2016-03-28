@@ -64,4 +64,10 @@ public interface ReferenceGenome extends Serializable
      * this job then the FASTA will be in the analysis directory.
      */
     public Integer getFastaExpDataId();
+
+    /**
+     * @param name The name used by the aligner to identify its cached directory
+     * @return The folder expected containing the cached index, which is not guarenteed to exist.  See AlignerIndexUtil for related methods.
+     */
+    public File getAlignerIndexDir(String name);
 }

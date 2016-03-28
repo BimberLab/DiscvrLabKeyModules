@@ -49,7 +49,7 @@ public class BWASWWrapper extends BWAWrapper
             args.addAll(getClientCommandArgs());
             getWrapper().appendThreads(getPipelineCtx().getJob(), args);
 
-            args.add(new File(referenceGenome.getWorkingFastaFile().getParentFile() + "/bwa", FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
+            args.add(new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
             args.add(inputFastq1.getPath());
 
             if (inputFastq2 != null)

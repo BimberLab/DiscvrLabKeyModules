@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
@@ -74,7 +75,7 @@ public class StarWrapper extends AbstractCommandWrapper
             //args1.add("--outSAMunmapped");
 
             args1.add("--genomeDir");
-            File indexDir = new File(referenceGenome.getWorkingFastaFile().getParentFile(), getProvider().getName());
+            File indexDir = referenceGenome.getAlignerIndexDir(getProvider().getName());
             args1.add(indexDir.getPath());
 
             args1.add("--twopassMode");
@@ -256,6 +257,27 @@ public class StarWrapper extends AbstractCommandWrapper
 
                 args.add("--genomeFastaFiles");
                 args.add(referenceGenome.getWorkingFastaFile().getPath());
+
+                //NOTE: if the genome has a large number of contigs, this param can be necessary to
+                try (IndexedFastaSequenceFile idx = new IndexedFastaSequenceFile(referenceGenome.getWorkingFastaFile()))
+                {
+                    int refNumber = idx.getSequenceDictionary().getSequences().size();
+                    if (refNumber > 500)
+                    {
+                        getPipelineCtx().getLogger().info("reference has " + refNumber + " contigs, adjusting parameters");
+                        long genomeLength = idx.getSequenceDictionary().getReferenceLength();
+                        getPipelineCtx().getLogger().info("genome length: " + genomeLength);
+
+                        Double scale = Math.min(18.0, (Math.log((genomeLength / refNumber)) / Math.log(2)));
+                        args.add("--genomeChrBinNbits");
+                        args.add(String.valueOf(scale.intValue()));
+                    }
+
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
 
                 addThreadArgs(args);
                 getWrapper().setWorkingDir(indexDir);

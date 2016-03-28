@@ -99,7 +99,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
                 params.add(SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob()).toString());
             }
 
-            File bam = getWrapper().executeMosaikAligner(referenceGenome.getWorkingFastaFile(), reads, outputDirectory, basename, params);
+            File bam = getWrapper().executeMosaikAligner(referenceGenome.getWorkingFastaFile(), referenceGenome.getAlignerIndexDir(getProvider().getName()), reads, outputDirectory, basename, params);
             if (!bam.exists())
             {
                 throw new PipelineJobException("BAM not created, expected: " + bam.getPath());
@@ -216,12 +216,12 @@ public class MosaikWrapper extends AbstractCommandWrapper
         return output;
     }
 
-    public File executeMosaikAligner(File refFasta, File reads, File outputDirectory, String basename, List<String> options) throws PipelineJobException
+    public File executeMosaikAligner(File refFasta, File indexDir, File reads, File outputDirectory, String basename, List<String> options) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
         args.add(getAlignExe().getPath());
         args.add("-ia");
-        File mosaikRef = getExpectedMosaikRefFile(new File(refFasta.getParentFile(), "Mosaik"), refFasta);
+        File mosaikRef = getExpectedMosaikRefFile(indexDir, refFasta);
         if (!mosaikRef.exists())
         {
             throw new PipelineJobException("Unable to find reference file: " + mosaikRef.getPath());
