@@ -73,7 +73,6 @@ import org.labkey.api.study.assay.AssayService;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.util.Path;
-import org.labkey.api.util.ReturnURLString;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
@@ -267,7 +266,7 @@ public class LaboratoryController extends SpringActionController
                     url.addParameter("renameConflicts", true);
                     url.addParameter("providerName", form.getProviderName());
                     url.addParameter("returnUrl", form.getReturnUrl().toString());
-                    form.setReturnUrl(new ReturnURLString(url.toHString()));
+                    form.setReturnUrl(url.getLocalURIString());
                 }
 
                 return true;
