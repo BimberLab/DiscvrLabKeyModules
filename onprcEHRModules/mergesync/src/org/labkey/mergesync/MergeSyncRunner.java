@@ -729,7 +729,9 @@ public class MergeSyncRunner implements Job
     private Map<String, Object> processResultSet(Container c, User u, ResultSet rs, @Nullable String runId) throws SQLException
     {
         String animalId = rs.getString("animalId");
-        Date date = convertGMTToLocal(rs.getDate("date"));
+        Date date = convertGMTToLocal(rs.getTimestamp("date"));
+      //  _log.info("Show Lab Record date: " + date);    //Removed 3-24-2016 Blasa
+
         String projectName = rs.getString("projectName");
         //Date datecollected = convertGMTToLocal(rs.getDate("datecollected"));
         String servicename_abbr = rs.getString("servicename_abbr");
@@ -865,7 +867,9 @@ public class MergeSyncRunner implements Job
         }
 
         String animalId = mergeRunRs.getString("animalId");
-        Date date = convertGMTToLocal(mergeRunRs.getDate("date"));
+        Date date = convertGMTToLocal(mergeRunRs.getTimestamp("date"));
+       // _log.info("Show clinPath Record date: " + date);    //Removed 3-24-2016 Blasa
+
         Integer project = resolveProject(c, u, mergeRunRs.getString("projectName"));
         String servicename = resolveServiceName(c, u, mergeRunRs.getString("servicename_abbr"), null);
 

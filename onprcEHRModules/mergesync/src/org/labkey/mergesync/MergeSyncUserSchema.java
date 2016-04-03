@@ -107,12 +107,21 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 ret.append("t.TS_INDEX as panelId,\n");
                 ret.append("p.Pt_Lname as animalId,\n");
                 ret.append("IsNumeric(p.Pt_Lname) as numericLastName,\n");
-                ret.append(MergeSyncUserSchema.getDateConversionSql("r.RE_DATE", "r.RE_TZ") + " as date,\n");
-                ret.append(MergeSyncUserSchema.getDateConversionSql("t.TS_VDT", "t.TS_VTZ") + " as dateVerified,\n");
+                //ret.append(MergeSyncUserSchema.getDateConversionSql("r.RE_DATE", "r.RE_TZ") + " as date,\n");
+               // ret.append(MergeSyncUserSchema.getDateConversionSql("t.TS_VDT", "t.TS_VTZ") + " as dateVerified,\n");
                 ret.append("i.INS_NAME as project,\n");
                 ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_COLLDT", "o.O_CLTZ") + " as dateCollected,\n");
                 ret.append(MergeSyncUserSchema.getDateConversionSql("o.O_DATE", "o.O_DTZ") + " as dateOrdered,\n");
-                ret.append(MergeSyncUserSchema.getDateConversionSql("r.RE_DATE", "r.RE_TZ") + " as runDate,\n");
+
+                //Added new column  3-24-2016 R. Blasa
+                ret.append(MergeSyncUserSchema.getDateConversionSql("t.TS_VDT", "t.TS_VTZ") + " as date,\n");
+                ret.append(MergeSyncUserSchema.getDateConversionSql("t.TS_VDT", "t.TS_VTZ") + " as dateVerified,\n");
+
+                //ret.append(MergeSyncUserSchema.getDateConversionSql("r.RE_DATE", "r.RE_TZ") + " as runDate,\n");
+
+                //Added new column  3-24-2016 R. Blasa
+                ret.append(MergeSyncUserSchema.getDateConversionSql("t.TS_VDT", "t.TS_VTZ") + " as runDate,\n");
+
                 ret.append("ti.T_ABBR as servicename_abbr,\n");
                 ret.append("ti.T_NAME as servicename,\n");
                 ret.append("pr.PR_LOGIN as doctorLogin,\n");

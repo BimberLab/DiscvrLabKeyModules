@@ -16,8 +16,9 @@
  * limitations under the License.
 
  -->
-<tables xmlns="http://labkey.org/data/xml">
-    <table tableName="census" tableDbType="TABLE">
+<tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\..\schemas\tableInfo.xsd"
+        xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <table tableName="census" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>SLA Census</tableTitle>
         <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
         <columns>
@@ -41,18 +42,18 @@
                     <fkFolderPath>/ONPRC/EHR</fkFolderPath>
                     <fkDbSchema>ehr</fkDbSchema>
                     <fkTable>project</fkTable>
-                    <fkColumnName>name</fkColumnName>
+                    <fkColumnName>project</fkColumnName>
                 </fk>
             </column>
             <column columnName="room" />
             <column columnName="species">
-                <columnTitle>Species</columnTitle>
-                <fk>
-                    <fkFolderPath>/ONPRC/EHR</fkFolderPath>
-                    <fkDbSchema>sla</fkDbSchema>
-                    <fkTable>species</fkTable>
-                    <fkColumnName>species</fkColumnName>
-                </fk>
+            <fk>
+                <fkFolderPath>/ONPRC/EHR</fkFolderPath>
+                <fkDbSchema>sla</fkDbSchema>
+                <fkTable>Species</fkTable>
+                <fkColumnName>specie</fkColumnName>
+
+            </fk>
             </column>
             <column columnName="cagetype">               <!--Blasa 2-13-2015 converted this into combo box   -->
                 <columnTitle>Cage Type</columnTitle>
@@ -73,8 +74,9 @@
                     <fkColumnName>cagesize</fkColumnName>
                 </fk>
             </column>
-            <column columnName="animalCount" />
             <column columnName="cageCount" />
+            <column columnName="animalCount" />
+
             <column columnName="dlaminventory">
                 <columnTitle>DLAM Inventory</columnTitle>
                 <isHidden>true</isHidden>
@@ -82,15 +84,24 @@
             <column columnName="counttype">
                 <isHidden>true</isHidden>
             </column>
-            <column columnName="taskid" />
+
             <column columnName="formsort" />
             <column columnName="objectid" />
-            <column columnName="qcstate" />
-            <column columnName="container" />
+
+            <column columnName="container">
+               <isHidden>true</isHidden>
+            </column>
+
             <column columnName="createdby" />
             <column columnName="created" />
             <column columnName="modifiedby" />
             <column columnName="modified" />
+            <column columnName="qcstate" >
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="taskid" >
+                <isHidden>true</isHidden>
+             </column>
         </columns>
     </table>
     <table tableName="etl_runs" tableDbType="TABLE">
@@ -387,4 +398,73 @@
             </column>
         </columns>
     </table>
+    <table tableName="protocols" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>IACUC Protocols</tableTitle>
+        <auditLogging>DETAILED</auditLogging>
+        <columns>
+            <column columnName="protocol">
+                <columnTitle>IACUC Protocol</columnTitle>
+                <isKeyField>true</isKeyField>
+            </column>
+            <column columnName="account">
+                <columnTitle>Account</columnTitle>
+            </column>
+            <column columnName="grant">
+                <columnTitle>Grant</columnTitle>
+            </column>
+            <!--TODO additional IACUC realted fields expected-->
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+    <table tableName="Reference_Data" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>Reference_Data</tableTitle>
+        <auditLogging>DETAILED</auditLogging>
+        <importUrl></importUrl>
+        <insertUrl></insertUrl>
+        <updateUrl></updateUrl>
+        <deleteUrl></deleteUrl>
+
+        <columns>
+            <column columnName="rowid" />
+            <column columnName="Label">
+                <columnTitle>Description</columnTitle>
+            </column>
+            <column columnName="value">
+                <columnTitle>Contents</columnTitle>
+            </column>
+            <column columnName="columnName">
+                <columnTitle>Column Name</columnTitle>
+            </column>
+
+            <column columnName="sort_order">
+                <columnTitle>Sort Sequence</columnTitle>
+            </column>
+
+            <column columnName="enddate">
+                <nullable>true</nullable>
+                <isHidden>false</isHidden>
+            </column>
+
+        </columns>
+    </table>
+
 </tables>

@@ -211,7 +211,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         readsets.setOwnerKey(owner.getPropertyManagerKey());
         items.add(readsets);
 
-        TabbedReportItem analyses = new QueryTabbedReportItem(cache, this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, "Sequence Analysis Runs", category);
+        TabbedReportItem analyses = new QueryTabbedReportItem(cache, this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, "Sequence Analyses", category);
         analyses.setSubjectIdFieldKey(FieldKey.fromString("readset/subjectid"));
         analyses.setSampleDateFieldKey(FieldKey.fromString("readset/sampledate"));
         analyses.setOwnerKey(owner.getPropertyManagerKey());

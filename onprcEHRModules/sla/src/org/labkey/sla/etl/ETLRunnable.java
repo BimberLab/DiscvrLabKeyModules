@@ -35,6 +35,7 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.exp.api.StorageProvisioner;
 import org.labkey.api.exp.property.Domain;
 import org.labkey.api.gwt.client.util.StringUtils;
 import org.labkey.api.module.ModuleLoader;
@@ -276,9 +277,7 @@ public class ETLRunnable implements Runnable
                 Domain domain = ((FilteredTable)targetTable).getDomain();
                 if (domain != null)
                 {
-                    String tableName = domain.getStorageTableName();
-                    dbSchema = StudyService.get().getDatasetSchema();
-                    realTable = dbSchema.getTable(tableName);
+                    StorageProvisioner.createTableInfo(domain);
                 }
             }
             else if (targetTable.getSchema() != null)
