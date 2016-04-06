@@ -4074,6 +4074,7 @@ onprcEHRModules/sla/resources/etl/sla/requestors.sql -text
 onprcEHRModules/sla/resources/etl/sla/vendors.sql -text
 onprcEHRModules/sla/resources/folderTypes/SLA.folderType.xml -text
 onprcEHRModules/sla/resources/module.xml -text
+onprcEHRModules/sla/resources/queries/onprc_ehr/Tumescence_Score.sql -text
 onprcEHRModules/sla/resources/queries/sla/SLACageSize.sql -text
 onprcEHRModules/sla/resources/queries/sla/SLACageType.sql -text
 onprcEHRModules/sla/resources/queries/sla/SLAMostRecentCensus.sql -text
