@@ -398,43 +398,43 @@
             </column>
         </columns>
     </table>
-    <table tableName="protocols" tableDbType="TABLE" useColumnOrder="true">
-        <tableTitle>IACUC Protocols</tableTitle>
-        <auditLogging>DETAILED</auditLogging>
-        <columns>
-            <column columnName="protocol">
-                <columnTitle>IACUC Protocol</columnTitle>
-                <isKeyField>true</isKeyField>
-            </column>
-            <column columnName="account">
-                <columnTitle>Account</columnTitle>
-            </column>
-            <column columnName="grant">
-                <columnTitle>Grant</columnTitle>
-            </column>
-            <!--TODO additional IACUC realted fields expected-->
-            <column columnName="createdby">
-                <isUserEditable>false</isUserEditable>
-                <nullable>true</nullable>
-                <isHidden>true</isHidden>
-            </column>
-            <column columnName="created">
-                <isUserEditable>false</isUserEditable>
-                <nullable>true</nullable>
-                <isHidden>true</isHidden>
-            </column>
-            <column columnName="modifiedby">
-                <isUserEditable>false</isUserEditable>
-                <nullable>true</nullable>
-                <isHidden>true</isHidden>
-            </column>
-            <column columnName="modified">
-                <isUserEditable>false</isUserEditable>
-                <nullable>true</nullable>
-                <isHidden>true</isHidden>
-            </column>
-        </columns>
-    </table>
+    <!--<table tableName="protocols" tableDbType="TABLE" useColumnOrder="true">-->
+        <!--<tableTitle>IACUC Protocols</tableTitle>-->
+        <!--<auditLogging>DETAILED</auditLogging>-->
+        <!--<columns>-->
+            <!--<column columnName="protocol">-->
+                <!--<columnTitle>IACUC Protocol</columnTitle>-->
+                <!--<isKeyField>true</isKeyField>-->
+            <!--</column>-->
+            <!--<column columnName="account">-->
+                <!--<columnTitle>Account</columnTitle>-->
+            <!--</column>-->
+            <!--<column columnName="grant">-->
+                <!--<columnTitle>Grant</columnTitle>-->
+            <!--</column>-->
+            <!--&lt;!&ndash;TODO additional IACUC realted fields expected&ndash;&gt;-->
+            <!--<column columnName="createdby">-->
+                <!--<isUserEditable>false</isUserEditable>-->
+                <!--<nullable>true</nullable>-->
+                <!--<isHidden>true</isHidden>-->
+            <!--</column>-->
+            <!--<column columnName="created">-->
+                <!--<isUserEditable>false</isUserEditable>-->
+                <!--<nullable>true</nullable>-->
+                <!--<isHidden>true</isHidden>-->
+            <!--</column>-->
+            <!--<column columnName="modifiedby">-->
+                <!--<isUserEditable>false</isUserEditable>-->
+                <!--<nullable>true</nullable>-->
+                <!--<isHidden>true</isHidden>-->
+            <!--</column>-->
+            <!--<column columnName="modified">-->
+                <!--<isUserEditable>false</isUserEditable>-->
+                <!--<nullable>true</nullable>-->
+                <!--<isHidden>true</isHidden>-->
+            <!--</column>-->
+        <!--</columns>-->
+    <!--</table>-->
     <table tableName="Reference_Data" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Reference_Data</tableTitle>
         <auditLogging>DETAILED</auditLogging>

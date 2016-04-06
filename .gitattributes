@@ -4078,13 +4078,6 @@ onprcEHRModules/sla/resources/queries/sla/SLACageSize.sql -text
 onprcEHRModules/sla/resources/queries/sla/SLACageType.sql -text
 onprcEHRModules/sla/resources/queries/sla/SLAMostRecentCensus.sql -text
 onprcEHRModules/sla/resources/queries/sla/allowableAnimals.js -text
-onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-0.00-13.21.sql -text
-onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.21-13.22.sql -text
-onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.22-13.23.sql -text
-onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.23-13.24.sql -text
-onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.24-13.25.sql -text
-onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.25-13.26.sql -text
-onprcEHRModules/sla/resources/schemas/dbscripts/postgresql/sla-13.27-13.28.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-0.00-13.21.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-13.21-13.22.sql -text
 onprcEHRModules/sla/resources/schemas/dbscripts/sqlserver/sla-13.22-13.23.sql -text
