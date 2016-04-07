@@ -658,8 +658,11 @@
         </ns:columns>
         <ns:buttonBarOptions includeStandardButtons="false">
             <ns:includeScript>/onprc_billing/BillingUtils.js</ns:includeScript>
-            <ns:item text="Views">
-                <ns:originalText>Views</ns:originalText>
+            <ns:item text="Grid Views">
+                <ns:originalText>Grid Views</ns:originalText>
+            </ns:item>
+            <ns:item text="Reports">
+                <ns:originalText>Reports</ns:originalText>
             </ns:item>
             <ns:item text="Delete" permission="DELETE" requiresSelection="true">
                 <ns:onClick>ONPRC.BillingUtils.deleteInvoiceRuns(dataRegionName);</ns:onClick>
@@ -667,8 +670,8 @@
             <ns:item text="Export">
                 <ns:originalText>Export</ns:originalText>
             </ns:item>
-            <ns:item text="Page Size">
-                <ns:originalText>Page Size</ns:originalText>
+            <ns:item text="Paging">
+                <ns:originalText>Paging</ns:originalText>
             </ns:item>
         </ns:buttonBarOptions>
     </ns:table>

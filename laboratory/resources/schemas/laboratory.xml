@@ -365,8 +365,11 @@
             <ns:includeScript>laboratory.context</ns:includeScript>
             <ns:includeScript>extWidgets/ExcelUploadPanel.js</ns:includeScript>
             <ns:includeScript>laboratory/buttons.js</ns:includeScript>
-            <ns:item text="Views">
-                <ns:originalText>Views</ns:originalText>
+            <ns:item text="Grid Views">
+                <ns:originalText>Grid Views</ns:originalText>
+            </ns:item>
+            <ns:item text="Reports">
+                <ns:originalText>Reports</ns:originalText>
             </ns:item>
             <ns:item text="Import Data">
                 <ns:onClick>Laboratory.buttonHandlers.importDataHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'laboratory', 'samples', 'rowid')</ns:onClick>
@@ -380,8 +383,8 @@
             <ns:item text="Print">
                 <ns:originalText>Print</ns:originalText>
             </ns:item>
-            <ns:item text="Page Size">
-                <ns:originalText>Page Size</ns:originalText>
+            <ns:item text="Paging">
+                <ns:originalText>Paging</ns:originalText>
             </ns:item>
         </ns:buttonBarOptions>
     </ns:table>
@@ -1325,8 +1328,11 @@
             <ns:item text="Delete">
                 <ns:originalText>Delete</ns:originalText>
             </ns:item>
-            <ns:item text="Views">
-                <ns:originalText>Views</ns:originalText>
+            <ns:item text="Grid Views">
+                <ns:originalText>Grid Views</ns:originalText>
+            </ns:item>
+            <ns:item text="Reports">
+                <ns:originalText>Reports</ns:originalText>
             </ns:item>
             <ns:item text="Add Tag" requiresSelection="true">
                 <ns:onClick>Ext4.create('Laboratory.window.WorkbookTagsWindow', {
@@ -1340,8 +1346,8 @@
             <ns:item text="Print">
                 <ns:originalText>Print</ns:originalText>
             </ns:item>
-            <ns:item text="Page Size">
-                <ns:originalText>Page Size</ns:originalText>
+            <ns:item text="Paging">
+                <ns:originalText>Paging</ns:originalText>
             </ns:item>
         </ns:buttonBarOptions>
     </ns:table>

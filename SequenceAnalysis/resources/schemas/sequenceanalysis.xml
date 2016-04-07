@@ -315,8 +315,11 @@
         <ns:buttonBarOptions includeStandardButtons="false">
             <ns:includeScript>laboratory.context</ns:includeScript>
             <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
-            <ns:item text="Views">
-                <ns:originalText>Views</ns:originalText>
+            <ns:item text="Grid Views">
+                <ns:originalText>Grid Views</ns:originalText>
+            </ns:item>
+            <ns:item text="Reports">
+                <ns:originalText>Reports</ns:originalText>
             </ns:item>
             <ns:item text="Delete" permission="ADMIN" requiresSelection="true">
                 <ns:onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</ns:onClick>
@@ -327,8 +330,8 @@
             <ns:item text="Print">
                 <ns:originalText>Print</ns:originalText>
             </ns:item>
-            <ns:item text="Page Size">
-                <ns:originalText>Page Size</ns:originalText>
+            <ns:item text="Paging">
+                <ns:originalText>Paging</ns:originalText>
             </ns:item>
         </ns:buttonBarOptions>        
     </ns:table>
@@ -467,8 +470,11 @@
         <ns:buttonBarOptions includeStandardButtons="false">
             <ns:includeScript>laboratory.context</ns:includeScript>
             <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
-            <ns:item text="Views">
-                <ns:originalText>Views</ns:originalText>
+            <ns:item text="Grid Views">
+                <ns:originalText>Grid Views</ns:originalText>
+            </ns:item>
+            <ns:item text="Reports">
+                <ns:originalText>Reports</ns:originalText>
             </ns:item>
             <ns:item text="Delete" permission="DELETE" requiresSelection="true">
                 <ns:onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</ns:onClick>
@@ -479,8 +485,8 @@
             <ns:item text="Print">
                 <ns:originalText>Print</ns:originalText>
             </ns:item>
-            <ns:item text="Page Size">
-                <ns:originalText>Page Size</ns:originalText>
+            <ns:item text="Paging">
+                <ns:originalText>Paging</ns:originalText>
             </ns:item>
             <ns:item insertPosition="end" requiresSelection="true" text="More Actions">
                 <ns:item text="Analyze Selected BAMs">
@@ -826,8 +832,11 @@
             <ns:includeScript>SequenceAnalysis/window/DownloadSequencesWindow.js</ns:includeScript>
             <ns:includeScript>SequenceAnalysis/window/CompareSequencesWindow.js</ns:includeScript>
             <ns:includeScript>SequenceAnalysis/window/MarkDisabledWindow.js</ns:includeScript>
-            <ns:item text="Views">
-                <ns:originalText>Views</ns:originalText>
+            <ns:item text="Grid Views">
+                <ns:originalText>Grid Views</ns:originalText>
+            </ns:item>
+            <ns:item text="Reports">
+                <ns:originalText>Reports</ns:originalText>
             </ns:item>
             <ns:item hidden="true">
                 <ns:originalText>Delete</ns:originalText>
@@ -1115,8 +1124,11 @@
         <ns:buttonBarOptions includeStandardButtons="false">
             <ns:includeScript>laboratory.context</ns:includeScript>
             <ns:includeScript>sequenceanalysis/sequenceAnalysis</ns:includeScript>
-            <ns:item text="Views">
-                <ns:originalText>Views</ns:originalText>
+            <ns:item text="Grid Views">
+                <ns:originalText>Grid Views</ns:originalText>
+            </ns:item>
+            <ns:item text="Reports">
+                <ns:originalText>Reports</ns:originalText>
             </ns:item>
             <ns:item text="Import Data" permission="INSERT">
                 <ns:originalText>Import Data</ns:originalText>
@@ -1130,8 +1142,8 @@
             <ns:item text="Print">
                 <ns:originalText>Print</ns:originalText>
             </ns:item>
-            <ns:item text="Page Size">
-                <ns:originalText>Page Size</ns:originalText>
+            <ns:item text="Paging">
+                <ns:originalText>Paging</ns:originalText>
             </ns:item>
             <ns:item insertPosition="end" requiresSelection="true" text="More Actions">
                 <ns:item text="Align/Analyze Selected">
