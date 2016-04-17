@@ -351,9 +351,9 @@ public class ExpRunCreator
 
     private Lsid createOutputProtocolLSID(Lsid parentProtocolLSID)
     {
-        Lsid result = new Lsid(parentProtocolLSID.toString());
+        Lsid.LsidBuilder result = new Lsid.LsidBuilder(parentProtocolLSID.toString());
         result.setObjectId(parentProtocolLSID.getObjectId() + ".Output");
-        return result;
+        return result.build();
     }
 
     private void addProtocol(Container c, User u, Map<String, ExpProtocol> protocols, String name)
