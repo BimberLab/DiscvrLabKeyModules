@@ -780,7 +780,6 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
             fileNamePrefix: fileNamePrefix,
             delim: 'COMMA',
             newlineChar: '\r\n',
-            exportAsWebPage: LABKEY.ActionURL.getParameter('exportAsWebPage'),
             rows: text
         });
     },
@@ -803,7 +802,6 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
             fileNamePrefix: fileNamePrefix,
             delim: 'COMMA',
             newlineChar: '\r\n',
-            exportAsWebPage: LABKEY.ActionURL.getParameter('exportAsWebPage'),
             rows: text
         });
     },

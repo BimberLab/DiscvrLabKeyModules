@@ -1032,7 +1032,7 @@ public class LaboratoryController extends SpringActionController
                 if (!method.supportsRunTemplates())
                     throw new ValidationException("Import method does not support templates: " + importMethod);
 
-                method.generateTemplate(getViewContext(), protocol, form.getTemplateId(), form.getTitle(), json, form.getExportAsWebPage());
+                method.generateTemplate(getViewContext(), protocol, form.getTemplateId(), form.getTitle(), json);
             }
             catch (BatchValidationException e)
             {
@@ -2089,7 +2089,6 @@ public class LaboratoryController extends SpringActionController
         private int _templateId;
         private boolean _doSave = false;
         private Integer _labkeyAssayId;
-        private boolean _exportAsWebPage = false;
 
         public String getJsonData()
         {
@@ -2129,16 +2128,6 @@ public class LaboratoryController extends SpringActionController
         public void setLabkeyAssayId(Integer labkeyAssayId)
         {
             _labkeyAssayId = labkeyAssayId;
-        }
-
-        public Boolean getExportAsWebPage()
-        {
-            return _exportAsWebPage;
-        }
-
-        public void setExportAsWebPage(Boolean exportAsWebPage)
-        {
-            _exportAsWebPage = exportAsWebPage;
         }
 
         public String getTitle()

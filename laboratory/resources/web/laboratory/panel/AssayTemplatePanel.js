@@ -175,9 +175,6 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
             standardSubmit: true
         });
 
-        //used by automated tests
-        params.exportAsWebPage = !!LABKEY.ActionURL.getParameter('exportAsWebPage');
-
         form.submit({
             params: params,
             scope: this,

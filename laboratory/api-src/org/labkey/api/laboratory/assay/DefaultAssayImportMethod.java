@@ -187,7 +187,7 @@ public class DefaultAssayImportMethod implements AssayImportMethod
         return json;
     }
 
-    public void generateTemplate(ViewContext ctx, ExpProtocol protocol, @Nullable Integer templateId, String title, JSONObject json, boolean exportAsWebpage) throws BatchValidationException
+    public void generateTemplate(ViewContext ctx, ExpProtocol protocol, @Nullable Integer templateId, String title, JSONObject json) throws BatchValidationException
     {
         BatchValidationException errors = new BatchValidationException();
         validateTemplate(ctx.getUser(), ctx.getContainer(), protocol, templateId, title, json, errors);
@@ -195,7 +195,7 @@ public class DefaultAssayImportMethod implements AssayImportMethod
         if (errors.hasErrors())
             throw errors;
 
-        doGenerateTemplate(json, ctx.getRequest(), ctx.getResponse(), exportAsWebpage);
+        doGenerateTemplate(json, ctx.getRequest(), ctx.getResponse());
     }
 
     public void validateTemplate(User u, Container c, ExpProtocol protocol, @Nullable Integer templateId, String title, JSONObject json, BatchValidationException errors) throws BatchValidationException
@@ -203,7 +203,7 @@ public class DefaultAssayImportMethod implements AssayImportMethod
         //NOTE: consider checking required fields; however, we need to differentiate which field we expect now, and which we expect later
     }
 
-    public void doGenerateTemplate(JSONObject json, HttpServletRequest request, HttpServletResponse response, boolean exportAsWebpage) throws BatchValidationException
+    public void doGenerateTemplate(JSONObject json, HttpServletRequest request, HttpServletResponse response) throws BatchValidationException
     {
         try
         {
@@ -227,14 +227,6 @@ public class DefaultAssayImportMethod implements AssayImportMethod
             JSONArray sheetsArray = new JSONArray();
             sheetsArray.put(sheet);
             Workbook workbook =  ExcelFactory.createFromArray(sheetsArray, docType);
-
-
-            if (!exportAsWebpage){
-                response.setContentType(docType.getMimeType());
-                response.setHeader("Content-disposition", "attachment; filename=\"" + filename +"\"");
-                response.setHeader("Pragma", "private");
-                response.setHeader("Cache-Control", "private");
-            }
             workbook.write(response.getOutputStream());
         }
         catch (IOException e)
