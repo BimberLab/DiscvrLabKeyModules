@@ -275,6 +275,16 @@ public class TestHelper
                     break;
                 }
             }
+
+            if (file != null && file.exists())
+            {
+                _log.info("total files in sampledata: " + file.list().length);
+            }
+            else
+            {
+                _log.error("unable to find sampledata directory");
+            }
+
             return file;
         }
 
