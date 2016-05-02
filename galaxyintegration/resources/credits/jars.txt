@@ -1,0 +1,9 @@
+{table}
+Filename|Component|Version|Source|License|LabKey Dev|Purpose
+blend4j-0.2.0.jar|Blend4J API to Galaxy|0.2.0|{link:Blend4J|https://github.com/jmchilton/blend4j}|{link:Eclipse Public License - v 1.0|https://www.eclipse.org/legal/epl-v10.html}|bbimber|Used by Galaxy Integration
+jackson-core-asl-1.9.13.jar|Jackson Core Library|1.9.13|{link:Jackson|http://wiki.fasterxml.com/JacksonDownload/}|{link:Apache 2.0|http://www.apache.org/licenses/LICENSE-2.0}|bbimber|Used by Galaxy Integration
+jackson-jaxrs-1.9.13.jar|Jackson Jax-RS Library|1.9.13|{link:Jackson|http://wiki.fasterxml.com/JacksonDownload/}|{link:Apache 2.0|http://www.apache.org/licenses/LICENSE-2.0}|bbimber|Used by Galaxy Integration
+jackson-mapper-asl-1.9.13.jar|Jackson Data Mapper Library|1.9.13|{link:Jackson|http://wiki.fasterxml.com/JacksonDownload/}|{link:Apache 2.0|http://www.apache.org/licenses/LICENSE-2.0}|bbimber|Used by Galaxy Integration
+jackson-xc-1.9.13.jar|Jackson XML Compatibility Library|1.9.13|{link:Jackson|http://wiki.fasterxml.com/JacksonDownload/}|{link:Apache 2.0|http://www.apache.org/licenses/LICENSE-2.0}|bbimber|Used by Galaxy Integration
+jackson-bundle-1.9.13.jar|Jackson Bundle|1.9.13|{link:Jackson|http://wiki.fasterxml.com/JacksonDownload/}|{link:Apache 2.0|http://www.apache.org/licenses/LICENSE-2.0}|bbimber|Used by Galaxy Integration
+jackson-multipart-1.9.13.jar|Jackson MIME MultiPart Library|1.9.13|{link:Jackson|http://wiki.fasterxml.com/JacksonDownload/}|{link:Apache 2.0|http://www.apache.org/licenses/LICENSE-2.0}|bbimber|Used by Galaxy Integration

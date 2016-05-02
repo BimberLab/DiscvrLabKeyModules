@@ -57,6 +57,7 @@ DISCVR/galaxyintegration/lib/jackson-xc-1.9.13.jar -text
 DISCVR/galaxyintegration/lib/jersey-bundle-1.19.jar -text
 DISCVR/galaxyintegration/lib/jersey-multipart-1.19.jar -text
 DISCVR/galaxyintegration/module.properties -text
+DISCVR/galaxyintegration/resources/credits/jars.txt -text
 DISCVR/galaxyintegration/resources/schemas/dbscripts/postgresql/galaxyintegration-13.30-13.31.sql -text
 DISCVR/galaxyintegration/resources/schemas/dbscripts/sqlserver/galaxyintegration-13.30-13.31.sql -text
 DISCVR/galaxyintegration/resources/schemas/galaxyintegration.xml -text
