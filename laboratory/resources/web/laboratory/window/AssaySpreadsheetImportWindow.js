@@ -28,7 +28,7 @@ Ext4.define('Laboratory.ext.AssaySpreadsheetImportWindow', {
                         LDK.StoreUtils.createExcelTemplate({
                             fields: fields,
                             skippedFields: [],
-                            fileName: win.fileNamePrefix + '_' + (new Date().format('Y-m-d H_i_s')) + '.xls'
+                            fileName: win.fileNamePrefix + '_' + Ext4.util.Format.date(new Date(), 'Y-m-d H_i_s') + '.xls'
                         });
                     }
                 },{

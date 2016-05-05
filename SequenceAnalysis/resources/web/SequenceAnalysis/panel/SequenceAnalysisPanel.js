@@ -278,7 +278,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 name: 'protocolName',
                 itemId: 'protocolName',
                 allowBlank:false,
-                value: 'SequenceAnalysis_'+new Date().format('Ymd'),
+                value: 'SequenceAnalysis_'+ Ext4.util.Format.date(new Date(), 'Ymd'),
                 maskRe: new RegExp('[A-Za-z0-9_]'),
                 validator: function(val){
                     return (this.isValidProtocol === false ? 'Job Name Already In Use' : true);

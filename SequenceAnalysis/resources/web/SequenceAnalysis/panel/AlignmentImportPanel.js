@@ -73,7 +73,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 name: 'protocolName',
                 itemId: 'protocolName',
                 allowBlank:false,
-                value: 'SequenceImport_'+new Date().format('Ymd'),
+                value: 'SequenceImport_'+ Ext4.util.Format.date(new Date(), 'Ymd'),
                 maskRe: new RegExp('[A-Za-z0-9_]'),
                 validator: function(val){
                     return (this.isValidProtocol === false ? 'Job Name Already In Use' : true);

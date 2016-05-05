@@ -145,7 +145,7 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
                 fieldLabel: 'Title',
                 name: 'title',
                 itemId: 'titleField',
-                value: LABKEY.Security.currentUser.displayName + ' ' + (new Date().format('Y-m-d')),
+                value: LABKEY.Security.currentUser.displayName + ' ' + Ext4.util.Format.date(new Date(), 'Y-m-d'),
                 selectOnFocus: true
             },{
                 xtype: 'textarea',
