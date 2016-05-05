@@ -368,7 +368,7 @@ Laboratory.buttonHandlers = new function(){
                                 }, this);
 
                                 LABKEY.Utils.convertToExcel({
-                                    fileName : 'Samples_' + (new Date().format('Y-m-d H_i_s')) + '.xls',
+                                    fileName : 'Samples_' + Ext4.Date.format(new Date(), 'Y-m-d H_i_s') + '.xls',
                                     sheets : [{
                                         name: 'samples',
                                         data: data

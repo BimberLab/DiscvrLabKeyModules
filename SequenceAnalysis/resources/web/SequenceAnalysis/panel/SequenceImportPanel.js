@@ -781,7 +781,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 name: 'protocolName',
                 itemId: 'protocolName',
                 allowBlank:false,
-                value: 'SequenceImport_'+new Date().format('Ymd'),
+                value: 'SequenceImport_'+ Ext4.Date.format(new Date(), 'Ymd'),
                 maskRe: new RegExp('[A-Za-z0-9_]'),
                 validator: function(val){
                     return (this.isValidProtocol === false ? 'Job Name Already In Use' : true);
@@ -1731,7 +1731,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         }, this);
 
                         LABKEY.Utils.convertToExcel({
-                            fileName : 'ReadsetImport_' + (new Date().format('Y-m-d H_i_s')) + '.xls',
+                            fileName : 'ReadsetImport_' + Ext4.util.Format.date(new Date(), 'Y-m-d H_i_s') + '.xls',
                             sheets : [{
                                 name: 'data',
                                 data: data
