@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2010-2012 LabKey Corporation
  *
@@ -304,7 +303,7 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
 
                 this.setDownloadPending(true);
                 LABKEY.Utils.convertToExcel({
-                    fileName : this.assayDesign.name + '_' + Ext4.util.Format.date(new Date(), 'Y-m-d H_i_s') + '.xls',
+                    fileName : this.assayDesign.name + '_' + (new Date().format('Y-m-d H_i_s')) + '.xls',
                     sheets : [{
                         name: 'data',
                         data: [results.columnNames]
