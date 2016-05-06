@@ -34,7 +34,7 @@ public class BarcodeModel extends SequenceTag
 
     public static BarcodeModel getByName(String name)
     {
-        BarcodeModel[] barcodes = getByNames(new String[]{name});
+        BarcodeModel[] barcodes = getByNames(name);
         return barcodes != null && barcodes.length == 1 ? barcodes[0] : null;
     }
 
