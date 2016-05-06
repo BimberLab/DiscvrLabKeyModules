@@ -182,7 +182,7 @@ public class AssayHelper
     public Pair<ExpExperiment, ExpRun> saveAssayBatch(List<Map<String, Object>> results, JSONObject json, File file, String fileName, ViewContext ctx, AssayProvider provider, ExpProtocol protocol) throws ValidationException, ExperimentException
     {
         AssayRunCreator creator = provider.getRunCreator();
-        Map<String, String> runProperties = new CaseInsensitiveHashMap((Map)json.optJSONObject("Run"));
+        Map<String, String> runProperties = new CaseInsensitiveHashMap(json.optJSONObject("Run"));
         String name = runProperties.get(ExperimentJSONConverter.NAME);
         String comments = runProperties.get("comments");
 

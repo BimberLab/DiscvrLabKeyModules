@@ -186,7 +186,7 @@ public class RequestSyncHelper
                     Integer mergeTestId = resolveMergeTestId(mergeSchema, (String)row.get("servicerequested"));
                     if (mergeTestId == null)
                     {
-                        _log.error("Unable to find merge test name matching: " + (String)row.get("servicerequested"));
+                        _log.error("Unable to find merge test name matching: " + row.get("servicerequested"));
                         continue;
                     }
 

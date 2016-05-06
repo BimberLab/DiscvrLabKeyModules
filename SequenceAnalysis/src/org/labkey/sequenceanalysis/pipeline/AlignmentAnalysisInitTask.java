@@ -137,7 +137,7 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
             ((SequenceAnalysisJob)getTaskHelper().getSequenceSupport()).cacheReadset(rs);
 
             ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(m.getLibraryId(), getJob().getUser());
-            ((SequenceAnalysisJob)getTaskHelper().getSequenceSupport()).cacheGenome(rg);
+            getTaskHelper().getSequenceSupport().cacheGenome(rg);
             (getTaskHelper().getSequenceSupport()).cacheExpData(ExperimentService.get().getExpData(rg.getFastaExpDataId()));
         }
 

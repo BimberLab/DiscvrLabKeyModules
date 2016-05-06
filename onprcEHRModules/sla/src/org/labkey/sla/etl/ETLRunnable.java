@@ -274,7 +274,7 @@ public class ETLRunnable implements Runnable
             DbSchema dbSchema;
             if (targetTable instanceof DatasetTable)
             {
-                Domain domain = ((FilteredTable)targetTable).getDomain();
+                Domain domain = targetTable.getDomain();
                 if (domain != null)
                 {
                     StorageProvisioner.createTableInfo(domain);

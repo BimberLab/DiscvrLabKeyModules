@@ -89,7 +89,7 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
 
         public List<FileType> getInputTypes()
         {
-            return Collections.singletonList((FileType)new NucleotideSequenceFileType());
+            return Collections.singletonList(new NucleotideSequenceFileType());
         }
 
         public String getStatusName()
