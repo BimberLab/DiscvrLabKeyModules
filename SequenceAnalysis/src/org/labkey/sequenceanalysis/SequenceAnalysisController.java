@@ -1210,7 +1210,7 @@ public class SequenceAnalysisController extends SpringActionController
                 files.add(d.getFile());
             }
 
-            PageFlowUtil.prepareResponseForFile(response, Collections.<String, String>emptyMap(), filename, true);
+            PageFlowUtil.prepareResponseForFile(response, Collections.emptyMap(), filename, true);
             FileInputStream in = null;
             GZIPInputStream gis = null;
             FileType gz = new FileType(".gz");
@@ -2803,7 +2803,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             final Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, keys);
             final JSONObject intervalMap = StringUtils.trimToNull(form.getIntervals()) == null ? new JSONObject() : new JSONObject(form.getIntervals());
-            PageFlowUtil.prepareResponseForFile(response, Collections.<String, String>emptyMap(), filename, true);
+            PageFlowUtil.prepareResponseForFile(response, Collections.emptyMap(), filename, true);
             TableSelector ts = new TableSelector(ti, cols.values(), new SimpleFilter(FieldKey.fromString("rowid"), Arrays.asList(form.getRowIds()), CompareType.IN), null);
             ts.forEach(new Selector.ForEachBlock<ResultSet>()
             {
@@ -3220,7 +3220,7 @@ public class SequenceAnalysisController extends SpringActionController
                 }
             }
 
-            PageFlowUtil.prepareResponseForFile(response, Collections.<String, String>emptyMap(), filename, true);
+            PageFlowUtil.prepareResponseForFile(response, Collections.emptyMap(), filename, true);
 
             try (ZipOutputStream zOut = new ZipOutputStream(response.getOutputStream()))
             {

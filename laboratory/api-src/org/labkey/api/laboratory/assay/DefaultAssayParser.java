@@ -623,7 +623,7 @@ public class DefaultAssayParser implements AssayParser
             String[] line;
             while ((line = reader.readNext()) != null)
             {
-                ret.add(Arrays.<String>asList(line));
+                ret.add(Arrays.asList(line));
             }
         }
 

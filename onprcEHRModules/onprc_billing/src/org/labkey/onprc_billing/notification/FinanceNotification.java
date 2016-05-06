@@ -548,7 +548,7 @@ public class FinanceNotification extends AbstractNotification
 
     private void chargesMissingRates(Container c, User u, StringBuilder msg)
     {
-        Map<String, Object> params = Collections.<String, Object>singletonMap("date", new Date());
+        Map<String, Object> params = Collections.singletonMap("date", new Date());
         TableInfo ti = QueryService.get().getUserSchema(u, c, "onprc_billing").getTable("chargesMissingRate");
         if (params != null)
         {

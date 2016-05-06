@@ -54,7 +54,7 @@ public class BlastUnmappedReadAnalysis extends AbstractCommandPipelineStep<Blast
     {
         public Provider()
         {
-            super("BlastUnmappedReads", "BLAST Unmapped Reads", null, "This will BLAST any unmapped reads against NCBI's nr database, creating a summary report of hits.", Collections.<ToolParameterDescriptor>emptyList(), null, null);
+            super("BlastUnmappedReads", "BLAST Unmapped Reads", null, "This will BLAST any unmapped reads against NCBI's nr database, creating a summary report of hits.", Collections.emptyList(), null, null);
         }
 
         @Override

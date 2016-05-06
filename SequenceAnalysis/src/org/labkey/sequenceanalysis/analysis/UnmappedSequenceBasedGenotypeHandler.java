@@ -216,7 +216,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
 
                     //first calculate avg qualities at each position
                     job.getLogger().info("Calculating avg quality scores");
-                    AvgBaseQualityAggregator avgBaseQualityAggregator = new AvgBaseQualityAggregator(job.getLogger(), so.getFile(), rg.getWorkingFastaFile(), Arrays.<SamRecordFilter>asList(
+                    AvgBaseQualityAggregator avgBaseQualityAggregator = new AvgBaseQualityAggregator(job.getLogger(), so.getFile(), rg.getWorkingFastaFile(), Arrays.asList(
                             new DuplicateReadFilter()
                     ));
                     avgBaseQualityAggregator.calculateAvgQuals();

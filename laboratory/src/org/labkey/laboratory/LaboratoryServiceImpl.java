@@ -597,7 +597,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
         if (list == null)
             list = new ArrayList<>();
 
-        list.add(Pair.<Module, Class<? extends TableCustomizer>>of(owner, customizerClass));
+        list.add(Pair.of(owner, customizerClass));
 
         schemaMap.put(queryName, list);
         _tableCustomizers.put(schemaName, schemaMap);

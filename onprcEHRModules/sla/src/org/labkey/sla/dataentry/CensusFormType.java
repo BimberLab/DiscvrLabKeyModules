@@ -19,7 +19,7 @@ public class CensusFormType extends TaskForm
 
     public CensusFormType(DataEntryFormContext ctx, Module owner)
     {
-        super(ctx, owner, NAME, NAME, "SLA", Arrays.<FormSection>asList(
+        super(ctx, owner, NAME, NAME, "SLA", Arrays.asList(
                         new TaskFormSection(),
                         new CensusFormSection())
         );

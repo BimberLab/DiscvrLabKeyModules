@@ -24,7 +24,7 @@ public class ReversalFormType extends TaskForm
 
     public ReversalFormType(DataEntryFormContext ctx, Module owner)
     {
-        super(ctx, owner, NAME, "Reversals/Adjustments", "Billing", Arrays.<FormSection>asList(
+        super(ctx, owner, NAME, "Reversals/Adjustments", "Billing", Arrays.asList(
                 new TaskFormSection(),
                 new AdjustmentFormSection()
         ));

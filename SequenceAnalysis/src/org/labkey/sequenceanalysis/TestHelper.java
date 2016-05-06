@@ -1281,10 +1281,10 @@ public class TestHelper
 
 
             File file3 = new File(_pipelineRoot, UNZIPPED_PAIRED_FILENAME1);
-            models.add(createReadset("TestReadset2", Arrays.asList(Pair.<File, File>of(file3, null))));
+            models.add(createReadset("TestReadset2", Arrays.asList(Pair.of(file3, null))));
 
             File file4 = new File(_pipelineRoot, UNZIPPED_PAIRED_FILENAME2);
-            models.add(createReadset("TestReadset3", Arrays.asList(Pair.<File, File>of(file4, null))));
+            models.add(createReadset("TestReadset3", Arrays.asList(Pair.of(file4, null))));
 
             return models;
         }

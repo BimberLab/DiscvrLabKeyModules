@@ -64,7 +64,7 @@ public class Barcoder extends AbstractSequenceMatcher
 
     public Set<File> demultiplexFile(File fastq, List<Readset> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir) throws IOException
     {
-        return demultiplexPair(Pair.<File, File>of(fastq, null), readsets, barcodes, outputDir);
+        return demultiplexPair(Pair.of(fastq, null), readsets, barcodes, outputDir);
     }
 
     public Set<File> demultiplexFiles(List<File> fastqs, List<Readset> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir) throws IOException
@@ -72,7 +72,7 @@ public class Barcoder extends AbstractSequenceMatcher
         List<Pair<File, File>> fastqPairs = new ArrayList<>();
         for (File f : fastqs)
         {
-            fastqPairs.add(Pair.<File, File>of(f, null));
+            fastqPairs.add(Pair.of(f, null));
         }
 
         return demultiplexPairs(fastqPairs, readsets, barcodes, outputDir);

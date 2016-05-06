@@ -22,7 +22,7 @@ public class ChargesFormType extends TaskForm
 
     public ChargesFormType(DataEntryFormContext ctx, Module owner)
     {
-        super(ctx, owner, NAME, "Misc Charges", "Billing", Arrays.<FormSection>asList(
+        super(ctx, owner, NAME, "Misc Charges", "Billing", Arrays.asList(
                 new TaskFormSection(),
                 new AnimalDetailsFormSection(),
                 new ChargesInstructionFormSection(),
