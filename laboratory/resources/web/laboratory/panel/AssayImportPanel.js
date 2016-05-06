@@ -147,7 +147,7 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
             templatePanel.add(this.getTemplatePanelItems())
         }
 
-        this.getForm().isValid.defer(500, this.getForm());
+        Ext4.defer(this.getForm().isValid, 500, this.getForm());
 
         //populate batch field, if present
         var field = this.down('#importMethod');
@@ -309,7 +309,7 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
                         data: [results.columnNames]
                     }]
                 });
-                this.setDownloadPending.defer(1000, this, [false]);
+                Ext4.defer(this.setDownloadPending, 1000, this, [false]);
             },
             failure: LDK.Utils.getErrorCallback()
         });
@@ -417,7 +417,7 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
                 window.location = LABKEY.ActionURL.buildURL('project', 'begin');
             }
 
-            doLoad.defer(400, this);
+            Ext4.defer(doLoad, 400, this);
         });
     },
 
