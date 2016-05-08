@@ -792,7 +792,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         if(this.analysesRecords[analysisId]['readset/subjectid'])
             qtip.push('Subject Id: ' + this.analysesRecords[analysisId]['readset/subjectid']);
         if(this.analysesRecords[analysisId]['readset/sampledate'])
-            qtip.push('Sample Date: ' + this.analysesRecords[analysisId]['readset/sampledate'].format('Y-m-d'));
+            qtip.push('Sample Date: ' + Ext4.Date.format(this.analysesRecords[analysisId]['readset/sampledate'], 'Y-m-d'));
         if(this.analysesRecords[analysisId]['readset/comment'])
             qtip.push('Readset Comments: ' + this.analysesRecords[analysisId]['readset/comment']);
 
