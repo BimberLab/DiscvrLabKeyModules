@@ -1,4 +1,3 @@
-
 package org.broadinstitute.gatk.tools.walkers.annotator;
 
 
@@ -40,8 +39,8 @@ import java.util.*;
 public class MendelianViolationCount extends InfoFieldAnnotation implements RodRequiringAnnotation {
 
     private final static Logger logger = Logger.getLogger(MendelianViolationCount.class);
-    public static final String MVLR_KEY = "MV_NUM";
-    public static final String MVLR_SN_KEY = "MV_SAMPLLES";
+    public static final String MV_NUM = "MV_NUM";
+    public static final String MV_SAMPLES = "MV_SAMPLES";
     private double minGenotypeQuality = 10.0;
     private SampleDB sampleDB = null;
     private boolean walkerIdentityCheckWarningLogged = false;
@@ -87,8 +86,8 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
                 }
             }
 
-            attributeMap.put(MVLR_KEY, totalViolations);
-            attributeMap.put(MVLR_SN_KEY, Utils.join(",", violations.toArray(new String[violations.size()])));
+            attributeMap.put(MV_NUM, totalViolations);
+            attributeMap.put(MV_SAMPLES, Utils.join(",", violations.toArray(new String[violations.size()])));
         }
 
         return attributeMap;
@@ -181,11 +180,11 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
     }
 
     // return the descriptions used for the VCF INFO meta field
-    public List<String> getKeyNames() { return Arrays.asList(MVLR_KEY, MVLR_SN_KEY); }
+    public List<String> getKeyNames() { return Arrays.asList(MV_NUM, MV_SAMPLES); }
 
     public List<VCFInfoHeaderLine> getDescriptions() { return Arrays.asList(
-            new VCFInfoHeaderLine(MVLR_KEY, 1, VCFHeaderLineType.Integer, "Number of mendelian violations across all samples."),
-            new VCFInfoHeaderLine(MVLR_SN_KEY, 1, VCFHeaderLineType.Integer, "Samples where a mendelian violation was observed.")
+            new VCFInfoHeaderLine(MV_NUM, 1, VCFHeaderLineType.Integer, "Number of mendelian violations across all samples."),
+            new VCFInfoHeaderLine(MV_SAMPLES, 1, VCFHeaderLineType.String, "Samples where a mendelian violation was observed.")
     ); }
 
     public class NoCallGenotype extends Genotype {
