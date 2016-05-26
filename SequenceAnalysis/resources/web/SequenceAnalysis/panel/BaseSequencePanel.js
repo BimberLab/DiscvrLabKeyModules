@@ -370,7 +370,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                             queryMode: 'local',
                                             listeners: {
                                                 afterrender: function (field) {
-                                                    field.focus.defer(200, field);
+                                                    Ext4.defer(field.focus, 200, field);
                                                 }
                                             }
                                         });
@@ -391,7 +391,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                             taskId: win.taskId,
                                             listeners: {
                                                 afterrender: function (field) {
-                                                    field.focus.defer(100, field);
+                                                    Ext4.defer(field.focus, 100, field);
                                                 },
                                                 render: function (field) {
                                                     Ext4.Msg.wait('Loading...');
@@ -471,7 +471,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                             show: function(win){
                                 var field = win.down('combo');
                                 if (field) {
-                                    field.focus.defer(100, field);
+                                    Ext4.defer(field.focus, 100, field);
                                 }
 
                                 new Ext4.util.KeyNav(win.getEl(), {

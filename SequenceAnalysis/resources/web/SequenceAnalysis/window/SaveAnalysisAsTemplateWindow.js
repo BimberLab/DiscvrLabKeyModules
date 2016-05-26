@@ -26,7 +26,7 @@ Ext4.define('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
             listeners: {
                 show: function(win){
                     var field = win.down('#nameField');
-                    field.focus.defer(100, field);
+                    Ext4.defer(field.focus, 100, field);
 
                     new Ext4.util.KeyNav(win.getEl(), {
                         "enter" : function(e){

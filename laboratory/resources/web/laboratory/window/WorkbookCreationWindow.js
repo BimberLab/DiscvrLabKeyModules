@@ -183,7 +183,7 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
             }),
             listeners: {
                 render: function(field){
-                    field.focus.defer(100, field);
+                    Ext4.defer(field.focus, 100, field);
                 }
             }
         },{
