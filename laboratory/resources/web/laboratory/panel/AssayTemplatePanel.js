@@ -197,7 +197,7 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('laboratory', 'saveTemplate'),
             method: 'POST',
-            params: {
+            jsonData: {
                 templateId: this.templateId,
                 title: title,
                 comments: this.down('#templateComments').getValue(),
