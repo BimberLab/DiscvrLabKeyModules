@@ -25,6 +25,7 @@
 <%!
     public void addClientDependencies(ClientDependencies dependencies)
     {
+        dependencies.add("Ext3");
         dependencies.add("laboratory.context");
         dependencies.add("laboratory/panel/WorkbookHeaderPanel.js");
         dependencies.add("editInPlaceElement.css");
