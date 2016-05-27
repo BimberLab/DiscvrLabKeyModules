@@ -242,6 +242,14 @@ public class TestHelper
             {
                 throw new Exception("sampledata folder does not exist: " + _sampleData.getPath());
             }
+
+            //debug intermittent failure
+            _log.info("files in " + _sampleData.getPath());
+            for (String f : _sampleData.list())
+            {
+                _log.info(f);
+            }
+
             _project = ContainerManager.getForPath(getProjectName());
             _pipelineRoot = PipelineService.get().getPipelineRootSetting(_project).getRootPath();
 
@@ -293,7 +301,18 @@ public class TestHelper
             File file1 = new File(_pipelineRoot, DUAL_BARCODE_FILENAME);
             if (!file1.exists())
             {
-                FileUtils.copyFile(new File(_sampleData, DUAL_BARCODE_FILENAME+".gz"), file1);
+                //debug intermittent failure
+                File orig = new File(_sampleData, DUAL_BARCODE_FILENAME+".gz");
+                if (!orig.exists())
+                {
+                    _log.info("files in sampleData: ");
+                    for (String f : _sampleData.list())
+                    {
+                        _log.info(f);
+                    }
+                }
+
+                FileUtils.copyFile(orig, file1);
                 Compress.decompressGzip(new File(_sampleData, DUAL_BARCODE_FILENAME+".gz"), file1);
             }
 
