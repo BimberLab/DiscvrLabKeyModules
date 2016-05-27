@@ -305,6 +305,7 @@ public class TestHelper
                 File orig = new File(_sampleData, DUAL_BARCODE_FILENAME+".gz");
                 if (!orig.exists())
                 {
+                    _log.info("missing file: " + orig.getPath());
                     _log.info("files in sampleData: ");
                     for (String f : _sampleData.list())
                     {

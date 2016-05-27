@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.TestHelper;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
@@ -289,7 +290,7 @@ public class Barcoder extends AbstractSequenceMatcher
         try
         {
             _detailLog = getDetailedLogFile(fastq);
-            _detailLogWriter = new CSVWriter(new FileWriter(_detailLog), '\t', CSVWriter.NO_QUOTE_CHARACTER, System.getProperty("line.separator"));
+            _detailLogWriter = new CSVWriter(PrintWriters.getPrintWriter(_detailLog), '\t', CSVWriter.NO_QUOTE_CHARACTER, System.getProperty("line.separator"));
             _detailLogWriter.writeNext(new String[]{"Readname", "Barcode", "End of Molecule", "Edit Distance", "Offset", "Start", "Stop", "Barcode Sequence", "Target Sequence"});
         }
         catch (IOException e)
@@ -303,7 +304,7 @@ public class Barcoder extends AbstractSequenceMatcher
         try
         {
             _summaryLog = getSummaryLogFile(fastq);
-            _summaryLogWriter = new CSVWriter(new FileWriter(_summaryLog), '\t', CSVWriter.NO_QUOTE_CHARACTER, System.getProperty("line.separator"));
+            _summaryLogWriter = new CSVWriter(PrintWriters.getPrintWriter(_summaryLog), '\t', CSVWriter.NO_QUOTE_CHARACTER, System.getProperty("line.separator"));
             _summaryLogWriter.writeNext(new String[]{"Readname", "Readset", "5' Barcode", "3' Barcode", "5' Edit Distance", "3' Edit Distance", "Start", "Stop", "Original Length", "Final Length", "Trimmed Sequence"});
         }
         catch (IOException e)
