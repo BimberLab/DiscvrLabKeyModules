@@ -146,7 +146,16 @@ Ext4.define('SequenceAnalysis.window.VisualizeDataWindow', {
     runHandler: function(handler){
         this.close();
         if (handler.successUrl) {
-            window.location = handler.successUrl;
+            if (handler.useWorkbooks){
+                Ext4.create('Laboratory.window.WorkbookCreationWindow', {
+                    controller: handler.successUrl.controller,
+                    action: handler.successUrl.action,
+                    urlParams: handler.successUrl.urlParams
+                }).show();
+            }
+            else {
+                window.location = LABKEY.ActionURL.buildURL(handler.successUrl.controller, handler.successUrl.action, null, handler.successUrl.urlParams);
+            }
         }
         else if (handler.jsHandler){
             var handlerFn = eval(handler.jsHandler);

@@ -48,7 +48,7 @@ public class FastqToSamWrapper extends PicardWrapper
         return output;
     }
 
-    protected String getTooName()
+    protected String getToolName()
     {
         return "FastqToSam";
     }
@@ -60,7 +60,7 @@ public class FastqToSamWrapper extends PicardWrapper
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getPicardJar().getPath());
-        params.add(getTooName());
+        params.add(getToolName());
         inferMaxRecordsInRam(params);
         params.add("FASTQ=" + file.getPath());
         if (file2 != null)

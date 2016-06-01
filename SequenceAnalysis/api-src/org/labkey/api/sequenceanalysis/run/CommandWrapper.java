@@ -37,6 +37,8 @@ public interface CommandWrapper
 
     public String executeWithOutput(List<String> params) throws PipelineJobException;
 
+    public void execute(List<String> params, ProcessBuilder.Redirect redirect) throws PipelineJobException;
+
     public void execute(List<String> params, File stdout) throws PipelineJobException;
 
     public List<String> getCommandsExecuted();

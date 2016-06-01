@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
-import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -16,17 +15,17 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
-import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -175,10 +174,18 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
 
             transaction.commit();
 
-            for (AnalysisModel m : ret)
+            //process metrics
+            Map<Integer, Integer> readsetToAnalysisMap = new HashMap<>();
+            Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new HashMap<>();
+            for (AnalysisModel model : ret)
             {
-                SequenceAnalysisTask.addMetricsForAnalysis(m, getJob().getLogger(), getJob().getContainer(), getJob().getUser(), null);
+                readsetToAnalysisMap.put(model.getReadset(), model.getRowId());
+                typeMap.put(model.getReadset(), new HashMap<>());
+
+                typeMap.get(model.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.bam, model.getAlignmentFileObject());
+                typeMap.get(model.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.reads, model.getAlignmentFileObject());
             }
+            taskHelper.getFileManager().writeMetricsToDb(readsetToAnalysisMap, typeMap);
 
             return ret;
         }

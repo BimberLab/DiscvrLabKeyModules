@@ -140,7 +140,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
                 return false;
             }
 
-            if ((gDad.isHomRef() && gChild.isHomVar()) || (gDad.isHomVar() && gChild.isHomRef()) || (countAllelesShared(gChild, gDad) == 0))
+            if ((gDad.isHomRef() && gChild.isHomVar()) || (gDad.isHomVar() && gChild.isHomRef()) || (gChild.isHomVar() && !gDad.getAlleles().contains(gChild.getAllele(0))))
             {
                 return true;
             }
@@ -153,7 +153,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
                 return false;
             }
 
-            if ((gMom.isHomRef() && gChild.isHomVar()) || (gMom.isHomVar() && gChild.isHomRef()) || (countAllelesShared(gChild, gMom) == 0))
+            if ((gMom.isHomRef() && gChild.isHomVar()) || (gMom.isHomVar() && gChild.isHomRef()) || (gChild.isHomVar() && !gMom.getAlleles().contains(gChild.getAllele(0))))
             {
                 return true;
             }

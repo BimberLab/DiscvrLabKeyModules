@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -17,6 +18,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.FixBAMWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -34,6 +36,8 @@ import java.util.List;
  */
 public class MosaikWrapper extends AbstractCommandWrapper
 {
+    private static final String MFL = "median_fragment_length";
+
     public MosaikWrapper(@Nullable Logger logger)
     {
         super(logger);
@@ -87,12 +91,14 @@ public class MosaikWrapper extends AbstractCommandWrapper
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName(), referenceGenome);
             getWrapper().setOutputDir(outputDirectory);
 
+            String mfl = StringUtils.trimToNull(getProvider().getParameterByName(MFL).extractValue(getPipelineCtx().getJob(), getProvider()));
+
             //TODO: can we infer the technology?
-            File reads = getWrapper().buildFastqReads(outputDirectory, inputFastq1, inputFastq2, SequencingTechnology.illumina_long);
+            File reads = getWrapper().buildFastqReads(outputDirectory, inputFastq1, inputFastq2, SequencingTechnology.illumina_long, mfl);
             output.addIntermediateFile(reads);
 
             List<String> params = new ArrayList<>();
-            params.addAll(getClientCommandArgs());
+            params.addAll(getClientCommandArgs(" ", PageFlowUtil.set(MFL)));
             if (SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob()) != null)
             {
                 params.add("-p");
@@ -157,14 +163,16 @@ public class MosaikWrapper extends AbstractCommandWrapper
                     {{
                             put("minValue", 0);
                             put("maxValue", 32);
-                        }}, 32),
+                        }}, 15),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mhp"), "max_hash_positions", "Max Hash Positions", "The maximum number of hash matches that are passed to local alignment", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
-                            put("maxValue", 200);
-                        }}, 200),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-act"), "align_threshold", "Alignment Threshold", "The alignment score (length) required for an alignment to continue to local alignment. Because the latter is slow, a higher value can improve speed", "ldk-integerfield", null, 55),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-bw"), "banded_smith_waterman", "Use Banded Smith-Waterman", "Uses the banded Smith-Waterman algorithm for increased performance", "ldk-integerfield", null, 51)
+                            put("maxValue", 300);
+                        }}, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-act"), "align_threshold", "Alignment Threshold", "The alignment score (length) required for an alignment to continue to local alignment. Because the latter is slow, a higher value can improve speed", "ldk-integerfield", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-bw"), "banded_smith_waterman", "Use Banded Smith-Waterman", "Uses the banded Smith-Waterman algorithm for increased performance", "ldk-integerfield", null, 51),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mfl"), MFL, "Median Fragment Length", "This is used by Mosaik for local alignments to rescue paired reads.  If median fragment length is 200bp, and the local search radius  is set to 100bp, then Mosaik will search 100-300bp downstream for a proper mate alignment.  This can be useful for PCR amplicons.", "ldk-integerfield", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ls"), "local_search_radius", "Local Search Radius", "This is used by Mosaik for local alignments to rescue paired reads.  If median fragment length is 200bp, and the local search radius is set to 100bp, then Mosaik will search 100-300bp downstream for a proper mate alignment.  This can be useful for PCR amplicons.", "ldk-integerfield", null, 150)
                     ), null, "https://code.google.com/p/mosaik-aligner/", true, true);
         }
 
@@ -206,10 +214,20 @@ public class MosaikWrapper extends AbstractCommandWrapper
         }
     }
 
-    private File buildFastqReads(File outputDirectory, File input, @Nullable File input2, SequencingTechnology technology) throws PipelineJobException
+    private File buildFastqReads(File outputDirectory, File input, @Nullable File input2, SequencingTechnology technology, @Nullable String mfl) throws PipelineJobException
     {
         File output = new File(outputDirectory, FileUtil.getBaseName(input) + ".mosaikreads");
-        executeMosaikBuild(input, input2, output, "-out", Arrays.asList("-st", technology.getParamValue()));
+
+        List<String> options = new ArrayList<>();
+        options.add("-st");
+        options.add(technology.getParamValue());
+        if (mfl != null)
+        {
+            options.add("-mfl");
+            options.add(mfl);
+        }
+
+        executeMosaikBuild(input, input2, output, "-out", options);
         if (!output.exists())
             throw new PipelineJobException("Unable to find file: " + output.getPath());
 

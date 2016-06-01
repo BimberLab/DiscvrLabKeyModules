@@ -1,6 +1,7 @@
 package org.labkey.api.htcondorconnector;
 
 import com.drew.lang.annotations.Nullable;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.TaskId;
 
 import java.util.List;
@@ -26,17 +27,17 @@ public interface HTCondorJobResourceAllocator
      * The maximum CPUs to request for this job
      */
     @Nullable
-    public Integer getMaxRequestCpus();
+    public Integer getMaxRequestCpus(PipelineJob job);
 
     /**
      * The maximum RAM in GBs to request for this job.  Not currently implemented
      */
     @Nullable
-    public Integer getMaxRequestMemory();
+    public Integer getMaxRequestMemory(PipelineJob job);
 
     /**
      * Additional lines to include in the condor submit script.  These will be appended to the default script.
      */
     @Nullable
-    public List<String> getExtraSubmitScriptLines();
+    public List<String> getExtraSubmitScriptLines(PipelineJob job);
 }

@@ -15,7 +15,7 @@ Ext4.define('SequenceAnalysis.field.GenomeFileSelectorField', {
                 schemaName: 'sequenceanalysis',
                 queryName: 'reference_library_tracks',
                 autoLoad: true,
-                filterArray: [LABKEY.Filter.create('library_id', this.genomeId)],
+                filterArray: this.getTracksFilterArray(this.genomeId),
                 sort: 'fileid/name',
                 columns: 'library_id,fileid,fileid/Name,fileid/FileExtension',
                 listeners: {
@@ -82,7 +82,11 @@ Ext4.define('SequenceAnalysis.field.GenomeFileSelectorField', {
 
     updateStoreFilters: function(genomeId){
         this.genomeId = genomeId;
-        this.store.filterArray = [LABKEY.Filter.create('library_id', this.genomeId)];
+        this.store.filterArray = this.getTracksFilterArray(genomeId);
         this.store.load();
+    },
+
+    getTracksFilterArray: function(genomeId){
+        return [LABKEY.Filter.create('library_id', this.genomeId), LABKEY.Filter.create('datedisabled', null, LABKEY.Filter.Types.ISBLANK)];
     }
 });

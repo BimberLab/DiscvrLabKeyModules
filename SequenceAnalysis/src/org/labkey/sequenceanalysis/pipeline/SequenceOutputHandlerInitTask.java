@@ -15,7 +15,6 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -91,6 +90,11 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
                 getPipelineJob().getSequenceSupport().cacheGenome(SequenceAnalysisService.get().getReferenceGenome(f.getLibrary_id(), getJob().getUser()));
             }
             getPipelineJob().getSequenceSupport().cacheExpData(f.getExpData());
+
+            if (f.getReadset() != null)
+            {
+                ((SequenceJobSupportImpl)getPipelineJob().getSequenceSupport()).cacheReadset(f.getReadset(), getJob().getUser());
+            }
         }
 
         getJob().getLogger().info("total inputs: " + getPipelineJob().getFiles().size());

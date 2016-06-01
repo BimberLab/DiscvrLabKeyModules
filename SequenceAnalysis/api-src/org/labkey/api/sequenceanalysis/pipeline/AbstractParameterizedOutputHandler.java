@@ -87,6 +87,12 @@ abstract public class AbstractParameterizedOutputHandler implements Parameterize
     }
 
     @Override
+    public boolean useWorkbooks()
+    {
+        return true;
+    }
+
+    @Override
     final public List<ToolParameterDescriptor> getParameters()
     {
         return _parameters;

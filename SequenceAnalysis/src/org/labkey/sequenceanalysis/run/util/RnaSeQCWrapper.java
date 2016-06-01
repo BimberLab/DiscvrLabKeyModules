@@ -6,13 +6,17 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.writer.PrintWriters;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,26 +83,74 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
         params.add("-r");
         params.add(referenceFasta.getPath());
 
-        params.add("-t");
-        params.add(gtfFile.getPath());
-
-        String fn = FileUtil.makeLegalName(name).replaceAll(" ", "_");
-        File output = new File(outputDir, fn);
-        params.add("-o");
-        params.add(output.getPath());
-
-        execute(params);
-
-        if (!output.exists())
-            throw new PipelineJobException("Output not created, expected: " + output.getPath());
-
-        File index = new File(output, "index.html");
-        if (!index.exists())
+        //simplistic filtering of GTF for required fields
+        File filteredGtf = new File(outputDir, "filtered.gtf");
+        try (BufferedReader reader = Readers.getReader(gtfFile); PrintWriter write = PrintWriters.getPrintWriter(filteredGtf))
         {
-            throw new PipelineJobException("Expected index.html file does not exist: " + index.getPath());
-        }
+            getLogger().info("filtering GTF for required fields");
+            getLogger().info("original GTF: " + gtfFile.getPath());
+            String line;
+            int lineNo = 0;
+            int totalLines = 0;
+            while ((line = reader.readLine()) != null)
+            {
+                lineNo++;
 
-        return output;
+                if (line.startsWith("#"))
+                {
+                    write.write(line);
+                    write.write('\n');
+                }
+                else if (!line.contains("transcript_id"))
+                {
+                    getLogger().info("skipping GTF line " + lineNo + " because it lacks transcript_id");
+                }
+                else if (!line.contains("gene_id"))
+                {
+                    getLogger().info("skipping GTF line " + lineNo + " because it lacks gene_id");
+                }
+                else
+                {
+                    write.write(line);
+                    write.write('\n');
+                    totalLines++;
+                }
+            }
+
+            getLogger().debug("total lines in filtered GTF: " + totalLines);
+
+            params.add("-t");
+            params.add(filteredGtf.getPath());
+
+            String fn = FileUtil.makeLegalName(name).replaceAll(" ", "_");
+            File output = new File(outputDir, fn);
+            params.add("-o");
+            params.add(output.getPath());
+
+            execute(params);
+
+            if (!output.exists())
+                throw new PipelineJobException("Output not created, expected: " + output.getPath());
+
+            File index = new File(output, "index.html");
+            if (!index.exists())
+            {
+                throw new PipelineJobException("Expected index.html file does not exist: " + index.getPath());
+            }
+
+            return output;
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+        finally
+        {
+            if (filteredGtf.exists())
+            {
+                filteredGtf.delete();
+            }
+        }
     }
 
     private File getJar()

@@ -121,6 +121,12 @@ public class CoverageDepthHandler implements SequenceOutputHandler
     }
 
     @Override
+    public boolean useWorkbooks()
+    {
+        return true;
+    }
+
+    @Override
     public Module getOwningModule()
     {
         return ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);

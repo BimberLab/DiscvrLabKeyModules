@@ -49,11 +49,17 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                     }
                     else {
                         distinctGenomes = Ext4.Array.unique(distinctGenomes);
-
-                        Ext4.create('SequenceAnalysis.window.LiftoverWindow', {
-                            dataRegionName: dataRegionName,
-                            outputFileIds: checked,
-                            libraryId: distinctGenomes.length == 1 ? distinctGenomes[0] : null
+                        Ext4.create('Laboratory.window.WorkbookCreationWindow', {
+                            workbookPanelCfg: {
+                                doLoad: function(containerPath){
+                                    Ext4.create('SequenceAnalysis.window.LiftoverWindow', {
+                                        containerPath: containerPath,
+                                        dataRegionName: dataRegionName,
+                                        outputFileIds: checked,
+                                        libraryId: distinctGenomes.length == 1 ? distinctGenomes[0] : null
+                                    }).show();
+                                }
+                            }
                         }).show();
                     }
                 }, this)
@@ -81,12 +87,12 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                     type: 'labkey-store',
                     schemaName: 'sequenceanalysis',
                     queryName: 'chain_files',
-                    columns: 'rowid,chainFile,genomeId2/name',
+                    columns: 'rowid,chainFile,genomeId2,genomeId2/name',
                     filterArray: [LABKEY.Filter.create('genomeId1', this.libraryId, LABKEY.Filter.Types.EQUAL)],
                     autoLoad: true
                 },
                 displayField: 'genomeId2/name',
-                valueField: 'rowid',
+                valueField: 'chainFile',
                 allowBlank: false
             },{
                 xtype: 'ldk-numberfield',
@@ -113,14 +119,19 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
     },
 
     onSubmit: function() {
-        var chainFile = this.down('#chainFileId');
-        if (!chainFile.getValue()) {
+        var chainField = this.down('#chainFileId');
+        if (!chainField.getValue()) {
             Ext4.Msg.alert('Error', 'Must choose the target genome');
             return;
         }
 
+        var recIdx = chainField.store.findExact('chainFile', chainField.getValue());
+        var rec = chainField.store.getAt(recIdx);
+        LDK.Assert.assertNotEmpty('Record not found in liftoverwindow', rec);
+
         var params = {
-            chainRowId: chainFile.getValue()
+            chainFileId: chainField.getValue(),
+            targetGenomeId: rec.get('genomeId2')
         };
 
         if (this.down('#pctField').getValue()){
@@ -129,7 +140,7 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
 
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler'),
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler', this.containerPath),
             jsonData: {
                 handlerClass: 'org.labkey.sequenceanalysis.analysis.LiftoverHandler',
                 outputFileIds: this.outputFileIds,

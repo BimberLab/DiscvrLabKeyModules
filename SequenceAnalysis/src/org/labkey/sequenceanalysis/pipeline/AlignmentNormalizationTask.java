@@ -1,12 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
-import htsjdk.samtools.BAMIndexer;
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.metrics.MetricsFile;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
@@ -16,6 +10,7 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
@@ -23,7 +18,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.run.util.AlignmentSummaryMetricsWrapper;
-import org.labkey.sequenceanalysis.run.util.BamMetricsRunner;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWrapper;
@@ -32,6 +26,7 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -220,6 +215,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 new AlignmentSummaryMetricsWrapper(getJob().getLogger()).executeCommand(finalDestination, referenceGenome.getWorkingFastaFile(), metricsFile);
                 getTaskHelper().getFileManager().addInput(metricsAction, "BAM File", finalDestination);
                 getTaskHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
+                getTaskHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, finalDestination, rs.getRowId())));
 
                 //and insert size metrics
                 getJob().getLogger().info("calculating insert size metrics");
@@ -230,6 +226,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 {
                     getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
                     getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size  Metrics Histogram", metricsHistogram);
+                    getTaskHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, finalDestination, rs.getRowId())));
                 }
 
                 if (getTaskHelper().getSettings().doCollectWgsMetrics())
@@ -240,6 +237,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                     CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
                     wgsWrapper.executeCommand(finalDestination, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
                     getTaskHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
+                    getTaskHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, finalDestination, rs.getRowId())));
                 }
 
                 metricsAction.setEndTime(new Date());

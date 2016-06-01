@@ -156,12 +156,12 @@ public class BamIterator
                     if (r.getAlignmentEnd() < start || r.getAlignmentStart() > stop)
                         continue;
 
-                    processRead(r, indexedRef);
+                    processAlignment(r, indexedRef);
 
                     if (i % 10000 == 0)
                     {
                         long newTime = new Date().getTime();
-                        _logger.info("processed " + i + " reads in " + ((newTime - startTime) / 1000) + " seconds");
+                        _logger.info("processed " + i + " alignments in " + ((newTime - startTime) / 1000) + " seconds");
                         startTime = newTime;
                     }
                 }
@@ -189,7 +189,7 @@ public class BamIterator
                 {
                     i++;
 
-                    processRead(it.next(), indexedRef);
+                    processAlignment(it.next(), indexedRef);
 
                     if (i % 25000 == 0)
                     {
@@ -202,7 +202,7 @@ public class BamIterator
         }
     }
 
-    private void processRead(SAMRecord r, IndexedFastaSequenceFile indexedRef)
+    private void processAlignment(SAMRecord r, IndexedFastaSequenceFile indexedRef)
     {
         if (r.getReadUnmappedFlag())
         {

@@ -16,6 +16,7 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.Pair;
 
 import java.io.File;
@@ -53,6 +54,8 @@ public interface PipelineStepOutput
      * these files will be deleted during the cleanup step.
      */
     public List<File> getIntermediateFiles();
+
+    public List<PicardMetricsOutput> getPicardMetricsFiles();
 
     /**
      * Returns a list of deferred delete intermediate files created during this step.  These are similar to the files
@@ -116,6 +119,60 @@ public interface PipelineStepOutput
         public Integer getGenomeId()
         {
             return _genomeId;
+        }
+    }
+
+    public static class PicardMetricsOutput
+    {
+        File _metricFile;
+        File _inputFile;
+        Integer _readsetId;
+        TYPE _type;
+
+        public enum TYPE
+        {
+            bam(),
+            reads();
+        }
+
+        public PicardMetricsOutput(File metricFile, File inputFile, Integer readsetId)
+        {
+            _metricFile = metricFile;
+            _inputFile = inputFile;
+            _readsetId = readsetId;
+        }
+
+
+        /**
+         * The rationale is that during processing we sequentially generate various files (like iterations on FASTQs or a BAM).  We
+         * want to denote that these metrics will apply to the final file, but dont know its name yet.  This can be used instead of tying the
+         * metrics to a specific file.
+         */
+        public PicardMetricsOutput(File metricFile, TYPE type, Integer readsetId)
+        {
+            _metricFile = metricFile;
+            _type = type;
+            _readsetId = readsetId;
+        }
+
+        public File getMetricFile()
+        {
+            return _metricFile;
+        }
+
+        public File getInputFile()
+        {
+            return _inputFile;
+        }
+
+        public Integer getReadsetId()
+        {
+            return _readsetId;
+        }
+
+        public TYPE getType()
+        {
+            return _type;
         }
     }
 }

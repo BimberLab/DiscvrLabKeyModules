@@ -90,14 +90,14 @@ public class SamToFastqWrapper extends PicardWrapper
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getPicardJar().getPath());
-        params.add(getTooName());
+        params.add(getToolName());
 
         params.add("INPUT=" + file.getPath());
 
         return params;
     }
 
-    protected String getTooName()
+    protected String getToolName()
     {
         return "SamToFastq";
     }

@@ -41,6 +41,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.TestContext;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.htcondorconnector.HTCondorConnectorManager;
 import org.labkey.htcondorconnector.HTCondorConnectorModule;
 import org.labkey.htcondorconnector.HTCondorConnectorSchema;
 import org.labkey.htcondorconnector.HTCondorServiceImpl;
@@ -66,6 +67,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
     private static final Logger _log = Logger.getLogger(HTCondorExecutionEngine.class);
     public static String TYPE = "HTCondorEngine";
     private static final String PREPARING = "PREPARING";
+    private static final String NOT_SUBMITTED = "NOT_SUBMITTED";
 
     //TODO: allow a site param to set this
     private boolean _debug = false;
@@ -100,7 +102,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
             //this means we have a duplicate
             if (job.getActiveTaskId() != null && job.getActiveTaskId().toString().equals(existingSubmission.getActiveTaskId()))
             {
-                job.getLogger().warn("duplicate submission attempt, skipping");
+                job.getLogger().warn("duplicate submission attempt, skipping.  original condor id: " + existingSubmission.getCondorId());
                 return;
             }
         }
@@ -124,6 +126,21 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
             return;
         }
 
+        if (HTCondorConnectorManager.get().isPreventNewJobs())
+        {
+            job.getLogger().info("submission to HTCondor has been disabled.  will resubmit when this is enabled");
+            job.setStatus(PipelineJob.TaskStatus.waiting, "HTCondor submission disabled");
+            j.setStatus(NOT_SUBMITTED);
+            Table.update(job.getUser(), HTCondorConnectorSchema.getInstance().getSchema().getTable(HTCondorConnectorSchema.CONDOR_JOBS), j, j.getRowId());
+        }
+        else
+        {
+            submitJobToCondor(j, job);
+        }
+    }
+
+    private void submitJobToCondor(HTCondorJob j, PipelineJob job) throws PipelineJobException
+    {
         boolean success = false;
         try
         {
@@ -254,9 +271,9 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
                     if (allocator != null)
                     {
                         job.getLogger().debug("using resource allocator: " + allocator.getClass().getName());
-                        maxCpus = allocator.getMaxRequestCpus();
-                        maxRam = allocator.getMaxRequestMemory();
-                        extraLines = allocator.getExtraSubmitScriptLines();
+                        maxCpus = allocator.getMaxRequestCpus(job);
+                        maxRam = allocator.getMaxRequestMemory(job);
+                        extraLines = allocator.getExtraSubmitScriptLines(job);
                     }
                 }
 
@@ -292,6 +309,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
                 {
                     for (String line : extraLines)
                     {
+                        job.getLogger().debug("adding line to submit script: [" + line + "]");
                         writer.write(line + "\n");
                     }
                 }
@@ -316,6 +334,12 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
         HTCondorJob job = getMostRecentCondorSubmission(jobId);
         if (job != null)
         {
+            //if the job was blocked from condor submission, treat as though queued
+            if (NOT_SUBMITTED.equals(job.getStatus()))
+            {
+                return PipelineJob.TaskStatus.waiting.name();
+            }
+
             ret = getStatusForJob(job.getCondorId());
         }
 
@@ -345,6 +369,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
         filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.error.name().toUpperCase(), CompareType.NEQ_OR_NULL);
         filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.complete.name().toUpperCase(), CompareType.NEQ_OR_NULL);
         filter.addCondition(FieldKey.fromString("status"), PREPARING, CompareType.NEQ_OR_NULL);
+        filter.addCondition(FieldKey.fromString("status"), NOT_SUBMITTED, CompareType.NEQ_OR_NULL);
 
         List<HTCondorJob> condorJobs = new TableSelector(ti, filter, new Sort("-created")).getArrayList(HTCondorJob.class);
         if (condorJobs.isEmpty())
@@ -532,11 +557,40 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
         return null;
     }
 
+    public synchronized void requeueBlockedJobs() throws PipelineJobException
+    {
+        if (!HTCondorConnectorManager.get().isPreventNewJobs())
+        {
+            //first see if we have any submissions to check
+            TableInfo ti = HTCondorConnectorSchema.getInstance().getSchema().getTable(HTCondorConnectorSchema.CONDOR_JOBS);
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("status"), NOT_SUBMITTED, CompareType.EQUAL);
+            TableSelector ts = new TableSelector(ti, filter, null);
+            List<HTCondorJob> jobs = ts.getArrayList(HTCondorJob.class);
+            if (jobs.isEmpty())
+            {
+                return;
+            }
+
+            for (HTCondorJob j : jobs)
+            {
+                PipelineJob job = PipelineJobService.get().getJobStore().getJob(j.getJobId());
+                if (job == null)
+                {
+                    _log.error("unable to find PipelineJob matching: " + j.getJobId());
+                }
+                else
+                {
+                    submitJobToCondor(j, job);
+                }
+            }
+        }
+    }
+
     public synchronized void updateStatusForAll() throws PipelineJobException
     {
         //first see if we have any submissions to check
         TableInfo ti = HTCondorConnectorSchema.getInstance().getSchema().getTable(HTCondorConnectorSchema.CONDOR_JOBS);
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("status"), PageFlowUtil.set(PipelineJob.TaskStatus.error.name().toUpperCase(), PipelineJob.TaskStatus.complete.name().toUpperCase(), PipelineJob.TaskStatus.cancelled.name().toUpperCase(), PREPARING), CompareType.NOT_IN);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("status"), PageFlowUtil.set(PipelineJob.TaskStatus.error.name().toUpperCase(), PipelineJob.TaskStatus.complete.name().toUpperCase(), PipelineJob.TaskStatus.cancelled.name().toUpperCase(), PREPARING, NOT_SUBMITTED), CompareType.NOT_IN);
         TableSelector ts = new TableSelector(ti, filter, null);
         List<HTCondorJob> jobs = ts.getArrayList(HTCondorJob.class);
 
@@ -763,6 +817,25 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
         {
             _log.error("unable to find HTCondor submission for jobId: " + jobId);
             return;
+        }
+
+        //this means job was never actually submitted to condor, so just mark cancelled
+        if (NOT_SUBMITTED.equals(condorJob.getStatus()))
+        {
+            condorJob.setStatus(PipelineJob.TaskStatus.cancelling.name().toUpperCase());
+            Table.update(null, HTCondorConnectorSchema.getInstance().getSchema().getTable(HTCondorConnectorSchema.CONDOR_JOBS), condorJob, condorJob.getRowId());
+
+            Integer jobIdx = PipelineService.get().getJobId(UserManager.getUser(condorJob.getCreatedBy()), ContainerManager.getForId(condorJob.getContainer()), condorJob.getJobId());
+            if (jobIdx != null)
+            {
+                //if this job was never submitted, the job in the database should be up to date
+                PipelineStatusFile sf = PipelineService.get().getStatusFile(jobIdx);
+                sf.createJobInstance().setStatus(PipelineJob.TaskStatus.cancelled);
+            }
+            else
+            {
+                _log.error("unable to find rowid for PipelineJob with Id: " + jobId);
+            }
         }
 
         Map<String, String> ctx = getBaseCtx();

@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -13,9 +14,11 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
@@ -25,14 +28,16 @@ import org.labkey.api.util.DebugInfoDumper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -118,6 +123,7 @@ public class TaskFileManagerImpl implements TaskFileManager
         }
 
         addIntermediateFiles(output.getIntermediateFiles());
+        addPicardMetricsFiles(output.getPicardMetricsFiles());
 
         for (File file : output.getDeferredDeleteIntermediateFiles())
         {
@@ -259,6 +265,26 @@ public class TaskFileManagerImpl implements TaskFileManager
         return logFile;
     }
 
+    private File getMetricsLog(boolean create)
+    {
+        File logFile = new File(getSupport().getAnalysisDirectory(), "metricsToCreate.txt");
+        if (create && !logFile.exists())
+        {
+            try (PrintWriter writer = PrintWriters.getPrintWriter(logFile))
+            {
+                writer.write(StringUtils.join(Arrays.asList("ReadsetId", "FileRelPath", "Type", "Category", "MetricName", "Value"), "\t"));
+                writer.write("\n");
+            }
+            catch (IOException e)
+            {
+                _job.getLogger().error("Unable to create log file: " + logFile.getPath());
+                return null;
+            }
+        }
+
+        return logFile;
+    }
+
     private File getSequenceOutputLog(boolean create)
     {
         File logFile = new File(getSupport().getAnalysisDirectory(), "sequenceOutputs.txt");
@@ -291,7 +317,7 @@ public class TaskFileManagerImpl implements TaskFileManager
                 _job.getLogger().debug("Intermediate files will be removed");
 
                 Set<String> toDelete = new HashSet<>();
-                try (BufferedReader reader = new BufferedReader(new FileReader(log)))
+                try (BufferedReader reader = Readers.getReader(log))
                 {
                     String line;
                     while ((line = reader.readLine()) != null)
@@ -307,26 +333,8 @@ public class TaskFileManagerImpl implements TaskFileManager
                 for (String line : toDelete)
                 {
                     _job.getLogger().debug("attempting to delete deferred file: [" + line + "]");
-                    File f = new File(_workLocation, line);
-                    if (!f.exists())
-                    {
-                        File test = new File(getSupport().getAnalysisDirectory(), line);
-                        if (test.exists())
-                        {
-                            f = test;
-                        }
-                    }
-
-                    if (!f.exists())
-                    {
-                        File test = new File(line);
-                        if (test.exists())
-                        {
-                            f = test;
-                        }
-                    }
-
-                    if (f.exists())
+                    File f = convertRelPathToFile(line);
+                    if (f != null && f.exists())
                     {
                         _job.getLogger().debug("deleting file: " + f.getPath());
                         if (f.isDirectory())
@@ -353,7 +361,7 @@ public class TaskFileManagerImpl implements TaskFileManager
                     }
                     else
                     {
-                        _job.getLogger().warn("could not find file to delete: " + f.getPath());
+                        _job.getLogger().warn("could not find file to delete: " + (f == null ? "null" : f.getPath()));
                     }
                 }
 
@@ -380,7 +388,7 @@ public class TaskFileManagerImpl implements TaskFileManager
         {
             _job.getLogger().info("Importing sequence output files");
 
-            try (BufferedReader reader = new BufferedReader(new FileReader(log)))
+            try (BufferedReader reader = Readers.getReader(log))
             {
                 TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
                 String line;
@@ -465,6 +473,35 @@ public class TaskFileManagerImpl implements TaskFileManager
         }
     }
 
+    private File convertRelPathToFile(String line)
+    {
+        if (line == null)
+        {
+            return null;
+        }
+
+        File f = new File(_workLocation, line);
+        if (!f.exists())
+        {
+            File test = new File(getSupport().getAnalysisDirectory(), line);
+            if (test.exists())
+            {
+                f = test;
+            }
+        }
+
+        if (!f.exists())
+        {
+            File test = new File(line);
+            if (test.exists())
+            {
+                f = test;
+            }
+        }
+
+        return f;
+    }
+
     @Override
     public void addIntermediateFile(File f)
     {
@@ -478,6 +515,141 @@ public class TaskFileManagerImpl implements TaskFileManager
         for (File f : files)
         {
             addIntermediateFile(f);
+        }
+    }
+
+    @Override
+    public void addPicardMetricsFiles(List<PipelineStepOutput.PicardMetricsOutput> files)
+    {
+        for (PipelineStepOutput.PicardMetricsOutput mf : files)
+        {
+            _job.getLogger().debug("adding picard metrics file: " + mf.getMetricFile().getPath());
+
+            //write to log
+            File metricLog = getMetricsLog(true);
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(metricLog, true)))
+            {
+                String bamRelPath = mf.getInputFile() == null ? "" : FilenameUtils.normalize(_wd.getRelativePath(mf.getInputFile()));
+                String type = mf.getType() == null ? "" : mf.getType().name();
+
+                List<Map<String, Object>> metricLines = PicardMetricsUtil.processFile(mf.getMetricFile(), _job.getLogger());
+                for (Map<String, Object> line : metricLines)
+                {
+                    writer.write(StringUtils.join(Arrays.asList(mf.getReadsetId(), bamRelPath, type, line.get("category"), line.get("metricname"), line.get("metricvalue")), "\t"));
+                    writer.write('\n');
+                }
+            }
+            catch (IOException | PipelineJobException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Override
+    public void writeMetricsToDb(Map<Integer, Integer> readsetMap, Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap) throws PipelineJobException
+    {
+        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+        {
+            throw new IllegalArgumentException("Your code is attempting to process metrics from a remote server.  This indicates an upstream problem with the code");
+        }
+
+        File metricLog = getMetricsLog(false);
+        if (metricLog.exists())
+        {
+            TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
+            try (CSVReader reader = new CSVReader(Readers.getReader(metricLog), '\t'))
+            {
+                String[] line;
+                int i = 0;
+                while ((line = reader.readNext()) != null)
+                {
+                    i++;
+                    if (i == 1)
+                    {
+                        continue; //header
+                    }
+
+                    if (line.length != 6)
+                    {
+                        throw new RuntimeException("Line length is not 6: " + i + "[" + StringUtils.join(line, ";") + "]");
+                    }
+
+                    Map<String, Object> toInsert = new HashMap<>();
+                    toInsert.put("container", _job.getContainer().getId());
+                    toInsert.put("createdby", _job.getUser().getUserId());
+                    toInsert.put("created", new Date());
+
+                    Integer readsetId = Integer.parseInt(line[0]);
+                    toInsert.put("readset", readsetId);
+                    if (readsetMap.containsKey(readsetId))
+                    {
+                        toInsert.put("analysis_id", readsetMap.get(readsetId));
+                    }
+
+                    String type = StringUtils.trimToNull(line[2]);
+                    Integer dataId = null;
+                    if (typeMap.containsKey(readsetId) && type != null)
+                    {
+                        try
+                        {
+                            PipelineStepOutput.PicardMetricsOutput.TYPE t = PipelineStepOutput.PicardMetricsOutput.TYPE.valueOf(type);
+                            if (typeMap != null && typeMap.get(readsetId).containsKey(t))
+                            {
+                                _job.getLogger().debug("attempting to find file: " + typeMap.get(readsetId).get(t).getPath());
+                                ExpData d = ExperimentService.get().getExpDataByURL(typeMap.get(readsetId).get(t), _job.getContainer());
+                                if (d != null)
+                                {
+                                    dataId = d.getRowId();
+                                }
+                            }
+                        }
+                        catch (IllegalArgumentException e)
+                        {
+                            _job.getLogger().error("unknown type: " + type);
+                        }
+                    }
+
+                    if (dataId == null)
+                    {
+                        String relPath = StringUtils.trimToNull(line[1]);
+                        File f = convertRelPathToFile(relPath);
+                        if (f != null)
+                        {
+                            ExpData d = ExperimentService.get().getExpDataByURL(f, _job.getContainer());
+                            if (d != null)
+                            {
+                                dataId = d.getRowId();
+                            }
+                            else
+                            {
+                                _job.getLogger().warn("unable to find ExpData for relPath: " + relPath);
+                            }
+                        }
+                    }
+
+                    if (dataId != null)
+                    {
+                        toInsert.put("dataid", dataId);
+                    }
+
+                    toInsert.put("category", line[3]);
+                    toInsert.put("metricname", line[4]);
+                    toInsert.put("metricvalue", line[5]);
+
+                    Table.insert(_job.getUser(), ti, toInsert);
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            metricLog.delete();
+        }
+        else
+        {
+            _job.getLogger().info("no metrics file found");
         }
     }
 
@@ -753,19 +925,22 @@ public class TaskFileManagerImpl implements TaskFileManager
             }
 
             //TODO: kinda of a hack
-            File fastqcHtml = new File(input.getParentFile(), input.getName().replaceAll(".fastq.gz", "") + "_fastqc.html.gz");
-            if (fastqcHtml.exists())
+            List<File> toMove = Arrays.asList(new File(input.getParentFile(), input.getName().replaceAll(".fastq.gz", "") + "_fastqc.html.gz"), new File(input.getParentFile(), input.getName().replaceAll(".fastq.gz", "") + "_fastqc.zip"));
+            for (File f : toMove)
             {
-                _job.getLogger().debug("also moving FASTQC file: " + fastqcHtml.getName());
-                File target = new File(output.getParentFile(), fastqcHtml.getName());
-                if (target.exists())
+                if (f.exists())
                 {
-                    _job.getLogger().warn("FASTQ file already exists on the server.  not expected: " + target.getPath());
-                }
-                else
-                {
-                    FileUtils.moveFile(fastqcHtml, target);
-                    swapFiles(fastqcHtml, target);
+                    _job.getLogger().debug("also moving FASTQC file: " + f.getName());
+                    File target = new File(output.getParentFile(), f.getName());
+                    if (target.exists())
+                    {
+                        _job.getLogger().warn("FASTQC file already exists on the server.  was not expected: " + target.getPath());
+                    }
+                    else
+                    {
+                        FileUtils.moveFile(f, target);
+                        swapFiles(f, target);
+                    }
                 }
             }
 

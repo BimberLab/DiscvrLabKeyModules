@@ -56,7 +56,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             params.addAll(SequencePipelineService.get().getJavaOpts());
             params.add("-jar");
             params.add(getPicardJar().getPath());
-            params.add(getTooName());
+            params.add(getToolName());
             params.add("ALIGNED_BAM=" + alignedBam.getPath());
             params.add("MAX_INSERTIONS_OR_DELETIONS=-1");
             inferMaxRecordsInRam(params);
@@ -186,7 +186,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
         return false;
     }
 
-    protected String getTooName()
+    protected String getToolName()
     {
         return "MergeBamAlignment";
     }

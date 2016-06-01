@@ -56,7 +56,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     @Override
     public void execute(List<String> params) throws PipelineJobException
     {
-        execute(params, null);
+        execute(params, null, null);
     }
 
     @Override
@@ -82,10 +82,16 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     @Override
     public void execute(List<String> params, File stdout) throws PipelineJobException
     {
-        execute(params, stdout, null);
+        execute(params, ProcessBuilder.Redirect.to(stdout));
     }
 
-    private void execute(List<String> params, File stdout, @Nullable StringBuffer output) throws PipelineJobException
+    @Override
+    public void execute(List<String> params, ProcessBuilder.Redirect redirect) throws PipelineJobException
+    {
+        execute(params, redirect, null);
+    }
+
+    private void execute(List<String> params, ProcessBuilder.Redirect redirect, @Nullable StringBuffer output) throws PipelineJobException
     {
         getLogger().info("\t" + StringUtils.join(params, " "));
         _commandsExecuted.add(StringUtils.join(params, " "));
@@ -105,10 +111,13 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         }
 
         pb.redirectErrorStream(false);
-        if (stdout != null)
+        if (redirect != null)
         {
-            getLogger().info("\twriting STDOUT to file: " + stdout.getPath());
-            pb.redirectOutput(stdout);
+            if (redirect.file() != null)
+            {
+                getLogger().info("\tredirecting STDOUT to: " + redirect.file().getPath());
+            }
+            pb.redirectOutput(redirect);
         }
         else
         {
@@ -119,7 +128,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         try
         {
             p = pb.start();
-            try (BufferedReader procReader = new BufferedReader(new InputStreamReader(stdout == null ? p.getInputStream() : p.getErrorStream())))
+            try (BufferedReader procReader = new BufferedReader(new InputStreamReader(redirect == null ? p.getInputStream() : p.getErrorStream())))
             {
                 String line;
                 while ((line = procReader.readLine()) != null)

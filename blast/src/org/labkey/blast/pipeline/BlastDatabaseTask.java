@@ -30,6 +30,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.util.FileType;
@@ -159,11 +160,15 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
         {
             fastaCopy = new File(getPipelineJob().getDatabaseDir(), getPipelineJob().getDatabaseGuid() + ".fasta");
 
-            //decompress file and also touch up filenames to keep BLAST happier
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(data.getFile())));BufferedWriter writer = new BufferedWriter(new FileWriter(fastaCopy)))
+            //decompress file and also touch up read names to keep BLAST happier
+            try (BufferedReader reader = Readers.getReader(data.getFile());BufferedWriter writer = new BufferedWriter(new FileWriter(fastaCopy)))
             {
-                String line, refName, accession;
+                getJob().getLogger().info("creating FASTA copy of: " + data.getFile().getPath());
+                getJob().getLogger().info("to file: " + fastaCopy.getPath());
+
+                String line, refName;
                 Integer rowId;
+                int sequenceCount = 0;
                 while ((line = reader.readLine()) != null)
                 {
                     if (line.startsWith(">"))
@@ -173,17 +178,27 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
                         rowId = libraryHelper.resolveSequenceId(refName);
 
                         writer.write(">lcl|" + refName + " [" + rowId + "]" + System.getProperty("line.separator"));
+                        sequenceCount++;
                     }
                     else
                     {
                         writer.write(line + System.getProperty("line.separator"));
                     }
                 }
+
+                if (sequenceCount == 0)
+                {
+                    throw new PipelineJobException("There are no sequences in the input FASTA");
+                }
+                else
+                {
+                    getJob().getLogger().debug("sequence count: " + sequenceCount);
+                }
             }
 
             BLASTWrapper wrapper = new BLASTWrapper();
             wrapper.setLog(getJob().getLogger());
-            wrapper.createDatabase(getPipelineJob().getDatabaseGuid(), null, fastaCopy, BLASTManager.get().getDatabaseDir(getJob().getContainer(), true));
+            wrapper.createDatabase(getPipelineJob().getDatabaseGuid(), null, fastaCopy, BLASTManager.get().getDatabaseDir(getJob().getContainer(), true), getJob().getLogger());
             success = true;
         }
         catch (IOException | IllegalArgumentException e)
@@ -192,8 +207,9 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
         }
         finally
         {
-            if (fastaCopy != null && fastaCopy.exists())
+            if (success && fastaCopy != null && fastaCopy.exists())
             {
+                getJob().getLogger().info("deleting FASTA copy");
                 fastaCopy.delete();
             }
 

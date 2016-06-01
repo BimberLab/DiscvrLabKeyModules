@@ -22,7 +22,9 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -46,13 +48,19 @@ abstract public class AbstractCommandPipelineStep<Wrapper extends CommandWrapper
 
     public List<String> getClientCommandArgs(String separator) throws PipelineJobException
     {
+        return getClientCommandArgs(separator, Collections.emptySet());
+    }
+
+    public List<String> getClientCommandArgs(String separator, Set<String> paramBlacklist) throws PipelineJobException
+    {
         List<String> ret = new ArrayList<>();
         List<ToolParameterDescriptor> params = getProvider().getParameters();
         for (ToolParameterDescriptor desc : params)
         {
             if (desc.getCommandLineParam() != null)
             {
-                ret.addAll(desc.getCommandLineParam().getArguments(separator, desc.extractValueForCommandLine(getPipelineCtx().getJob(), getProvider())));
+                if (paramBlacklist == null || !paramBlacklist.contains(desc.getName()))
+                    ret.addAll(desc.getCommandLineParam().getArguments(separator, desc.extractValueForCommandLine(getPipelineCtx().getJob(), getProvider())));
             }
         }
 

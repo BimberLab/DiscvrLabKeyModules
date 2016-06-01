@@ -16,16 +16,27 @@
 
 package org.labkey.htcondorconnector;
 
+import org.json.JSONObject;
+import org.labkey.api.action.ApiAction;
+import org.labkey.api.action.ApiResponse;
+import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.data.PropertyManager;
+import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
+import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
+import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.HtmlView;
 import org.labkey.htcondorconnector.pipeline.HTCondorExecutionEngine;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class HTCondorConnectorController extends SpringActionController
 {
@@ -60,6 +71,66 @@ public class HTCondorConnectorController extends SpringActionController
             HTCondorExecutionEngine.TestCase.runTestJob(getContainer(), getUser());
 
             return true;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    @CSRF
+    public class GetSettingsAction extends ApiAction<Object>
+    {
+        public ApiResponse execute(Object form, BindException errors)
+        {
+            JSONObject resultProperties = new JSONObject();
+            String[] configKeys = {HTCondorConnectorManager.PREVENT_NEW_JOBS};
+
+            resultProperties.put("configKeys", configKeys);
+            resultProperties.put("config", PropertyManager.getProperties(HTCondorConnectorManager.CONFIG_PROPERTY_DOMAIN));
+
+            return new ApiSimpleResponse(resultProperties);
+        }
+    }
+
+    @RequiresSiteAdmin
+    @CSRF
+    public class SetSettingsAction extends ApiAction<SettingsForm>
+    {
+        public ApiResponse execute(SettingsForm form, BindException errors)
+        {
+            if (!getContainer().isRoot())
+            {
+                errors.reject(ERROR_MSG, "HTCondor settings can only be set at the site level");
+                return null;
+            }
+
+            Map<String, String> configMap = new HashMap<>();
+            configMap.put(HTCondorConnectorManager.PREVENT_NEW_JOBS, String.valueOf(form.isPreventNewJobs()));
+
+            try
+            {
+                HTCondorConnectorManager.get().saveSettings(configMap);
+            }
+            catch (IllegalArgumentException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+
+            return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    public static class SettingsForm
+    {
+        private boolean _preventNewJobs = false;
+
+        public boolean isPreventNewJobs()
+        {
+            return _preventNewJobs;
+        }
+
+        public void setPreventNewJobs(boolean preventNewJobs)
+        {
+            _preventNewJobs = preventNewJobs;
         }
     }
 }

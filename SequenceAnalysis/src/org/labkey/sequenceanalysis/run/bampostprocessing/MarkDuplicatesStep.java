@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.bampostprocessing;
 
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
@@ -67,11 +68,13 @@ public class MarkDuplicatesStep extends AbstractCommandPipelineStep<MarkDuplicat
         //NOTE: depending on whether the BAM is sorted by the wrapper, the metrics file name will differ
         if (getWrapper().getMetricsFile(sortedBam).exists())
         {
-            output.addIntermediateFile(getWrapper().getMetricsFile(sortedBam));
+            output.addPicardMetricsFile(rs, getWrapper().getMetricsFile(sortedBam), PipelineStepOutput.PicardMetricsOutput.TYPE.bam);
+            output.addOutput(getWrapper().getMetricsFile(sortedBam), "MarkDuplicateMetrics");
         }
         else if (getWrapper().getMetricsFile(inputBam).exists())
         {
-            output.addIntermediateFile(getWrapper().getMetricsFile(inputBam));
+            output.addPicardMetricsFile(rs, getWrapper().getMetricsFile(inputBam), PipelineStepOutput.PicardMetricsOutput.TYPE.bam);
+            output.addOutput(getWrapper().getMetricsFile(inputBam), "MarkDuplicateMetrics");
         }
 
         return output;

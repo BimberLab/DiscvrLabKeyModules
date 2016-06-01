@@ -426,6 +426,7 @@
             <!--TODO: deprecate in favor of this library_id-->
             <ns:column columnName="reference_library">
                 <ns:nullable>true</ns:nullable>
+                <ns:isHidden>true</ns:isHidden>
                 <ns:columnTitle>Reference Genome FASTA</ns:columnTitle>
                 <ns:fk>
                     <ns:fkDbSchema>exp</ns:fkDbSchema>
@@ -435,7 +436,6 @@
             </ns:column>
             <ns:column columnName="library_id">
                 <ns:columnTitle>Reference Genome</ns:columnTitle>
-                <ns:isHidden>true</ns:isHidden>
                 <ns:nullable>true</ns:nullable>
                 <ns:fk>
                     <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
@@ -2273,7 +2273,7 @@
                 <ns:columnTitle>Output File Id</ns:columnTitle>
             </ns:column>
             <ns:column columnName="name">
-                <ns:scale>80</ns:scale>
+                <ns:nullable>false</ns:nullable>
             </ns:column>
             <ns:column columnName="description"/>
             <ns:column columnName="dataid">

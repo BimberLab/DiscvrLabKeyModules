@@ -7,10 +7,14 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
     extend: 'Ext.panel.Panel',
     alias: 'widget.alignmentpanel',
 
-    MAX_ROWS: 300000,
+    MAX_ROWS: 250000,
     FEATURE_COLOR_MAP: {
         'CTL Epitope': 'yellow',
         'Protein Domain': 'cyan'
+    },
+
+    statics: {
+        MIN_PCT: 0.005
     },
 
     initComponent: function(){
@@ -182,15 +186,15 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         multi.add(LABKEY.Query.selectRows, {
             containerPath: Laboratory.Utils.getQueryContainerPath(),
             schemaName: 'SequenceAnalysis',
-            queryName: 'aa_snps_by_codon',
+            queryName: 'aa_snps_by_position',
             maxRows: this.MAX_ROWS,
             timeout: 0,
             includeTotalCount: false,
-            columns: 'analysis_id,q_aa,codon,ref_aa,ref_aa_id,ref_aa_insert_index,ref_aa_position,ref_nt_id,ref_nt_positions,pct,readcount,depth,adj_depth,ref_aa_id/name,ref_nt_id/name',
+            columns: 'analysis_id,q_aas,ref_aa,ref_aa_id,ref_aa_insert_index,ref_aa_position,ref_nt_id,ref_aa,readcount,adj_depth,pct,indel_pct,ref_aa_id/name,ref_nt_id/name',
             filterArray: [
                 LABKEY.Filter.create('analysis_id', this.analysisIds.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF),
                 //NOTE: added to reduce the total rowcount being sent to the client, as these datapoints rarely alter presentation
-                LABKEY.Filter.create('pct', 0.005, LABKEY.Filter.Types.GT)
+                LABKEY.Filter.create('pct', SequenceAnalysis.panel.SnpAlignmentPanel.MIN_PCT, LABKEY.Filter.Types.GT)
             ],
             scope: this,
             success: this.processSnps,
@@ -312,12 +316,14 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                 this.snps[row.analysis_id][row.ref_aa_id] = {refName: row['ref_aa_id/name'], snps: {}};
                 this.inserts[row.ref_aa_id] = this.inserts[row.ref_aa_id] || {};
             }
+
             if(!this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position]){
                 this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position] = {};
                 this.inserts[row.ref_aa_id][row.ref_aa_position] = this.inserts[row.ref_aa_id][row.ref_aa_position] || {};
             }
+
             if(!this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]){
-                this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index] = {ref_aa: row.ref_aa, num_reads: 0, adj_num_reads: 0, percent: 0, adj_percent: 0, depth: row.depth, adj_depth: row.adj_depth, codons: {}};
+                this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index] = {ref_aa: row.ref_aa, adj_num_reads: 0, adj_percent: 0, adj_depth: row.adj_depth, q_aas: row.q_aas};
             }
 
             if(Number(row.ref_aa_insert_index) > 0){
@@ -327,18 +333,9 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                 this.inserts[row.ref_aa_id][row.ref_aa_position][row.ref_aa_insert_index]['samples'][row.analysis_id] = row;
             }
 
-            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['num_reads'] += row.readcount;
-            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['adj_num_reads'] += row.readcount;
-
-            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['percent'] += row.pct;
-            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['adj_percent'] += row.pct;
-
-            if(!this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['codons'][row.codon]){
-                this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['codons'][row.codon] = {count: 0, adj_count: 0, q_aa: (row.q_aa || 'x'), depth: row.depth, percent: row.pct, adj_percent: row.pct, adj_depth: row.adj_depth, ref_nt_positions: row.ref_nt_positions}
-            }
-
-            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['codons'][row.codon]['count'] += row.readcount;
-            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['codons'][row.codon]['adj_count'] += row.readcount;
+            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['adj_num_reads'] = row.readcount;
+            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['adj_percent'] = row.pct;
+            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['indel_pct'] = row.indel_pct;
         };
     },
 
@@ -469,7 +466,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             this.refSequences[ref_id] = [];
             for(pos in this.refPositions[ref_id]){
                 for(idx in this.refPositions[ref_id][pos]){
-                    this.refSequences[ref_id].push('<span '+(idx!=0 ? ' style="background-color:#C0C0C0;"' : '')+' data-qtip="Position: '+(idx==0 ? pos : pos+'.'+idx)+'">'+this.refPositions[ref_id][pos][idx].residue+'</span>');
+                    this.refSequences[ref_id].push('<span '+(idx!=0 ? ' style="background-color:#C0C0C0;"' : '')+' data-qtip="Positon: ' + this.ref_aa_sequences[ref_id].name + ' '+(idx==0 ? pos : pos+'.'+idx)+'">'+this.refPositions[ref_id][pos][idx].residue+'</span>');
                 }
             }
         }
@@ -487,7 +484,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
     buildSequence: function(analysis_id){
         var obj = {};
         var snp;
-        var q_aa;
+        var q_aas;
         var i;
         var residue;
         var minPct = this.down('#minMutationPct').getValue();
@@ -544,22 +541,8 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                             snp.displayResidues.indexOf('?') != -1 ||
                             snp.displayResidues.indexOf('+') != -1
                         ){
-                            var incomplete = 0;
-                            var codon;
-                            for(var i in snp.codons){
-                                codon = snp.codons[i];
-                                if(!codon.q_aa){
-                                    console.error('no qq_aa');
-                                    console.log(codon);
-                                    return;
-                                }
-
-                                if(codon.q_aa && (codon.q_aa.match(':') || codon.q_aa.match(/\?/) || codon.q_aa.match(/\+/)))
-                                    incomplete += codon.adj_percent;
-                            };
-
-                            //if a signficant percent of mutations at this position are indels, color as indel
-                            if((incomplete / snp.adj_percent) > .3)
+                            //if a significant percent of mutations at this position are indels, color as indel
+                            if((snp.indel_pct / snp.adj_percent) > .3)
                                 snp.isIndel = true;
 
                             residue = 'X';
@@ -571,11 +554,9 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                         obj[ref_id].push({
                             tag: 'span',
                             html: residue,
+                            cls: 'sequenceanalysis-snp',
                             style: this.getSnpStyle(analysis_id, ref_id, pos, idx, residue, snp),
-                            'data-qtip': Ext4.util.Format.htmlEncode(this.renderSnpQtip(analysis_id, this.refPositions[ref_id][pos][0].residue, ref_id, pos, idx, snp)),
-                            'data-qwidth': "800",
-                            'data-hide': 'user',
-                            'data-qclass': 'snp-qtip-border'
+                            onclick: 'SequenceAnalysis.window.SnpDetailsWindow.showWindow(' + analysis_id + ', ' + ref_id + ', ' + pos + ', ' + idx + ');'
                         });
                     }
                     else {
@@ -601,34 +582,11 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         }
 
         snp.show = true;
-
-        if(!snp.aa_map){
-            snp.aa_map = {};
-            for(var i in snp.codons){
-                if(!snp.aa_map[snp.codons[i].q_aa])
-                    snp.aa_map[snp.codons[i].q_aa] = {adj_percent: 0, adj_count: 0};
-
-                snp.aa_map[snp.codons[i].q_aa].adj_percent += snp.codons[i].adj_percent;
-                snp.aa_map[snp.codons[i].q_aa].adj_count += snp.codons[i].adj_count;
-            }
+        if (!Ext4.isArray(snp.q_aas)){
+            snp.q_aas = snp.q_aas.split(',');
         }
 
-        snp.displayResidues = [];
-        for(i in snp.aa_map){
-            if(minPct && snp.aa_map[i].adj_percent < minPct){
-                snp.aa_map[i].show = false;
-                continue;
-            }
-
-            if(minReads && snp.aa_map[i].adj_count < minReads){
-                snp.aa_map[i].show = false;
-                continue;
-            }
-
-            snp.aa_map[i].show = true;
-            if(snp.displayResidues.indexOf(i) == -1)
-                snp.displayResidues.push(i);
-        }
+        snp.displayResidues = snp.q_aas;
     },
 
     getColorSettings: function(reset){
@@ -964,7 +922,6 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         var exons = aa.exonMap;
 
         var nt_positions = [];
-        var codonPos = 1;
         var nt_position = 3 * pos - 2; //the position of the first NT in this codon
 
         //these will track the NT position of the current protein
@@ -1012,70 +969,6 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             cover: cover,
             avgCover: (cover[0] + cover[1] + cover[2]) / 3
         }
-    },
-
-    renderSnpQtip: function(analysis_id, ref_base, ref_id, pos, idx, snp){
-        var style = 'class="snp-qtip"';
-        var html = '<table '+style+'>' +
-                '<tr '+style+'>' +
-                '<th>AA Position</th>' +
-                '<th>NT Position(s)</th>' +
-                '<th>Ref AA</th>' +
-                '<th>Codon</th>' +
-                '<th>Translation</th>' +
-                '<th>Depth</th>' +
-                '<th>Reads</th>' +
-                //'<th>Incomplete Codons</th>' +
-                '<th>Adj Count</th>' +
-                '<th>Adj Percent</th>' +
-                //'<th>Include</th>' +
-                '</tr>';
-
-        var codons = [];
-        for(var i in snp.codons){
-            codons.push(snp.codons[i]);
-            snp.codons[i].show = snp.aa_map[snp.codons[i].q_aa].show;
-            snp.codons[i].codon = i;
-
-        }
-        codons.sort(function(a, b){
-            if(a.show && !b.show)
-                return -1;
-            else if (b.show && !a.show)
-                return 1;
-            else {
-                if(a.adj_count > b.adj_count)
-                    return -1;
-                else if(a.adj_count > b.adj_count)
-                    return 1;
-            }
-            return 0;
-        })
-
-        var codon;
-        for (var i=0;i<codons.length;i++){
-            codon = codons[i];
-            html += '<tr '+style+'>' +
-                    '<td>'+(idx==0 ? pos : pos+'.'+idx)+'</td>' +
-                    '<td>'+codon.ref_nt_positions+'</td>' +
-                    '<td>'+(idx==0 ? ref_base : '-')+'</td>' +
-                    '<td>'+codon.codon+'</td><td>'+codon.q_aa+'</td>' +
-                    '<td>'+LABKEY.Utils.roundNumber(codon.depth, 2)+'</td><td>'+codon.adj_count+'</td>' +
-                    //'<td>'+codon.incomplete_codons+'</td>' +
-                    '<td>'+(codon.show ? '' : '<del>')+codon.adj_count+(codon.show ? '' : '</del>')+'</td>' +
-                    '<td>'+(codon.show ? '' : '<del>')+(codon.adj_percent ? LABKEY.Utils.roundNumber(codon.adj_percent, 2) : '')+(codon.show ? '' : '</del>')+'</td>' +
-                    //'<td>'+(codon.show ? 'x' : '')+'</td>' +
-                    '</tr>';
-        };
-
-        html += '<tr><td>Total Non-WT</td><td></td><td></td><td></td><td></td><td></td><td></td><td>'+LABKEY.Utils.roundNumber(snp.adj_num_reads, 2)+'</td><td>'+(snp.adj_percent ? LABKEY.Utils.roundNumber(snp.adj_percent, 2) : '')+'</td>';
-        html += '<tr><td>Total WT</td><td></td><td></td><td></td><td></td><td></td><td></td><td>'+LABKEY.Utils.roundNumber((snp.adj_depth - snp.adj_num_reads), 2)+'</td><td>'+(snp.adj_percent ? LABKEY.Utils.roundNumber(100-snp.adj_percent, 2) : '100')+'</td>';
-        html += '</table>';
-        html += '<i>**Strikethrough over the percent indicates this mutation is below the filter threshold. This is calculated per AA variation not <br>' +
-                     'per codon, meaning individual rows can be below the threshold if multiple codons combine to reach the threshold.</i><br><br>';
-        html += '<i>**To hide this tooltip click elsewhere on the screen.</i>'
-
-        return html;
     }
 });
 

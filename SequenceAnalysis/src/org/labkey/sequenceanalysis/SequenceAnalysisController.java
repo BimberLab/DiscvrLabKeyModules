@@ -121,6 +121,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.StringExpressionFactory;
+import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
@@ -2201,7 +2202,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
             catch (Throwable e)
             {
-                try (OutputStream out = getViewContext().getResponse().getOutputStream(); OutputStreamWriter writer = new OutputStreamWriter(out))
+                try (OutputStream out = getViewContext().getResponse().getOutputStream(); OutputStreamWriter writer = new OutputStreamWriter(out, StringUtilsLabKey.DEFAULT_CHARSET))
                 {
                     logger.error(e.getMessage(), e);
 
@@ -3096,9 +3097,15 @@ public class SequenceAnalysisController extends SpringActionController
             ActionURL url = handler.getButtonSuccessUrl(getContainer(), getUser(), Arrays.asList(ArrayUtils.toObject(form.getOutputFileIds())));
             if (url != null)
             {
-                ret.put("successUrl", url.toString());
+                Map<String, Object> urlMap = new HashMap<>();
+                urlMap.put("controller", url.getController());
+                urlMap.put("action", url.getAction());
+                urlMap.put("urlParams", url.getParameterMap());
+
+                ret.put("successUrl", urlMap);
             }
             ret.put("jsHandler", handler.getButtonJSHandler());
+            ret.put("useWorkbooks", handler.useWorkbooks());
 
             return new ApiSimpleResponse(ret);
         }
@@ -3653,36 +3660,45 @@ public class SequenceAnalysisController extends SpringActionController
                     params.put("dataid", data.getRowId());
 
                     //check for index, also move
-                    List<String> expected = SequenceAnalysisMaintenanceTask.getAssociatedFiles(file, false);
-                    for (String fn : expected)
+                    List<String> associatedFiles = SequenceAnalysisMaintenanceTask.getAssociatedFiles(file, false);
+                    for (String indexName : associatedFiles)
                     {
-                        File idx = new File(file.getParent(), fn);
+                        File idx = new File(file.getParent(), indexName);
                         if (idx.exists())
                         {
-                            //note: match against potentially renamed file
-                            String targetName;
-                            if (idx.getName().contains(fn))
+                            String idxTargetName;
+                            //if the original file was not renamed on move
+                            if (target.getName().equals(file.getName()))
                             {
-                                String suffix = idx.getName().replaceFirst(fn, "");
-                                targetName = target.getName() + suffix;
+                                idxTargetName = indexName;
                             }
+                            //if it was renamed, match against the new name
                             else
                             {
-                                targetName = idx.getName();
+                                if (indexName.contains(file.getName()))
+                                {
+                                    String suffix = indexName.replaceFirst(file.getName(), "");
+                                    idxTargetName = target.getName() + suffix;
+                                }
+                                else
+                                {
+                                    _log.error("unexpected name for index file: " + indexName + " for parent: " + target.getName());
+                                    continue;
+                                }
                             }
 
-                            _log.info("moving associated file: " + idx.getPath() + ", to: " + targetName);
-                            File idxTarget = writer.findUniqueFileName(targetName, targetDirectory);
+                            _log.info("moving associated file: " + idx.getPath() + ", to: " + idxTargetName);
+                            File idxTarget = new File(targetDirectory, idxTargetName);
                             if (idxTarget.exists())
                             {
-                                _log.error("target already exists");
+                                _log.error("target already exists, skipping: " + idxTargetName);
                             }
                             else
                             {
                                 FileUtils.moveFile(idx, idxTarget);
 
                                 ExpData idxData = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
-                                idxData.setName(idx.getName());
+                                idxData.setName(idxTarget.getName());
                                 idxData.setDataFileURI(idxTarget.toURI());
                                 idxData.save(getUser());
                             }
@@ -3856,9 +3872,15 @@ public class SequenceAnalysisController extends SpringActionController
                     ActionURL url = handler.getButtonSuccessUrl(getContainer(), getUser(), Arrays.asList(ArrayUtils.toObject(form.getOutputFileIds())));
                     if (url != null)
                     {
-                        json.put("successUrl", url.toString());
+                        Map<String, Object> urlMap = new HashMap<>();
+                        urlMap.put("controller", url.getController());
+                        urlMap.put("action", url.getAction());
+                        urlMap.put("urlParams", url.getParameterMap());
+
+                        json.put("successUrl", urlMap);
                     }
                     json.put("jsHandler", handler.getButtonJSHandler());
+                    json.put("useWorkbooks", handler.useWorkbooks());
 
                     availableHandlers.add(json);
                 }

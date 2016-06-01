@@ -235,9 +235,28 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
             }, this);
         }
 
+        if (mode == 'createNew'){
+            Ext4.create('Laboratory.window.WorkbookCreationWindow', {
+                title: 'Create New Workbook or Add To Existing?',
+                workbookPanelCfg: {
+                    jbrowseVals: vals,
+                    jbrowseScope: this,
+                    doLoad: function (containerPath) {
+                        console.log(this.jbrowseVals);
+                        this.jbrowseScope.makeRequest('createNew', this.jbrowseVals, containerPath);
+                    }
+                }
+            }).show();
+        }
+        else {
+            this.makeRequest(mode, vals);
+        }
+    },
+
+    makeRequest: function(mode, vals, containerPath){
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('jbrowse', (mode == 'createNew' ? 'createDatabase' : 'addDatabaseMember'), null),
+            url: LABKEY.ActionURL.buildURL('jbrowse', (mode == 'createNew' ? 'createDatabase' : 'addDatabaseMember'), containerPath),
             jsonData: vals,
             scope: this,
             success: function(){

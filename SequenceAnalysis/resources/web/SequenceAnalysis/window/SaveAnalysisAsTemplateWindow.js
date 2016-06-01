@@ -22,6 +22,11 @@ Ext4.define('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
                 xtype: 'textarea',
                 fieldLabel: 'Description',
                 itemId: 'descriptionField'
+            },{
+                xtype: 'checkbox',
+                fieldLabel: 'Save Globally?',
+                hidden: !LABKEY.Security.currentUser.isAdmin,
+                itemId: 'saveGloballyField'
             }],
             listeners: {
                 show: function(win){
@@ -59,6 +64,7 @@ Ext4.define('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
         }
 
         var description = this.down('#descriptionField').getValue();
+        var saveGlobally = this.down('#saveGloballyField').getValue();
         var json = this.sequencePanel.getJsonParams(true);
         delete json.protocolName;
         delete json.protocolDesription;
@@ -82,7 +88,8 @@ Ext4.define('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
             containerPath: Laboratory.Utils.getQueryContainerPath(),
             schemaName: 'sequenceanalysis',
             queryName: 'saved_analyses',
-            columns: 'rowid',
+            columns: 'rowid,container,container/Path',
+            sort: 'name',
             filterArray: [
                 LABKEY.Filter.create('name', name),
                 LABKEY.Filter.create('taskid', this.sequencePanel.taskId)
@@ -90,35 +97,61 @@ Ext4.define('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
             scope: this,
             failure: LDK.Utils.getErrorCallback(),
             success: function(results){
+                var targetContainer = saveGlobally ? 'Shared' : Laboratory.Utils.getQueryContainerPath();
+
                 if (results && results.rows && results.rows.length){
-                    Ext4.Msg.confirm('Overwrite Existing?', 'There is another saves templated with this name.  Do you want to overwrite it?', function(val){
-                        if (val === 'yes'){
-                            this.doSave(params);
-                        }
-                    }, this);
+                    var row = results.rows[0];
+                    if (row['container/Path'] != targetContainer){
+                        Ext4.Msg.confirm('Overwrite Existing?', 'There is another saved template with this name; however, it has been saved in the folder: ' + row['container/Path'] + ', not ' + targetContainer + '.  You can overwrite this template, but it will remain in the original folder.  Do you want to continue?', function(val){
+                            if (val === 'yes'){
+                                this.doSave(params, row.container);
+                            }
+                        }, this);
+                    }
+                    else {
+                        Ext4.Msg.confirm('Overwrite Existing?', 'There is another saved template with this name.  Do you want to overwrite it?', function(val){
+                            if (val === 'yes'){
+                                this.doSave(params, row.container);
+                            }
+                        }, this);
+                    }
                 }
                 else {
-                    this.doSave(params);
+                    this.doSave(params, targetContainer);
                 }
             }
-
-        })
+        });
     },
 
-    doSave: function(params){
+    doSave: function(params, targetContainer){
         Ext4.Msg.wait('Saving...');
-        LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'saveAnalysisAsTemplate', Laboratory.Utils.getQueryContainerPath()),
-            method: 'POST',
-            params: params,
-            scope: this,
-            failure: LDK.Utils.getErrorCallback(),
-            success: function(results){
-                Ext4.Msg.hide();
-                Ext4.Msg.alert('Success', 'Success!');
 
-                this.close();
-            }
+        //check permissions
+        LABKEY.Security.getUserPermissions({
+            containerPath: targetContainer,
+            userId: LABKEY.Security.currentUser.id,
+            success: function(results){
+                if (results.container.effectivePermissions.indexOf('org.labkey.api.security.permissions.UpdatePermission') > -1){
+                    LABKEY.Ajax.request({
+                        url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'saveAnalysisAsTemplate', targetContainer),
+                        method: 'POST',
+                        params: params,
+                        scope: this,
+                        failure: LDK.Utils.getErrorCallback(),
+                        success: function(results){
+                            Ext4.Msg.hide();
+                            Ext4.Msg.alert('Success', 'Success!');
+
+                            this.close();
+                        }
+                    });
+                }
+                else {
+                    Ext4.Msg.hide();
+                    Ext4.Msg.alert('Error', 'You do not have update permissions on the target folder, cannot overwrite template.');
+                }
+            },
+            scope: this
         });
     }
 });

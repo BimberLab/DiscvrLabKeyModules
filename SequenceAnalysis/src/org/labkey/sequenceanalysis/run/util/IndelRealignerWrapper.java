@@ -109,7 +109,8 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
 
             List<String> args = new ArrayList<>();
             args.add(SequencePipelineService.get().getJavaFilepath());
-            args.addAll(SequencePipelineService.get().getJavaOpts());
+            //for now, ignore java opts since queue's scatter/gather causes issues
+            //args.addAll(SequencePipelineService.get().getJavaOpts());
             args.add("-classpath");
             args.add(getJAR().getPath());
 

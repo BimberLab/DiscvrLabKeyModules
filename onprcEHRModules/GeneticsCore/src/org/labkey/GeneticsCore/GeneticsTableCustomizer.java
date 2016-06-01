@@ -43,6 +43,33 @@ public class GeneticsTableCustomizer extends AbstractTableCustomizer implements 
 
     private void customizeAnalyses(AbstractTableInfo ti)
     {
+        if (ti.getColumn("numUnmappedReads") == null)
+        {
+            //# unmapped
+            SQLFragment sql = new SQLFragment("(select SUM(a.total) from sequenceanalysis.alignment_summary a left join sequenceanalysis.alignment_summary_junction j ON (a.rowid = j.alignment_id AND a.analysis_id = j.analysis_id) WHERE j.alignment_id is null AND a.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol = new ExprColumn(ti, "numUnmappedReads", sql, JdbcType.INTEGER, ti.getColumn("rowid"));
+            newCol.setLabel("# Unmapped Reads");
+            ti.addColumn(newCol);
+
+            //total reads
+            SQLFragment sql2 = new SQLFragment("(select SUM(a.total) from sequenceanalysis.alignment_summary a WHERE a.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol2 = new ExprColumn(ti, "totalReads", sql2, JdbcType.INTEGER, ti.getColumn("rowid"));
+            newCol2.setLabel("Total Reads");
+            ti.addColumn(newCol2);
+
+            //pct unmapped
+            SQLFragment sql3 = new SQLFragment("(select CASE WHEN SUM(a.total) > 0 THEN CAST(SUM(CASE WHEN j.alignment_id is null THEN a.total ELSE 0 END) as DOUBLE PRECISION) / CAST(SUM(a.total) as DOUBLE PRECISION) ELSE NULL END from sequenceanalysis.alignment_summary a left join sequenceanalysis.alignment_summary_junction j ON (a.rowid = j.alignment_id AND a.analysis_id = j.analysis_id) WHERE a.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol3 = new ExprColumn(ti, "pctUnmappedReads", sql3, JdbcType.DOUBLE, ti.getColumn("rowid"));
+            newCol3.setLabel("% Unmapped Reads");
+            newCol3.setFormat("#.##%");
+            ti.addColumn(newCol3);
+        }
+
+        addAssayFieldsToAnalyses(ti);
+    }
+
+    private void addAssayFieldsToAnalyses(AbstractTableInfo ti)
+    {
         if (ti.getColumn("numCachedResults") == null)
         {
             AssayProvider ap = AssayService.get().getProvider("Genotype Assay");
@@ -69,28 +96,6 @@ public class GeneticsTableCustomizer extends AbstractTableCustomizer implements 
             newCol2.setLabel("# Cached Haplotypes");
             newCol2.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=assay." + ap.getName().replaceAll(" ", "") + "." + protocols.get(0).getName() + "&query.queryName=data&query.analysisId~eq=${rowid}", (ti.getUserSchema().getContainer().isWorkbook() ? ti.getUserSchema().getContainer().getParent() : ti.getUserSchema().getContainer())));
             ti.addColumn(newCol2);
-        }
-
-        if (ti.getColumn("numUnmappedReads") == null)
-        {
-            //# unmapped
-            SQLFragment sql = new SQLFragment("(select SUM(a.total) from sequenceanalysis.alignment_summary a left join sequenceanalysis.alignment_summary_junction j ON (a.rowid = j.alignment_id AND a.analysis_id = j.analysis_id) WHERE j.alignment_id is null AND a.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
-            ExprColumn newCol = new ExprColumn(ti, "numUnmappedReads", sql, JdbcType.INTEGER, ti.getColumn("rowid"));
-            newCol.setLabel("# Unmapped Reads");
-            ti.addColumn(newCol);
-
-            //total reads
-            SQLFragment sql2 = new SQLFragment("(select SUM(a.total) from sequenceanalysis.alignment_summary a WHERE a.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
-            ExprColumn newCol2 = new ExprColumn(ti, "totalReads", sql2, JdbcType.INTEGER, ti.getColumn("rowid"));
-            newCol2.setLabel("Total Reads");
-            ti.addColumn(newCol2);
-
-            //pct unmapped
-            SQLFragment sql3 = new SQLFragment("(select CAST(SUM(CASE WHEN j.alignment_id is null THEN a.total ELSE 0 END) as DOUBLE PRECISION) / CAST(SUM(a.total) as DOUBLE PRECISION) from sequenceanalysis.alignment_summary a left join sequenceanalysis.alignment_summary_junction j ON (a.rowid = j.alignment_id AND a.analysis_id = j.analysis_id) WHERE a.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
-            ExprColumn newCol3 = new ExprColumn(ti, "pctUnmappedReads", sql3, JdbcType.DOUBLE, ti.getColumn("rowid"));
-            newCol3.setLabel("% Unmapped Reads");
-            newCol3.setFormat("#.##%");
-            ti.addColumn(newCol3);
         }
     }
 

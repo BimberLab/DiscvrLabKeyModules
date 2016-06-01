@@ -29,14 +29,16 @@ import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.search.SearchService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
 import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
-import org.labkey.sequenceanalysis.analysis.CoverageDepthHandler;
+import org.labkey.sequenceanalysis.analysis.CombineStarGeneCountsHandler;
 import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
@@ -73,11 +75,11 @@ import org.labkey.sequenceanalysis.run.bampostprocessing.CleanSamStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.FixMateInformationStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.IndelRealignerStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.MarkDuplicatesStep;
+import org.labkey.sequenceanalysis.run.bampostprocessing.MarkDuplicatesWithMateCigarStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.RecalibrateBamStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.RnaSeQCStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SplitNCigarReadsStep;
-import org.labkey.sequenceanalysis.run.preprocessing.BlastFilterPipelineStep;
 import org.labkey.sequenceanalysis.run.preprocessing.CutadaptWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.DownsampleFastqWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
@@ -108,7 +110,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.299;
+        return 12.300;
     }
 
     public boolean hasScripts()
@@ -160,7 +162,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.MaxInfoTrimmingProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.AdapterTrimmingProvider());
         SequencePipelineService.get().registerPipelineStep(new CutadaptWrapper.Provider());
-        //temporarily disable
         //SequencePipelineService.get().registerPipelineStep(new BlastFilterPipelineStep.Provider());
 
         //ref library
@@ -192,6 +193,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new FixMateInformationStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new IndelRealignerStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MarkDuplicatesStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new MarkDuplicatesWithMateCigarStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new RecalibrateBamStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SortSamStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SplitNCigarReadsStep.Provider());
@@ -209,7 +211,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
-        SequenceAnalysisService.get().registerFileHandler(new CoverageDepthHandler());
+        //SequenceAnalysisService.get().registerFileHandler(new CoverageDepthHandler());
         SequenceAnalysisService.get().registerFileHandler(new GenotypeGVCFHandler());
         //SequenceAnalysisService.get().registerFileHandler(new AlignmentMetricsHandler());
         SequenceAnalysisService.get().registerFileHandler(new UnmappedSequenceBasedGenotypeHandler());
@@ -218,6 +220,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new BamCleanupHandler());
         SequenceAnalysisService.get().registerFileHandler(new HaplotypeCallerHandler());
         SequenceAnalysisService.get().registerFileHandler(new RnaSeqcHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CombineStarGeneCountsHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));
@@ -274,6 +277,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SystemMaintenance.addTask(new SequenceAnalysisMaintenanceTask());
 
         ExperimentService.get().registerExperimentDataHandler(new HtmlExpDataHandler());
+
+        ServiceRegistry.get(SearchService.class).addDocumentParser(new SequenceNoOpDocumentParser());
     }
 
     @Override

@@ -18,11 +18,13 @@ package org.labkey.api.sequenceanalysis.pipeline;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.Pair;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -57,6 +59,10 @@ public interface TaskFileManager
     public void addIntermediateFile(File f);
 
     public void addIntermediateFiles(Collection<File> files);
+
+    public void addPicardMetricsFiles(List<PipelineStepOutput.PicardMetricsOutput> files) throws PipelineJobException;
+
+    public void writeMetricsToDb(Map<Integer, Integer> readsetMap, Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap) throws PipelineJobException;
 
     public void deleteIntermediateFiles() throws PipelineJobException;
 

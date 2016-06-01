@@ -68,7 +68,7 @@ public class FixBAMWrapper extends PicardWrapper
         return cleanedFile;
     }
 
-    protected String getTooName()
+    protected String getToolName()
     {
         throw new UnsupportedOperationException("This tool does not have a standalone JAR");
     }

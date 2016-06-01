@@ -401,6 +401,8 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 normalizedGroups.add(fg);
             }
 
+            getJob().getLogger().debug("total file groups: " + normalizedGroups.size());
+
             SequenceAnalysisJob pipelineJob = getJob().getJobSupport(SequenceAnalysisJob.class);
             List<SequenceReadsetImpl> readsets = pipelineJob.getCachedReadsetModels();
 
@@ -419,6 +421,11 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                         {
                             readsetsForGroup.add(rs);
                         }
+                    }
+
+                    if (readsetsForGroup.isEmpty())
+                    {
+                        getJob().getLogger().warn("no readsets found for group: " + fg);
                     }
 
                     RecordedAction barcodeAction = new RecordedAction(BARCODE_ACTIONNAME);
@@ -519,17 +526,21 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     File detailLog = barcoder.getDetailedLogFile();
                     if (detailLog != null && detailLog.exists())
                     {
+                        getJob().getLogger().debug("compressing detailed barcode log");
                         File detailLogCompressed = Compress.compressGzip(detailLog);
                         getHelper().getFileManager().addOutput(barcodeAction, "Barcode Log", detailLogCompressed);
                         detailLog.delete();
+                        getJob().getLogger().debug("compressed size: " + FileUtils.byteCountToDisplaySize(detailLogCompressed.length()));
                     }
 
                     File summaryLog = barcoder.getSummaryLogFile();
                     if (summaryLog != null && summaryLog.exists())
                     {
+                        getJob().getLogger().debug("compressing summary barcode log");
                         File summaryLogCompressed = Compress.compressGzip(summaryLog);
                         getHelper().getFileManager().addOutput(barcodeAction, "Barcode Log", summaryLogCompressed);
                         summaryLog.delete();
+                        getJob().getLogger().debug("compressed size: " + FileUtils.byteCountToDisplaySize(summaryLogCompressed.length()));
                     }
 
                     getHelper().getFileManager().addFinalOutputFiles(outputs);
@@ -577,6 +588,12 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                             getJob().getLogger().debug("readset: " + rs.getName() + ", " + rd.size() + " file pairs");
                         }
                     }
+
+                    if (rd.isEmpty())
+                    {
+                        getJob().getLogger().warn("no file groups found ofr rs: " + rs.getName() + " with fileGroupId: " + rs.getFileSetName());
+                    }
+
                     rs.setReadData(rd);
                 }
             }
@@ -616,7 +633,14 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     File zip = new File(f.getParentFile(), runner.getExpectedBasename(f) + "_fastqc.zip");
 
                     _taskHelper.getFileManager().addOutput(fqAction, "FASTQC Report", fq);
-                    _taskHelper.getFileManager().addOutput(fqAction, "FASTQC Output", zip);
+                    if (zip.exists())
+                    {
+                        _taskHelper.getFileManager().addOutput(fqAction, "FASTQC Output", zip);
+                    }
+                    else
+                    {
+                        getJob().getLogger().error("zip not found: " + zip.getPath());
+                    }
 
                     fqAction.setEndTime(new Date());
                     actions.add(fqAction);

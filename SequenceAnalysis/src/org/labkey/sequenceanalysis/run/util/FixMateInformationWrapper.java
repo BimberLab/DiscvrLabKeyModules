@@ -34,7 +34,7 @@ public class FixMateInformationWrapper extends PicardWrapper
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getPicardJar().getPath());
-        params.add(getTooName());
+        params.add(getToolName());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
         inferMaxRecordsInRam(params);
         params.add("INPUT=" + inputFile.getPath());
@@ -52,7 +52,7 @@ public class FixMateInformationWrapper extends PicardWrapper
         return expectedOut;
     }
 
-    protected String getTooName()
+    protected String getToolName()
     {
         return "FixMateInformation";
     }

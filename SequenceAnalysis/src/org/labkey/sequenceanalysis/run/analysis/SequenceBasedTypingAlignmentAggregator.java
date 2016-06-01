@@ -82,8 +82,11 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     private Set<String> _uniqueReads = new HashSet<>();
     private Map<String, Set<String>> _alignmentsByReadM1 = new HashMap<>();
     private Map<String, Set<String>> _alignmentsByReadM2 = new HashMap<>();
+    private int _forwardAlignmentsDiscardedBySnps = 0;
+    private int _reverseAlignmentsDiscardedBySnps = 0;
 
     private Set<String> _unaligned = new HashSet<>();
+    private Set<String> _unmappedWithMappedMate = new HashSet<>();
     //private Set<String> _mappedWithoutHits = new HashSet<>();
     private int _totalAlignmentsInspected = 0;
     private int _maxSNPs = 0;
@@ -93,6 +96,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     private int _alignmentsIncludingDiscardedSnps = 0;
     private int _alignmentsHelpedByMate = 0;
     private int _alignmentsHelpedByAlleleFilters = 0;
+    private int _secondarySupplementary = 0;
 
     private int _pairsWithoutSharedHits = 0;
     private int _singletonCalls = 0;
@@ -140,12 +144,20 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi)
     {
         _uniqueReads.add(record.getReadName());
+        if (record.isSecondaryOrSupplementary())
+        {
+            _secondarySupplementary++;
+        }
 
         if (record.getReferenceName().equals(SAMRecord.NO_ALIGNMENT_REFERENCE_NAME) || record.getReadUnmappedFlag())
         {
             if (!record.getReadPairedFlag() || record.getMateUnmappedFlag())
             {
                 _unaligned.add(record.getReadName());
+            }
+            else
+            {
+                _unmappedWithMappedMate.add(record.getReadName());
             }
         }
         else
@@ -181,6 +193,17 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 else
                 {
                     appendAlignment(record, ref, _alignmentsByReadM2);
+                }
+            }
+            else
+            {
+                if (!record.getReadPairedFlag() || record.getFirstOfPairFlag())
+                {
+                    _forwardAlignmentsDiscardedBySnps++;
+                }
+                else
+                {
+                    _reverseAlignmentsDiscardedBySnps++;
                 }
             }
         }
@@ -294,12 +317,13 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         for (String readName : _alignmentsByReadM1.keySet())
         {
             List<String> refNames = new ArrayList(_alignmentsByReadM1.get(readName));
+            List<String> refNames2 = null;
 
             //if this read has an aligned mate, we find the intersect between its alignments
             Boolean hasMate = false;
             if (_alignmentsByReadM2.containsKey(readName))
             {
-                List<String> refNames2 = new ArrayList<>(_alignmentsByReadM2.get(readName));
+                refNames2 = new ArrayList<>(_alignmentsByReadM2.get(readName));
 
                 // note: if reverse read has no alignments, skip this optimization
                 // it will only pass if we have onlyImportValidPairs=false
@@ -307,7 +331,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 {
                     int originalSize = refNames.size();
                     refNames.retainAll(refNames2);
-                    if (refNames.size() > 0)
+                    if (!refNames.isEmpty())
                     {
                         if (refNames.size() != originalSize)
                         {
@@ -338,15 +362,28 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                     appendReadToTotals(readName, refNames, totals, true, hasMate);
 
                     if (hasMate)
+                    {
                         _pairedCalls++;
+                    }
                     else
+                    {
                         _singletonCalls++;
+                        if (writer != null)
+                        {
+                            writer.writeNext(new String[]{"Singleton", readName, StringUtils.join(refNames, ";"), (refNames2 == null ? "N/A" : StringUtils.join(refNames2, ";"))});
+                        }
+                    }
                 }
                 else
                 {
                     _rejectedSingletons++;
                     _unaligned.add(readName);
                     //_mappedWithoutHits.add(readName);
+
+                    if (writer != null)
+                    {
+                        writer.writeNext(new String[]{"Singleton", readName, StringUtils.join(refNames, ";"), (refNames2 == null ? "N/A" : StringUtils.join(refNames2, ";"))});
+                    }
                 }
             }
             else
@@ -368,11 +405,20 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 {
                     appendReadToTotals(mateName, refNames, totals, false, true);
                     _singletonCalls++;
+                    if (writer != null)
+                    {
+                        writer.writeNext(new String[]{"Singleton", mateName, "N/A", StringUtils.join(refNames, ";")});
+                    }
                 }
                 else
                 {
                     _unaligned.add(mateName);
                     //_mappedWithoutHits.add(mateName);
+
+                    if (writer != null)
+                    {
+                        writer.writeNext(new String[]{"Singleton", mateName, "N/A", StringUtils.join(refNames, ";")});
+                    }
                 }
             }
             else
@@ -388,13 +434,16 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 Collections.sort(names);
                 for (String refName : names)
                 {
-                    writer.writeNext(new String[]{"Reverse", mateName, String.valueOf(_alignmentsByReadM2.get(mateName).size()), String.valueOf(refNames.size()), refName, String.valueOf(refNames.contains(refName))});
+                    writer.writeNext(new String[]{"Reverse", mateName, String.valueOf(_alignmentsByReadM2.get(mateName).size()), String.valueOf(refNames.size()), refName, String.valueOf(refNames.contains(refName)), ""});
                 }
             }
         }
 
         getLogger().info("\talignments helped using paired read: " + _alignmentsHelpedByMate);
-        getLogger().info("\trejected singleton reads: " + _rejectedSingletons);
+        if (_onlyImportValidPairs)
+        {
+            getLogger().info("\tread pairs rejected because they lack a valid pair: " + _rejectedSingletons);
+        }
 
         return totals;
     }
@@ -666,17 +715,21 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
         getLogger().info("Saving SBT Results");
         getLogger().info("\tTotal alignments inspected: " + _totalAlignmentsInspected);
+        getLogger().info("\tSecondary or supplementary alignments inspected: " + _secondarySupplementary);
         getLogger().info("\tTotal reads inspected: " + _uniqueReads.size());
 
         getLogger().info("\tAlignments discarded due to short length: " + _shortAlignments);
         getLogger().info("\tAlignments retained (lacking high quality SNPs): " + _acceptedAlignments.size());
         getLogger().info("\tAlignments discarded (due to presence of high quality SNPs): " + (_totalAlignmentsInspected - _acceptedAlignments.size()));
+        getLogger().info("\tForward Alignments Discarded Due To SNPs: " + _forwardAlignmentsDiscardedBySnps);
+        getLogger().info("\tReverse Alignments Discarded Due To SNPs: " + _reverseAlignmentsDiscardedBySnps);
         getLogger().info("\tAlignments retained that contained low qual SNPs (thse may have been discarded for other factors): " + _alignmentsIncludingDiscardedSnps);
         getLogger().info("\tReferences with at least 1 aligned read (these may get filtered out downstream): " + _distinctReferences.size());
         getLogger().info("\tReferences disallowed due to read count filters: " + _skippedReferencesByRead);
         getLogger().info("\tReferences disallowed due to percent filters: " + _skippedReferencesByPct);
 
         getLogger().info("\tReads with no alignments: " + _unaligned.size());
+        getLogger().info("\tReads unmapped with a mate mapped: " + _unmappedWithMappedMate.size());
         //getLogger().info("\tMapped reads without passing hits: " + _mappedWithoutHits.size());
         getLogger().info("\tSingleton or First Mate Reads with at least 1 alignment that passed thresholds: " + _alignmentsByReadM1.keySet().size());
         getLogger().info("\tSecond Mate Reads with at least 1 alignment that passed thresholds: " + _alignmentsByReadM2.keySet().size());
@@ -698,7 +751,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         if (_onlyImportValidPairs)
         {
             getLogger().info("\tOnly alignments representing valid pairs will be included");
-            getLogger().info("\tAlignments rejected because they lacked a valid pair: " + _rejectedSingletons);
+            getLogger().info("\tRead pairs rejected because they lacked a valid pair: " + _rejectedSingletons + " (" + (100.0 * ((double) _rejectedSingletons / (double) _uniqueReads.size())) + "%)");
         }
 
         Set<String> allReadNames = new HashSet<>();

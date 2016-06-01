@@ -47,7 +47,7 @@ public class DownsampleSamWrapper extends PicardWrapper
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getPicardJar().getPath());
-        params.add(getTooName());
+        params.add(getToolName());
         params.add("INPUT=" + file.getPath());
         params.add("OUTPUT=" + new File(getOutputDir(file), getOutputFilename(file)).getPath());
         params.add("PROBABILITY=" + pctRetained);
@@ -62,7 +62,7 @@ public class DownsampleSamWrapper extends PicardWrapper
     }
 
     @Override
-    protected String getTooName()
+    protected String getToolName()
     {
         return "DownsampleSam";
     }

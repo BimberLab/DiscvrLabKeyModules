@@ -1,19 +1,12 @@
 package org.labkey.sequenceanalysis.analysis;
 
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.Interval;
-import htsjdk.samtools.util.SamRecordIntervalIteratorFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
-import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
@@ -22,22 +15,21 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
-import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisTask;
+import org.labkey.sequenceanalysis.pipeline.PicardMetricsUtil;
 import org.labkey.sequenceanalysis.run.util.AlignmentSummaryMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWrapper;
-import picard.analysis.CollectAlignmentSummaryMetrics;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by bimber on 9/8/2014.
@@ -132,8 +124,8 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                 if (m != null)
                 {
                     job.getLogger().warn("processing analysis: " + m.getRowId());
+                    List<File> metricsFiles = new ArrayList<>();
 
-                    SequenceAnalysisTask.addMetricsForAnalysis(m, job.getLogger(), job.getContainer(), job.getUser(), outputDir);
                     RecordedAction action = new RecordedAction(getName());
                     action.addInput(o.getFile(), "Input BAM");
 
@@ -141,18 +133,38 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     if (mf.exists())
                     {
                         action.addOutput(mf, "Alignment Summary Metrics", false);
+                        metricsFiles.add(mf);
                     }
 
                     File mf2 = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics");
                     if (mf2.exists())
                     {
                         action.addOutput(mf2, "InsertSize Metrics", false);
+                        metricsFiles.add(mf2);
                     }
 
                     File mf3 = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".wgs.metrics");
                     if (mf3.exists())
                     {
                         action.addOutput(mf3, "WGS Metrics", false);
+                        metricsFiles.add(mf3);
+                    }
+
+                    TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
+                    for (File f : metricsFiles)
+                    {
+                        List<Map<String, Object>> lines = PicardMetricsUtil.processFile(f, job.getLogger());
+                        for (Map<String, Object> row : lines)
+                        {
+                            row.put("container", job.getContainer().getId());
+                            row.put("createdby", job.getUser().getUserId());
+                            row.put("created", new Date());
+                            row.put("readset", m.getReadset());
+                            row.put("analysis_id", m.getRowId());
+                            row.put("dataid", m.getAlignmentFile());
+
+                            Table.insert(job.getUser(), ti, row);
+                        }
                     }
 
                     actions.add(action);

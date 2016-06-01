@@ -55,7 +55,7 @@ public class BuildBamIndexWrapper extends PicardWrapper
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getPicardJar().getPath());
-        params.add(getTooName());
+        params.add(getToolName());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
         params.add("INPUT=" + file.getPath());
         params.add("OUTPUT=" + new File(getOutputDir(file), getOutputFilename(file)).getPath());
@@ -63,7 +63,7 @@ public class BuildBamIndexWrapper extends PicardWrapper
         return params;
     }
 
-    protected String getTooName()
+    protected String getToolName()
     {
         return "BuildBamIndex";
     }

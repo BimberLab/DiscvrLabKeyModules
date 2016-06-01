@@ -78,6 +78,12 @@ public class CompareVariantsHandler implements SequenceOutputHandler
     }
 
     @Override
+    public boolean useWorkbooks()
+    {
+        return true;
+    }
+
+    @Override
     public List<String> validateParameters(JSONObject params)
     {
         return null;

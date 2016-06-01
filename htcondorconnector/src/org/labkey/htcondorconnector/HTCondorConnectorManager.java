@@ -16,7 +16,11 @@
 
 package org.labkey.htcondorconnector;
 
+import org.apache.commons.beanutils.ConversionException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.labkey.api.data.ConvertHelper;
+import org.labkey.api.data.PropertyManager;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.RemoteExecutionEngine;
@@ -31,11 +35,17 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 
+import java.io.File;
+import java.util.Map;
+
 public class HTCondorConnectorManager
 {
     private static final HTCondorConnectorManager _instance = new HTCondorConnectorManager();
     private static final Logger _log = Logger.getLogger(HTCondorConnectorManager.class);
     private JobDetail _job = null;
+
+    public final static String CONFIG_PROPERTY_DOMAIN = "org.labkey.htcondorconnector.settings";
+    public final static String PREVENT_NEW_JOBS = "preventNewJobs";
 
     private HTCondorConnectorManager()
     {
@@ -119,6 +129,7 @@ public class HTCondorConnectorManager
                         try
                         {
                             ((HTCondorExecutionEngine) e).updateStatusForAll();
+                            ((HTCondorExecutionEngine) e).requeueBlockedJobs();
                         }
                         catch (PipelineJobException ex)
                         {
@@ -132,5 +143,39 @@ public class HTCondorConnectorManager
                 isRunning = false;
             }
         }
+    }
+
+    public void saveSettings(Map<String, String> props) throws IllegalArgumentException
+    {
+        PropertyManager.PropertyMap configMap = PropertyManager.getWritableProperties(HTCondorConnectorManager.CONFIG_PROPERTY_DOMAIN, true);
+
+        Boolean preventNewJobs = false;
+        String val = StringUtils.trimToNull(props.get(PREVENT_NEW_JOBS));
+        if (val != null)
+        {
+            try
+            {
+                preventNewJobs = ConvertHelper.convert(val, Boolean.class);
+            }
+            catch (ConversionException e)
+            {
+                _log.error("unable to parse value for htcondor preventNewJobs: " + val);
+            }
+        }
+
+        configMap.put(PREVENT_NEW_JOBS, preventNewJobs.toString());
+
+        configMap.save();
+    }
+
+    public boolean isPreventNewJobs()
+    {
+        PropertyManager.PropertyMap props = PropertyManager.getProperties(HTCondorConnectorManager.CONFIG_PROPERTY_DOMAIN);
+        if (props.containsKey(PREVENT_NEW_JOBS) && "true".equals(props.get(PREVENT_NEW_JOBS)))
+        {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -9,3 +9,8 @@ table.fileNames td {
 div.ddhover {
     background-color: #F4F4F4;
 }
+
+span.sequenceanalysis-snp:hover {
+    text-decoration: underline;
+    font-size: x-large;
+}

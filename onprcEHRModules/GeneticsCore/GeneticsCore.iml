@@ -11,6 +11,7 @@
     <orderEntry type="module" module-name="API" />
     <orderEntry type="module" module-name="LDK-API" />
     <orderEntry type="module" module-name="SequenceAnalysis-API" />
+    <orderEntry type="module" module-name="HTCondorConnector-API" />
   </component>
 </module>
 

@@ -9,7 +9,10 @@ import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
+import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
 
 import java.io.File;
 import java.lang.reflect.ParameterizedType;
@@ -191,5 +194,50 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         }
 
         return params;
+    }
+
+    @Override
+    public CommandWrapper getCommandWrapper(Logger log)
+    {
+        return new AbstractCommandWrapper(log){
+
+        };
+    }
+
+    @Override
+    public List<File> getSequenceJobInputFiles(PipelineJob job)
+    {
+        if (!(job instanceof SequenceAnalysisJob))
+        {
+            return null;
+        }
+
+        SequenceAnalysisJob pipelineJob = (SequenceAnalysisJob)job;
+        List<File> ret = new ArrayList<>();
+
+        List<SequenceReadsetImpl> readsets = pipelineJob.getCachedReadsetModels();
+        for (SequenceReadsetImpl rs : readsets)
+        {
+            //NOTE: because these jobs can be split, we only process the readsets we chose to include
+            if (pipelineJob.getReadsetIdToProcesss() != null && !pipelineJob.getReadsetIdToProcesss().contains(rs.getReadsetId()))
+            {
+                continue;
+            }
+
+            for (ReadDataImpl d : rs.getReadData())
+            {
+                if (d.getFile1() != null)
+                {
+                    ret.add(d.getFile1());
+                }
+
+                if (d.getFile2() != null)
+                {
+                    ret.add(d.getFile2());
+                }
+            }
+        }
+
+        return ret;
     }
 }

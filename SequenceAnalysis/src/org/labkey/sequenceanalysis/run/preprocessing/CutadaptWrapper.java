@@ -45,7 +45,7 @@ public class CutadaptWrapper extends AbstractCommandWrapper
     {
         public Provider()
         {
-            super("AdapterTrimming", "Adapter Trimming", "Cutadapt", "This provides the ability to trim adapters from the 5' and/or 3' end of the reads.  5' trimming will always be performed first, followed by a second round if 3' adapter trimming was selected.", Arrays.asList(
+            super("AdapterTrimming", "Adapter Trimming (Cutadapt)", "Cutadapt", "This provides the ability to trim adapters from the 5' and/or 3' end of the reads.  5' trimming will always be performed first, followed by a second round if 3' adapter trimming was selected.", Arrays.asList(
                     ToolParameterDescriptor.create(ADAPTERS, "Adapters", "", "sequenceanalysis-adapterpanel", null, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-O"), "overlapLength", "Overlap Length", "Minimum overlap length. If the overlap between the read and the adapter is shorter than LENGTH, the read is not modified.This reduces the no. of bases trimmed purely due to short random adapter matches", "ldk-integerfield", new JSONObject()
                     {{

@@ -50,7 +50,7 @@ public class CreateSequenceDictionaryWrapper extends PicardWrapper
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getPicardJar().getPath());
-        params.add(getTooName());
+        params.add(getToolName());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
         inferMaxRecordsInRam(params);
         params.add("REFERENCE=" + referenceFasta.getPath());
@@ -66,7 +66,7 @@ public class CreateSequenceDictionaryWrapper extends PicardWrapper
         return expected;
     }
 
-    protected String getTooName()
+    protected String getToolName()
     {
         return "CreateSequenceDictionary";
     }

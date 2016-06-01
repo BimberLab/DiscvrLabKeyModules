@@ -111,6 +111,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
             if (threads != null)
             {
                 args.add("--multicore"); //multi-threaded
+                threads = Math.min(10, threads); //we seem to have intermittent failures due to memory
                 args.add(threads.toString());
             }
 

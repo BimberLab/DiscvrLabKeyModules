@@ -107,7 +107,17 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                 handler: function(btn){
                     btn.up('window').close();
                 }
-            }]
+            }],
+            listeners: {
+                show: function(win){
+                    new Ext4.util.KeyNav(win.getEl(), {
+                        "enter" : function(e){
+                            win.onSubmit();
+                        },
+                        scope : this
+                    });
+                }
+            }
         });
 
         this.callParent(arguments);
@@ -160,7 +170,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
 
         var params = this.down('form').getForm().getValues();
 
-        Ext4.Msg.wait('Saving...');
+        Ext4.Msg.wait('Submitting...');
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler', this.containerPath),
             jsonData: {

@@ -32,6 +32,7 @@ import org.labkey.api.files.FileContentService;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -41,6 +42,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.jbrowse.model.Database;
 import org.labkey.jbrowse.model.JsonFile;
 
@@ -53,6 +55,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -411,7 +414,10 @@ public class JBrowseRoot
                 }
             }
 
-            List<Integer> trackIds = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_library_tracks"), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("library_id"), db.getLibraryId()), null).getArrayList(Integer.class);
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("library_id"), db.getLibraryId());
+            filter.addCondition(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK);
+
+            List<Integer> trackIds = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_library_tracks"), PageFlowUtil.set("rowid"), filter, null).getArrayList(Integer.class);
             getLogger().info("total tracks: " + trackIds.size());
             for (Integer trackId : trackIds)
             {
@@ -1309,8 +1315,12 @@ public class JBrowseRoot
         File indexFile = new File(inputFile.getPath() + ".idx");
         if (!indexFile.exists())
         {
-            getLogger().info("unable to find index file for VCF, creating");
-            indexFile = SequenceAnalysisService.get().ensureVcfIndex(inputFile, getLogger());
+            indexFile = new File(inputFile.getPath() + ".tbi");
+            if (!indexFile.exists())
+            {
+                getLogger().info("unable to find index file for VCF, creating");
+                indexFile = SequenceAnalysisService.get().ensureVcfIndex(inputFile, getLogger());
+            }
         }
 
         File targetFile = new File(outDir, inputFile.getName());
@@ -1443,7 +1453,7 @@ public class JBrowseRoot
 
     private String readFile(File file) throws IOException
     {
-        try (BufferedReader reader = new BufferedReader(new FileReader(file)))
+        try (BufferedReader reader = Readers.getReader(file))
         {
             String line;
             StringBuilder stringBuilder = new StringBuilder();
@@ -1476,7 +1486,7 @@ public class JBrowseRoot
     private void writeJsonToFile(File output, String json) throws IOException
     {
         getLogger().debug("writing json to file: " + output.getPath());
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(output)))
+        try (PrintWriter writer = PrintWriters.getPrintWriter(output))
         {
             writer.write(json.equals("{}") ? "" : json);
         }

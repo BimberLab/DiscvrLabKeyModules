@@ -123,7 +123,7 @@ public class MergeSamFilesWrapper extends PicardWrapper
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getPicardJar().getPath());
-        params.add(getTooName());
+        params.add(getToolName());
 
         for (File f : files)
         {
@@ -137,7 +137,7 @@ public class MergeSamFilesWrapper extends PicardWrapper
         return params;
     }
 
-    protected String getTooName()
+    protected String getToolName()
     {
         return "MergeSamFiles";
     }

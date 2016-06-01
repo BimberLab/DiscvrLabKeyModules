@@ -38,18 +38,18 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 fields: [
                     {name: 'fileGroupId', allowBlank: false},
                     {name: 'readset', allowBlank: false},
-                    {name: 'readsetname'},
-                    {name: 'barcode5'},
-                    {name: 'barcode3'},
+                    {name: 'readsetname', useNull: true},
+                    {name: 'barcode5', useNull: true},
+                    {name: 'barcode3', useNull: true},
                     {name: 'platform', allowBlank: false},
                     {name: 'application', allowBlank: false},
-                    {name: 'librarytype'},
-                    {name: 'sampletype'},
-                    {name: 'subjectid'},
-                    {name: 'sampledate'},
-                    {name: 'comments'},
-                    {name: 'sampleid'},
-                    {name: 'instrument_run_id'}
+                    {name: 'librarytype', useNull: true},
+                    {name: 'sampletype', useNull: true},
+                    {name: 'subjectid', useNull: true},
+                    {name: 'sampledate', type: 'date'},
+                    {name: 'comments', useNull: true},
+                    {name: 'sampleid', useNull: true},
+                    {name: 'instrument_run_id', type: 'int', useNull: true}
                 ],
                 validations: [
                     {type: 'presence', field: 'fileGroupId'},

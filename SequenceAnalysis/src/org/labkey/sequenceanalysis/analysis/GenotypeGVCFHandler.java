@@ -94,6 +94,8 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
             {
                 genomeIds.add(so.getLibrary_id());
                 inputVcfs.add(so.getFile());
+
+                action.addInput(so.getFile(), "Input gVCF");
             }
 
             if (genomeIds.size() > 1)
@@ -137,6 +139,9 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
             {
                 toolParams.add("--includeNonVariantSites");
             }
+
+            toolParams.add("-A");
+            toolParams.add("FractionInformativeReads");
 
             wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcfs.toArray(new File[inputVcfs.size()]));
             action.addOutput(outputVcf, "VCF", outputVcf.exists(), true);

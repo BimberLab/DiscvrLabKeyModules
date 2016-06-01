@@ -77,9 +77,12 @@ import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.HttpView;
+import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.UnauthorizedException;
+import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.ClientDependency;
+import org.labkey.api.view.template.PageConfig;
 import org.labkey.laboratory.assay.AssayHelper;
 import org.labkey.laboratory.query.ContainerIncrementingTable;
 import org.labkey.laboratory.query.WorkbookModel;
@@ -2343,6 +2346,28 @@ public class LaboratoryController extends SpringActionController
         public void setReverseOrder(Boolean reverseOrder)
         {
             this.reverseOrder = reverseOrder;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class DataBrowserAction extends SimpleViewAction<Object>
+    {
+        @Override
+        public ModelAndView getView(Object form, BindException errors) throws Exception
+        {
+            JspView<Object> view = new JspView<>("/org/labkey/laboratory/view/dataBrowser.jsp", form);
+            view.setTitle("Data Browser");
+            view.setHidePageTitle(true);
+            //view.setFrame(WebPartView.FrameType.NONE);
+            //getPageConfig().setTemplate(PageConfig.Template.None);
+
+            return view;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root.addChild("Data Browser");
         }
     }
 }

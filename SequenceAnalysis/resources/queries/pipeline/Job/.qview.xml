@@ -6,7 +6,7 @@
         <column name="ActiveHostName"/>
         <column name="Created" />
         <column name="CreatedBy" />
-        <column name="Container"/>
+        <column name="Folder"/>
     </columns>
     <sorts>
         <sort column="Created" descending="true"/>

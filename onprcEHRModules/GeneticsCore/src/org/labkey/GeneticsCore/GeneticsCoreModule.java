@@ -23,8 +23,11 @@ import org.labkey.GeneticsCore.button.PublishSBTHaplotypesButton;
 import org.labkey.GeneticsCore.button.PublishSBTResultsButton;
 import org.labkey.GeneticsCore.button.SBTReviewButton;
 import org.labkey.GeneticsCore.notification.GeneticsCoreNotification;
+import org.labkey.GeneticsCore.pipeline.BlastPipelineJobResourceAllocator;
+import org.labkey.GeneticsCore.pipeline.SequenceJobResourceAllocator;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.htcondorconnector.HTCondorService;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
@@ -87,6 +90,9 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
         LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "alignment_summary_grouped");
 
         SequenceAnalysisService.get().registerFileHandler(new MethylationRateComparison());
+
+        HTCondorService.get().registerResourceAllocator(new BlastPipelineJobResourceAllocator());
+        HTCondorService.get().registerResourceAllocator(new SequenceJobResourceAllocator());
     }
 
     @Override

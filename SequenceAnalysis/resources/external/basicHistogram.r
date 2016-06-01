@@ -12,6 +12,8 @@ library(naturalsort)
 library(getopt);
 library(Matrix);
 
+options(scipen=1000000000)
+
 spec <- matrix(c(
     'inputFile', 'i', 1, "character",
     'outputFile', 'o', 1, "character",

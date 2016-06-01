@@ -1,25 +1,27 @@
 package org.labkey.laboratory;
 
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.module.SimpleModuleContainerListener;
 import org.labkey.api.query.BatchValidationException;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.view.HttpView;
 import org.labkey.laboratory.query.LaboratoryWorkbooksTable;
+import org.labkey.laboratory.query.WorkbookModel;
 
 import java.beans.PropertyChangeEvent;
-import java.util.Collection;
-import java.util.Collections;
 
 /**
  * User: bimber
@@ -35,6 +37,7 @@ public class LaboratoryContainerListener extends SimpleModuleContainerListener
         super(owner);
     }
 
+    @Override
     public void containerCreated(Container c, User user)
     {
         super.containerCreated(c, user);
@@ -72,11 +75,34 @@ public class LaboratoryContainerListener extends SimpleModuleContainerListener
         }
     }
 
-    @NotNull
     @Override
-    public Collection<String> canMove(Container c, Container newParent, User user)
+    public void containerMoved(Container c, Container oldParent, User u)
     {
-        return Collections.emptyList();
+        super.containerMoved(c, oldParent, u);
+
+        if (c.isWorkbook())
+        {
+            //determine if we have a record of this workbook, and delete if true:
+            TableInfo ti = LaboratorySchema.getInstance().getTable(LaboratorySchema.TABLE_WORKBOOKS);
+            TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString(LaboratoryWorkbooksTable.WORKBOOK_COL), c.getId()), null);
+            if (ts.exists())
+            {
+                Table.delete(ti, c.getId());
+            }
+
+            //then re-register
+            if (c.getActiveModules().contains(ModuleLoader.getInstance().getModule(LaboratoryModule.class)))
+            {
+                try
+                {
+                    LaboratoryManager.get().initLaboratoryWorkbook(c, u);
+                }
+                catch (Exception e)
+                {
+                    _log.error("Unable to init laboratory workbook", e);
+                }
+            }
+        }
     }
 
     @Override
@@ -84,7 +110,33 @@ public class LaboratoryContainerListener extends SimpleModuleContainerListener
     {
         super.propertyChange(evt);
 
-        if (evt.getPropertyName().equals(ContainerManager.Property.Policy.name()))
+        if (evt.getPropertyName().equals(ContainerManager.Property.Name.name()))
+        {
+            if (evt instanceof ContainerManager.ContainerPropertyChangeEvent)
+            {
+                ContainerManager.ContainerPropertyChangeEvent ce = (ContainerManager.ContainerPropertyChangeEvent) evt;
+                if (ce.container.isWorkbook())
+                {
+                    TableInfo ti = LaboratorySchema.getInstance().getTable(LaboratorySchema.TABLE_WORKBOOKS);
+                    TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString(LaboratoryWorkbooksTable.WORKBOOK_COL), ce.container.getId()), null);
+                    if (ts.exists())
+                    {
+                        try
+                        {
+                            Integer rowId = Integer.parseInt(ce.container.getName());
+                            WorkbookModel w = ts.getObject(ce.container.getId(), WorkbookModel.class);
+                            w.setWorkbookId(rowId);
+                            Table.update(ce.user, ti, w, ce.container.getId());
+                        }
+                        catch (NumberFormatException e)
+                        {
+
+                        }
+                    }
+                }
+            }
+        }
+        else if (evt.getPropertyName().equals(ContainerManager.Property.Policy.name()))
         {
             if (evt instanceof ContainerManager.ContainerPropertyChangeEvent)
             {

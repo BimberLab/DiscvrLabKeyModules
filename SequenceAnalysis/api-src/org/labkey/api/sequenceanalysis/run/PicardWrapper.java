@@ -33,10 +33,10 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
     public String getVersion() throws PipelineJobException
     {
         List<String> params = new LinkedList<>();
-        params.add("java");
+        params.add(SequencePipelineService.get().getJavaFilepath());
         params.add("-jar");
         params.add(getPicardJar().getPath());
-        params.add(getTooName());
+        params.add(getToolName());
         params.add("--version");
 
         boolean origWarn = isWarnNonZeroExits();
@@ -80,7 +80,7 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         _stringency = stringency;
     }
 
-    abstract protected String getTooName();
+    abstract protected String getToolName();
 
     protected void inferMaxRecordsInRam(List<String> args)
     {

@@ -68,6 +68,12 @@ public class MethylationRateComparison implements SequenceOutputHandler
     }
 
     @Override
+    public boolean useWorkbooks()
+    {
+        return true;
+    }
+
+    @Override
     public Module getOwningModule()
     {
         return ModuleLoader.getInstance().getModule(GeneticsCoreModule.class);

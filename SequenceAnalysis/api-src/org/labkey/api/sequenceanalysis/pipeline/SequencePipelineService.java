@@ -20,6 +20,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 
 import java.io.File;
 import java.util.List;
@@ -65,4 +66,8 @@ abstract public class SequencePipelineService
     abstract public String getJavaFilepath();
 
     abstract public List<String> getJavaOpts();
+
+    abstract public CommandWrapper getCommandWrapper(Logger log);
+
+    abstract public List<File> getSequenceJobInputFiles(PipelineJob job);
 }

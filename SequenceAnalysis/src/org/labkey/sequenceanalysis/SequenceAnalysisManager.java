@@ -277,7 +277,7 @@ public class SequenceAnalysisManager
         }
 
         File samJar = new File(webappDir, "WEB-INF/lib");
-        samJar = new File(samJar, "htsjdk-1.138.jar");
+        samJar = new File(samJar, "htsjdk-2.2.4.jar");
         if (!samJar.exists())
             throw new RuntimeException("Not found: " + samJar.getPath());
 

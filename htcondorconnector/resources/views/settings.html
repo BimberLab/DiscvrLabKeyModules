@@ -1,0 +1,104 @@
+<script type="text/javascript">
+
+Ext4.onReady(function (){
+
+    if (LABKEY.Security.currentUser.isAdmin){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.QuickTips.init();
+        Ext4.define('HTCondor.panel.SettingsPanel', {
+            extend: 'Ext.form.Panel',
+            alias: 'widget.htcondor-settingspanel',
+            initComponent: function(){
+                Ext4.apply(this, {
+                    border: false,
+                    items: [{
+                        html: 'This page allows site-level administration of the HTCondorConnector module.  For full instructions on configuring this module, <a href="' + LABKEY.ActionURL.buildURL('htcondorconnector', 'begin') + '">click here</a>',
+                        border: false,
+                        style: 'padding-bottom: 10px;'
+                    },{
+                        border: false,
+                        itemId: 'settings',
+                        items: [{
+                            html: 'Loading...',
+                            border: false
+                        }]
+                    }]
+                });
+
+                this.loadData();
+                this.callParent();
+            },
+
+            loadData: function(){
+                LABKEY.Ajax.request({
+                    url: LABKEY.ActionURL.buildURL('htcondorconnector', 'getSettings', null),
+                    method : 'GET',
+                    scope: this,
+                    failure: LDK.Utils.getErrorCallback(),
+                    success: this.onLoad
+                });
+            },
+
+            onLoad: function(results){
+                var json = LDK.Utils.decodeHttpResponseJson(results);
+                var labelWidth = 140;
+                var width = 550;
+
+                var toAdd = [{
+                    xtype: 'checkbox',
+                    itemId: 'preventNewJobs',
+                    labelWidth: labelWidth,
+                    width: width,
+                    inputValue: json.config['preventNewJobs'] === 'true',
+                    fieldLabel: 'Prevent New Job Submission',
+                    helpPopup: 'If checked, any jobs submitted that would normally be sent to HTCondor will remain in the queue until unchecked.  This can be useful if for any reason the cluster needs to be taken down.',
+                    checked: json.config['preventNewJobs'] === 'true'
+                }];
+
+                var target = this.down('#settings');
+                target.removeAll();
+                target.add({
+                    xtype: 'form',
+                    border: false,
+                    bodyStyle: 'padding: 5px;',
+                    items: toAdd,
+                    buttonAlign: 'left',
+                    buttons: [{
+                        text: 'Save Settings',
+                        handler: this.onSubmit
+                    }]
+                });
+            },
+
+            onSubmit: function(btn){
+                var form = btn.up('form');
+                var fields = form.getForm().getFields();
+
+                var json = {};
+
+                fields.each(function(field){
+                    if (field.itemId)
+                        json[field.itemId] = field.getValue();
+                }, this);
+
+                LABKEY.Ajax.request({
+                    url: LABKEY.ActionURL.buildURL('htcondorconnector', 'setSettings', '/'),
+                    method : 'POST',
+                    params: json,
+                    scope: this,
+                    failure: LDK.Utils.getErrorCallback(),
+                    success: function(response){
+                        Ext4.Msg.alert('Success', 'Save Successful', function(){
+                            window.location.reload();
+                        });
+                    }
+                });
+            }
+        });
+
+        Ext4.create('HTCondor.panel.SettingsPanel', {}).render(webpart.wrapperDivId);
+    }
+});
+
+</script>

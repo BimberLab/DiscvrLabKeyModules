@@ -2,7 +2,10 @@ package org.labkey.sequenceanalysis.run.alignment;
 
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
@@ -14,6 +17,7 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -83,7 +87,14 @@ public class BWAMemWrapper extends BWAWrapper
     {
         public Provider()
         {
-            super("BWA-Mem", null, null, null, "http://bio-bwa.sourceforge.net/", true, true);
+            super("BWA-Mem", null, Arrays.asList(
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-a"), "outputAll", "Output All Hits", "Output all found alignments for single-end or unpaired paired-end reads. These alignments will be flagged as secondary alignments.", "checkbox", new JSONObject(){{
+                        put("checked", false);
+                    }}, true),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-M"), "markSplit", "Mark Shorter Hits As Secondary", "Mark shorter split hits as secondary (for Picard compatibility).", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true)
+            ), null, "http://bio-bwa.sourceforge.net/", true, true);
         }
 
         public BWAMemAlignmentStep create(PipelineContext context)

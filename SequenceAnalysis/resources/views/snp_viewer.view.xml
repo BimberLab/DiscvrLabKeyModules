@@ -8,5 +8,6 @@
         <dependency path="SequenceAnalysis/panel/snp_viewer.css"/>
         <dependency path="SequenceAnalysis/panel/SnpAlignmentConfigPanel.js"/>
         <dependency path="SequenceAnalysis/panel/SnpAlignmentPanel.js"/>
+        <dependency path="SequenceAnalysis/window/SnpDetailsWindow.js"/>
     </dependencies>
 </view>

@@ -67,14 +67,11 @@ public class MinorAlleleFrequency extends ChromosomeCounts {
         }
 
         Map<String, Object> attributeMap = new HashMap<>();
-        if (afVals.size() > 1)
+        if (!afVals.isEmpty())
         {
-            afVals.remove(0);  //ignore the reference
-
-            Double maf = Collections.max(afVals);
-            attributeMap.put(MAF_KEY, maf);
+            attributeMap.put(MAF_KEY, Collections.max(afVals));
         }
-        else if (afVals.size() == 1)
+        else
         {
             attributeMap.put(MAF_KEY, 0.0);
         }

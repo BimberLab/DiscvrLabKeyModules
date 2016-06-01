@@ -5,14 +5,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.util.FileType;
 import org.labkey.blast.model.BlastJob;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -128,7 +128,7 @@ public class BLASTWrapper
         execute(args, out);
     }
 
-    public File createDatabase(String dbName, String title, File fastaFile, File dbDir) throws IllegalArgumentException, IOException
+    public File createDatabase(String dbName, String title, File fastaFile, File dbDir, Logger log) throws IllegalArgumentException, IOException
     {
         File binDir = BLASTManager.get().getBinDir();
         if (binDir == null)
@@ -149,6 +149,19 @@ public class BLASTWrapper
         if (dbDir == null || !dbDir.exists())
         {
             throw new IllegalArgumentException("BLAST database dir does not exist.  This filepath is defined through the admin console.");
+        }
+
+        //delete any existing files from this DB
+        File[] preexistingFiles = dbDir.listFiles();
+        if (preexistingFiles != null)
+        {
+            for (File f : preexistingFiles)
+            {
+                if (f.getName().startsWith(dbName) && !f.getName().endsWith(".fasta"))
+                {
+                    f.delete();
+                }
+            }
         }
 
         List<String> args = new ArrayList<>();
@@ -178,10 +191,20 @@ public class BLASTWrapper
 
         execute(args, null);
 
-        File dbFile = new File(outFile.getParentFile(), outFile.getName() + ".nhr");
-        if (!dbFile.exists())
+        File[] files = dbDir.listFiles(new FilenameFilter()
         {
-            throw new IOException("Expected file not created: " + dbFile.getPath());
+            @Override
+            public boolean accept(File dir, String name)
+            {
+                return name.startsWith(dbName);
+            }
+        });
+
+        log.info("total files created: " + files.length);
+
+        if (files.length == 0)
+        {
+            throw new IOException("No files created");
         }
 
         //make index
@@ -205,10 +228,19 @@ public class BLASTWrapper
 
         execute(indexArgs, null);
 
-        File indexFile = new File(dbDir, dbName + ".00.idx");
-        if (!indexFile.exists())
+        File[] idxFiles = dbDir.listFiles(new FilenameFilter()
         {
-            throw new IOException("Expected file not created: " + indexFile.getPath());
+            @Override
+            public boolean accept(File dir, String name)
+            {
+                return name.startsWith(dbName) && name.endsWith(".idx");
+            }
+        });
+
+        log.info("total index files: " + idxFiles.length);
+        if (idxFiles.length == 0)
+        {
+            throw new IOException("Index files not created");
         }
 
         return outFile;
@@ -236,7 +268,7 @@ public class BLASTWrapper
             p = pb.start();
             if (out == null)
             {
-                try (BufferedReader procReader = new BufferedReader(new InputStreamReader(p.getInputStream())))
+                try (BufferedReader procReader = Readers.getReader(p.getInputStream()))
                 {
                     String line;
                     while ((line = procReader.readLine()) != null)

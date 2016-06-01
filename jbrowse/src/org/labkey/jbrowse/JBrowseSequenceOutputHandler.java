@@ -66,6 +66,12 @@ public class JBrowseSequenceOutputHandler implements SequenceOutputHandler
     }
 
     @Override
+    public boolean useWorkbooks()
+    {
+        return true;
+    }
+
+    @Override
     public boolean canProcess(SequenceOutputFile f)
     {
         return f.getFile() != null && JBrowseManager.get().canDisplayAsTrack(f.getFile());

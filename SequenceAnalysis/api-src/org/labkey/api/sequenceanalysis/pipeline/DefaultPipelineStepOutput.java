@@ -16,6 +16,7 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.Pair;
 
 import java.io.File;
@@ -33,6 +34,7 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
     private List<Pair<File, String>> _inputs = new ArrayList<>();
     private List<Pair<File, String>> _outputs = new ArrayList<>();
     private List<File> _intermediateFiles = new ArrayList<>();
+    private List<PicardMetricsOutput> _picardMetricsFiles = new ArrayList<>();
     private List<File> _deferredDeleteFiles = new ArrayList<>();
     private List<SequenceOutput> _sequenceOutputs = new ArrayList<>();
     private List<String> _commands = new ArrayList<>();
@@ -76,6 +78,12 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
     }
 
     @Override
+    public List<PicardMetricsOutput> getPicardMetricsFiles()
+    {
+        return Collections.unmodifiableList(_picardMetricsFiles);
+    }
+
+    @Override
     public List<File> getDeferredDeleteIntermediateFiles()
     {
         return Collections.unmodifiableList(_deferredDeleteFiles);
@@ -113,6 +121,16 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
             addOutput(file, role);
 
         _intermediateFiles.add(file);
+    }
+
+    public void addPicardMetricsFile(Readset rs, File metricFile, File inputFile)
+    {
+        _picardMetricsFiles.add(new PipelineStepOutput.PicardMetricsOutput(metricFile, inputFile, rs.getRowId()));
+    }
+
+    public void addPicardMetricsFile(Readset rs, File metricFile, PicardMetricsOutput.TYPE type)
+    {
+        _picardMetricsFiles.add(new PipelineStepOutput.PicardMetricsOutput(metricFile, type, rs.getRowId()));
     }
 
     public void addDeferredDeleteIntermediateFile(File file)

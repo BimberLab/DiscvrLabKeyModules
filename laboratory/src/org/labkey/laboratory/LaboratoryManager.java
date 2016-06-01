@@ -123,16 +123,15 @@ public class LaboratoryManager
             if (us != null)
             {
                 TableInfo ti = us.getTable(LaboratorySchema.TABLE_WORKBOOKS);
-
-                List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
-                Map<String, Object> row = new CaseInsensitiveHashMap<Object>();
-                rows.add(row);
-
-                BatchValidationException errors = new BatchValidationException();
-
                 TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString(LaboratoryWorkbooksTable.WORKBOOK_COL), c.getId()), null);
-                if (ts.getRowCount() == 0)
-                    ti.getUpdateService().insertRows(u, c, rows, errors, null, new HashMap<String, Object>());
+                if (!ts.exists())
+                {
+                    List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
+                    Map<String, Object> row = new CaseInsensitiveHashMap<>();
+                    rows.add(row);
+
+                    ti.getUpdateService().insertRows(u, c, rows, new BatchValidationException(), null, new HashMap<>());
+                }
             }
         }
     }

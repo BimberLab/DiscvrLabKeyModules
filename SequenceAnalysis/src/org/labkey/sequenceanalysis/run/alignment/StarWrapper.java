@@ -39,6 +39,8 @@ public class StarWrapper extends AbstractCommandWrapper
         super(logger);
     }
 
+    public static String LONG_READS = "longReads";
+
     public static class StarAlignmentStep extends AbstractCommandPipelineStep<StarWrapper> implements AlignmentStep
     {
         public StarAlignmentStep(PipelineStepProvider provider, PipelineContext ctx)
@@ -60,56 +62,63 @@ public class StarWrapper extends AbstractCommandWrapper
             StarWrapper wrapper = getWrapper();
 
             getPipelineCtx().getLogger().info("Aligning sample with STAR using two pass mode");
-            List<String> args1 = new ArrayList<>();
-            args1.add(wrapper.getExe().getPath());
+            List<String> args = new ArrayList<>();
+
+            Boolean longReads = getProvider().getParameterByName(LONG_READS).extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class);
+            if (longReads)
+            {
+                getPipelineCtx().getLogger().info("long reads were selected, using STARlong");
+            }
+
+            args.add(wrapper.getExe(longReads).getPath());
 
             if (!basename.endsWith("."))
             {
                 basename = basename + ".";
             }
 
-            args1.add("--outSAMtype");
-            args1.add("BAM");
-            args1.add("SortedByCoordinate");  //optional
+            args.add("--outSAMtype");
+            args.add("BAM");
+            args.add("SortedByCoordinate");  //optional
 
-            //args1.add("--outSAMunmapped");
+            //args.add("--outSAMunmapped");
 
-            args1.add("--genomeDir");
+            args.add("--genomeDir");
             File indexDir = referenceGenome.getAlignerIndexDir(getProvider().getName());
-            args1.add(indexDir.getPath());
+            args.add(indexDir.getPath());
 
-            args1.add("--twopassMode");
-            args1.add("Basic");
+            args.add("--twopassMode");
+            args.add("Basic");
 
-            args1.add("--outFileNamePrefix");
-            args1.add((new File(outputDirectory, basename)).getPath());
+            args.add("--outFileNamePrefix");
+            args.add((new File(outputDirectory, basename)).getPath());
 
-            args1.add("--outReadsUnmapped");
-            args1.add("Fastq");
+            args.add("--outReadsUnmapped");
+            args.add("Fastq");
 
             //  $RAW_DIR/$line\_R1.fastq.gz $RAW_DIR/$line\_R2.fastq.gz
-            args1.add("--readFilesIn");
-            args1.add(inputFastq1.getPath());
+            args.add("--readFilesIn");
+            args.add(inputFastq1.getPath());
             if (inputFastq2 != null)
             {
-                args1.add(inputFastq2.getPath());
+                args.add(inputFastq2.getPath());
             }
 
             FileType gz = new FileType(".gz");
             if (gz.isType(inputFastq1))
             {
-                args1.add("--readFilesCommand");
-                args1.add("zcat");
+                args.add("--readFilesCommand");
+                args.add("zcat");
             }
 
             Boolean stranded = getProvider().getParameterByName("stranded").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
             if (stranded)
             {
-                args1.add("--outSAMstrandField");
-                args1.add("intronMotif");
+                args.add("--outSAMstrandField");
+                args.add("intronMotif");
 
-                args1.add("--outFilterIntronMotifs");
-                args1.add("RemoveNoncanonicalUnannotated");
+                args.add("--outFilterIntronMotifs");
+                args.add("RemoveNoncanonicalUnannotated");
             }
 
             //GTF
@@ -119,8 +128,8 @@ public class StarWrapper extends AbstractCommandWrapper
                 File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class));
                 if (gtf.exists())
                 {
-                    args1.add("--sjdbGTFfile");
-                    args1.add(gtf.getPath());
+                    args.add("--sjdbGTFfile");
+                    args.add(gtf.getPath());
 
                     FileType gtfType = new FileType("gtf");
                     if (!gtfType.isType(gtf))
@@ -128,8 +137,8 @@ public class StarWrapper extends AbstractCommandWrapper
                         String parentTranscript = StringUtils.trimToNull(getProvider().getParameterByName("sjdbGTFtagExonParentTranscript").extractValue(getPipelineCtx().getJob(), getProvider(), String.class));
                         if (parentTranscript != null)
                         {
-                            args1.add("--sjdbGTFtagExonParentTranscript");
-                            args1.add(parentTranscript);
+                            args.add("--sjdbGTFtagExonParentTranscript");
+                            args.add(parentTranscript);
                         }
                         else
                         {
@@ -144,11 +153,11 @@ public class StarWrapper extends AbstractCommandWrapper
                 }
             }
 
-            args1.add("--quantMode");
-            args1.add("GeneCounts");
+            args.add("--quantMode");
+            args.add("GeneCounts");
 
-            addThreadArgs(args1);
-            getWrapper().execute(args1);
+            addThreadArgs(args);
+            getWrapper().execute(args);
 
             //check for output
             File out = new File(outputDirectory, basename + "Aligned.sortedByCoord.out.bam");
@@ -173,7 +182,7 @@ public class StarWrapper extends AbstractCommandWrapper
             //set permissions on directories.  it is possible we actually want to delete these
             if (SystemUtils.IS_OS_LINUX)
             {
-                List<String> dirs = Arrays.asList("._STARgenome", "._STARpass1", "._STARtmp");
+                List<String> dirs = Arrays.asList("_STARgenome", "_STARpass1", "_STARtmp");
                 for (String name : dirs)
                 {
                     File f = new File(outputDirectory, basename + name);
@@ -247,7 +256,7 @@ public class StarWrapper extends AbstractCommandWrapper
                 }
 
                 List<String> args = new ArrayList<>();
-                args.add(getWrapper().getExe().getPath());
+                args.add(getWrapper().getExe(false).getPath());
 
                 args.add("--runMode");
                 args.add("genomeGenerate");
@@ -305,6 +314,9 @@ public class StarWrapper extends AbstractCommandWrapper
                     put("width", 400);
                     put("allowBlank", false);
                 }}, null),
+                ToolParameterDescriptor.create(LONG_READS, "Reads >500bp", "If the reads are expected to exceed 500bp (per pair), this will use STARlong instead of STAR.", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, false),
                 ToolParameterDescriptor.create("sjdbGTFtagExonParentTranscript", "Exon Parent Transcript", "This is only required for GFF3 files.  It is the annotation used to assign exons to transcripts.  For GFF3 files this is usually Parent.  It will be ignored if a GTF file is used.", "textfield", null, "Parent"),
                 ToolParameterDescriptor.create("stranded", "Data Are Stranded?", "If checked, the following arguments will be added: --outSAMstrandField=intronMotif and --outFilterIntronMotifs=RemoveNoncanonicalUnannotated.", "checkbox", new JSONObject(){{
                     put("checked", true);
@@ -318,8 +330,8 @@ public class StarWrapper extends AbstractCommandWrapper
         }
     }
 
-    protected File getExe()
+    protected File getExe(boolean longReads)
     {
-        return SequencePipelineService.get().getExeForPackage("STARPATH", "STAR");
+            return SequencePipelineService.get().getExeForPackage("STARPATH", (longReads ? "STARlong" : "STAR"));
     }
 }

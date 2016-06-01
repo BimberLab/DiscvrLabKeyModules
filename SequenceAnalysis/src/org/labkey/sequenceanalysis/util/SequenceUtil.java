@@ -1,8 +1,6 @@
 package org.labkey.sequenceanalysis.util;
 
-import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
@@ -10,40 +8,40 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.BlockCompressedOutputStream;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
-import htsjdk.tribble.index.IndexFactory;
-import htsjdk.tribble.index.tabix.TabixFormat;
-import htsjdk.variant.vcf.VCFCodec;
-import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -69,7 +67,11 @@ public class SequenceUtil
         fastq(Arrays.asList(".fastq", ".fq"), true),
         fasta(".fasta"),
         bam(".bam"),
-        sff(".sff");
+        sff(".sff"),
+        gtf(".gtf"),
+        gff(".gff"),
+        bed(".bed"),
+        vcf(Arrays.asList(".vcf"), true);
 
         private List<String> _extensions;
         private boolean _allowGzip;
@@ -380,5 +382,49 @@ public class SequenceUtil
         {
             new BuildBamIndexWrapper(log).executeCommand(bam);
         }
+    }
+
+    public static void sortROD(File input, Logger log) throws IOException, PipelineJobException
+    {
+        log.info("sorting file: " + input.getPath());
+
+        boolean isCompressed = input.getPath().endsWith(".gz");
+        File sorted = new File(input.getParent(), "sorted.tmp");
+        try (PrintWriter writer = PrintWriters.getPrintWriter(sorted))
+        {
+            //copy header
+            try (BufferedReader reader = IOUtil.openFileForBufferedUtf8Reading(input))
+            {
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
+                    if (line.startsWith("#"))
+                    {
+                        writer.write(line + '\n');
+                    }
+                    else
+                    {
+                        //the first non-comment line means we left the header
+                        break;
+                    }
+                }
+            }
+
+            //then sort/append the records
+            CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
+            wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + input.getPath() + "' | grep -v '^#' | sort -k1,1 -k2,2n"), ProcessBuilder.Redirect.appendTo(sorted));
+        }
+
+        //replace the non-sorted output
+        input.delete();
+        if (isCompressed)
+        {
+            SequenceUtil.bgzip(sorted, input);
+        }
+        else
+        {
+            FileUtils.moveFile(sorted, input);
+        }
+        sorted.delete();
     }
 }

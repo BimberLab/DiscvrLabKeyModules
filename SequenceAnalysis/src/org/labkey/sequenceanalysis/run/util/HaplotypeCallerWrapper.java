@@ -74,6 +74,8 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
         {
             args.addAll(options);
         }
+        args.add("-A");
+        args.add("DepthPerSampleHC");
 
         if (_multiThreaded)
         {
@@ -132,7 +134,8 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
 
             List<String> args = new ArrayList<>();
             args.add(SequencePipelineService.get().getJavaFilepath());
-            args.addAll(SequencePipelineService.get().getJavaOpts());
+            //for now, ignore java opts since queue's scatter/gather causes issues
+            //args.addAll(SequencePipelineService.get().getJavaOpts());
             args.add("-classpath");
             args.add(getJAR().getPath());
 
@@ -154,6 +157,8 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
             {
                 args.addAll(options);
             }
+            args.add("-A");
+            args.add("DepthPerSampleHC");
 
             args.add("-startFromScratch");
             args.add("-scatterCount");

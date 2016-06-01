@@ -26,7 +26,7 @@ select
   sum(a.valid_pairs) as valid_pairs,
   max(a.total_reads) as total_reads_in_analysis,
   --max(a.loci_total_reads) as total_reads_in_analysis_from_locus,
-  round(100 * (cast(sum(a.total) as float) / cast(max(a.total_reads) as float)), 2) as percent,
+  CASE WHEN max(a.total_reads) = 0 THEN 0 ELSE round(100 * (cast(sum(a.total) as float) / cast(max(a.total_reads) as float)), 2) END as percent,
 --   case
 --     when (cast(sum(a.total) as float) / cast(max(a.total_reads) as float)) >= .04 THEN 'Major'
 --     else 'Minor'

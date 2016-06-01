@@ -16,23 +16,17 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import com.drew.lang.annotations.Nullable;
-import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
-import org.labkey.api.sequenceanalysis.model.ReadData;
-import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.settings.AppProps;
-import org.labkey.api.util.DateUtil;
 import org.labkey.sequenceanalysis.FileGroup;
-import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
 
@@ -72,9 +66,12 @@ public class SequencePipelineSettings
     {
         _params = new HashMap<>(params);
 
-        AppProps.Interface appProps = AppProps.getInstance();
-        if (appProps != null)
-            _params.put("serverBaseUrl", appProps.getBaseServerUrl());
+        if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
+        {
+            AppProps.Interface appProps = AppProps.getInstance();
+            if (appProps != null)
+                _params.put("serverBaseUrl", appProps.getBaseServerUrl());
+        }
 
         initInstrumentRun();
     }
@@ -159,6 +156,7 @@ public class SequencePipelineSettings
         {
             try
             {
+                //TODO: support other parsing
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
                 Date date = format.parse(o.getString("sampledate"));
                 model.setSampleDate(date);

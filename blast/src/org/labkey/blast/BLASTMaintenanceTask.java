@@ -17,6 +17,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.blast.model.BlastJob;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.List;
 import java.util.Set;
 
@@ -122,7 +123,11 @@ public class BLASTMaintenanceTask extends DefaultSystemMaintenanceTask
             List<String> dbNames = databaseTs.getArrayList(String.class);
             if (dbDir.list() == null || dbDir.list().length == 0)
             {
-                _log.info("empty directory: " + dbDir.getPath());
+                if (!dbNames.isEmpty())
+                {
+                    _log.error("BLAST DBs files not found for container: " + c.getPath());
+                }
+
                 return;
             }
 
@@ -140,10 +145,18 @@ public class BLASTMaintenanceTask extends DefaultSystemMaintenanceTask
 
             for (String dbName : dbNames)
             {
-                File expected = new File(dbDir, dbName + ".nhr");
-                if (!expected.exists())
+                File[] files = dbDir.listFiles(new FilenameFilter()
                 {
-                    _log.error("BLAST db does not exist: " + expected.getPath());
+                    @Override
+                    public boolean accept(File dir, String name)
+                    {
+                        return name.startsWith(dbName);
+                    }
+                });
+
+                if (files.length == 0)
+                {
+                    _log.error("BLAST db not found: " + dbName + " in: " + dbDir);
                 }
             }
         }

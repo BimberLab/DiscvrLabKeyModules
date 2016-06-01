@@ -105,7 +105,12 @@ public class FastqcRunner
                 File zip = new File(expectedHtml.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(expectedHtml)) + ".zip");
                 if (zip.exists())
                 {
+                    _logger.info("adding ZIP: " + zip.getPath());
                     filesCreated.add(zip);
+                }
+                else
+                {
+                    _logger.error("ZIP file not found, expected: " + zip.getPath());
                 }
 
                 //force compression
@@ -273,6 +278,7 @@ public class FastqcRunner
         {
             for (File f : filesCreated)
             {
+                _logger.debug("deleting fastcq file: " + f.getPath());
                 f.delete();
             }
         }

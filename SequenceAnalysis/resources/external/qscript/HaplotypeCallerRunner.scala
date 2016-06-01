@@ -21,24 +21,25 @@ class HaplotypeCallerRunner extends QScript {
   @Argument(fullName="scatterCount", shortName="scatterCount", doc="the number of concurrent jobs", required=false)
   var scatterCount: Int = 1
 
+  @Argument(fullName="annotation", shortName="A", doc="one or more annotations to apply", required=false)
+  var annotation: List[String] = Nil
+
   // The following arguments are all optional.
   @Argument(fullName="dontUseSoftClippedBases", shortName="dontUseSoftClippedBases", doc="Do not analyze soft clipped bases in the reads", required = false)
   var dontUseSoftClippedBases: Boolean = false
 
   def script(){
-    val snps = new HaplotypeCaller
-    snps.R = this.referenceFile
-    snps.I = this.bamFiles
-    snps.out = this.output
-    snps.scatterCount = this.scatterCount
+    val hc = new HaplotypeCaller
+    hc.R = this.referenceFile
+    hc.I = this.bamFiles
+    hc.out = this.output
+    hc.annotation = this.annotation
+    hc.scatterCount = this.scatterCount
 
     //optional
-    snps.emitRefConfidence = ReferenceConfidenceMode.GVCF
-    snps.dontUseSoftClippedBases = this.dontUseSoftClippedBases
+    hc.emitRefConfidence = ReferenceConfidenceMode.GVCF
+    hc.dontUseSoftClippedBases = this.dontUseSoftClippedBases
 
-    snps.variant_index_type = GATKVCFIndexType.LINEAR
-    snps.variant_index_parameter = 128000
-
-    add(snps)
+    add(hc)
   }
 }

@@ -28,6 +28,7 @@ import org.labkey.api.ldk.notification.NotificationService;
 import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.settings.AdminConsole;
@@ -35,6 +36,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.BaseWebPartFactory;
 import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.JspView;
+import org.labkey.api.view.NavTree;
 import org.labkey.api.view.Portal;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
@@ -97,6 +99,37 @@ public class LaboratoryModule extends ExtendedSimpleModule
                 public boolean isAvailable(Container c, String location)
                 {
                     return false;
+                }
+            },
+            new BaseWebPartFactory("Laboratory Data Browser")
+            {
+                public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+                {
+                    JspView<Object> view = new JspView<>("/org/labkey/laboratory/view/dataBrowser.jsp", new Object());
+                    view.setTitle("Laboratory Data Browser");
+                    //view.setFrame(WebPartView.FrameType.NONE);
+
+                    if (portalCtx.getContainer().hasPermission(portalCtx.getUser(), LaboratoryAdminPermission.class) || portalCtx.getContainer().hasPermission(portalCtx.getUser(), AdminPermission.class))
+                    {
+                        NavTree customize = new NavTree("");
+                        //customize.setScript(getWrappedOnClick(webPart, _webPartDef.getCustomizeHandler()));
+                        customize.setHref(DetailsURL.fromString("/laboratory/customizeDataBrowser.view", portalCtx.getContainer()).getActionURL().toString());
+                        view.setCustomize(customize);
+                    }
+
+                    return view;
+                }
+
+                @Override
+                public String getDisplayName(Container container, String location)
+                {
+                    return "Laboratory Data Browser";
+                }
+
+                @Override
+                public boolean isAvailable(Container c, String location)
+                {
+                    return WebPartFactory.LOCATION_BODY.equals(location);
                 }
             }
         ));

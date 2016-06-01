@@ -18,7 +18,6 @@ package org.labkey.api.sequenceanalysis.pipeline;
 import com.drew.lang.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
-import org.labkey.api.ldk.table.ButtonConfigFactory;
 import org.labkey.api.module.Module;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -26,7 +25,6 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.template.ClientDependency;
 
 import java.io.File;
 import java.util.LinkedHashSet;
@@ -73,6 +71,11 @@ public interface SequenceOutputHandler
      * An ordered list of ClientDependencies, which allows this handler to declare any client-side resources it depends upon.
      */
     public LinkedHashSet<String> getClientDependencies();
+
+    /**
+     * Set whether the user should be prompted for a workbook when this handler is selected
+     */
+    public boolean useWorkbooks();
 
     /**
      * Provides the opportunity for the handler to validate parameters prior to running

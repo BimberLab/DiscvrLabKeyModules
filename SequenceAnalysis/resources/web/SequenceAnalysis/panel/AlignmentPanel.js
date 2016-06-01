@@ -61,8 +61,10 @@ Ext4.define('SequenceAnalysis.panel.AlignmentPanel', {
                     var items = SequenceAnalysis.panel.AnalysisSectionPanel.prototype.getItems.call(this, toolConfig);
                     items = Ext4.Array.insert(items, 1, [{
                         xtype: 'checkbox',
+                        inputValue: true,
                         fieldLabel: 'Copy Files To Working Directory?',
-                        checked: true,
+                        checked: false,
+                        isToolParam: true,
                         name: 'copyGenomeLocally'
                     }]);
 

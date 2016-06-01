@@ -107,6 +107,10 @@ public class SequenceOutputHandlerRemoteTask extends PipelineJob.Task<SequenceOu
                 getPipelineJob().addOutputToCreate(o);
             }
         }
+        else
+        {
+            getJob().debug("no sequence outputs created");
+        }
 
         return new RecordedActionSet(actions);
     }

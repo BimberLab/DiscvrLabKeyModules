@@ -200,10 +200,14 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             this.errorNames = this.errorNames.concat(errorNames);
             this.errorNames = Ext4.unique(this.errorNames);
         }
-        if (this.storesLoaded == 2)
-        {
+        if (this.storesLoaded == 2){
             this.checkProtocol();
-            this.down('dataview').refresh();
+
+            var dv = this.down('dataview');
+            LDK.Assert.assertNotEmpty('Dataview Not Found In SequenceAnalaysisPanel', dv);
+            if (dv){
+                dv.refresh();
+            }
 
             if (this.errorNames.length){
                 alert('The follow readsets lack an input file and will be skipped: ' + this.errorNames.join(', '));

@@ -36,10 +36,11 @@ set -e
 set -u
 FORCE_REINSTALL=
 SKIP_PACKAGE_MANAGER=
+CLEAN_SRC=
 LK_HOME=
 LK_USER=
 
-while getopts "d:u:fp" arg;
+while getopts "d:u:fpc" arg;
 do
   case $arg in
     d)
@@ -57,6 +58,10 @@ do
     p)
        SKIP_PACKAGE_MANAGER=1
        echo "SKIP_PACKAGE_MANAGER = ${SKIP_PACKAGE_MANAGER}"
+       ;;
+    c)
+       CLEAN_SRC=1
+       echo "CLEAN_SRC = ${CLEAN_SRC}"
        ;;
     *)
        echo "The following arguments are supported:"
@@ -89,7 +94,7 @@ echo "Install location"
 echo ""
 echo "LKTOOLS_DIR: $LKTOOLS_DIR"
 echo "LKSRC_DIR: $LKSRC_DIR"
-
+WGET_OPTS="--read-timeout=10 --secure-protocol=TLSv1"
 
 #
 # Install required software
@@ -107,8 +112,8 @@ echo ""
 #    if [[ ! -e ${LKSRC_DIR}/epel-release-6-8.noarch.rpm ]];
 #    then
 #        cd $LKSRC_DIR
-#        wget --read-timeout=10 http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-#        wget --read-timeout=10 http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+#        wget $WGET_OPTS http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+#        wget $WGET_OPTS http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
 #        rpm -Uvh remi-release-6*.rpm epel-release-6*.rpm
 #    fi
 #fi
@@ -117,7 +122,7 @@ if [ ! -z $SKIP_PACKAGE_MANAGER ]; then
     echo "Skipping package install"
 elif [ $(which yum) ]; then
     echo "Using Yum"
-    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-devel.i686 glibc-static.i686 glibc-static.x86_64 expat expat-devel subversion cpan git cmake liblzf-devel apache-maven R
+    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-static expat expat-devel subversion cpan git cmake liblzf-devel apache-maven R
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
 
@@ -146,6 +151,9 @@ for l in $(find ${LKTOOLS_DIR} -type l -exec test ! -e {} \; -print); do
     rm -Rf $l
 done
 
+echo "wget version: "
+wget --version
+
 #
 # bwa
 #
@@ -164,7 +172,7 @@ then
     rm -Rf bwa-0.7.12*
     rm -Rf $LKTOOLS_DIR/bwa
 
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/bio-bwa/bwa-0.7.12.tar.bz2
+    wget $WGET_OPTS http://downloads.sourceforge.net/project/bio-bwa/bwa-0.7.12.tar.bz2
     bunzip2 bwa-0.7.12.tar.bz2
     tar -xf bwa-0.7.12.tar
     bzip2 bwa-0.7.12.tar
@@ -193,7 +201,7 @@ then
     rm -Rf FLASH-1.2.7
     rm -Rf $LKTOOLS_DIR/flash
 
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/flashpage/FLASH-1.2.7.tar.gz
+    wget $WGET_OPTS http://downloads.sourceforge.net/project/flashpage/FLASH-1.2.7.tar.gz
     gunzip FLASH-1.2.7.tar.gz
     tar -xf FLASH-1.2.7.tar
     echo "Compressing TAR"
@@ -240,6 +248,7 @@ then
     mkdir -p ${LK_HOME}/svn/trunk/pipeline_code/
     svn co --username cpas --password cpas --no-auth-cache https://hedgehog.fhcrc.org/tor/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code/gatk ${LK_HOME}/svn/trunk/pipeline_code/gatk/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationCount.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
+    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MinorAlleleFrequency.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/ConflictingReadCount.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/ConflictingReadCountBySample.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
 
@@ -277,7 +286,7 @@ then
     rm -Rf $LKTOOLS_DIR/gmap
     rm -Rf $LKTOOLS_DIR/gmap_build
 
-    wget --read-timeout=10 http://research-pub.gene.com/gmap/src/gmap-gsnap-2015-09-10.tar.gz
+    wget $WGET_OPTS http://research-pub.gene.com/gmap/src/gmap-gsnap-2015-09-10.tar.gz
     gunzip gmap-gsnap-2015-09-10.tar.gz
     tar -xf gmap-gsnap-2015-09-10.tar
     gzip gmap-gsnap-2015-09-10.tar
@@ -311,14 +320,16 @@ if [[ ! -e ${LKTOOLS_DIR}/STAR || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf STAR_2.4*
+    rm -Rf STAR_2.5*
     rm -Rf $LKTOOLS_DIR/STAR
 
-    wget --read-timeout=10 https://github.com/alexdobin/STAR/archive/2.5.1b.tar.gz
+    wget $WGET_OPTS https://github.com/alexdobin/STAR/archive/2.5.1b.tar.gz
     gunzip 2.5.1b.tar.gz
     tar -xf 2.5.1b.tar
     gzip 2.5.1b.tar
 
     install ./STAR-2.5.1b/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR/STAR
+    install ./STAR-2.5.1b/bin/Linux_x86_64_static/STARlong $LKTOOLS_DIR/STARlong
 else
     echo "Already installed"
 fi
@@ -340,7 +351,7 @@ then
     rm -Rf RNA-SeQC*
     rm -Rf $LKTOOLS_DIR/RNA-SeQC.jar
 
-    wget --read-timeout=10 http://www.broadinstitute.org/cancer/cga/tools/rnaseqc/RNA-SeQC_v1.1.8.jar
+    wget $WGET_OPTS http://www.broadinstitute.org/cancer/cga/tools/rnaseqc/RNA-SeQC_v1.1.8.jar
 
     install ./RNA-SeQC_v1.1.8.jar $LKTOOLS_DIR/RNA-SeQC.jar
 else
@@ -361,21 +372,21 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/MosaikAligner || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf MOSAIK-2.1.73*
+    rm -Rf MOSAIK-*
     rm -Rf $LKTOOLS_DIR/MosaikAligner
     rm -Rf $LKTOOLS_DIR/MosaikBuild
     rm -Rf $LKTOOLS_DIR/MosaikJump
     rm -Rf $LKTOOLS_DIR/MosaikText
 
-    wget --read-timeout=10 http://mosaik-aligner.googlecode.com/files/MOSAIK-2.1.73-binary.tar
-    tar -xf MOSAIK-2.1.73-binary.tar
+    wget $WGET_OPTS https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/mosaik-aligner/MOSAIK-2.2.3-Linux-x64.tar
+    tar -xf MOSAIK-2.2.3-Linux-x64.tar
     echo "Compressing TAR"
-    gzip MOSAIK-2.1.73-binary.tar
+    gzip MOSAIK-2.2.3-Linux-x64.tar
 
-    install ./MOSAIK-2.1.73-binary/MosaikAligner $LKTOOLS_DIR/MosaikAligner
-    install ./MOSAIK-2.1.73-binary/MosaikBuild $LKTOOLS_DIR/MosaikBuild
-    install ./MOSAIK-2.1.73-binary/MosaikJump $LKTOOLS_DIR/MosaikJump
-    install ./MOSAIK-2.1.73-binary/MosaikText $LKTOOLS_DIR/MosaikText
+    install ./MOSAIK-2.2.3-Linux-x64/MosaikAligner $LKTOOLS_DIR/MosaikAligner
+    install ./MOSAIK-2.2.3-Linux-x64/MosaikBuild $LKTOOLS_DIR/MosaikBuild
+    install ./MOSAIK-2.2.3-Linux-x64/MosaikJump $LKTOOLS_DIR/MosaikJump
+    install ./MOSAIK-2.2.3-Linux-x64/MosaikText $LKTOOLS_DIR/MosaikText
 fi
 
 #also download src to get the networkFiles
@@ -384,18 +395,18 @@ echo ""
 if [[ ! -e ${LKTOOLS_DIR}/mosaikNetworkFile || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf MOSAIK-2.1.73-source*
+    rm -Rf MOSAIK-*
     rm -Rf $LKTOOLS_DIR/networkFile
     rm -Rf $LKTOOLS_DIR/mosaikNetworkFile
 
     cd $LKSRC_DIR
 
-    wget --read-timeout=10 http://mosaik-aligner.googlecode.com/files/MOSAIK-2.1.73-source.tar
-    tar -xf MOSAIK-2.1.73-source.tar
+    wget $WGET_OPTS https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/mosaik-aligner/MOSAIK-2.2.3-source.tar
+    tar -xf MOSAIK-2.2.3-source.tar
     echo "Compressing TAR"
-    gzip MOSAIK-2.1.73-source.tar
+    gzip MOSAIK-2.2.3-source.tar
 
-    cp -R ./MOSAIK-2.1.73-source/networkFile $LKTOOLS_DIR/mosaikNetworkFile
+    cp -R ./MOSAIK-2.2.3-source/networkFile $LKTOOLS_DIR/mosaikNetworkFile
 else
     echo "Mosaik network files already downloaded"
 fi
@@ -423,7 +434,7 @@ then
     rm -Rf $LKTOOLS_DIR/coverage2cytosine
     rm -Rf $LKTOOLS_DIR/deduplicate_bismark
 
-    wget --read-timeout=10 http://www.bioinformatics.babraham.ac.uk/projects/bismark/bismark_v0.14.5.tar.gz
+    wget $WGET_OPTS http://www.bioinformatics.babraham.ac.uk/projects/bismark/bismark_v0.14.5.tar.gz
     gunzip bismark_v0.14.5.tar.gz
     tar -xf bismark_v0.14.5.tar
     echo "Compressing TAR"
@@ -467,7 +478,7 @@ then
     rm -Rf $LKTOOLS_DIR/samtools
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/samtools/samtools/0.1.18/samtools-0.1.18.tar.bz2
+    wget $WGET_OPTS http://downloads.sourceforge.net/project/samtools/samtools/0.1.18/samtools-0.1.18.tar.bz2
     bunzip2 samtools-0.1.18.tar.bz2
     tar -xf samtools-0.1.18.tar
     echo "Compressing TAR"
@@ -497,7 +508,7 @@ then
     rm -Rf $LKTOOLS_DIR/tabix
     rm -Rf $LKTOOLS_DIR/bgzip
 
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/samtools/tabix/tabix-0.2.6.tar.bz2
+    wget $WGET_OPTS http://downloads.sourceforge.net/project/samtools/tabix/tabix-0.2.6.tar.bz2
     bunzip2 tabix-0.2.6.tar.bz2
     tar -xf tabix-0.2.6.tar
     echo "Compressing TAR"
@@ -530,7 +541,7 @@ then
     rm -Rf bedtools-2.24.0*
     rm -Rf $LKTOOLS_DIR/bedtools
 
-    wget --read-timeout=10 https://github.com/arq5x/bedtools2/releases/download/v2.24.0/bedtools-2.24.0.tar.gz
+    wget $WGET_OPTS https://github.com/arq5x/bedtools2/releases/download/v2.24.0/bedtools-2.24.0.tar.gz
     gunzip bedtools-2.24.0.tar.gz
     tar -xf bedtools-2.24.0.tar
     echo "Compressing TAR"
@@ -560,8 +571,11 @@ then
     rm -Rf snpEff*
     rm -Rf $LKTOOLS_DIR/snpEff
 
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/snpeff/snpEff_latest_core.zip
+    wget $WGET_OPTS http://downloads.sourceforge.net/project/snpeff/snpEff_latest_core.zip
     unzip snpEff_latest_core.zip
+    rm -Rf ./snpEff/examples
+    rm -Rf ./snpEff/galaxy
+    rm -Rf ./snpEff/scripts
 
     cp -R ./snpEff ${LKTOOLS_DIR}/snpEff
 else
@@ -587,7 +601,7 @@ then
 
     mkdir blat
     cd blat
-    wget --read-timeout=10 http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/blat/blat
+    wget $WGET_OPTS http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/blat/blat
     chmod +x blat
 
     install blat $LKTOOLS_DIR/blat
@@ -615,7 +629,7 @@ then
     rm -Rf lastz-1.02.00*
     rm -Rf $LKTOOLS_DIR/lastz
 
-    wget --read-timeout=10 http://www.bx.psu.edu/miller_lab/dist/lastz-1.02.00.tar.gz
+    wget $WGET_OPTS http://www.bx.psu.edu/miller_lab/dist/lastz-1.02.00.tar.gz
     gunzip lastz-1.02.00.tar.gz
     tar -xf lastz-1.02.00.tar
     echo "Compressing TAR"
@@ -646,14 +660,14 @@ then
     rm -Rf fastx_toolkit-0.0.13.2*
 
     #this should not be required with this script
-    #wget --read-timeout=10 http://cancan.cshl.edu/labmembers/gordon/files/libgtextutils-0.6.tar.bz2
+    #wget $WGET_OPTS http://cancan.cshl.edu/labmembers/gordon/files/libgtextutils-0.6.tar.bz2
     #tar -xjf libgtextutils-0.6.tar.bz2
     #cd libgtextutils-0.6
     #./configure
     #make
     #make install
 
-    wget --read-timeout=10 http://hannonlab.cshl.edu/fastx_toolkit/fastx_toolkit-0.0.13.2.tar.bz2
+    wget $WGET_OPTS http://hannonlab.cshl.edu/fastx_toolkit/fastx_toolkit-0.0.13.2.tar.bz2
     bunzip2 fastx_toolkit-0.0.13.2.tar.bz2
     tar -xf fastx_toolkit-0.0.13.2.tar
     echo "Compressing TAR"
@@ -686,10 +700,10 @@ then
     rm -Rf $LKTOOLS_DIR/htsjdk-*
     rm -Rf $LKTOOLS_DIR/libIntelDeflater.so
 
-    wget --read-timeout=10 https://github.com/broadinstitute/picard/releases/download/1.135/picard-tools-1.135.zip
-    unzip picard-tools-1.135.zip
+    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/2.2.2/picard-tools-2.2.2.zip
+    unzip picard-tools-2.2.2.zip
 
-    cp -R ./picard-tools-1.135/* $LKTOOLS_DIR/
+    cp -R ./picard-tools-2.2.2/* $LKTOOLS_DIR/
 else
     echo "Already installed"
 fi
@@ -714,7 +728,7 @@ then
     rm -Rf $LKTOOLS_DIR/bowtie
     rm -Rf $LKTOOLS_DIR/bowtie-build
 
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.0.1/bowtie-1.0.1-linux-x86_64.zip
+    wget $WGET_OPTS http://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.0.1/bowtie-1.0.1-linux-x86_64.zip
     unzip bowtie-1.0.1-linux-x86_64.zip
 
     install ./bowtie-1.0.1/bowtie $LKTOOLS_DIR/bowtie
@@ -743,7 +757,7 @@ then
     rm -Rf $LKTOOLS_DIR/bowtie2
     rm -Rf $LKTOOLS_DIR/bowtie2-*
 
-    wget --read-timeout=10 http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.2.6/bowtie2-2.2.6-linux-x86_64.zip
+    wget $WGET_OPTS http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.2.6/bowtie2-2.2.6-linux-x86_64.zip
     unzip bowtie2-2.2.6-linux-x86_64.zip
 
     install ./bowtie2-2.2.6/bowtie2 $LKTOOLS_DIR/bowtie2
@@ -780,7 +794,7 @@ then
     rm -Rf trinityrnaseq-*
     rm -Rf $LKTOOLS_DIR/Trinity
 
-    wget --read-timeout=10 https://github.com/trinityrnaseq/trinityrnaseq/archive/v2.1.1.tar.gz
+    wget $WGET_OPTS https://github.com/trinityrnaseq/trinityrnaseq/archive/v2.1.1.tar.gz
     gunzip v2.1.1.tar.gz
     tar -xf v2.1.1.tar
     cd trinityrnaseq-2.1.1
@@ -851,7 +865,7 @@ else
         rm -Rf biopython-1.60.tar
         rm -Rf biopython-1.60
 
-        wget --read-timeout=10 http://biopython.org/DIST/biopython-1.60.tar.gz
+        wget $WGET_OPTS http://biopython.org/DIST/biopython-1.60.tar.gz
         gunzip biopython-1.60.tar.gz
         tar -xf biopython-1.60.tar
         echo "Compressing TAR"
@@ -908,7 +922,7 @@ then
     rm -Rf liftOver
     rm -Rf $LKTOOLS_DIR/liftOver
 
-    wget --read-timeout=10 http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/liftOver
+    wget $WGET_OPTS http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/liftOver
     chmod +x liftOver
 
     install ./liftOver $LKTOOLS_DIR/liftOver
@@ -933,7 +947,7 @@ then
     rm -Rf faToTwoBit
     rm -Rf $LKTOOLS_DIR/faToTwoBit
 
-    wget --read-timeout=10 http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/faToTwoBit
+    wget $WGET_OPTS http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/faToTwoBit
     chmod +x faToTwoBit
 
     install ./faToTwoBit $LKTOOLS_DIR/faToTwoBit
@@ -958,7 +972,7 @@ then
     rm -Rf JBrowse-*
     rm -Rf $LKTOOLS_DIR/JBrowse-*
 
-    wget --read-timeout=10 http://jbrowse.org/releases/JBrowse-1.11.5.zip
+    wget $WGET_OPTS http://jbrowse.org/releases/JBrowse-1.11.5.zip
     unzip JBrowse-1.11.5.zip
     rm JBrowse-1.11.5.zip
     cd JBrowse-1.11.5
@@ -989,7 +1003,7 @@ then
     rm -Rf $LKTOOLS_DIR/blast_formatter
     rm -Rf $LKTOOLS_DIR/makeblastdb
 
-    wget --read-timeout=10 ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.30/ncbi-blast-2.2.30+-x64-linux.tar.gz
+    wget $WGET_OPTS ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.30/ncbi-blast-2.2.30+-x64-linux.tar.gz
     gunzip ncbi-blast-2.2.30+-x64-linux.tar.gz
     tar -xf ncbi-blast-2.2.30+-x64-linux.tar
     gzip ncbi-blast-2.2.30+-x64-linux.tar
@@ -1020,7 +1034,7 @@ then
     rm -Rf clustalw-2.1
     rm -Rf $LKTOOLS_DIR/clustalw2
 
-    wget --read-timeout=10 http://www.clustal.org/download/current/clustalw-2.1.tar.gz
+    wget $WGET_OPTS http://www.clustal.org/download/current/clustalw-2.1.tar.gz
     gunzip clustalw-2.1.tar.gz
     tar -xf clustalw-2.1.tar
     gzip clustalw-2.1.tar
@@ -1053,7 +1067,7 @@ then
     rm -Rf muscle3.8.31_i86linux64
     rm -Rf $LKTOOLS_DIR/muscle
 
-    wget --read-timeout=10 http://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz
+    wget $WGET_OPTS http://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz
     gunzip muscle3.8.31_i86linux64.tar.gz
     tar -xf muscle3.8.31_i86linux64.tar
     gzip muscle3.8.31_i86linux64.tar
@@ -1082,7 +1096,7 @@ then
     rm -Rf Trimmomatic-0.33*
     rm -Rf $LKTOOLS_DIR/trimmomatic.jar
 
-    wget --read-timeout=10 http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.33.zip
+    wget $WGET_OPTS http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.33.zip
     unzip Trimmomatic-0.33.zip
 
     install ./Trimmomatic-0.33/trimmomatic-0.33.jar $LKTOOLS_DIR/trimmomatic.jar
@@ -1096,6 +1110,11 @@ then
     echo "Setting owner of files to: ${LK_USER}"
     chown -R ${LK_USER} $LKTOOLS_DIR
     chown -R ${LK_USER} $LKSRC_DIR
+fi
+
+if [ ! -z $CLEAN_SRC ]; then
+    echo "Cleaning up tool_src"
+    rm -Rf $LKSRC_DIR
 fi
 
 echo ""

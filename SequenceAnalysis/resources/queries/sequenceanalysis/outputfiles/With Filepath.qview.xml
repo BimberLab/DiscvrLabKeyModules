@@ -1,0 +1,24 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" canOverride="true">
+   <columns>
+       <column name="rowid" />
+       <column name="name" />
+       <column name="description" />
+       <column name="readset" />
+       <column name="readset/subjectid" />
+       <column name="readset/sampletype" />
+       <column name="library_id" />
+       <column name="category" />
+       <column name="analysis_id" />
+       <column name="analysisSets"/>
+       <column name="runid" />
+       <column name="runid/jobid" />
+       <column name="workbook" />
+       <column name="dataid"/>
+       <column name="dataid/DataFileUrl"/>
+       <column name="dataid/FileExists"/>
+       <column name="dataid/FileSize"/>
+   </columns>
+   <sorts>
+       <sort column="rowid" descending="true"/>
+   </sorts>
+</customView>

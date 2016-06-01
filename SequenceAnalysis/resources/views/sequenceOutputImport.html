@@ -245,6 +245,7 @@ Ext4.onReady(function(){
 
                 Ext4.Msg.wait('Saving...');
                 LABKEY.Ajax.request({
+                    method: 'POST',
                     url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'importOutputFiles', null),
                     failure: LDK.Utils.getErrorCallback(),
                     success: LABKEY.Utils.getCallbackWrapper(function(){

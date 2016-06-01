@@ -34,7 +34,7 @@ public class MarkDuplicatesWrapper extends PicardWrapper
      */
     public File executeCommand(File inputFile, @Nullable File outputFile, List<String> options) throws PipelineJobException
     {
-        getLogger().info("Mark Duplicates: " + inputFile.getPath());
+        getLogger().info(getToolName() + ": " + inputFile.getPath());
         List<File> tempFiles = new ArrayList<>();
 
         //ensure BAM sorted
@@ -66,7 +66,7 @@ public class MarkDuplicatesWrapper extends PicardWrapper
             throw new PipelineJobException(e);
         }
 
-        File outputBam = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".markduplicates.bam") : outputFile;
+        File outputBam = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + "." + getToolName().toLowerCase() + ".bam") : outputFile;
         if ((new File(outputBam.getPath() + ".bai")).exists())
         {
             getLogger().info("BAM index already exists, deleting: " + outputBam.getName() + ".bai");
@@ -78,7 +78,7 @@ public class MarkDuplicatesWrapper extends PicardWrapper
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getPicardJar().getPath());
-        params.add(getTooName());
+        params.add(getToolName());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
         inferMaxRecordsInRam(params);
         // added for compatibility with GATK.  see:
@@ -143,10 +143,10 @@ public class MarkDuplicatesWrapper extends PicardWrapper
 
     public File getMetricsFile(File inputFile)
     {
-        return new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".markduplicates.metrics");
+        return new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + "." + getToolName().toLowerCase() + ".metrics");
     }
 
-    protected String getTooName()
+    protected String getToolName()
     {
         return "MarkDuplicates";
     }
