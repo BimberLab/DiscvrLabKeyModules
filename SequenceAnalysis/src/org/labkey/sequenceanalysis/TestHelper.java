@@ -825,10 +825,11 @@ public class TestHelper
 
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME1));
             expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME1)) + "_fastqc.html.gz"));
-            //expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME1)) + "_fastqc.zip"));
+            expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME1)) + "_fastqc.zip"));
+
             expectedOutputs.add(new File(basedir, PAIRED_FILENAME2));
             expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2)) + "_fastqc.html.gz"));
-            //expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2)) + "_fastqc.zip"));
+            expectedOutputs.add(new File(basedir, FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2)) + "_fastqc.zip"));
 
             //these will be merged
             if (!deleteIntermediates)
