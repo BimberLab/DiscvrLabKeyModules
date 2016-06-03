@@ -121,7 +121,7 @@ public class MultipleAllelesAtLoci extends LocusWalker<MultipleAllelesAtLoci.Sit
                 List<String> comments = new ArrayList<>();
                 for (FlaggedSite f : flaggedSites) {
                     totalSubjects.add(f.sample);
-                    comments.add(String.format("%s:%s/%f", f.sample, (char)(f.base.byteValue()), f.pct));
+                    comments.add(String.format("%s: [%s/%f/%d/%d]", f.sample, (char)(f.base.byteValue()), f.pct, f.baseCount, f.depth));
                 }
 
                 out.println(String.format("%s\t%d\t%d\t%s\t%s", loc.getContig(), loc.getStart()-1, loc.getStop(), totalSubjects.size(), StringUtils.join(comments, ";")));
@@ -136,12 +136,16 @@ public class MultipleAllelesAtLoci extends LocusWalker<MultipleAllelesAtLoci.Sit
     private static class FlaggedSite {
         public String sample;
         public Byte base;
-        public Double pct;
+        public double pct;
+        public long depth;
+        public long baseCount;
 
-        public FlaggedSite(String sample, Byte base, Double pct) {
+        public FlaggedSite(String sample, Byte base, double pct, long depth, long baseCount) {
             this.sample = sample;
             this.base = base;
             this.pct = pct;
+            this.depth = depth;
+            this.baseCount = baseCount;
         }
     }
 
@@ -152,13 +156,18 @@ public class MultipleAllelesAtLoci extends LocusWalker<MultipleAllelesAtLoci.Sit
         Map<DoCOutputType.Partition,Map<String,int[]>> counts = CoverageUtils.getBaseCountsByPartition(context,minMappingQuality,Integer.MAX_VALUE,minBaseQuality,Byte.MAX_VALUE,CoverageUtils.CountPileupType.COUNT_READS, EnumSet.of(DoCOutputType.Partition.sample));
         for (String sn : getSampleDB().getSampleNames()) {
             int[] baseCounts = counts.get(DoCOutputType.Partition.sample).get(sn);
+            if (baseCounts == null) {
+                //logger.warn(String.format("no base counts found for sample: %s, position: %s %d", sn, context.getLocation().getContig(), context.getLocation().getStart()));
+                continue;
+            }
+
             int total = sumOfArray(baseCounts);
             if (total < minDepth) {
                 continue;
             }
 
-            Map<Byte, Double> baseCountPct = getBaseCountPctMap(baseCounts, total);
-            List<Map.Entry<Byte, Double>> vals = sortByValue(baseCountPct);
+            Map<Integer, Double> baseCountPct = getBaseCountPctMap(baseCounts, total);
+            List<Map.Entry<Integer, Double>> vals = sortByValue(baseCountPct);
             if (vals.size() <= 2) {
                 //nothing to do
             }
@@ -168,9 +177,15 @@ public class MultipleAllelesAtLoci extends LocusWalker<MultipleAllelesAtLoci.Sit
                 vals.remove(0);
 
                 //iterate remaining by pct
-                for (Map.Entry<Byte, Double> entry : vals) {
+                for (Map.Entry<Integer, Double> entry : vals) {
                     if (entry.getValue() >= minBasePct) {
-                        counter.addSite(new FlaggedSite(sn, entry.getKey(), entry.getValue()));
+                        try {
+                            counter.addSite(new FlaggedSite(sn, BaseUtils.EXTENDED_BASES[entry.getKey()], entry.getValue(), total, baseCounts[entry.getKey()]));
+                        }
+                        catch (IndexOutOfBoundsException e) {
+                            logger.warn(String.format("index of out bounds, %d, %d, %s, %d", entry.getKey(), baseCounts.length, context.getLocation().getContig(), context.getLocation().getStart()));
+                            throw e;
+                        }
                     }
                 }
             }
@@ -197,13 +212,13 @@ public class MultipleAllelesAtLoci extends LocusWalker<MultipleAllelesAtLoci.Sit
         return list;
     }
 
-    private Map<Byte, Double> getBaseCountPctMap(int[] baseCounts, int total)
+    private Map<Integer, Double> getBaseCountPctMap(int[] baseCounts, int total)
     {
-        Map<Byte, Double> ret = new HashMap<>();
+        Map<Integer, Double> ret = new HashMap<>();
 
         for (int i = 0; i < baseCounts.length; i++)
         {
-            ret.put(BaseUtils.baseIndexToSimpleBase(i),  total == 0 ? 0 : ((double)baseCounts[i]) / total);
+            ret.put(i,  total == 0 ? 0 : ((double)baseCounts[i]) / total);
         }
 
         return ret;
@@ -212,9 +227,9 @@ public class MultipleAllelesAtLoci extends LocusWalker<MultipleAllelesAtLoci.Sit
     private int sumOfArray(int[] array)
     {
         int ret = 0;
-        for (int i : array)
+        for (Integer i : array)
         {
-            ret += array[i];
+            ret += i;
         }
 
         return ret;
@@ -227,8 +242,6 @@ public class MultipleAllelesAtLoci extends LocusWalker<MultipleAllelesAtLoci.Sit
 
     @Override
     public Integer reduce(SiteBaseCounter counter1, Integer i) {
-        logger.info(String.format("reduce! %s, %d", counter1.getLocation().getContig(), counter1.getLocation().getStart()));
-
         return 0;
     }
 
