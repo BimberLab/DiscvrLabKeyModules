@@ -164,6 +164,11 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     public String getJavaFilepath()
     {
         String javaDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_HOME");
+        if (javaDir == null)
+        {
+            javaDir = StringUtils.trimToNull(System.getenv("JAVA_HOME"));
+        }
+
         if (javaDir != null)
         {
             File ret = new File(javaDir, "bin");

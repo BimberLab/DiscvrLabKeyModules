@@ -155,7 +155,7 @@ public class MultipleAllelesAtLoci extends LocusWalker<MultipleAllelesAtLoci.Sit
 
         Map<DoCOutputType.Partition,Map<String,int[]>> counts = CoverageUtils.getBaseCountsByPartition(context,minMappingQuality,Integer.MAX_VALUE,minBaseQuality,Byte.MAX_VALUE,CoverageUtils.CountPileupType.COUNT_READS, EnumSet.of(DoCOutputType.Partition.sample));
         for (String sn : getSampleDB().getSampleNames()) {
-            int[] baseCounts = counts.get(DoCOutputType.Partition.sample).get(sn);
+            int[] baseCounts = counts.get(DoCOutputType.Partition.sample) != null ? counts.get(DoCOutputType.Partition.sample).get(sn) : null;
             if (baseCounts == null) {
                 //logger.warn(String.format("no base counts found for sample: %s, position: %s %d", sn, context.getLocation().getContig(), context.getLocation().getStart()));
                 continue;
