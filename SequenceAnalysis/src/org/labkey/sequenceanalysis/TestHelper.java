@@ -1790,7 +1790,7 @@ public class TestHelper
             //expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired3/Alignment/TestReadset2.bam.bai"));
 
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate." + (isGATKPresent() ? "realigned." : "sorted.") + "markduplicates.metrics"));
+            expectedOutputs.add(new File(basedir, "paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate." + (isGATKPresent() ? "realigned." : "sorted.") + "markduplicates.metrics"));
 
             expectedOutputs.add(new File(basedir, "paired4"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment"));
@@ -1801,8 +1801,8 @@ public class TestHelper
             //expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.insertsize.metrics"));
             expectedOutputs.add(new File(basedir, "paired4/Alignment/TestReadset3.bam.bai"));
 
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate." + (isGATKPresent() ? "realigned." : "sorted.") + "markduplicates.metrics"));
-            expectedOutputs.add(new File(basedir, "paired1/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate." + (isGATKPresent() ? "realigned." : "sorted.") + "markduplicates.metrics"));
+            expectedOutputs.add(new File(basedir, "paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate." + (isGATKPresent() ? "realigned." : "sorted.") + "markduplicates.metrics"));
+
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
             validateAlignment(bam1, 294, 128);
