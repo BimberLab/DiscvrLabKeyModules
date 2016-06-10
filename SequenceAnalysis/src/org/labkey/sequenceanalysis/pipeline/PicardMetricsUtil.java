@@ -237,11 +237,21 @@ public class PicardMetricsUtil
         {
             Map<String, Object> metricNames = new HashMap<>();
             metricNames.put("Avg Sequence Length", m.MEAN_READ_LENGTH);
-            metricNames.put("%Reads Aligned In Pairs", m.PCT_READS_ALIGNED_IN_PAIRS * 100);
+            metricNames.put("%Reads Aligned In Pairs", m.PCT_READS_ALIGNED_IN_PAIRS * 100.0);
             metricNames.put("Total Sequences", m.TOTAL_READS);
             metricNames.put("Total Sequences Passed Filter", m.PF_READS);
             metricNames.put("Reads Aligned", m.PF_READS_ALIGNED);
-            metricNames.put("%Reads Aligned", m.PCT_PF_READS_ALIGNED * 100);
+            metricNames.put("%Reads Aligned", m.PCT_PF_READS_ALIGNED * 100.0);
+
+            metricNames.put("Reads Aligned (>Q20)", m.PF_HQ_ALIGNED_READS);
+            metricNames.put("% Reads Aligned (>Q20)", (double) m.PF_HQ_ALIGNED_READS / (double) m.TOTAL_READS);
+            metricNames.put("% Alignments (>Q20)", ((double) m.PF_HQ_ALIGNED_READS / (double) m.PF_READS_ALIGNED) * 100.0);
+
+            metricNames.put("PF_INDEL_RATE", m.PF_INDEL_RATE);
+            metricNames.put("PF_MISMATCH_RATE", m.PF_MISMATCH_RATE);
+            metricNames.put("PF_HQ_MEDIAN_MISMATCHES", m.PF_HQ_MEDIAN_MISMATCHES);
+            metricNames.put("PF_HQ_ALIGNED_BASES", m.PF_HQ_ALIGNED_BASES);
+            metricNames.put("PF_HQ_ALIGNED_Q20_BASES", m.PF_HQ_ALIGNED_Q20_BASES);
 
             for (String metricName : metricNames.keySet())
             {
