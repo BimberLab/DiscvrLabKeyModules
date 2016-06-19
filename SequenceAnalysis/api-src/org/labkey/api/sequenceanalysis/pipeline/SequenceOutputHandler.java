@@ -15,7 +15,7 @@
  */
 package org.labkey.api.sequenceanalysis.pipeline;
 
-import com.drew.lang.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
