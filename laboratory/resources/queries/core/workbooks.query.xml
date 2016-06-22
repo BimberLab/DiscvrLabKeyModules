@@ -2,6 +2,7 @@
   <metadata>
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="workbooks" tableDbType="TABLE" useColumnOrder="true">
+                <tableTitle>Workbooks</tableTitle>
                 <titleColumn>workbookId</titleColumn>
                 <columns>
                     <column columnName="workbookId" wrappedColumnName="entityId">

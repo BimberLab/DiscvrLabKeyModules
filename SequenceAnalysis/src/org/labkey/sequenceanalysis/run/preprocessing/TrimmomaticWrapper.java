@@ -497,7 +497,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
         else
         {
-            File output1 = new File(input1.getParentFile(), basename + "." + actionName + extension);
+            File output1 = new File(getOutputDir(input1), basename + "." + actionName + extension);
             fileNames.add(output1);
         }
 

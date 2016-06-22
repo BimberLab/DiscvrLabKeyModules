@@ -35,7 +35,7 @@ public class FastqToSamWrapper extends PicardWrapper
 
     public File execute(File file, @Nullable File file2, @Nullable SAMFileHeader.SortOrder sortOrder, @Nullable String readGroupName) throws PipelineJobException
     {
-        getLogger().info("Converting FASTQ to SAM: " + file.getPath());
+        getLogger().info("Converting FASTQ to BAM: " + file.getPath());
         getLogger().info("\tFastqToSam version: " + getVersion());
 
         execute(getParams(file, file2, sortOrder, readGroupName));
@@ -100,6 +100,6 @@ public class FastqToSamWrapper extends PicardWrapper
 
     public String getOutputFilename(File file)
     {
-        return FileUtil.getBaseName(file) + ".sam";
+        return FileUtil.getBaseName(file) + ".bam";
     }
 }

@@ -2606,7 +2606,6 @@ return declare("dojox.grid._Events", null, {
 			event = e;
 		}
 		this.focus.setFocusCell(event.cell, event.rowIndex);
-		this.onRowClick(event);
 		this.edit.setEditCell(event.cell, event.rowIndex);
 		this.onRowDblClick(e);
 	},
@@ -4960,7 +4959,7 @@ define("dojox/grid/_View", [
 		_nativeScroll: false,
 
 		doscroll: function(inEvent){
-			if(has('ff') >= 13){
+			if(has('ff') >= 13 || has('chrome')){
 				this._nativeScroll = true;
 			}
 			//var s = dojo.marginBox(this.headerContentNode.firstChild);
@@ -5136,11 +5135,15 @@ define("dojox/html/metrics", ["dojo/_base/kernel","dojo/_base/lang", "dojo/_base
 			'small':0, 'medium':0, 'large':0, 'x-large':0, 'xx-large':0
 		};
 	
+		var oldStyle;	
 		if(has("ie")){
-			//	we do a font-size fix if and only if one isn't applied already.
-			//	NOTE: If someone set the fontSize on the HTML Element, this will kill it.
-			Window.doc.documentElement.style.fontSize="100%";
-		}
+			//	We do a font-size fix if and only if one isn't applied already.
+			// NOTE: If someone set the fontSize on the HTML Element, this will kill it.
+			oldStyle = Window.doc.documentElement.style.fontSize || "";
+			if(!oldStyle){
+				Window.doc.documentElement.style.fontSize="100%";
+			}
+		}		
 	
 		//	set up the measuring node.
 		var div=Window.doc.createElement("div");
@@ -5162,6 +5165,11 @@ define("dojox/html/metrics", ["dojo/_base/kernel","dojo/_base/lang", "dojo/_base
 		for(var p in heights){
 			ds.fontSize = p;
 			heights[p] = Math.round(div.offsetHeight * 12/16) * 16/12 / 1000;
+		}
+
+		if(has("ie")){
+			// Restore the font to its old style.
+			Window.doc.documentElement.style.fontSize = oldStyle;
 		}
 		
 		Window.body().removeChild(div);
@@ -5313,8 +5321,9 @@ define("dojox/grid/_Builder", [
 	"dojo/dnd/Moveable",
 	"dojox/html/metrics",
 	"./util",
-	"dojo/_base/html"
-], function(dojox, array, lang, win, event, has, connect, Moveable, metrics, util, html){
+	"dojo/_base/html",
+	"dojo/dom-geometry"
+], function(dojox, array, lang, win, event, has, connect, Moveable, metrics, util, html, domGeometry){
 
 	var dg = dojox.grid;
 
@@ -5661,28 +5670,17 @@ define("dojox/grid/_Builder", [
 
 		// event helpers
 		getCellX: function(e){
-			var n, x = e.layerX;
-			if(has('mozilla') || has('ie') >= 9){
-				n = ascendDom(e.target, makeNotTagName("th"));
-				x -= (n && n.offsetLeft) || 0;
-				var t = e.sourceView.getScrollbarWidth();
-				if(!this.grid.isLeftToRight()/*&& e.sourceView.headerNode.scrollLeft < t*/){
-					//fix #11253
-					table = ascendDom(n,makeNotTagName("table"));
-					x -= (table && table.offsetLeft) || 0;
-				}
-				//x -= getProp(ascendDom(e.target, mkNotTagName("td")), "offsetLeft") || 0;
+			var n, x, pos;
+			// Calculate starting x position
+			n = ascendDom(e.target, makeNotTagName("th"));
+			if(n){
+				// We have a proper parent node, use that for position
+				pos = domGeometry.position(n);
+				x = e.clientX - pos.x;
+			}else{
+				// Fall back to layerX
+				x = e.layerX;
 			}
-			n = ascendDom(e.target, function(){
-				if(!n || n == e.cellNode){
-					return false;
-				}
-				// Mozilla 1.8 (FF 1.5) has a bug that makes offsetLeft = -parent border width
-				// when parent has border, overflow: hidden, and is positioned
-				// handle this problem here ... not a general solution!
-				x += (n.offsetLeft < 0 ? 0 : n.offsetLeft);
-				return true;
-			});
 			return x;
 		},
 
@@ -6060,6 +6058,7 @@ define("dojox/grid/_Builder", [
 		_ContentBuilder: _ContentBuilder
 	};
 });
+
 },
 'dojox/grid/_ViewManager':function(){
 define("dojox/grid/_ViewManager", [
@@ -9250,7 +9249,7 @@ var RowSelector = declare("dojox.grid.cells.RowSelector", gridCells._Widget, {
 		return ["<div tabindex = -1 ",
 				"id = '" + _this.grid.id + "_rowSelector_" + rowIndex + "' ",
 				"name = '" + _this.grid.id + "_rowSelector' class = '" + clazz + "' ",
-				"role = " + _this.inputType + " aria-checked = '" + checked + "' aria-disabled = '" + disabled +
+				"role = " + _this.inputType.toLowerCase() + " aria-checked = '" + checked + "' aria-disabled = '" + disabled +
 				"' aria-label = '" + string.substitute(_this.grid._nls["indirectSelection" + _this.inputType], [rowIndex + 1]) + "'>",
 				"<span class = '" + _this.statusTextClass + "'>" + (checked ? _this.checkedText : _this.unCheckedText) + "</span>",
 				"</div>"].join("");
@@ -12615,8 +12614,51 @@ supplemental._region = function(/*String?*/locale){
 	if(!region){
 		// IE often gives language only (#2269)
 		// Arbitrary mappings of language-only locales to a country:
-		region = {de:"de", en:"us", es:"es", fi:"fi", fr:"fr", he:"il", hu:"hu", it:"it",
-			ja:"jp", ko:"kr", nl:"nl", pt:"br", sv:"se", zh:"cn"}[tags[0]];
+		region = {
+			aa:"et", ab:"ge", af:"za", ak:"gh", am:"et", ar:"eg", as:"in", av:"ru", ay:"bo", az:"az", ba:"ru",
+			be:"by", bg:"bg", bi:"vu", bm:"ml", bn:"bd", bo:"cn", br:"fr", bs:"ba", ca:"es", ce:"ru", ch:"gu",
+			co:"fr", cr:"ca", cs:"cz", cv:"ru", cy:"gb", da:"dk", de:"de", dv:"mv", dz:"bt", ee:"gh", el:"gr",
+			en:"us", es:"es", et:"ee", eu:"es", fa:"ir", ff:"sn", fi:"fi", fj:"fj", fo:"fo", fr:"fr", fy:"nl",
+			ga:"ie", gd:"gb", gl:"es", gn:"py", gu:"in", gv:"gb", ha:"ng", he:"il", hi:"in", ho:"pg", hr:"hr",
+			ht:"ht", hu:"hu", hy:"am", ia:"fr", id:"id", ig:"ng", ii:"cn", ik:"us", "in":"id", is:"is", it:"it",
+			iu:"ca", iw:"il", ja:"jp", ji:"ua", jv:"id", jw:"id", ka:"ge", kg:"cd", ki:"ke", kj:"na", kk:"kz",
+			kl:"gl", km:"kh", kn:"in", ko:"kr", ks:"in", ku:"tr", kv:"ru", kw:"gb", ky:"kg", la:"va", lb:"lu",
+			lg:"ug", li:"nl", ln:"cd", lo:"la", lt:"lt", lu:"cd", lv:"lv", mg:"mg", mh:"mh", mi:"nz", mk:"mk",
+			ml:"in", mn:"mn", mo:"ro", mr:"in", ms:"my", mt:"mt", my:"mm", na:"nr", nb:"no", nd:"zw", ne:"np",
+			ng:"na", nl:"nl", nn:"no", no:"no", nr:"za", nv:"us", ny:"mw", oc:"fr", om:"et", or:"in", os:"ge",
+			pa:"in", pl:"pl", ps:"af", pt:"br", qu:"pe", rm:"ch", rn:"bi", ro:"ro", ru:"ru", rw:"rw", sa:"in",
+			sd:"in", se:"no", sg:"cf", si:"lk", sk:"sk", sl:"si", sm:"ws", sn:"zw", so:"so", sq:"al", sr:"rs",
+			ss:"za", st:"za", su:"id", sv:"se", sw:"tz", ta:"in", te:"in", tg:"tj", th:"th", ti:"et", tk:"tm",
+			tl:"ph", tn:"za", to:"to", tr:"tr", ts:"za", tt:"ru", ty:"pf", ug:"cn", uk:"ua", ur:"pk", uz:"uz",
+			ve:"za", vi:"vn", wa:"be", wo:"sn", xh:"za", yi:"il", yo:"ng", za:"cn", zh:"cn", zu:"za",
+			ace:"id", ady:"ru", agq:"cm", alt:"ru", amo:"ng", asa:"tz", ast:"es", awa:"in", bal:"pk",
+			ban:"id", bas:"cm", bax:"cm", bbc:"id", bem:"zm", bez:"tz", bfq:"in", bft:"pk", bfy:"in",
+			bhb:"in", bho:"in", bik:"ph", bin:"ng", bjj:"in", bku:"ph", bqv:"ci", bra:"in", brx:"in",
+			bss:"cm", btv:"pk", bua:"ru", buc:"yt", bug:"id", bya:"id", byn:"er", cch:"ng", ccp:"in",
+			ceb:"ph", cgg:"ug", chk:"fm", chm:"ru", chp:"ca", chr:"us", cja:"kh", cjm:"vn", ckb:"iq",
+			crk:"ca", csb:"pl", dar:"ru", dav:"ke", den:"ca", dgr:"ca", dje:"ne", doi:"in", dsb:"de",
+			dua:"cm", dyo:"sn", dyu:"bf", ebu:"ke", efi:"ng", ewo:"cm", fan:"gq", fil:"ph", fon:"bj",
+			fur:"it", gaa:"gh", gag:"md", gbm:"in", gcr:"gf", gez:"et", gil:"ki", gon:"in", gor:"id",
+			grt:"in", gsw:"ch", guz:"ke", gwi:"ca", haw:"us", hil:"ph", hne:"in", hnn:"ph", hoc:"in",
+			hoj:"in", ibb:"ng", ilo:"ph", inh:"ru", jgo:"cm", jmc:"tz", kaa:"uz", kab:"dz", kaj:"ng",
+			kam:"ke", kbd:"ru", kcg:"ng", kde:"tz", kdt:"th", kea:"cv", ken:"cm", kfo:"ci", kfr:"in",
+			kha:"in", khb:"cn", khq:"ml", kht:"in", kkj:"cm", kln:"ke", kmb:"ao", koi:"ru", kok:"in",
+			kos:"fm", kpe:"lr", krc:"ru", kri:"sl", krl:"ru", kru:"in", ksb:"tz", ksf:"cm", ksh:"de",
+			kum:"ru", lag:"tz", lah:"pk", lbe:"ru", lcp:"cn", lep:"in", lez:"ru", lif:"np", lis:"cn",
+			lki:"ir", lmn:"in", lol:"cd", lua:"cd", luo:"ke", luy:"ke", lwl:"th", mad:"id", mag:"in",
+			mai:"in", mak:"id", man:"gn", mas:"ke", mdf:"ru", mdh:"ph", mdr:"id", men:"sl", mer:"ke",
+			mfe:"mu", mgh:"mz", mgo:"cm", min:"id", mni:"in", mnk:"gm", mnw:"mm", mos:"bf", mua:"cm",
+			mwr:"in", myv:"ru", nap:"it", naq:"na", nds:"de", "new":"np", niu:"nu", nmg:"cm", nnh:"cm",
+			nod:"th", nso:"za", nus:"sd", nym:"tz", nyn:"ug", pag:"ph", pam:"ph", pap:"bq", pau:"pw",
+			pon:"fm", prd:"ir", raj:"in", rcf:"re", rej:"id", rjs:"np", rkt:"in", rof:"tz", rwk:"tz",
+			saf:"gh", sah:"ru", saq:"ke", sas:"id", sat:"in", saz:"in", sbp:"tz", scn:"it", sco:"gb",
+			sdh:"ir", seh:"mz", ses:"ml", shi:"ma", shn:"mm", sid:"et", sma:"se", smj:"se", smn:"fi",
+			sms:"fi", snk:"ml", srn:"sr", srr:"sn", ssy:"er", suk:"tz", sus:"gn", swb:"yt", swc:"cd",
+			syl:"bd", syr:"sy", tbw:"ph", tcy:"in", tdd:"cn", tem:"sl", teo:"ug", tet:"tl", tig:"er",
+			tiv:"ng", tkl:"tk", tmh:"ne", tpi:"pg", trv:"tw", tsg:"ph", tts:"th", tum:"mw", tvl:"tv",
+			twq:"ne", tyv:"ru", tzm:"ma", udm:"ru", uli:"fm", umb:"ao", unr:"in", unx:"in", vai:"lr",
+			vun:"tz", wae:"ch", wal:"et", war:"ph", xog:"ug", xsr:"np", yao:"mz", yap:"fm", yav:"cm", zza:"tr"
+		}[tags[0]];
 	}else if(region.length == 4){
 		// The ISO 3166 country code is usually in the second position, unless a
 		// 4-letter script is given. See http://www.ietf.org/rfc/rfc4646.txt
@@ -12660,7 +12702,7 @@ return supplemental;
 },
 'dijit/CalendarLite':function(){
 require({cache:{
-'url:dijit/templates/Calendar.html':"<table cellspacing=\"0\" cellpadding=\"0\" class=\"dijitCalendarContainer\" role=\"grid\" aria-labelledby=\"${id}_mddb ${id}_year\">\n\t<thead>\n\t\t<tr class=\"dijitReset dijitCalendarMonthContainer\" valign=\"top\">\n\t\t\t<th class='dijitReset dijitCalendarArrow' data-dojo-attach-point=\"decrementMonth\">\n\t\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarDecrease\" role=\"presentation\"/>\n\t\t\t\t<span data-dojo-attach-point=\"decreaseArrowNode\" class=\"dijitA11ySideArrow\">-</span>\n\t\t\t</th>\n\t\t\t<th class='dijitReset' colspan=\"5\">\n\t\t\t\t<div data-dojo-attach-point=\"monthNode\">\n\t\t\t\t</div>\n\t\t\t</th>\n\t\t\t<th class='dijitReset dijitCalendarArrow' data-dojo-attach-point=\"incrementMonth\">\n\t\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarIncrease\" role=\"presentation\"/>\n\t\t\t\t<span data-dojo-attach-point=\"increaseArrowNode\" class=\"dijitA11ySideArrow\">+</span>\n\t\t\t</th>\n\t\t</tr>\n\t\t<tr role=\"row\">\n\t\t\t${!dayCellsHtml}\n\t\t</tr>\n\t</thead>\n\t<tbody data-dojo-attach-point=\"dateRowsNode\" data-dojo-attach-event=\"onclick: _onDayClick\" class=\"dijitReset dijitCalendarBodyContainer\">\n\t\t\t${!dateRowsHtml}\n\t</tbody>\n\t<tfoot class=\"dijitReset dijitCalendarYearContainer\">\n\t\t<tr>\n\t\t\t<td class='dijitReset' valign=\"top\" colspan=\"7\" role=\"presentation\">\n\t\t\t\t<div class=\"dijitCalendarYearLabel\">\n\t\t\t\t\t<span data-dojo-attach-point=\"previousYearLabelNode\" class=\"dijitInline dijitCalendarPreviousYear\" role=\"button\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"currentYearLabelNode\" class=\"dijitInline dijitCalendarSelectedYear\" role=\"button\" id=\"${id}_year\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"nextYearLabelNode\" class=\"dijitInline dijitCalendarNextYear\" role=\"button\"></span>\n\t\t\t\t</div>\n\t\t\t</td>\n\t\t</tr>\n\t</tfoot>\n</table>\n"}});
+'url:dijit/templates/Calendar.html':"<table cellspacing=\"0\" cellpadding=\"0\" class=\"dijitCalendarContainer\" role=\"grid\" aria-labelledby=\"${id}_mddb ${id}_year\" data-dojo-attach-point=\"gridNode\">\n\t<thead>\n\t\t<tr class=\"dijitReset dijitCalendarMonthContainer\" valign=\"top\">\n\t\t\t<th class='dijitReset dijitCalendarArrow' data-dojo-attach-point=\"decrementMonth\" scope=\"col\">\n\t\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarDecrease\" role=\"presentation\"/>\n\t\t\t\t<span data-dojo-attach-point=\"decreaseArrowNode\" class=\"dijitA11ySideArrow\">-</span>\n\t\t\t</th>\n\t\t\t<th class='dijitReset' colspan=\"5\" scope=\"col\">\n\t\t\t\t<div data-dojo-attach-point=\"monthNode\">\n\t\t\t\t</div>\n\t\t\t</th>\n\t\t\t<th class='dijitReset dijitCalendarArrow' scope=\"col\" data-dojo-attach-point=\"incrementMonth\">\n\t\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarIncrease\" role=\"presentation\"/>\n\t\t\t\t<span data-dojo-attach-point=\"increaseArrowNode\" class=\"dijitA11ySideArrow\">+</span>\n\t\t\t</th>\n\t\t</tr>\n\t\t<tr role=\"row\">\n\t\t\t${!dayCellsHtml}\n\t\t</tr>\n\t</thead>\n\t<tbody data-dojo-attach-point=\"dateRowsNode\" data-dojo-attach-event=\"onclick: _onDayClick\" class=\"dijitReset dijitCalendarBodyContainer\">\n\t\t\t${!dateRowsHtml}\n\t</tbody>\n\t<tfoot class=\"dijitReset dijitCalendarYearContainer\">\n\t\t<tr>\n\t\t\t<td class='dijitReset' valign=\"top\" colspan=\"7\" role=\"presentation\">\n\t\t\t\t<div class=\"dijitCalendarYearLabel\">\n\t\t\t\t\t<span data-dojo-attach-point=\"previousYearLabelNode\" class=\"dijitInline dijitCalendarPreviousYear\" role=\"button\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"currentYearLabelNode\" class=\"dijitInline dijitCalendarSelectedYear\" role=\"button\" id=\"${id}_year\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"nextYearLabelNode\" class=\"dijitInline dijitCalendarNextYear\" role=\"button\"></span>\n\t\t\t\t</div>\n\t\t\t</td>\n\t\t</tr>\n\t</tfoot>\n</table>\n"}});
 define("dijit/CalendarLite", [
 	"dojo/_base/array", // array.forEach array.map
 	"dojo/_base/declare", // declare
@@ -12709,7 +12751,7 @@ define("dijit/CalendarLite", [
 		templateString: template,
 
 		// Template for cell for a day of the week (ex: M)
-		dowTemplateString: '<th class="dijitReset dijitCalendarDayLabelTemplate" role="columnheader"><span class="dijitCalendarDayLabel">${d}</span></th>',
+		dowTemplateString: '<th class="dijitReset dijitCalendarDayLabelTemplate" role="columnheader" scope="col"><span class="dijitCalendarDayLabel">${d}</span></th>',
 
 		// Templates for a single date (ex: 13), and for a row for a week (ex: 20 21 22 23 24 25 26)
 		dateTemplateString: '<td class="dijitReset" role="gridcell" data-dojo-attach-point="dateCells"><span class="dijitCalendarDateLabel" data-dojo-attach-point="dateLabels"></span></td>',
@@ -12741,6 +12783,9 @@ define("dijit/CalendarLite", [
 		//		if the calendar itself was focused.   Also indicates which year and month to display,
 		//		i.e. the current "page" the calendar is on.
 		currentFocus: new Date(),
+
+		// Put the summary to the node with role=grid
+		_setSummaryAttr: "gridNode",
 
 		baseClass:"dijitCalendar",
 
@@ -12849,6 +12894,12 @@ define("dijit/CalendarLite", [
 				dayOffset = cldrSupplemental.getFirstDayOfWeek(this.lang);
 			if(dayOffset > firstDay){ dayOffset -= 7; }
 
+			// If they didn't provide a summary, change the default summary to match with the new month
+			if(!this.summary){
+					var monthNames = this.dateLocaleModule.getNames('months', 'wide', 'standAlone', this.lang, month)
+					this.gridNode.setAttribute("summary", monthNames[month.getMonth()]);
+			}
+
 			// Mapping from date (as specified by number returned from Date.valueOf()) to corresponding <td>
 			this._date2cell = {};
 
@@ -12953,7 +13004,7 @@ define("dijit/CalendarLite", [
 			//		Creates the drop down button that displays the current month and lets user pick a new one
 
 			return CalendarLite._MonthWidget({
-				id: this.id + "_mw",
+				id: this.id + "_mddb",
 				lang: this.lang,
 				dateLocaleModule: this.dateLocaleModule
 			}, this.monthNode);
@@ -13162,10 +13213,10 @@ define("dijit/CalendarLite", [
 });
 
 },
-'url:dijit/templates/Calendar.html':"<table cellspacing=\"0\" cellpadding=\"0\" class=\"dijitCalendarContainer\" role=\"grid\" aria-labelledby=\"${id}_mddb ${id}_year\">\n\t<thead>\n\t\t<tr class=\"dijitReset dijitCalendarMonthContainer\" valign=\"top\">\n\t\t\t<th class='dijitReset dijitCalendarArrow' data-dojo-attach-point=\"decrementMonth\">\n\t\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarDecrease\" role=\"presentation\"/>\n\t\t\t\t<span data-dojo-attach-point=\"decreaseArrowNode\" class=\"dijitA11ySideArrow\">-</span>\n\t\t\t</th>\n\t\t\t<th class='dijitReset' colspan=\"5\">\n\t\t\t\t<div data-dojo-attach-point=\"monthNode\">\n\t\t\t\t</div>\n\t\t\t</th>\n\t\t\t<th class='dijitReset dijitCalendarArrow' data-dojo-attach-point=\"incrementMonth\">\n\t\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarIncrease\" role=\"presentation\"/>\n\t\t\t\t<span data-dojo-attach-point=\"increaseArrowNode\" class=\"dijitA11ySideArrow\">+</span>\n\t\t\t</th>\n\t\t</tr>\n\t\t<tr role=\"row\">\n\t\t\t${!dayCellsHtml}\n\t\t</tr>\n\t</thead>\n\t<tbody data-dojo-attach-point=\"dateRowsNode\" data-dojo-attach-event=\"onclick: _onDayClick\" class=\"dijitReset dijitCalendarBodyContainer\">\n\t\t\t${!dateRowsHtml}\n\t</tbody>\n\t<tfoot class=\"dijitReset dijitCalendarYearContainer\">\n\t\t<tr>\n\t\t\t<td class='dijitReset' valign=\"top\" colspan=\"7\" role=\"presentation\">\n\t\t\t\t<div class=\"dijitCalendarYearLabel\">\n\t\t\t\t\t<span data-dojo-attach-point=\"previousYearLabelNode\" class=\"dijitInline dijitCalendarPreviousYear\" role=\"button\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"currentYearLabelNode\" class=\"dijitInline dijitCalendarSelectedYear\" role=\"button\" id=\"${id}_year\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"nextYearLabelNode\" class=\"dijitInline dijitCalendarNextYear\" role=\"button\"></span>\n\t\t\t\t</div>\n\t\t\t</td>\n\t\t</tr>\n\t</tfoot>\n</table>\n",
+'url:dijit/templates/Calendar.html':"<table cellspacing=\"0\" cellpadding=\"0\" class=\"dijitCalendarContainer\" role=\"grid\" aria-labelledby=\"${id}_mddb ${id}_year\" data-dojo-attach-point=\"gridNode\">\n\t<thead>\n\t\t<tr class=\"dijitReset dijitCalendarMonthContainer\" valign=\"top\">\n\t\t\t<th class='dijitReset dijitCalendarArrow' data-dojo-attach-point=\"decrementMonth\" scope=\"col\">\n\t\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarDecrease\" role=\"presentation\"/>\n\t\t\t\t<span data-dojo-attach-point=\"decreaseArrowNode\" class=\"dijitA11ySideArrow\">-</span>\n\t\t\t</th>\n\t\t\t<th class='dijitReset' colspan=\"5\" scope=\"col\">\n\t\t\t\t<div data-dojo-attach-point=\"monthNode\">\n\t\t\t\t</div>\n\t\t\t</th>\n\t\t\t<th class='dijitReset dijitCalendarArrow' scope=\"col\" data-dojo-attach-point=\"incrementMonth\">\n\t\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarIncrease\" role=\"presentation\"/>\n\t\t\t\t<span data-dojo-attach-point=\"increaseArrowNode\" class=\"dijitA11ySideArrow\">+</span>\n\t\t\t</th>\n\t\t</tr>\n\t\t<tr role=\"row\">\n\t\t\t${!dayCellsHtml}\n\t\t</tr>\n\t</thead>\n\t<tbody data-dojo-attach-point=\"dateRowsNode\" data-dojo-attach-event=\"onclick: _onDayClick\" class=\"dijitReset dijitCalendarBodyContainer\">\n\t\t\t${!dateRowsHtml}\n\t</tbody>\n\t<tfoot class=\"dijitReset dijitCalendarYearContainer\">\n\t\t<tr>\n\t\t\t<td class='dijitReset' valign=\"top\" colspan=\"7\" role=\"presentation\">\n\t\t\t\t<div class=\"dijitCalendarYearLabel\">\n\t\t\t\t\t<span data-dojo-attach-point=\"previousYearLabelNode\" class=\"dijitInline dijitCalendarPreviousYear\" role=\"button\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"currentYearLabelNode\" class=\"dijitInline dijitCalendarSelectedYear\" role=\"button\" id=\"${id}_year\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"nextYearLabelNode\" class=\"dijitInline dijitCalendarNextYear\" role=\"button\"></span>\n\t\t\t\t</div>\n\t\t\t</td>\n\t\t</tr>\n\t</tfoot>\n</table>\n",
 'dijit/form/_DateTimeTextBox':function(){
 require({cache:{
-'url:dijit/form/templates/DropDownBox.html':"<div class=\"dijit dijitReset dijitInline dijitLeft\"\n\tid=\"widget_${id}\"\n\trole=\"combobox\"\n\t><div class='dijitReset dijitRight dijitButtonNode dijitArrowButton dijitDownArrowButton dijitArrowButtonContainer'\n\t\tdata-dojo-attach-point=\"_buttonNode, _popupStateNode\" role=\"presentation\"\n\t\t><input class=\"dijitReset dijitInputField dijitArrowButtonInner\" value=\"&#9660; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"button presentation\" aria-hidden=\"true\"\n\t\t\t${_buttonInputDisabled}\n\t/></div\n\t><div class='dijitReset dijitValidationContainer'\n\t\t><input class=\"dijitReset dijitInputField dijitValidationIcon dijitValidationInner\" value=\"&#935; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"presentation\"\n\t/></div\n\t><div class=\"dijitReset dijitInputField dijitInputContainer\"\n\t\t><input class='dijitReset dijitInputInner' ${!nameAttrSetting} type=\"text\" autocomplete=\"off\"\n\t\t\tdata-dojo-attach-point=\"textbox,focusNode\" role=\"textbox\" aria-haspopup=\"true\"\n\t/></div\n></div>\n"}});
+'url:dijit/form/templates/DropDownBox.html':"<div class=\"dijit dijitReset dijitInline dijitLeft\"\n\tid=\"widget_${id}\"\n\trole=\"combobox\"\n\taria-haspopup=\"true\"\n\tdata-dojo-attach-point=\"_popupStateNode\"\n\t><div class='dijitReset dijitRight dijitButtonNode dijitArrowButton dijitDownArrowButton dijitArrowButtonContainer'\n\t\tdata-dojo-attach-point=\"_buttonNode\" role=\"presentation\"\n\t\t><input class=\"dijitReset dijitInputField dijitArrowButtonInner\" value=\"&#9660; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"button presentation\" aria-hidden=\"true\"\n\t\t\t${_buttonInputDisabled}\n\t/></div\n\t><div class='dijitReset dijitValidationContainer'\n\t\t><input class=\"dijitReset dijitInputField dijitValidationIcon dijitValidationInner\" value=\"&#935; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"presentation\"\n\t/></div\n\t><div class=\"dijitReset dijitInputField dijitInputContainer\"\n\t\t><input class='dijitReset dijitInputInner' ${!nameAttrSetting} type=\"text\" autocomplete=\"off\"\n\t\t\tdata-dojo-attach-point=\"textbox,focusNode\" role=\"textbox\"\n\t/></div\n></div>\n"}});
 define("dijit/form/_DateTimeTextBox", [
 	"dojo/date", // date date.compare
 	"dojo/date/locale", // locale.regexp
@@ -13759,7 +13810,11 @@ define("dijit/_TimePicker", [
 
 		_setConstraintsAttr: function(/* Object */ constraints){
 			// brings in visibleRange, increments, etc.
-			lang.mixin(this, constraints);
+			for (var key in { clickableIncrement: 1, visibleIncrement: 1, visibleRange: 1 }) {
+				if (key in constraints) {
+					this[key] = constraints[key];
+				}
+			}
 
 			// locale needs the lang in the constraints as locale
 			if(!constraints.locale){
@@ -14745,7 +14800,7 @@ define("dijit/Editor", [
 			//see whether user clicks out of a focus editor, if so, save selection (focus will
 			//only lost after onmousedown event is fired, so we can obtain correct caret pos.)
 			//2) when user tabs away from the editor, which is handled in onKeyDown below.
-			if(has("ie")){
+			if(has("ie") || has("trident")){
 				this.events.push("onBeforeDeactivate");
 				this.events.push("onBeforeActivate");
 			}
@@ -14781,7 +14836,8 @@ define("dijit/Editor", [
 				this.toolbar = new Toolbar({
 					ownerDocument: this.ownerDocument,
 					dir: this.dir,
-					lang: this.lang
+					lang: this.lang,
+					"aria-label": this.id
 				});
 				this.header.appendChild(this.toolbar.domNode);
 			}
@@ -16309,7 +16365,7 @@ return declare("dijit._editor.plugins.EnterKeyHandling", _Plugin, {
 							}
 						}
 					});
-					if(has("ie") >= 9){
+					if(has("ie") >= 9 && has("ie") <= 10){
 						this.connect(editor.document, "onpaste", function(e){
 							setTimeout(dojo.hitch(this, function(){
 								// Use the old range/selection code to kick IE 9 into updating
@@ -16469,7 +16525,6 @@ return declare("dijit._editor.plugins.EnterKeyHandling", _Plugin, {
 						rs = range.startContainer;
 						if(rs && rs.nodeType == 3){
 							// Text node, we have to split it.
-							var endEmpty = false;
 
 							var offset = range.startOffset;
 							if(rs.length < offset){
@@ -16486,7 +16541,6 @@ return declare("dijit._editor.plugins.EnterKeyHandling", _Plugin, {
 
 							if(!endNode.length){
 								endNode = doc.createTextNode('\xA0');
-								endEmpty = true;
 							}
 
 							if(startNode.length){
@@ -16502,11 +16556,7 @@ return declare("dijit._editor.plugins.EnterKeyHandling", _Plugin, {
 							newrange.setEnd(endNode, endNode.length);
 							selection.removeAllRanges();
 							selection.addRange(newrange);
-							if(endEmpty && !has("webkit")){
-								this.editor._sCall("remove", []);
-							}else{
-								this.editor._sCall("collapse", [true]);
-							}
+							this.editor._sCall("collapse", [true]);
 						}else{
 							var targetNode;
 							if(range.startOffset >= 0){
@@ -16528,6 +16578,9 @@ return declare("dijit._editor.plugins.EnterKeyHandling", _Plugin, {
 							selection.addRange(newrange);
 							this.editor._sCall("collapse", [true]);
 						}
+						// \xA0 dummy text node remains, but is stripped before get("value")
+						// by RichText._stripTrailingEmptyNodes().  Still, could we just use a plain
+						// space (" ") instead?
 					}
 				}else{
 					// don't change this: do not call this.execCommand, as that may have other logic in subclass
@@ -16996,7 +17049,10 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 
 		// Push in the builtin filters now, making them the first executed, but not over-riding anything
 		// users passed in.  See: #6062
-		this.contentPreFilters = [lang.hitch(this, "_preFixUrlAttributes")].concat(this.contentPreFilters);
+		this.contentPreFilters = [
+			lang.trim,	// avoid IE10 problem hitting ENTER on last line when there's a trailing \n.
+			lang.hitch(this, "_preFixUrlAttributes")
+		].concat(this.contentPreFilters);
 		if(has("mozilla")){
 			this.contentPreFilters = [this._normalizeFontStyle].concat(this.contentPreFilters);
 			this.contentPostFilters = [this._removeMozBogus].concat(this.contentPostFilters);
@@ -17007,11 +17063,13 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 			this.contentPreFilters = [this._removeWebkitBogus].concat(this.contentPreFilters);
 			this.contentPostFilters = [this._removeWebkitBogus].concat(this.contentPostFilters);
 		}
-		if(has("ie")){
+		if(has("ie") || has("trident")){
 			// IE generates <strong> and <em> but we want to normalize to <b> and <i>
+			// Still happens in IE11!
 			this.contentPostFilters = [this._normalizeFontStyle].concat(this.contentPostFilters);
-			this.contentDomPostFilters = [lang.hitch(this, this._stripBreakerNodes)].concat(this.contentDomPostFilters);
+				this.contentDomPostFilters = [lang.hitch(this, "_stripBreakerNodes")].concat(this.contentDomPostFilters);
 		}
+		this.contentDomPostFilters = [lang.hitch(this, "_stripTrailingEmptyNodes")].concat(this.contentDomPostFilters);
 		this.inherited(arguments);
 
 		topic.publish(dijit._scopeName + "._editor.RichText::init", this);
@@ -17298,7 +17356,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		ifr.frameBorder = 0;
 		ifr._loadFunc = lang.hitch( this, function(w){
 			this.window = w;
-			this.document = this.window.document;
+				this.document = w.document;
 
 			if(has("ie")){
 				this._localizeEditorCommands();
@@ -17308,11 +17366,33 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 			this.onLoad(html);
 		});
 
-		// Set the iframe's initial (blank) content.
-		var src = this._getIframeDocTxt(),
-			s = "javascript: '" + src.replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
-		ifr.setAttribute('src', s);
-		this.editingArea.appendChild(ifr);
+		// Attach iframe to document, and set the initial (blank) content.
+			var src = this._getIframeDocTxt().replace(/\\/g, "\\\\").replace(/'/g, "\\'"),
+				s;
+
+			// IE10 and earlier will throw an "Access is denied" error when attempting to access the parent frame if
+			// document.domain has been set, unless the child frame also has the same document.domain set. The child frame
+			// can only set document.domain while the document is being constructed using open/write/close; attempting to
+			// set it later results in a different "This method can't be used in this context" error. See #17529
+			if (has("ie") < 11) {
+				s = 'javascript:document.open();try{parent.window;}catch(e){document.domain="' + document.domain + '";}' +
+					'document.write(\'' + src + '\');document.close()';
+			}
+			else {
+				s = "javascript: '" + src + "'";
+			}
+
+			if(has("ie") == 9){
+				// On IE9, attach to document before setting the content, to avoid problem w/iframe running in
+			// wrong security context, see #16633.
+			this.editingArea.appendChild(ifr);
+			ifr.src = s;
+		}else{
+			// For other browsers, set src first, especially for IE6/7 where attaching first gives a warning on
+			// https:// about "this page contains secure and insecure items, do you want to view both?"
+			ifr.setAttribute('src', s);
+			this.editingArea.appendChild(ifr);
+		}
 
 		if(has("safari") <= 4){
 			src = ifr.getAttribute("src");
@@ -17344,19 +17424,9 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		var _cs = domStyle.getComputedStyle(this.domNode);
 
 		// The contents inside of <body>.  The real contents are set later via a call to setValue().
-		var html = "";
-		var setBodyId = true;
-		if(has("ie") || has("webkit") || (!this.height && !has("mozilla"))){
 			// In auto-expand mode, need a wrapper div for AlwaysShowToolbar plugin to correctly
 			// expand/contract the editor as the content changes.
-			html = "<div id='dijitEditorBody'></div>";
-			setBodyId = false;
-		}else if(has("mozilla")){
-			// workaround bug where can't select then delete text (until user types something
-			// into the editor)... and/or issue where typing doesn't erase selected text
-			this._cursorToStart = true;
-			html = "&#160;";	// &nbsp;
-		}
+			var html = "<div id='dijitEditorBody'></div>";
 
 		var font = [ _cs.fontWeight, _cs.fontSize, _cs.fontFamily ].join(" ");
 
@@ -17400,25 +17470,41 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		});
 
 
-		// need to find any associated label element and update iframe document title
-		var label=query('label[for="'+this.id+'"]');
-
+		// need to find any associated label element, aria-label, or aria-labelledby and update iframe document title
+		var label = query('label[for="'+this.id+'"]');
+		var title = "";
+		if(label.length){
+			title = label[0].innerHTML;
+		}else if(this["aria-label"]){
+			title = this["aria-label"];
+		}else if(this["aria-labelledby"]){
+			title = dom.byId(this["aria-labelledby"]).innerHTML;
+		}
+			
+		// Now that we have the title, also set it as the title attribute on the iframe
+		this.iframe.setAttribute("title", title);
+		
 		return [
-			this.isLeftToRight() ? "<html>\n<head>\n" : "<html dir='rtl'>\n<head>\n",
-			(has("mozilla") && label.length ? "<title>" + label[0].innerHTML + "</title>\n" : ""),
+				"<!DOCTYPE html>",
+			this.isLeftToRight() ? "<html lang='"+this.lang+"'>\n<head>\n" : "<html dir='rtl' lang='"+this.lang+"'>\n<head>\n",
+			title ? "<title>" + title + "</title>" : "",
 			"<meta http-equiv='Content-Type' content='text/html'>\n",
 			"<style>\n",
 			"\tbody,html {\n",
 			"\t\tbackground:transparent;\n",
 			"\t\tpadding: 1px 0 0 0;\n",
 			"\t\tmargin: -1px 0 0 0;\n", // remove extraneous vertical scrollbar on safari and firefox
-
-			// Set the html/body sizing.  Webkit always needs this, other browsers
-			// only set it when height is defined (not auto-expanding), otherwise
-			// scrollers do not appear.
-			((has("webkit"))?"\t\twidth: 100%;\n":""),
-			((has("webkit"))?"\t\theight: 100%;\n":""),
 			"\t}\n",
+				"\tbody,html,#dijitEditorBody { outline: none; }",
+
+				// Set <body> to expand to full size of editor, so clicking anywhere will work.
+				// Except in auto-expand mode, in which case the editor expands to the size of <body>.
+				// Also determine how scrollers should be applied.  In autoexpand mode (height = "") no scrollers on y at all.
+				// But in fixed height mode we want both x/y scrollers.
+				// Scrollers go on <body> since it's been set to height: 100%.
+				"html { height: 100%; width: 100%; overflow: hidden; }\n",	// scroll bar is on #dijitEditorBody, shouldn't be on <html>
+				this.height ? "\tbody,#dijitEditorBody { height: 100%; width: 100%; overflow: auto; }\n" :
+					"\tbody,#dijitEditorBody { min-height: " + this.minHeight + "; width: 100%; overflow-x: auto; overflow-y: hidden; }\n",
 
 			// TODO: left positioning will cause contents to disappear out of view
 			//	   if it gets too wide for the visible area
@@ -17428,24 +17514,16 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 			"\t\tright:0px;\n",
 			"\t\tfont:", font, ";\n",
 				((this.height||has("opera")) ? "" : "\t\tposition: fixed;\n"),
-			// FIXME: IE 6 won't understand min-height?
-			"\t\tmin-height:", this.minHeight, ";\n",
 			"\t\tline-height:", lineHeight,";\n",
 			"\t}\n",
 			"\tp{ margin: 1em 0; }\n",
 
-			// Determine how scrollers should be applied.  In autoexpand mode (height = "") no scrollers on y at all.
-			// But in fixed height mode we want both x/y scrollers.  Also, if it's using wrapping div and in auto-expand
-			// (Mainly IE) we need to kill the y scroller on body and html.
-			(!setBodyId && !this.height ? "\tbody,html {overflow-y: hidden;}\n" : ""),
-			"\t#dijitEditorBody{overflow-x: auto; overflow-y:" + (this.height ? "auto;" : "hidden;") + " outline: 0px;}\n",
 			"\tli > ul:-moz-first-node, li > ol:-moz-first-node{ padding-top: 1.2em; }\n",
-			// Can't set min-height in IE9, it puts layout on li, which puts move/resize handles.
-			(!has("ie") ? "\tli{ min-height:1.2em; }\n" : ""),
+			// Can't set min-height in IE>=9, it puts layout on li, which puts move/resize handles.
+			(has("ie") || has("trident") ? "" : "\tli{ min-height:1.2em; }\n"),
 			"</style>\n",
 			this._applyEditingAreaStyleSheets(),"\n",
-			"</head>\n<body ",
-			(setBodyId?"id='dijitEditorBody' ":""),
+			"</head>\n<body role='main' ",
 
 			// Onload handler fills in real editor content.
 			// On IE9, sometimes onload is called twice, and the first time frameElement is null (test_FullScreen.html)
@@ -17524,7 +17602,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 			return;
 		}
 		delete this.editingAreaStyleSheets[index];
-		query('link:[href="'+url+'"]', this.window.document).orphan();
+		query('link[href="' + url + '"]', this.window.document).orphan();
 	},
 
 	// disabled: Boolean
@@ -17536,10 +17614,12 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		value = !!value;
 		this._set("disabled", value);
 		if(!this.isLoaded){ return; } // this method requires init to be complete
-		if(has("ie") || has("webkit") || has("opera")){
 			var preventIEfocus = has("ie") && (this.isLoaded || !this.focusOnLoad);
-			if(preventIEfocus){ this.editNode.unselectable = "on"; }
+			if(preventIEfocus){
+				this.editNode.unselectable = "on";
+			}
 			this.editNode.contentEditable = !value;
+			this.editNode.tabIndex = value ? "-1" : this.tabIndex;
 			if(preventIEfocus){
 				this.defer(function(){
 					if(this.editNode){		// guard in case widget destroyed before timeout
@@ -17547,26 +17627,18 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 					}
 				});
 			}
-		}else{ //moz
-			try{
-				this.document.designMode=(value?'off':'on');
-			}catch(e){ return; } // ! _disabledOK
-			if(!value && this._mozSettingProps){
+			if(has("mozilla") && !value && this._mozSettingProps){
 				var ps = this._mozSettingProps;
 				var n;
 				for(n in ps){
 					if(ps.hasOwnProperty(n)){
 						try{
 							this.document.execCommand(n,false,ps[n]);
-						}catch(e2){}
+						}catch(e2){
 					}
 				}
 			}
-//			this.document.execCommand('contentReadOnly', false, value);
-//				if(value){
-//					this.blur(); //to remove the blinking caret
-//				}
-		}
+			}
 		this._disabledOK = true;
 	},
 
@@ -17587,17 +17659,19 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 			this.window.__registeredWindow = true;
 			this._iframeRegHandle = focus.registerIframe(this.iframe);
 		}
-		if(!has("ie") && !has("webkit") && (this.height || has("mozilla"))){
-			this.editNode=this.document.body;
-		}else{
+
 			// there's a wrapper div around the content, see _getIframeDocTxt().
 			this.editNode=this.document.body.firstChild;
 			var _this = this;
-			if(has("ie")){ // #4996 IE wants to focus the BODY tag
-				this.tabStop = domConstruct.create('div', { tabIndex: -1 }, this.editingArea);
-				this.iframe.onfocus = function(){ _this.editNode.setActive(); };
-			}
-		}
+
+			// Helper code so IE and FF skip over focusing on the <iframe> and just focus on the inner <div>.
+			// See #4996 IE wants to focus the BODY tag.
+			this.beforeIframeNode = domConstruct.place("<div tabIndex=-1></div>", this.iframe, "before");
+			this.afterIframeNode = domConstruct.place("<div tabIndex=-1></div>", this.iframe, "after");
+			this.iframe.onfocus = this.document.onfocus = function(){
+				_this.editNode.focus();
+			};
+
 		this.focusNode = this.editNode; // for InlineEditBox
 
 
@@ -17607,7 +17681,10 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 			this.connect(ap, item.toLowerCase(), item);
 		}, this);
 
-		this.connect(ap, "onmouseup", "onClick"); // mouseup in the margin does not generate an onclick event
+			this.own(
+				// mouseup in the margin does not generate an onclick event
+				on(ap, "mouseup", lang.hitch(this, "onClick"))
+			);
 
 		if(has("ie")){ // IE contentEditable
 			this.connect(this.document, "onmousedown", "_onIEMouseDown"); // #4996 fix focus
@@ -17691,7 +17768,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		// such as the backspace. It might be possible to add this to Dojo, so that
 		// keyPress events can be emulated by the keyDown and keyUp detection.
 
-		if(e.keyCode === keys.TAB && this.isTabIndent ){
+		if(e.keyCode === keys.TAB && this.isTabIndent){
 			event.stop(e); //prevent tab from moving focus out of editor
 
 			// FIXME: this is a poor-man's indent/outdent. It would be
@@ -17701,20 +17778,25 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 				this.execCommand((e.shiftKey ? "outdent" : "indent"));
 			}
 		}
-		if(has("ie")){
-			if(e.keyCode == keys.TAB && !this.isTabIndent){
-				if(e.shiftKey && !e.ctrlKey && !e.altKey){
-					// focus the BODY so the browser will tab away from it instead
-					this.iframe.focus();
-				}else if(!e.shiftKey && !e.ctrlKey && !e.altKey){
-					// focus the BODY so the browser will tab away from it instead
-					this.tabStop.focus();
+
+			// Make tab and shift-tab skip over the <iframe>, going from the nested <div> to the toolbar
+			// or next element after the editor
+			if(e.keyCode == keys.TAB && !this.isTabIndent && !e.ctrlKey && !e.altKey){
+				if(e.shiftKey){
+					// focus the <iframe> so the browser will shift-tab away from it instead
+					this.beforeIframeNode.focus();
+				}else{
+					// focus node after the <iframe> so the browser will tab away from it instead
+					this.afterIframeNode.focus();
 				}
-			}else if(e.keyCode === keys.BACKSPACE && this.document.selection.type === "Control"){
+			}
+
+			if(has("ie") < 9 && e.keyCode === keys.BACKSPACE && this.document.selection.type === "Control"){
 				// IE has a bug where if a non-text object is selected in the editor,
 				// hitting backspace would act as if the browser's back button was
 				// clicked instead of deleting the object. see #1069
-				event.stop(e);
+				e.stopPropagation();
+				e.preventDefault();
 				this.execCommand("delete");
 			}else if((65 <= e.keyCode && e.keyCode <= 90) ||
 				(e.keyCode>=37 && e.keyCode<=40) // FIXME: get this from connect() instead!
@@ -17722,7 +17804,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 				e.charCode = e.keyCode;
 				this.onKeyPress(e);
 			}
-		}
+
 		if(has("ff")){
 			if(e.keyCode === keys.PAGE_UP || e.keyCode === keys.PAGE_DOWN ){
 				if(this.editNode.clientHeight >= this.editNode.scrollHeight){
@@ -17771,6 +17853,14 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		//		Handle the various key events
 		// tags:
 		//		protected
+
+		if(e.keyCode === keys.SHIFT ||
+		   e.keyCode === keys.ALT ||
+		   e.keyCode === keys.META ||
+		   e.keyCode === keys.CTRL ||
+		   (e.keyCode == keys.TAB && !this.isTabIndent && !e.ctrlKey && !e.altKey)){
+			return true;
+		}
 
 		var c = (e.keyChar && e.keyChar.toLowerCase()) || e.keyCode,
 			handlers = this._keyHandlers[c],
@@ -17850,7 +17940,15 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		// tags:
 		//		protected
 
-		// console.info('_onBlur')
+			// Workaround IE problem when you blur the browser windows while an editor is focused: IE hangs
+			// when you focus editor #1, blur the browser window, and then click editor #0.  See #16939.
+			if(has("ie") || has("trident")){
+				this.defer(function(){
+					if(!focus.curNode){
+						this.ownerDocumentBody.focus();
+					}
+				});
+			}
 
 		this.inherited(arguments);
 
@@ -17903,17 +18001,14 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 				return;
 			}
 		}
-		if(!has("ie")){
-			focus.focus(this.iframe);
-		}else if(this.editNode && this.editNode.focus){
-			// editNode may be hidden in display:none div, lets just punt in this case
+			if(has("ie") < 9){
 			//this.editNode.focus(); -> causes IE to scroll always (strict and quirks mode) to the top the Iframe
 			// if we fire the event manually and let the browser handle the focusing, the latest
 			// cursor position is focused like in FF
-			this.iframe.fireEvent('onfocus', document.createEventObject()); // createEventObject only in IE
-		//	}else{
-		// TODO: should we throw here?
-		// console.debug("Have no idea how to focus into the editor!");
+				this.iframe.fireEvent('onfocus', document.createEventObject()); // createEventObject/fireEvent only in IE < 11
+			}else{
+				// Firefox and chrome
+				this.editNode.focus();
 		}
 	},
 
@@ -18051,7 +18146,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 			default: return false;
 		}
 
-		return (has("ie") && supportedBy.ie) ||
+			return ((has("ie") || has("trident")) && supportedBy.ie) ||
 			(has("mozilla") && supportedBy.mozilla) ||
 			(has("webkit") && supportedBy.webkit) ||
 			(has("opera") && supportedBy.opera);	// Boolean return true if the command is supported, false otherwise
@@ -18071,14 +18166,17 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		//focus() is required for IE to work
 		//In addition, focus() makes sure after the execution of
 		//the command, the editor receives the focus as expected
-		this.focus();
+		if(this.focused){
+			// put focus back in the iframe, unless focus has somehow been shifted out of the editor completely
+			this.focus();
+		}
 
 		command = this._normalizeCommand(command, argument);
 		
 		if(argument !== undefined){
 			if(command === "heading"){
 				throw new Error("unimplemented");
-			}else if((command === "formatblock") && has("ie")){
+				}else if(command === "formatblock" && (has("ie") || has("trident"))){
 				argument = '<'+argument+'>';
 			}
 		}
@@ -18149,7 +18247,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		if(this.disabled || !this._disabledOK){ return false; }
 		var r;
 		command = this._normalizeCommand(command);
-		if(has("ie") && command === "formatblock"){
+			if((has("ie") || has("trident")) && command === "formatblock"){
 			r = this._native2LocalFormatNames[this.document.queryCommandValue(command)];
 		}else if(has("mozilla") && command === "hilitecolor"){
 			var oldValue;
@@ -18278,7 +18376,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 			}
 		}
 
-		return this._postFilterContent(null, nonDestructive);
+		return this.isLoaded ? this._postFilterContent(null, nonDestructive) : this.value;
 	},
 	_getValueAttr: function(){
 		// summary:
@@ -18308,9 +18406,6 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		}else{
 			html = this._preFilterContent(html);
 			var node = this.isClosed ? this.domNode : this.editNode;
-			if(html && has("mozilla") && html.toLowerCase() === "<p></p>"){
-				html = "<p>&#160;</p>";	// &nbsp;
-			}
 
 			// Use &nbsp; to avoid webkit problems where editor is disabled until the user clicks it
 			if(!html && has("webkit")){
@@ -18340,10 +18435,6 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		}else if(this.window && this.window.getSelection){ // Moz
 			html = this._preFilterContent(html);
 			this.execCommand("selectall");
-			if(!html){
-				this._cursorToStart = true;
-				html = "&#160;";	// &nbsp;
-			}
 			this.execCommand("inserthtml", html);
 			this._preDomFilterContent(this.editNode);
 		}else if(this.document && this.document.selection){//IE
@@ -18446,10 +18537,6 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 			ec = "";
 		}
 
-		//	if(has("ie")){
-		//		//removing appended <P>&nbsp;</P> for IE
-		//		ec = ec.replace(/(?:<p>&nbsp;</p>[\n\r]*)+$/i,"");
-		//	}
 		array.forEach(this.contentPostFilters, function(ef){
 			ec = ef(ec);
 		});
@@ -18640,15 +18727,17 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 
 	/*** queryCommandEnabled implementations ***/
 
-	_browserQueryCommandEnabled: function(command){
-		// summary:
-		//		Implementation to call to the native queryCommandEnabled of the browser.
-		// command:
-		//		The command to check.
-		// tags:
-		//		protected
-		if(!command) { return false; }
-		var elem = has("ie") ? this.document.selection.createRange() : this.document;
+		_browserQueryCommandEnabled: function(command){
+			// summary:
+			//		Implementation to call to the native queryCommandEnabled of the browser.
+			// command:
+			//		The command to check.
+			// tags:
+			//		protected
+			if(!command){
+				return false;
+			}
+			var elem = has("ie") < 9 ? this.document.selection.createRange() : this.document;
 		try{
 			return elem.queryCommandEnabled(command);
 		}catch(e){
@@ -18876,19 +18965,41 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		//		protected
 		argument = this._preFilterContent(argument);
 		var rv = true;
-		if(has("ie")){
-			var insertRange = this.document.selection.createRange();
-			if(this.document.selection.type.toUpperCase() === 'CONTROL'){
-				var n=insertRange.item(0);
-				while(insertRange.length){
-					insertRange.remove(insertRange.item(0));
+			if(has("ie") < 9){
+				var insertRange = this.document.selection.createRange();
+				if(this.document.selection.type.toUpperCase() === 'CONTROL'){
+					var n = insertRange.item(0);
+					while(insertRange.length){
+						insertRange.remove(insertRange.item(0));
+					}
+					n.outerHTML = argument;
+				}else{
+					insertRange.pasteHTML(argument);
 				}
-				n.outerHTML=argument;
-			}else{
-				insertRange.pasteHTML(argument);
+				insertRange.select();
+			}else if(has("trident") < 8){
+			var insertRange;
+			var selection = rangeapi.getSelection(this.window);
+			if(selection && selection.rangeCount && selection.getRangeAt){
+				insertRange = selection.getRangeAt(0);
+				insertRange.deleteContents();
+
+				var div = domConstruct.create('div');
+				div.innerHTML = argument;
+				var node, lastNode;
+				var n = this.document.createDocumentFragment();
+				while((node = div.firstChild)){
+					lastNode = n.appendChild(node);
+				}
+				insertRange.insertNode(n);
+				if(lastNode) {
+					insertRange = insertRange.cloneRange();
+					insertRange.setStartAfter(lastNode);
+					insertRange.collapse(false);
+					selection.removeAllRanges();
+					selection.addRange(insertRange);
+				}
 			}
-			insertRange.select();
-			//insertRange.collapse(true);
 		}else if(has("mozilla") && !argument.length){
 			//mozilla can not inserthtml an empty html to delete current selection
 			//so we delete the selection instead in this case
@@ -18907,7 +19018,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		// tags:
 		//		protected
 		var applied = false;
-		if(has("ie")){
+		if(has("ie") || has("trident")){
 			this._adaptIESelection();		
 			applied = this._adaptIEFormatAreaAndExec("bold");
 		}
@@ -18925,7 +19036,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		// tags:
 		//		protected
 		var applied = false;
-		if(has("ie")){
+		if(has("ie") || has("trident")){
 			this._adaptIESelection();			
 			applied = this._adaptIEFormatAreaAndExec("italic");
 		}
@@ -18943,7 +19054,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		// tags:
 		//		protected
 		var applied = false;
-		if(has("ie")){
+		if(has("ie") || has("trident")){
 			this._adaptIESelection();			
 			applied = this._adaptIEFormatAreaAndExec("underline");
 		}
@@ -18961,7 +19072,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		// tags:
 		//		protected
 		var applied = false;
-		if(has("ie")){
+		if(has("ie") || has("trident")){
 			this._adaptIESelection();			
 			applied = this._adaptIEFormatAreaAndExec("strikethrough");
 		}
@@ -18979,7 +19090,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		// tags:
 		//		protected
 		var applied = false;
-		if(has("ie")){
+		if(has("ie") || has("trident")){
 			this._adaptIESelection();			
 			applied = this._adaptIEFormatAreaAndExec("superscript");
 		}
@@ -18997,7 +19108,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		// tags:
 		//		protected
 		var applied = false;
-		if(has("ie")){
+		if(has("ie") || has("trident")){
 			this._adaptIESelection();			
 			applied = this._adaptIEFormatAreaAndExec("subscript");
 			
@@ -19016,7 +19127,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		// tags:
 		//		protected
 		var isApplied;
-		if(has("ie")){
+		if(has("ie") || has("trident")){
 			isApplied = this._handleTextColorOrProperties("fontname", argument);
 		}
 		if(!isApplied){
@@ -19033,7 +19144,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		// tags:
 		//		protected
 		var isApplied;
-		if(has("ie")){
+		if(has("ie") || has("trident")){
 			isApplied = this._handleTextColorOrProperties("fontsize", argument);
 		}
 		if(!isApplied){
@@ -19050,7 +19161,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		// tags:
 		//		protected
 		var applied = false;
-		if(has("ie")){
+		if(has("ie") || has("trident")){
 			applied = this._adaptIEList("insertorderedlist", argument);
 		}
 		if(!applied){
@@ -19067,7 +19178,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		// tags:
 		//		protected
 		var applied = false;
-		if(has("ie")){
+		if(has("ie") || has("trident")){
 			applied = this._adaptIEList("insertunorderedlist", argument);
 		}
 		if(!applied){
@@ -19115,7 +19226,7 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 		//		private.
 		if(node.nodeType === 1/*element*/){
 			if(node.childNodes.length > 0){
-				return this._isNodeEmpty(node.childNodes[0], startOffset);
+					return this._isNodeEmpty(node.childNodes[0], startOffset);	// huh?   why test just first child?
 	}
 			return true;
 		}else if(node.nodeType === 3/*text*/){
@@ -19680,6 +19791,24 @@ var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
 			}
 			domConstruct.destroy(b);
 		});
+			return node;
+		},
+
+		_stripTrailingEmptyNodes: function(/*DOMNode*/ node){
+			// summary:
+			//		Function for stripping trailing nodes without any text, excluding trailing nodes
+			//		like <img> or <div><img></div>, even though they don't have text either.
+
+			function isEmpty(node){
+				// If not for old IE we could check for Element children by node.firstElementChild
+				return (/^(p|div|br)$/i.test(node.nodeName) && node.children.length == 0 &&
+					/^[\s\xA0]*$/.test(node.textContent || node.innerText || "")) ||
+					(node.nodeType === 3/*text*/ && /^[\s\xA0]*$/.test(node.nodeValue));
+			}
+			while(node.lastChild && isEmpty(node.lastChild)){
+				domConstruct.destroy(node.lastChild);
+			}
+
 		return node;
 	}
 });
@@ -20046,16 +20175,9 @@ var selection = {
 				// use IE specific crud.
 				range = doc.selection.createRange();
 				try{
-					newRange = node.ownerDocument.body.createControlRange();
-					if(newRange){
-						newRange.addElement(node);
-					}
-				}catch(e1){
-					try{
 						newRange = node.ownerDocument.body.createTextRange();
 						newRange.moveToElementText(node);
 					}catch(e2){/* squelch */}
-				}
 				if(range && newRange){
 					// We can finally compare similar to W3C
 					if(range.compareEndPoints("EndToStart", newRange) === 1){
@@ -21273,7 +21395,7 @@ return declare( 'JBrowse.View.TrackList.Faceted', null,
         grid.selection.selectRange = function( inFrom, inTo ) {
             var selectionLimit = 30;
             if( inTo - inFrom > selectionLimit ) {
-                alert( "Too many tracks selected, please select fewer than "+selectionLimit+" tracks." );
+                alert( "Too many tracks selected, please select fewer than "+selectionLimit+" tracks. Note: you can use shift+click to select a range of tracks" );
                 return undefined;
             }
             return origSelectRange.apply( this, arguments );

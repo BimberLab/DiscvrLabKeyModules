@@ -43,6 +43,7 @@ import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
 import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
+import org.labkey.sequenceanalysis.analysis.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.GenomeLoadButton;
@@ -87,6 +88,9 @@ import org.labkey.sequenceanalysis.run.reference.CustomReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.DNAReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.SavedReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.VirusReferenceLibraryStep;
+import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
+import org.labkey.sequenceanalysis.run.variant.SelectVariantsStep;
+import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
 
 import java.util.Arrays;
@@ -110,7 +114,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.300;
+        return 12.301;
     }
 
     public boolean hasScripts()
@@ -209,6 +213,11 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new RnaSeQCStep.Provider());
 
+        //variant processing
+        SequencePipelineService.get().registerPipelineStep(new SNPEffStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SelectVariantsStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VariantFiltrationStep.Provider());
+
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
         //SequenceAnalysisService.get().registerFileHandler(new CoverageDepthHandler());
@@ -221,6 +230,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new HaplotypeCallerHandler());
         SequenceAnalysisService.get().registerFileHandler(new RnaSeqcHandler());
         SequenceAnalysisService.get().registerFileHandler(new CombineStarGeneCountsHandler());
+        SequenceAnalysisService.get().registerFileHandler(new ProcessVariantsHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));

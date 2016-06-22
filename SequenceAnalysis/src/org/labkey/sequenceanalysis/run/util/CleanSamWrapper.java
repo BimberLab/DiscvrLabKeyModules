@@ -42,6 +42,7 @@ public class CleanSamWrapper extends PicardWrapper
         params.add(getPicardJar().getPath());
         params.add(getToolName());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
+        params.add("COMPRESSION_LEVEL=9");
         inferMaxRecordsInRam(params);
         params.add("INPUT=" + inputFile.getPath());
         params.add("OUTPUT=" + outputBam.getPath());

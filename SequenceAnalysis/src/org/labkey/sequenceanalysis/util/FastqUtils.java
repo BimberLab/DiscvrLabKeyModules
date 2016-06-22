@@ -159,10 +159,10 @@ public class FastqUtils
             avg = sum / (float)total;
 
             Map<String, Object> map = new HashMap<>();
-            map.put("Total Sequences", total);
-            map.put("Min Sequence Length", min);
-            map.put("Max Sequence Length", max);
-            map.put("Avg Sequence Length", avg);
+            map.put("Total Reads", total);
+            map.put("Min Read Length", min);
+            map.put("Max Read Length", max);
+            map.put("Mean Read Length", avg);
 
             return map;
         }

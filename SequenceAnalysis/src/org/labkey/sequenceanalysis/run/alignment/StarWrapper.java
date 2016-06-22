@@ -191,7 +191,7 @@ public class StarWrapper extends AbstractCommandWrapper
                         try
                         {
                             getPipelineCtx().getLogger().debug("changing permissions on directory: " + f.getPath());
-                            Runtime.getRuntime().exec(new String[]{"chmod", "775", f.getPath()});
+                            recursivelyChangeDirectoryPermissions(f);
                         }
                         catch (IOException e)
                         {
@@ -210,6 +210,23 @@ public class StarWrapper extends AbstractCommandWrapper
             }
 
             return output;
+        }
+
+        private void recursivelyChangeDirectoryPermissions(File f) throws IOException
+        {
+            if (f.isDirectory())
+            {
+                Runtime.getRuntime().exec(new String[]{"chmod", "775", f.getPath()});
+
+                File[] children = f.listFiles();
+                if (children != null)
+                {
+                    for (File child : children)
+                    {
+                        recursivelyChangeDirectoryPermissions(child);
+                    }
+                }
+            }
         }
 
         private void addThreadArgs(List<String> args)
@@ -267,14 +284,14 @@ public class StarWrapper extends AbstractCommandWrapper
                 args.add("--genomeFastaFiles");
                 args.add(referenceGenome.getWorkingFastaFile().getPath());
 
-                //NOTE: if the genome has a large number of contigs, this param can be necessary to
+                //NOTE: if the genome has a large number of contigs, this param can be necessary
                 try (IndexedFastaSequenceFile idx = new IndexedFastaSequenceFile(referenceGenome.getWorkingFastaFile()))
                 {
                     int refNumber = idx.getSequenceDictionary().getSequences().size();
+                    long genomeLength = idx.getSequenceDictionary().getReferenceLength();
                     if (refNumber > 500)
                     {
                         getPipelineCtx().getLogger().info("reference has " + refNumber + " contigs, adjusting parameters");
-                        long genomeLength = idx.getSequenceDictionary().getReferenceLength();
                         getPipelineCtx().getLogger().info("genome length: " + genomeLength);
 
                         Double scale = Math.min(18.0, (Math.log((genomeLength / refNumber)) / Math.log(2)));
@@ -282,6 +299,10 @@ public class StarWrapper extends AbstractCommandWrapper
                         args.add(String.valueOf(scale.intValue()));
                     }
 
+                    //and small genomes may require this
+                    Double genomeSAindexNbases = Math.min(14.0, ((Math.log(genomeLength) / Math.log(2)) / 2) - 1);
+                    args.add("--genomeSAindexNbases");
+                    args.add(String.valueOf(genomeSAindexNbases.intValue()));
                 }
                 catch (IOException e)
                 {

@@ -145,6 +145,11 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
             return super.updateRow(user, container, row, oldRow);
         }
 
+        /**
+         * Note: removed since I think this can cause a recursion
+         * if you delete from the QWP, since we delete this row, and the
+         * container delete listeners will attempt to re-delete this row
+         * Instead redirect this table's delete to core.workbooks
         @Override
         protected Map<String, Object> deleteRow(User user, Container container, Map<String, Object> oldRow) throws InvalidKeyException, QueryUpdateServiceException, SQLException
         {
@@ -155,10 +160,13 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
 
             if (null == workbook || !workbook.isWorkbook())
                 throw new NotFoundException("Could not find a workbook with id '" + containerId + "'");
+
+            //this might create a circular delete problem
             ContainerManager.delete(workbook, user);
 
             return oldRow;
         }
+        */
     }
 
     @Override

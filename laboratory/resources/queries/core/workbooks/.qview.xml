@@ -3,6 +3,7 @@
         <column name="workbookId"/>
         <column name="title"/>
         <column name="description"/>
+        <column name="workbookId/tags"/>
         <column name="createdBy"/>
         <column name="created"/>
     </columns>

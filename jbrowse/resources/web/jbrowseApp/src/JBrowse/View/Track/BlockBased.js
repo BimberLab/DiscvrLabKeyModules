@@ -180,7 +180,7 @@ return declare( [Component,DetailsMixin,FeatureFiltererMixin,Destroyable],
         this.label = labelDiv;
 
         if ( ( this.config.style || {} ).trackLabelCss){
-            labelDiv.style.cssText += ";" + trackConfig.style.trackLabelCss;
+            labelDiv.style.cssText += ";" + this.config.style.trackLabelCss;
         }
 
         var closeButton = dojo.create('div',{
@@ -715,7 +715,7 @@ return declare( [Component,DetailsMixin,FeatureFiltererMixin,Destroyable],
             this.own( parent );
         }
 
-        for ( key in menuStructure ) {
+        for ( var key in menuStructure ) {
             var spec = menuStructure [ key ];
             try {
                 if ( spec.children ) {
@@ -764,6 +764,10 @@ return declare( [Component,DetailsMixin,FeatureFiltererMixin,Destroyable],
         else if( typeof inputSpec == 'undefined' ) {
             console.error("Undefined click specification, cannot make click handler");
             return function() {};
+        }
+        else if( inputSpec.action == 'defaultDialog' ) {
+            inputSpec.action = 'contentDialog';
+            inputSpec.content = dojo.hitch(this,'defaultFeatureDetail');
         }
 
         var handler = function ( evt ) {

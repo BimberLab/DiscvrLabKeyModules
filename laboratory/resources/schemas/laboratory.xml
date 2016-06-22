@@ -1267,6 +1267,7 @@
         <ns:insertUrl></ns:insertUrl>
         <ns:updateUrl></ns:updateUrl>
         <ns:importUrl></ns:importUrl>
+        <ns:deleteUrl>/query/deleteQueryRows.view?schemaName=core&amp;query.queryName=workbooks</ns:deleteUrl>
         <ns:columns>
             <ns:column columnName="workbookId">
                 <ns:columnTitle>Workbook #</ns:columnTitle>

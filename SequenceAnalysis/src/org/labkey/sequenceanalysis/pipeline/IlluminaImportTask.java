@@ -133,6 +133,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
             //this step will be slow
             IlluminaFastqSplitter<Integer> parser = new IlluminaFastqSplitter<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
+            parser.setOutputGzip(true);
             parser.setDestinationDir(_helper.getSupport().getAnalysisDirectory());
 
             // the first element of the pair is the sample ID.  the second is either 1 or 2,
@@ -147,15 +148,20 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             getJob().getLogger().info("Created " + fileMap.keySet().size() + " FASTQ files");
 
             getJob().getLogger().info("Compressing FASTQ files");
+            FileType gz = new FileType("gz");
             for (Pair<Integer, Integer> sampleKey : fileMap.keySet())
             {
                 File inputFile = fileMap.get(sampleKey);
-                File output = Compress.compressGzip(inputFile);
-                inputFile.delete();
-                if (inputFile.exists())
-                    throw new PipelineJobException("Unable to delete file: " + inputFile.getPath());
+                if (!gz.isType(inputFile))
+                {
+                    job.getLogger().info("compressing: " + inputFile.getName());
+                    File output = Compress.compressGzip(inputFile);
+                    inputFile.delete();
+                    if (inputFile.exists())
+                        throw new PipelineJobException("Unable to delete file: " + inputFile.getPath());
 
-                fileMap.put(sampleKey, output);
+                    fileMap.put(sampleKey, output);
+                }
             }
 
             TableInfo rs = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);

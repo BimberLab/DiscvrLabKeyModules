@@ -38,23 +38,24 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
+import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
-import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -203,16 +204,23 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             }
 
             //then gather sequences and create the FASTA
-            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fasta), StringUtilsLabKey.DEFAULT_CHARSET)); BufferedWriter idWriter = new BufferedWriter(new FileWriter(idFile)))
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fasta), StringUtilsLabKey.DEFAULT_CHARSET)); PrintWriter idWriter = PrintWriters.getPrintWriter(idFile))
             {
                 idWriter.write("RowId\tName\tAccession\tStart\tStop\n");
 
+                int idx = 0;
                 for (ReferenceLibraryMember lm : libraryMembers)
                 {
+                    idx++;
+
                     RefNtSequenceModel model = lm.getSequenceModel();
                     String name = lm.getHeaderName();
 
                     getJob().getLogger().info("processing sequence: " + name + " [" + model.getRowid() + "]");
+                    if (idx % 1000 == 0)
+                    {
+                        getJob().setStatus(PipelineJob.TaskStatus.running, String.format("Processing %d of %d", idx, libraryMembers.size()));
+                    }
 
                     writer.write(">" + name + "\n");
                     model.writeSequence(writer, 60, lm.getStart(), lm.getStop());

@@ -11,7 +11,6 @@ define( "JBrowse/View/Track/CanvasFeatures", [
             'dojo/dom-construct',
             'dojo/Deferred',
             'dojo/on',
-
             'JBrowse/has',
             'JBrowse/Util',
             'JBrowse/View/GranularRectLayout',
@@ -33,7 +32,6 @@ define( "JBrowse/View/Track/CanvasFeatures", [
             domConstruct,
             Deferred,
             on,
-
             has,
             Util,
             Layout,
@@ -362,7 +360,7 @@ return declare(
             basesPerBin: basesPerBin
         };
 
-        if( this.store.getRegionFeatureDensities ) {
+        if( !this.config.histograms.store&&this.store.getRegionFeatureDensities ) {
             this.store.getRegionFeatureDensities(
                 query,
                 lang.hitch( this, '_drawHistograms', args )
@@ -878,6 +876,15 @@ return declare(
                         this.labelTooltip.style.display = 'block';
                         var labelSpan = this.labelTooltip.childNodes[0],
                             descriptionSpan = this.labelTooltip.childNodes[1];
+
+                        if( this.config.onClick&&this.config.onClick.label ) {
+                            var context = lang.mixin( { track: this, feature: feature, callbackArgs: [ this, feature ] } );
+                            labelSpan.style.display = 'block';
+                            labelSpan.style.font = label.font;
+                            labelSpan.style.color = label.fill;
+                            labelSpan.innerHTML = this.template( feature, this._evalConf( context, this.config.onClick.label, "label" ) );
+                            return;
+                        }
                         if( label ) {
                             labelSpan.style.display = 'block';
                             labelSpan.style.font = label.font;

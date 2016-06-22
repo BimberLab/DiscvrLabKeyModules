@@ -13,6 +13,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import java.io.File;
 import java.lang.reflect.ParameterizedType;
@@ -199,6 +200,12 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         }
 
         return params;
+    }
+
+    @Override
+    public Integer getMaxThreads(PipelineJob job)
+    {
+        return SequenceTaskHelper.getMaxThreads(job);
     }
 
     @Override

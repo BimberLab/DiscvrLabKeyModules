@@ -20,6 +20,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
         Ext4.apply(this, {
             itemId: 'sequenceAnalysisPanel',
+            buttonAlign: 'left',
             buttons: [{
                 text: 'Start Analysis',
                 itemId: 'startAnalysis',

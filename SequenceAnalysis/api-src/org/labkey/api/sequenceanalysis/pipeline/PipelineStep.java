@@ -36,8 +36,7 @@ public interface PipelineStep
         referenceLibraryCreation(ReferenceLibraryStep.class),
         alignment(AlignmentStep.class),
         bamPostProcessing(BamProcessingStep.class),
-        variantCalling(VariantCallingStep.class),
-        variantPostProcessing(VariantPostProcessingStep.class),
+        variantProcessing(VariantProcessingStep.class),
         analysis(AnalysisStep.class);
 
         private Class<? extends PipelineStep> _stepClass;

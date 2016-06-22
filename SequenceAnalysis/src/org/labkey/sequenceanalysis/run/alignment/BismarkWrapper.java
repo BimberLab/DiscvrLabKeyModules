@@ -84,7 +84,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, WORKING_GENOME_NAME, CACHED_NAME_BOWTIE2, referenceGenome);
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, WORKING_GENOME_NAME, CACHED_NAME_BOWTIE2, referenceGenome, true);
             BismarkWrapper wrapper = getWrapper();
 
             List<String> args = new ArrayList<>();

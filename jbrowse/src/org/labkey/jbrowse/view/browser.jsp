@@ -30,7 +30,23 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>JBrowse</title>
-    <link rel="stylesheet" type="text/css" href="<%=h(base)%>genome.css">
+    <link rel="stylesheet" type="text/css" href="<%=h(base)%>css/genome.css">
+
+    <script type="text/javascript">
+        // jshint unused: false
+        var dojoConfig = {
+            async: true,
+            baseUrl: './src',
+            has: {
+                'host-node': false // Prevent dojo from being fooled by Electron
+            }
+        };
+        // Move Electron's require out before loading Dojo
+        if(window.process&&process.versions&&process.versions.electron) {
+            window.electronRequire = require;
+            delete window.require;
+        }
+    </script>
     <script type="text/javascript" src="<%=h(base)%>src/dojo/dojo.js" data-dojo-config="async: 1, baseUrl: '<%=text(AppProps.getInstance().getBaseServerUrl())%><%=h(base)%>src'"></script>
     <script type="text/javascript" src="<%=h(base)%>src/JBrowse/init.js"></script>
 
@@ -73,6 +89,9 @@
                         show_nav: queryParams.nav,
                         show_tracklist: queryParams.tracklist,
                         show_overview: queryParams.overview,
+                        show_menu: queryParams.menu,
+                        show_tracklabels: queryParams.tracklabels,
+                        highResolutionMode: queryParams.highres,
                         stores: { url: { type: "JBrowse/Store/SeqFeature/FromConfig", features: [] } },
                         makeFullViewURL: function( browser ) {
 

@@ -1247,7 +1247,7 @@ public class JBrowseRoot
         o.put("storeClass", "JBrowse/Store/SeqFeature/BAM");
         o.put("label", featureName);
         o.put("type", "JBrowse/View/Track/Alignments2");
-        o.put("maxHeight", 900);   //1.5X the default maxHeight
+        o.put("maxHeight", 1200);   //extend maxHeight
         o.put("key", featureLabel);
 
         String relPath = FileUtil.relativePath(getBaseDir(data.getContainer()).getPath(), outDir.getPath());
@@ -1337,6 +1337,7 @@ public class JBrowseRoot
         o.put("label", featureName);
         o.put("type", "JBrowse/View/Track/HTMLVariants");
         o.put("key", featureLabel);
+        o.put("hideNotFilterPass", true);
 
         String relPath = FileUtil.relativePath(getBaseDir(data.getContainer()).getPath(), outDir.getPath());
         getLogger().debug("using relative path: " + relPath);

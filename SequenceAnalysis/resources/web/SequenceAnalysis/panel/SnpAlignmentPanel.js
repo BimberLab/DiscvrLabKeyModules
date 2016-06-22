@@ -190,7 +190,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             maxRows: this.MAX_ROWS,
             timeout: 0,
             includeTotalCount: false,
-            columns: 'analysis_id,q_aas,ref_aa,ref_aa_id,ref_aa_insert_index,ref_aa_position,ref_nt_id,ref_aa,readcount,adj_depth,pct,indel_pct,ref_aa_id/name,ref_nt_id/name',
+            columns: 'analysis_id,q_aas,q_non_ref_aas,ref_aa,ref_aa_id,ref_aa_insert_index,ref_aa_position,ref_nt_id,ref_aa,readcount,adj_depth,pct,indel_pct,ref_aa_id/name,ref_nt_id/name',
             filterArray: [
                 LABKEY.Filter.create('analysis_id', this.analysisIds.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF),
                 //NOTE: added to reduce the total rowcount being sent to the client, as these datapoints rarely alter presentation
@@ -323,7 +323,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             }
 
             if(!this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]){
-                this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index] = {ref_aa: row.ref_aa, adj_num_reads: 0, adj_percent: 0, adj_depth: row.adj_depth, q_aas: row.q_aas};
+                this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index] = {ref_aa: row.ref_aa, adj_num_reads: 0, adj_percent: 0, adj_depth: row.adj_depth, q_aas: row.q_aas, q_non_ref_aas: row.q_non_ref_aas};
             }
 
             if(Number(row.ref_aa_insert_index) > 0){
@@ -575,6 +575,21 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         return obj;
     },
 
+    updateSnpField: function(val){
+        if (!Ext4.isArray(val)){
+            val = val.split(',');
+        }
+
+        var arr = [];
+        Ext4.Array.forEach(val, function(item){
+            item = item.split(',');
+            arr = arr.concat(item);
+        }, this);
+        arr = Ext4.unique(arr);
+        
+        return arr;
+    },
+    
     processSnp: function(snp, minPct, minReads){
         if((minPct && minPct>snp.adj_percent) || (minReads && minReads>snp.adj_num_reads)){
             snp.show = false;
@@ -582,10 +597,9 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         }
 
         snp.show = true;
-        if (!Ext4.isArray(snp.q_aas)){
-            snp.q_aas = snp.q_aas.split(',');
-        }
-
+        snp.q_aas = this.updateSnpField(snp.q_aas);
+        snp.q_non_ref_aas = this.updateSnpField(snp.q_non_ref_aas);
+        
         snp.displayResidues = snp.q_aas;
     },
 

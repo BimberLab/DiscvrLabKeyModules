@@ -31,25 +31,26 @@ return declare([ MismatchesMixin, NamedFeatureFiltersMixin ], {
             className: 'detail feature-detail feature-detail-'+track.name.replace(/\s+/g,'_').toLowerCase(),
             innerHTML: ''
         });
-        var fmt = dojo.hitch( this, function( name, value ) {
+        var fmt = dojo.hitch( this, function( name, value, feature ) {
             name = Util.ucFirst( name.replace(/_/g,' ') );
-            return this.renderDetailField(container, name, value);
+            return this.renderDetailField(container, name, value, feature);
         });
-        fmt( 'Name', f.get('name') );
-        fmt( 'Type', f.get('type') );
-        fmt( 'Score', f.get('score') );
-        fmt( 'Description', f.get('note') );
+        fmt( 'Name', f.get('name'), f );
+        fmt( 'Type', f.get('type'), f );
+        fmt( 'Score', f.get('score'), f );
+        fmt( 'Description', f.get('note'), f );
         fmt(
             'Position',
             Util.assembleLocString({ start: f.get('start'),
                                      end: f.get('end'),
                                      ref: this.refSeq.name })
-            + ({'1':' (+)', '-1': ' (-)', 0: ' (no strand)' }[f.get('strand')] || '')
+            + ({'1':' (+)', '-1': ' (-)', 0: ' (no strand)' }[f.get('strand')] || ''),
+            f
         );
 
 
         if( f.get('seq') ) {
-            fmt('Sequence and Quality', this._renderSeqQual( f ) );
+            fmt('Sequence and Quality', this._renderSeqQual( f ), f );
         }
 
         var additionalTags = array.filter(
@@ -59,7 +60,7 @@ return declare([ MismatchesMixin, NamedFeatureFiltersMixin ], {
         ).sort();
 
         dojo.forEach( additionalTags, function(t) {
-                          fmt( t, f.get(t) );
+                          fmt( t, f.get(t), f );
         });
 
         return container;
@@ -93,14 +94,10 @@ return declare([ MismatchesMixin, NamedFeatureFiltersMixin ], {
         var outSheets = [];
         array.forEach( inSheets, function( sheet ) {
             outSheets.push( sheet );
-            // avoid modifying cssRules for plugins which generates SecurityException on Firefox
-            if(sheet.href!=null&&!sheet.href.match("^resource:\/\/")){
-                
-                array.forEach( sheet.cssRules || sheet.rules, function( rule ) {
-                    if( rule.styleSheet )
-                        outSheets.push.apply( outSheets, this._getStyleSheets( [rule.styleSheet] ) );
-                },this);
-            }
+            array.forEach( sheet.cssRules || sheet.rules, function( rule ) {
+                if( rule.styleSheet )
+                    outSheets.push.apply( outSheets, this._getStyleSheets( [rule.styleSheet] ) );
+            },this);
         },this);
         return outSheets;
     },
@@ -111,10 +108,10 @@ return declare([ MismatchesMixin, NamedFeatureFiltersMixin ], {
         // get the base colors out of CSS
         this._baseStyles = this._baseStyles || function() {
             var colors = {};
-            var styleSheets = this._getStyleSheets( document.styleSheets );
-            array.forEach( styleSheets, function( sheet ) {
-                // avoid modifying cssRules for plugins which generates SecurityException on Firefox
-                if(sheet.href!=null&&!sheet.href.match("^resource:\/\/")){
+            try {
+                var styleSheets = this._getStyleSheets( document.styleSheets );
+                array.forEach( styleSheets, function( sheet ) {
+                    // avoid modifying cssRules for plugins which generates SecurityException on Firefox
                     var classes = sheet.rules || sheet.cssRules;
                     if( ! classes ) return;
                     array.forEach( classes, function( c ) {
@@ -128,8 +125,8 @@ return declare([ MismatchesMixin, NamedFeatureFiltersMixin ], {
                             }
                         }
                     });
-                }
-            });
+                });
+            } catch(e) { /* catch errors from cross-domain stylesheets */ }
 
             return colors;
         }.call(this);

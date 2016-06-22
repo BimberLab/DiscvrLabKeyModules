@@ -146,10 +146,10 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         if (ret.getColumn("totalForwardReads") == null)
         {
             SQLFragment sql = new SQLFragment("(SELECT SUM(q.metricvalue) as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd " +
-                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid1 = q.dataid AND q.metricname = 'Total Sequences') " +
+                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid1 = q.dataid AND q.metricname = 'Total Reads') " +
                     " WHERE rd.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ret, "totalForwardReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
-            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.dataid~eq=${fileid1}&query.metricname~eq=Total Sequences"));
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.dataid~eq=${fileid1}&query.metricname~eq=Total Reads"));
             newCol.setLabel("Total Forward Reads");
 
             ret.addColumn(newCol);
@@ -158,10 +158,10 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         if (ret.getColumn("totalReverseReads") == null)
         {
             SQLFragment sql = new SQLFragment("(SELECT SUM(q.metricvalue) as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd " +
-                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid2 = q.dataid AND q.metricname = 'Total Sequences') " +
+                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid2 = q.dataid AND q.metricname = 'Total Reads') " +
                     " WHERE rd.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ret, "totalReverseReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
-            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.dataid~eq=${fileid2}&query.metricname~eq=Total Sequences"));
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.dataid~eq=${fileid2}&query.metricname~eq=Total Reads"));
             newCol.setLabel("Total Reverse Reads");
 
             ret.addColumn(newCol);
@@ -247,10 +247,10 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         if (ret.getColumn("totalForwardReads") == null)
         {
             SQLFragment sql = new SQLFragment("(SELECT SUM(q.metricvalue) as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd " +
-                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid1 = q.dataid AND rd.readset = q.readset AND q.metricname = 'Total Sequences') " +
+                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid1 = q.dataid AND rd.readset = q.readset AND q.metricname = 'Total Reads') " +
                     " WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ret, "totalForwardReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
-            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.readset~eq=${rowid}&query.metricname~eq=Total Sequences", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.readset~eq=${rowid}&query.metricname~eq=Total Reads", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
             newCol.setLabel("Total Forward Reads");
 
             ret.addColumn(newCol);
@@ -259,10 +259,10 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         if (ret.getColumn("totalReverseReads") == null)
         {
             SQLFragment sql = new SQLFragment("(SELECT SUM(q.metricvalue) as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd " +
-                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid2 = q.dataid AND rd.readset = q.readset AND q.metricname = 'Total Sequences') " +
+                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid2 = q.dataid AND rd.readset = q.readset AND q.metricname = 'Total Reads') " +
                     " WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ret, "totalReverseReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
-            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.readset~eq=${rowid}&query.metricname~eq=Total Sequences", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.readset~eq=${rowid}&query.metricname~eq=Total Reads", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
             newCol.setLabel("Total Reverse Reads");
 
             ret.addColumn(newCol);

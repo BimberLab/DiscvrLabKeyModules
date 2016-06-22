@@ -67,6 +67,8 @@ abstract public class SequencePipelineService
 
     abstract public List<String> getJavaOpts();
 
+    abstract public Integer getMaxThreads(PipelineJob job);
+
     abstract public CommandWrapper getCommandWrapper(Logger log);
 
     abstract public List<File> getSequenceJobInputFiles(PipelineJob job);

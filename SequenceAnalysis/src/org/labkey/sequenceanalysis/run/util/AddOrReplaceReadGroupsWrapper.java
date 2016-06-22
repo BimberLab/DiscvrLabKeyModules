@@ -43,6 +43,7 @@ public class AddOrReplaceReadGroupsWrapper extends PicardWrapper
         params.add("-jar");
         params.add(getPicardJar().getPath());
         params.add(getToolName());
+        params.add("COMPRESSION_LEVEL=9");
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
         inferMaxRecordsInRam(params);
         params.add("INPUT=" + inputFile.getPath());

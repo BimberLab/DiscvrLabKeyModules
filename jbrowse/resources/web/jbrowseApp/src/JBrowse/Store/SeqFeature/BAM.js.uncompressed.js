@@ -808,7 +808,7 @@ var Feature = Util.fastDeclare(
     },
 
     id: function() {
-        return this._get('name')+'/'+this._get('md')+'/'+this._get('cigar')+'/'+this._get('start');
+        return this._get('name')+'/'+this._get('md')+'/'+this._get('cigar')+'/'+this._get('start')+'/'+this._get('multi_segment_next_segment_reversed');
     },
 
     multi_segment_all_aligned: function() {
@@ -840,9 +840,7 @@ var Feature = Util.fastDeclare(
         return qseq.join(' ');
     },
     strand: function() {
-        var xs = this._get('xs');
-        return xs ? ( xs == '-' ? -1 : 1 ) :
-               this._get('seq_reverse_complemented') ? -1 :  1;
+        return this._get('seq_reverse_complemented') ? -1 :  1;
     },
     multi_segment_next_segment_strand: function() {
       if(this._get('multi_segment_next_segment_unmapped'))
@@ -870,7 +868,8 @@ var Feature = Util.fastDeclare(
         for (var j = 0; j < seqBytes; ++j) {
             var sb = byteArray[p + j];
             seq += SEQRET_DECODER[(sb & 0xf0) >> 4];
-            seq += SEQRET_DECODER[(sb & 0x0f)];
+            if (seq.length < this.get('seq_length'))
+                seq += SEQRET_DECODER[(sb & 0x0f)];
         }
         return seq;
     },
@@ -956,38 +955,30 @@ var Feature = Util.fastDeclare(
     },
 
     _bin_mq_nl: function() {
-        with( this.bytes )
-            return readInt( byteArray, start + 12  );
+        return readInt( this.bytes.byteArray, this.bytes.start + 12  );
     },
     _flag_nc: function() {
-        with( this.bytes )
-            return readInt( byteArray, start + 16 );
+        return readInt( this.bytes.byteArray, this.bytes.start + 16 );
     },
     seq_length: function() {
-        with( this.bytes )
-            return readInt( byteArray, start + 20 );
+        return readInt( this.bytes.byteArray, this.bytes.start + 20 );
     },
     _next_refid: function() {
-        with( this.bytes )
-            return readInt( byteArray, start + 24 );
+        return readInt( this.bytes.byteArray, this.bytes.start + 24 );
     },
     _next_pos: function() {
-        with( this.bytes )
-            return readInt( byteArray, start + 28 );
+        return readInt( this.bytes.byteArray, this.bytes.start + 28 );
     },
     template_length: function() {
-        with( this.bytes )
-            return readInt( byteArray, start + 32 );
+        return readInt( this.bytes.byteArray, this.bytes.start + 32 );
     },
 
     /**
      * parse the core data: ref ID and start
      */
     _coreParse: function() {
-        with( this.bytes ) {
-            this._refID      = readInt( byteArray, start + 4 );
-            this.data.start  = readInt( byteArray, start + 8 );
-        }
+        this._refID      = readInt( this.bytes.byteArray, this.bytes.start + 4 );
+        this.data.start  = readInt( this.bytes.byteArray, this.bytes.start + 8 );
     },
 
     /**
@@ -1262,6 +1253,13 @@ var BAMStore = declare( [ SeqFeatureStore, DeferredStatsMixin, DeferredFeaturesM
     // called by getFeatures from the DeferredFeaturesMixin
     _getFeatures: function( query, featCallback, endCallback, errorCallback ) {
         this.bam.fetch( this.refSeq.name, query.start, query.end, featCallback, endCallback, errorCallback );
+    },
+
+    saveStore: function() {
+        return {
+            urlTemplate: this.config.bam.url,
+            baiUrlTemplate: this.config.bai.url
+        };
     }
 
 });

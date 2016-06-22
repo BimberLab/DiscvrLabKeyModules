@@ -57,6 +57,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             params.add("-jar");
             params.add(getPicardJar().getPath());
             params.add(getToolName());
+            params.add("COMPRESSION_LEVEL=9");
             params.add("ALIGNED_BAM=" + alignedBam.getPath());
             params.add("MAX_INSERTIONS_OR_DELETIONS=-1");
             inferMaxRecordsInRam(params);
@@ -87,12 +88,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
                 FastqToSamWrapper fq = new FastqToSamWrapper(getLogger());
                 fq.setOutputDir(alignedBam.getParentFile());
                 fq.setStringency(ValidationStringency.SILENT);
-                File unmappedReadsSam = fq.execute(inputFastq1, inputFastq2, SAMFileHeader.SortOrder.queryname, rgId == null ? "null" : rgId);
-                unmappedReadsBam = new File(unmappedReadsSam.getParentFile(), FileUtil.getBaseName(unmappedReadsSam) + ".unmapped.bam");
-
-                SamFormatConverterWrapper converterWrapper = new SamFormatConverterWrapper(getLogger());
-                converterWrapper.setStringency(ValidationStringency.SILENT);
-                converterWrapper.execute(unmappedReadsSam, unmappedReadsBam, true);
+                unmappedReadsBam = fq.execute(inputFastq1, inputFastq2, SAMFileHeader.SortOrder.queryname, rgId == null ? "null" : rgId);
                 if (!unmappedReadsBam.exists())
                 {
                     throw new PipelineJobException("BAM file not created, expected: " + unmappedReadsBam.getPath());

@@ -16,6 +16,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import com.drew.lang.annotations.Nullable;
+import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -154,16 +155,25 @@ public class SequencePipelineSettings
         model.setComments(o.getString("comments"));
         if (o.containsKey("sampledate") && o.get("sampledate") != null && StringUtils.trimToNull(o.getString("sampledate")) != null)
         {
+            Date date;
             try
             {
                 //TODO: support other parsing
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-                Date date = format.parse(o.getString("sampledate"));
+                date = format.parse(o.getString("sampledate"));
                 model.setSampleDate(date);
             }
             catch (ParseException e)
             {
-                throw new IllegalArgumentException("Unable to parse sampleDate: [" +  o.getString("sampledate") + "]");
+                try
+                {
+                    date = ConvertHelper.convert(o.getString("sampledate"), Date.class);
+                    model.setSampleDate(date);
+                }
+                catch (ConversionException ce)
+                {
+                    throw new IllegalArgumentException("Unable to parse sampleDate: [" + o.getString("sampledate") + "]", ce);
+                }
             }
         }
         model.setPlatform(o.getString("platform"));

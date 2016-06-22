@@ -4224,7 +4224,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                 return new ApiSimpleResponse(ret);
             }
-            catch (IOException e)
+            catch (IOException | SAMException e)
             {
                 _log.error(e.getMessage(), e);
                 errors.reject(ERROR_MSG, e.getMessage());

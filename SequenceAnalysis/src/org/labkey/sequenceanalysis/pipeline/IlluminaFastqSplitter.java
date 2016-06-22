@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * This is designed to parse the FASTQ files produced by a single run on an illumina instructment and produce one gzipped FASTQ
@@ -62,6 +63,7 @@ public class IlluminaFastqSplitter<SampleIdType>
     private Set<Integer> _skippedSampleIdx = new HashSet<>();
     private Logger _logger;
     private static FileType FASTQ_FILETYPE = new FileType(Arrays.asList("fastq", "fq"), "fastq", FileType.gzSupportLevel.SUPPORT_GZ);
+    private boolean _outputGzip = false;
 
     public IlluminaFastqSplitter(@Nullable String outputPrefix, Map<Integer, SampleIdType> sampleMap, Logger logger, List<File> files)
     {
@@ -225,18 +227,32 @@ public class IlluminaFastqSplitter<SampleIdType>
         }
         else
         {
-            String name = (_outputPrefix == null ? "Reads" : _outputPrefix) + "-R" + pairNumber + "-" + (sampleIdx == 0 ? "Control" : sampleId) + ".fastq";
+            String name = (_outputPrefix == null ? "Reads" : _outputPrefix) + "-R" + pairNumber + "-" + (sampleIdx == 0 ? "Control" : sampleId) + ".fastq" + (_outputGzip ? ".gz" : "");
             File newFile = new File(targetDir, name);
             newFile.createNewFile();
 
             // Buffer the output so we aren't constantly writing through to file system. See issue 19633
-            FastqWriter syncWriter = new BasicFastqWriter(new PrintStream(new BufferedOutputStream(new FileOutputStream(newFile), 64 * 1024)));
+            FastqWriter syncWriter;
+            if (_outputGzip)
+            {
+                syncWriter = new BasicFastqWriter(new PrintStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(newFile), 64 * 1024))));
+            }
+            else
+            {
+                syncWriter = new BasicFastqWriter(new PrintStream(new BufferedOutputStream(new FileOutputStream(newFile), 64 * 1024)));
+            }
+
             // Also use an async IO for better perf
             FastqWriter writer = new AsyncFastqWriter(syncWriter, AsyncFastqWriter.DEFAULT_QUEUE_SIZE);
 
             _fileMap.put(Pair.of(sampleId, pairNumber), Pair.of(newFile, writer));
             return writer;
         }
+    }
+
+    public void setOutputGzip(boolean outputGzip)
+    {
+        _outputGzip = outputGzip;
     }
 
     public File getDestinationDir()

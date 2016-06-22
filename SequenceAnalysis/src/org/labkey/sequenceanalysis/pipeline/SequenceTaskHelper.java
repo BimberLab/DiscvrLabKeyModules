@@ -19,6 +19,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -78,9 +79,19 @@ public class SequenceTaskHelper implements PipelineContext
 
     public SequenceTaskHelper(PipelineJob job, WorkDirectory wd)
     {
+        this(job, wd, null);
+    }
+
+    public SequenceTaskHelper(PipelineJob job, File workLocation)
+    {
+        this(job, null, workLocation);
+    }
+
+    private SequenceTaskHelper(PipelineJob job, WorkDirectory wd, @Nullable File workLocation)
+    {
         _job = job;
         _wd = wd;
-        _workLocation = wd.getDir();  //TODO: is this the right behavior??
+        _workLocation = workLocation == null ? wd.getDir() : workLocation;  //TODO: is this the right behavior??
         _fileManager = new TaskFileManagerImpl(_job, getWorkingDirectory(), wd);
         _settings = new SequencePipelineSettings(_job.getParameters());
     }
@@ -144,7 +155,7 @@ public class SequenceTaskHelper implements PipelineContext
     }
 
     @Override
-    public WorkDirectory getWorkDir()
+    public @Nullable WorkDirectory getWorkDir()
     {
         return _wd;
     }

@@ -68,7 +68,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         return ret.toString();
     }
 
-    protected void addToEnvironment(String key, String value)
+    public void addToEnvironment(String key, String value)
     {
         _environment.put(key, value);
     }

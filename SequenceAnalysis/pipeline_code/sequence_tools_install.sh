@@ -251,6 +251,7 @@ then
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MinorAlleleFrequency.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/ConflictingReadCount.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/ConflictingReadCountBySample.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
+    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MultipleAllelesAtLoci.java ./gatk-protected/public/gatk-tools-public/src/main/java/org/broadinstitute/gatk/tools/walkers/coverage/
 
     cd gatk-protected
 

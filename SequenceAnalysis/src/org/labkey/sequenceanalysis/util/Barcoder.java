@@ -15,6 +15,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
@@ -587,6 +588,19 @@ public class Barcoder extends AbstractSequenceMatcher
             testBarcoder(log, 1, 1, 1);
         }
 
+        //TODO: write this test case
+//        @Test
+//        public void test2() throws Exception
+//        {
+//            //tag: CCGGTG
+//
+//            //@M00370:50:000000000-AE8A2:1:1101:15970:1641 1:N:0:0
+//            //ATGAGCGATGCAGTGCAGTGGCATGATCATGGCTCACTGCAAGATCGGAAGAGCGGTTCAGCAGGAATGCCGAGACCGATGTCGTAGGCCGTCTTCTGCTTGAAAAAAAAATGTTCTTCGATAGCTTATTGTTTCATGAGGAATTGAGCCTTCGCCTTTGTAGTTACTGATTGCTTGGTTTTGGCTATGCTATGTCTTATCTATGTGGCTTTGTTTTCACATACCCAACTTGCCCGGACTCAACCCGGTG
+//
+//            //@M00370:50:000000000-AE8A2:1:1101:15970:1641 2:N:0:0
+//            //TGCAGTGAGCCATGATCATGCCACTGCACTGCATCGCCCAT
+//        }
+
         private void testBarcoder(Logger log, int editDistance, int offset, int deletions) throws IOException
         {
             Barcoder bc = new Barcoder(log);
@@ -622,7 +636,7 @@ public class Barcoder extends AbstractSequenceMatcher
             Assert.assertTrue("Detailed log not found", detailLog.exists());
             detailLog.delete();
 
-            try (CSVReader reader = new CSVReader(new FileReader(summaryLog), '\t'))
+            try (CSVReader reader = new CSVReader(Readers.getReader(summaryLog), '\t'))
             {
                 String[] line;
                 int lineNum = 0;

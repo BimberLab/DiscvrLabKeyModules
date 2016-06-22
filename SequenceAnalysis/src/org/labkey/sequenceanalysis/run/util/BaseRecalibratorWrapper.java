@@ -44,6 +44,9 @@ public class BaseRecalibratorWrapper extends AbstractGatkWrapper
         args.add("-o");
         args.add(recalFile.getPath());
 
+        args.add("--bam_compression");
+        args.add("9");
+
         Integer maxThreads = SequenceTaskHelper.getMaxThreads(getLogger());
         if (maxThreads != null)
         {

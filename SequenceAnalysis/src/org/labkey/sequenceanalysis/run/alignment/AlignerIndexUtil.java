@@ -23,7 +23,7 @@ public class AlignerIndexUtil
     {
         ctx.getLogger().debug("checking whether cached index exists: " + name);
 
-        return verifyOrCreateCachedIndex(ctx, null, null, name, name, genome);
+        return verifyOrCreateCachedIndex(ctx, null, null, name, name, genome, false);
     }
 
     public static boolean copyIndexIfExists(PipelineContext ctx, AlignmentOutputImpl output, String name, ReferenceGenome genome) throws PipelineJobException
@@ -33,13 +33,18 @@ public class AlignerIndexUtil
 
     public static boolean copyIndexIfExists(PipelineContext ctx, AlignmentOutputImpl output, String localName, String webserverName, ReferenceGenome genome) throws PipelineJobException
     {
+        return copyIndexIfExists(ctx, output, localName, webserverName, genome, false);
+    }
+
+    public static boolean copyIndexIfExists(PipelineContext ctx, AlignmentOutputImpl output, String localName, String webserverName, ReferenceGenome genome, boolean forceCopyLocal) throws PipelineJobException
+    {
         ctx.getLogger().debug("copying index to shared dir if exists: " + localName);
         if (ctx.getWorkDir() == null)
         {
             throw new PipelineJobException("PipelineContext.getWorkDir() is null");
         }
 
-        return verifyOrCreateCachedIndex(ctx, ctx.getWorkDir(), output, localName, webserverName, genome);
+        return verifyOrCreateCachedIndex(ctx, ctx.getWorkDir(), output, localName, webserverName, genome, forceCopyLocal);
     }
 
     public static File getWebserverIndexDir(ReferenceGenome genome, String name)
@@ -50,7 +55,7 @@ public class AlignerIndexUtil
     /**
      * If WorkDirectory is null, files will not be copied.  Otherwise files be be copied to this destination.
      */
-    private static boolean verifyOrCreateCachedIndex(PipelineContext ctx, @Nullable WorkDirectory wd, @Nullable AlignmentOutputImpl output, String localName, String webserverName, ReferenceGenome genome) throws PipelineJobException
+    private static boolean verifyOrCreateCachedIndex(PipelineContext ctx, @Nullable WorkDirectory wd, @Nullable AlignmentOutputImpl output, String localName, String webserverName, ReferenceGenome genome, boolean forceCopyLocal) throws PipelineJobException
     {
         boolean hasCachedIndex = false;
         if (genome != null)
@@ -68,7 +73,7 @@ public class AlignerIndexUtil
                     if (wd != null)
                     {
                         String val = ctx.getJob().getParameters().get(AlignmentInitTask.COPY_LOCALLY);
-                        boolean doCopy = val == null ? true : ConvertHelper.convert(val, Boolean.class);
+                        boolean doCopy = forceCopyLocal || (val == null ? true : ConvertHelper.convert(val, Boolean.class));
 
                         if (doCopy)
                         {

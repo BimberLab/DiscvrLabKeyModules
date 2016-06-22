@@ -823,7 +823,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
                 wgsWrapper.executeCommand(finalBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
                 getHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
-                getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, finalBam, rs.getRowId())));
+                getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, finalBam, rs.getRowId())));
                 commands.addAll(wgsWrapper.getCommandsExecuted());
             }
 
@@ -839,7 +839,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 {
                     getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
                     getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics Histogram", metricsHistogram);
-                    getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, finalBam, rs.getRowId())));
+                    getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile2, finalBam, rs.getRowId())));
 
                     commands.addAll(collectInsertSizeMetricsWrapper.getCommandsExecuted());
                 }

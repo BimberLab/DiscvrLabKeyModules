@@ -26,6 +26,7 @@ class IndelRealignerRunner extends QScript {
     realigner.R = this.referenceFile
     realigner.I = this.bamFiles
     realigner.out = this.output
+    realigner.bam_compression = 9
     realigner.targetIntervals = this.targetIntervals
     realigner.scatterCount = this.scatterCount
 

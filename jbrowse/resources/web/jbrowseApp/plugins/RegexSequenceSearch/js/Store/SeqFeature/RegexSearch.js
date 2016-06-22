@@ -109,6 +109,7 @@ define("RegexSequenceSearch/Store/SeqFeature/RegexSearch", [
                 var newFeat = new SimpleFeature(
                     {
                         data: {
+                            type: "SEARCH",
                             start: newStart,
                             end: newEnd,
                             searchMatch: result,
@@ -119,22 +120,31 @@ define("RegexSequenceSearch/Store/SeqFeature/RegexSearch", [
                 featCallback( newFeat );
             }
         },
-
-        translateSequence: function( sequence, frameOffset ) {
+        translateSequence:function( sequence, frameOffset ) {
             var slicedSeq = sequence.slice( frameOffset );
             slicedSeq = slicedSeq.slice( 0, Math.floor( slicedSeq.length / 3 ) * 3);
 
             var translated = "";
+            var codontable=new CodonTable();
+            var codons=codontable.generateCodonTable(codontable.defaultCodonTable);
             for(var i = 0; i < slicedSeq.length; i += 3) {
                 var nextCodon = slicedSeq.slice(i, i + 3);
-                translated = translated + CodonTable[nextCodon];
+                translated = translated + codons[nextCodon];
             }
 
             return translated;
         },
+        
 
         escapeString: function( str ) {
             return (str+'').replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
+        },
+
+        saveStore: function() {
+            return {
+                searchParams: this.config.searchParams,
+                regionSizeLimit: this.config.regionSizeLimit
+            };
         }
 
     });

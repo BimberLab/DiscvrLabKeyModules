@@ -44,6 +44,7 @@ public class SortSamWrapper extends PicardWrapper
         params.add(getToolName());
 
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
+        params.add("COMPRESSION_LEVEL=9");
         params.add("INPUT=" + inputFile.getPath());
         params.add("OUTPUT=" + outputBam.getPath());
         params.add("SORT_ORDER=" + order.name());

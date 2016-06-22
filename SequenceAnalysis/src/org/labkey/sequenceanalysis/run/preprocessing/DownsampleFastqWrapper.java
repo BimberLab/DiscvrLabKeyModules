@@ -96,14 +96,14 @@ public class DownsampleFastqWrapper extends AbstractCommandWrapper
     {
         FastqToSamWrapper fq2sam = new FastqToSamWrapper(getLogger());
         fq2sam.setOutputDir(getOutputDir(null));
-        File sam = fq2sam.execute(inputFile, inputFile2);
+        File bam = fq2sam.execute(inputFile, inputFile2);
 
         DownsampleSamWrapper downsample = new DownsampleSamWrapper(getLogger());
         downsample.setOutputDir(getOutputDir(null));
-        File downsampledSam = downsample.execute(sam, pctRetained);
-        getLogger().info("\tDeleting file: " + sam.getPath());
-        if (!sam.delete() || sam.exists())
-            throw new PipelineJobException("File exists: " + sam.getPath());
+        File downsampledSam = downsample.execute(bam, pctRetained);
+        getLogger().info("\tDeleting file: " + bam.getPath());
+        if (!bam.delete() || bam.exists())
+            throw new PipelineJobException("File exists: " + bam.getPath());
 
         String extension = FileUtil.getExtension(inputFile).endsWith("gz") ? ".fastq.gz" : ".fastq";
         SamToFastqWrapper sam2fq = new SamToFastqWrapper(getLogger());

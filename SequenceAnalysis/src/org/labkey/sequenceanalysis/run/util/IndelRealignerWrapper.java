@@ -67,6 +67,8 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
         realignerArgs.add(realignedBam.getPath());
         realignerArgs.add("-targetIntervals");
         realignerArgs.add(intervalsFile.getPath());
+        realignerArgs.add("--bam_compression");
+        realignerArgs.add("9");
         if (knownIndelsVcf != null)
         {
             realignerArgs.add("--known");
@@ -84,7 +86,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
 
     public File executeWithQueue(File inputBam, File outputBam, File referenceFasta, @Nullable File knownIndelsVcf) throws PipelineJobException
     {
-        getLogger().info("Running GATK HaplotypeCaller using Queue for: " + inputBam.getName());
+        getLogger().info("Running GATK IndelRealigner using Queue for: " + inputBam.getName());
 
         List<File> tempFiles = new ArrayList<>();
         File workingBam = performSharedWork(inputBam, outputBam, referenceFasta, tempFiles);

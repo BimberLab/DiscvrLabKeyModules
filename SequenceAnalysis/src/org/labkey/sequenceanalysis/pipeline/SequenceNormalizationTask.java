@@ -17,6 +17,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
 import com.drew.lang.annotations.Nullable;
+import htsjdk.samtools.SAMException;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.util.FastqQualityFormat;
 import htsjdk.samtools.util.IOUtil;
@@ -226,44 +227,71 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
     private static boolean isNormalizationRequired(PipelineJob job, File f)
     {
-        SequencePipelineSettings settings = new SequencePipelineSettings(job.getParameters());
-        if (settings.isDoBarcode())
+        try
         {
-            return true;
-        }
-
-        if (FastqUtils.FqFileType.isType(f))
-        {
-            QualityEncodingDetector detector = new QualityEncodingDetector();
-            try (FastqReader reader = new FastqReader(f))
+            SequencePipelineSettings settings = new SequencePipelineSettings(job.getParameters());
+            if (settings.isDoBarcode())
             {
-                detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE * 2, reader);
+                return true;
             }
 
-            if (detector.isDeterminationAmbiguous())
+            if (FastqUtils.FqFileType.isType(f))
             {
-                job.getLogger().warn("ambigous encoding detected: " + f.getPath() + ". matched:");
-                EnumSet<FastqQualityFormat> formats = detector.generateCandidateQualities(false);
-                for (FastqQualityFormat fmt : formats)
+                if (!f.exists())
                 {
-                    job.getLogger().warn(fmt.name());
+                    job.getLogger().error("file does not exist: " + f.getPath(), new Exception());
                 }
 
-                return false;
-            }
-            else if (!FastqQualityFormat.Standard.equals(detector.generateBestGuess(QualityEncodingDetector.FileContext.FASTQ, null)))
-            {
-                job.getLogger().debug("fastq file does not appear to use standard encoding (ASCII 33): " + f.getPath());
-                return true;
+                try
+                {
+                    if (!SequenceUtil.hasMinLineCount(f, 4))
+                    {
+                        job.getLogger().warn("file has fewer than 4 lines: " + f.getPath());
+                        return false;
+                    }
+                }
+                catch (PipelineJobException e)
+                {
+                    job.getLogger().error(e.getMessage(), e);
+                }
+
+                QualityEncodingDetector detector = new QualityEncodingDetector();
+                try (FastqReader reader = new FastqReader(f))
+                {
+                    detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE * 2, reader);
+                }
+
+                if (detector.isDeterminationAmbiguous())
+                {
+                    job.getLogger().warn("ambigous encoding detected: " + f.getPath() + ". matched:");
+                    EnumSet<FastqQualityFormat> formats = detector.generateCandidateQualities(false);
+                    for (FastqQualityFormat fmt : formats)
+                    {
+                        job.getLogger().warn(fmt.name());
+                    }
+
+                    return false;
+                }
+                else if (!FastqQualityFormat.Standard.equals(detector.generateBestGuess(QualityEncodingDetector.FileContext.FASTQ, null)))
+                {
+                    job.getLogger().debug("fastq file does not appear to use standard encoding (ASCII 33): " + f.getPath());
+                    return true;
+                }
+                else
+                {
+                    job.getLogger().debug("normalization not required: " + f.getPath());
+                    return false;
+                }
             }
             else
             {
-                job.getLogger().debug("normalization not required: " + f.getPath());
-                return false;
+                return true;
             }
         }
-        else
+        catch (SAMException e)
         {
+            //this is called from pipeline code, so just report the exception for now, and deal with downstream
+            job.getLogger().error(e.getMessage(), e);
             return true;
         }
     }
@@ -375,10 +403,10 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                         fp.file2 = merged2;
                         normalizedPairs.add(fp);
 
-                        getHelper().getFileManager().addOutput(mergeAction, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, merged1);
+                        getHelper().getFileManager().addOutput(mergeAction, SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, merged1);
                         if (merged2 != null && merged2.exists())
                         {
-                            getHelper().getFileManager().addOutput(mergeAction, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, merged2);
+                            getHelper().getFileManager().addOutput(mergeAction, SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, merged2);
                         }
 
                         Date end = new Date();

@@ -26,7 +26,7 @@ DataView.prototype.getUint64Approx = function( byteOffset, littleEndian ) {
     var result = b[0] * Math.pow(2,56) + b[1]*Math.pow(2,48) + b[2]*Math.pow(2,40) + b[3]*Math.pow(2,32) +  b[4]*Math.pow(2, 24) + (b[5]<<16) + (b[6]<<8) + b[7];
 
     if( b[0] || b[1]&224 ) {
-        result = new Number(result);
+        result = Number(result);
         result.overflow = true;
     }
 
@@ -47,6 +47,7 @@ DataView.prototype.getUint64 = function( byteOffset, littleEndian ) {
 return DataView;
 
 });
+
 },
 'jDataView/jdataview':function(){
 define("jDataView/jdataview", [], function() {
@@ -862,14 +863,14 @@ var RequestWorker = declare( null,
             var chromId =   data.getInt32();
             var start =     data.getInt32();
             var end =       data.getInt32();
-            var validCnt =  data.getInt32();
+            var validCnt =  data.getInt32()||1;
             var minVal    = data.getFloat32();
             var maxVal    = data.getFloat32();
             var sumData   = data.getFloat32();
             var sumSqData = data.getFloat32();
 
             if (chromId == this.chr) {
-                var summaryOpts = {score: sumData/validCnt};
+                var summaryOpts = {score: sumData/validCnt,maxScore: maxVal,minScore:minVal};
                 if (this.window.bwg.type == 'bigbed') {
                     summaryOpts.type = 'density';
                 }
@@ -968,7 +969,7 @@ var RequestWorker = declare( null,
                 var blockStarts = bedColumns[8].split(',');
 
                 featureOpts.type = 'bb-transcript';
-                var grp = new Feature();
+                var grp = new SimpleFeature();
                 grp.id = bedColumns[0];
                 grp.type = 'bb-transcript';
                 grp.notes = [];
@@ -977,7 +978,7 @@ var RequestWorker = declare( null,
                 if (bedColumns.length > 10) {
                     var geneId = bedColumns[9];
                     var geneName = bedColumns[10];
-                    var gg = new Feature();
+                    var gg = new SimpleFeature();
                     gg.id = geneId;
                     gg.label = geneName;
                     gg.type = 'gene';
@@ -1065,6 +1066,7 @@ var RequestWorker = declare( null,
 return RequestWorker;
 
 });
+
 },
 'JBrowse/Util/RejectableFastPromise':function(){
 /**
@@ -1194,7 +1196,8 @@ var Range = declare( null,
         if (oranges.length == 1) {
             return oranges[0];
         } else {
-            return new _Compound(oranges);
+            alert('unknown error: _Compound');
+            //return new _Compound(oranges);
         }
     },
 
@@ -1225,7 +1228,8 @@ var Range = declare( null,
         } else if (or.length == 1) {
             return or[0];
         } else {
-            return new _Compound(or);
+            alert('unknown error: _Compound');
+            //return new _Compound(or);
         }
     },
 
@@ -1377,7 +1381,7 @@ return declare([ SeqFeatureStore, DeferredFeaturesMixin, DeferredStatsMixin ],
                 data = this.newDataView( bytes );
                 if( data.getInt32() != this.BIG_WIG_MAGIC && magic != this.BIG_BED_MAGIC) {
                     console.error('Not a BigWig or BigBed file');
-                    deferred.reject('Not a BigWig or BigBed file');
+                    this._deferred.reject('Not a BigWig or BigBed file');
                     return;
                 }
             }
@@ -1602,7 +1606,15 @@ return declare([ SeqFeatureStore, DeferredFeaturesMixin, DeferredStatsMixin ],
         }
         //console.log( 'using unzoomed level');
         return this.getUnzoomedView();
+    },
+
+
+    saveStore: function() {
+        return {
+            urlTemplate: this.config.blob.url
+        };
     }
+
 });
 
 });

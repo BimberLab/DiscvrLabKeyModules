@@ -54,7 +54,7 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
 
         //write sample file
         File sampleFile = new File(outputDir, "samples.txt");
-        try (CSVWriter writer = new CSVWriter(new FileWriter(sampleFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(sampleFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             writer.writeNext(new String[]{"Sample ID", "Bam File", "Notes"});
 
@@ -85,72 +85,74 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
 
         //simplistic filtering of GTF for required fields
         File filteredGtf = new File(outputDir, "filtered.gtf");
-        try (BufferedReader reader = Readers.getReader(gtfFile); PrintWriter write = PrintWriters.getPrintWriter(filteredGtf))
+        try (BufferedReader reader = Readers.getReader(gtfFile); PrintWriter writer = PrintWriters.getPrintWriter(filteredGtf))
         {
             getLogger().info("filtering GTF for required fields");
             getLogger().info("original GTF: " + gtfFile.getPath());
             String line;
             int lineNo = 0;
             int totalLines = 0;
+            int filteredLines = 0;
             while ((line = reader.readLine()) != null)
             {
                 lineNo++;
 
                 if (line.startsWith("#"))
                 {
-                    write.write(line);
-                    write.write('\n');
+                    writer.write(line);
+                    writer.write('\n');
+                    totalLines++;
                 }
                 else if (!line.contains("transcript_id"))
                 {
                     getLogger().info("skipping GTF line " + lineNo + " because it lacks transcript_id");
+                    filteredLines++;
                 }
                 else if (!line.contains("gene_id"))
                 {
                     getLogger().info("skipping GTF line " + lineNo + " because it lacks gene_id");
+                    filteredLines++;
                 }
                 else
                 {
-                    write.write(line);
-                    write.write('\n');
+                    writer.write(line);
+                    writer.write('\n');
                     totalLines++;
                 }
             }
 
-            getLogger().debug("total lines in filtered GTF: " + totalLines);
-
-            params.add("-t");
-            params.add(filteredGtf.getPath());
-
-            String fn = FileUtil.makeLegalName(name).replaceAll(" ", "_");
-            File output = new File(outputDir, fn);
-            params.add("-o");
-            params.add(output.getPath());
-
-            execute(params);
-
-            if (!output.exists())
-                throw new PipelineJobException("Output not created, expected: " + output.getPath());
-
-            File index = new File(output, "index.html");
-            if (!index.exists())
-            {
-                throw new PipelineJobException("Expected index.html file does not exist: " + index.getPath());
-            }
-
-            return output;
+            getLogger().debug(String.format("total lines in original GTF: %d, in filtered GTF: %d, total filtered: %d", lineNo, totalLines, filteredLines));
         }
         catch (IOException e)
         {
             throw new PipelineJobException(e);
         }
-        finally
+
+        params.add("-t");
+        params.add(filteredGtf.getPath());
+
+        String fn = FileUtil.makeLegalName(name).replaceAll(" ", "_");
+        File output = new File(outputDir, fn);
+        params.add("-o");
+        params.add(output.getPath());
+
+        execute(params);
+
+        if (!output.exists())
+            throw new PipelineJobException("Output not created, expected: " + output.getPath());
+
+        File index = new File(output, "index.html");
+        if (!index.exists())
         {
-            if (filteredGtf.exists())
-            {
-                filteredGtf.delete();
-            }
+            throw new PipelineJobException("Expected index.html file does not exist: " + index.getPath());
         }
+
+        if (filteredGtf.exists())
+        {
+            filteredGtf.delete();
+        }
+
+        return output;
     }
 
     private File getJar()
