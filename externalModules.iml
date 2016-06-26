@@ -21,6 +21,7 @@
       <sourceFolder url="file://$MODULE_DIR$/onprcEHRModules/onprc_reports/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/onprcEHRModules/GeneticsCore/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/onprcEHRModules/mergesync/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DISCVR/htcondorconnector/api-src" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
