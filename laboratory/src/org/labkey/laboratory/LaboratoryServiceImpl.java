@@ -181,7 +181,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
             File targetDirectory = writer.ensureUploadDirectory(ctx.getContainer());
             File file = writer.findUniqueFileName(basename, targetDirectory);
 
-            return this.saveAssayBatch(results, json, file, basename, ctx, provider, protocol);
+            return this.saveAssayBatch(results, json, file, ctx, provider, protocol);
         }
         catch (ExperimentException e)
         {
@@ -189,11 +189,11 @@ public class LaboratoryServiceImpl extends LaboratoryService
         }
     }
 
-    public Pair<ExpExperiment, ExpRun> saveAssayBatch(List<Map<String, Object>> results, JSONObject json, File file, String fileName, ViewContext ctx, AssayProvider provider, ExpProtocol protocol) throws ValidationException
+    public Pair<ExpExperiment, ExpRun> saveAssayBatch(List<Map<String, Object>> results, JSONObject json, File file, ViewContext ctx, AssayProvider provider, ExpProtocol protocol) throws ValidationException
     {
         try
         {
-            return AssayHelper.get().saveAssayBatch(results, json, file, fileName, ctx, provider, protocol);
+            return AssayHelper.get().saveAssayBatch(results, json, file, ctx, provider, protocol);
         }
         catch (ExperimentException e)
         {

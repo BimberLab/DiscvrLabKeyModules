@@ -451,7 +451,7 @@ public class DefaultAssayParser implements AssayParser
 
         try
         {
-            return LaboratoryService.get().saveAssayBatch(parseResults(context), json, file, fileName, ctx, _provider, _protocol);
+            return LaboratoryService.get().saveAssayBatch(parseResults(context), json, file, ctx, _provider, _protocol);
         }
         catch (ValidationException e)
         {

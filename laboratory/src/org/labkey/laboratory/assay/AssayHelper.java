@@ -34,7 +34,11 @@ import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentJSONConverter;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.exp.property.AssayBatchDomainKind;
+import org.labkey.api.exp.property.AssayResultDomainKind;
+import org.labkey.api.exp.property.AssayRunDomainKind;
 import org.labkey.api.exp.property.Domain;
+import org.labkey.api.exp.property.DomainKind;
 import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.assay.AssayDataProvider;
@@ -179,7 +183,7 @@ public class AssayHelper
             throw errors;
     }
 
-    public Pair<ExpExperiment, ExpRun> saveAssayBatch(List<Map<String, Object>> results, JSONObject json, File file, String fileName, ViewContext ctx, AssayProvider provider, ExpProtocol protocol) throws ValidationException, ExperimentException
+    public Pair<ExpExperiment, ExpRun> saveAssayBatch(List<Map<String, Object>> results, JSONObject json, File file, ViewContext ctx, AssayProvider provider, ExpProtocol protocol) throws ValidationException, ExperimentException
     {
         AssayRunCreator creator = provider.getRunCreator();
         Map<String, String> runProperties = new CaseInsensitiveHashMap(json.optJSONObject("Run"));
@@ -187,11 +191,17 @@ public class AssayHelper
         String comments = runProperties.get("comments");
 
         Map<String, String> batchProperties = (Map)json.optJSONObject("Batch");
+        if (batchProperties == null)
+        {
+            batchProperties = new HashMap<>();
+        }
+
         if (!batchProperties.containsKey("Name"))
             batchProperties.put("Name", name);
 
         Map<String, File> uploadedFiles = saveResultsFile(results, json, file, provider, protocol);
 
+        //TODO: see AssayRunAsyncContext
         AssayRunUploadContext uploadContext = new RunUploadContext(protocol, provider, name, comments, runProperties, batchProperties, ctx, uploadedFiles);
         Pair<ExpExperiment, ExpRun> resultRows = creator.saveExperimentRun(uploadContext, null);
         return resultRows;
@@ -232,6 +242,32 @@ public class AssayHelper
         return newFile;
     }
 
+    private static Domain saveDomain(Domain existing, AssayProvider ap, ExpProtocol p, User user) throws ChangePropertyDescriptorException
+    {
+        existing.save(user);
+
+        return getExistingDomain(ap, p, user, existing.getDomainKind());
+    }
+
+    @Nullable
+    private static Domain getExistingDomain(AssayProvider ap, ExpProtocol p, User u, DomainKind domainKind)
+    {
+        if (domainKind instanceof  AssayBatchDomainKind)
+        {
+            return ap.getBatchDomain(p);
+        }
+        else if (domainKind instanceof AssayRunDomainKind)
+        {
+            return ap.getRunDomain(p);
+        }
+        else if (domainKind instanceof AssayResultDomainKind)
+        {
+            return ap.getResultsDomain(p);
+        }
+
+        return null;
+    }
+
     public static List<String> ensureAssayFields(User user, String providerName) throws ChangePropertyDescriptorException
     {
         return ensureAssayFields(user, providerName, false, false);
@@ -268,19 +304,11 @@ public class AssayHelper
             boolean changed = false;
             for (ExpProtocol p : allProtocols)
             {
-                Map<String, Domain> existingDomains = new HashMap<String, Domain>();
-                Domain batchDomain = ap.getBatchDomain(p);
-                existingDomains.put(batchDomain.getDomainKind().getKindName(), batchDomain);
-                Domain runDomain = ap.getRunDomain(p);
-                existingDomains.put(runDomain.getDomainKind().getKindName(), runDomain);
-                Domain resultDomain = ap.getResultsDomain(p);
-                existingDomains.put(resultDomain.getDomainKind().getKindName(), resultDomain);
-
                 List<Pair<Domain, Map<DomainProperty, Object>>> domains = ap.createDefaultDomains(p.getContainer(), user);
                 for (Pair<Domain, Map<DomainProperty, Object>> pair : domains)
                 {
                     Domain d = pair.first;
-                    Domain existing = existingDomains.get(d.getDomainKind().getKindName());
+                    Domain existing = getExistingDomain(ap, p, user, d.getDomainKind());
                     for (DomainProperty dp : d.getProperties())
                     {
                         DomainProperty existingProp = existing.getPropertyByName(dp.getName());
@@ -291,7 +319,7 @@ public class AssayHelper
                             if (!reportMessagesOnly)
                             {
                                 _log.info(msg);
-                                addPropertyToDomain(user, existing, dp);
+                                existing = addPropertyToDomain(existing, ap, p, dp, user);
                             }
                             changed = true;
                         }
@@ -312,10 +340,10 @@ public class AssayHelper
                                     existingProp.setName(dp.getName() + "_new");
                                     String uri = existingProp.getPropertyURI().replaceAll(existingProp.getName() + "$", dp.getName());
                                     existingProp.setPropertyURI(uri);
-                                    existing.save(user);
+                                    existing = saveDomain(existing, ap, p, user);
 
                                     existingProp.setName(dp.getName());
-                                    existing.save(user);
+                                    existing = saveDomain(existing, ap, p, user);
                                 }
                             }
 
@@ -328,7 +356,7 @@ public class AssayHelper
                                     _log.info(msg);
                                     changed = true;
                                     existingProp.setLabel(dp.getLabel());
-                                    existing.save(user);
+                                    existing = saveDomain(existing, ap, p, user);
                                 }
                             }
 
@@ -341,7 +369,7 @@ public class AssayHelper
                                     _log.info(msg);
                                     changed = true;
                                     existingProp.setConceptURI(dp.getConceptURI());
-                                    existing.save(user);
+                                    existing = saveDomain(existing, ap, p, user);
                                 }
                             }
 
@@ -383,16 +411,16 @@ public class AssayHelper
                                     if (existingProp.getLabel() != null)
                                         existingProp.setLabel(existingProp.getLabel() + suffix);
 
-                                    existing.save(user);
+                                    existing = saveDomain(existing, ap, p, user);
                                     existingProp = existing.getPropertyByName(existingProp.getName());
 
                                     existingProp.setPropertyURI(existingProp.getPropertyURI() + suffix);
-                                    existing.save(user);
+                                    existing = saveDomain(existing, ap, p, user);
 
                                     //NOTE: for some reason when we do this in a single step, the new property ends up
                                     //showing up, but the old does not.  if we do this in 2 steps, everything is fine
                                     //_log.info("Creating field with the expected datatype");
-                                    //addPropertyToDomain(user, existing, dp);
+                                    //existing = addPropertyToDomain(user, existing, dp);
                                     messages.add("NOTE: one or more fields had the wrong datatype, and the existing field was renamed.  You will need to re-run this page in order to create a new field with the correct datatype.");
                                 }
                             }
@@ -425,7 +453,7 @@ public class AssayHelper
         return messages;
     }
 
-    private static void addPropertyToDomain(User user, Domain domain, DomainProperty dp) throws ChangePropertyDescriptorException
+    private static Domain addPropertyToDomain(Domain domain, AssayProvider ap, ExpProtocol p, DomainProperty dp, User user) throws ChangePropertyDescriptorException
     {
         //TODO: proper way to copy/save, assign propertyURI, etc?
         DomainProperty newProp = domain.addProperty();
@@ -440,6 +468,6 @@ public class AssayHelper
         newProp.setLookup(dp.getLookup());
         newProp.setHidden(dp.isHidden());
 
-        domain.save(user);
+        return saveDomain(domain, ap, p, user);
     }
 }
