@@ -17,8 +17,8 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.labkey.api.gwt.client.util.StringUtils;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.sequenceanalysis.run.util.AASnp;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
