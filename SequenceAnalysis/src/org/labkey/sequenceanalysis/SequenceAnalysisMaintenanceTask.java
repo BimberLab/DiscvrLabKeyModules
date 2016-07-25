@@ -12,10 +12,10 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.util.DefaultSystemMaintenanceTask;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.SystemMaintenance.MaintenanceTask;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
 import java.io.File;
@@ -29,7 +29,7 @@ import java.util.Set;
 /**
  * Created by bimber on 9/15/2014.
  */
-public class SequenceAnalysisMaintenanceTask extends DefaultSystemMaintenanceTask
+public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 {
     private static Logger _log = Logger.getLogger(SequenceAnalysisMaintenanceTask.class);
 
