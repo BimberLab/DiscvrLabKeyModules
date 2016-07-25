@@ -1,0 +1,26 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.create('LDK.panel.PopulateDataPanel', {
+            moduleName: 'su2c',
+            tables: [
+                {queryName: 'differentiation', label: 'Differentiation'},
+                {queryName: 'gender', label: 'Gender'},
+                {queryName: 'sample_organism', label: 'Sample Organism'},
+                {queryName: 'sample_origin_tissue', label: 'Sample Origin Tissue'},
+                {queryName: 'sample_preparation_method', label: 'Sample Preparation Method'},
+                {queryName: 'sample_source', label: 'Sample Source'},
+                {queryName: 'sample_status', label: 'Sample Status'},
+                {queryName: 'stage', label: 'Stage'},
+                {queryName: 'tumor_grade', label: 'Tumor Grade'},
+                {queryName: 'tumor_normal', label: 'Tumor/Normal'},
+                {queryName: 'tumor_type', label: 'Tumor Type'},
+                {queryName: 'yes_no', label: 'Yes/No'}
+            ]
+        }).render(webpart.wrapperDivId);
+
+    });
+
+</script>

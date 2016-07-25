@@ -72,4 +72,9 @@ abstract public class SequencePipelineService
     abstract public CommandWrapper getCommandWrapper(Logger log);
 
     abstract public List<File> getSequenceJobInputFiles(PipelineJob job);
+
+    /**
+     * Throws exception if no run is found
+     */
+    abstract public Integer getExpRunIdForJob(PipelineJob job) throws PipelineJobException;
 }

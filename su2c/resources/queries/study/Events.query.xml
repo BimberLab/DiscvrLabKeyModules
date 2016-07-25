@@ -1,0 +1,13 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="" tableDbType="TABLE">
+                <tableTitle>Events</tableTitle>
+                <javaCustomizer>org.labkey.su2c.Su2cCustomizer</javaCustomizer>
+                <columns>
+
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

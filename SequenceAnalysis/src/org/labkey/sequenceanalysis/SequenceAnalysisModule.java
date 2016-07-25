@@ -89,7 +89,9 @@ import org.labkey.sequenceanalysis.run.reference.DNAReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.SavedReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.VirusReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
+import org.labkey.sequenceanalysis.run.variant.SelectSNVsStep;
 import org.labkey.sequenceanalysis.run.variant.SelectVariantsStep;
+import org.labkey.sequenceanalysis.run.variant.VariantAnnotatorStep;
 import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
 
@@ -217,6 +219,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new SNPEffStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SelectVariantsStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantFiltrationStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SelectSNVsStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VariantAnnotatorStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());

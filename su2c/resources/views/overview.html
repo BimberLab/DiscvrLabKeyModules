@@ -1,0 +1,72 @@
+<!--<script>-->
+    <!--$(function() {-->
+        <!--$('.table-responsive').responsiveTable({options});-->
+    <!--});-->
+<!--</script>-->
+<script type="text/javascript">
+    Ext4.onReady(function() {
+        LABKEY.Query.selectRows({
+            schemaName: 'study',
+            queryName: 'demographics',
+            columns: 'patientId,study,IHC_Images_count,Variants_count',
+            scope: this,
+            failure: LDK.Utils.getErrorCallback(),
+            success: function(results){
+                var datasets = ['Variants', 'Images', 'Patients'];
+
+                var aggregate = {};
+                Ext4.each(results.rows, function(row){
+                    var cohort = row.study || 'Unknown';
+                    if (!aggregate[cohort]){
+                        aggregate[cohort] = {
+                            y: datasets,
+                            x: [0,0,0],
+                            //marker: {
+                            //    color: colors.shift()
+                            //},
+                            name: cohort,
+                            type: 'bar',
+                            orientation: 'h'
+                        };
+                    }
+
+                    aggregate[cohort].x[0] += (row['Variants_count'] ? 1 : 0);
+                    aggregate[cohort].x[1] += (row['IHC_Images_count'] ? 1 : 0);
+                    aggregate[cohort].x[2] += 1;
+                }, this);
+
+                var data = [];
+                for (var cohort in aggregate){
+                    data.push(aggregate[cohort]);
+                }
+
+                var layout = {barmode: 'stack', height: 500};
+
+                //var webpart = <%=webpartContext%>;
+                Plotly.newPlot('su2c_overview_graph', data, layout);
+
+            }
+        });
+    });
+</script>
+<div style="padding: 30px 0px 0px 10px">
+    SU2C contains data from 5 clinical trials.  Below is a summary of the data currently available, by patient and trial.  Use the tabs above to browse these data by patient or dataset.
+
+</div>
+<!--<div>-->
+    <!--<table>-->
+        <!--<thead>-->
+            <!--<tr><th>Study</th><th>Site</th></tr>-->
+        <!--</thead>-->
+        <!--<tbody>-->
+            <!--<tr><td>CXCR4I</td><td>Cambridge</td></tr>-->
+            <!--<tr><td>GVAX (J14113)</td><td>Johns Hopkins</td></tr>-->
+            <!--<tr><td>CD47</td><td>Stanford</td></tr>-->
+            <!--<tr><td>BTKI</td><td>UCSF</td></tr>-->
+            <!--<tr><td>CD40</td><td>University of Pennsylvania</td></tr>-->
+        <!--</tbody>-->
+    <!--</table>-->
+<!--</div>-->
+
+<p></p>
+<div id="su2c_overview_graph"></div>

@@ -3,7 +3,7 @@
         var webpart = <%=webpartContext%>;
 
         Ext4.create('SequenceAnalysis.panel.VariantProcessingPanel', {
-            outputFileIds: LABKEY.ActionURL.getParameter("outputFileIds")
+            outputFileIds: LABKEY.ActionURL.getParameter("outputFileIds") ? LABKEY.ActionURL.getParameter("outputFileIds").split(';') : []
         }).render(webpart.wrapperDivId);
     });
 

@@ -538,16 +538,18 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/bedtools || ! -f ${LKTOOLS_DIR}/bedtools || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf bedtools-2.20.1*
-    rm -Rf bedtools-2.24.0*
+    rm -Rf bedtools*
     rm -Rf $LKTOOLS_DIR/bedtools
 
-    wget $WGET_OPTS https://github.com/arq5x/bedtools2/releases/download/v2.24.0/bedtools-2.24.0.tar.gz
-    gunzip bedtools-2.24.0.tar.gz
-    tar -xf bedtools-2.24.0.tar
-    echo "Compressing TAR"
-    gzip bedtools-2.24.0.tar
+    #wget $WGET_OPTS https://github.com/arq5x/bedtools2/releases/download/v2.26.0/bedtools-2.26.0.tar.gz
+    #gunzip bedtools-2.26.0.tar.gz
+    #tar -xf bedtools-2.26.0.tar
+    #echo "Compressing TAR"
+    #gzip bedtools-2.26.0.tar
+
+    git clone https://github.com/arq5x/bedtools2.git
     cd bedtools2
+    git checkout tags/v2.26.0
     make
     
     install ./bin/bedtools ${LKTOOLS_DIR}/bedtools
@@ -701,10 +703,10 @@ then
     rm -Rf $LKTOOLS_DIR/htsjdk-*
     rm -Rf $LKTOOLS_DIR/libIntelDeflater.so
 
-    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/2.2.2/picard-tools-2.2.2.zip
-    unzip picard-tools-2.2.2.zip
+    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/2.5.0/picard-tools-2.5.0.zip
+    unzip picard-tools-2.5.0.zip
 
-    cp -R ./picard-tools-2.2.2/* $LKTOOLS_DIR/
+    cp -R ./picard-tools-2.5.0/* $LKTOOLS_DIR/
 else
     echo "Already installed"
 fi

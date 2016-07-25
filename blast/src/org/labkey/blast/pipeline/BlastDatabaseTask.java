@@ -35,17 +35,15 @@ import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.blast.BLASTManager;
 import org.labkey.blast.BLASTSchema;
 import org.labkey.blast.BLASTWrapper;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -161,7 +159,7 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
             fastaCopy = new File(getPipelineJob().getDatabaseDir(), getPipelineJob().getDatabaseGuid() + ".fasta");
 
             //decompress file and also touch up read names to keep BLAST happier
-            try (BufferedReader reader = Readers.getReader(data.getFile());BufferedWriter writer = new BufferedWriter(new FileWriter(fastaCopy)))
+            try (BufferedReader reader = Readers.getReader(data.getFile()); PrintWriter writer = PrintWriters.getPrintWriter(fastaCopy))
             {
                 getJob().getLogger().info("creating FASTA copy of: " + data.getFile().getPath());
                 getJob().getLogger().info("to file: " + fastaCopy.getPath());
@@ -174,6 +172,8 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
                     if (line.startsWith(">"))
                     {
                         refName = line.substring(1);
+                        refName = refName.replaceAll("\\|", "_");  //problematic for BLAST's parsing
+
                         //accession = libraryHelper.resolveAccession(refName);
                         rowId = libraryHelper.resolveSequenceId(refName);
 

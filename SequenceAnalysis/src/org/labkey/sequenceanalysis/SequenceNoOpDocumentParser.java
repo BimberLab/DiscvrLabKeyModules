@@ -37,7 +37,15 @@ public class SequenceNoOpDocumentParser extends AbstractDocumentParser
                 SequenceUtil.FILETYPE.gtf.getFileType().isType(resource.getFile()) ||
                 SequenceUtil.FILETYPE.gff.getFileType().isType(resource.getFile()) ||
                 SequenceUtil.FILETYPE.bed.getFileType().isType(resource.getFile()) ||
-                SequenceUtil.FILETYPE.vcf.getFileType().isType(resource.getFile());
+                SequenceUtil.FILETYPE.vcf.getFileType().isType(resource.getFile()) ||
+                isUnderAnalysisDir(resource);
+    }
+
+    private boolean isUnderAnalysisDir(WebdavResource resource)
+    {
+        return resource.getFile() != null && (resource.getFile().getPath().contains("/sequenceAnalysis/") ||
+                resource.getFile().getPath().contains("/analyzeAlignment/") ||
+                resource.getFile().getPath().contains("/sequenceOutputPipeline/"));
     }
 }
 

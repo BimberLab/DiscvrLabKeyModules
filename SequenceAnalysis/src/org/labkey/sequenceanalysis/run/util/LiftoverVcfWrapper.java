@@ -57,6 +57,6 @@ public class LiftoverVcfWrapper extends PicardWrapper
     @Override
     protected String getToolName()
     {
-        return "LiftoverVCF";
+        return "LiftoverVcf";
     }
 }

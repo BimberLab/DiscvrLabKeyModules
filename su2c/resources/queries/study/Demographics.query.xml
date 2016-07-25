@@ -1,0 +1,69 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="" tableDbType="TABLE" useColumnOrder="true">
+                <tableTitle>Patient Demographics</tableTitle>
+                <javaCustomizer>org.labkey.su2c.Su2cCustomizer</javaCustomizer>
+                <columns>
+                    <column columnName="patientId">
+
+                    </column>
+                    <column columnName="study">
+                        <columnTitle>Study</columnTitle>
+                    </column>
+                    <column columnName="date">
+                        <columnTitle>Enrollment Date</columnTitle>
+                    </column>
+                    <column columnName="ageAtEnrollment">
+                        <columnTitle>Age At Enrollment</columnTitle>
+                    </column>
+                    <column columnName="gender">
+                        <fk>
+                            <fkDbSchema>lookups</fkDbSchema>
+                            <fkTable>gender</fkTable>
+                            <fkColumnName>value</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="race">
+                        <columnTitle>Race</columnTitle>
+                    </column>
+                    <column columnName="ethnicity">
+                        <columnTitle>Ethnicity</columnTitle>
+                    </column>
+                    <column columnName="mrn">
+                        <columnTitle>MRN</columnTitle>
+                        <phi>PHI</phi>
+                        <protected>true</protected>
+                    </column>
+                    <column columnName="firstName">
+                        <columnTitle>First Name</columnTitle>
+                        <phi>PHI</phi>
+                        <protected>true</protected>
+                    </column>
+                    <column columnName="lastName">
+                        <columnTitle>Last Name</columnTitle>
+                        <phi>PHI</phi>
+                        <protected>true</protected>
+                    </column>
+                    <column columnName="birth">
+                        <phi>PHI</phi>
+                        <protected>true</protected>
+                    </column>
+                    <column columnName="death">
+                        <phi>PHI</phi>
+                        <protected>true</protected>
+                    </column>
+                    <column columnName="eligibilityStatus">
+                        <columnTitle>Eligibility Status</columnTitle>
+                    </column>
+                    <column columnName="consentStatus">
+                        <columnTitle>Consent Status</columnTitle>
+                    </column>
+                    <column columnName="consentedDate">
+                        <columnTitle>Consented Date</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

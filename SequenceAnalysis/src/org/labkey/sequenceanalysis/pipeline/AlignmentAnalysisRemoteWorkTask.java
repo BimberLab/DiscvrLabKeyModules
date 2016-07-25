@@ -106,27 +106,7 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
                 throw new PipelineJobException("Unable to find analysis details for file: " + inputBam.getName());
             }
 
-            Integer refFastaId = m.getReferenceLibrary();
-            if (refFastaId == null)
-            {
-                ReferenceGenome genome = getTaskHelper().getSequenceSupport().getCachedGenome(m.getLibraryId());
-                if (genome != null)
-                {
-                    refFastaId = genome.getFastaExpDataId();
-                }
-            }
-
-            if (refFastaId == null)
-            {
-                throw new PipelineJobException("Unable to find reference FASTA for file: " + inputBam.getName());
-            }
-
-            File refFasta = getTaskHelper().getSequenceSupport().getCachedData(refFastaId);
-            if (refFasta == null)
-            {
-                throw new PipelineJobException("Unable to find reference FASTA for file: " + inputBam.getName());
-            }
-
+            File refFasta = resolveRefFasta(m, inputBam);
             File fai = new File(refFasta.getPath() + ".fai");
             if (!fai.exists())
             {
@@ -139,9 +119,45 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
             outputs.addAll(SequenceAnalysisTask.runAnalysesRemote(actions, rs, inputBam, genome, providers, getTaskHelper()));
         }
 
+        getTaskHelper().getFileManager().deleteIntermediateFiles();
         getTaskHelper().getFileManager().cleanup();
 
         return new RecordedActionSet(actions);
+    }
+
+    //this is an artifact from before reference_libraries, and needed to support one-off custom references:
+    private File resolveRefFasta(AnalysisModel m, File inputBam) throws PipelineJobException
+    {
+        //first try to find FASTA based on reference_library
+        Integer refFastaId = m.getReferenceLibrary();
+        if (refFastaId != null)
+        {
+            File refFasta = getTaskHelper().getSequenceSupport().getCachedData(refFastaId);
+            if (refFasta != null)
+            {
+                return refFasta;
+            }
+        }
+
+        //if null, fall back to the genome
+        ReferenceGenome genome = getTaskHelper().getSequenceSupport().getCachedGenome(m.getLibraryId());
+        if (genome != null)
+        {
+            refFastaId = genome.getFastaExpDataId();
+        }
+
+        if (refFastaId == null)
+        {
+            throw new PipelineJobException("Unable to find reference FASTA ID for file: " + inputBam.getName());
+        }
+
+        File refFasta = getTaskHelper().getSequenceSupport().getCachedData(refFastaId);
+        if (refFasta == null)
+        {
+            throw new PipelineJobException("Unable to find reference FASTA for file: " + inputBam.getName() + " for id: " + refFastaId);
+        }
+
+        return refFasta;
     }
 
     public SequenceTaskHelper getTaskHelper()

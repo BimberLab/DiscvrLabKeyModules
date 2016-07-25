@@ -1,9 +1,18 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.filter.DuplicateReadFilter;
 import htsjdk.samtools.filter.SamRecordFilter;
 import org.json.JSONObject;
+import org.labkey.api.data.DbScope;
+import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.Selector;
+import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
@@ -15,14 +24,20 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -75,13 +90,18 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                             put("minValue", 0);
                             put("maxValue", 100);
                         }}, 25),
+                    ToolParameterDescriptor.create("minPctForLineageFiltering", "Min Pct For Lineage Filtering", "If a value is provided, each group of allele hits will be categorized by lineage.  Any groupings representing more than the specified percent of reads from that lineage will be included.  Per lineage, we will also find the intersect of all groups.  If a set of alleles is common to all groups, only these alleles will be kept and the others discarded.", "ldk-numberfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                    }}, 0.05),
                     ToolParameterDescriptor.create("minAlignmentLength", "Min Alignment Length", "If a value is provided, any alignment with a length less than this value will be discarded.", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
                         }}, 40),
                     ToolParameterDescriptor.create("writeLog", "Write Detailed Log", "If checked, the analysis will write a detailed log file of read mapping and calls.  This is intended for debugging purposes", "checkbox", new JSONObject()
                     {{
-                            put("checked", true);
+                            put("checked", false);
                     }}, null)
             ), null, null);
         }
@@ -96,6 +116,43 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
     @Override
     public void init(List<AnalysisModel> models) throws PipelineJobException
     {
+        Set<Integer> distinctGenomeIds = new HashSet<>();
+        for (AnalysisModel m : models)
+        {
+            if (m.getLibraryId() != null)
+            {
+                distinctGenomeIds.add(m.getLibraryId());
+            }
+        }
+
+        for (Integer libraryId : distinctGenomeIds)
+        {
+            ReferenceGenome referenceGenome = SequenceAnalysisService.get().getReferenceGenome(libraryId, getPipelineCtx().getJob().getUser());
+            if (referenceGenome == null)
+            {
+                throw new PipelineJobException("Genome not found: " + libraryId);
+            }
+
+            File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
+            try (final CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(lineageMapFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+            {
+                SQLFragment sql = new SQLFragment("SELECT r.name, r.lineage FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES + " r WHERE r.rowid IN (SELECT ref_nt_id FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS + " WHERE library_id = ?)", libraryId);
+                SqlSelector ss = new SqlSelector(DbScope.getLabKeyScope(), sql);
+                ss.forEach(new Selector.ForEachBlock<ResultSet>()
+                {
+                    @Override
+                    public void exec(ResultSet rs) throws SQLException
+                    {
+                        if (rs.getObject("lineage") != null)
+                        writer.writeNext(new String[]{rs.getString("name"), rs.getString("lineage")});
+                    }
+                });
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
 
     }
 
@@ -118,6 +175,19 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
         else
         {
             getPipelineCtx().getLogger().info("SBT output not found, skipping: " + expectedTxt.getPath());
+        }
+
+        //delete lineage files
+        ReferenceGenome referenceGenome = SequenceAnalysisService.get().getReferenceGenome(model.getLibraryId(), getPipelineCtx().getJob().getUser());
+        if (referenceGenome == null)
+        {
+            throw new PipelineJobException("Genome not found: " + model.getLibraryId());
+        }
+
+        File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
+        if (lineageMapFile.exists())
+        {
+            lineageMapFile.delete();
         }
 
         return null;
@@ -157,6 +227,23 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                 }
                 File outputLog = new File(workDir, FileUtil.getBaseName(inputBam) + ".sbt.txt.gz");
                 agg.setOutputLog(outputLog);
+
+                File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
+                if (lineageMapFile.exists())
+                {
+                    getPipelineCtx().getLogger().debug("using lineage map: " + lineageMapFile.getName());
+                    agg.setLineageMapFile(lineageMapFile);
+
+                    Double minPctForLineageFiltering = getProvider().getParameterByName("minPctForLineageFiltering").extractValue(getPipelineCtx().getJob(), getProvider(), Double.class);
+                    if (minPctForLineageFiltering != null)
+                    {
+                        agg.setMinPctForLineageFiltering(minPctForLineageFiltering);
+                    }
+                }
+                else
+                {
+                    getPipelineCtx().getLogger().debug("lineage map not found, skipping");
+                }
             }
 
             aggregators.add(agg);

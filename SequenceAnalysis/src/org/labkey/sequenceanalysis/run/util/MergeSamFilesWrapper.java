@@ -124,7 +124,7 @@ public class MergeSamFilesWrapper extends PicardWrapper
         params.add("-jar");
         params.add(getPicardJar().getPath());
         params.add(getToolName());
-        params.add("COMPRESSION_LEVEL=9");
+        params.add("COMPRESSION_LEVEL=" + getCompressionLevel());
 
         for (File f : files)
         {

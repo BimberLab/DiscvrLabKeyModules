@@ -1,0 +1,17 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="patientId"/>
+        <column name="type"/>
+        <column name="gene"/>
+        <column name="normalVAF"/>
+        <column name="tumorVAF"/>
+        <column name="filterCall"/>
+        <column name="trvType"/>
+        <column name="chromosome"/>
+        <column name="start"/>
+        <column name="stop"/>
+    </columns>
+    <sorts>
+        <sort column="patientId" descending="false"/>
+    </sorts>
+</customView>

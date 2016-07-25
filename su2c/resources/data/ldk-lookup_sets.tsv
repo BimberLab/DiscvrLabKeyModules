@@ -1,0 +1,13 @@
+setname	label	keyfield	titleColumn
+differentiation	Differentiation	value
+gender	Gender	value
+sample_organism	Sample Organism	value
+sample_origin_tissue	Sample Origin Tissue	value
+sample_preparation_method	Sample Preparation Method	value
+sample_source	Sample	Source	value
+sample_status	Sample Status	value
+stage	Stage	value
+tumor_grade	Tumor Grade	value
+tumor_normal	Tumor/Normal	value
+tumor_type	Tumor Type	value
+yes_no	Yes/No	value

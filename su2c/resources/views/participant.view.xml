@@ -1,0 +1,16 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Patient Details" frame="portal">
+    <dependencies>
+        <dependency path="Ext4ClientApi" />
+        <dependency path="ldk/LDKApi.lib.xml"/>
+
+        <dependency path="internal/jQuery"/>
+        <dependency path="https://cdn.plot.ly/plotly-latest.min.js"/>
+
+        <dependency path="su2c/Utils.js"/>
+        <dependency path="CancerStudies/panel/PatientSummaryPanel.js"/>
+        <dependency path="CancerStudies/panel/TabbedReportPanel.js"/>
+        <dependency path="CancerStudies/panel/PatientTabbedReportPanel.js"/>
+        <dependency path="CancerStudies/panel/MutationMapperPanel.js"/>
+        <dependency path="su2c/PatientTimelinePanel.js"/>
+    </dependencies>
+</view>

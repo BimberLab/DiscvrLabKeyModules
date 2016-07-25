@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Exported from LabKey Server at https://bcclabkey.ohsu.edu/project/Study/begin.view by bimber on Wed May 04 10:21:50 PDT 2016-->
+<study archiveVersion="16.1" label="SU2C Clinical Trials" timepointType="CONTINUOUS" subjectNounSingular="Patient" subjectNounPlural="Patients" subjectColumnName="patientId" investigator="" grant="" species="" alternateIdPrefix="" alternateIdDigits="6" defaultTimepointDuration="1" startDate="2016-05-02-07:00" securityType="BASIC_WRITE" xmlns="http://labkey.org/study/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <cohorts type="AUTOMATIC" mode="SIMPLE" datasetId="5001" datasetProperty="study" file="cohorts.xml"/>
+  <datasets dir="datasets" file="datasets_manifest.xml">
+    <definition file="SU2C.dataset"/>
+  </datasets>
+  <comments/>
+  <studyDescription rendererType="TEXT_WITH_LINKS">
+    <description xsi:nil="true"/>
+  </studyDescription>
+</study>

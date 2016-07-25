@@ -1,0 +1,7 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart" title="SU2C Tools">
+    <view name="sidebar"/>
+    <locations>
+        <location name="right"/>
+        <!--<location name="menu"/>-->
+    </locations>
+</webpart>

@@ -36,7 +36,7 @@ public class FixMateInformationWrapper extends PicardWrapper
         params.add(getPicardJar().getPath());
         params.add(getToolName());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
-        params.add("COMPRESSION_LEVEL=9");
+        params.add("COMPRESSION_LEVEL=" + getCompressionLevel());
         inferMaxRecordsInRam(params);
         params.add("INPUT=" + inputFile.getPath());
         if (outputFile != null)

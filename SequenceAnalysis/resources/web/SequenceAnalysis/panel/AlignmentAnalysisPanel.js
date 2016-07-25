@@ -5,7 +5,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
     initComponent: function(){
         this.callParent(arguments);
 
-        this.splitJobs = true;
+        this.splitJobs = false;
     },
 
     onDataLoad: function(results){

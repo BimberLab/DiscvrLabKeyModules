@@ -1,0 +1,6 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart" title="SU2C Admin">
+    <view name="admin"/>
+    <locations>
+        <location name="body"/>
+    </locations>
+</webpart>

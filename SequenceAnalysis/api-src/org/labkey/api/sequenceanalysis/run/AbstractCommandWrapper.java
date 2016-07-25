@@ -22,6 +22,7 @@ import org.apache.log4j.spi.NOPLoggerRepository;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.util.StringUtilsLabKey;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -46,7 +47,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     private boolean _throwNonZeroExits = true;
     private Integer _lastReturnCode = null;
     private Map<String, String> _environment = new HashMap<>();
-    protected List<String> _commandsExecuted = new ArrayList<>();
+    private List<String> _commandsExecuted = new ArrayList<>();
 
     public AbstractCommandWrapper(@Nullable Logger logger)
     {
@@ -91,11 +92,8 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         execute(params, redirect, null);
     }
 
-    private void execute(List<String> params, ProcessBuilder.Redirect redirect, @Nullable StringBuffer output) throws PipelineJobException
+    public ProcessBuilder getProcessBuilder(List<String> params)
     {
-        getLogger().info("\t" + StringUtils.join(params, " "));
-        _commandsExecuted.add(StringUtils.join(params, " "));
-
         ProcessBuilder pb = new ProcessBuilder(params);
         setPath(pb);
 
@@ -110,6 +108,15 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
             pb.directory(getWorkingDir());
         }
 
+        return pb;
+    }
+
+    private void execute(List<String> params, ProcessBuilder.Redirect redirect, @Nullable StringBuffer output) throws PipelineJobException
+    {
+        getLogger().info("\t" + StringUtils.join(params, " "));
+        _commandsExecuted.add(StringUtils.join(params, " "));
+
+        ProcessBuilder pb = getProcessBuilder(params);
         pb.redirectErrorStream(false);
         if (redirect != null)
         {
@@ -128,7 +135,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         try
         {
             p = pb.start();
-            try (BufferedReader procReader = new BufferedReader(new InputStreamReader(redirect == null ? p.getInputStream() : p.getErrorStream())))
+            try (BufferedReader procReader = new BufferedReader(new InputStreamReader(redirect == null ? p.getInputStream() : p.getErrorStream(), StringUtilsLabKey.DEFAULT_CHARSET)))
             {
                 String line;
                 while ((line = procReader.readLine()) != null)
@@ -220,7 +227,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         _workingDir = workingDir;
     }
 
-    public File getWorkingDir()
+    private File getWorkingDir()
     {
         return _workingDir;
     }
@@ -235,7 +242,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         return _log;
     }
 
-    public void setLogLevel(Level logLevel)
+    protected void setLogLevel(Level logLevel)
     {
         _logLevel = logLevel;
     }
@@ -250,12 +257,12 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         _throwNonZeroExits = throwNonZeroExits;
     }
 
-    public boolean isWarnNonZeroExits()
+    protected boolean isWarnNonZeroExits()
     {
         return _warnNonZeroExits;
     }
 
-    public boolean isThrowNonZeroExits()
+    protected boolean isThrowNonZeroExits()
     {
         return _throwNonZeroExits;
     }

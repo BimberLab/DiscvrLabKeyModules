@@ -534,6 +534,7 @@ public class SequenceAnalysisController extends SpringActionController
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_FEATURES, "NT Features", keys, "ref_nt_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "ref_nt_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION, "Alignment Records", keys, "ref_nt_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS, "Reference Library Member Records", keys, "ref_nt_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "ref_nt_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "ref_nt_id");
             }

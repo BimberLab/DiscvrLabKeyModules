@@ -24,6 +24,7 @@ import java.util.List;
 abstract public class PicardWrapper extends AbstractCommandWrapper
 {
     private ValidationStringency _stringency = ValidationStringency.LENIENT;
+    private int _compressionLevel = 9;
 
     public PicardWrapper(@Nullable Logger logger)
     {
@@ -102,5 +103,15 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
                 break;
             }
         }
+    }
+
+    public int getCompressionLevel()
+    {
+        return _compressionLevel;
+    }
+
+    public void setCompressionLevel(int compressionLevel)
+    {
+        _compressionLevel = compressionLevel;
     }
 }

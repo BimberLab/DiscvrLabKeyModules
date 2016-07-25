@@ -1,0 +1,15 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="patientId"/>
+        <column name="patientId/cohort"/>
+        <column name="slideId"/>
+        <column name="species"/>
+        <column name="tissue"/>
+        <column name="tumorType"/>
+        <column name="panel"/>
+    </columns>
+    <sorts>
+        <sort column="patientId" descending="false"/>
+        <sort column="slideId"/>
+    </sorts>
+</customView>

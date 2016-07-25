@@ -1,0 +1,108 @@
+<ft:folderType xmlns:ft="http://labkey.org/data/xml/folderType">
+    <ft:name>SU2C Folder</ft:name>
+    <ft:description>The default folder layout for SU2C</ft:description>
+    <ft:folderTabs>
+        <ft:folderTab>
+            <ft:name>overview</ft:name>
+            <ft:caption>Overview</ft:caption>
+            <ft:selectors>
+            </ft:selectors>
+            <ft:requiredWebParts>
+            </ft:requiredWebParts>
+            <ft:preferredWebParts>
+                <ft:webPart>
+                    <ft:name>SU2C Overview</ft:name>
+                    <ft:location>body</ft:location>
+                </ft:webPart>
+                <ft:webPart>
+                    <ft:name>Study Overview</ft:name>
+                    <ft:location>body</ft:location>
+                </ft:webPart>
+                <ft:webPart>
+                    <ft:name>SU2C Tools</ft:name>
+                    <ft:location>right</ft:location>
+                </ft:webPart>
+            </ft:preferredWebParts>
+        </ft:folderTab>
+        <ft:folderTab>
+            <ft:name>dataBrowser</ft:name>
+            <ft:caption>Data Browser</ft:caption>
+            <ft:selectors>
+            </ft:selectors>
+            <ft:requiredWebParts>
+            </ft:requiredWebParts>
+            <ft:preferredWebParts>
+                <ft:webPart>
+                    <ft:name>SU2C Data Browser</ft:name>
+                    <ft:location>body</ft:location>
+                </ft:webPart>
+            </ft:preferredWebParts>
+        </ft:folderTab>
+        <ft:folderTab>
+            <ft:name>study.PARTICIPANTS</ft:name>
+            <ft:caption>By Patient</ft:caption>
+            <ft:selectors>
+            </ft:selectors>
+            <ft:requiredWebParts>
+            </ft:requiredWebParts>
+            <ft:preferredWebParts>
+                <ft:webPart>
+                    <ft:name>Subject List</ft:name>
+                    <ft:location>body</ft:location>
+                </ft:webPart>
+                <ft:webPart>
+                    <ft:name>SU2C Tools</ft:name>
+                    <ft:location>right</ft:location>
+                </ft:webPart>
+            </ft:preferredWebParts>
+        </ft:folderTab>
+        <ft:folderTab>
+            <ft:name>study.DATA_ANALYSIS</ft:name>
+            <ft:caption>By Dataset</ft:caption>
+            <ft:selectors>
+            </ft:selectors>
+            <ft:requiredWebParts>
+            </ft:requiredWebParts>
+            <ft:preferredWebParts>
+                <ft:webPart>
+                    <ft:name>Data Views</ft:name>
+                    <ft:location>body</ft:location>
+                </ft:webPart>
+                <ft:webPart>
+                    <ft:name>SU2C Tools</ft:name>
+                    <ft:location>right</ft:location>
+                </ft:webPart>
+            </ft:preferredWebParts>
+        </ft:folderTab>
+        <ft:folderTab>
+            <ft:name>manage</ft:name>
+            <ft:caption>Manage</ft:caption>
+            <ft:selectors>
+            </ft:selectors>
+            <ft:requiredWebParts>
+            </ft:requiredWebParts>
+            <ft:preferredWebParts>
+                <ft:webPart>
+                    <ft:name>SU2C Admin</ft:name>
+                    <ft:location>body</ft:location>
+                </ft:webPart>
+                <ft:webPart>
+                    <ft:name>Pipeline Files</ft:name>
+                    <ft:location>body</ft:location>
+                </ft:webPart>
+            </ft:preferredWebParts>
+            <ft:permissions>
+                <ft:permission name="admin"/>
+            </ft:permissions>
+        </ft:folderTab>
+    </ft:folderTabs>
+    <ft:modules>
+        <ft:moduleName>SequenceAnalysis</ft:moduleName>
+        <ft:moduleName>OmeroIntegration</ft:moduleName>
+        <ft:moduleName>study</ft:moduleName>
+        <ft:moduleName>CancerStudies</ft:moduleName>
+        <ft:moduleName>su2c</ft:moduleName>
+    </ft:modules>
+    <ft:defaultModule>su2c</ft:defaultModule>
+    <ft:forceAssayUploadIntoWorkbooks>true</ft:forceAssayUploadIntoWorkbooks>
+</ft:folderType>

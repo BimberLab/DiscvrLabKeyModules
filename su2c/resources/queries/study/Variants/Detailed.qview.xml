@@ -1,0 +1,43 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="patientId"/>
+        <column name="type"/>
+        <column name="gene"/>
+        <column name="normalVAF"/>
+        <column name="tumorVAF"/>
+        <column name="filterCall"/>
+        <column name="trvType"/>
+        <column name="chromosome"/>
+        <column name="start"/>
+        <column name="stop"/>
+        <column name="reference"/>
+        <column name="variant"/>
+        <column name="transcriptName"/>
+        <column name="transcriptSpecies"/>
+        <column name="transcriptSource"/>
+        <column name="transcriptVersion"/>
+        <column name="strand"/>
+        <column name="transcriptStatus"/>
+        <column name="cPosition"/>
+        <column name="aminoAcidChange"/>
+        <column name="ucscCons"/>
+        <column name="domain"/>
+        <column name="allDomains"/>
+        <column name="deletionSubstructures"/>
+        <column name="transcriptError"/>
+        <column name="defaultGeneName"/>
+        <column name="geneNameSource"/>
+        <column name="ensemblGeneId"/>
+        <column name="transcriptStatus"/>
+        <column name="tier"/>
+        <column name="normalRefCount"/>
+        <column name="normalVarCount"/>
+        <column name="tumorRefCount"/>
+        <column name="tumorVarCount"/>
+        <column name="prob"/>
+        <column name="llr"/>
+    </columns>
+    <sorts>
+        <sort column="patientId" descending="false"/>
+    </sorts>
+</customView>

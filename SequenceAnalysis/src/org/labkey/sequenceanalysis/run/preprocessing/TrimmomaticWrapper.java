@@ -21,7 +21,9 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.Pair;
+import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.sequenceanalysis.model.AdapterModel;
 import org.labkey.sequenceanalysis.pipeline.IlluminaFastqSplitter;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -168,7 +170,9 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 getPipelineCtx().getLogger().info("\t" + input2.getPath());
 
             AbstractTrimmomaticProvider provider = (AbstractTrimmomaticProvider)getProvider();
-            getWrapper().execute(getWrapper().getParams(input, input2, provider.getName(), provider.getAdditionalParams(getPipelineCtx(), output), getPipelineCtx().getJob()));
+            List<String> trimmomaticParams = getWrapper().getTrimmomaticParams(input, input2, provider.getName(), provider.getAdditionalParams(getPipelineCtx(), output));
+            getWrapper().doTrim(trimmomaticParams);
+            output.addCommandExecuted(StringUtils.join(trimmomaticParams, " "));
 
             List<File> files = getWrapper().getExpectedOutputFilenames(input, input2, provider.getName());
             for (File f : files)
@@ -191,7 +195,6 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             //a single input file results in only 1 output
             if (files.size() == 1)
             {
-
                 if (FileUtils.sizeOf(files.get(0)) > 0)
                 {
                     output.setProcessedFastq(Pair.of(files.get(0), (File) null));
@@ -226,13 +229,46 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
 
             }
 
-            if (getPipelineCtx().getLogger() != null)
-            {
-                getWrapper().generateSummaryText(getWrapper().getTrimlog(getWrapper().getOutputDir(input)));
-            }
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
+        }
+    }
+
+    protected void doTrim(List<String> params) throws PipelineJobException
+    {
+        ProcessBuilder pb = getProcessBuilder(params);
+        pb.redirectErrorStream(false);
+        Process p = null;
+        try
+        {
+            p = pb.start();
+            generateSummaryText(p);
+            try (BufferedReader procReader = new BufferedReader(new InputStreamReader(p.getErrorStream(), StringUtilsLabKey.DEFAULT_CHARSET)))
+            {
+                String line;
+                while ((line = procReader.readLine()) != null)
+                {
+                    getLogger().debug("\t" + line);
+                }
+
+                int lastReturnCode = p.waitFor();
+                if (lastReturnCode != 0)
+                {
+                    throw new PipelineJobException("process exited with non-zero value: " + lastReturnCode);
+                }
+            }
+        }
+        catch (IOException | InterruptedException e)
+        {
+            throw new PipelineJobException(e);
+        }
+        finally
+        {
+            if (p != null)
+            {
+                p.destroy();
+            }
         }
     }
 
@@ -409,7 +445,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         return new File(workingDir, "trimLog.txt");
     }
 
-    private List<String> getParams(File input, @Nullable File input2, String actionName, List<String> additionalParams, PipelineJob job) throws PipelineJobException
+    private List<String> getTrimmomaticParams(File input, @Nullable File input2, String actionName, List<String> additionalParams) throws PipelineJobException
     {
         List<String> params = new LinkedList<>();
         params.add(SequencePipelineService.get().getJavaFilepath());
@@ -418,9 +454,10 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         params.add("-jar");
         params.add(getJar().getPath());
         params.add((input2 != null ? "PE" : "SE"));
-        File trimLog = getTrimlog(getOutputDir(input));
         params.add("-trimlog");
-        params.add(trimLog.getPath());
+
+        //TODO: consider testing OS?
+        params.add("/dev/stdout");
 
         FastqQualityFormat encoding = FastqUtils.inferFastqEncoding(input);
         if (encoding != null)
@@ -504,183 +541,183 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         return fileNames;
     }
 
-    private void generateSummaryText(File logFile) throws PipelineJobException
+    private void generateSummaryText(final Process p) throws PipelineJobException
     {
-        getLogger().debug("generating trimmomatic summary stats based on log: " + logFile.getPath());
-
-        if (!logFile.exists())
+        getLogger().debug("generating trimmomatic summary stats based on stdout");
+        JobRunner.getDefault().execute(new Runnable()
         {
-            getLogger().warn("Did not find expected logFile: " + logFile.getPath());
-            return;
-        }
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(logFile), Charset.forName("UTF-8"))))
-        {
-            long totalInspected = 0;
-            long totalInspectedF = 0;
-            long totalInspectedR = 0;
-            long totalReadsRetained = 0;
-            long totalLength = 0;
-
-            long totalReadsTrimmed = 0;
-            long totalBasesTrimmed = 0;
-            long totalDiscarded = 0;
-
-            long totalReadsTrimmedF = 0;
-            long totalBasesTrimmedF = 0;
-            long totalDiscardedF = 0;
-            long totalReadsRetainedF = 0;
-            long totalLengthF = 0;
-            long totalReadsTrimmedR = 0;
-            long totalBasesTrimmedR = 0;
-            long totalDiscardedR = 0;
-            long totalReadsRetainedR = 0;
-            long totalLengthR = 0;
-            long unknownOrientation = 0;
-            boolean haveReportedInvalidHeader = false;
-
-            String line;
-            while ((line = reader.readLine()) != null)
+            @Override
+            public void run()
             {
-                String[] cells = line.split(" ");
-                if (cells.length < 4)
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream(), StringUtilsLabKey.DEFAULT_CHARSET)))
                 {
-                    getLogger().error("log line too short: [" + line + "]");
-                    continue;
-                }
+                    long totalInspected = 0;
+                    long totalInspectedF = 0;
+                    long totalInspectedR = 0;
+                    long totalReadsRetained = 0;
+                    long totalLength = 0;
 
-                //NOTE: if the readname has spaces, we need to rebuild it after the split
-                StringBuilder nameBuilder = new StringBuilder();
-                int i = 0;
-                String delim = "";
-                while (i < (cells.length - 4))
-                {
-                    nameBuilder.append(delim).append(cells[i]);
-                    delim = " ";
-                    i++;
-                }
-                String name = nameBuilder.toString();
+                    long totalReadsTrimmed = 0;
+                    long totalBasesTrimmed = 0;
+                    long totalDiscarded = 0;
 
-                Integer survivingLength = Integer.parseInt(cells[cells.length - 4]);
-                Integer basesTrimmed = Integer.parseInt(cells[cells.length - 1]);
+                    long totalReadsTrimmedF = 0;
+                    long totalBasesTrimmedF = 0;
+                    long totalDiscardedF = 0;
+                    long totalReadsRetainedF = 0;
+                    long totalLengthF = 0;
+                    long totalReadsTrimmedR = 0;
+                    long totalBasesTrimmedR = 0;
+                    long totalDiscardedR = 0;
+                    long totalReadsRetainedR = 0;
+                    long totalLengthR = 0;
+                    long unknownOrientation = 0;
+                    boolean haveReportedInvalidHeader = false;
 
-                totalInspected++;
-                if (survivingLength == 0)
-                {
-                    totalDiscarded ++;
-                }
-                else
-                {
-                    totalReadsRetained++;
-                    totalLength += survivingLength;
-                }
-
-                if (basesTrimmed > 0)
-                {
-                    totalBasesTrimmed += basesTrimmed;
-                    totalReadsTrimmed++;
-                }
-
-                //infer metrics for paired end data
-                //aatempt to parse illumina
-                IlluminaReadHeader header = IlluminaFastqSplitter.parseHeader(name);
-                if (!haveReportedInvalidHeader && header == null)
-                {
-                    getLogger().info("header does not match expected format: " + name);
-                    haveReportedInvalidHeader = true;
-                }
-
-                if ((header != null && header.getPairNumber() == 1 ) || name.endsWith("/1") || header == null)
-                {
-                    if (survivingLength == 0)
+                    String line;
+                    while (p.isAlive() && (line = reader.readLine()) != null)
                     {
-                        totalDiscardedF++;
-                    }
-                    else
-                    {
-                        totalLengthF += survivingLength;
-                        totalReadsRetainedF++;
+                        String[] cells = line.split(" ");
+                        if (cells.length < 4)
+                        {
+                            getLogger().error("log line too short: [" + line + "]");
+                            continue;
+                        }
+
+                        //NOTE: if the readname has spaces, we need to rebuild it after the split
+                        StringBuilder nameBuilder = new StringBuilder();
+                        int i = 0;
+                        String delim = "";
+                        while (i < (cells.length - 4))
+                        {
+                            nameBuilder.append(delim).append(cells[i]);
+                            delim = " ";
+                            i++;
+                        }
+                        String name = nameBuilder.toString();
+
+                        Integer survivingLength = Integer.parseInt(cells[cells.length - 4]);
+                        Integer basesTrimmed = Integer.parseInt(cells[cells.length - 1]);
+
+                        totalInspected++;
+                        if (survivingLength == 0)
+                        {
+                            totalDiscarded ++;
+                        }
+                        else
+                        {
+                            totalReadsRetained++;
+                            totalLength += survivingLength;
+                        }
+
+                        if (basesTrimmed > 0)
+                        {
+                            totalBasesTrimmed += basesTrimmed;
+                            totalReadsTrimmed++;
+                        }
+
+                        //infer metrics for paired end data
+                        //attempt to parse illumina
+                        IlluminaReadHeader header = IlluminaFastqSplitter.parseHeader(name);
+                        if (!haveReportedInvalidHeader && header == null)
+                        {
+                            getLogger().info("header does not match expected format: " + name);
+                            haveReportedInvalidHeader = true;
+                        }
+
+                        if ((header != null && header.getPairNumber() == 1 ) || name.endsWith("/1") || header == null)
+                        {
+                            if (survivingLength == 0)
+                            {
+                                totalDiscardedF++;
+                            }
+                            else
+                            {
+                                totalLengthF += survivingLength;
+                                totalReadsRetainedF++;
+                            }
+
+                            totalBasesTrimmedF += basesTrimmed;
+                            totalInspectedF++;
+                            if (basesTrimmed > 0)
+                                totalReadsTrimmedF++;
+                        }
+                        else if ((header != null && header.getPairNumber() == 2) || name.endsWith("/2"))
+                        {
+                            if (survivingLength == 0)
+                            {
+                                totalDiscardedR++;
+                            }
+                            else
+                            {
+                                totalLengthR += survivingLength;
+                                totalReadsRetainedR++;
+                            }
+
+                            totalBasesTrimmedR += basesTrimmed;
+                            totalInspectedR++;
+                            if (basesTrimmed > 0)
+                                totalReadsTrimmedR++;
+                        }
+                        else
+                        {
+                            unknownOrientation++;
+                            if (!haveReportedInvalidHeader)
+                            {
+                                getLogger().info("unable to determine if read is forward or reverse: " + name);
+                                haveReportedInvalidHeader = true;
+                            }
+                        }
                     }
 
-                    totalBasesTrimmedF += basesTrimmed;
-                    totalInspectedF++;
-                    if (basesTrimmed > 0)
-                        totalReadsTrimmedF++;
-                }
-                else if ((header != null && header.getPairNumber() == 2) || name.endsWith("/2"))
-                {
-                    if (survivingLength == 0)
+                    Double avgBasesTrimmed = totalReadsTrimmed == 0 ? 0 : (double)totalBasesTrimmed / (double)totalReadsTrimmed;
+                    Double avgReadLength = totalReadsTrimmed == 0 ? 0 : (double)totalLength / (double)totalReadsRetained;
+                    StringBuilder summary = new StringBuilder();
+                    summary.append("Trimming summary:\n");
+                    summary.append("\tTotal reads inspected: " + NumberFormat.getInstance().format(totalInspected) + "\n");
+                    summary.append("\tTotal reads discarded: " + NumberFormat.getInstance().format(totalDiscarded) + "\n");
+                    summary.append("\tTotal reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmed) + "\n");
+                    summary.append("\tAvg bases trimmed: " +  avgBasesTrimmed + "\n");
+                    summary.append("\tTotal reads remaining: " + NumberFormat.getInstance().format(totalReadsRetained) + "\n");
+                    summary.append("\tAvg read length after trimming (excludes discarded reads): " + avgReadLength + "\n");
+                    if (unknownOrientation > 0)
                     {
-                        totalDiscardedR++;
-                    }
-                    else
-                    {
-                        totalLengthR += survivingLength;
-                        totalReadsRetainedR++;
+                        summary.append("\tReads inspected with unknown orientation: " + unknownOrientation + "\n");
                     }
 
-                    totalBasesTrimmedR += basesTrimmed;
-                    totalInspectedR++;
-                    if (basesTrimmed > 0)
-                        totalReadsTrimmedR++;
-                }
-                else
-                {
-                    unknownOrientation++;
-                    if (!haveReportedInvalidHeader)
+                    if (totalInspectedF > 0)
                     {
-                        getLogger().info("unable to determine if read is forward or reverse: " + name);
-                        haveReportedInvalidHeader = true;
+                        Double avgBasesTrimmedF = totalBasesTrimmedF == 0 ? 0 : (double)totalBasesTrimmedF / (double)totalReadsTrimmedF;
+                        Double avgReadLengthF = (double)totalLengthF / (double)totalReadsRetainedF;
+                        summary.append("Forward read trimming summary: " + "\n");
+                        summary.append("\tTotal forward reads inspected: " + NumberFormat.getInstance().format(totalInspectedF) + "\n");
+                        summary.append("\tTotal forward reads discarded: " + NumberFormat.getInstance().format(totalDiscardedF) + "\n");
+                        summary.append("\tTotal forward reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmedF) + "\n");
+                        summary.append("\tAvg bases trimmed from forward reads: " +  NumberFormat.getInstance().format(avgBasesTrimmedF) + "\n");
+                        summary.append("\tTotal forward reads remaining: " + NumberFormat.getInstance().format(totalReadsRetainedF) + "\n");
+                        summary.append("\tAvg forward read length after trimming (excludes discarded reads): " + NumberFormat.getInstance().format(avgReadLengthF) + "\n");
                     }
+
+                    if (totalInspectedR > 0)
+                    {
+                        Double avgBasesTrimmedR = totalBasesTrimmedR == 0 ? 0 : (double)totalBasesTrimmedR / (double)totalReadsTrimmedR;
+                        Double avgReadLengthR = (double)totalLengthR / (double)totalReadsRetainedR;
+                        summary.append("Reverse read trimming summary: " + "\n");
+                        summary.append("\tTotal reverse reads inspected: " + NumberFormat.getInstance().format(totalInspectedR) + "\n");
+                        summary.append("\tTotal reverse reads discarded: " + NumberFormat.getInstance().format(totalDiscardedR) + "\n");
+                        summary.append("\tTotal reverse reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmedR) + "\n");
+                        summary.append("\tAvg bases trimmed from reverse reads: " +  NumberFormat.getInstance().format(avgBasesTrimmedR) + "\n");
+                        summary.append("\tTotal reverse reads remaining: " + NumberFormat.getInstance().format(totalReadsRetainedR) + "\n");
+                        summary.append("\tAvg reverse read length after trimming (excludes discarded reads): " + NumberFormat.getInstance().format(avgReadLengthR) + "\n");
+                    }
+
+                    getLogger().info(summary.toString());
+                }
+                catch (NumberFormatException | IOException e)
+                {
+                    getLogger().error(e);
                 }
             }
-
-            Double avgBasesTrimmed = totalReadsTrimmed == 0 ? 0 : (double)totalBasesTrimmed / (double)totalReadsTrimmed;
-            Double avgReadLength = totalReadsTrimmed == 0 ? 0 : (double)totalLength / (double)totalReadsRetained;
-            getLogger().info("Trimming summary:");
-            getLogger().info("\tTotal reads inspected: " + NumberFormat.getInstance().format(totalInspected));
-            getLogger().info("\tTotal reads discarded: " + NumberFormat.getInstance().format(totalDiscarded));
-            getLogger().info("\tTotal reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmed));
-            getLogger().info("\tAvg bases trimmed: " +  avgBasesTrimmed);
-            getLogger().info("\tTotal reads remaining: " + NumberFormat.getInstance().format(totalReadsRetained));
-            getLogger().info("\tAvg read length after trimming (excludes discarded reads): " + avgReadLength);
-            if (unknownOrientation > 0)
-            {
-                getLogger().info("\tReads inspected with unknown orientation: " + unknownOrientation);
-            }
-
-            if (totalInspectedF > 0)
-            {
-                Double avgBasesTrimmedF = totalBasesTrimmedF == 0 ? 0 : (double)totalBasesTrimmedF / (double)totalReadsTrimmedF;
-                Double avgReadLengthF = (double)totalLengthF / (double)totalReadsRetainedF;
-                getLogger().info("Forward read trimming summary: ");
-                getLogger().info("\tTotal forward reads inspected: " + NumberFormat.getInstance().format(totalInspectedF));
-                getLogger().info("\tTotal forward reads discarded: " + NumberFormat.getInstance().format(totalDiscardedF));
-                getLogger().info("\tTotal forward reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmedF));
-                getLogger().info("\tAvg bases trimmed from forward reads: " +  NumberFormat.getInstance().format(avgBasesTrimmedF));
-                getLogger().info("\tTotal forward reads remaining: " + NumberFormat.getInstance().format(totalReadsRetainedF));
-                getLogger().info("\tAvg forward read length after trimming (excludes discarded reads): " + NumberFormat.getInstance().format(avgReadLengthF));
-            }
-
-            if (totalInspectedR > 0)
-            {
-                Double avgBasesTrimmedR = totalBasesTrimmedR == 0 ? 0 : (double)totalBasesTrimmedR / (double)totalReadsTrimmedR;
-                Double avgReadLengthR = (double)totalLengthR / (double)totalReadsRetainedR;
-                getLogger().info("Reverse read trimming summary: ");
-                getLogger().info("\tTotal reverse reads inspected: " + NumberFormat.getInstance().format(totalInspectedR));
-                getLogger().info("\tTotal reverse reads discarded: " + NumberFormat.getInstance().format(totalDiscardedR));
-                getLogger().info("\tTotal reverse reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmedR));
-                getLogger().info("\tAvg bases trimmed from reverse reads: " +  NumberFormat.getInstance().format(avgBasesTrimmedR));
-                getLogger().info("\tTotal reverse reads remaining: " + NumberFormat.getInstance().format(totalReadsRetainedR));
-                getLogger().info("\tAvg reverse read length after trimming (excludes discarded reads): " + NumberFormat.getInstance().format(avgReadLengthR));
-            }
-
-            //delete on success
-            logFile.delete();
-        }
-        catch (NumberFormatException | IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
+        });
     }
 }

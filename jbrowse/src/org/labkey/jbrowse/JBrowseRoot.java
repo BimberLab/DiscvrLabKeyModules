@@ -2,8 +2,6 @@ package org.labkey.jbrowse;
 
 import htsjdk.samtools.BAMIndexer;
 import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.BlockCompressedOutputStream;
 import org.apache.commons.io.FileUtils;
@@ -29,7 +27,6 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
-import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
@@ -47,12 +44,9 @@ import org.labkey.jbrowse.model.Database;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -166,7 +160,7 @@ public class JBrowseRoot
         try
         {
             p = pb.start();
-            try (BufferedReader procReader = new BufferedReader(new InputStreamReader(p.getInputStream())))
+            try (BufferedReader procReader = Readers.getReader(p.getInputStream()))
             {
                 String line;
                 while ((line = procReader.readLine()) != null)
@@ -303,7 +297,7 @@ public class JBrowseRoot
         File fasta = afw.findUniqueFileName(FileUtil.makeLegalName(model.getName()) + ".fasta", outDir);
         fasta.createNewFile();
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fasta)))
+        try (PrintWriter writer = PrintWriters.getPrintWriter(fasta))
         {
             writer.write(">" + model.getName() + "\n");
 
@@ -751,7 +745,30 @@ public class JBrowseRoot
             args.add("--completionLimit");
             args.add("100");
 
-            runScript("generate-names.pl", args);
+            Set<String> tracksToIndex = new HashSet<>();
+            for (JSONObject track : trackList.getJSONArray("tracks").toJSONObjectArray())
+            {
+                if (!track.containsKey("doIndex") || track.getBoolean("doIndex"))
+                {
+                    tracksToIndex.add(track.getString("label"));
+                }
+                else
+                {
+                    getLogger().debug("skipping indexing of track: " + track.getString("label"));
+                }
+            }
+
+            if (!tracksToIndex.isEmpty())
+            {
+                args.add("--tracks");
+                args.add(StringUtils.join(tracksToIndex, ","));
+
+                runScript("generate-names.pl", args);
+            }
+            else
+            {
+                getLogger().debug("no tracks to index, skipping generate-names.pl");
+            }
         }
     }
 
@@ -826,7 +843,7 @@ public class JBrowseRoot
         }
 
         File aaFeaturesOutFile = new File(databaseTrackDir, "aaFeatures.gff");
-        try (final BufferedWriter writer = new BufferedWriter(new FileWriter(aaFeaturesOutFile)))
+        try (final PrintWriter writer = PrintWriters.getPrintWriter(aaFeaturesOutFile))
         {
             //first find ref_aa_sequences
             ts.forEach(new Selector.ForEachBlock<ResultSet>()
@@ -846,35 +863,28 @@ public class JBrowseRoot
                     RefNtSequenceModel ref = RefNtSequenceModel.getForRowId(refNtId);
                     String refName = ref.getName();
 
-                    try
-                    {
-                        String[] tokens = StringUtils.split(exons, ";");
+                    String[] tokens = StringUtils.split(exons, ";");
 
-                        String featureId = refName + "_" + name;
-                        String strand = isComplement ? "-" : "+";
-                        String[] lastExon = StringUtils.split(tokens[tokens.length - 1], "-");
-                        if (lastExon.length != 2)
+                    String featureId = refName + "_" + name;
+                    String strand = isComplement ? "-" : "+";
+                    String[] lastExon = StringUtils.split(tokens[tokens.length - 1], "-");
+                    if (lastExon.length != 2)
+                    {
+                        return;
+                    }
+
+                    writer.write(StringUtils.join(new String[]{refName, "ReferenceAA", "gene", rs.getString("start_location"), lastExon[1], ".", strand, ".", "ID=" + featureId + ";Note="}, '\t') + System.getProperty("line.separator"));
+
+                    for (String exon : tokens)
+                    {
+                        String[] borders = StringUtils.split(exon, "-");
+                        if (borders.length != 2)
                         {
+                            getLogger().error("improper exon: " + exon);
                             return;
                         }
 
-                        writer.write(StringUtils.join(new String[]{refName, "ReferenceAA", "gene", rs.getString("start_location"), lastExon[1], ".", strand, ".", "ID=" + featureId + ";Note="}, '\t') + System.getProperty("line.separator"));
-
-                        for (String exon : tokens)
-                        {
-                            String[] borders = StringUtils.split(exon, "-");
-                            if (borders.length != 2)
-                            {
-                                getLogger().error("improper exon: " + exon);
-                                return;
-                            }
-
-                            writer.write(StringUtils.join(new String[]{refName, "ReferenceAA", "CDS", borders[0], borders[1], ".", strand, ".", "Parent=" + featureId}, '\t') + System.getProperty("line.separator"));
-                        }
-                    }
-                    catch (IOException e)
-                    {
-                        throw new SQLException(e);
+                        writer.write(StringUtils.join(new String[]{refName, "ReferenceAA", "CDS", borders[0], borders[1], ".", strand, ".", "Parent=" + featureId}, '\t') + System.getProperty("line.separator"));
                     }
                 }
             });
@@ -918,7 +928,7 @@ public class JBrowseRoot
         }
 
         File aaFeaturesOutFile = new File(databaseTrackDir, "ntFeatures.gff");
-        try (final BufferedWriter writer = new BufferedWriter(new FileWriter(aaFeaturesOutFile)))
+        try (final PrintWriter writer = PrintWriters.getPrintWriter(aaFeaturesOutFile))
         {
             //first find ref_aa_sequences
             ts.forEach(new Selector.ForEachBlock<ResultSet>()
@@ -931,15 +941,8 @@ public class JBrowseRoot
                     RefNtSequenceModel ref = RefNtSequenceModel.getForRowId(refNtId);
                     String refName = ref.getName();
 
-                    try
-                    {
-                        String featureId = refName + "_" + name;
-                        writer.write(StringUtils.join(new String[]{refName, "ReferenceNTFeatures", rs.getString("category"), rs.getString("nt_start"), rs.getString("nt_stop"), ".", "+", ".", "ID=" + featureId + ";Note="}, '\t') + System.getProperty("line.separator"));
-                    }
-                    catch (IOException e)
-                    {
-                        throw new SQLException(e);
-                    }
+                    String featureId = refName + "_" + name;
+                    writer.write(StringUtils.join(new String[]{refName, "ReferenceNTFeatures", rs.getString("category"), rs.getString("nt_start"), rs.getString("nt_stop"), ".", "+", ".", "ID=" + featureId + ";Note="}, '\t') + System.getProperty("line.separator"));
                 }
             });
         }
@@ -1205,7 +1208,7 @@ public class JBrowseRoot
 
         JSONObject ret = new JSONObject();
         ret.put("formatVersion", 1);
-        ret.put("refSeqSelectorMaxSize", 50);
+        ret.put("refSeqSelectorMaxSize", 200);
         ret.put("tracks", tracks);
 
         writeJsonToFile(new File(outDir, "trackList.json"), ret.toString(1));
@@ -1246,6 +1249,7 @@ public class JBrowseRoot
         o.put("category", "Alignments");
         o.put("storeClass", "JBrowse/Store/SeqFeature/BAM");
         o.put("label", featureName);
+        o.put("doIndex", false);
         o.put("type", "JBrowse/View/Track/Alignments2");
         o.put("maxHeight", 1200);   //extend maxHeight
         o.put("key", featureLabel);
@@ -1335,6 +1339,7 @@ public class JBrowseRoot
         o.put("category", "Variants");
         o.put("storeClass", "JBrowse/Store/SeqFeature/VCFTabix");
         o.put("label", featureName);
+        o.put("doIndex", false);
         o.put("type", "JBrowse/View/Track/HTMLVariants");
         o.put("key", featureLabel);
         o.put("hideNotFilterPass", true);
@@ -1406,6 +1411,9 @@ public class JBrowseRoot
         {
             args.add("--compress");
         }
+
+        //TODO: conider adding this option
+        //"--nameAttributes"
 
         //to avoid issues w/ perl and escaping characters, just set the working directory to the output folder
         //args.add("--out");
@@ -1493,61 +1501,6 @@ public class JBrowseRoot
         }
     }
 
-//    private File convertToBCF(File input, @Nullable ExpData refGenomeData)
-//    {
-//        try (VCFFileReader reader = new VCFFileReader(input, false))
-//        {
-//            VCFHeader header = new VCFHeader(reader.getFileHeader());
-//            SAMSequenceDictionary sequenceDictionary = header.getSequenceDictionary();
-//
-//            //we need contig lines to convert to BCF.  if these are present we can use BCF.  otherwise just bgzip
-//            if (header.getContigLines().isEmpty())
-//            {
-//                //attempt to create header
-//                if (refGenomeData != null && refGenomeData.getFile().exists())
-//                {
-//                    sequenceDictionary = SequenceAnalysisService.get().makeSequenceDictionary(refGenomeData.getFile());
-//                    header.setSequenceDictionary(sequenceDictionary);
-//                }
-//
-//                if (sequenceDictionary == null)
-//                {
-//                    //cant use BCF, just bgzip
-//                    File output = new File(input.getPath() + ".bgz");
-//                    return bgzip(input, output);
-//                }
-//            }
-//
-//            VariantContextWriterBuilder builder = new VariantContextWriterBuilder();
-//            File output = new File(input.getParentFile(), FileUtil.getBaseName(input) + ".bcf");
-//            builder.setOutputFile(output);
-//            if (sequenceDictionary != null)
-//            {
-//                builder.setReferenceDictionary(sequenceDictionary);
-//                //builder.setOption(Options.INDEX_ON_THE_FLY);
-//            }
-//
-//            builder.unsetOption(Options.INDEX_ON_THE_FLY);
-//            builder.setOption(Options.ALLOW_MISSING_FIELDS_IN_HEADER);
-//
-//            try (VariantContextWriter writer = builder.build();CloseableIterator<VariantContext> iterator = reader.iterator())
-//            {
-//                writer.writeHeader(header);
-//                while (iterator.hasNext())
-//                {
-//                    VariantContext context = iterator.next();
-//                    writer.add(context);
-//                }
-//
-//                CloserUtil.close(iterator);
-//                CloserUtil.close(reader);
-//                writer.close();
-//            }
-//
-//            return output;
-//        }
-//    }
-
     private File bgzip(File input, File output)
     {
         try (FileInputStream i = new FileInputStream(input); BlockCompressedOutputStream o = new BlockCompressedOutputStream(new FileOutputStream(output), output))
@@ -1562,7 +1515,7 @@ public class JBrowseRoot
         }
     }
 
-    // NOTE: there is abug in FileUtils causing it to delete the contents of directories that are symlinks, instead of just deleting the symlink on windows machines
+    // NOTE: there is a bug in FileUtils causing it to delete the contents of directories that are symlinks, instead of just deleting the symlink on windows machines
     private void safeDeleteDiretory(File directory) throws IOException
     {
         getLogger().debug("deleting directory: "+ directory.getPath());

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<datasets metaDataFile="datasets_metadata.xml" xmlns="http://labkey.org/study/xml">
+  <datasets>
+    <dataset name="Demographics" id="5001" demographicData="true" type="Standard" category="Clinical">
+      <tags/>
+    </dataset>
+    <dataset name="Events" id="5002" type="Standard" category="Clinical">
+      <tags/>
+    </dataset>
+    <dataset name="IHC_Slides" id="5003" type="Standard" category="Research">
+      <tags/>
+    </dataset>
+    <dataset name="IHC_Images" id="5004" type="Standard" category="Research">
+      <tags/>
+    </dataset>
+    <dataset name="Variants" id="5005" category="Research" type="Standard">
+      <tags/>
+    </dataset>
+    <dataset name="Quantitative_Image_Analysis" id="5006" category="Research" type="Standard">
+      <tags/>
+    </dataset>
+  </datasets>
+</datasets>

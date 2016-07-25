@@ -153,7 +153,7 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
 
         public static class UploadFileFilter extends PipelineProvider.FileEntryFilter
         {
-            private static FileType _fasta = new FileType(Arrays.asList("fa", "fasta"), "fasta");
+            private static FileType _fasta = new FileType(Arrays.asList("fa", "fasta"), "fasta", FileType.gzSupportLevel.SUPPORT_GZ);
 
             public boolean accept(File file)
             {

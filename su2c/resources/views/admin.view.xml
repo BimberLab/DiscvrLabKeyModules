@@ -1,0 +1,6 @@
+<view xmlns="http://labkey.org/data/xml/view" title="SU2C Admin" frame="portal">
+    <dependencies>
+        <dependency path="Ext4ClientApi" />
+        <dependency path="ldk/LDKApi.lib.xml"/>
+    </dependencies>
+</view>

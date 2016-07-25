@@ -1,0 +1,9 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <!--<columns>-->
+        <!--<column name="patientId"/>-->
+
+    <!--</columns>-->
+    <sorts>
+        <sort column="patientId" descending="false"/>
+    </sorts>
+</customView>

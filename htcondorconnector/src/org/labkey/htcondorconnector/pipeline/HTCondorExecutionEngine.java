@@ -766,10 +766,17 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
                         taskStatus = PipelineJob.TaskStatus.error;
                     }
 
-                    pj.getLogger().debug("setting active task status for job: " + j.getCondorId() + " to: " + taskStatus.name() + ". status was: " + pj.getActiveTaskStatus() + " (PipelineJob) /" + sf.getStatus() + " (StatusFile) / activeTaskId: " + (pj.getActiveTaskId() != null ? pj.getActiveTaskId().toString() : "no active task"));
+                    pj.getLogger().debug("setting active task status for job: " + j.getCondorId() + " to: " + taskStatus.name() + ". status was: " + pj.getActiveTaskStatus() + " (PipelineJob) /" + sf.getStatus() + " (StatusFile) / activeTaskId: " + (pj.getActiveTaskId() != null ? pj.getActiveTaskId().toString() : "no active task") + ", hostname: " + sf.getActiveHostName());
                     try
                     {
-                        PipelineService.get().setPipelineJobStatus(pj, taskStatus);
+                        if (taskStatus == PipelineJob.TaskStatus.running)
+                        {
+                            pj.setStatus(taskStatus, sf.getInfo());
+                        }
+                        else
+                        {
+                            PipelineService.get().setPipelineJobStatus(pj, taskStatus);
+                        }
                     }
                     catch (CancelledException e)
                     {

@@ -1,0 +1,6 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart" title="SU2C Data Browser">
+    <view name="dataBrowser"/>
+    <locations>
+        <location name="body"/>
+    </locations>
+</webpart>

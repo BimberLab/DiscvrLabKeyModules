@@ -34,6 +34,7 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.util.Compress;
@@ -76,6 +77,8 @@ import java.util.zip.GZIPOutputStream;
 public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAggregator
 {
     private File _outputLog = null;
+    private File _lineageMapFile = null;
+    private double _minPctForLineageFiltering = 0.0;
 
     private Set<String> _distinctReferences = new HashSet<>();
     private Map<String, Integer> _acceptedAlignments = new HashMap<>();
@@ -130,14 +133,19 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             _minAlignmentLength = Integer.parseInt(settings.get("minAlignmentLength"));
     }
 
-    public File getOutputLog()
-    {
-        return _outputLog;
-    }
-
     public void setOutputLog(File outputLog)
     {
         _outputLog = outputLog;
+    }
+
+    public void setLineageMapFile(File lineageMapFile)
+    {
+        _lineageMapFile = lineageMapFile;
+    }
+
+    public void setMinPctForLineageFiltering(double minPctForLineageFiltering)
+    {
+        _minPctForLineageFiltering = minPctForLineageFiltering;
     }
 
     @Override
@@ -258,7 +266,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         }
     }
 
-    public Map<String, HitSet> getAlignmentSummary(File outputLog) throws IOException
+    public Map<String, HitSet> getAlignmentSummary(File outputLog) throws IOException, PipelineJobException
     {
         try (CSVWriter writer = outputLog == null ? null : new CSVWriter(new BufferedWriter(new OutputStreamWriter(getLogOutputStream(outputLog), "UTF-8")), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
@@ -271,30 +279,33 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             //stage 3 filters: filtering within each set
             Map<String, HitSet> totals3 = doFilterStage3(writer, totals2);
 
-            Map<String, Integer> totalByReferenceStage3 = new HashMap<>();
-            int distinctStageThreeReads = 0;
-            for (HitSet hs : totals3.values())
+            //stage 4 filters: filtering within each set
+            Map<String, HitSet> totals4 = doFilterStage4(writer, totals3);
+
+            Map<String, Integer> totalByReferenceFinal = new HashMap<>();
+            int distinctFinalReads = 0;
+            for (HitSet hs : totals4.values())
             {
                 for (String refName : hs.refNames)
                 {
-                    int total = totalByReferenceStage3.containsKey(refName) ? totalByReferenceStage3.get(refName) : 0;
+                    int total = totalByReferenceFinal.containsKey(refName) ? totalByReferenceFinal.get(refName) : 0;
                     total += hs.readNames.size();
-                    totalByReferenceStage3.put(refName, total);
+                    totalByReferenceFinal.put(refName, total);
                 }
 
                 if (!hs.refNames.isEmpty())
                 {
-                    distinctStageThreeReads += hs.readNames.size();
+                    distinctFinalReads += hs.readNames.size();
                 }
             }
 
             getLogger().info("after filters:");
-            getLogger().info("\tpassing references: " + totalByReferenceStage3.size());
-            getLogger().info("\ttotal passing reads: " + distinctStageThreeReads);
-            getLogger().info("\ttotal allele groups: " + totals3.size());
+            getLogger().info("\tpassing references: " + totalByReferenceFinal.size());
+            getLogger().info("\ttotal passing reads: " + distinctFinalReads);
+            getLogger().info("\ttotal allele groups: " + totals4.size());
             getLogger().info("\ttotal unaligned reads: " + _unaligned.size());
 
-            return totals3;
+            return totals4;
         }
     }
 
@@ -451,28 +462,9 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     private Map<String, HitSet> doFilterStage2(CSVWriter writer, Map<String, HitSet> stage1Totals)
     {
         //build map of totals by ref, only counting each read pair once
-        Map<String, Integer> totalByReferenceStage2 = new HashMap<>();
-        int distinctStageTwoReads = 0;
-        for (HitSet hs : stage1Totals.values())
-        {
-            for (String refName : hs.refNames)
-            {
-                int total = totalByReferenceStage2.containsKey(refName) ? totalByReferenceStage2.get(refName) : 0;
-                total += hs.readNames.size();
-                totalByReferenceStage2.put(refName, total);
-            }
-
-            if (!hs.refNames.isEmpty())
-            {
-                distinctStageTwoReads += hs.readNames.size();
-            }
-        }
-        
-        getLogger().info("starting stage 2 filters:");
-        getLogger().info("\tinitial references: " + totalByReferenceStage2.size());
-        getLogger().info("\tinitial distinct reads: " + distinctStageTwoReads);
-        getLogger().info("\tinitial allele groups: " + stage1Totals.size());
-        getLogger().info("\tinitial unaligned reads: " + _unaligned.size());
+        Pair<Integer, Map<String, Integer>> pair = writeTotalSummary("stage 2", stage1Totals);
+        Map<String, Integer> totalByReferenceStage2 = pair.second;
+        int distinctStageTwoReads = pair.first;
 
         //optionally filter by total read #
         Set<String> disallowedReferences = new HashSet<>();
@@ -542,11 +534,11 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         return totals2;
     }
 
-    private Map<String, HitSet> doFilterStage3(CSVWriter writer, Map<String, HitSet> stage2Totals)
+    private Pair<Integer, Map<String, Integer>> writeTotalSummary(String label, Map<String, HitSet> stageTotals)
     {
         Map<String, Integer> totalByReferenceStage3 = new HashMap<>();
         int distinctStageThreeReads = 0;
-        for (HitSet hs : stage2Totals.values())
+        for (HitSet hs : stageTotals.values())
         {
             for (String refName : hs.refNames)
             {
@@ -561,12 +553,20 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             }
         }
 
-        getLogger().info("starting stage 3 filters:");
+        getLogger().info("starting " + label + " filters:");
         getLogger().info("\tinitial references: " + totalByReferenceStage3.size());
         getLogger().info("\tinitial distinct reads: " + distinctStageThreeReads);
-        getLogger().info("\tinitial allele groups: " + stage2Totals.size());
+        getLogger().info("\tinitial allele groups: " + stageTotals.size());
         getLogger().info("\tinitial unaligned reads: " + _unaligned.size());
-        
+
+        return Pair.of(distinctStageThreeReads, totalByReferenceStage3);
+    }
+
+    private Map<String, HitSet> doFilterStage3(CSVWriter writer, Map<String, HitSet> stage2Totals)
+    {
+        Pair<Integer, Map<String, Integer>> pair = writeTotalSummary("stage 3", stage2Totals);
+        Map<String, Integer> totalByReferenceStage3 = pair.second;
+
         Map<String, HitSet> totals3 = new HashMap<>();
         List<String> sortedRefs = new ArrayList<>(stage2Totals.keySet());
         Collections.sort(sortedRefs);
@@ -616,7 +616,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                             refName,
                             String.valueOf(hs.readNames.size()),
                             String.valueOf(totalByReferenceStage3.get(refName)),
-                            String.valueOf(100.0 * ((double) totalByReferenceStage3.get(refName) / distinctStageThreeReads)),
+                            String.valueOf(100.0 * ((double) totalByReferenceStage3.get(refName) / pair.first)),
                             String.valueOf(pct),
                             msg
                     });
@@ -645,6 +645,177 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         getLogger().info("\ttotal alleles filtered: " + totalFiltered);
 
         return totals3;
+    }
+
+    private Map<String, String> getLineageMap() throws PipelineJobException
+    {
+        if (_lineageMapFile == null)
+        {
+            return null;
+        }
+
+        Map<String, String> ret = new HashMap<>();
+        try (CSVReader reader = new CSVReader(Readers.getReader(_lineageMapFile)))
+        {
+            String[] line;
+            while ((line = reader.readNext()) != null)
+            {
+                ret.put(line[0], line[1]);
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        return ret;
+    }
+
+    private Map<String, HitSet> doFilterStage4(CSVWriter writer, Map<String, HitSet> stage3Totals) throws PipelineJobException
+    {
+        Map<String, String> nameToLineageMap = getLineageMap();
+        if (nameToLineageMap == null)
+        {
+            getLogger().info("no lineage map file found, skipping");
+            return stage3Totals;
+        }
+
+        writeTotalSummary("stage 4", stage3Totals);
+
+        Map<String, HitSet> stage4Totals = new HashMap<>();
+
+        //build a map of distinct sets by lineage
+        Map<String, List<HitSet>> resultByLineage = new HashMap<>();
+        Map<String, Integer> totalByLineage = new HashMap<>();
+        for (String key : stage3Totals.keySet())
+        {
+            HitSet hs = stage3Totals.get(key);
+            Set<String> distinctLineages = new HashSet<>();
+            for (String refName: hs.refNames)
+            {
+                if (!nameToLineageMap.containsKey(refName))
+                {
+                    //if we have missing lineages, abort and keep data as-is
+                    distinctLineages.clear();
+                    break;
+                }
+
+                distinctLineages.add(nameToLineageMap.get(refName));
+            }
+
+            if (distinctLineages.size() == 1)
+            {
+                String lineage = distinctLineages.iterator().next();
+                if (!resultByLineage.containsKey(lineage))
+                {
+                    resultByLineage.put(lineage, new ArrayList<>());
+                    totalByLineage.put(lineage, 0);
+                }
+
+                resultByLineage.get(lineage).add(hs);
+                totalByLineage.put(lineage, totalByLineage.get(lineage + hs.readNames.size()));
+            }
+            else
+            {
+                stage4Totals.put(key, hs);
+            }
+        }
+
+        //now filter by lineage
+        getLogger().info("total lineages being inspected: " + resultByLineage.size());
+        int totalLineagesImproved = 0;
+        Set<String> distinctAllelesPruned = new HashSet<>();
+        for (String lineage : resultByLineage.keySet())
+        {
+            List<HitSet> sets = resultByLineage.get(lineage);
+            if (sets.size() == 1)
+            {
+                stage4Totals.put(sets.get(0).getKey(), sets.get(0));
+                continue;
+            }
+
+            Set<String> sharedRefNames = new HashSet<>();
+            boolean hasPassingSet = false;
+            for (int i = 0; i<sets.size(); i++)
+            {
+                double pctOfLineage = (double)sets.get(i).readNames.size() / (double)totalByLineage.get(lineage);
+                if (pctOfLineage < _minPctForLineageFiltering)
+                {
+                    continue;
+                }
+
+                if (!hasPassingSet)
+                {
+                    sharedRefNames.addAll(sets.get(i).refNames);
+                    hasPassingSet = true;
+                }
+                else
+                {
+                    sharedRefNames.retainAll(sets.get(i).refNames);
+                }
+            }
+
+            if (sharedRefNames.isEmpty())
+            {
+                //if empty, there are no alleles common to all, so keep original data
+                for (HitSet hs : sets)
+                {
+                    stage4Totals.put(hs.getKey(), hs);
+                }
+            }
+            else
+            {
+                totalLineagesImproved++;
+
+                //merge and make new
+                HitSet merged = new HitSet(sharedRefNames);
+                for (HitSet hs : sets)
+                {
+                    //if below the threshold, leave as is
+                    double pctOfLineage = (double)hs.readNames.size() / (double)totalByLineage.get(lineage);
+                    if (pctOfLineage < _minPctForLineageFiltering)
+                    {
+                        if (stage4Totals.containsKey(hs.getKey()))
+                        {
+                            stage4Totals.get(hs.getKey()).append(hs);
+                        }
+                        else
+                        {
+                            stage4Totals.put(hs.getKey(), hs);
+                        }
+
+                        continue;
+                    }
+
+                    int diff = hs.refNames.size() - sharedRefNames.size();
+                    if (diff > 0)
+                    {
+                        Set<String> discarded = new HashSet<>(hs.refNames);
+                        discarded.removeAll(sharedRefNames);
+                        distinctAllelesPruned.addAll(discarded);
+                    }
+
+                    merged.append(hs);
+                }
+
+                if (stage4Totals.containsKey(merged.getKey()))
+                {
+                    stage4Totals.get(merged.getKey()).append(merged);
+                }
+                else
+                {
+                    stage4Totals.put(merged.getKey(), merged);
+                }
+            }
+        }
+
+        getLogger().info("after filters:");
+        getLogger().info("\ttotal lineages inspected: " + resultByLineage.size());
+        getLogger().info("\ttotal lineages improved: " + totalLineagesImproved);
+        getLogger().info("\ttotal alleles pruned: " + distinctAllelesPruned.size());
+        getLogger().info("\ttotal allele groups: " + stage4Totals.size());
+
+        return stage4Totals;
     }
 
     private class HitSet
@@ -709,7 +880,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         totals.put(refs, hs);
     }
 
-    public Map<String, HitSet> writeSummary() throws IOException
+    public Map<String, HitSet> writeSummary() throws IOException, PipelineJobException
     {
         Map<String, HitSet> map = getAlignmentSummary(_outputLog);
 

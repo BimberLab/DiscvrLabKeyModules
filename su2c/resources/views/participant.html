@@ -1,0 +1,24 @@
+<script type="text/javascript">
+    Ext4.onReady(function (){
+        /* get the participant id from the request URL: this parameter is required. */
+        var participantId = LABKEY.ActionURL.getParameter('participantId') || LABKEY.ActionURL.getParameter('patientId');
+        if (!participantId){
+            alert('Must Provide Id');
+            return;
+        }
+
+        var title = 'Patient Details: ' + participantId;
+        document.title = title;
+
+        var webpart = <%=webpartContext%>;
+
+        Ext4.create('CancerStudies.panel.PatientTabbedReportPanel', {
+            participantId: participantId,
+            defaultReport: 'patientSummary',
+            loadReports: function(){
+                this.reports = SU2C.Utils.getTabbedReports();
+                this.createTabPanel();
+            }
+        }).render(webpart.wrapperDivId);
+    });
+</script>

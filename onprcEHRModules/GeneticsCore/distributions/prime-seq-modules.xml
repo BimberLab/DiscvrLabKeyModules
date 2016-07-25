@@ -28,6 +28,8 @@
                 <include name="mergesync.module" />
                 <include name="GenotypeAssays.module" />
                 <include name="galaxyintegration.module" />
+                <include name="su2c.module" />
+                <include name="CancerStudies.module" />
             </fileset>
         </copy>
     </target>

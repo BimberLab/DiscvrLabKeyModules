@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tables xmlns="http://labkey.org/data/xml">
+    <table tableName="IHC_Slides" tableDbType="TABLE">
+        <columns>
+            <column columnName="patientId">
+                <datatype>varchar</datatype>
+                <columnTitle>Patient Id</columnTitle>
+                <propertyURI>http://cpas.labkey.com/Study#ParticipantId</propertyURI>
+                <nullable>false</nullable>
+                <fk>
+                    <fkDbSchema>study</fkDbSchema>
+                    <fkTable>Patient</fkTable>
+                    <fkColumnName>patientId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <columnTitle>Date</columnTitle>
+                <propertyURI>http://cpas.labkey.com/Study#VisitDate</propertyURI>
+                <conceptURI>http://cpas.labkey.com/Study#VisitDate</conceptURI>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="slideId">
+                <columnTitle>Slide Id</columnTitle>
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="species">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="tissue">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="tumorType">
+                <columnTitle>Tumor Type</columnTitle>
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="panel">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+        </columns>
+        <tableTitle>IHC Slides</tableTitle>
+    </table>
+    <table tableName="IHC_Images" tableDbType="TABLE">
+        <columns>
+            <column columnName="patientId">
+                <datatype>varchar</datatype>
+                <columnTitle>Patient Id</columnTitle>
+                <propertyURI>http://cpas.labkey.com/Study#ParticipantId</propertyURI>
+                <nullable>false</nullable>
+                <fk>
+                    <fkDbSchema>study</fkDbSchema>
+                    <fkTable>Patient</fkTable>
+                    <fkColumnName>patientId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <columnTitle>Date</columnTitle>
+                <propertyURI>http://cpas.labkey.com/Study#VisitDate</propertyURI>
+                <conceptURI>http://cpas.labkey.com/Study#VisitDate</conceptURI>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="fileType">
+                <columnTitle>File Type</columnTitle>
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="fileName">
+                <columnTitle>File Name</columnTitle>
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="slideId">
+                <datatype>varchar</datatype>
+                <columnTitle>Slide Id</columnTitle>
+            </column>
+            <column columnName="aperioId">
+                <columnTitle>Aperio Id</columnTitle>
+                <datatype>integer</datatype>
+            </column>
+            <column columnName="marker">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="omeroId">
+                <datatype>integer</datatype>
+                <columnTitle>Omero Id</columnTitle>
+            </column>
+            <column columnName="acquisitionDate">
+                <columnTitle>Image Acquisition Date</columnTitle>
+                <rangeURI>http://www.w3.org/2001/XMLSchema#date</rangeURI>
+            </column>
+            <column columnName="comment">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+        </columns>
+        <tableTitle>IHC Images</tableTitle>
+    </table>
+    <table tableName="Demographics" tableDbType="TABLE">
+        <columns>
+            <column columnName="patientId">
+                <datatype>varchar</datatype>
+                <columnTitle>Patient Id</columnTitle>
+                <propertyURI>http://cpas.labkey.com/Study#ParticipantId</propertyURI>
+                <nullable>false</nullable>
+                <fk>
+                    <fkDbSchema>study</fkDbSchema>
+                    <fkTable>Patient</fkTable>
+                    <fkColumnName>patientId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <columnTitle>Enrollment Date</columnTitle>
+                <propertyURI>http://cpas.labkey.com/Study#VisitDate</propertyURI>
+                <conceptURI>http://cpas.labkey.com/Study#VisitDate</conceptURI>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="study">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="firstName">
+                <datatype>varchar</datatype>
+                <columnTitle>First Name</columnTitle>
+            </column>
+            <column columnName="lastName">
+                <datatype>varchar</datatype>
+                <columnTitle>Last Name</columnTitle>
+            </column>
+            <column columnName="mrn">
+                <datatype>varchar</datatype>
+                <columnTitle>Mrn</columnTitle>
+            </column>
+            <column columnName="birth">
+                <datatype>timestamp</datatype>
+                <columnTitle>Birth</columnTitle>
+                <rangeURI>http://www.w3.org/2001/XMLSchema#dateTime</rangeURI>
+            </column>
+            <column columnName="gender">
+                <datatype>varchar</datatype>
+                <columnTitle>Gender</columnTitle>
+            </column>
+            <column columnName="ageAtEnrollment">
+                <datatype>double</datatype>
+            </column>
+            <column columnName="race">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="ethnicity">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="eligibilityStatus">
+                <datatype>varchar</datatype>
+                <columnTitle>Eligibility Status</columnTitle>
+            </column>
+            <column columnName="consentStatus">
+                <datatype>varchar</datatype>
+                <columnTitle>Consent Status</columnTitle>
+            </column>
+            <column columnName="consentedDate">
+                <datatype>timestamp</datatype>
+                <columnTitle>Consented Date</columnTitle>
+                <rangeURI>http://www.w3.org/2001/XMLSchema#dateTime</rangeURI>
+            </column>
+            <column columnName="death">
+                <datatype>timestamp</datatype>
+                <columnTitle>Death</columnTitle>
+                <rangeURI>http://www.w3.org/2001/XMLSchema#dateTime</rangeURI>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+        </columns>
+        <tableTitle>Demographics</tableTitle>
+    </table>
+    <table tableName="Events" tableDbType="TABLE">
+        <columns>
+            <column columnName="patientId">
+                <datatype>varchar</datatype>
+                <columnTitle>Patient Id</columnTitle>
+                <description>Subject identifier</description>
+                <propertyURI>http://cpas.labkey.com/Study#ParticipantId</propertyURI>
+                <nullable>false</nullable>
+                <importAliases>
+                    <importAlias>ptid</importAlias>
+                </importAliases>
+                <fk>
+                    <fkDbSchema>study</fkDbSchema>
+                    <fkTable>Patient</fkTable>
+                    <fkColumnName>patientId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <columnTitle>Date</columnTitle>
+                <propertyURI>http://cpas.labkey.com/Study#VisitDate</propertyURI>
+                <conceptURI>http://cpas.labkey.com/Study#VisitDate</conceptURI>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="type">
+                <datatype>varchar</datatype>
+                <columnTitle>Type</columnTitle>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+        </columns>
+        <tableTitle>Events</tableTitle>
+    </table>
+    <table tableName="Variants" tableDbType="TABLE">
+        <columns>
+            <column columnName="patientId">
+                <datatype>varchar</datatype>
+                <columnTitle>Patient Id</columnTitle>
+                <description>Subject identifier</description>
+                <propertyURI>http://cpas.labkey.com/Study#ParticipantId</propertyURI>
+                <nullable>false</nullable>
+                <importAliases>
+                    <importAlias>ptid</importAlias>
+                </importAliases>
+                <fk>
+                    <fkDbSchema>study</fkDbSchema>
+                    <fkTable>Patient</fkTable>
+                    <fkColumnName>patientId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <columnTitle>Date</columnTitle>
+                <propertyURI>http://cpas.labkey.com/Study#VisitDate</propertyURI>
+                <conceptURI>http://cpas.labkey.com/Study#VisitDate</conceptURI>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="chromosome">
+                <datatype>varchar</datatype>
+                <columnTitle>Chromosome</columnTitle>
+            </column>
+            <column columnName="start">
+                <datatype>varchar</datatype>
+                <columnTitle>Start</columnTitle>
+            </column>
+            <column columnName="stop">
+                <datatype>varchar</datatype>
+                <columnTitle>Stop</columnTitle>
+            </column>
+            <column columnName="reference">
+                <datatype>varchar</datatype>
+                <columnTitle>Reference</columnTitle>
+            </column>
+            <column columnName="variant">
+                <datatype>varchar</datatype>
+                <columnTitle>Variant</columnTitle>
+            </column>
+            <column columnName="type">
+                <datatype>varchar</datatype>
+                <columnTitle>Type</columnTitle>
+            </column>
+            <column columnName="gene">
+                <datatype>varchar</datatype>
+                <columnTitle>Gene Name</columnTitle>
+            </column>
+            <column columnName="transcript">
+                <datatype>varchar</datatype>
+                <columnTitle>Transcript Name</columnTitle>
+            </column>
+            <column columnName="transcriptSpecies">
+                <datatype>varchar</datatype>
+                <columnTitle>Transcript Species</columnTitle>
+            </column>
+            <column columnName="transcriptSource">
+                <datatype>varchar</datatype>
+                <columnTitle>Transcript Source</columnTitle>
+            </column>
+            <column columnName="transcriptVersion">
+                <datatype>varchar</datatype>
+                <columnTitle>Transcript Version</columnTitle>
+            </column>
+            <column columnName="strand">
+                <datatype>varchar</datatype>
+                <columnTitle>Strand</columnTitle>
+            </column>
+            <column columnName="transcriptStatus">
+                <datatype>varchar</datatype>
+                <columnTitle>Transcript Status</columnTitle>
+            </column>
+            <column columnName="trvType">
+                <datatype>varchar</datatype>
+                <columnTitle>TRV Type</columnTitle>
+            </column>
+            <column columnName="cPosition">
+                <datatype>varchar</datatype>
+                <columnTitle>C Position</columnTitle>
+            </column>
+            <column columnName="aminoAcidChange">
+                <datatype>varchar</datatype>
+                <columnTitle>Amino Acid Change</columnTitle>
+            </column>
+            <column columnName="ucscCons">
+                <datatype>varchar</datatype>
+                <columnTitle>UCSC Consensus</columnTitle>
+            </column>
+            <column columnName="domain">
+                <datatype>varchar</datatype>
+                <columnTitle>Domain</columnTitle>
+            </column>
+            <column columnName="allDomains">
+                <datatype>varchar</datatype>
+                <columnTitle>All Domains</columnTitle>
+            </column>
+            <column columnName="deletionSubstructures">
+                <datatype>varchar</datatype>
+                <columnTitle>Deletion Substructures</columnTitle>
+            </column>
+            <column columnName="transcriptError">
+                <datatype>varchar</datatype>
+                <columnTitle>Transcript Error</columnTitle>
+            </column>
+            <column columnName="defaultGeneName">
+                <datatype>varchar</datatype>
+                <columnTitle>Default Gene Name</columnTitle>
+            </column>
+            <column columnName="geneNameSource">
+                <datatype>varchar</datatype>
+                <columnTitle>Gene Name Source</columnTitle>
+            </column>
+            <column columnName="ensemblGeneId">
+                <datatype>varchar</datatype>
+                <columnTitle>Ensembl Gene Id</columnTitle>
+            </column>
+            <column columnName="tier">
+                <datatype>varchar</datatype>
+                <columnTitle>Tier</columnTitle>
+            </column>
+            <column columnName="normalRefCount">
+                <datatype>varchar</datatype>
+                <columnTitle>Normal Ref Count</columnTitle>
+            </column>
+            <column columnName="normalVarCount">
+                <datatype>varchar</datatype>
+                <columnTitle>Normal Var Count</columnTitle>
+            </column>
+            <column columnName="normalVAF">
+                <datatype>varchar</datatype>
+                <columnTitle>Normal VAF</columnTitle>
+            </column>
+            <column columnName="tumorRefCount">
+                <datatype>varchar</datatype>
+                <columnTitle>Tumor Ref Count</columnTitle>
+            </column>
+            <column columnName="tumorVarCount">
+                <datatype>varchar</datatype>
+                <columnTitle>Tumor Var Count</columnTitle>
+            </column>
+            <column columnName="tumorVAF">
+                <datatype>varchar</datatype>
+                <columnTitle>Tumor VAF</columnTitle>
+            </column>
+            <column columnName="filterCall">
+                <datatype>varchar</datatype>
+                <columnTitle>Filter Call</columnTitle>
+            </column>
+            <column columnName="prob">
+                <datatype>varchar</datatype>
+                <columnTitle>Prob</columnTitle>
+            </column>
+            <column columnName="llr">
+                <datatype>varchar</datatype>
+                <columnTitle>LLR</columnTitle>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+        </columns>
+        <tableTitle>Variants</tableTitle>
+    </table>
+    <table tableName="Quantitative_Image_Analysis" tableDbType="TABLE">
+        <columns>
+            <column columnName="patientId">
+                <datatype>varchar</datatype>
+                <columnTitle>Patient Id</columnTitle>
+                <propertyURI>http://cpas.labkey.com/Study#ParticipantId</propertyURI>
+                <nullable>false</nullable>
+                <fk>
+                    <fkDbSchema>study</fkDbSchema>
+                    <fkTable>Patient</fkTable>
+                    <fkColumnName>patientId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <columnTitle>Date</columnTitle>
+                <propertyURI>http://cpas.labkey.com/Study#VisitDate</propertyURI>
+                <conceptURI>http://cpas.labkey.com/Study#VisitDate</conceptURI>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="slideId">
+                <columnTitle>Slide Id</columnTitle>
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="imageId">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="subset">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="cellNumber">
+                <datatype>integer</datatype>
+            </column>
+            <column columnName="biomarker">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="total">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+        </columns>
+        <tableTitle>Quantitative Image Analysis</tableTitle>
+    </table>
+</tables>

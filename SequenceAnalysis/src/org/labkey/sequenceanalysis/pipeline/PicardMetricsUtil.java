@@ -42,6 +42,7 @@ public class PicardMetricsUtil
             List<MetricBase> metrics = metricsFile.getMetrics();
             if (metrics.get(0).getClass() == DuplicationMetrics.class)
             {
+                log.info("Importing Picard Duplication metrics from: " + f.getName());
                 return processDuplicationMetrics(metricsFile, log);
             }
             else if (metrics.get(0).getClass() == InsertSizeMetrics.class)

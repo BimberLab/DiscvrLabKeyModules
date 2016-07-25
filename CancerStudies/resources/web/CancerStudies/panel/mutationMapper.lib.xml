@@ -1,0 +1,13 @@
+<libraries xmlns="http://labkey.org/clientLibrary/xml/">
+    <library compileInProductionMode="true">
+        <script path="CancerStudies/panel/MutationMapperPanel.js"/>
+    </library>
+    <dependencies>
+        <dependency path="Ext4ClientApi"/>
+        <dependency path="internal/jQuery"/>
+        <dependency path="http://www.cbioportal.org/js/lib/backbone-min.js"/>
+        <dependency path="http://www.cbioportal.org/js/lib/mutationMapper.js"/>
+        <dependency path="http://www.cbioportal.org/js/src/mutation/view/StandaloneMutationView.js"/>
+
+    </dependencies>
+</libraries>

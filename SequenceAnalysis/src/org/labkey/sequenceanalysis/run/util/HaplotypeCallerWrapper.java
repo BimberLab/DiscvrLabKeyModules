@@ -79,12 +79,21 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
 
         if (_multiThreaded)
         {
+            getLogger().debug("checking available threads");
             Integer maxThreads = SequenceTaskHelper.getMaxThreads(getLogger());
             if (maxThreads != null)
             {
                 args.add("-nct");
                 args.add(maxThreads.toString());
             }
+            else
+            {
+                getLogger().debug("max threads not set");
+            }
+        }
+        else
+        {
+            getLogger().debug("multithreading not enabled");
         }
 
         execute(args);

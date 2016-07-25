@@ -2376,9 +2376,6 @@
             <ns:item text="Import Files" insertPosition="beginning">
                 <ns:onClick>SequenceAnalysis.window.ImportOutputFileWindow.buttonHandler(dataRegionName);</ns:onClick>
             </ns:item>
-            <ns:item hidden="true">
-                <ns:originalText>Charts</ns:originalText>
-            </ns:item>
             <ns:item text="View Quality Metrics" insertPosition="end">
                 <ns:onClick>SequenceAnalysis.Buttons.viewQualityMetricsForOutputFiles(dataRegionName, 'analysis_id');</ns:onClick>
             </ns:item>

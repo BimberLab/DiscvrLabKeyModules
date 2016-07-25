@@ -1,0 +1,47 @@
+<script type="text/javascript">
+    Ext4.onReady(function(){
+        var config = {
+            width: 120,
+            border: false,
+            style: 'margin-left:auto;margin-right:auto;padding:5px;',
+            defaults: {
+                xtype: 'laboratory-iconbutton',
+                align: 'center'
+            },
+            items: [{
+                text: 'Import Data',
+                icon: LABKEY.ActionURL.getContextPath() + '/study/tools/study_overview.png',
+                disabled: importItems.length == 0,
+                menu: {
+                    showSeparator: false,
+                    items: importItems
+                }
+            },{
+                text: 'Import Samples',
+                icon: LABKEY.ActionURL.getContextPath() + '/study/tools/specimen_report.png',
+                disabled: sampleItems.length == 0,
+                menu: {
+                    showSeparator: false,
+                    items: sampleItems
+                }
+            },{
+                text: 'Data Browser',
+                icon: LABKEY.ActionURL.getContextPath() + '/study/tools/timeline_chart.png',
+                href: LABKEY.ActionURL.buildURL('laboratory', 'dataBrowser', Laboratory.Utils.getQueryContainerPath())
+            }]
+        };
+
+        if (Laboratory.Utils.isLaboratoryAdmin()){
+            config.items.push({
+                text: 'Settings',
+                icon: LABKEY.ActionURL.getContextPath() + '/study/tools/settings.png',
+                href: LABKEY.ActionURL.buildURL('laboratory', 'labSettings', Laboratory.Utils.getQueryContainerPath())
+            });
+        }
+
+        var webpart = <%=webpartContext%>;
+        Ext4.get(webpart.wrapperDivId).update('');
+        Ext4.create('Ext.panel.Panel', config).render(webpart.wrapperDivId);
+    });
+
+</script>

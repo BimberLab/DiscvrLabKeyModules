@@ -196,7 +196,7 @@ public class BLASTWrapper
             @Override
             public boolean accept(File dir, String name)
             {
-                return name.startsWith(dbName);
+                return name.startsWith(dbName) && !name.endsWith("fasta");
             }
         });
 

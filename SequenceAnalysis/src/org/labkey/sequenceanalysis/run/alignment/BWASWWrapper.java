@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.run.alignment;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
@@ -33,51 +34,9 @@ public class BWASWWrapper extends BWAWrapper
     {
         public BWASWAlignmentStep(PipelineStepProvider provider, PipelineContext ctx)
         {
-            super(provider, ctx);
+            super(provider, ctx, new BWASWWrapper(ctx.getLogger()));
         }
 
-        @Override
-        protected AlignmentOutput _performAlignment(AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
-        {
-            getWrapper().setOutputDir(outputDirectory);
-
-            getPipelineCtx().getLogger().info("Running BWA-SW");
-
-            List<String> args = new ArrayList<>();
-            args.add(getWrapper().getExe().getPath());
-            args.add("bwasw");
-            args.addAll(getClientCommandArgs());
-            getWrapper().appendThreads(getPipelineCtx().getJob(), args);
-
-            args.add(new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
-            args.add(inputFastq1.getPath());
-
-            if (inputFastq2 != null)
-            {
-                args.add(inputFastq2.getPath());
-            }
-
-            File sam = new File(outputDirectory, basename + ".sam");
-            getWrapper().execute(args, sam);
-            if (!sam.exists() || !SequenceUtil.hasMinLineCount(sam, 2))
-            {
-                throw new PipelineJobException("SAM file doesnt exist or has too few lines: " + sam.getPath());
-            }
-
-            //convert to BAM
-            File bam = new File(outputDirectory, basename + ".bam");
-            SamFormatConverterWrapper converter = new SamFormatConverterWrapper(getPipelineCtx().getLogger());
-            converter.setStringency(ValidationStringency.SILENT);
-            bam = converter.execute(sam, bam, true);
-            if (!bam.exists())
-            {
-                throw new PipelineJobException("Unable to find output file: " + bam.getPath());
-            }
-
-            output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
-
-            return output;
-        }
     }
 
     public static class Provider extends AbstractAlignmentStepProvider<AlignmentStep>
@@ -91,5 +50,49 @@ public class BWASWWrapper extends BWAWrapper
         {
             return new BWASWAlignmentStep(this, context);
         }
+    }
+
+    @Override
+    protected AlignmentStep.AlignmentOutput _performAlignment(PipelineJob job, AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, List<String> additionalArgs) throws PipelineJobException
+    {
+        setOutputDir(outputDirectory);
+
+        getLogger().info("Running BWA-SW");
+
+        List<String> args = new ArrayList<>();
+        args.add(getExe().getPath());
+        args.add("bwasw");
+        if (additionalArgs != null)
+            args.addAll(additionalArgs);
+        appendThreads(job, args);
+
+        args.add(new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
+        args.add(inputFastq1.getPath());
+
+        if (inputFastq2 != null)
+        {
+            args.add(inputFastq2.getPath());
+        }
+
+        File sam = new File(outputDirectory, basename + ".sam");
+        execute(args, sam);
+        if (!sam.exists() || !SequenceUtil.hasMinLineCount(sam, 2))
+        {
+            throw new PipelineJobException("SAM file doesnt exist or has too few lines: " + sam.getPath());
+        }
+
+        //convert to BAM
+        File bam = new File(outputDirectory, basename + ".bam");
+        SamFormatConverterWrapper converter = new SamFormatConverterWrapper(getLogger());
+        converter.setStringency(ValidationStringency.SILENT);
+        bam = converter.execute(sam, bam, true);
+        if (!bam.exists())
+        {
+            throw new PipelineJobException("Unable to find output file: " + bam.getPath());
+        }
+
+        output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
+
+        return output;
     }
 }

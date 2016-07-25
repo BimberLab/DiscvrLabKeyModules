@@ -80,7 +80,7 @@ public class MarkDuplicatesWrapper extends PicardWrapper
         params.add(getPicardJar().getPath());
         params.add(getToolName());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
-        params.add("COMPRESSION_LEVEL=9");
+        params.add("COMPRESSION_LEVEL=" + getCompressionLevel());
         inferMaxRecordsInRam(params);
         // added for compatibility with GATK.  see:
         // http://gatkforums.broadinstitute.org/discussion/2790/indelrealigner-with-markduplicates

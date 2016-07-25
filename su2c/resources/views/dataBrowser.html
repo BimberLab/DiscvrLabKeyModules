@@ -1,0 +1,28 @@
+<script type="text/javascript">
+    Ext4.onReady(function (){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.create('CancerStudies.panel.TabbedReportPanel', {
+            defaultReport: 'patientSummary',
+            filterTypes: [{
+                xtype: 'ldk-singlesubjectfiltertype',
+                inputValue: LDK.panel.SingleSubjectFilterType.filterName,
+                label: 'Single Patient',
+            },{
+                xtype: 'ldk-multisubjectfiltertype',
+                inputValue: LDK.panel.MultiSubjectFilterType.filterName,
+                label: 'Multiple Patients'
+            },{
+                xtype: 'cancerstudies-cohortfiltertype',
+                inputValue: CancerStudies.panel.CohortFilterType.filterName,
+                label: 'Clinical Trial',
+                nounSingular: 'Trial Site'
+            }],
+            loadReports: function(){
+                this.reports = SU2C.Utils.getTabbedReports();
+
+                this.createTabPanel();
+            }
+        }).render(webpart.wrapperDivId);
+    });
+</script>

@@ -97,13 +97,14 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler
                 File outputFile = new File(outputDir, FileUtil.getBaseName(so.getFile()) + ".g.vcf.gz");
                 File idxFile = new File(outputDir, FileUtil.getBaseName(so.getFile()) + ".g.vcf.gz.idx");
 
+                HaplotypeCallerWrapper wrapper = new HaplotypeCallerWrapper(job.getLogger());
                 if ("on".equals(params.optString("multithreaded")))
                 {
                     job.getLogger().debug("HaplotypeCaller will run multi-threaded");
-                    getWrapper(job.getLogger()).setMultiThreaded(true);
+                    wrapper.setMultiThreaded(true);
                 }
 
-                getWrapper(job.getLogger()).setOutputDir(outputDir);
+                wrapper.setOutputDir(outputDir);
 
                 ReferenceGenome referenceGenome = support.getCachedGenome(so.getLibrary_id());
                 if (referenceGenome == null)
@@ -113,7 +114,7 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler
 
                 if ("on".equals(params.optString("useQueue")))
                 {
-                    getWrapper(job.getLogger()).executeWithQueue(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, getClientCommandArgs(params));
+                    wrapper.executeWithQueue(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, getClientCommandArgs(params));
                 }
                 else
                 {
@@ -122,7 +123,7 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler
                     args.add("--emitRefConfidence");
                     args.add("GVCF");
 
-                    getWrapper(job.getLogger()).execute(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, args);
+                    wrapper.execute(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, args);
                 }
 
                 action.addOutput(outputFile, "gVCF File", false);
@@ -160,11 +161,6 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler
             }
 
             return ret;
-        }
-
-        private HaplotypeCallerWrapper getWrapper(Logger log)
-        {
-            return new HaplotypeCallerWrapper(log);
         }
 
         @Override

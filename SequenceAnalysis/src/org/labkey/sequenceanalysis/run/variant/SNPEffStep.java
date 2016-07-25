@@ -37,6 +37,21 @@ public class SNPEffStep extends AbstractPipelineStep implements VariantProcessin
     @Override
     public Output processVariants(File inputVCF, ReferenceGenome genome)
     {
+        /**
+         * 	echo "Running SNPEff"
+         $JAVA \
+         -jar $SNPEFF ann \
+         18_MacaM \
+         -noStats \
+         -dataDir "$SNP_EFF_DATA" \
+         -configOption "18_MacaM.genome=18_MacaM" \
+         -t \  //multithreaded
+
+         "$INPUT" > "$SNPEFF_OUT"
+         /home/groups/prime-seq/pipeline_tools/bin/bgzip ${SNPEFF_OUT}
+         /home/groups/prime-seq/pipeline_tools/bin/tabix -f ${SNPEFF_OUT}.gz
+         */
+
         return null;
     }
 }

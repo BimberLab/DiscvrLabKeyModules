@@ -252,4 +252,9 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
 
         return ret;
     }
+
+    public Integer getExpRunIdForJob(PipelineJob job) throws PipelineJobException
+    {
+        return SequenceTaskHelper.getExpRunIdForJob(job);
+    }
 }

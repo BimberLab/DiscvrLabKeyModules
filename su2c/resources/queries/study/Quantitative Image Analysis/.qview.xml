@@ -1,0 +1,22 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="patientId"/>
+        <column name="patientId/cohort"/>
+        <column name="slideId/species"/>
+        <column name="slideId/tissue"/>
+        <column name="slideId/tumorType"/>
+        <column name="slideId/panel"/>
+        <column name="imageId/marker"/>
+
+        <column name="subset"/>
+        <column name="cellNumber"/>
+        <column name="biomarker"/>
+        <column name="total"/>
+        <column name="imageId/omeroId"/>
+    </columns>
+    <sorts>
+        <sort column="patientId" descending="false"/>
+        <sort column="slideId"/>
+        <sort column="subset"/>
+    </sorts>
+</customView>

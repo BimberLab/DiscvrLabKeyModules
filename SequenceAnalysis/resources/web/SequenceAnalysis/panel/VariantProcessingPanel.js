@@ -88,12 +88,107 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 		};
 	},
 
+	//loads the exp.RowId for each file
 	initFiles: function(){
+		this.outputFileStore = Ext4.create("LABKEY.ext4.data.Store", {
+			containerPath: this.queryContainer,
+			schemaName: 'sequenceanalysis',
+			queryName: 'outputfiles',
+			columns: 'rowid,name,readset,readset/name,readset/platform,container,container/displayName,container/path,dataid,dataid/name,dataid/fileexists,readset/subjectid,readset/sampleid,library_id,library_id/name',
+			metadata: {
+				queryContainerPath: {
+					createIfDoesNotExist: true,
+					setValueOnLoad: true,
+					defaultValue: this.queryContainerPath
+				}
+			},
+			autoLoad: true,
+			filterArray: [
+				LABKEY.Filter.create('rowid', this.outputFileIds.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
+			],
+			sort: 'name',
+			listeners: {
+				scope: this,
+				load: function(store){
+					this.fileNames = [];
+					this.fileIds = [];
+					var errors = [];
+					var errorNames = [];
+					var libraryIds = [];
+					store.each(function(rec){
+						if (rec.get('dataid')){
+							if (!rec.get('dataid/fileexists')){
+								errors.push(rec);
+								errorNames.push(rec.get('readset/name'));
+							}
+							else {
+								this.fileIds.push(rec.get('dataid'));
+								this.fileNames.push(rec.get('dataid/name'));
+							}
+						}
+						else {
+							errors.push(rec);
+							errorNames.push(rec.get('readset/name'))
+						}
 
+						if (rec.get('library_id')){
+							libraryIds.push(rec.get('library_id'));
+						}
+					}, this);
+
+					if (errors.length){
+						alert('The following alignments lack a file and will be skipped: ' + errorNames.join(', '));
+					}
+
+					this.libraryIds = Ext4.unique(libraryIds);
+
+					this.checkProtocol();
+				}
+			}
+		});
+	},
+
+	getFilePanelCfg: function(){
+		return {
+			xtype: 'panel',
+			border: true,
+			title: 'Selected Files',
+			itemId: 'files',
+			width: 'auto',
+			defaults: {
+				border: false,
+				style: 'padding: 5px;'
+			},
+			items: [{
+				html: 'Below are the files that will be processed.',
+				style: 'padding-bottom: 10px;'
+			},{
+				xtype: 'dataview',
+				store: this.outputFileStore,
+				itemSelector: 'tr.file_list',
+				tpl: [
+					'<table class="fileNames"><tr class="fileNames"><td>File Id</td><td>Description</td><td>Readset Name</td><td>VCF File</td><td>Genome</td><td>Folder</td></tr>',
+					'<tpl for=".">',
+					'<tr class="file_list">',
+					'<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "sequenceanalysis", "query.queryName":"outputfiles", "query.rowId~eq": values.rowid})]}" target="_blank">{rowid:htmlEncode}</a></td>',
+					'<td>{description:htmlEncode}</td>',
+					'<td><a href="{[LABKEY.ActionURL.buildURL("query", "executeQuery", values.queryContainerPath, {schemaName: "sequenceanalysis", "query.queryName":"sequence_readsets", "query.rowId~eq": values.readset})]}" target="_blank">{[Ext4.htmlEncode(values["readset/name"])]}</a></td>',
+					'<td',
+					'<tpl if="values.dataid && !values[\'dataid/fileexists\']"> style="background: red;" data-qtip="File does not exist"</tpl>',
+					'><a href="{[LABKEY.ActionURL.buildURL("experiment", "showData", values.queryContainerPath, {rowId: values.dataid})]}" target="_blank">{[Ext4.htmlEncode(values["dataid/name"])]}</a></td>',
+
+					'<td>{[Ext4.htmlEncode(values["library_id/name"])]}</td>',
+					'<td><a href="{[LABKEY.ActionURL.buildURL("project", "start", values["container/path"], {})]}" target="_blank">{[Ext4.htmlEncode(values["container/displayName"])]}</a></td>',
+					'</tr>',
+					'</tpl>',
+					'</table>'
+				]
+			}]
+		}
 	},
 
 	onDataLoad: function(results){
-		this.add([this.getProtocolPanelCfg(),{
+		this.add([this.getFilePanelCfg(), this.getProtocolPanelCfg(),{
 			xtype: 'panel',
 			title: 'Analysis Options',
 			width: '100%',
@@ -133,6 +228,24 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 
 		var btn = this.down('#copyPrevious');
 		btn.handler.call(this, btn);
+	},
+	
+	onSubmit: function(){
+		LABKEY.Ajax.request({
+			url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler'),
+			jsonData: {
+				handlerClass: 'org.labkey.sequenceanalysis.analysis.CoverageDepthHandler',
+				outputFileIds: this.outputFileIds,
+				params: Ext4.encode(values)
+			},
+			scope: this,
+			success: function(){
+				Ext4.Msg.hide();
+
+				window.location = LABKEY.ActionURL.buildURL('pipeline-status', 'showList');
+			},
+			failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback())
+		});
 	}
 
 });

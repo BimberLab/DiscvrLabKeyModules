@@ -1,0 +1,15 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="" tableDbType="TABLE">
+                <tableTitle>Quantitative Analysis Summary</tableTitle>
+                <columns>
+                    <column columnName="analyses">
+                        <columnTitle>Quantitative Data</columnTitle>
+                        <url>/query/executeQuery.view?schemaName=study&amp;queryName=Variants&amp;query.patientId~eq=${patientId}</url>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

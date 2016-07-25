@@ -173,8 +173,8 @@
                         <list>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisInitTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisRemoteWorkTask</value>
-                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisWorkTask</value>
                             <ref bean="xarGeneratorJoin"/>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisWorkTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisCleanupTask</value>
                         </list>
                     </property>

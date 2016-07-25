@@ -1,0 +1,5 @@
+<view xmlns="http://labkey.org/data/xml/view" title="SU2C Tools">
+    <dependencies>
+        <dependency path="laboratory/button/IconButton.js"/>
+    </dependencies>
+</view>
