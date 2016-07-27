@@ -523,6 +523,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 FastqUtils.logSequenceCounts(pair.first, pair.second, getJob().getLogger(), previousCounts.first, previousCounts.second);
 
                 //TODO: read count / metrics
+                //getHelper().getFileManager()
 
                 Date end = new Date();
                 action.setEndTime(end);

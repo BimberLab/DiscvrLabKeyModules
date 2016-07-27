@@ -264,7 +264,7 @@ public class StarWrapper extends AbstractCommandWrapper
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
             File indexDir = new File(outputDir, getProvider().getName());
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName(), referenceGenome);
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!indexDir.exists())

@@ -273,6 +273,10 @@ Ext4.define('SequenceAnalysis.panel.AdapterPanel', {
             }
         }, this);
 
+        if (!this.down('gridpanel').store.getCount()){
+            msgs.push('Must provide at least one adapter or remove this step');
+        }
+
         return msgs;
     },
 

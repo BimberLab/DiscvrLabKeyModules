@@ -63,7 +63,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
 
             File indexDir = new File(outputDir, getProvider().getName());
             File outputFile = getWrapper().getExpectedMosaikRefFile(indexDir, referenceGenome.getWorkingFastaFile());
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName(), referenceGenome);
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!indexDir.exists())

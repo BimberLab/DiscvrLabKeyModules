@@ -79,13 +79,19 @@ public class BWAWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public String getIndexCachedDirName()
+        {
+            return "bwa";
+        }
+
+        @Override
         public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             getPipelineCtx().getLogger().info("Creating BWA index");
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
-            File indexDir = new File(outputDir, "bwa");
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), "bwa", referenceGenome);
+            File indexDir = new File(outputDir, getIndexCachedDirName());
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(), referenceGenome);
             if (!hasCachedIndex)
             {
                 List<String> args = new ArrayList<>();

@@ -10,6 +10,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
+import org.labkey.sequenceanalysis.run.alignment.AlignerIndexUtil;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
@@ -44,7 +45,55 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
         @Override
         public boolean isParticipant(PipelineJob job)
         {
-            return SequenceTaskHelper.isAlignmentUsed(job);
+
+            if (!SequenceTaskHelper.isAlignmentUsed(job))
+            {
+                return false;
+            }
+
+            try
+            {
+                SequenceTaskHelper taskHelper = new SequenceTaskHelper(job, job.getLogFile().getParentFile());
+                AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
+
+                ReferenceGenome referenceGenome = taskHelper.getSequenceSupport().getReferenceGenome();
+                if (referenceGenome == null)
+                {
+                    job.getLogger().warn("No reference genome was cached prior to preparing aligned indexes");
+                    return true;
+                }
+
+                File refFasta = referenceGenome.getSourceFastaFile();
+                if (!refFasta.exists())
+                {
+                    job.getLogger().warn("Reference fasta does not exist: " + refFasta.getPath());
+                    return true;
+                }
+
+                File refFastaIdx = new File(referenceGenome.getSourceFastaFile().getPath() + ".fai");
+                if (!refFastaIdx.exists())
+                {
+                    job.getLogger().warn("Reference fasta idx does not exist: " + refFastaIdx.getPath());
+                    return true;
+                }
+
+                boolean hasIndex = AlignerIndexUtil.hasCachedIndex(alignmentStep.getPipelineCtx(), alignmentStep.getIndexCachedDirName(), referenceGenome);
+                if (hasIndex)
+                {
+                    job.getLogger().info("cached aligner index exists, skipping step");
+                    return false;
+                }
+                else
+                {
+                    job.getLogger().info("no previously cached index found");
+                }
+            }
+            catch (PipelineJobException e)
+            {
+                job.getLogger().error(e.getMessage(), e);
+            }
+
+            return true;
         }
 
         public List<FileType> getInputTypes()

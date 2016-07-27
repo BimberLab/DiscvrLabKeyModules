@@ -166,6 +166,12 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public String getIndexCachedDirName()
+        {
+            return CACHED_NAME_BOWTIE2;
+        }
+
+        @Override
         public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             getPipelineCtx().getLogger().info("Preparing reference for bismark");
@@ -176,7 +182,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
             File indexOutputDir = localFasta.getParentFile();
             File genomeBuild = new File(indexOutputDir, WORKING_GENOME_NAME);
 
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), CACHED_NAME_BOWTIE2, referenceGenome);
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!localFasta.exists())
@@ -254,7 +260,10 @@ public class BismarkWrapper extends AbstractCommandWrapper
         {
             super("Bismark", "Bismark is a tool to map bisulfite converted sequence reads and determine cytosine methylation states.  It will use bowtie for the alignment itself.", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-L"), "seed_length", "Seed Length", "Sets the length of the seed substrings to align during multiseed alignment. Smaller values make alignment slower but more sensitive.", "ldk-numberfield", null, 30),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-N"), "max_seed_mismatches", "Max Seed Mismatches", "Sets the number of mismatches to be allowed in a seed alignment during multiseed alignment. Can be set to 0 or 1. Setting this higher makes alignment slower (often much slower) but increases sensitivity. Default: 0.", "ldk-numberfield", null, 1)
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-N"), "max_seed_mismatches", "Max Seed Mismatches", "Sets the number of mismatches to be allowed in a seed alignment during multiseed alignment. Can be set to 0 or 1. Setting this higher makes alignment slower (often much slower) but increases sensitivity. Default: 0.", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                    }}, 1)
             ), null, "http://www.bioinformatics.babraham.ac.uk/projects/bismark/", true, false);
         }
 

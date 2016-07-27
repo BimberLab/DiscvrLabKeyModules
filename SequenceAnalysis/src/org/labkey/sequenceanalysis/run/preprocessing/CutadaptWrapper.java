@@ -85,7 +85,7 @@ public class CutadaptWrapper extends AbstractCommandWrapper
             File output2 = inputFile2 == null ? null : new File(outputDir, SequenceTaskHelper.getUnzippedBaseName(inputFile2.getName()) + ".adaptertrimmed" + extention);
 
             List<AdapterModel> adapters = TrimmomaticWrapper.AdapterTrimmingProvider.getAdapters(getPipelineCtx().getJob(), getProvider().getName());
-            if (adapters.isEmpty())
+            if (adapters == null || adapters.isEmpty())
             {
                 throw new PipelineJobException("No adapters provided, will not run");
             }

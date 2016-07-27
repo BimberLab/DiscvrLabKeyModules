@@ -3,6 +3,7 @@ package org.labkey.api.sequenceanalysis.pipeline;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.StringUtilsLabKey;
 
@@ -31,7 +32,7 @@ public class ProcessUtils
         {
             final Process tmpProcess1 = process1;
             final Process tmpProcess2 = process2;
-            JobRunner.getDefault().execute(new Runnable()
+            new Thread(new Runnable()
             {
                 @Override
                 public void run()
@@ -47,7 +48,7 @@ public class ProcessUtils
                         _log.error(e.getMessage(), e);
                     }
                 }
-            });
+            }).start();
         }
     }
 
@@ -67,7 +68,7 @@ public class ProcessUtils
         public void readProcess(Process process) throws IOException
         {
             final Process tmpProcess = process;
-            JobRunner.getDefault().execute(new Runnable()
+            new Thread(new Runnable()
             {
                 @Override
                 public void run()
@@ -89,7 +90,7 @@ public class ProcessUtils
                         }
                     }
                 }
-            });
+            }).start();
         }
     }
 }

@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.alignment;
 
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
@@ -140,7 +141,7 @@ public class Bowtie2Wrapper extends AbstractCommandWrapper
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
             File indexDir = new File(outputDir, getProvider().getName());
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getProvider().getName(), referenceGenome);
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!indexDir.exists())
@@ -178,7 +179,10 @@ public class Bowtie2Wrapper extends AbstractCommandWrapper
         {
             super("Bowtie2", "Bowtie2 is a fast aligner often used for short reads. Disadvantages are that it does not perform gapped alignment. It will return a single hit for each read.", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-L"), "seed_length", "Seed Length", "Sets the length of the seed substrings to align during multiseed alignment. Smaller values make alignment slower but more senstive. Default: the --sensitive preset is used by default, which sets -L to 20 both in --end-to-end mode and in --local mode.", "ldk-numberfield", null, 20),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-N"), "max_seed_mismatches", "Max Seed Mismatches", "Sets the number of mismatches to allowed in a seed alignment during multiseed alignment. Can be set to 0 or 1. Setting this higher makes alignment slower (often much slower) but increases sensitivity.", "ldk-integerfield", null, 3),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-N"), "max_seed_mismatches", "Max Seed Mismatches", "Sets the number of mismatches to allowed in a seed alignment during multiseed alignment. Can be set to 0 or 1. Setting this higher makes alignment slower (often much slower) but increases sensitivity.", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                    }}, 3),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--local"), "local", "Local Mode", "In this mode, Bowtie 2 does not require that the entire read align from one end to the other. Rather, some characters may be omitted (\"soft clipped\") from the ends in order to achieve the greatest possible alignment score. The match bonus --ma is used in this mode, and the best possible alignment score is equal to the match bonus (--ma) times the length of the read. Specifying --local and one of the presets (e.g. --local --very-fast) is equivalent to specifying the local version of the preset (--very-fast-local). This is mutually exclusive with --end-to-end. --end-to-end is the default mode.", "checkbox", null, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--end-to-end"), "end-to-end", "End to End Mode", "In this mode, Bowtie 2 requires that the entire read align from one end to the other, without any trimming (or \"soft clipping\") of characters from either end. The match bonus --ma always equals 0 in this mode, so all alignment scores are less than or equal to 0, and the greatest possible alignment score is 0. This is mutually exclusive with --local. --end-to-end is the default mode.", "checkbox", null, null)
             ), null, "http://bowtie-bio.sourceforge.net/bowtie2/index.shtml", true, true);

@@ -238,6 +238,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
     protected void doTrim(List<String> params) throws PipelineJobException
     {
         ProcessBuilder pb = getProcessBuilder(params);
+        getLogger().info(StringUtils.join(params, " "));
         pb.redirectErrorStream(false);
         Process p = null;
         try
@@ -330,9 +331,15 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             File outputFile = new File(ctx.getWorkingDirectory(), "adapters.fasta");
             if (!outputFile.exists())
             {
-                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), "UTF-8")))
+                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile), StringUtilsLabKey.DEFAULT_CHARSET)))
                 {
-                    for (AdapterModel ad : getAdapters(ctx.getJob(), getName()))
+                    List<AdapterModel> adapters = getAdapters(ctx.getJob(), getName());
+                    if (adapters == null || adapters.isEmpty())
+                    {
+                        throw new PipelineJobException("No adapters provided");
+                    }
+
+                    for (AdapterModel ad : adapters)
                     {
                         ad.setTrim3(false); //ILLUMINACLIP should handle this for us
                         writer.write(ad.getFastaLines());
@@ -347,10 +354,16 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             return outputFile;
         }
 
+        @Nullable
         public static List<AdapterModel> getAdapters(PipelineJob job, String providerName)
         {
             List<AdapterModel> adapters = new ArrayList<>();
             List<JSONArray> rawData = getAdapterInfo(job, providerName);
+            if (rawData == null)
+            {
+                return null;
+            }
+
             for (JSONArray adapter : rawData)
             {
                 adapters.add(AdapterModel.fromJSON(adapter));
@@ -359,11 +372,17 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             return adapters;
         }
 
+        @Nullable
         private static List<JSONArray> getAdapterInfo(PipelineJob job, String providerName)
         {
             List<JSONArray> adapters = new ArrayList<>();
             if (job.getParameters().containsKey("fastqProcessing." + providerName + ".adapters"))
             {
+                if (job.getParameters().get("fastqProcessing." + providerName + ".adapters") == null || job.getParameters().get("fastqProcessing." + providerName + ".adapters").isEmpty())
+                {
+                    return null;
+                }
+
                 JSONArray adapterArr = new JSONArray(job.getParameters().get("fastqProcessing." + providerName + ".adapters"));
                 if (adapterArr != null)
                 {

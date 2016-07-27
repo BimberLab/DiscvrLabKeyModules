@@ -34,6 +34,11 @@ public interface AlignmentStep extends PipelineStep
      */
     public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException;
 
+    default public String getIndexCachedDirName()
+    {
+        return getProvider().getName();
+    }
+
     /**
      * Performs a reference guided alignment using the provided files.
      * @param inputFastq1 The forward FASTQ file
