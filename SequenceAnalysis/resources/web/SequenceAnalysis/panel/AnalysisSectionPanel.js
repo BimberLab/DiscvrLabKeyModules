@@ -163,6 +163,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
             modal: true,
             ownerPanel: this,
             bodyStyle: 'padding: 5px;',
+            closeAction: 'destroy',
             title: 'Add Steps',
             border: false,
             width: 800,
@@ -312,6 +313,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         else {
             var toAdd = [];
             Ext4.Array.forEach(toolNames, function(name) {
+                LDK.Assert.assertNotEmpty('Variable name is empty: ' + name, name);
                 var recIdx = this.getToolStore().find('name', name);
                 if (recIdx > -1) {
                     var config = this.getToolStore().getAt(recIdx).get('config');

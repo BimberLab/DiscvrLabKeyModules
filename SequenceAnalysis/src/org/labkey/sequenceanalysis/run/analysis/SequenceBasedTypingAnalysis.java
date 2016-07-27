@@ -177,17 +177,20 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             getPipelineCtx().getLogger().info("SBT output not found, skipping: " + expectedTxt.getPath());
         }
 
-        //delete lineage files
-        ReferenceGenome referenceGenome = SequenceAnalysisService.get().getReferenceGenome(model.getLibraryId(), getPipelineCtx().getJob().getUser());
-        if (referenceGenome == null)
+        //delete lineage files, if present
+        if (model.getLibraryId() != null)
         {
-            throw new PipelineJobException("Genome not found: " + model.getLibraryId());
-        }
+            ReferenceGenome referenceGenome = SequenceAnalysisService.get().getReferenceGenome(model.getLibraryId(), getPipelineCtx().getJob().getUser());
+            if (referenceGenome == null)
+            {
+                throw new PipelineJobException("Genome not found: " + model.getLibraryId());
+            }
 
-        File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
-        if (lineageMapFile.exists())
-        {
-            lineageMapFile.delete();
+            File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
+            if (lineageMapFile.exists())
+            {
+                lineageMapFile.delete();
+            }
         }
 
         return null;
