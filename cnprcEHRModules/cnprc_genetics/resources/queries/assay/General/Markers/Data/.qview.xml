@@ -1,0 +1,8 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="AN_ID"/>
+        <column name="LOCUS"/>
+        <column name="ALLELE1"/>
+        <column name="ALLELE2"/>
+    </columns>
+</customView>

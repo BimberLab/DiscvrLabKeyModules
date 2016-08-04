@@ -1,0 +1,14 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="AN_ID"/>
+        <column name="RESULT_STATUS"/>
+        <column name="VGL_AN_ID"/>
+        <column name="VGL_GEN_SIRE"/>
+        <column name="VGL_GEN_DAM"/>
+        <column name="VGL_TEST_DATE"/>
+        <column name="VGL_SENT_DATE"/>
+        <column name="VGL_STATUS"/>
+        <column name="VGL_SEX_TEST"/>
+        <column name="VGL_NOTE"/>
+    </columns>
+</customView>
