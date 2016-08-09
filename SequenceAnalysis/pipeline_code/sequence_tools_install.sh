@@ -475,16 +475,16 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/samtools || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf samtools-0.1.18*
+    rm -Rf samtools-*
     rm -Rf $LKTOOLS_DIR/samtools
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget $WGET_OPTS http://downloads.sourceforge.net/project/samtools/samtools/0.1.18/samtools-0.1.18.tar.bz2
-    bunzip2 samtools-0.1.18.tar.bz2
-    tar -xf samtools-0.1.18.tar
+    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2
+    bunzip2 samtools-1.3.1.tar.bz2
+    tar -xf samtools-1.3.1.tar
     echo "Compressing TAR"
-    bzip2 samtools-0.1.18.tar
-    cd samtools-0.1.18
+    bzip2 samtools-1.3.1.tar
+    cd samtools-1.3.1
     #note: this is used later by Bio::DB::Samtools
     make CXXFLAGS=-fPIC CFLAGS=-fPIC CPPFLAGS=-fPIC
     install samtools ${LKTOOLS_DIR}/samtools
