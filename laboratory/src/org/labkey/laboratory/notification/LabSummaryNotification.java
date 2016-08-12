@@ -131,7 +131,8 @@ public class LabSummaryNotification implements Notification
 
     }
 
-    public String getMessage(Container c, User u)
+    @Override
+    public String getMessageBodyHTML(Container c, User u)
     {
         _pctFormat = NumberFormat.getPercentInstance();
         _pctFormat.setMaximumFractionDigits(1);

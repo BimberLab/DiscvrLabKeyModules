@@ -88,7 +88,8 @@ public class SSU_Notification extends AbstractNotification
         return "The report is designed provide a summary of surgeries performed today and alert for any surgeries missing cases or post-op meds.";
     }
 
-    public String getMessage(Container c, User u)
+    @Override
+    public String getMessageBodyHTML(Container c, User u)
     {
         StringBuilder msg = new StringBuilder();
 

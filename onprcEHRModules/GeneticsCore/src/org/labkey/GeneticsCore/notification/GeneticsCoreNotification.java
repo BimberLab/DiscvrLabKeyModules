@@ -83,7 +83,7 @@ public class GeneticsCoreNotification implements Notification
         return "The report is designed provide a summary of alerts relevant to genetics, including alerts about genetics blood draws, parentage, etc.";
     }
 
-    public String getMessage(Container c, User u)
+    public String getMessageBodyHTML(Container c, User u)
     {
         StringBuilder msg = new StringBuilder();
 
