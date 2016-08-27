@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<etl xmlns="http://labkey.org/etl/xml">
+    <name>demographics</name>
+    <description>SNPRC Marmosets</description>
+    <transforms>
+        <transform type="RemoteQueryTransformStep" id="step1">
+            <description>Copy to target</description>
+            <source remoteSource="snprcLkSrc" schemaName="study" queryName="R24DemographicsSrc" />
+            <destination schemaName="study" queryName="demographics" targetOption="merge"/>
+        </transform>
+    </transforms>
+    <incrementalFilter className="ModifiedSinceFilterStrategy" timestampColumnName="modified" />
+    <schedule>
+        <poll interval="60m" />
+    </schedule>
+</etl>

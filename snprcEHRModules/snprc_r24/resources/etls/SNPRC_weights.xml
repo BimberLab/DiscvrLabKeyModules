@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<etl xmlns="http://labkey.org/etl/xml">
+    <name>weights</name>
+    <description>SNPRC Marmoset weights</description>
+    <transforms>
+        <transform type="RemoteQueryTransformStep" id="step1">
+            <description>Copy to target</description>
+            <source remoteSource="snprcLkSrc" schemaName="study" queryName="R24weightsSrc" />
+            <destination schemaName="study" queryName="weight" targetOption="merge"/>
+        </transform>
+    </transforms>
+    <incrementalFilter className="ModifiedSinceFilterStrategy" timestampColumnName="modified" />
+    <schedule>
+        <poll interval="60m" />
+    </schedule>
+</etl>
