@@ -19,14 +19,14 @@ package org.labkey.cnprc_genetics;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.module.DefaultModule;
+import org.labkey.api.module.CodeOnlyModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.view.WebPartFactory;
 
 import java.util.Collection;
 import java.util.Collections;
 
-public class CNPRC_GeneticsModule extends DefaultModule
+public class CNPRC_GeneticsModule extends CodeOnlyModule
 {
     public static final String NAME = "CNPRC_Genetics";
 
@@ -34,18 +34,6 @@ public class CNPRC_GeneticsModule extends DefaultModule
     public String getName()
     {
         return NAME;
-    }
-
-    @Override
-    public double getVersion()
-    {
-        return 16.21;
-    }
-
-    @Override
-    public boolean hasScripts()
-    {
-        return true;
     }
 
     @Override
