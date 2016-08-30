@@ -2786,6 +2786,11 @@ cnprcEHRModules/cnprc_genetics/resources/queries/assay/General/Markers/Data/.qvi
 cnprcEHRModules/cnprc_genetics/resources/schemas/cnprc_genetics.xml -text
 cnprcEHRModules/cnprc_genetics/resources/schemas/dbscripts/postgresql/cnprc_genetics-15.30-15.31.sql -text
 cnprcEHRModules/cnprc_genetics/resources/schemas/dbscripts/sqlserver/cnprc_genetics-15.30-15.31.sql -text
+cnprcEHRModules/cnprc_genetics/resources/transform/MANIFEST.MF -text
+cnprcEHRModules/cnprc_genetics/resources/transform/META-INF/MANIFEST.MF -text
+cnprcEHRModules/cnprc_genetics/resources/transform/build.xml -text
+cnprcEHRModules/cnprc_genetics/resources/transform/src/AbstractAssayValidator.java -text
+cnprcEHRModules/cnprc_genetics/resources/transform/src/GeneticsTransform.java -text
 cnprcEHRModules/cnprc_genetics/src/org/labkey/cnprc_genetics/CNPRC_GeneticsContainerListener.java -text
 cnprcEHRModules/cnprc_genetics/src/org/labkey/cnprc_genetics/CNPRC_GeneticsController.java -text
 cnprcEHRModules/cnprc_genetics/src/org/labkey/cnprc_genetics/CNPRC_GeneticsModule.java -text
