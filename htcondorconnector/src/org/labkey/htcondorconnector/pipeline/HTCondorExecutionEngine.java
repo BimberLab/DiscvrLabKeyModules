@@ -79,7 +79,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
         _config = config;
     }
 
-    @org.jetbrains.annotations.NotNull
+    @NotNull
     @Override
     public String getType()
     {
