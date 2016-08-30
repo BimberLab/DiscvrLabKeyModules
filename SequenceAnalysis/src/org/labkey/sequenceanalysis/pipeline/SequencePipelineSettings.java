@@ -15,9 +15,9 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
-import com.drew.lang.annotations.Nullable;
 import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.ConvertHelper;

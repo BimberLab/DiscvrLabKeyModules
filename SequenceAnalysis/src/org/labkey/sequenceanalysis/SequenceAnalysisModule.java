@@ -15,8 +15,8 @@
 
 package org.labkey.sequenceanalysis;
 
-import com.drew.lang.annotations.Nullable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;

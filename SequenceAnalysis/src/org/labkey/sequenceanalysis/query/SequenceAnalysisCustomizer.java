@@ -1,14 +1,12 @@
 package org.labkey.sequenceanalysis.query;
 
-import com.drew.lang.annotations.Nullable;
-import org.labkey.api.arrays.IntegerArray;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.AbstractTableInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.QueryForeignKey;
@@ -16,7 +14,6 @@ import org.labkey.api.security.User;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
-import java.sql.Timestamp;
 import java.util.Collection;
 
 /**

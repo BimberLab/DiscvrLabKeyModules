@@ -1,6 +1,6 @@
 package org.labkey.api.htcondorconnector;
 
-import com.drew.lang.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.TaskId;
 
