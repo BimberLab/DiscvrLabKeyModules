@@ -4411,7 +4411,6 @@ snprcEHRModules/snprc_r24/module.properties -text
 snprcEHRModules/snprc_r24/resources/etls/SNPRC_demographics.xml -text
 snprcEHRModules/snprc_r24/resources/etls/SNPRC_idHistory.xml -text
 snprcEHRModules/snprc_r24/resources/etls/SNPRC_weights.xml -text
-snprcEHRModules/snprc_r24/resources/schemas/dbscripts/postgresql/snprc_r24-15.30-15.31.sql -text
 snprcEHRModules/snprc_r24/resources/schemas/dbscripts/sqlserver/snprc_r24-15.30-15.31.sql -text
 snprcEHRModules/snprc_r24/resources/schemas/snprc_r24.xml -text
 snprcEHRModules/snprc_r24/resources/views/welcome.html -text
