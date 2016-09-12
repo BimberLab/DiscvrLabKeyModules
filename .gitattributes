@@ -2782,8 +2782,6 @@ cnprcEHRModules/cnprc_genetics/build.xml -text
 cnprcEHRModules/cnprc_genetics/module.properties -text
 cnprcEHRModules/cnprc_genetics/resources/queries/assay/General/Genetics/Data.query.xml -text
 cnprcEHRModules/cnprc_genetics/resources/queries/assay/General/Genetics/Data/.qview.xml -text
-cnprcEHRModules/cnprc_genetics/resources/queries/assay/General/Markers/Data.query.xml -text
-cnprcEHRModules/cnprc_genetics/resources/queries/assay/General/Markers/Data/.qview.xml -text
 cnprcEHRModules/cnprc_genetics/resources/transform/MANIFEST.MF -text
 cnprcEHRModules/cnprc_genetics/resources/transform/META-INF/MANIFEST.MF -text
 cnprcEHRModules/cnprc_genetics/resources/transform/build.xml -text
