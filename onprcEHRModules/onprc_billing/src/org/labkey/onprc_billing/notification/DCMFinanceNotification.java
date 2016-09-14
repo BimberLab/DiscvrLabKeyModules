@@ -27,7 +27,7 @@ public class DCMFinanceNotification extends FinanceNotification
     }
 
     @Override
-    public String getEmailSubject()
+    public String getEmailSubject(Container c)
     {
         return "DCM Finance/Billing Alerts: " + _dateTimeFormat.format(new Date());
     }

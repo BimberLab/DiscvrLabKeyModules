@@ -59,7 +59,7 @@ public class SSU_Notification extends AbstractNotification
     }
 
     @Override
-    public String getEmailSubject()
+    public String getEmailSubject(Container c)
     {
         return "SSU Alerts: " + _dateTimeFormat.format(new Date());
     }

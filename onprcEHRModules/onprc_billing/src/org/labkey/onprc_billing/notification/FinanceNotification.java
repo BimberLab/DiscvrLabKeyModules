@@ -91,7 +91,7 @@ public class FinanceNotification extends AbstractNotification
     }
 
     @Override
-    public String getEmailSubject()
+    public String getEmailSubject(Container c)
     {
         return "Finance/Billing Alerts: " + _dateTimeFormat.format(new Date());
     }

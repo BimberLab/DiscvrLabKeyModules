@@ -38,7 +38,7 @@ public class BillingValidationNotification extends FinanceNotification
     }
 
     @Override
-    public String getEmailSubject()
+    public String getEmailSubject(Container c)
     {
         return "Billing Validation: " + _dateTimeFormat.format(new Date());
     }

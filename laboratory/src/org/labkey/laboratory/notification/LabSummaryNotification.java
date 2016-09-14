@@ -15,7 +15,6 @@ import org.labkey.api.laboratory.DataProvider;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.ldk.LDKService;
-import org.labkey.api.laboratory.NavItem;
 import org.labkey.api.ldk.notification.Notification;
 import org.labkey.api.module.Module;
 import org.labkey.api.query.FieldKey;
@@ -71,7 +70,7 @@ public class LabSummaryNotification implements Notification
         return "This creates a report summarizing laboratory data usage";
     }
 
-    public String getEmailSubject()
+    public String getEmailSubject(Container c)
     {
         return "Lab Data Summary: " + _dateTimeFormat.format(new Date());
     }

@@ -47,7 +47,7 @@ public class GeneticsCoreNotification implements Notification
     }
 
     @Override
-    public String getEmailSubject()
+    public String getEmailSubject(Container c)
     {
         return "Genetics Core Alerts: " + _dateTimeFormat.format(new Date());
     }
