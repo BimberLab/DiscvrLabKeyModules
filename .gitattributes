@@ -4411,6 +4411,11 @@ snprcEHRModules/snprc_r24/resources/etls/SNPRC_idHistory.xml -text
 snprcEHRModules/snprc_r24/resources/etls/SNPRC_weights.xml -text
 snprcEHRModules/snprc_r24/resources/schemas/dbscripts/sqlserver/snprc_r24-15.30-15.31.sql -text
 snprcEHRModules/snprc_r24/resources/schemas/snprc_r24.xml -text
+snprcEHRModules/snprc_r24/resources/transform/MANIFEST.MF -text
+snprcEHRModules/snprc_r24/resources/transform/META-INF/MANIFEST.MF -text
+snprcEHRModules/snprc_r24/resources/transform/build.xml -text
+snprcEHRModules/snprc_r24/resources/transform/src/AbstractAssayValidator.java -text
+snprcEHRModules/snprc_r24/resources/transform/src/MicrobiomeTransform.java -text
 snprcEHRModules/snprc_r24/resources/views/welcome.html -text
 snprcEHRModules/snprc_r24/resources/views/welcome.view.xml -text
 snprcEHRModules/snprc_r24/resources/views/welcome.webpart.xml -text
