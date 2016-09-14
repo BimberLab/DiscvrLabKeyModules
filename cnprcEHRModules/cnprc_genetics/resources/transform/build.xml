@@ -33,7 +33,7 @@
                includeantruntime="false" >
         </javac>
 
-        <one-jar destfile="${output.jar}" manifest="manifest.mf">
+        <one-jar destfile="${output.jar}" manifest="MANIFEST.MF">
             <main>
                 <fileset dir="${transform.dir}/classes"/>
             </main>
