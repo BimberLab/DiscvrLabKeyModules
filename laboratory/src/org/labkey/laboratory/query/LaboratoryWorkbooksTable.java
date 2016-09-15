@@ -9,11 +9,11 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.etl.DataIterator;
-import org.labkey.api.etl.DataIteratorBuilder;
-import org.labkey.api.etl.DataIteratorContext;
-import org.labkey.api.etl.LoggingDataIterator;
-import org.labkey.api.etl.SimpleTranslator;
+import org.labkey.api.dataiterator.DataIterator;
+import org.labkey.api.dataiterator.DataIteratorBuilder;
+import org.labkey.api.dataiterator.DataIteratorContext;
+import org.labkey.api.dataiterator.LoggingDataIterator;
+import org.labkey.api.dataiterator.SimpleTranslator;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.DuplicateKeyException;
 import org.labkey.api.query.ExprColumn;
@@ -26,8 +26,6 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.util.ExceptionUtil;
-import org.labkey.api.view.NotFoundException;
-import org.labkey.laboratory.LaboratoryManager;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -101,7 +99,7 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
             return super.getRow(user, container, keys);
         }
 
-        //NOTE: this should no longer be called (see persistRows() for ETL implementation); however, I have left this code in place for now
+        //NOTE: this should no longer be called (see persistRows() for DataIterator implementation); however, I have left this code in place for now
         @Override
         protected Map<String, Object> insertRow(User user, Container container, Map<String, Object> row) throws DuplicateKeyException, ValidationException, QueryUpdateServiceException, SQLException
         {

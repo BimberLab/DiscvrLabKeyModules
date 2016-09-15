@@ -8,18 +8,16 @@ import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.PropertyManager;
-import org.labkey.api.data.SchemaTableInfo;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.etl.DataIterator;
-import org.labkey.api.etl.DataIteratorBuilder;
-import org.labkey.api.etl.DataIteratorContext;
-import org.labkey.api.etl.LoggingDataIterator;
-import org.labkey.api.etl.SimpleTranslator;
+import org.labkey.api.dataiterator.DataIterator;
+import org.labkey.api.dataiterator.DataIteratorBuilder;
+import org.labkey.api.dataiterator.DataIteratorContext;
+import org.labkey.api.dataiterator.LoggingDataIterator;
+import org.labkey.api.dataiterator.SimpleTranslator;
 import org.labkey.api.query.DuplicateKeyException;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QueryUpdateService;
@@ -29,9 +27,6 @@ import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
-import org.labkey.api.view.NotFoundException;
-import org.labkey.laboratory.LaboratoryManager;
-import org.labkey.laboratory.LaboratorySchema;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -91,7 +86,7 @@ public class ContainerIncrementingTable extends SimpleUserSchema.SimpleTable
             super(ti, ti.getRealTable());
         }
 
-        //NOTE: this code should never be encountered now that hard tables use ETL; however, I have kept it in place for the time being.
+        //NOTE: this code should never be encountered now that hard tables use DataIterator; however, I have kept it in place for the time being.
         @Override
         protected Map<String, Object> insertRow(User user, Container container, Map<String, Object> row) throws DuplicateKeyException, ValidationException, QueryUpdateServiceException, SQLException
         {
