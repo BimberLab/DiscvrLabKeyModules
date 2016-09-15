@@ -189,6 +189,11 @@ public class DefaultAssayImportMethod implements AssayImportMethod
 
     public void generateTemplate(ViewContext ctx, ExpProtocol protocol, @Nullable Integer templateId, String title, JSONObject json) throws BatchValidationException
     {
+        if (!supportsRunTemplates())
+        {
+            throw new UnsupportedOperationException("This import method does not support templates");
+        }
+
         BatchValidationException errors = new BatchValidationException();
         validateTemplate(ctx.getUser(), ctx.getContainer(), protocol, templateId, title, json, errors);
 
@@ -203,30 +208,80 @@ public class DefaultAssayImportMethod implements AssayImportMethod
         //NOTE: consider checking required fields; however, we need to differentiate which field we expect now, and which we expect later
     }
 
+    /**
+     * The typical idea of run templates is that the user supplies a subset of fields upfront (often sample information/metadata), and these
+     * are saved ahead of time.  The instrument run is performed and that input is imported.  Based on those saved values, the ImportMethod typically generates
+     * some input for the instrument (for example, the format that instrument natively expects).  This input will often contain some key that can be used
+     * to connect samples from the template information saved in LabKey to the data output by the instrument.
+     *
+     * In the case of DefaultAssayImportMethod, there is no instrument expected.  Therefore there's often little reason to bother with this step (downloading the regular
+     * import excel file ahead of time accomplishes the same thing).  This code below is implemented primarily to help subclasses that fully implement a run template
+     * for their type of data.
+     */
     public void doGenerateTemplate(JSONObject json, HttpServletRequest request, HttpServletResponse response) throws BatchValidationException
     {
         try
         {
-            String filename = json.optString("templateName");
+            String filename = json.getString("templateName") + ".xlsx";
             ExcelWriter.ExcelDocumentType docType = ExcelWriter.ExcelDocumentType.xlsx;
 
             JSONObject resultDefaults = json.optJSONObject("Results");
             JSONArray results = json.getJSONArray("ResultRows");
-            JSONArray rows = new JSONArray();
+
+            //append global results
             for (JSONObject row : results.toJSONObjectArray())
             {
-                Map<String, Object> map = new HashMap<>();
+                for (String prop : resultDefaults.keySet())
+                {
+                    if (row.get(prop) == null)
+                    {
+                        row.put(prop, resultDefaults.get(prop));
+                    }
+                }
+            }
 
-                rows.put(new JSONArray());
+            //add header row:
+            JSONArray rowsForExcel = new JSONArray();
+            List<String> headerCols = getTemplateDownloadColumns();
+            if (headerCols != null)
+            {
+                rowsForExcel.put(new JSONArray(headerCols));
+            }
+
+            for (JSONObject row : results.toJSONObjectArray())
+            {
+                JSONArray toAdd = new JSONArray();
+                if (headerCols != null)
+                {
+                    for (String colName : headerCols)
+                    {
+                        toAdd.put(row.get(colName));
+                    }
+                }
+                else
+                {
+                    for (String key : row.keySet())
+                    {
+                        toAdd.put(row.get(key));
+                    }
+                }
+
+                rowsForExcel.put(toAdd);
             }
 
             JSONObject sheet = new JSONObject();
             sheet.put("name", "Data");
-            sheet.put("data", rows);
+            sheet.put("data", rowsForExcel);
 
             JSONArray sheetsArray = new JSONArray();
             sheetsArray.put(sheet);
             Workbook workbook =  ExcelFactory.createFromArray(sheetsArray, docType);
+
+            response.setContentType(docType.getMimeType());
+            response.setHeader("Content-disposition", "attachment; filename=\"" + filename +"\"");
+            response.setHeader("Pragma", "private");
+            response.setHeader("Cache-Control", "private");
+
             workbook.write(response.getOutputStream());
         }
         catch (IOException e)
@@ -235,6 +290,16 @@ public class DefaultAssayImportMethod implements AssayImportMethod
             bve.addRowError(new ValidationException(e.getMessage()));
             throw bve;
         }
+    }
+
+    /**
+     * Override this method to define a list of columns for the download.
+     * If null, no header will be appended
+     *
+     */
+    protected List<String> getTemplateDownloadColumns()
+    {
+        return null;
     }
 
     protected Map<Object, Object> getWellMap96(final String keyProperty, final String valueProperty)
