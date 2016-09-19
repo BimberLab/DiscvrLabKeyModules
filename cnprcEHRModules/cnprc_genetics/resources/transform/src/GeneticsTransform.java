@@ -86,7 +86,7 @@ public class GeneticsTransform extends AbstractAssayValidator
             {
                 _columnMap.put(col++, "File");
             }
-            else if(getValue(cell).equals("Type") || getValue(cell).isEmpty())
+            else if(getValue(cell).isEmpty() || getValue(cell).equals("Type"))
             {
                 _columnMap.put(col, LOCUS);
                 _columnMap.put(col, ALLELE1);
@@ -102,7 +102,7 @@ public class GeneticsTransform extends AbstractAssayValidator
         boolean locusFound = false, allele1Found = false, allele2Found = false, noteFound = false;
         for(Map.Entry<Integer, String> entry : _columnMap.entries())
         {
-            if(entry.getValue().equals(LOCUS))
+            if(LOCUS.equals(entry.getValue()))
             {
                 if (locusFound)
                     continue;
@@ -110,7 +110,7 @@ public class GeneticsTransform extends AbstractAssayValidator
                     locusFound = true;
             }
 
-            if(entry.getValue().equals(ALLELE1))
+            if(ALLELE1.equals(entry.getValue()))
             {
                 if (allele1Found)
                     continue;
@@ -118,7 +118,7 @@ public class GeneticsTransform extends AbstractAssayValidator
                     allele1Found = true;
             }
 
-            if(entry.getValue().equals(ALLELE2))
+            if(ALLELE2.equals(entry.getValue()))
             {
                 if (allele2Found)
                     continue;
@@ -126,7 +126,7 @@ public class GeneticsTransform extends AbstractAssayValidator
                     allele2Found = true;
             }
 
-            if(entry.getValue().equals("Note"))
+            if("Note".equals(entry.getValue()))
             {
                 if (noteFound)
                     continue;
@@ -204,7 +204,7 @@ public class GeneticsTransform extends AbstractAssayValidator
 
             if(null != cell)
             {
-                if (entry.getValue().equals("Note"))
+                if ("Note".equals(entry.getValue()))
                 {
                     String strNote = getValue(cell);
 
@@ -226,7 +226,7 @@ public class GeneticsTransform extends AbstractAssayValidator
 
             if(null != cell)
             {
-                if (entry.getValue().equals("Note") && notes.length() > 0)
+                if ("Note".equals(entry.getValue()) && notes.length() > 0)
                 {
                     common.append(notes.toString());
                     common.append('\t');
@@ -282,11 +282,9 @@ public class GeneticsTransform extends AbstractAssayValidator
                         Sheet firstSheet = workbook.getSheetAt(0);
                         Iterator<Row> rowIter = firstSheet.iterator();
 
-//                        int test = 0;
                         boolean first = true;
                         StringBuilder sb;
 
-//                        while (test < 3)
                         while (rowIter.hasNext())
                         {
                             Row nextRow = rowIter.next();
@@ -296,7 +294,6 @@ public class GeneticsTransform extends AbstractAssayValidator
                             if(first)
                             {
                                 sb.append(getColumns(nextRow));
-//                                sb.append(_columnMap);
                                 first = false;
                             }
                             else
@@ -304,7 +301,6 @@ public class GeneticsTransform extends AbstractAssayValidator
                                 sb.append(processRow(nextRow));
                             }
 
-//                            test++;
                             writer.print(sb.toString());
                         }
                     }
