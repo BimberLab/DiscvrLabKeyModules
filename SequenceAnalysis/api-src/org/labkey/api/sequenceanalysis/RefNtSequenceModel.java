@@ -32,13 +32,13 @@ import org.labkey.api.files.FileContentService;
 import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.MemTracker;
+import org.labkey.api.writer.PrintWriters;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.Date;
@@ -367,9 +367,9 @@ public class RefNtSequenceModel
         {
             output.delete();
         }
-        output.createNewFile();
+        //output.createNewFile();
 
-        try (Writer writer = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(output))))
+        try (Writer writer = PrintWriters.getPrintWriter(new GZIPOutputStream(new FileOutputStream(output))))
         {
             writer.write(sequence);
             writer.flush();

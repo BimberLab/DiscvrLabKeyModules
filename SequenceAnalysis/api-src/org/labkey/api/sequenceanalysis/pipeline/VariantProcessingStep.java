@@ -15,6 +15,8 @@
  */
 package org.labkey.api.sequenceanalysis.pipeline;
 
+import org.labkey.api.pipeline.PipelineJobException;
+
 import java.io.File;
 
 /**
@@ -24,7 +26,7 @@ import java.io.File;
  */
 public interface VariantProcessingStep extends PipelineStep
 {
-    public Output processVariants(File inputVCF, ReferenceGenome genome);
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException;
 
     public static interface Output extends PipelineStepOutput
     {

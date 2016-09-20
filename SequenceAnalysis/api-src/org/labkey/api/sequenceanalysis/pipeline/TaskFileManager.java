@@ -18,14 +18,13 @@ package org.labkey.api.sequenceanalysis.pipeline;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
-import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.util.Pair;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * This class helps manage the inputs and outputs created during a pipeline job.  It will gather inputs, outputs and intermediate files.
@@ -37,7 +36,9 @@ import java.util.Set;
  */
 public interface TaskFileManager
 {
-    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId);
+    public void addSequenceOutput(SequenceOutputFile o);
+
+    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description);
 
     public void addOutput(RecordedAction action, String role, File file);
 
@@ -60,35 +61,20 @@ public interface TaskFileManager
 
     public void addIntermediateFiles(Collection<File> files);
 
+    public void removeIntermediateFile(File f);
+
     public void addPicardMetricsFiles(List<PipelineStepOutput.PicardMetricsOutput> files) throws PipelineJobException;
 
     public void writeMetricsToDb(Map<Integer, Integer> readsetMap, Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap) throws PipelineJobException;
 
     public void deleteIntermediateFiles() throws PipelineJobException;
 
-    public void createSequenceOutputRecords();
+    public void createSequenceOutputRecords(@Nullable Integer analysisId)throws PipelineJobException;
 
     //should be used for remote jobs or local jobs running in a separate working directory
-    public void cleanup() throws PipelineJobException;
-
-    public void addFinalOutputFile(File f);
-
-    public void addFinalOutputFiles(Collection<File> files);
-
-    public Set<File> getFinalOutputFiles();
-
-    /**
-     * These are output files that are unaltered versions of an input file
-     * This is tracked to avoid duplications when inputs are process/archived
-     * @param file
-     */
-    public void addUnalteredOutput(File file);
-
-    public void compressFile(File file);
+    public void cleanup(Collection<RecordedAction> actions) throws PipelineJobException;
 
     public String getInputfileTreatment();
-
-    public void handleInputs() throws PipelineJobException;
 
     public void processUnzippedInputs();
 

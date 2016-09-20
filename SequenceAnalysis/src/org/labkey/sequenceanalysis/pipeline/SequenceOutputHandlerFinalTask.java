@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.DataType;
@@ -94,43 +95,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
 
         if (!getPipelineJob().getOutputsToCreate().isEmpty())
         {
-            getJob().getLogger().info("creating " + getPipelineJob().getOutputsToCreate().size() + " new output files");
-
-            TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
-            for (SequenceOutputFile o : getPipelineJob().getOutputsToCreate())
-            {
-                o.setRunId(runId);
-                o.setAnalysis_id(analysisId);
-                o.setCreatedby(getJob().getUser().getUserId());
-                if (o.getCreated() == null)
-                {
-                    o.setCreated(new Date());
-                }
-
-                o.setModifiedby(getJob().getUser().getUserId());
-                if (o.getModified() == null)
-                {
-                    o.setModified(new Date());
-                }
-
-                if (o.getContainer() == null)
-                {
-                    o.setContainer(getJob().getContainerId());
-                }
-
-                if (o.getDataId() == null && o.getFile() != null)
-                {
-                    getJob().getLogger().debug("creating ExpData for file: " + o.getFile().getName());
-                    ExpData d = ExperimentService.get().createData(getJob().getContainer(), new DataType(o.getCategory()));
-
-                    d.setDataFileURI(o.getFile().toURI());
-                    d.setName(o.getFile().getName());
-                    d.save(getJob().getUser());
-                    o.setDataId(d.getRowId());
-                }
-
-                Table.insert(getJob().getUser(), ti, o);
-            }
+            createOutputFiles(getPipelineJob(), runId, analysisId);
         }
         else
         {
@@ -140,4 +105,44 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         return new RecordedActionSet();
     }
 
+    public static void createOutputFiles(SequenceJob job, int runId, @Nullable Integer analysisId)
+    {
+        job.getLogger().info("creating " + job.getOutputsToCreate().size() + " new output files");
+
+        TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+        for (SequenceOutputFile o : job.getOutputsToCreate())
+        {
+            o.setRunId(runId);
+            o.setAnalysis_id(analysisId);
+            o.setCreatedby(job.getUser().getUserId());
+            if (o.getCreated() == null)
+            {
+                o.setCreated(new Date());
+            }
+
+            o.setModifiedby(job.getUser().getUserId());
+            if (o.getModified() == null)
+            {
+                o.setModified(new Date());
+            }
+
+            if (o.getContainer() == null)
+            {
+                o.setContainer(job.getContainerId());
+            }
+
+            if (o.getDataId() == null && o.getFile() != null)
+            {
+                job.getLogger().debug("creating ExpData for file: " + o.getFile().getName());
+                ExpData d = ExperimentService.get().createData(job.getContainer(), new DataType(o.getCategory()));
+
+                d.setDataFileURI(o.getFile().toURI());
+                d.setName(o.getFile().getName());
+                d.save(job.getUser());
+                o.setDataId(d.getRowId());
+            }
+
+            Table.insert(job.getUser(), ti, o);
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package org.labkey.GeneticsCore;
 
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
@@ -171,6 +172,7 @@ public class GeneticsCoreController extends SpringActionController
     public static class CacheAnalysesForm
     {
         private String[] _alleleNames;
+        private String _json;
         private int _protocolId;
 
         public String[] getAlleleNames()
@@ -192,6 +194,16 @@ public class GeneticsCoreController extends SpringActionController
         {
             _protocolId = protocolId;
         }
+
+        public String getJson()
+        {
+            return _json;
+        }
+
+        public void setJson(String json)
+        {
+            _json = json;
+        }
     }
 
 
@@ -204,7 +216,7 @@ public class GeneticsCoreController extends SpringActionController
             Map<String, Object> resultProperties = new HashMap<>();
 
             //first verify permission to delete
-            if (form.getAlleleNames() != null)
+            if (form.getJson() != null)
             {
                 try
                 {
@@ -215,7 +227,7 @@ public class GeneticsCoreController extends SpringActionController
                         return null;
                     }
 
-                    Pair<List<Integer>, List<Integer>> ret = GeneticsCoreManager.get().cacheHaplotypes(getViewContext(), protocol, form.getAlleleNames());
+                    Pair<List<Integer>, List<Integer>> ret = GeneticsCoreManager.get().cacheHaplotypes(getViewContext(), protocol, new JSONArray(form.getJson()));
                     resultProperties.put("runsCreated", ret.first);
                     resultProperties.put("runsDeleted", ret.second);
                 }
@@ -227,7 +239,7 @@ public class GeneticsCoreController extends SpringActionController
             }
             else
             {
-                errors.reject(ERROR_MSG, "No alleles provided");
+                errors.reject(ERROR_MSG, "No data provided");
                 return null;
             }
 

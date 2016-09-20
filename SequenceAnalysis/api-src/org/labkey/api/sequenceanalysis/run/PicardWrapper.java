@@ -85,24 +85,28 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
 
     protected void inferMaxRecordsInRam(List<String> args)
     {
-        if (args == null)
-        {
-            return;
-        }
+        //TODO: this is temporarily disabled since it does not seem to make much of a difference, and can be counter productive.
+        //if this remains out, calls to this method should be removed
+        return;
 
-        for (String arg : args)
-        {
-            if (arg.startsWith("-Xmx") && arg.endsWith("g"))
-            {
-                String val = arg.substring(4, arg.length() - 1);
-                Integer gb = ConvertHelper.convert(val, Integer.class);
-
-                //A rule of thumb for reads of ~100bp is to set MAX_RECORDS_IN_RAM to be 250,000 reads per each GB given to the -Xmx
-                args.add("MAX_RECORDS_IN_RAM=" + String.valueOf(gb * 250000));
-
-                break;
-            }
-        }
+//        if (args == null)
+//        {
+//            return;
+//        }
+//
+//        for (String arg : args)
+//        {
+//            if (arg.startsWith("-Xmx") && arg.endsWith("g"))
+//            {
+//                String val = arg.substring(4, arg.length() - 1);
+//                Integer gb = ConvertHelper.convert(val, Integer.class);
+//
+//                //A rule of thumb for reads of ~100bp is to set MAX_RECORDS_IN_RAM to be 250,000 reads per each GB given to the -Xmx
+//                args.add("MAX_RECORDS_IN_RAM=" + String.valueOf(gb * 250000));
+//
+//                break;
+//            }
+//        }
     }
 
     public int getCompressionLevel()

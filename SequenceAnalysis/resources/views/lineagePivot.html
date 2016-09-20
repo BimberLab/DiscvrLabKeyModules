@@ -10,7 +10,88 @@ Ext4.onReady(function(){
 
     var analysisIds = LABKEY.ActionURL.getParameter('analysisIds');
     if (!analysisIds){
-        Ext4.Msg.alert('Error', 'No analysis IDs provided');
+        Ext4.create('Ext.window.Window', {
+            title: 'Choose Lineage(s)',
+            bodyStyle: 'padding: 5px;',
+            width: 500,
+            items: [{
+                html: 'Because you did not select specific analyses, you can issue a search to find subjects with specific lineages(s).  Once this search returns, you can generate a table showing the combined genotypes of this cohort.  The total number of matching analysis will be shown on the panel below.',
+                border: false,
+                style: 'padding-bottom: 10px;'
+            }, {
+                xtype: 'checkcombo',
+                fieldLabel: 'Lineages',
+                itemId: 'lineageField',
+                multiSelect: true,
+                displayField: 'lineage',
+                valueField: 'lineage',
+                queryMode: 'local',
+                triggerAction: 'all',
+                store: {
+                    type: 'labkey-store',
+                    autoLoad: true,
+                    containerPath: Laboratory.Utils.getQueryContainerPath(),
+                    schemaName: 'sequenceanalysis',
+                    sql: 'SELECT distinct lineage as lineage from sequenceanalysis.ref_nt_sequences'
+                },
+                width: 400
+            },{
+                xtype: 'ldk-numberfield',
+                fieldLabel: 'Min Pct of Locus',
+                itemId: 'locusPct',
+                minValue: 0,
+                maxValue: 1,
+                value: 0.25,
+                width: 400
+            }],
+            buttons: [{
+                text: 'Submit',
+                handler: function (btn){
+                    var win = btn.up('window');
+                    var lineages = win.down('#lineageField').getValue();
+                    var minPct = win.down('#locusPct').getValue();
+                    if (!lineages){
+                        Ext4.Msg.alert('Error', 'Must Pick Lineages');
+                        return;
+                    }
+
+                    Ext4.Msg.wait('Loading...');
+                    LABKEY.Query.selectDistinctRows({
+                        containerPath: Laboratory.Utils.getQueryContainerPath(),
+                        schemaName: 'sequenceanalysis',
+                        queryName: 'alignment_summary_by_lineage',
+                        filterArray: [
+                            LABKEY.Filter.create('lineages', lineages.join(';'), LABKEY.Filter.Types.IN),
+                            LABKEY.Filter.create('percent_from_locus', minPct, LABKEY.Filter.Types.GTE)
+                        ],
+                        column: 'analysis_id',
+                        scope: this,
+                        success: function(results){
+                            Ext4.Msg.hide();
+
+                            if (Ext4.isEmpty(results.values)){
+                                Ext4.Msg.alert('Error', 'No matching rows found');
+                            }
+                            else {
+
+                                if (results.length < 100){
+                                    window.location = LABKEY.ActionURL.buildURL('sequenceanalysis', 'lineagePivot', null, {analysisIds: results.values.join(';')})
+                                }
+                                else {
+                                    var newForm = Ext4.DomHelper.append(document.getElementsByTagName('body')[0],
+                                            '<form method="POST" action="' + LABKEY.ActionURL.buildURL("sequenceanalysis", "lineagePivot", null) + '">' +
+                                            '<input type="hidden" name="analysisIds" value="' + results.values.join(';') + '" />' +
+                                            '</form>');
+                                    newForm.submit();
+                                }
+                            }
+                        },
+                        failure: LDK.Utils.getErrorCallback()
+                    })
+                }
+            }]
+        }).show();
+
         return;
     }
 
@@ -29,6 +110,9 @@ Ext4.onReady(function(){
         },
         items: [{
             html: 'This page allows you to build a pivot table of allele results for the selected analyses, by lineage.  You can use the fields below to limit the lineages that are shown.',
+            style: 'padding-bottom: 10px'
+        },{
+            html: 'Total analyses selected: ' + analysisIds.length,
             style: 'padding-bottom: 10px'
         },{
             xtype: 'checkcombo',
@@ -74,11 +158,12 @@ Ext4.onReady(function(){
             fieldLabel: 'Min Pct From Locus',
             minValue: 0,
             maxValue: 100,
-            itemId: 'minPct'
+            itemId: 'minPct',
+            value: 0.25
         },{
             xtype: 'checkbox',
             fieldLabel: 'Restrict To Lineages Present In Animals?',
-            checked: false,
+            checked: true,
             itemId: 'restrict'
         },{
             itemId: 'appendHaplotypes',

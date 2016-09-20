@@ -18,6 +18,7 @@ package org.labkey.omerointegration;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
+import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.view.WebPartFactory;
@@ -26,7 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-public class OmeroIntegrationModule extends DefaultModule
+public class OmeroIntegrationModule extends ExtendedSimpleModule
 {
     public static final String NAME = "OmeroIntegration";
 
@@ -62,7 +63,7 @@ public class OmeroIntegrationModule extends DefaultModule
     }
 
     @Override
-    public void doStartup(ModuleContext moduleContext)
+    public void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
 
     }

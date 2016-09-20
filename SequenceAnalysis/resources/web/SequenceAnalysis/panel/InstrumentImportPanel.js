@@ -6,9 +6,9 @@
 
 Ext4.define('SequenceAnalysis.panel.InstrumentImportPanel', {
     extend: 'SequenceAnalysis.panel.BaseSequencePanel',
-    initComponent: function(){
-        this.taskId = 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:IlluminaImportPipeline';
+    jobType: 'illuminaImport',
 
+    initComponent: function(){
         Ext4.apply(this, {
             width: '100%',
             defaults: {
@@ -41,21 +41,13 @@ Ext4.define('SequenceAnalysis.panel.InstrumentImportPanel', {
                 fieldLabel: 'Job Name',
                 xtype: 'textfield',
                 helpPopup: 'This is the name assigned to this job, which must be unique.  Results will be moved into a folder with this name.',
-                name: 'protocolName',
-                itemId: 'protocolName',
+                name: 'jobName',
+                itemId: 'jobName',
                 allowBlank:false,
                 //value: 'analysis_'+new Date().format('Ymd'),
                 maskRe: new RegExp('[A-Za-z0-9_]'),
                 validator: function(val){
                     return (this.isValidProtocol === false ? 'Job Name Already In Use' : true);
-                },
-                listeners: {
-                    scope: this,
-                    change: {
-                        fn: this.checkProtocol,
-                        buffer: 200,
-                        scope: this
-                    }
                 }
 //            },{
 //                xtype: 'textfield',
@@ -144,20 +136,31 @@ Ext4.define('SequenceAnalysis.panel.InstrumentImportPanel', {
     getJsonParams: function(){
         var fields = this.callParent();
 
-        if(!fields)
+        if (!fields)
             return;
 
-        fields.runName = fields.protocolName;
+        fields.runName = fields.jobName;
 
         return fields;
     },
 
-    onSubmit: function(btn){
+    onSubmit: function(){
         var json = this.getJsonParams();
         if(!json)
             return false;
 
-        this.startAnalysis(json, null, this.fileNames);
+        json.inputFiles = [];
+        Ext4.Array.forEach(LABKEY.ActionURL.getParameterArray('file'), function(f){
+            var path = LABKEY.ActionURL.getParameter('path') || '';
+            json.inputFiles.push({fileName: path + f});
+        }, this);
+
+        if (!json.inputFiles.length){
+            Ext4.Msg.alert('Error', 'No files provided');
+            return;
+        }
+
+        this.startAnalysis(json);
     }
 });
 

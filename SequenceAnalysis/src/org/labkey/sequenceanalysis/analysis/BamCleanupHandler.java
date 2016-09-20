@@ -11,6 +11,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -18,7 +19,6 @@ import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.SequenceJobSupportImpl;
 import org.labkey.sequenceanalysis.run.util.AddOrReplaceReadGroupsWrapper;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
-import org.labkey.sequenceanalysis.run.util.SortSamWrapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -102,8 +102,11 @@ public class BamCleanupHandler extends AbstractParameterizedOutputHandler
         }
 
         @Override
-        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            PipelineJob job = ctx.getJob();
+            JSONObject params = ctx.getParams();
+
             if (inputFiles.isEmpty())
             {
                 job.getLogger().warn("no input files");
@@ -128,14 +131,14 @@ public class BamCleanupHandler extends AbstractParameterizedOutputHandler
                         continue;
                     }
 
-                    Readset rs = support.getCachedReadset(so.getReadset());
+                    Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
                     if (rs == null)
                     {
                         job.getLogger().error("Unable to find readset for output file: " + so.getRowid());
                         continue;
                     }
 
-                    output = new File(outputDir, FileUtil.getBaseName(input) + ".readgroups.bam");
+                    output = new File(ctx.getOutputDir(), FileUtil.getBaseName(input) + ".readgroups.bam");
 
                     AddOrReplaceReadGroupsWrapper wrapper = new AddOrReplaceReadGroupsWrapper(job.getLogger());
                     wrapper.executeCommand(input, output, rs.getReadsetId().toString(), rs.getPlatform(), rs.getReadsetId().toString(), rs.getName().replaceAll(" ", "_"));
@@ -152,7 +155,7 @@ public class BamCleanupHandler extends AbstractParameterizedOutputHandler
                 String sortBam = params.optString("sortBam", null);
                 if ("on".equals(sortBam))
                 {
-                    output = new File(outputDir, FileUtil.getBaseName(input) + ".sorted.bam");
+                    output = new File(ctx.getOutputDir(), FileUtil.getBaseName(input) + ".sorted.bam");
                     new SortSamWrapper(job.getLogger()).execute(input, output, SAMFileHeader.SortOrder.coordinate);
                     if (!output.exists())
                     {
@@ -166,7 +169,7 @@ public class BamCleanupHandler extends AbstractParameterizedOutputHandler
                     return;
                 }
 
-                File finalOutput = new File(outputDir, FileUtil.getBaseName(so.getFile()) + ".cleaned.bam");
+                File finalOutput = new File(ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()) + ".cleaned.bam");
                 try
                 {
                     FileUtils.moveFile(output, finalOutput);
@@ -180,7 +183,7 @@ public class BamCleanupHandler extends AbstractParameterizedOutputHandler
 
                 action.addOutput(finalOutput, "Cleaned BAM", false);
                 action.addOutput(outputIdx, "Cleaned BAM Index", false);
-                actions.add(action);
+                ctx.addActions(action);
 
                 SequenceOutputFile o = new SequenceOutputFile();
                 o.setName(finalOutput.getName());
@@ -189,7 +192,7 @@ public class BamCleanupHandler extends AbstractParameterizedOutputHandler
                 o.setCategory("Alignment");
                 o.setReadset(so.getReadset());
 
-                outputsToCreate.add(o);
+                ctx.addSequenceOutput(o);
 
                 for (File f : toDelete)
                 {

@@ -13,15 +13,20 @@ import java.util.List;
  */
 public interface HTCondorJobResourceAllocator
 {
-    /**
-     * Prior to submitting to condor, we iterate all registered ResourceAllocators and query this
-     * method, passing the taskId of the active task.  If this allocator can process this task type,
-     * it should return a non-null value.  Allocators returning null will be ignored.  The highest priority allocator will be used.
-     * Note: because allocators are registered during module startup, this should reflect module dependency order.  This means child modules should
-     * take priority over parent modules in the case of a priority tie.
-     */
-    @Nullable
-    public Integer getPriority(TaskId taskId);
+    public interface Factory
+    {
+        public HTCondorJobResourceAllocator getAllocator();
+
+        /**
+         * Prior to submitting to condor, we iterate all registered ResourceAllocators and query this
+         * method, passing the taskId of the active task.  If this allocator can process this task type,
+         * it should return a non-null value.  Allocators returning null will be ignored.  The highest priority allocator will be used.
+         * Note: because allocators are registered during module startup, this should reflect module dependency order.  This means child modules should
+         * take priority over parent modules in the case of a priority tie.
+         */
+        @Nullable
+        public Integer getPriority(TaskId taskId);
+    }
 
     /**
      * The maximum CPUs to request for this job

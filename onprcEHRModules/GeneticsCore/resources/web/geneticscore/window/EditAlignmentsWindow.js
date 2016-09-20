@@ -16,6 +16,63 @@ Ext4.define('GeneticsCore.window.EditAlignmentsWindow', {
                 dataRegionName: dataRegionName,
                 checked: checked
             }).show(btnEl);
+        },
+
+        editRow: function(rowId, dataRegionName){
+            var dr = LABKEY.DataRegions[dataRegionName];
+            LDK.Assert.assertNotEmpty('Unable to find dataregion in EditAlignmentsWindow', dr);
+
+            if (Ext4.isArray(rowId)){
+                rowId = rowId.join(',');
+            }
+
+            Ext4.create('GeneticsCore.window.EditAlignmentsWindow', {
+                dataRegionName: dataRegionName,
+                checked: [rowId]
+            }).show();
+        },
+
+        editLineage: function (analysisId, lineage, dataRegionName, locusFilterOperator, minPctFromLocus) {
+            var dr = LABKEY.DataRegions[dataRegionName];
+            LDK.Assert.assertNotEmpty('Unable to find dataregion in EditAlignmentsWindow', dr);
+
+            Ext4.Msg.wait('Loading...');
+
+            var filter = [
+                LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL),
+                LABKEY.Filter.create('lineages', lineage, LABKEY.Filter.Types.EQUAL)
+            ]
+
+            if (locusFilterOperator){
+                filter.push(LABKEY.Filter.create('percent_from_locus', minPctFromLocus, LABKEY.Filter.getFilterTypeForURLSuffix(locusFilterOperator)));
+            }
+
+            LABKEY.Query.selectRows({
+                containerPath: Laboratory.Utils.getQueryContainerPath(),
+                schemaName: 'sequenceanalysis',
+                queryName: 'alignment_summary_grouped',
+                filterArray: filter,
+                columns: 'rowids',
+                failure: LDK.Utils.getErrorCallback(),
+                scope: this,
+                success: function(results){
+                    Ext4.Msg.hide();
+
+                    var rowIds = [];
+                    Ext4.Array.forEach(results.rows, function(row){
+                        if (Ext4.isArray(row.rowids)){
+                            row.rowids = row.rowids.join(',');
+                        }
+
+                        rowIds.push(row.rowids);
+                    }, this);
+
+                    Ext4.create('GeneticsCore.window.EditAlignmentsWindow', {
+                        dataRegionName: dataRegionName,
+                        checked: rowIds
+                    }).show();
+                }
+            });
         }
     },
 
@@ -265,14 +322,32 @@ Ext4.define('GeneticsCore.window.EditAlignmentsWindow', {
 
             var keys = Ext4.Object.getKeys(record.alleles);
             keys = keys.sort();
+
+            var hasAllelesMatchingTotal = false;
             Ext4.Array.forEach(keys, function(refName){
+                if (record.alleles[refName].total == activeCount){
+                    hasAllelesMatchingTotal = true;
+                    return false;
+                }
+            }, this);
+
+            Ext4.Array.forEach(keys, function(refName){
+                var checkVal = (hasAllelesMatchingTotal ? record.alleles[refName].total == activeCount : true);
                 checkboxes.push({
                     xtype: 'checkbox',
                     inputValue: refName,
                     boxLabel: refName +  (record.alleles[refName].total == activeCount ? '<span style="color: red;font-weight: bold">' : '') + ' (' + record.alleles[refName].total + ')' + (record.alleles[refName].total == activeCount ? '</span>' : ''),
                     checked: true,
                     rows: record.alleles[refName].rows,
-                    total: record.alleles[refName].total
+                    total: record.alleles[refName].total,
+                    listeners: {
+                        scope: this,
+                        beforerender: function(field){
+                            if (!checkVal){
+                                field.setValue(checkVal);
+                            }
+                        }
+                    }
                 });
             }, this);
 

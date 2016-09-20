@@ -12,11 +12,11 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
@@ -62,12 +62,6 @@ public class BlastUnmappedReadAnalysis extends AbstractCommandPipelineStep<Blast
         {
             return new BlastUnmappedReadAnalysis(this, ctx);
         }
-    }
-
-    @Override
-    public void init(List<AnalysisModel> models) throws PipelineJobException
-    {
-
     }
 
     @Override

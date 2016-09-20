@@ -1,26 +1,34 @@
 package org.labkey.sequenceanalysis.run.variant;
 
-import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
+import org.json.JSONArray;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.sequenceanalysis.run.VariantFiltrationWrapper;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * User: bimber
  * Date: 6/15/2014
  * Time: 12:39 PM
  */
-public class VariantFiltrationStep extends AbstractPipelineStep implements VariantProcessingStep
+public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFiltrationWrapper> implements VariantProcessingStep
 {
     public VariantFiltrationStep(PipelineStepProvider provider, PipelineContext ctx)
     {
-        super(provider, ctx);
+        super(provider, ctx, new VariantFiltrationWrapper(ctx.getLogger()));
     }
 
     public static class Provider extends AbstractVariantProcessingStepProvider<VariantFiltrationStep>
@@ -28,8 +36,11 @@ public class VariantFiltrationStep extends AbstractPipelineStep implements Varia
         public Provider()
         {
             super("VariantFiltrationStep", "GATK VariantFiltration", "GATK", "Filter variants using GATK VariantFiltration", Arrays.asList(
-                    ToolParameterDescriptor.create("filters", "Filters", "Filters that will be applied to the variants.", "sequenceanalysis-variantfilterfield", null, null)
-            ), Arrays.asList("sequenceanalysis/field/VariantFilterField.js"), "");
+                    ToolParameterDescriptor.create("filters", "Filters", "Filters that will be applied to the variants.", "sequenceanalysis-variantfilterpanel", null, null),
+                    ToolParameterDescriptor.create("mask", "Masking", "A mask that can be used to filter variant.", "sequenceanalysis-variantmaskpanel", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--clusterSize"), "clusterSize", "Cluster Size", "If both this and cluster window size are provided, and windows of the specified size with at least the specified number of SNPs will be filtered as SnpCluster.", "ldk-numberfield", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--clusterWindowSize"), "clusterWindowSize", "Cluster Window Size", "If both this and cluster size are provided, and windows of the specified size with at least the specified number of SNPs will be filtered as SnpCluster.", "ldk-numberfield", null, null)
+            ), Arrays.asList("sequenceanalysis/panel/VariantFilterPanel.js", "sequenceanalysis/panel/VariantMaskPanel.js", "sequenceanalysis/field/GenomeFileSelectorField.js", "ldk/field/ExpDataField.js"), "");
         }
 
         public VariantFiltrationStep create(PipelineContext ctx)
@@ -39,50 +50,53 @@ public class VariantFiltrationStep extends AbstractPipelineStep implements Varia
     }
 
     @Override
-    public Output processVariants(File inputVCF, ReferenceGenome genome)
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
     {
-        /**
-         * 	$JAVA $JAVA_OPTS $TMP_OPTS -jar $GATK \
-         -R "$REF" \
-         -T VariantFiltration \
-         -filterName "NoneCalled" \
-         -filter "vc.getCalledChrCount() == 0" \
-         -filterName "MendelianViolation" \
-         -filter "vc.hasAttribute('MV_NUM') && MV_NUM > 0" \
-         -V "${MV_ANN}" \
-         -o "${FILTER2}" \
-         --read_buffer_size 500000
-         */
+        VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
+        File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".filtered.vcf.gz");
 
-        /**
-         * 	$JAVA $JAVA_OPTS $TMP_OPTS -jar $GATK \
-         -R "$REF" \
-         -T VariantFiltration \
-         -filterName "QualityFilter" \
-         -filter "vc.hasAttribute('QD') && QD < 5.0" \
-         -filterName "FisherStrand" \
-         -filter "FS > 15.0" \
-         -filterName "MappingQuality" \
-         -filter "MQ < 50.0" \
-         -filterName "MQRankSum" \
-         -filter "vc.hasAttribute('MQRankSum') && MQRankSum < -12.5" \
-         -filterName "ReadPosRankSum" \
-         -filter "vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -8.0" \
-         -window 10 \
-         -cluster 3 \
-         --maskName "RepeatMask" \
-         --mask "$MASK" \
-         -G_filter "DP < 10" \
-         -G_filterName "DepthLT10"\
-         -G_filter "DP > 100" \
-         -G_filterName "DepthGT100"\
-         -G_filter "GQ < 20" \
-         -G_filterName "QualLT20"\
-         --setFilteredGtToNocall \
-         -V "${ANN}" \
-         -o "${FILTER}" \
-         --read_buffer_size 1000000
-         */
-        return null;
+        List<String> params = new ArrayList<>();
+        params.addAll(getClientCommandArgs());
+
+        //filters
+        String filterText = getProvider().getParameterByName("filters").extractValue(getPipelineCtx().getJob(), getProvider(), String.class, null);
+        if (filterText != null)
+        {
+            JSONArray filterArr = new JSONArray(filterText);
+            for (int i = 0; i < filterArr.length(); i++)
+            {
+                JSONArray arr = filterArr.getJSONArray(i);
+                if (arr.length() < 2)
+                {
+                    throw new PipelineJobException("Improper filter: " + filterArr.getString(i));
+                }
+
+                params.add("-filterName");
+                params.add(arr.getString(0));
+                params.add("-filter");
+                params.add(arr.getString(1));
+                //if (arr.length() > 2 && arr.optBoolean(2))
+                //{
+                //    params.add("-invfilter");
+                //}
+            }
+        }
+
+        //snp cluster, handled by getClientCommandArgs()
+
+        //masking
+        //--maskName "RepeatMask" \
+        //--mask "$MASK" \
+
+
+        getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, params);
+        if (!outputVcf.exists())
+        {
+            throw new PipelineJobException("unable to find output: " + outputVcf.getPath());
+        }
+
+        output.setVcf(outputVcf);
+
+        return output;
     }
 }

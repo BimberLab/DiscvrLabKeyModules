@@ -10,6 +10,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
     extend: 'Ext.form.Panel',
     alias: 'widget.sequenceanalysis-analysissectionpanel',
     singleTool: false,
+    allowDuplicateSteps: false,
 
     initComponent: function (){
         Ext4.apply(this, {
@@ -122,7 +123,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
                     var target = owner.down('#toolConfgPanel');
 
                     //check if exists
-                    if (target.down('[stepName=' + btn.step.name + ']')){
+                    if (!owner.allowDuplicateSteps && target.down('[stepName=' + btn.step.name + ']')) {
                         Ext4.Msg.alert('Already Added', 'This step has already been added and cannot be used twice.');
                     }
                     else {
@@ -464,7 +465,8 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
 
         if (this.stepType){
             var stepNames = [];
-            Ext4.Array.forEach(this.query('component[stepName]'), function(i){
+            var stepComponents = this.query('component[stepName]');
+            Ext4.Array.forEach(stepComponents, function(i){
                 stepNames.push(i.stepName);
             }, this);
 
@@ -472,9 +474,12 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         }
 
         var params = this.query('component[isToolParam]');
+        var stepMap = this.getStepMap();
         if (params && params.length) {
             Ext4.Array.forEach(params, function (p) {
-                ret[p.name] = p.getValue();
+                //check for step #
+                var stepIdx = this.getStepIdxForToolParam(p, stepMap);
+                ret[p.name + (stepIdx ? '.' + stepIdx : '')] = p.getValue();
             }, this);
         }
 
@@ -495,14 +500,43 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
             this.setActiveTools(tools);
         }
 
+        var stepMap = this.getStepMap();
         var params = this.query('component[isToolParam]');
         if (params && params.length) {
-            Ext4.Array.forEach(params, function (p) {
-                if (Ext4.isDefined(values[p.name])){
-                    //console.log('setting: ' + p.name + ' to: ' + values[p.name]);
-                    p.setValue(values[p.name]);
+            Ext4.Array.forEach(params, function(p) {
+                var stepIdx = this.getStepIdxForToolParam(p, stepMap);
+                var name = p.name + (stepIdx ? '.' + stepIdx : '');
+                if (Ext4.isDefined(values[name])){
+                    p.setValue(values[name]);
                 }
             }, this);
         }
+    },
+
+    getStepMap: function(){
+        var stepMap = {}
+        if (this.stepType){
+            var stepNames = [];
+            var stepComponents = this.query('component[stepName]');
+            Ext4.Array.forEach(stepComponents, function(i, idx){
+                stepNames.push(i.stepName);
+
+                stepMap[i.stepName] = stepMap[i.stepName] || [];
+                stepMap[i.stepName].push(i);
+            }, this);
+        }
+
+        return stepMap;
+    },
+
+    getStepIdxForToolParam: function(p, stepMap){
+        if (this.allowDuplicateSteps && this.stepType){
+            var parent = p.up('component[stepName]');
+            if (parent && stepMap[parent.stepName]){
+                return stepMap[parent.stepName].indexOf(parent);
+            }
+        }
+
+        return 0;
     }
 });

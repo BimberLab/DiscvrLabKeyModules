@@ -6,13 +6,13 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
-import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.util.FileType;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
@@ -74,10 +74,15 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
         }
     }
 
+    private AlignmentAnalysisJob getPipelineJob()
+    {
+        return (AlignmentAnalysisJob)getJob();
+    }
+
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
-        _taskHelper = new SequenceTaskHelper(getJob(), _wd);
+        _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
         Map<Integer, File> cachedFiles = getTaskHelper().getSequenceSupport().getAllCachedData();
         getJob().getLogger().debug("total ExpDatas cached: " + cachedFiles.size());
@@ -120,7 +125,7 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
         }
 
         getTaskHelper().getFileManager().deleteIntermediateFiles();
-        getTaskHelper().getFileManager().cleanup();
+        getTaskHelper().getFileManager().cleanup(actions);
 
         return new RecordedActionSet(actions);
     }

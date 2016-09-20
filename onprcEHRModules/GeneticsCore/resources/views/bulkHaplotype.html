@@ -1,0 +1,24 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function () {
+        var analysisIds = LABKEY.ActionURL.getParameter('analysisIds');
+
+        if (!analysisIds) {
+            alert('Must Provide At Least One Analysis Id');
+            return;
+        }
+
+        var webpart = <%=webpartContext%>;
+
+        Ext4.create('LDK.panel.WebpartPanel', {
+            style: 'margin-bottom: 30px;',
+            title: 'Haplotype Matches',
+            items: [{
+                xtype: 'geneticscore-haplotypepanel',
+                analysisIds: analysisIds.split(';'),
+                showCheckBoxes: true
+            }]
+        }).render(webpart.wrapperDivId);
+    });
+
+</script>

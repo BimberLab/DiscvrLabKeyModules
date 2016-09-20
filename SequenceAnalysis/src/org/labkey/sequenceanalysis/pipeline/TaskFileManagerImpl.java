@@ -5,11 +5,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.exp.api.DataType;
+import org.labkey.api.exp.PropertyType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
@@ -19,6 +19,7 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
@@ -38,6 +39,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,21 +56,22 @@ import java.util.Set;
  * Date: 6/20/2014
  * Time: 5:39 PM
  */
-public class TaskFileManagerImpl implements TaskFileManager
+public class TaskFileManagerImpl implements TaskFileManager, Serializable
 {
-    private PipelineJob _job;
-    private WorkDirectory _wd;
-    private File _workLocation;
+    transient SequenceJob _job;
+    transient WorkDirectory _wd;
+    transient File _workLocation;
 
-    private HashMap<String, List<Object[]>> _outputFiles = new HashMap<>();
-    private HashMap<String, List<Object[]>> _inputFiles = new HashMap<>();
-    private Set<File> _finalOutputs = new HashSet<>();
-    private Set<File> _unalteredOutputs = new HashSet<>();
-    Map<File, File> _unzippedMap = new HashMap<>();
-
+    private Map<File, File> _unzippedMap = new HashMap<>();
     private Set<File> _intermediateFiles = new HashSet<>();
 
-    public TaskFileManagerImpl(PipelineJob job, File workDir, WorkDirectory wd)
+    //for serialization
+    public TaskFileManagerImpl()
+    {
+
+    }
+
+    public TaskFileManagerImpl(SequenceJob job, File workDir, WorkDirectory wd)
     {
         _job = job;
         _workLocation = workDir;
@@ -76,37 +79,37 @@ public class TaskFileManagerImpl implements TaskFileManager
     }
 
     @Override
-    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId)
+    public void addSequenceOutput(SequenceOutputFile o)
     {
-        String path = FilenameUtils.normalize(file.getPath());
-        String relPath = FileUtil.relativePath(_workLocation.getPath(), path);
-        _job.getLogger().debug("Adding sequence output file: " + relPath + " || " + path + "||" + readsetId + "||" + analysisId + "||" + genomeId);
-        if (relPath == null)
-        {
-            relPath = file.getPath();
-        }
 
-        File log = getSequenceOutputLog(true);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(log, true)))
-        {
-            writer.write(StringUtils.join(new String[]{relPath, label, category, (readsetId == null ? "0" : readsetId.toString()), (analysisId == null ? "0" : analysisId.toString()), (genomeId == null ? "0" : genomeId.toString())}, '\t') + '\n');
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException(e);
-        }
+        _job.addOutputToCreate(o);
+    }
+
+    @Override
+    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description)
+    {
+        SequenceOutputFile so = new SequenceOutputFile();
+        so.setFile(file);
+        so.setName(label);
+        so.setCategory(category);
+        so.setReadset(readsetId);
+        so.setAnalysis_id(analysisId);
+        so.setLibrary_id(genomeId);
+        so.setDescription(description);
+
+        _job.addOutputToCreate(so);
     }
 
     @Override
     public void addOutput(RecordedAction action, String role, File file)
     {
-        addInputOutput(action, role, file, _outputFiles, "Output");
+        action.addOutput(file, role, false);
     }
 
     @Override
     public void addInput(RecordedAction action, String role, File file)
     {
-        addInputOutput(action, role, file, _inputFiles, "Input");
+        action.addInput(file, role);
     }
 
     @Override
@@ -137,81 +140,47 @@ public class TaskFileManagerImpl implements TaskFileManager
 
         for (PipelineStepOutput.SequenceOutput o : output.getSequenceOutputs())
         {
-            addSequenceOutput(o.getFile(), o.getLabel(), o.getCategory(), o.getReadsetId(), o.getAnalysisId(), o.getGenomeId());
+            addSequenceOutput(o.getFile(), o.getLabel(), o.getCategory(), o.getReadsetId(), o.getAnalysisId(), o.getGenomeId(), o.getDescription());
+        }
+
+        addCommandsToAction(output.getCommandsExecuted(), action);
+    }
+
+    public void addCommandsToAction(List<String> commands, RecordedAction action)
+    {
+        if (!commands.isEmpty())
+        {
+            for (String command : commands)
+            {
+                addCommandToAction(command, action);
+            }
         }
     }
 
-    private void addInputOutput(RecordedAction action, String role, File file, HashMap<String, List<Object[]>> target, String type)
+    private void addCommandToAction(String command, RecordedAction action)
     {
-        addInputOutput(action, role, file, target, type, false);
+        int commandIdx = 0;
+        RecordedAction.ParameterType paramType = new RecordedAction.ParameterType("command" + commandIdx, PropertyType.STRING);
+        while (isParamterNameUsed(paramType, action))
+        {
+            commandIdx++;
+            paramType = new RecordedAction.ParameterType("command" + commandIdx, PropertyType.STRING);
+        }
+
+        action.addParameter(paramType, command);
     }
 
-    private void addInputOutput(RecordedAction action, String role, File file, HashMap<String, List<Object[]>> target, String type, boolean isTransient)
+    private boolean isParamterNameUsed(RecordedAction.ParameterType paramType, RecordedAction action)
     {
-        String path = FilenameUtils.normalize(file.getPath());
-        String relPath = FileUtil.relativePath(_workLocation.getPath(), path);
-        if (relPath == null)
+        for (RecordedAction.ParameterType param : action.getParams().keySet())
         {
-            if (file.exists())
+            if (paramType.getName().equals(param.getName()))
             {
-                relPath = path;
-            }
-            else
-            {
-                _job.getLogger().warn("File not found: " + path);
-                return;
+                return true;
             }
         }
 
-        if (relPath != null)
-            relPath = FilenameUtils.normalize(relPath);
-
-        _job.getLogger().debug("Attempting to add " + type + ": " + relPath);
-        _job.getLogger().debug("\toriginal path: " + path);
-        _job.getLogger().debug("\tusing work dir: " + _workLocation.getPath());
-
-        if (file.isDirectory())
-        {
-            for(File f : file.listFiles())
-            {
-                addInputOutput(action, role, f, target, type, isTransient);
-            }
-        }
-        else
-        {
-            if (!target.containsKey(relPath))
-            {
-                if (relPath == null)
-                {
-                    _job.getLogger().warn("file is not a child of the work location: " + file.getPath());
-                }
-                else
-                {
-                    target.put(relPath, new ArrayList<Object[]>());
-                }
-            }
-
-            // verify we dont have duplicate file/actions.
-            // this could occur if we added a specific file in one step, then later tried to add the whole directory
-            boolean shouldAdd = true;
-            for(Object[] values : target.get(relPath))
-            {
-                RecordedAction action2 = (RecordedAction)values[0];
-                if (action2 == action)
-                {
-                    shouldAdd = false;
-                    _job.getLogger().debug("File already present in another action, will not add: " + file.getName() + " / pending action: " + action.getName() + " / existing action: " + action2.getName() + " / existing role: " + values[1] + " / new role: " + role + " / path: " + relPath);
-                    break;
-                }
-            }
-
-            if (shouldAdd)
-            {
-                _job.getLogger().debug("Adding file: " + relPath + " / " + file.getName() + " / role: " + role + " / action: " + action.getName() + " / " + isTransient);
-                Object[] array = {action, role, file, isTransient};
-                target.get(relPath).add(array);
-            }
-        }
+        return false;
     }
 
     @Override
@@ -274,25 +243,6 @@ public class TaskFileManagerImpl implements TaskFileManager
             {
                 writer.write(StringUtils.join(Arrays.asList("ReadsetId", "FileRelPath", "Type", "Category", "MetricName", "Value"), "\t"));
                 writer.write("\n");
-            }
-            catch (IOException e)
-            {
-                _job.getLogger().error("Unable to create log file: " + logFile.getPath());
-                return null;
-            }
-        }
-
-        return logFile;
-    }
-
-    private File getSequenceOutputLog(boolean create)
-    {
-        File logFile = new File(getSupport().getAnalysisDirectory(), "sequenceOutputs.txt");
-        if (create && !logFile.exists())
-        {
-            try
-            {
-                logFile.createNewFile();
             }
             catch (IOException e)
             {
@@ -381,95 +331,16 @@ public class TaskFileManagerImpl implements TaskFileManager
     }
 
     @Override
-    public void createSequenceOutputRecords()
+    public void createSequenceOutputRecords(@Nullable Integer analysisId) throws PipelineJobException
     {
-        File log = getSequenceOutputLog(false);
-        if (log != null && log.exists())
+        if (!_job.getOutputsToCreate().isEmpty())
         {
-            _job.getLogger().info("Importing sequence output files");
-
-            try (BufferedReader reader = Readers.getReader(log))
-            {
-                TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
-                String line;
-                while ((line = reader.readLine()) != null)
-                {
-                    String[] tokens = StringUtils.split(line, '\t');
-                    File f = new File(((FileAnalysisJobSupport)_job).getAnalysisDirectory(), tokens[0]);
-                    if (!f.exists())
-                    {
-                        f = new File(tokens[0]);
-                        if (!f.exists())
-                        {
-                            _job.getLogger().error("unable to find file: " + f.getPath());
-                            continue;
-                        }
-                    }
-
-                    ExpData d = ExperimentService.get().getExpDataByURL(f, _job.getContainer());
-                    if (d == null)
-                    {
-                        _job.getLogger().info("creating ExpData for file: " + f.getPath());
-
-                        d = ExperimentService.get().createData(_job.getContainer(), new DataType(tokens[2]));
-                        d.setDataFileURI(f.toURI());
-                        d.setName(tokens[1]);
-                        d.save(_job.getUser());
-                    }
-
-                    Map<String, Object> map = new CaseInsensitiveHashMap<>();
-                    map.put("name", tokens[1]);
-                    map.put("category", tokens[2]);
-                    map.put("dataid", d.getRowId());
-
-                    if (tokens.length >= 4)
-                    {
-                        Integer readsetId = Integer.parseInt(tokens[3]);
-                        if (readsetId > 0)
-                        {
-                            map.put("readset", readsetId);
-                            _job.getLogger().debug("readset: " + map.get("readset"));
-                        }
-                    }
-
-                    if (tokens.length >= 5 && StringUtils.trimToNull(tokens[4]) != null && Integer.parseInt(tokens[4]) > 0)
-                    {
-                        map.put("analysis_id", Integer.parseInt(tokens[4]));
-                        _job.getLogger().debug("analysis id: " + map.get("analysis_id"));
-                    }
-
-                    if (tokens.length >= 6 && StringUtils.trimToNull(tokens[5]) != null && Integer.parseInt(tokens[5]) > 0)
-                    {
-                        map.put("library_id", Integer.parseInt(tokens[5]));
-                        _job.getLogger().debug("library_id found in log: " + map.get("library_id"));
-                    }
-                    else if (getSequenceSupport() != null && getSequenceSupport().getReferenceGenome() != null)
-                    {
-                        map.put("library_id", getSequenceSupport().getReferenceGenome().getGenomeId());
-                        _job.getLogger().debug("library_id taken from reference genome: " + map.get("library_id"));
-                    }
-
-                    Integer runId = SequenceTaskHelper.getExpRunIdForJob(_job);
-                    map.put("runid", runId);
-                    map.put("container", _job.getContainer().getId());
-                    map.put("createdby", _job.getUser().getUserId());
-                    map.put("modifiedby", _job.getUser().getUserId());
-                    map.put("created", new Date());
-                    map.put("modified", new Date());
-
-                    Table.insert(_job.getUser(), ti, map);
-                }
-            }
-            catch (Exception e)
-            {
-                throw new RuntimeException(e);
-            }
-
-            log.delete();
+            Integer runId = SequenceTaskHelper.getExpRunIdForJob(_job);
+            SequenceOutputHandlerFinalTask.createOutputFiles(_job, runId, analysisId);
         }
         else
         {
-            _job.getLogger().debug("There are no sequence outputs to add");
+            _job.getLogger().info("no outputs created, nothing to do");
         }
     }
 
@@ -509,6 +380,11 @@ public class TaskFileManagerImpl implements TaskFileManager
         _intermediateFiles.add(f);
     }
 
+    public void removeIntermediateFile(File f)
+    {
+        _intermediateFiles.remove(f);
+    }
+
     @Override
     public void addIntermediateFiles(Collection<File> files)
     {
@@ -517,6 +393,22 @@ public class TaskFileManagerImpl implements TaskFileManager
             addIntermediateFile(f);
         }
     }
+
+//    public void addQualityMetric(PipelineStepOutput.PicardMetricsOutput type, Integer readsetId, File bam, String category, String metricName, Double value) throws PipelineJobException
+//    {
+//        //write to log
+//        File metricLog = getMetricsLog(true);
+//        try (BufferedWriter writer = new BufferedWriter(new FileWriter(metricLog, true)))
+//        {
+//            String bamRelPath = bam == null ? "" : FilenameUtils.normalize(_wd.getRelativePath(bam));
+//            writer.write(StringUtils.join(Arrays.asList(readsetId, bamRelPath, type, category, metricName, String.valueOf(value)), "\t"));
+//            writer.write('\n');
+//        }
+//        catch (IOException e)
+//        {
+//            throw new PipelineJobException(e);
+//        }
+//    }
 
     @Override
     public void addPicardMetricsFiles(List<PipelineStepOutput.PicardMetricsOutput> files)
@@ -653,73 +545,33 @@ public class TaskFileManagerImpl implements TaskFileManager
         }
     }
 
-    private void swapFiles(File original, File newFile)
+    private void swapFilesInRecordedActions(File original, File newFile, Collection<RecordedAction> actions, SequenceJob job)
     {
-        try
+        swapFilesInRecordedActions(_job.getLogger(), original, newFile, actions, job);
+    }
+
+    public static void swapFilesInRecordedActions(Logger log, File original, File newFile, Collection<RecordedAction> actions, SequenceJob job)
+    {
+        log.debug("Swapping copied output file in actions: ");
+        log.debug("\tOriginal file: " + original.getPath());
+        log.debug("\tNew locations: " + newFile.getPath());
+
+        for (RecordedAction a : actions)
         {
-            _job.getLogger().debug("Swapping output file: ");
-            _job.getLogger().debug("\tOriginal file: " + original.getPath());
-
-            String relPath = FilenameUtils.normalize(_wd.getRelativePath(original));
-            if (relPath == null)
+            if (a.updateForMovedFile(original, newFile))
             {
-                relPath = FilenameUtils.normalize(FileUtil.relativize(getSupport().getAnalysisDirectory(), original, true));
-                if (relPath == null)
-                {
-                    relPath = FilenameUtils.normalize(original.getPath());
-                }
-            }
-            String relPath2 = FilenameUtils.normalize(_wd.getRelativePath(newFile));
-            if (relPath2 == null && newFile.exists())
-            {
-                relPath2 = FilenameUtils.normalize(FileUtil.relativize(getSupport().getAnalysisDirectory(), newFile, true));
-                if (relPath2 == null)
-                {
-                    relPath2 = FilenameUtils.normalize(newFile.getPath());
-                }
-            }
-
-            _job.getLogger().debug("\tNew file: " + newFile.getPath());
-            _job.getLogger().debug("\tRelative path: " + relPath);
-            if (_inputFiles.containsKey(relPath))
-            {
-                if (!_inputFiles.containsKey(relPath2))
-                {
-                    _inputFiles.put(relPath2, new ArrayList<Object[]>());
-                }
-
-                for(Object[] array : _inputFiles.get(relPath))
-                {
-                    _job.getLogger().debug("\treplacing input: " + array[2] + " with " + newFile.getPath());
-                    array[2] = newFile;
-
-                    _inputFiles.get(relPath2).add(array);
-                }
-
-                _inputFiles.remove(relPath);
-            }
-
-            if (_outputFiles.containsKey(relPath))
-            {
-                if (!_outputFiles.containsKey(relPath2))
-                {
-                    _outputFiles.put(relPath2, new ArrayList<Object[]>());
-                }
-
-                for(Object[] array : _outputFiles.get(relPath))
-                {
-                    _job.getLogger().debug("\treplacing output: " + array[2] + " with " + newFile.getPath());
-                    array[2] = newFile;
-
-                    _outputFiles.get(relPath2).add(array);
-                }
-
-                _outputFiles.remove(relPath);
+                log.debug("updated action: " + a.getName());
             }
         }
-        catch (IOException e)
+
+        //also sequence outputs
+        for (SequenceOutputFile so : job.getOutputsToCreate())
         {
-            throw new RuntimeException(e);
+            if (so.getFile().equals(original))
+            {
+                log.debug("swapping file in sequence output: " + original.getPath());
+                so.setFile(newFile);
+            }
         }
     }
 
@@ -727,84 +579,6 @@ public class TaskFileManagerImpl implements TaskFileManager
     public String getInputfileTreatment()
     {
         return _job.getParameters().get("inputfile.inputTreatment");
-    }
-
-    @Override
-    public void handleInputs() throws PipelineJobException
-    {
-        Set<File> inputs = new HashSet<>();
-        inputs.addAll(getSupport().getInputFiles());
-
-        _job.getLogger().info("Cleaning up input files");
-
-        try
-        {
-            Thread.sleep(1000);
-        }
-        catch (InterruptedException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
-        String handling = getInputfileTreatment();
-        if ("delete".equals(handling))
-        {
-            for (File input : inputs)
-            {
-                if (input.exists())
-                {
-                    if (!_finalOutputs.contains(input))
-                    {
-                        _job.getLogger().info("Deleting input file: " + input.getPath());
-
-                        input.delete();
-                        if (input.exists())
-                        {
-                            throw new PipelineJobException("Unable to delete file: " + input.getPath());
-                        }
-                    }
-                    else
-                    {
-                        //this input file was not altered during normalization.  in this case, we move it into the analysis folder
-                        _job.getLogger().info("File was not altered by normalization.  Copying to analysis folder: " + input.getPath());
-                        copyInputToAnalysisDir(input);
-                    }
-                }
-            }
-        }
-        else if ("compress".equals(handling))
-        {
-            FileType gz = new FileType(".gz");
-            for (File input : inputs)
-            {
-                if (input.exists())
-                {
-                    if (gz.isType(input))
-                    {
-                        _job.getLogger().debug("Moving input file to analysis directory: " + input.getPath());
-                        copyInputToAnalysisDir(input);
-                    }
-                    else
-                    {
-                        _job.getLogger().info("Compressing/Moving input file to analysis directory: " + input.getPath());
-                        File compressed = Compress.compressGzip(input);
-                        if (!compressed.exists())
-                            throw new PipelineJobException("Unable to compress file: " + input);
-
-                        swapFiles(input, compressed);
-
-                        input.delete();
-                        copyInputToAnalysisDir(compressed);
-                    }
-                }
-            }
-        }
-        else
-        {
-            _job.getLogger().info("\tInput files will be left alone");
-        }
-
-        deleteIntermediateFiles();
     }
 
     @Override
@@ -893,210 +667,57 @@ public class TaskFileManagerImpl implements TaskFileManager
         }
     }
 
-    private File copyInputToAnalysisDir(File input) throws PipelineJobException
-    {
-        _job.getLogger().debug("Copying input file to analysis directory: " + input.getPath());
-
-        try
-        {
-            //NOTE: we assume the input is gzipped already
-            File outputDir = getSupport().getAnalysisDirectory();
-            File output = new File(outputDir, input.getName());
-            if (output.exists())
-            {
-                if (_unalteredOutputs.contains(output))
-                {
-                    _job.getLogger().debug("\tThis input was unaltered during normalization and a copy already exists in the analysis folder so the original will be discarded");
-                    input.delete();
-                    swapFiles(input, output);
-                    return output;
-                }
-                else
-                {
-                    output = new File(outputDir, FileUtil.getBaseName(input.getName()) + ".orig.gz");
-                    _job.getLogger().debug("\tA file with the expected output name already exists, so the original will be renamed: " + output.getPath());
-                }
-            }
-
-            FileUtils.moveFile(input, output);
-            if (!output.exists())
-            {
-                throw new PipelineJobException("Unable to move file: " + input.getPath());
-            }
-
-            //TODO: kinda of a hack
-            List<File> toMove = Arrays.asList(new File(input.getParentFile(), input.getName().replaceAll(".fastq.gz", "") + "_fastqc.html.gz"), new File(input.getParentFile(), input.getName().replaceAll(".fastq.gz", "") + "_fastqc.zip"));
-            for (File f : toMove)
-            {
-                if (f.exists())
-                {
-                    _job.getLogger().debug("also moving FASTQC file: " + f.getName());
-                    File target = new File(output.getParentFile(), f.getName());
-                    if (target.exists())
-                    {
-                        _job.getLogger().warn("FASTQC file already exists on the server.  was not expected: " + target.getPath());
-                    }
-                    else
-                    {
-                        FileUtils.moveFile(f, target);
-                        swapFiles(f, target);
-                    }
-                }
-            }
-
-            swapFiles(input, output);
-
-            return output;
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-    }
-
-    private void processCopiedFile(File file)
+    private void processCopiedFile(File original, File moved, Collection<RecordedAction> actions) throws IOException
     {
         //this should be harmless (although unnecessary) if the working dir is the same as the normal location
-        if (file.isDirectory())
+        if (moved.isDirectory())
         {
-            _job.getLogger().debug("Copying directory: " +  file.getPath());
-            _job.getLogger().debug("Directory has " + file.listFiles().length + " children");
-            for (File f : file.listFiles())
+            if (moved.list().length == 0)
             {
-                processCopiedFile(f);
+                _job.getLogger().debug("Deleting empty directory: " + moved.getPath());
+                FileUtils.deleteDirectory(moved);
+            }
+            else
+            {
+                _job.getLogger().debug("Copying directory: " + moved.getPath());
+                _job.getLogger().debug("Directory has " + moved.listFiles().length + " children");
+                for (File f : moved.listFiles())
+                {
+                    processCopiedFile(new File(original, f.getName()), f, actions);
+                }
             }
         }
         else
         {
-            _job.getLogger().debug("Processing file: " + file.getName());
-
-            String relPath = FilenameUtils.normalize(FileUtil.relativePath(getSupport().getAnalysisDirectory().getPath(), file.getPath()));
-            _job.getLogger().debug("\tRelative path: " + relPath);
-            if (_outputFiles.containsKey(relPath))
-            {
-                for(Object[] array : _outputFiles.get(relPath))
-                {
-                    RecordedAction action = (RecordedAction)array[0];
-                    String role = (String)array[1];
-                    boolean isTransient = (Boolean)array[3];
-                    _job.getLogger().debug("\tProcessing output: " + file.getName() + " / " + role + " / " + action.getName());
-                    if (!file.exists())
-                    {
-                        _job.getLogger().info("\tFile does not exist: " + file.getPath());
-                        isTransient = true;
-                    }
-                    action.addOutput(file, role, isTransient, true);
-                }
-                _outputFiles.remove(relPath);
-            }
-
-            if (_inputFiles.containsKey(relPath))
-            {
-                for(Object[] array : _inputFiles.get(relPath))
-                {
-                    RecordedAction action = (RecordedAction)array[0];
-                    String role = (String)array[1];
-                    _job.getLogger().debug("\tProcessing input: " + file.getName() + " / " + role + " / " + action.getName());
-                    if (!file.exists())
-                    {
-                        _job.getLogger().info("\tFile does not exist: " + file.getPath());
-                    }
-
-                    action.addInput(file, role);
-                }
-                _inputFiles.remove(relPath);
-            }
-
-            if (!_inputFiles.containsKey(relPath) && !_outputFiles.containsKey(relPath))
-            {
-                _job.getLogger().debug("File not associated as an input: " + file.getPath());
-                for (String fn : _inputFiles.keySet())
-                {
-                    if (fn == null)
-                    {
-                        _job.getLogger().error("null filename", new Exception());
-                        continue;
-                    }
-
-                    if (fn.contains(file.getName()))
-                    {
-                        _job.getLogger().debug("Found possible match in inputs: " + fn);
-                        for (Object[] array : _inputFiles.get(fn))
-                        {
-                            _job.getLogger().debug("Action: " + ((RecordedAction)array[0]).getName());
-                            _job.getLogger().debug("Role: " + array[1]);
-                            _job.getLogger().debug("Path: " + array[2]);
-                            _job.getLogger().debug(array[2]);
-                        }
-                    }
-                }
-
-                for (String fn : _outputFiles.keySet())
-                {
-                    if (fn == null)
-                    {
-                        _job.getLogger().error("null filename", new Exception());
-                        continue;
-                    }
-
-                    if (fn.contains(file.getName()))
-                    {
-                        _job.getLogger().debug("Found possible match in outputs: " + fn);
-                        for (Object[] array : _outputFiles.get(fn))
-                        {
-                            _job.getLogger().debug("\tAction: " + ((RecordedAction)array[0]).getName());
-                            _job.getLogger().debug("\tRole: " + array[1]);
-                            _job.getLogger().debug("\tPath: " + array[2]);
-                        }
-                    }
-                }
-            }
+            _job.getLogger().debug("Processing file: " + moved.getName());
+            swapFilesInRecordedActions(original, moved, actions, _job);
         }
     }
 
     @Override
-    public void cleanup() throws PipelineJobException
+    public void cleanup(Collection<RecordedAction> actions) throws PipelineJobException
     {
         _job.getLogger().debug("performing file cleanup");
         _job.setStatus(PipelineJob.TaskStatus.running, "PERFORMING FILE CLEANUP");
 
         try
         {
-            // Get rid of any copied input files.
-            _job.getLogger().debug("discarding copied inputs");
-            _wd.discardCopiedInputs();
-
-            //NOTE: preserving relative locations is a pain.  therefore we copy all outputs, including directories
-            //then sort out which files were specified as named outputs later
-            for (File input : _wd.getDir().listFiles())
+            if (_wd != null)
             {
-                copyFile(input);
-            }
+                // Get rid of any copied input files.
+                _job.getLogger().debug("discarding copied inputs");
+                _wd.discardCopiedInputs();
 
-            for (String relPath : _inputFiles.keySet())
-            {
-                for(Object[] array : _inputFiles.get(relPath))
+                //NOTE: preserving relative locations is a pain.  therefore we copy all outputs, including directories
+                //then sort out which files were specified as named outputs later
+                for (File input : _wd.getDir().listFiles())
                 {
-                    RecordedAction action = (RecordedAction)array[0];
-                    String role = (String)array[1];
-                    File file = (File)array[2];
-                    boolean isTransient = (Boolean)array[3];
-                    _job.getLogger().debug("\tProcessing input: " + file.getName() + " / " + role + " / " + action.getName());
-                    action.addInput(file, role);
+                    copyFile(input, actions);
                 }
             }
-
-            for (String relPath : _outputFiles.keySet())
+            else
             {
-                for(Object[] array : _outputFiles.get(relPath))
-                {
-                    RecordedAction action = (RecordedAction)array[0];
-                    String role = (String)array[1];
-                    File file = (File)array[2];
-                    boolean isTransient = (Boolean)array[3];
-                    _job.getLogger().debug("\tProcessing output: " + file.getName() + " / " + role + " / " + action.getName());
-                    action.addOutput(file, role, isTransient, true);
-                }
+                _job.getLogger().debug("no workDir provided, skipping");
             }
         }
         catch (IOException e)
@@ -1105,11 +726,11 @@ public class TaskFileManagerImpl implements TaskFileManager
         }
     }
 
-    private void copyFile(File input) throws IOException
+    private void copyFile(File input, Collection<RecordedAction> actions) throws IOException
     {
         try
         {
-            doCopyFile(input);
+            doCopyFile(input, actions);
         }
         catch (IOException e)
         {
@@ -1131,13 +752,13 @@ public class TaskFileManagerImpl implements TaskFileManager
         }
     }
 
-    private void doCopyFile(File input) throws IOException
+    private void doCopyFile(File input, Collection<RecordedAction> actions) throws IOException
     {
         _job.getLogger().debug("copying file: " + input.getPath());
 
         if (!input.exists())
         {
-            _job.getLogger().debug("file does not exists: " + input.getPath());
+            _job.getLogger().debug("file does not exist: " + input.getPath());
             return;
         }
 
@@ -1161,7 +782,7 @@ public class TaskFileManagerImpl implements TaskFileManager
                 File[] children = input.listFiles();
                 for (File child : children)
                 {
-                    copyFile(child);
+                    copyFile(child, actions);
                 }
 
                 FileUtils.deleteDirectory(input);
@@ -1183,7 +804,7 @@ public class TaskFileManagerImpl implements TaskFileManager
             _job.getLogger().debug("to: " + dest.getPath());
 
             dest = _wd.outputFile(input, dest);
-            processCopiedFile(dest);
+            processCopiedFile(input, dest, actions);
         }
     }
 
@@ -1198,59 +819,6 @@ public class TaskFileManagerImpl implements TaskFileManager
             _job.error(wrapper.executeWithOutput(Arrays.asList("/usr/sbin/lsof", "+D", input.getPath())));
         else
             _job.error(wrapper.executeWithOutput(Arrays.asList("lsof", input.getPath())));
-    }
-
-    @Override
-    public void addFinalOutputFile(File f)
-    {
-        _job.getLogger().debug("adding final output: " + f.getPath());
-
-        _finalOutputs.add(f);
-    }
-
-    @Override
-    public void addFinalOutputFiles(Collection<File> files)
-    {
-        for (File f : files)
-        {
-            _job.getLogger().debug("adding final output: " + f.getPath());
-        }
-
-        _finalOutputs.addAll(files);
-    }
-
-    @Override
-    public void addUnalteredOutput(File file)
-    {
-        _unalteredOutputs.add(file);
-    }
-
-    @Override
-    public Set<File> getFinalOutputFiles()
-    {
-        return _finalOutputs;
-    }
-    
-    @Override
-    public void compressFile(File file)
-    {
-        if (!file.exists())
-        {
-            return;
-        }
-
-        Set<String> inputPaths = getInputPaths();
-        if (!inputPaths.contains(file.getPath()))
-        {
-            _job.getLogger().info("\tCompressing file: " + file.getPath());
-            File zipped = Compress.compressGzip(file);
-            swapFiles(file, zipped);
-            file.delete();
-        }
-        else
-        {
-            _job.getLogger().debug("\tFile was an input, will not compress: " + file.getPath());
-        }        
     }
 
     @Override
@@ -1319,5 +887,25 @@ public class TaskFileManagerImpl implements TaskFileManager
         }
 
         return i;
+    }
+
+    public Map<File, File> getUnzippedMap()
+    {
+        return _unzippedMap;
+    }
+
+    public void setUnzippedMap(Map<File, File> unzippedMap)
+    {
+        _unzippedMap = unzippedMap;
+    }
+
+    public Set<File> getIntermediateFiles()
+    {
+        return _intermediateFiles;
+    }
+
+    public void setIntermediateFiles(Set<File> intermediateFiles)
+    {
+        _intermediateFiles = intermediateFiles;
     }
 }

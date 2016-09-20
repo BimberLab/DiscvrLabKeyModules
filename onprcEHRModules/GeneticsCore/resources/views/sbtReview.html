@@ -24,7 +24,8 @@
                         xtype: 'ldk-webpartpanel',
                         style: 'margin-bottom: 30px;',
                         items: [{
-                            html: 'This page is designed to help review the results of sequence based genotyping data.  Use the buttons below to scroll between the analyses you selected.',
+                            html: 'This page is designed to help review the results of sequence based genotyping data.  Use the buttons below to scroll between the analyses you selected.<br><br>' +
+                            'Currently showing: ' + analysisId + ' (' + (this.analysisIds.indexOf(analysisId) + 1) + ' of ' + this.analysisIds.length + ')',
                             border: false,
                             style: 'margin-bottom: 20px;'
                         },{
@@ -135,7 +136,6 @@
                         title: 'Analysis Details',
                         schemaName: 'sequenceanalysis',
                         queryName: 'sequence_analyses',
-                        viewName: 'SBT Information',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         filterArray: [LABKEY.Filter.create('rowid', analysisId, LABKEY.Filter.Types.EQUAL)],
                         scope: this,
@@ -178,21 +178,13 @@
                             success: this.onDataRegionLoad
                         })
                     },{
-                        xtype: 'ldk-querypanel',
+                        xtype: 'ldk-webpartpanel',
                         style: 'margin-bottom: 30px;',
-                        queryConfig: LDK.Utils.getReadOnlyQWPConfig({
-                            title: 'Matching Haplotypes',
-                            allowHeaderLock: false,
-                            schemaName: 'sequenceanalysis',
-                            queryName: 'haplotypeMatches',
-                            parameters: {
-                                MinimumPercent: 0.1
-                            },
-                            containerPath: Laboratory.Utils.getQueryContainerPath(),
-                            filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)],
-                            scope: this,
-                            success: this.onDataRegionLoad
-                        })
+                        title: 'Haplotype Matches',
+                        items: [{
+                            xtype: 'geneticscore-haplotypepanel',
+                            analysisIds: [analysisId]
+                        }]
                     },{
                         xtype: 'ldk-querypanel',
                         style: 'margin-bottom: 30px;',

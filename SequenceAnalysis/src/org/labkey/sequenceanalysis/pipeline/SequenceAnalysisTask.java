@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -25,9 +26,13 @@ import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
+import org.labkey.api.pipeline.WorkDirFactory;
+import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -43,6 +48,7 @@ import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -101,13 +107,26 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         {
             return false;
         }
+
+        @Override
+        public WorkDirectory createWorkDirectory(String jobGUID, FileAnalysisJobSupport jobSupport, Logger logger) throws IOException
+        {
+            WorkDirFactory factory = PipelineJobService.get().getWorkDirFactory();
+
+            return factory.createWorkDirectory(jobGUID, jobSupport, true, logger);
+        }
+    }
+
+    public SequenceAlignmentJob getPipelineJob()
+    {
+        return (SequenceAlignmentJob)getJob();
     }
 
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();
-        SequenceTaskHelper taskHelper = new SequenceTaskHelper(job, _wd);
+        SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
         List<RecordedAction> actions = new ArrayList<>();
 
@@ -116,125 +135,139 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         //first validate all analysis records before actually creating any DB records
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         ExpRun run = ExperimentService.get().getExpRun(runId);
-        List<AnalysisModelImpl> analysisModels = new ArrayList<>();
+        AnalysisModelImpl analysisModel = null;
 
         if (SequenceTaskHelper.isAlignmentUsed(getJob()))
         {
-            for (SequenceReadsetImpl rs : taskHelper.getSettings().getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class)))
+            SequenceReadsetImpl rs = getPipelineJob().getReadset();
+            String basename = rs.getLegalFileName();
+
+            analysisModel = new AnalysisModelImpl();
+            analysisModel.setContainer(getJob().getContainer().getId());
+            analysisModel.setCreatedby(getJob().getUser().getUserId());
+            analysisModel.setCreated(new Date());
+            analysisModel.setModifiedby(getJob().getUser().getUserId());
+            analysisModel.setModified(new Date());
+            analysisModel.setDescription(taskHelper.getSettings().getJobDescription());
+            analysisModel.setRunId(runId);
+            analysisModel.setReadset(rs.getReadsetId());
+
+            //find BAM
+            List<? extends ExpData> datas = run.getInputDatas(SequenceAlignmentTask.FINAL_BAM_ROLE, ExpProtocol.ApplicationType.ExperimentRunOutput);
+            if (datas.size() > 0)
             {
-                String basename = rs.getLegalFileName();
-
-                AnalysisModelImpl model = new AnalysisModelImpl();
-                model.setContainer(getJob().getContainer().getId());
-                model.setCreatedby(getJob().getUser().getUserId());
-                model.setCreated(new Date());
-                model.setModifiedby(getJob().getUser().getUserId());
-                model.setModified(new Date());
-                model.setDescription(taskHelper.getSettings().getProtocolDescription());
-                model.setRunId(runId);
-                model.setReadset(rs.getReadsetId());
-
-                //find BAM
-                List<? extends ExpData> datas = run.getInputDatas(SequenceAlignmentTask.FINAL_BAM_ROLE, ExpProtocol.ApplicationType.ExperimentRunOutput);
-                if (datas.size() > 0)
+                boolean found = false;
+                for (ExpData d : datas)
                 {
-                    boolean found = false;
-                    for (ExpData d : datas)
+                    if (basename.equals(FileUtil.getBaseName(d.getFile())))
                     {
-                        if (basename.equals(FileUtil.getBaseName(d.getFile())))
+                        if (found)
                         {
-                            if (found)
-                            {
-                                getJob().getLogger().warn("ERROR: More than 1 matching BAM found for basename: " + basename);
-                                getJob().getLogger().warn("BAM was: " + d.getFile().getPath());
-                            }
-
-                            if (!d.getFile().exists())
-                                throw new PipelineJobException("Unable to find file: " + d.getFile().getPath());
-
-                            model.setAlignmentFile(d.getRowId());
-                            found = true;
+                            getJob().getLogger().warn("ERROR: More than 1 matching BAM found for basename: " + basename);
+                            getJob().getLogger().warn("BAM was: " + d.getFile().getPath());
                         }
+
+                        if (!d.getFile().exists())
+                            throw new PipelineJobException("Unable to find file: " + d.getFile().getPath());
+
+                        analysisModel.setAlignmentFile(d.getRowId());
+                        found = true;
                     }
                 }
+            }
 
-                if (model.getAlignmentFile() == null)
+            if (analysisModel.getAlignmentFile() == null)
+            {
+                getJob().getLogger().info("Total BAMs found : " + datas.size());
+                for (ExpData d : datas)
                 {
-                    getJob().getLogger().warn("Unable to find BAM for run: " + run.getRowId() + ". Expected file beginning with: " + basename);
-                    getJob().getLogger().info("Total BAMs found : " + datas.size());
-                    for (ExpData d : datas)
-                    {
-                        getJob().getLogger().info("\t" + d.getFile().getPath());
-                    }
-                    continue;
+                    getJob().getLogger().info("\t" + d.getFile().getPath());
                 }
 
-                //reference
-                ReferenceGenome referenceGenome = taskHelper.getSequenceSupport().getReferenceGenome();
-                if (referenceGenome == null)
-                {
-                    throw new PipelineJobException("unable to find cached reference genome");
-                }
+                throw new PipelineJobException("Unable to find BAM for run: " + run.getRowId() + ". Expected file beginning with: " + basename);
+            }
 
-                model.setLibraryId(referenceGenome.getGenomeId());
-                if (referenceGenome.getFastaExpDataId() != null)
-                {
-                    model.setReferenceLibrary(referenceGenome.getFastaExpDataId());
-                }
-                else
-                {
-                    List<? extends ExpData> fastaDatas = run.getInputDatas(AlignmentInitTask.REFERENCE_DB_FASTA, null);
-                    if (fastaDatas.size() > 0)
-                    {
-                        for (ExpData d : fastaDatas)
-                        {
-                            if (d.getFile() == null)
-                            {
-                                job.getLogger().debug("No file found for ExpData: " + d.getRowId());
-                            }
-                            else if (d.getFile().exists())
-                            {
-                                model.setReferenceLibrary(d.getRowId());
-                                break;
-                            }
-                            else
-                            {
-                                job.getLogger().debug("File does not exist: " + d.getFile().getPath());
-                            }
-                        }
-                    }
-                }
+            //reference
+            ReferenceGenome referenceGenome = getPipelineJob().getTargetGenome();
+            if (referenceGenome == null)
+            {
+                throw new PipelineJobException("unable to find cached reference genome");
+            }
 
-                if (model.getReferenceLibrary() == null)
+            analysisModel.setLibraryId(referenceGenome.getGenomeId());
+            if (referenceGenome.getFastaExpDataId() != null)
+            {
+                analysisModel.setReferenceLibrary(referenceGenome.getFastaExpDataId());
+            }
+            else
+            {
+                List<? extends ExpData> fastaDatas = run.getInputDatas(AlignmentInitTask.REFERENCE_DB_FASTA, null);
+                if (fastaDatas.size() > 0)
                 {
-                    getJob().getLogger().error("Unable to find reference FASTA for run: " + run.getRowId());
-                    continue;
-                }
-
-                //input FASTQs
-                datas = run.getInputDatas(SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, ExpProtocol.ApplicationType.ProtocolApplication);
-                if (datas.size() > 0)
-                {
-                    for (ExpData d : datas)
+                    for (ExpData d : fastaDatas)
                     {
                         if (d.getFile() == null)
                         {
-                            getJob().getLogger().debug("No file found for data: " + d.getRowId() + " / run: " + run.getRowId());
-                            continue;
+                            job.getLogger().debug("No file found for ExpData: " + d.getRowId());
+                        }
+                        else if (d.getFile().exists())
+                        {
+                            analysisModel.setReferenceLibrary(d.getRowId());
+                            break;
+                        }
+                        else
+                        {
+                            job.getLogger().debug("File does not exist: " + d.getFile().getPath());
                         }
                     }
                 }
+            }
 
-                analysisModels.add(model);
+            if (analysisModel.getReferenceLibrary() == null)
+            {
+                throw new PipelineJobException("Unable to find reference FASTA for run: " + run.getRowId());
+            }
+
+            //input FASTQs
+            datas = run.getInputDatas(SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, ExpProtocol.ApplicationType.ProtocolApplication);
+            if (datas.size() > 0)
+            {
+                for (ExpData d : datas)
+                {
+                    if (d.getFile() == null)
+                    {
+                        getJob().getLogger().debug("No file found for data: " + d.getRowId() + " / run: " + run.getRowId());
+                    }
+                }
             }
         }
 
-        if (analysisModels.size() == 0)
+        if (analysisModel == null)
         {
             getJob().getLogger().info("No analyses were created");
         }
+        else
+        {
+            processAnalyses(analysisModel, runId, actions, taskHelper);
+        }
 
-        int i = 0;
+        //build map used next to import metrics
+        Map<Integer, Integer> readsetToAnalysisMap = new HashMap<>();
+        Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new HashMap<>();
+        readsetToAnalysisMap.put(analysisModel.getReadset(), analysisModel.getRowId());
+        typeMap.put(analysisModel.getReadset(), new HashMap<>());
+
+        typeMap.get(analysisModel.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.bam, analysisModel.getAlignmentFileObject());
+        typeMap.get(analysisModel.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.reads, analysisModel.getAlignmentFileObject());
+
+        taskHelper.getFileManager().createSequenceOutputRecords(analysisModel.getRowId());
+        taskHelper.getFileManager().writeMetricsToDb(readsetToAnalysisMap, typeMap);
+
+        return new RecordedActionSet();
+    }
+
+    private void processAnalyses(AnalysisModelImpl analysisModel, int runId, List<RecordedAction> actions, SequenceTaskHelper taskHelper) throws PipelineJobException
+    {
         List<AnalysisStep.Output> outputs = new ArrayList<>();
         List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
         if (providers.isEmpty())
@@ -242,70 +275,52 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             getJob().getLogger().info("no analyses were selected");
         }
 
-        Map<Integer, Integer> readsetToAnalysisMap = new HashMap<>();
-        Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new HashMap<>();
-        for (AnalysisModelImpl model : analysisModels)
+        getJob().getLogger().info("processing BAM " + analysisModel.getRowId());
+
+        File bam = ExperimentService.get().getExpData(analysisModel.getAlignmentFile()).getFile();
+        if (bam == null)
         {
-            i++;
-            getJob().getLogger().info("processing BAM " + i + " of " + analysisModels.size());
-
-            File bam = ExperimentService.get().getExpData(model.getAlignmentFile()).getFile();
-            if (bam == null)
-            {
-                getJob().getLogger().error("unable to find BAM, skipping");
-                continue;
-            }
-
-            File refDB = ExperimentService.get().getExpData(model.getReferenceLibrary()).getFile();
-            if (refDB == null)
-            {
-                getJob().getLogger().error("unable to find reference fasta, skipping");
-                continue;
-            }
-
-            getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
-            TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
-            Table.insert(getJob().getUser(), ti, model);
-
-            SequenceOutputFile so = new SequenceOutputFile();
-            so.setName(bam.getName());
-            so.setCategory("Alignment");
-            so.setAnalysis_id(model.getAnalysisId());
-            so.setReadset(model.getReadset());
-            so.setLibrary_id(model.getLibrary_Id());
-            ExpData d = ExperimentService.get().getExpDataByURL(bam, getJob().getContainer());
-            if (d == null)
-            {
-                getJob().getLogger().info("creating ExpData for file: " + bam.getPath());
-
-                d = ExperimentService.get().createData(getJob().getContainer(), new DataType("Alignment"));
-                d.setDataFileURI(bam.toURI());
-                d.setName(bam.getName());
-                d.save(getJob().getUser());
-            }
-            so.setDataId(d.getRowId());
-            so.setContainer(getJob().getContainerId());
-            so.setRunId(runId);
-
-            Table.insert(getJob().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), so);
-
-            if (!providers.isEmpty())
-            {
-                outputs.addAll(runAnalysesLocal(actions, model, bam, refDB, providers, taskHelper, bam.getParentFile()));
-            }
-
-            //build map used next to import metrics
-            readsetToAnalysisMap.put(model.getReadset(), model.getRowId());
-            typeMap.put(model.getReadset(), new HashMap<>());
-
-            typeMap.get(model.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.bam, model.getAlignmentFileObject());
-            typeMap.get(model.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.reads, model.getAlignmentFileObject());
+            getJob().getLogger().error("unable to find BAM, skipping");
+            return;
         }
 
-        taskHelper.getFileManager().createSequenceOutputRecords();
-        taskHelper.getFileManager().writeMetricsToDb(readsetToAnalysisMap, typeMap);
+        File refDB = ExperimentService.get().getExpData(analysisModel.getReferenceLibrary()).getFile();
+        if (refDB == null)
+        {
+            getJob().getLogger().error("unable to find reference fasta, skipping");
+            return;
+        }
 
-        return new RecordedActionSet();
+        getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
+        TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
+        Table.insert(getJob().getUser(), ti, analysisModel);
+
+        SequenceOutputFile so = new SequenceOutputFile();
+        so.setName(bam.getName());
+        so.setCategory("Alignment");
+        so.setAnalysis_id(analysisModel.getAnalysisId());
+        so.setReadset(analysisModel.getReadset());
+        so.setLibrary_id(analysisModel.getLibrary_Id());
+        ExpData d = ExperimentService.get().getExpDataByURL(bam, getJob().getContainer());
+        if (d == null)
+        {
+            getJob().getLogger().info("creating ExpData for file: " + bam.getPath());
+
+            d = ExperimentService.get().createData(getJob().getContainer(), new DataType("Alignment"));
+            d.setDataFileURI(bam.toURI());
+            d.setName(bam.getName());
+            d.save(getJob().getUser());
+        }
+        so.setDataId(d.getRowId());
+        so.setContainer(getJob().getContainerId());
+        so.setRunId(runId);
+
+        Table.insert(getJob().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), so);
+
+        if (!providers.isEmpty())
+        {
+            outputs.addAll(runAnalysesLocal(actions, analysisModel, bam, refDB, providers, taskHelper, bam.getParentFile()));
+        }
     }
 
     public static List<AnalysisStep.Output> runAnalysesLocal(List<RecordedAction> actions, AnalysisModel model, File inputBam, File refFasta, List<PipelineStepProvider<AnalysisStep>> providers, SequenceTaskHelper taskHelper, File outDir) throws PipelineJobException

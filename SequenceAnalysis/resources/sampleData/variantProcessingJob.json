@@ -1,0 +1,19 @@
+{
+  "jobName": null,
+  "deleteIntermediateFiles": true,
+  "variantProcessing.VariantFiltrationStep.clusterSize": null,
+  "variantProcessing.VariantFiltrationStep.clusterWindowSize": null,
+  "variantProcessing.SelectVariantsStep.excludeNonVariant": false,
+  "version": 2,
+  "variantProcessing": "GenotypeFiltrationStep;SelectVariantsStep;VariantAnnotatorStep;VariantFiltrationStep",
+  "variantProcessing.SelectVariantsStep.selectType": ["SNP"],
+  "variantProcessing.SelectVariantsStep.excludeFiltered": false,
+  "variantProcessing.GenotypeFiltrationStep.setFilteredGtToNocall": true,
+  "variantProcessing.GenotypeFiltrationStep.filters": [[
+    "DP-LTE5",
+    " DP <= 5"
+  ]],
+  "variantProcessing.VariantFiltrationStep.filters": null,
+  "jobDescription": "",
+  "variantProcessing.SelectVariantsStep.selectTypeToExclude": []
+}

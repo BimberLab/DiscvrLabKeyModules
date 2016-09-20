@@ -30,7 +30,7 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
                 border: false
             },
             items: [{
-                html: 'This will update the status for the readsets associated with the analyses selected.',
+                html: 'This will update the status for the readsets associated with the ' + this.checked.length + ' analyses selected.',
                 style: 'padding-bottom: 10px;'
             },{
                 xtype: 'labkey-combo',
@@ -104,7 +104,7 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
                     toUpdate.push({
                         rowid: tokens[0],
                         container: tokens[1],
-                        status: status
+                        status: status || null
                     });
                 }, this);
 
@@ -118,6 +118,11 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
                         failure: LDK.Utils.getErrorCallback(),
                         success: function (results) {
                             Ext4.Msg.hide();
+
+                            if (this.dataRegionName){
+                                LABKEY.DataRegions[this.dataRegionName].clearSelected();
+                            }
+
                             Ext4.Msg.alert('Success', 'Readsets updated', function () {
                                 window.location.reload();
                             });

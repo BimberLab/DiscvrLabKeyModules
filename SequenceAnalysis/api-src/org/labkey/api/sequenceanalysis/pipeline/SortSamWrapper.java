@@ -1,4 +1,4 @@
-package org.labkey.sequenceanalysis.run.util;
+package org.labkey.api.sequenceanalysis.pipeline;
 
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
@@ -61,18 +61,21 @@ public class SortSamWrapper extends PicardWrapper
         {
             try
             {
+                getLogger().debug("replacing original BAM with sorted: " + order.name());
                 inputFile.delete();
                 FileUtils.moveFile(outputBam, inputFile);
 
                 //note: if there is a pre-existing index, we need to delete this since it is out of date
-                File idx = new File(inputFile.getPath() + ".bai");
-                if (idx.exists())
+                File expectedIndex = new File(inputFile.getPath() + ".bai");
+                if (expectedIndex.exists())
                 {
-                    getLogger().debug("deleting/recreating BAM index");
-                    idx.delete();
-                    BuildBamIndexWrapper buildBamIndexWrapper = new BuildBamIndexWrapper(getLogger());
-                    buildBamIndexWrapper.setStringency(ValidationStringency.SILENT);
-                    buildBamIndexWrapper.executeCommand(inputFile);
+                    getLogger().info("deleting out of date index: " + expectedIndex.getPath());
+                    expectedIndex.delete();
+                }
+
+                if (SAMFileHeader.SortOrder.coordinate == order)
+                {
+                    SequencePipelineService.get().ensureBamIndex(inputFile, getLogger(), true);
                 }
 
                 getLogger().info("\tSortSam duration: " + DurationFormatUtils.formatDurationWords((new Date()).getTime() - start.getTime(), true, true));

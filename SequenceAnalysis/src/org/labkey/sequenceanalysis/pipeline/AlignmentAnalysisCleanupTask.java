@@ -5,10 +5,10 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
-import org.labkey.api.util.FileType;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.util.FileType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,10 +67,15 @@ public class AlignmentAnalysisCleanupTask extends WorkDirectoryTask<AlignmentAna
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
-        SequenceTaskHelper taskHelper = new SequenceTaskHelper(getJob(), _wd);
+        SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
-        taskHelper.getFileManager().createSequenceOutputRecords();
+        taskHelper.getFileManager().createSequenceOutputRecords(getPipelineJob().getAnalyisId());
 
         return new RecordedActionSet();
-    }    
+    }
+
+    private AlignmentAnalysisJob getPipelineJob()
+    {
+        return (AlignmentAnalysisJob)getJob();
+    }
 }

@@ -67,17 +67,22 @@ Ext4.define('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
         var saveGlobally = this.down('#saveGloballyField').getValue();
         var json = this.sequencePanel.getJsonParams(true);
         delete json.protocolName;
-        delete json.protocolDesription;
+        delete json.protocolDescription;
+        delete json.jobName;
+        delete json.jobDescription;
+        delete json.readsetIds;
+        delete json.analysisIds;
+        delete json.fileGroups;
         for (var key in json) {
             if (key.match(/^readset_/) || key.match(/^sample_/)) {
                 delete json[key];
             }
         }
 
-        LDK.Assert.assertNotEmpty('unable to find taskid when saving template', this.sequencePanel.taskId);
+        LDK.Assert.assertNotEmpty('unable to find jobType when saving template', this.sequencePanel.jobType);
 
         var params = {
-            taskId: this.sequencePanel.taskId,
+            taskId: this.sequencePanel.jobType,
             name: name,
             description: description,
             json: Ext4.encode(json)
@@ -92,7 +97,7 @@ Ext4.define('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
             sort: 'name',
             filterArray: [
                 LABKEY.Filter.create('name', name),
-                LABKEY.Filter.create('taskid', this.sequencePanel.taskId)
+                LABKEY.Filter.create('taskid', this.sequencePanel.jobType)
             ],
             scope: this,
             failure: LDK.Utils.getErrorCallback(),

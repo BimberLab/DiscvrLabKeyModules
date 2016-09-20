@@ -27,12 +27,15 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileType;
@@ -48,13 +51,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -900,7 +903,7 @@ public class JBrowseRoot
 
         outDir.mkdirs();
 
-        JSONObject ret = processFlatFile(c, aaFeaturesOutFile, outDir, "--gff", featureName, "Coding Regions", null, "Reference Annotations", "JBrowse/View/Track/CanvasFeatures");
+        JSONObject ret = processFlatFile(c, aaFeaturesOutFile, outDir, "--gff", featureName, "Coding Regions", null, "Reference Annotations", "JBrowse/View/Track/CanvasFeatures", null);
 
         //move file, so name parsing works properly
         File source = new File(databaseTrackDir, "tmpTrackDir/data/tracks/" + featureName);
@@ -957,7 +960,7 @@ public class JBrowseRoot
 
         outDir.mkdirs();
 
-        JSONObject ret = processFlatFile(c, aaFeaturesOutFile, outDir, "--gff", featureName, "Coding Regions", null, "Reference Annotations", "JBrowse/View/Track/CanvasFeatures");
+        JSONObject ret = processFlatFile(c, aaFeaturesOutFile, outDir, "--gff", featureName, "Coding Regions", null, "Reference Annotations", "JBrowse/View/Track/CanvasFeatures", null);
 
         //move file, so name parsing works properly
         File source = new File(databaseTrackDir, "tmpTrackDir/data/tracks/" + featureName);
@@ -1137,6 +1140,31 @@ public class JBrowseRoot
         return jsonFile;
     }
 
+    private File convertGtfToGff(File gtf, File gff)
+    {
+        getLogger().info("attempting to convert GTF to GFF: " + gtf.getName());
+        File gffread = SequencePipelineService.get().getExeForPackage("GFFREADPATH", "gffread");
+        if (gffread == null || !gffread.exists())
+        {
+            getLogger().warn("unable to find gffread");
+            return null;
+        }
+
+        try
+        {
+            SimpleScriptWrapper wrapper = new SimpleScriptWrapper(getLogger());
+            wrapper.execute(Arrays.asList(gffread.getPath(), gtf.getPath(), "-E", "-F", "-o", gff.getPath()));
+
+            return gff;
+        }
+        catch (PipelineJobException e)
+        {
+            getLogger().error(e.getMessage(), e);
+        }
+
+        return null;
+    }
+
     private List<JSONObject> processFile(ExpData data, File outDir, String featureName, String featureLabel, Map<String, Object> metadata, String category, @Nullable ExpData refGenomeData) throws IOException
     {
         FileType bamType = new FileType("bam", FileType.gzSupportLevel.NO_GZ);
@@ -1146,19 +1174,34 @@ public class JBrowseRoot
         String ext = FileUtil.getExtension(data.getFile());
         if ("gff3".equalsIgnoreCase(ext) || "gff".equalsIgnoreCase(ext) || "gtf".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--gff", featureName, featureLabel, metadata, category, "JBrowse/View/Track/CanvasFeatures");
+            File temp = null;
+            Set<String> nameAttrs = new HashSet<>();
+            if ("gtf".equalsIgnoreCase(ext))
+            {
+                getLogger().info("converting GTF to GFF");
+                temp = convertGtfToGff(data.getFile(), File.createTempFile("temp", ".gff"));
+                nameAttrs.add("gene_name");
+            }
+
+            JSONObject ret = processFlatFile(data.getContainer(), (temp == null ? data.getFile() : temp), outDir, "--gff", featureName, featureLabel, metadata, category, "JBrowse/View/Track/CanvasFeatures", nameAttrs);
             writeTrackList(outDir, ret);
+
+            if (temp != null)
+            {
+                temp.delete();
+            }
+
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("bed".equalsIgnoreCase(ext) || "bedgraph".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--bed", featureName, featureLabel, metadata, category, null);
+            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--bed", featureName, featureLabel, metadata, category, null, null);
             writeTrackList(outDir, ret);
             return ret == null ? null : Arrays.asList(ret);
         }
         else if ("gbk".equalsIgnoreCase(ext))
         {
-            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--gbk", featureName, featureLabel, metadata, category, null);
+            JSONObject ret = processFlatFile(data.getContainer(), data.getFile(), outDir, "--gbk", featureName, featureLabel, metadata, category, null, null);
             writeTrackList(outDir, ret);
             return ret == null ? null : Arrays.asList(ret);
         }
@@ -1393,7 +1436,7 @@ public class JBrowseRoot
         return o;
     }
 
-    private JSONObject processFlatFile(Container c, File inputFile, File outDir, String typeArg, String featureName, String featureLabel, Map<String, Object> metadata, String category, String trackType) throws IOException
+    private JSONObject processFlatFile(Container c, File inputFile, File outDir, String typeArg, String featureName, String featureLabel, Map<String, Object> metadata, String category, String trackType, Collection<String> nameAttributes) throws IOException
     {
         List<String> args = new ArrayList<>();
 
@@ -1412,8 +1455,17 @@ public class JBrowseRoot
             args.add("--compress");
         }
 
-        //TODO: conider adding this option
-        //"--nameAttributes"
+        if (nameAttributes != null && !nameAttributes.isEmpty())
+        {
+            args.add("--nameAttributes");
+            Set<String> attrs = new HashSet<>();
+            attrs.add("name");
+            attrs.add("alias");
+            attrs.add("id");
+            attrs.addAll(nameAttributes);
+
+            args.add(StringUtils.join(nameAttributes, ","));
+        }
 
         //to avoid issues w/ perl and escaping characters, just set the working directory to the output folder
         //args.add("--out");

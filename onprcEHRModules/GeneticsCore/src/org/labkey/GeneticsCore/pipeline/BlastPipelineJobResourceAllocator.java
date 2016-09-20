@@ -4,6 +4,7 @@ import org.labkey.api.htcondorconnector.HTCondorJobResourceAllocator;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.TaskId;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -11,10 +12,19 @@ import java.util.List;
  */
 public class BlastPipelineJobResourceAllocator implements HTCondorJobResourceAllocator
 {
-    @Override
-    public Integer getPriority(TaskId taskId)
+    public static class Factory implements HTCondorJobResourceAllocator.Factory
     {
-        return (taskId.getNamespaceClass() != null && taskId.getNamespaceClass().getName().equals("org.labkey.blast.pipeline.BlastWorkTask"))  ? 50 : null;
+        @Override
+        public HTCondorJobResourceAllocator getAllocator()
+        {
+            return new BlastPipelineJobResourceAllocator();
+        }
+
+        @Override
+        public Integer getPriority(TaskId taskId)
+        {
+            return (taskId.getNamespaceClass() != null && taskId.getNamespaceClass().getName().equals("org.labkey.blast.pipeline.BlastWorkTask"))  ? 50 : null;
+        }
     }
 
     @Override
@@ -26,12 +36,13 @@ public class BlastPipelineJobResourceAllocator implements HTCondorJobResourceAll
     @Override
     public Integer getMaxRequestMemory(PipelineJob job)
     {
-        return null;
+        return 24;
     }
 
     @Override
     public List<String> getExtraSubmitScriptLines(PipelineJob job)
     {
-        return null;
+        //force BLAST jobs to top of queue, since we assume these run quickly
+        return Collections.singletonList("+JobPrio = 5");
     }
 }

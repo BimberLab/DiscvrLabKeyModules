@@ -19,7 +19,6 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
-import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -87,9 +86,14 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
         return new RecordedActionSet();
     }
 
+    private AlignmentImportJob getPipelineJob()
+    {
+        return (AlignmentImportJob)getJob();
+    }
+
     private List<AnalysisModel> parseAndCreateAnalyses() throws PipelineJobException
     {
-        SequenceTaskHelper taskHelper = new SequenceTaskHelper(getJob(), _wd);
+        SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
         //find moved BAM files and build map
         Map<String, ExpData> bamMap = new HashMap<>();
@@ -115,7 +119,7 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
             TableInfo outputFiles = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
 
             List<AnalysisModel> ret = new ArrayList<>();
-            List<Readset> readsets = getJob().getJobSupport(SequenceAnalysisJobSupport.class).getCachedReadsets();
+            List<Readset> readsets = getPipelineJob().getSequenceSupport().getCachedReadsets();
 
             Map<String, String> params = getJob().getParameters();
             int idx = 0;

@@ -14,11 +14,10 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
-import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 
 import java.io.File;
 import java.util.Date;
@@ -48,7 +47,7 @@ public class AnalysisModelImpl implements AnalysisModel
 
     }
 
-    public static AnalysisModel getFromDb(int analysisId, User u)
+    public static AnalysisModelImpl getFromDb(int analysisId, User u)
     {
         if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
         {
@@ -58,11 +57,11 @@ public class AnalysisModelImpl implements AnalysisModel
         TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), analysisId);
         TableSelector ts = new TableSelector(ti, filter, null);
-        AnalysisModel[] rows = ts.getArray(AnalysisModelImpl.class);
+        AnalysisModelImpl[] rows = ts.getArray(AnalysisModelImpl.class);
         if (rows.length != 1)
             throw new RuntimeException("Unable to find analysis: " + analysisId);
 
-        AnalysisModel model = rows[0];
+        AnalysisModelImpl model = rows[0];
         Container c = ContainerManager.getForId(model.getContainer());
         if (!c.hasPermission(u, ReadPermission.class))
             throw new UnauthorizedException("User : " + analysisId);

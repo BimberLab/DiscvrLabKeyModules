@@ -53,8 +53,8 @@ public class GeneticsTableCustomizer extends AbstractTableCustomizer implements 
 
             //total reads
             SQLFragment sql2 = new SQLFragment("(select SUM(a.total) from sequenceanalysis.alignment_summary a WHERE a.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
-            ExprColumn newCol2 = new ExprColumn(ti, "totalReads", sql2, JdbcType.INTEGER, ti.getColumn("rowid"));
-            newCol2.setLabel("Total Reads");
+            ExprColumn newCol2 = new ExprColumn(ti, "totalSbtReads", sql2, JdbcType.INTEGER, ti.getColumn("rowid"));
+            newCol2.setLabel("Total SBT Reads");
             ti.addColumn(newCol2);
 
             //pct unmapped
@@ -63,6 +63,12 @@ public class GeneticsTableCustomizer extends AbstractTableCustomizer implements 
             newCol3.setLabel("% Unmapped Reads");
             newCol3.setFormat("#.##%");
             ti.addColumn(newCol3);
+
+            //# disabled
+            SQLFragment sql4 = new SQLFragment("(select count(*) as expr from sequenceanalysis.alignment_summary_junction j WHERE j.status = 0 AND j.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol4 = new ExprColumn(ti, "numReadsDisabled", sql4, JdbcType.INTEGER, ti.getColumn("rowid"));
+            newCol.setLabel("# Allele Calls Disabled");
+            ti.addColumn(newCol4);
         }
 
         addAssayFieldsToAnalyses(ti);

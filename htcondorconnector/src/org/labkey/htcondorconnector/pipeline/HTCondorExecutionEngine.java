@@ -267,9 +267,10 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
 
                 if (job.getActiveTaskId() != null)
                 {
-                    HTCondorJobResourceAllocator allocator = HTCondorServiceImpl.get().getAllocator(job.getActiveTaskId());
-                    if (allocator != null)
+                    HTCondorJobResourceAllocator.Factory allocatorFact = HTCondorServiceImpl.get().getAllocator(job.getActiveTaskId());
+                    if (allocatorFact != null)
                     {
+                        HTCondorJobResourceAllocator allocator = allocatorFact.getAllocator();
                         job.getLogger().debug("using resource allocator: " + allocator.getClass().getName());
                         maxCpus = allocator.getMaxRequestCpus(job);
                         maxRam = allocator.getMaxRequestMemory(job);
@@ -277,15 +278,17 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
                     }
                 }
 
+                Integer cpus = null;
                 if (getConfig().getRequestCpus() != null)
                 {
-                    Integer cpus = maxCpus != null ? Math.min(maxCpus, getConfig().getRequestCpus()) : getConfig().getRequestCpus();
+                    cpus = maxCpus != null ? Math.min(maxCpus, getConfig().getRequestCpus()) : getConfig().getRequestCpus();
                     writer.write("request_cpus = " + cpus + "\n");
                 }
 
+                Integer ram = null;
                 if (getConfig().getRequestMemory() != null)
                 {
-                    Integer ram = maxRam != null ? Math.min(maxRam, getConfig().getRequestMemory()) : getConfig().getRequestMemory();
+                    ram = maxRam != null ? Math.min(maxRam, getConfig().getRequestMemory()) : getConfig().getRequestMemory();
                     writer.write("request_memory = " + ram + " GB\n");
                 }
 
@@ -296,7 +299,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
                     {
                         suffix += " " + StringUtils.join(getConfig().getEnvironmentVars(), " ");
                     }
-                    writer.write("environment = \"JAVA_HOME=\"\"" + StringUtils.trimToNull(getConfig().getJavaHome()) + "\"\"" + (suffix) +"\"\n");
+                    writer.write("environment = \"" + (cpus == null ? "" : "SEQUENCEANALYSIS_MAX_THREADS=" + cpus + " ") + (ram == null ? "" : "SEQUENCEANALYSIS_MAX_RAM=" + ram + " ") + "JAVA_HOME='" + StringUtils.trimToNull(getConfig().getJavaHome()) + "'" + (suffix) +"\"\n");
                 }
                 writer.write("getenv = True\n");
 
@@ -793,7 +796,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
             }
             else
             {
-                _log.error("unable to find statusfile for job: " + j.getCondorId());
+                _log.error("unable to find statusfile for job: " + j.getCondorId() + ", status: " + j.getStatus());
             }
 
             Table.update(null, HTCondorConnectorSchema.getInstance().getSchema().getTable(HTCondorConnectorSchema.CONDOR_JOBS), j, j.getRowId());

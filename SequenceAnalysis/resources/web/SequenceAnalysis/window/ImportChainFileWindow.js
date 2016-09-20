@@ -39,6 +39,7 @@ Ext4.define('SequenceAnalysis.window.ImportChainFileWindow', {
                     containerPath: Laboratory.Utils.getQueryContainerPath(),
                     schemaName: 'sequenceanalysis',
                     queryName: 'reference_libraries',
+                    filterArray: [LABKEY.Filter.create('datedisabled', null, LABKEY.Filter.Types.ISBLANK)],
                     displayField: 'name',
                     valueField: 'rowid',
                     value: LABKEY.ActionURL.getParameter('libraryId') ? parseInt(LABKEY.ActionURL.getParameter('libraryId')) : null
@@ -49,6 +50,7 @@ Ext4.define('SequenceAnalysis.window.ImportChainFileWindow', {
                     containerPath: Laboratory.Utils.getQueryContainerPath(),
                     schemaName: 'sequenceanalysis',
                     queryName: 'reference_libraries',
+                    filterArray: [LABKEY.Filter.create('datedisabled', null, LABKEY.Filter.Types.ISBLANK)],
                     displayField: 'name',
                     valueField: 'rowid'
                 },{

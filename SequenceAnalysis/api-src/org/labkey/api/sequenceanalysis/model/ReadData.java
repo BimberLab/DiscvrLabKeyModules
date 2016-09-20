@@ -15,6 +15,7 @@
  */
 package org.labkey.api.sequenceanalysis.model;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -36,6 +37,10 @@ public interface ReadData extends Serializable
     public Integer getFileId1();
 
     public Integer getFileId2();
+
+    public File getFile1();
+
+    public File getFile2();
 
     public String getDescription();
 

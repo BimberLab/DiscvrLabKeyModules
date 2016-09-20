@@ -19,14 +19,17 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.ConvertHelper;
-import org.labkey.api.exp.PropertyType;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
+import org.labkey.api.pipeline.WorkDirFactory;
+import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.model.ReadData;
@@ -45,7 +48,6 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.Pair;
-import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
@@ -62,12 +64,24 @@ import org.labkey.sequenceanalysis.run.util.MergeSamFilesWrapper;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
+import java.beans.Encoder;
+import java.beans.Expression;
+import java.beans.PersistenceDelegate;
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +116,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
     private static final String COPY_INPUTS_ACTIONNAME = "Copying Inputs";
 
     private SequenceTaskHelper _taskHelper;
+    private Resumer _resumer;
 
     protected SequenceAlignmentTask(Factory factory, PipelineJob job)
     {
@@ -164,6 +179,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
 
         @Override
+        public WorkDirectory createWorkDirectory(String jobGUID, FileAnalysisJobSupport jobSupport, Logger logger) throws IOException
+        {
+            WorkDirFactory factory = PipelineJobService.get().getWorkDirFactory();
+
+            return factory.createWorkDirectory(jobGUID, jobSupport, true, logger);
+        }
+
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             FileAnalysisJobSupport support = (FileAnalysisJobSupport) job;
@@ -186,105 +209,46 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
     @Override
     public RecordedActionSet run() throws PipelineJobException
     {
-        _taskHelper = new SequenceTaskHelper(getJob(), _wd);
-
         getJob().getLogger().info("Starting alignment");
-        getHelper().logModuleVersions();
-        List<RecordedAction> actions = new ArrayList<>();
+        SequenceTaskHelper.logModuleVersions(getJob().getLogger());
 
-        //debugging only
-        //logEnvironment();
+        _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
+        _resumer = Resumer.create(getPipelineJob(), this);
+        if (_resumer.isResume())
+        {
+            getJob().getLogger().info("resuming previous job");
+            if (_resumer.getFileManager() == null)
+            {
+                throw new PipelineJobException("fileManager is null for resumed job");
+            }
+
+            _taskHelper.setFileManager(_resumer.getFileManager());
+        }
 
         try
         {
+            SequenceReadsetImpl rs = getPipelineJob().getReadset();
+            copyReferenceResources();
+
             //then we preprocess FASTQ files, if needed
-            List<SequenceReadsetImpl> readsets = getPipelineJob().getCachedReadsetModels();
-            if (!readsets.isEmpty())
+            Map<ReadData, Pair<File, File>> toAlign = performFastqPreprocessing(rs);
+
+            if (SequenceTaskHelper.isAlignmentUsed(getJob()))
             {
-                ReferenceGenome referenceGenome = getHelper().getSequenceSupport().getReferenceGenome();
-                copyReferenceResources(actions);
-
-                getJob().getLogger().debug("there are a total of " + readsets.size() + " readets passed to this task");
-                if (getPipelineJob().getReadsetIdToProcesss() != null)
-                {
-                    getJob().getLogger().debug("readsets to process: " + getPipelineJob().getReadsetIdToProcesss().toString());
-                }
-
-                for (SequenceReadsetImpl rs : readsets)
-                {
-                    //NOTE: because these jobs can be split, we only process the readsets we chose to include
-                    if (getPipelineJob().getReadsetIdToProcesss() != null && !getPipelineJob().getReadsetIdToProcesss().contains(rs.getReadsetId()))
-                    {
-                        continue;
-                    }
-
-                    String outputBasename = rs.getLegalFileName();
-                    getJob().getLogger().info("starting readset: " + rs.getName());
-                    getJob().getLogger().info("\ttotal file pairs: " + rs.getReadData().size());
-
-                    Map<ReadDataImpl, Pair<File, File>> toAlign = new LinkedHashMap<>();
-                    int i = 0;
-                    for (ReadDataImpl d : rs.getReadData())
-                    {
-                        i++;
-                        String suffix = " (set " + i + " of " + rs.getReadData().size() + ")";
-
-                        getJob().getLogger().info("\tstarting files: " + d.getFile1().getName() + (d.getFile2() == null ? "" : " and " + d.getFile2().getName()));
-                        Pair<File, File> pair = Pair.of(d.getFile1(), d.getFile2());
-
-                        //copy to work dir
-                        if (getHelper().getFileManager().isCopyInputsLocally())
-                        {
-                            getJob().getLogger().info("copying files to work directory");
-                            getJob().setStatus(PipelineJob.TaskStatus.running, "Copying Files to Work Directory: " + suffix);
-
-                            RecordedAction copyAction = new RecordedAction(COPY_INPUTS_ACTIONNAME);
-                            actions.add(copyAction);
-                            File target = new File(getHelper().getWorkingDirectory(), pair.first.getName());
-                            target = _wd.inputFile(pair.first, target, false);
-                            getHelper().getFileManager().addInput(copyAction, "Input FASTQ", pair.first);
-                            getHelper().getFileManager().addOutput(copyAction, "Copied FASTQ", target);
-                            pair.first = target;
-
-                            if (pair.second != null)
-                            {
-                                File target2 = new File(getHelper().getWorkingDirectory(), pair.second.getName());
-                                target2 = _wd.inputFile(pair.second, target2, false);
-                                getHelper().getFileManager().addInput(copyAction, "Input FASTQ", pair.second);
-                                getHelper().getFileManager().addOutput(copyAction, "Copied FASTQ", target2);
-                                pair.second = target2;
-                            }
-                            getJob().getLogger().info("copy done");
-                        }
-                        else
-                        {
-                            getJob().getLogger().debug("Will not copy inputs to working directory");
-                        }
-
-                        pair = preprocessFastq(pair.first, pair.second, actions, suffix);
-                        toAlign.put(d, pair);
-                    }
-
-                    if (SequenceTaskHelper.isAlignmentUsed(getJob()))
-                    {
-                        getJob().getLogger().info("Preparing to perform alignment");
-                        alignSet(rs, outputBasename, toAlign, actions, referenceGenome);
-                    }
-                    else
-                    {
-                        getJob().getLogger().info("Alignment not selected, skipping");
-                    }
-                }
-
-                //NOTE: we set this back to NULL, so subsequent steps will continue to use the local copy
-                if (referenceGenome != null)
-                {
-                    referenceGenome.setWorkingFasta(null);
-                }
+                getJob().getLogger().info("Preparing to perform alignment");
+                ReferenceGenome referenceGenome = getPipelineJob().getTargetGenome();
+                String outputBasename = rs.getLegalFileName();
+                alignSet(rs, outputBasename, toAlign, referenceGenome);
             }
             else
             {
-                throw new PipelineJobException("There are no readsets to align");
+                getJob().getLogger().info("Alignment not selected, skipping");
+            }
+
+            //NOTE: we set this back to NULL, so subsequent steps will continue to use the local copy
+            if (getPipelineJob().getTargetGenome() != null)
+            {
+                getPipelineJob().getTargetGenome().setWorkingFasta(null);
             }
 
             //remove unzipped files
@@ -292,22 +256,15 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             getHelper().getFileManager().processUnzippedInputs();
             getHelper().getFileManager().deleteIntermediateFiles();
             getHelper().getFileManager().deleteDeferredIntermediateFiles();
-            getHelper().getFileManager().cleanup();
-
-            if (getHelper().getSettings().isDebugMode())
-            {
-                for (RecordedAction a : actions)
-                {
-                    getJob().getLogger().debug(a.getName() + "/" + a.getInputs().size() + "/" + a.getOutputs().size());
-                }
-            }
+            getHelper().getFileManager().cleanup(_resumer.getRecordedActionSet().getActions());
+            _resumer.markComplete();
         }
         catch (IOException e)
         {
             throw new PipelineJobException(e);
         }
 
-        return new RecordedActionSet(actions);
+        return new RecordedActionSet(_resumer.getRecordedActionSet());
     }
 
     private void logEnvironment() throws PipelineJobException
@@ -321,25 +278,104 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
     }
 
-    private SequenceAnalysisJob getPipelineJob()
+    private Map<ReadData, Pair<File, File>> performFastqPreprocessing(SequenceReadsetImpl rs) throws IOException, PipelineJobException
     {
-        return (SequenceAnalysisJob)getJob();
+        if (_resumer.isFastqPreprocessingDone())
+        {
+            getJob().getLogger().info("resuming FASTQ preprocessing from saved state");
+            return _resumer.getFilesToAlign();
+        }
+
+        getJob().getLogger().info("starting readset: " + rs.getName());
+        getJob().getLogger().info("\ttotal file pairs: " + rs.getReadData().size());
+        List<RecordedAction> preprocessingActions = new ArrayList<>();
+        Map<File, File> copiedInputs = new HashMap<>();
+
+        Map<ReadData, Pair<File, File>> toAlign = new LinkedHashMap<>();
+        int i = 0;
+        for (ReadData d : rs.getReadData())
+        {
+            i++;
+            String suffix = " (set " + i + " of " + rs.getReadData().size() + ")";
+
+            getJob().getLogger().info("\tstarting files: " + d.getFile1().getName() + (d.getFile2() == null ? "" : " and " + d.getFile2().getName()));
+            Pair<File, File> pair = Pair.of(d.getFile1(), d.getFile2());
+
+            //copy to work dir
+            if (getHelper().getFileManager().isCopyInputsLocally())
+            {
+                getJob().getLogger().info("copying files to work directory");
+                getJob().setStatus(PipelineJob.TaskStatus.running, "Copying Files to Work Directory: " + suffix);
+
+                RecordedAction copyAction = new RecordedAction(COPY_INPUTS_ACTIONNAME);
+                preprocessingActions.add(copyAction);
+                File target = new File(getHelper().getWorkingDirectory(), pair.first.getName());
+
+                target = _wd.inputFile(pair.first, target, false);
+                copiedInputs.put(pair.first, target);
+                getHelper().getFileManager().addInput(copyAction, "Input FASTQ", pair.first);
+                getHelper().getFileManager().addOutput(copyAction, "Copied FASTQ", target);
+                pair.first = target;
+
+                if (pair.second != null)
+                {
+                    File target2 = new File(getHelper().getWorkingDirectory(), pair.second.getName());
+                    target2 = _wd.inputFile(pair.second, target2, false);
+                    copiedInputs.put(pair.second, target2);
+                    getHelper().getFileManager().addInput(copyAction, "Input FASTQ", pair.second);
+                    getHelper().getFileManager().addOutput(copyAction, "Copied FASTQ", target2);
+                    pair.second = target2;
+                }
+                getJob().getLogger().info("copy done");
+            }
+            else
+            {
+                getJob().getLogger().debug("Will not copy inputs to working directory");
+            }
+
+            pair = preprocessFastq(pair.first, pair.second, preprocessingActions, suffix);
+            toAlign.put(d, pair);
+        }
+
+        _resumer.setFastqPreprocessingDone(toAlign, preprocessingActions, copiedInputs);
+
+        return toAlign;
     }
 
-    private void copyReferenceResources(List<RecordedAction> actions) throws PipelineJobException
+    private SequenceAlignmentJob getPipelineJob()
+    {
+        return (SequenceAlignmentJob)getJob();
+    }
+
+    private void copyReferenceResources() throws PipelineJobException
     {
         if (!SequenceTaskHelper.isAlignmentUsed(getJob()))
         {
             return;
         }
 
-        getJob().setStatus(PipelineJob.TaskStatus.running, "COPYING REFERENCE LIBRARY");
-        getJob().getLogger().info("copying reference library files");
-        ReferenceGenome referenceGenome = getHelper().getSequenceSupport().getReferenceGenome();
+        ReferenceGenome referenceGenome = getPipelineJob().getTargetGenome();
         if (referenceGenome == null)
         {
             throw new PipelineJobException("No reference genome was cached prior to preparing aligned indexes");
         }
+
+        if (_resumer.hasCopiedResources())
+        {
+            getJob().getLogger().info("copy reference resources already performed, skipping");
+            if (!referenceGenome.getSourceFastaFile().equals(_resumer.getWorkingFasta()))
+            {
+                referenceGenome.setWorkingFasta(_resumer.getWorkingFasta());
+            }
+
+            return;
+        }
+
+        List<RecordedAction> actions = new ArrayList<>();
+        Map<File, File> copiedInputs = new HashMap<>();
+
+        getJob().setStatus(PipelineJob.TaskStatus.running, "COPYING REFERENCE LIBRARY");
+        getJob().getLogger().info("Potentially copying reference library files");
 
         File refFasta = referenceGenome.getSourceFastaFile();
         if (!refFasta.exists())
@@ -384,7 +420,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     {
                         getJob().getLogger().debug("copying reference file: " + f.getPath());
                         File movedFile = _wd.inputFile(f, new File(targetDir, f.getName()), true);
-
+                        copiedInputs.put(f, movedFile);
                         action.addInput(f, "Reference File");
                         action.addOutput(movedFile, "Copied Reference File", true, true);
                     }
@@ -406,6 +442,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         {
             getJob().getLogger().debug("Will not copy reference library locally");
         }
+
+        _resumer.setHasCopiedResources(referenceGenome.getWorkingFastaFile(), actions, copiedInputs);
     }
 
     private SequenceTaskHelper getHelper()
@@ -504,15 +542,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 pair = output.getProcessedFastqFiles();
                 getHelper().getFileManager().addStepOutputs(action, output);
                 getHelper().getFileManager().addIntermediateFile(pair.first);
-                if (!output.getCommandsExecuted().isEmpty())
-                {
-                    int commandIdx = 0;
-                    for (String command : output.getCommandsExecuted())
-                    {
-                        action.addParameter(new RecordedAction.ParameterType("command" + commandIdx, PropertyType.STRING), command);
-                        commandIdx++;
-                    }
-                }
 
                 if (pair.second != null)
                 {
@@ -538,17 +567,27 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             Date start = new Date();
             action.setStartTime(start);
             File renamed1 = new File(pair.first.getParentFile(), originalbaseName + ".preprocessed" + extension);
+            if (renamed1.exists())
+            {
+                getJob().getLogger().debug("deleting existing file prior to rename: " + renamed1.getName());
+                renamed1.delete();
+            }
             pair.first.renameTo(renamed1);
             getJob().getLogger().info("normalizing file name to: " + renamed1.getName());
             getHelper().getFileManager().addInput(action, "Input", pair.first);
             getHelper().getFileManager().addOutput(action, "Output", renamed1);
             pair.first = renamed1;
             getHelper().getFileManager().addIntermediateFile(renamed1);
-
             getHelper().getFileManager().addIntermediateFile(pair.first);
+
             if (pair.second != null)
             {
                 File renamed2 = new File(pair.second.getParentFile(), originalbaseName2 + ".preprocessed" + extension);
+                if (renamed2.exists())
+                {
+                    getJob().getLogger().debug("deleting existing file prior to rename: " + renamed2.getName());
+                    renamed2.delete();
+                }
                 pair.second.renameTo(renamed2);
                 getJob().getLogger().info("and: " + renamed2.getName());
                 getHelper().getFileManager().addInput(action, "Input", pair.second);
@@ -566,336 +605,352 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
     }
 
-    private void alignSet(Readset rs, String basename, Map<ReadDataImpl, Pair<File, File>> files, List<RecordedAction> actions, ReferenceGenome referenceGenome) throws IOException, PipelineJobException
+    private void alignSet(Readset rs, String basename, Map<ReadData, Pair<File, File>> files, ReferenceGenome referenceGenome) throws IOException, PipelineJobException
     {
-        getJob().setStatus(PipelineJob.TaskStatus.running, ALIGNMENT_STATUS);
-        getJob().getLogger().info("Beginning to align files for: " +  basename);
-
-        List<AlignmentStep.AlignmentOutput> outputs = new ArrayList<>();
-        int idx = 0;
-        for (ReadDataImpl rd : files.keySet())
-        {
-            idx++;
-            String msgSuffix = files.size() > 1 ? " (" + idx + " of " + files.size() + ")" : "";
-            Pair<File, File> pair = files.get(rd);
-
-            getJob().getLogger().info("Aligning inputs: " + pair.first.getName() + (pair.second == null ? "" : " and " + pair.second.getName()));
-
-            outputs.add(doAlignmentForPair(actions, pair, referenceGenome, rs, rd, msgSuffix));
-        }
-
-        //merge outputs
         File bam;
-        if (outputs.size() > 1)
+        if (_resumer.isInitialAlignmentDone())
         {
-            getJob().setStatus(PipelineJob.TaskStatus.running, "MERGING BAM FILES");
-            getJob().getLogger().info("merging BAMs");
-            RecordedAction mergeAction = new RecordedAction(MERGE_ALIGNMENT_ACTIONNAME);
-            Date start = new Date();
-            mergeAction.setStartTime(start);
-            MergeSamFilesWrapper mergeSamFilesWrapper = new MergeSamFilesWrapper(getJob().getLogger());
-            List<File> bams = new ArrayList<>();
-            for (AlignmentStep.AlignmentOutput o : outputs)
-            {
-                bams.add(o.getBAM());
-                getHelper().getFileManager().addInput(mergeAction, "Input BAM", o.getBAM());
-            }
-
-            bam = new File(outputs.get(0).getBAM().getParent(), FileUtil.getBaseName(outputs.get(0).getBAM().getName()) + ".merged.bam");
-            getHelper().getFileManager().addOutput(mergeAction, "Merged BAM", bam);
-            mergeSamFilesWrapper.execute(bams, bam.getPath(), true);
-            int commandIdx = 0;
-            for (String command : mergeSamFilesWrapper.getCommandsExecuted())
-            {
-                mergeAction.addParameter(new RecordedAction.ParameterType("command" + commandIdx, PropertyType.STRING), command);
-                commandIdx++;
-            }
-
-            Date end = new Date();
-            mergeAction.setEndTime(end);
-            getJob().getLogger().info("MergeSamFiles Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-            actions.add(mergeAction);
+            getJob().getLogger().info("resuming initial alignment from saved state");
+            bam = _resumer.getMergedBamFile();
         }
         else
         {
-            bam = outputs.get(0).getBAM();
+            getJob().setStatus(PipelineJob.TaskStatus.running, ALIGNMENT_STATUS);
+            getJob().getLogger().info("Beginning to align files for: " + basename);
+            List<RecordedAction> alignActions = new ArrayList<>();
+
+            List<AlignmentStep.AlignmentOutput> outputs = new ArrayList<>();
+            int idx = 0;
+            for (ReadData rd : files.keySet())
+            {
+                idx++;
+                String msgSuffix = files.size() > 1 ? " (" + idx + " of " + files.size() + ")" : "";
+                Pair<File, File> pair = files.get(rd);
+
+                getJob().getLogger().info("Aligning inputs: " + pair.first.getName() + (pair.second == null ? "" : " and " + pair.second.getName()));
+
+                outputs.add(doAlignmentForPair(alignActions, pair, referenceGenome, rs, rd, msgSuffix));
+            }
+
+            //merge outputs
+            if (outputs.size() > 1)
+            {
+                getJob().setStatus(PipelineJob.TaskStatus.running, "MERGING BAM FILES");
+                getJob().getLogger().info("merging BAMs");
+                RecordedAction mergeAction = new RecordedAction(MERGE_ALIGNMENT_ACTIONNAME);
+                Date start = new Date();
+                mergeAction.setStartTime(start);
+                MergeSamFilesWrapper mergeSamFilesWrapper = new MergeSamFilesWrapper(getJob().getLogger());
+                List<File> bams = new ArrayList<>();
+                for (AlignmentStep.AlignmentOutput o : outputs)
+                {
+                    bams.add(o.getBAM());
+                    getHelper().getFileManager().addInput(mergeAction, "Input BAM", o.getBAM());
+                }
+
+                bam = new File(outputs.get(0).getBAM().getParent(), FileUtil.getBaseName(outputs.get(0).getBAM().getName()) + ".merged.bam");
+                getHelper().getFileManager().addOutput(mergeAction, "Merged BAM", bam);
+                mergeSamFilesWrapper.execute(bams, bam.getPath(), true);
+                getHelper().getFileManager().addCommandsToAction(mergeSamFilesWrapper.getCommandsExecuted(), mergeAction);
+
+                Date end = new Date();
+                mergeAction.setEndTime(end);
+                getJob().getLogger().info("MergeSamFiles Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+                alignActions.add(mergeAction);
+            }
+            else
+            {
+                bam = outputs.get(0).getBAM();
+            }
+
+            _resumer.setInitialAlignmentDone(bam, alignActions);
         }
 
         //post-processing
-        List<PipelineStepProvider<BamProcessingStep>> providers = SequencePipelineService.get().getSteps(getJob(), BamProcessingStep.class);
-        if (providers.isEmpty())
+        if (_resumer.isBamPostProcessingBamDone())
         {
-            getJob().getLogger().info("No BAM postprocessing is necessary");
+            getJob().getLogger().info("resuming BAM post processing from saved state");
+            bam = _resumer.getPostProcessedBamFile();
         }
         else
         {
-            getJob().getLogger().info("***Starting BAM Post processing");
-            getJob().setStatus(PipelineJob.TaskStatus.running, "BAM POST-PROCESSING");
-            getHelper().getFileManager().addIntermediateFile(bam);
-
-            for (PipelineStepProvider<BamProcessingStep> provider : providers)
+            List<RecordedAction> postProcessActions = new ArrayList<>();
+            List<PipelineStepProvider<BamProcessingStep>> providers = SequencePipelineService.get().getSteps(getJob(), BamProcessingStep.class);
+            if (providers.isEmpty())
             {
-                getJob().getLogger().info("performing step: " + provider.getLabel());
-                getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + provider.getLabel().toUpperCase());
-                getJob().getLogger().debug("BAM index exists: " + (new File(bam.getPath() + ".bai")).exists());
-
-                RecordedAction action = new RecordedAction(provider.getLabel());
-                Date start = new Date();
-                action.setStartTime(start);
-                getHelper().getFileManager().addInput(action, "Input BAM", bam);
-
-                BamProcessingStep step = provider.create(getHelper());
-                BamProcessingStep.Output output = step.processBam(rs, bam, referenceGenome, bam.getParentFile());
-                getHelper().getFileManager().addStepOutputs(action, output);
-
-                if (output.getBAM() != null)
-                {
-                    bam = output.getBAM();
-                }
-                //can take a long time to execute
-                //getJob().getLogger().info("\ttotal alignments in processed BAM: " + SequenceUtil.getAlignmentCount(bam));
-                getJob().getLogger().info("\tfile size: " + FileUtils.byteCountToDisplaySize(bam.length()));
-
-                getJob().getLogger().debug("index exists: " + (new File(bam.getPath() + ".bai")).exists());
-
-                if (!output.getCommandsExecuted().isEmpty())
-                {
-                    int commandIdx = 0;
-                    for (String command : output.getCommandsExecuted())
-                    {
-                        action.addParameter(new RecordedAction.ParameterType("command" + commandIdx, PropertyType.STRING), command);
-                        commandIdx++;
-                    }
-                }
-
-                Date end = new Date();
-                action.setEndTime(end);
-                getJob().getLogger().info(provider.getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-                actions.add(action);
+                getJob().getLogger().info("No BAM postprocessing is necessary");
             }
+            else
+            {
+                getJob().getLogger().info("***Starting BAM Post processing");
+                getJob().setStatus(PipelineJob.TaskStatus.running, "BAM POST-PROCESSING");
+                getHelper().getFileManager().addIntermediateFile(bam);
+
+                for (PipelineStepProvider<BamProcessingStep> provider : providers)
+                {
+                    getJob().getLogger().info("performing step: " + provider.getLabel());
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + provider.getLabel().toUpperCase());
+                    getJob().getLogger().debug("BAM index exists: " + (new File(bam.getPath() + ".bai")).exists());
+
+                    RecordedAction action = new RecordedAction(provider.getLabel());
+                    Date start = new Date();
+                    action.setStartTime(start);
+                    getHelper().getFileManager().addInput(action, "Input BAM", bam);
+
+                    BamProcessingStep step = provider.create(getHelper());
+                    BamProcessingStep.Output output = step.processBam(rs, bam, referenceGenome, bam.getParentFile());
+                    getHelper().getFileManager().addStepOutputs(action, output);
+
+                    if (output.getBAM() != null)
+                    {
+                        bam = output.getBAM();
+                    }
+                    //can take a long time to execute
+                    //getJob().getLogger().info("\ttotal alignments in processed BAM: " + SequenceUtil.getAlignmentCount(bam));
+                    getJob().getLogger().info("\tfile size: " + FileUtils.byteCountToDisplaySize(bam.length()));
+
+                    getJob().getLogger().debug("index exists: " + (new File(bam.getPath() + ".bai")).exists());
+
+                    Date end = new Date();
+                    action.setEndTime(end);
+                    getJob().getLogger().info(provider.getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+                    postProcessActions.add(action);
+                }
+            }
+
+            _resumer.setBamPostProcessingBamDone(bam, postProcessActions);
         }
 
         //always end with coordinate sorted
         File finalBam;
-        AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
-        if (alignmentStep.doSortIndexBam())
+        if (_resumer.isFinalBamProcessingDone())
         {
-            if (SequenceUtil.getBamSortOrder(bam) != SAMFileHeader.SortOrder.coordinate)
+            finalBam = _resumer.getFinalBamFile();
+        }
+        else
+        {
+            List<RecordedAction> bamActions = new ArrayList<>();
+            AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
+            if (alignmentStep.doSortIndexBam())
             {
-                getJob().getLogger().info("***Sorting BAM: " + bam.getPath());
-                getJob().setStatus(PipelineJob.TaskStatus.running, "SORTING BAM");
-                RecordedAction sortAction = new RecordedAction(SORT_BAM_ACTION);
-                Date start = new Date();
-                sortAction.setStartTime(start);
-                getHelper().getFileManager().addInput(sortAction, "Input BAM", bam);
-
-                SortSamStep sortStep = new SortSamStep.Provider().create(getHelper());
-                BamProcessingStep.Output sortOutput = sortStep.processBam(rs, bam, referenceGenome, bam.getParentFile());
-                getHelper().getFileManager().addStepOutputs(sortAction, sortOutput);
-                getHelper().getFileManager().addIntermediateFile(bam);
-                bam = sortOutput.getBAM();
-                getHelper().getFileManager().addOutput(sortAction, "Sorted BAM", bam);
-                if (!sortOutput.getCommandsExecuted().isEmpty())
+                if (SequenceUtil.getBamSortOrder(bam) != SAMFileHeader.SortOrder.coordinate)
                 {
-                    int commandIdx = 0;
-                    for (String command : sortOutput.getCommandsExecuted())
+                    getJob().getLogger().info("***Sorting BAM: " + bam.getPath());
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "SORTING BAM");
+                    RecordedAction sortAction = new RecordedAction(SORT_BAM_ACTION);
+                    Date start = new Date();
+                    sortAction.setStartTime(start);
+                    getHelper().getFileManager().addInput(sortAction, "Input BAM", bam);
+
+                    SortSamStep sortStep = new SortSamStep.Provider().create(getHelper());
+                    BamProcessingStep.Output sortOutput = sortStep.processBam(rs, bam, referenceGenome, bam.getParentFile());
+                    getHelper().getFileManager().addStepOutputs(sortAction, sortOutput);
+                    getHelper().getFileManager().addIntermediateFile(bam);
+                    bam = sortOutput.getBAM();
+                    getHelper().getFileManager().addOutput(sortAction, "Sorted BAM", bam);
+                    getHelper().getFileManager().addCommandsToAction(sortOutput.getCommandsExecuted(), sortAction);
+
+                    Date end = new Date();
+                    sortAction.setEndTime(end);
+                    getJob().getLogger().info("SortBam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+                    bamActions.add(sortAction);
+                }
+                else
+                {
+                    getJob().getLogger().debug("BAM is already coordinate sorted, no need to sort");
+                }
+
+                //finally index
+                getJob().setStatus(PipelineJob.TaskStatus.running, "INDEXING BAM");
+                RecordedAction indexAction = new RecordedAction(INDEX_ACTION);
+                Date start = new Date();
+                indexAction.setStartTime(start);
+                getHelper().getFileManager().addInput(indexAction, "Input BAM", bam);
+                File originalIndex = new File(bam.getPath() + ".bai");
+                if (originalIndex.exists())
+                {
+                    getJob().getLogger().debug("deleting existing BAM index: " + originalIndex.getName());
+                    originalIndex.delete();
+                }
+
+                finalBam = new File(bam.getParentFile(), basename + ".bam");
+                if (!finalBam.getPath().equalsIgnoreCase(bam.getPath()))
+                {
+                    getJob().getLogger().info("\tnormalizing BAM name to: " + finalBam.getPath());
+                    if (finalBam.exists())
                     {
-                        sortAction.addParameter(new RecordedAction.ParameterType("command" + commandIdx, PropertyType.STRING), command);
-                        commandIdx++;
+                        getJob().getLogger().warn("unexpected file, deleting: " + finalBam.getPath());
+                    }
+
+                    FileUtils.moveFile(bam, finalBam);
+                }
+                getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_ROLE, finalBam);
+
+                File bai = new File(finalBam.getPath() + ".bai");
+                if (bai.exists())
+                {
+                    getJob().getLogger().debug("deleting existing BAM index: " + bai.getName());
+                    bai.delete();
+                }
+
+                BuildBamIndexWrapper buildBamIndexWrapper = new BuildBamIndexWrapper(getJob().getLogger());
+                buildBamIndexWrapper.setStringency(ValidationStringency.SILENT);
+                buildBamIndexWrapper.executeCommand(finalBam);
+                getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_INDEX_ROLE, bai);
+                getHelper().getFileManager().addCommandsToAction(buildBamIndexWrapper.getCommandsExecuted(), indexAction);
+
+                getJob().getLogger().info("\tfile size: " + FileUtils.byteCountToDisplaySize(bam.length()));
+
+                Date end = new Date();
+                indexAction.setEndTime(end);
+                getJob().getLogger().info("IndexBam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+                bamActions.add(indexAction);
+            }
+            else
+            {
+                getJob().setStatus(PipelineJob.TaskStatus.running, "MOVING BAM");
+                RecordedAction renameAction = new RecordedAction(RENAME_BAM_ACTION);
+                Date start = new Date();
+                renameAction.setStartTime(start);
+                getHelper().getFileManager().addInput(renameAction, "Input BAM", bam);
+                finalBam = new File(bam.getParentFile(), basename + ".bam");
+                if (!finalBam.getPath().equalsIgnoreCase(bam.getPath()))
+                {
+                    getJob().getLogger().info("\tnormalizing BAM name to: " + finalBam.getPath());
+                    if (finalBam.exists())
+                    {
+                        getJob().getLogger().warn("unexpected file, deleting: " + finalBam.getPath());
+                    }
+
+                    FileUtils.moveFile(bam, finalBam);
+
+                    File bamIdxOrig = new File(bam.getPath() + ".bai");
+                    File finalBamIdx = new File(finalBam.getPath() + ".bai");
+                    if (bamIdxOrig.exists())
+                    {
+                        getJob().getLogger().debug("also moving bam index");
+                        if (finalBamIdx.exists())
+                        {
+                            getJob().getLogger().warn("unexpected file, deleting: " + finalBamIdx.getPath());
+                        }
+
+                        FileUtils.moveFile(bamIdxOrig, finalBamIdx);
+                    }
+                    else
+                    {
+                        SequencePipelineService.get().ensureBamIndex(finalBam, getJob().getLogger(), true);
+                    }
+
+                }
+                getHelper().getFileManager().addOutput(renameAction, FINAL_BAM_ROLE, finalBam);
+
+                Date end = new Date();
+                renameAction.setEndTime(end);
+                getJob().getLogger().info("Move Bam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+                bamActions.add(renameAction);
+            }
+
+            //generate alignment metrics
+            if (alignmentStep.doSortIndexBam())
+            {
+                RecordedAction metricsAction = new RecordedAction(ALIGNMENT_METRICS_ACTIONNAME);
+
+                Date start = new Date();
+                metricsAction.setStartTime(start);
+                getJob().getLogger().info("calculating alignment metrics");
+                getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING ALIGNMENT SUMMARY METRICS");
+                File metricsFile = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".summary.metrics");
+                AlignmentSummaryMetricsWrapper wrapper = new AlignmentSummaryMetricsWrapper(getJob().getLogger());
+                wrapper.executeCommand(finalBam, referenceGenome.getWorkingFastaFile(), metricsFile);
+                getHelper().getFileManager().addInput(metricsAction, "BAM File", finalBam);
+                getHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
+                getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, finalBam, rs.getRowId())));
+                getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), metricsAction);
+
+                //wgs metrics
+                ToolParameterDescriptor wgsParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.COLLECT_WGS_METRICS);
+                boolean doCollectWgsMetrics = wgsParam == null ? false : wgsParam.extractValue(getJob(), alignmentStep.getProvider(), Boolean.class, false);
+
+                if (doCollectWgsMetrics)
+                {
+                    getJob().getLogger().info("calculating wgs metrics");
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
+                    File wgsMetricsFile = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".wgs.metrics");
+                    CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
+                    wgsWrapper.executeCommand(finalBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
+                    getHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
+                    getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, finalBam, rs.getRowId())));
+                    getHelper().getFileManager().addCommandsToAction(wgsWrapper.getCommandsExecuted(), metricsAction);
+                }
+
+                //and insert size metrics
+                if (rs.hasPairedData())
+                {
+                    getJob().getLogger().info("calculating insert size metrics");
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING INSERT SIZE METRICS");
+                    File metricsFile2 = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".insertsize.metrics");
+                    File metricsHistogram = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".insertsize.metrics.pdf");
+                    CollectInsertSizeMetricsWrapper collectInsertSizeMetricsWrapper = new CollectInsertSizeMetricsWrapper(getJob().getLogger());
+                    if (collectInsertSizeMetricsWrapper.executeCommand(finalBam, metricsFile2, metricsHistogram) != null)
+                    {
+                        getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
+                        getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics Histogram", metricsHistogram);
+                        getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile2, finalBam, rs.getRowId())));
+                        getHelper().getFileManager().addCommandsToAction(collectInsertSizeMetricsWrapper.getCommandsExecuted(), metricsAction);
                     }
                 }
 
                 Date end = new Date();
-                sortAction.setEndTime(end);
-                getJob().getLogger().info("SortBam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-                actions.add(sortAction);
+                metricsAction.setEndTime(end);
+                getJob().getLogger().info("Alignment Summary Metrics Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+                bamActions.add(metricsAction);
             }
             else
             {
-                getJob().getLogger().debug("BAM is already coordinate sorted, no need to sort");
+                getJob().getLogger().info("BAM was not coordinate sorted, skipping capture of alignment metrics");
             }
 
-            //finally index
-            getJob().setStatus(PipelineJob.TaskStatus.running, "INDEXING BAM");
-            RecordedAction indexAction = new RecordedAction(INDEX_ACTION);
-            Date start = new Date();
-            indexAction.setStartTime(start);
-            getHelper().getFileManager().addInput(indexAction, "Input BAM", bam);
-            File originalIndex = new File(bam.getPath() + ".bai");
-            if (originalIndex.exists())
-            {
-                getJob().getLogger().debug("deleting existing BAM index: " + originalIndex.getName());
-                originalIndex.delete();
-            }
-
-            finalBam = new File(bam.getParentFile(), basename + ".bam");
-            if (!finalBam.getPath().equalsIgnoreCase(bam.getPath()))
-            {
-                getJob().getLogger().info("\tnormalizing BAM name to: " + finalBam.getPath());
-                if (finalBam.exists())
-                {
-                    getJob().getLogger().warn("unexpected file, deleting: " + finalBam.getPath());
-                }
-
-                FileUtils.moveFile(bam, finalBam);
-            }
-            getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_ROLE, finalBam);
-
-            File bai = new File(finalBam.getPath() + ".bai");
-            if (bai.exists())
-            {
-                getJob().getLogger().debug("deleting existing BAM index: " + bai.getName());
-                bai.delete();
-            }
-
-            BuildBamIndexWrapper buildBamIndexWrapper = new BuildBamIndexWrapper(getJob().getLogger());
-            buildBamIndexWrapper.setStringency(ValidationStringency.SILENT);
-            buildBamIndexWrapper.executeCommand(finalBam);
-            getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_INDEX_ROLE, bai);
-            if (!buildBamIndexWrapper.getCommandsExecuted().isEmpty())
-            {
-                int commandIdx = 0;
-                for (String command : buildBamIndexWrapper.getCommandsExecuted())
-                {
-                    indexAction.addParameter(new RecordedAction.ParameterType("command" + commandIdx, PropertyType.STRING), command);
-                    commandIdx++;
-                }
-            }
-
-            getJob().getLogger().info("\tfile size: " + FileUtils.byteCountToDisplaySize(bam.length()));
-
-            Date end = new Date();
-            indexAction.setEndTime(end);
-            getJob().getLogger().info("IndexBam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-            actions.add(indexAction);
+            getJob().setStatus(PipelineJob.TaskStatus.running, "PROCESSING BAM");
+            _resumer.setFinalBamProcessingDone(finalBam, bamActions);
         }
-        else
-        {
-            getJob().setStatus(PipelineJob.TaskStatus.running, "MOVING BAM");
-            RecordedAction renameAction = new RecordedAction(RENAME_BAM_ACTION);
-            Date start = new Date();
-            renameAction.setStartTime(start);
-            getHelper().getFileManager().addInput(renameAction, "Input BAM", bam);
-            finalBam = new File(bam.getParentFile(), basename + ".bam");
-            if (!finalBam.getPath().equalsIgnoreCase(bam.getPath()))
-            {
-                getJob().getLogger().info("\tnormalizing BAM name to: " + finalBam.getPath());
-                if (finalBam.exists())
-                {
-                    getJob().getLogger().warn("unexpected file, deleting: " + finalBam.getPath());
-                }
-
-                FileUtils.moveFile(bam, finalBam);
-            }
-            getHelper().getFileManager().addOutput(renameAction, FINAL_BAM_ROLE, finalBam);
-
-            Date end = new Date();
-            renameAction.setEndTime(end);
-            getJob().getLogger().info("Move Bam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-            actions.add(renameAction);
-        }
-
-        //generate alignment metrics
-        if (alignmentStep.doSortIndexBam())
-        {
-            RecordedAction metricsAction = new RecordedAction(ALIGNMENT_METRICS_ACTIONNAME);
-            List<String> commands = new ArrayList<>();
-            Date start = new Date();
-            metricsAction.setStartTime(start);
-            getJob().getLogger().info("calculating alignment metrics");
-            getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING ALIGNMENT SUMMARY METRICS");
-            File metricsFile = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".summary.metrics");
-            AlignmentSummaryMetricsWrapper wrapper = new AlignmentSummaryMetricsWrapper(getJob().getLogger());
-            wrapper.executeCommand(finalBam, referenceGenome.getWorkingFastaFile(), metricsFile);
-            getHelper().getFileManager().addInput(metricsAction, "BAM File", finalBam);
-            getHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
-            getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, finalBam, rs.getRowId())));
-            commands.addAll(wrapper.getCommandsExecuted());
-
-            //wgs metrics
-            ToolParameterDescriptor wgsParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.COLLECT_WGS_METRICS);
-            boolean doCollectWgsMetrics = wgsParam == null ? false : wgsParam.extractValue(getJob(), alignmentStep.getProvider(), Boolean.class, false);
-
-            if (doCollectWgsMetrics)
-            {
-                getJob().getLogger().info("calculating wgs metrics");
-                getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
-                File wgsMetricsFile = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".wgs.metrics");
-                CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
-                wgsWrapper.executeCommand(finalBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
-                getHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
-                getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, finalBam, rs.getRowId())));
-                commands.addAll(wgsWrapper.getCommandsExecuted());
-            }
-
-            //and insert size metrics
-            if (rs.hasPairedData())
-            {
-                getJob().getLogger().info("calculating insert size metrics");
-                getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING INSERT SIZE METRICS");
-                File metricsFile2 = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".insertsize.metrics");
-                File metricsHistogram = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".insertsize.metrics.pdf");
-                CollectInsertSizeMetricsWrapper collectInsertSizeMetricsWrapper = new CollectInsertSizeMetricsWrapper(getJob().getLogger());
-                if (collectInsertSizeMetricsWrapper.executeCommand(finalBam, metricsFile2, metricsHistogram) != null)
-                {
-                    getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
-                    getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics Histogram", metricsHistogram);
-                    getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile2, finalBam, rs.getRowId())));
-
-                    commands.addAll(collectInsertSizeMetricsWrapper.getCommandsExecuted());
-                }
-            }
-
-            if (!commands.isEmpty())
-            {
-                int commandIdx = 0;
-                for (String command : commands)
-                {
-                    metricsAction.addParameter(new RecordedAction.ParameterType("command" + commandIdx, PropertyType.STRING), command);
-                    commandIdx++;
-                }
-            }
-
-            Date end = new Date();
-            metricsAction.setEndTime(end);
-            getJob().getLogger().info("Alignment Summary Metrics Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-            actions.add(metricsAction);
-        }
-        else
-        {
-            getJob().getLogger().info("BAM was not coordinate sorted, skipping capture of alignment metrics");
-        }
-
-        getJob().setStatus(PipelineJob.TaskStatus.running, "PROCESSING BAM");
 
         //perform remote analyses, if necessary
-        List<PipelineStepProvider<AnalysisStep>> analysisProviders = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
-        if (analysisProviders.isEmpty())
+        if (_resumer.isBamAnalysisDone())
         {
-            getJob().getLogger().debug("no analyses were selected");
+            getJob().getLogger().info("resuming BAM analyses from saved state");
         }
         else
         {
-            getJob().setStatus(PipelineJob.TaskStatus.running, "PERFORMING ANALYSES ON ALIGNMENT");
-            for (PipelineStepProvider<AnalysisStep> provider : analysisProviders)
+            List<PipelineStepProvider<AnalysisStep>> analysisProviders = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
+            if (analysisProviders.isEmpty())
             {
-                getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + provider.getLabel().toUpperCase());
-
-                getHelper().getJob().getLogger().info("Running analysis " + provider.getLabel() + " for readset: " + rs.getReadsetId());
-                getHelper().getJob().getLogger().info("\tUsing alignment: " + finalBam.getPath());
-
-                RecordedAction action = new RecordedAction(provider.getLabel());
-                getHelper().getFileManager().addInput(action, "Input BAM File", finalBam);
-                getHelper().getFileManager().addInput(action, "Reference DB FASTA", referenceGenome.getWorkingFastaFile());
-
-                AnalysisStep step = provider.create(getHelper());
-                AnalysisStep.Output o = step.performAnalysisPerSampleRemote(rs, finalBam, referenceGenome, finalBam.getParentFile());
-                if (o != null)
+                getJob().getLogger().debug("no analyses were selected");
+            }
+            else
+            {
+                List<RecordedAction> analysisActions = new ArrayList<>();
+                getJob().setStatus(PipelineJob.TaskStatus.running, "PERFORMING ANALYSES ON ALIGNMENT");
+                for (PipelineStepProvider<AnalysisStep> provider : analysisProviders)
                 {
-                    getHelper().getFileManager().addStepOutputs(action, o);
-                }
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + provider.getLabel().toUpperCase());
 
-                actions.add(action);
+                    getHelper().getJob().getLogger().info("Running analysis " + provider.getLabel() + " for readset: " + rs.getReadsetId());
+                    getHelper().getJob().getLogger().info("\tUsing alignment: " + finalBam.getPath());
+
+                    RecordedAction action = new RecordedAction(provider.getLabel());
+                    getHelper().getFileManager().addInput(action, "Input BAM File", finalBam);
+                    getHelper().getFileManager().addInput(action, "Reference DB FASTA", referenceGenome.getWorkingFastaFile());
+
+                    AnalysisStep step = provider.create(getHelper());
+                    AnalysisStep.Output o = step.performAnalysisPerSampleRemote(rs, finalBam, referenceGenome, finalBam.getParentFile());
+                    if (o != null)
+                    {
+                        getHelper().getFileManager().addStepOutputs(action, o);
+                    }
+
+                    analysisActions.add(action);
+                    _resumer.setBamAnalysisComplete(analysisActions);
+                }
             }
         }
     }
@@ -920,7 +975,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
 
         RecordedAction alignmentAction = new RecordedAction(ALIGNMENT_ACTIONNAME);
-        List<String> commands = new ArrayList<>();
 
         Date start = new Date();
         alignmentAction.setStartTime(start);
@@ -944,7 +998,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + alignmentStep.getProvider().getLabel().toUpperCase() + msgSuffix);
         AlignmentStep.AlignmentOutput alignmentOutput = alignmentStep.performAlignment(rs, inputFiles.first, inputFiles.second, outputDirectory, referenceGenome, SequenceTaskHelper.getUnzippedBaseName(inputFiles.first.getName()) + "." + alignmentStep.getProvider().getName().toLowerCase());
-        commands.addAll(alignmentOutput.getCommandsExecuted());
         getHelper().getFileManager().addStepOutputs(alignmentAction, alignmentOutput);
 
         if (alignmentOutput.getBAM() == null || !alignmentOutput.getBAM().exists())
@@ -974,7 +1027,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             //merge unaligned reads and clean file
             MergeBamAlignmentWrapper wrapper = new MergeBamAlignmentWrapper(getJob().getLogger());
             wrapper.executeCommand(referenceGenome.getWorkingFastaFile(), alignmentOutput.getBAM(), inputFiles.first, inputFiles.second, null);
-            commands.addAll(wrapper.getCommandsExecuted());
+            getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), alignmentAction);
         }
         else
         {
@@ -986,7 +1039,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             getJob().setStatus(PipelineJob.TaskStatus.running, "ADDING READ GROUPS" + (msgSuffix != null ? ": " + msgSuffix : ""));
             AddOrReplaceReadGroupsWrapper wrapper = new AddOrReplaceReadGroupsWrapper(getJob().getLogger());
             wrapper.executeCommand(alignmentOutput.getBAM(), null, rs.getReadsetId().toString(), rs.getPlatform(), (rd.getPlatformUnit() == null ? rs.getReadsetId().toString() : rd.getPlatformUnit()), rs.getName().replaceAll(" ", "_"));
-            commands.addAll(wrapper.getCommandsExecuted());
+            getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), alignmentAction);
         }
         else
         {
@@ -997,19 +1050,325 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         getJob().setStatus(PipelineJob.TaskStatus.running, "Generating BAM Stats");
         FlagStatRunner runner = new FlagStatRunner(getJob().getLogger());
         runner.execute(alignmentOutput.getBAM());
-        commands.addAll(runner.getCommandsExecuted());
-
-        if (!commands.isEmpty())
-        {
-            int commandIdx = 0;
-            for (String command : commands)
-            {
-                alignmentAction.addParameter(new RecordedAction.ParameterType("command" + commandIdx, PropertyType.STRING), command);
-                commandIdx++;
-            }
-        }
+        getHelper().getFileManager().addCommandsToAction(runner.getCommandsExecuted(), alignmentAction);
 
         return alignmentOutput;
     }
+
+    public static class Resumer implements Serializable
+    {
+        transient SequenceAlignmentTask _task;
+
+        private TaskFileManagerImpl _fileManager;
+        private RecordedActionSet _recordedActionSet = new RecordedActionSet();
+        private Map<File, File> _copiedInputs = new HashMap<>();
+        private boolean _isResume = false;
+
+        private File _workingFasta = null;
+        private Map<ReadData, Pair<File, File>> _filesToAlign = null;
+        private File _mergedBamFile = null;
+        private File _postProcessedBamFile = null;
+        private File _finalBamFile = null;
+        private boolean _bamAnalysisDone = false;
+
+        //for serialization
+        public Resumer()
+        {
+
+        }
+
+        private Resumer(SequenceAlignmentTask task)
+        {
+            _task = task;
+            _fileManager = _task.getHelper().getFileManager();
+        }
+
+        public static Resumer create(SequenceAlignmentJob job, SequenceAlignmentTask task) throws PipelineJobException
+        {
+            File xml = getSerializedXml(job);
+            if (!xml.exists())
+            {
+                return new Resumer(task);
+            }
+            else
+            {
+                Resumer ret = readFromXml(xml);
+                ret._isResume = true;
+                ret._task = task;
+                ret._fileManager._job = job;
+                ret._fileManager._wd = task._wd;
+                ret._fileManager._workLocation = task._wd.getDir();
+                ret._task._taskHelper.setFileManager(ret._fileManager);
+                try
+                {
+                    if (!ret._copiedInputs.isEmpty())
+                    {
+                        for (File orig : ret._copiedInputs.keySet())
+                        {
+                            ret._task._wd.inputFile(orig, ret._copiedInputs.get(orig), false);
+                        }
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+                return ret;
+            }
+        }
+
+        private static File getSerializedXml(SequenceAlignmentJob job)
+        {
+            return new File(job.getAnalysisDirectory(), "alignmentCheckpoint.xml");
+        }
+
+        private static Resumer readFromXml(File xml) throws PipelineJobException
+        {
+            try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(xml))))
+            {
+                return (Resumer)decoder.readObject();
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
+        private void writeToXml() throws PipelineJobException
+        {
+            _task.getJob().getLogger().info("saving job checkpoint to file");
+            try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(getSerializedXml(_task.getPipelineJob())))))
+            {
+                encoder.setPersistenceDelegate(File.class, FilePersistenceDelegate);
+                encoder.setPersistenceDelegate(Pair.class, PairPersistenceDelegate);
+                encoder.writeObject(this);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
+        public void markComplete()
+        {
+            File xml = getSerializedXml(_task.getPipelineJob());
+            if (xml.exists())
+            {
+                _task.getPipelineJob().getLogger().info("closing job resumer");
+                xml.delete();
+            }
+        }
+        
+        public void saveState() throws PipelineJobException
+        {
+            writeToXml();
+        }
+
+        public boolean isResume()
+        {
+            return _isResume;
+        }
+
+        public void setHasCopiedResources(File workingFasta, List<RecordedAction> actions, Map<File, File> copiedInputs) throws PipelineJobException
+        {
+            _workingFasta = workingFasta;
+            for (RecordedAction action : actions)
+            {
+                _recordedActionSet.add(action);
+            }
+            _copiedInputs.putAll(copiedInputs);
+            saveState();
+        }
+
+        public boolean hasCopiedResources()
+        {
+            return _workingFasta != null;
+        }
+
+        public boolean isFastqPreprocessingDone()
+        {
+            return _filesToAlign != null;
+        }
+
+        public void setFastqPreprocessingDone(Map<ReadData, Pair<File, File>> toAlign, List<RecordedAction> actions, Map<File, File> copiedInputs) throws PipelineJobException
+        {
+            _filesToAlign = toAlign;
+            for (RecordedAction action : actions)
+            {
+                _recordedActionSet.add(action);
+            }
+            _copiedInputs.putAll(copiedInputs);
+            saveState();
+        }
+
+        public boolean isInitialAlignmentDone()
+        {
+            return _mergedBamFile != null;
+        }
+
+        public void setInitialAlignmentDone(File mergedBamFile, List<RecordedAction> actions) throws PipelineJobException
+        {
+            _mergedBamFile = mergedBamFile;
+            for (RecordedAction action : actions)
+            {
+                _recordedActionSet.add(action);
+            }
+            saveState();
+        }
+
+        public boolean isBamPostProcessingBamDone()
+        {
+            return _postProcessedBamFile != null;
+        }
+
+        public void setBamPostProcessingBamDone(File postProcessedBamFile, List<RecordedAction> actions) throws PipelineJobException
+        {
+            _postProcessedBamFile = postProcessedBamFile;
+            for (RecordedAction action : actions)
+            {
+                _recordedActionSet.add(action);
+            }
+            saveState();
+        }
+
+        public boolean isFinalBamProcessingDone()
+        {
+            return _finalBamFile != null;
+        }
+
+        public void setFinalBamProcessingDone(File finalBamFile, List<RecordedAction> actions) throws PipelineJobException
+        {
+            _finalBamFile = finalBamFile;
+            for (RecordedAction action : actions)
+            {
+                _recordedActionSet.add(action);
+            }
+            saveState();
+        }
+
+        public void setBamAnalysisComplete(List<RecordedAction> actions) throws PipelineJobException
+        {
+            _bamAnalysisDone = true;
+            for (RecordedAction action : actions)
+            {
+                _recordedActionSet.add(action);
+            }
+            saveState();
+        }
+
+        public TaskFileManagerImpl getFileManager()
+        {
+            return _fileManager;
+        }
+
+        public void setFileManager(TaskFileManagerImpl fileManager)
+        {
+            _fileManager = fileManager;
+        }
+
+        public Map<File, File> getCopiedInputs()
+        {
+            return _copiedInputs;
+        }
+
+        public void setCopiedInputs(Map<File, File> copiedInputs)
+        {
+            _copiedInputs = copiedInputs;
+        }
+
+        public void setResume(boolean resume)
+        {
+            _isResume = resume;
+        }
+
+        public File getWorkingFasta()
+        {
+            return _workingFasta;
+        }
+
+        public void setWorkingFasta(File workingFasta)
+        {
+            _workingFasta = workingFasta;
+        }
+
+        public Map<ReadData, Pair<File, File>> getFilesToAlign()
+        {
+            return _filesToAlign;
+        }
+
+        public void setFilesToAlign(Map<ReadData, Pair<File, File>> filesToAlign)
+        {
+            _filesToAlign = filesToAlign;
+        }
+
+        public File getMergedBamFile()
+        {
+            return _mergedBamFile;
+        }
+
+        public void setMergedBamFile(File mergedBamFile)
+        {
+            _mergedBamFile = mergedBamFile;
+        }
+
+        public File getPostProcessedBamFile()
+        {
+            return _postProcessedBamFile;
+        }
+
+        public void setPostProcessedBamFile(File postProcessedBamFile)
+        {
+            _postProcessedBamFile = postProcessedBamFile;
+        }
+
+        public File getFinalBamFile()
+        {
+            return _finalBamFile;
+        }
+
+        public void setFinalBamFile(File finalBamFile)
+        {
+            _finalBamFile = finalBamFile;
+        }
+
+        public boolean isBamAnalysisDone()
+        {
+            return _bamAnalysisDone;
+        }
+
+        public void setBamAnalysisDone(boolean bamAnalysisDone)
+        {
+            _bamAnalysisDone = bamAnalysisDone;
+        }
+
+        public RecordedActionSet getRecordedActionSet()
+        {
+            return _recordedActionSet;
+        }
+
+        public void setRecordedActionSet(RecordedActionSet recordedActionSet)
+        {
+            _recordedActionSet = recordedActionSet;
+        }
+    }
+
+    private static final PersistenceDelegate FilePersistenceDelegate = new PersistenceDelegate()
+    {
+        @Override
+        protected Expression instantiate(final Object oldInstance, final Encoder out)
+        {
+            return new Expression(oldInstance, File.class, "new", new URI[] { ((File) oldInstance).toURI() });
+        }
+    };
+
+    private static final PersistenceDelegate PairPersistenceDelegate = new PersistenceDelegate()
+    {
+        @Override
+        protected Expression instantiate(final Object oldInstance, final Encoder out)
+        {
+            return new Expression(oldInstance, Pair.class, "new", new Object[] { ((Pair) oldInstance).first, ((Pair) oldInstance).second });
+        }
+    };
 }
 

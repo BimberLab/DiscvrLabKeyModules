@@ -76,6 +76,8 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
         }
         args.add("-A");
         args.add("DepthPerSampleHC");
+        args.add("--max_alternate_alleles");
+        args.add("12");
 
         if (_multiThreaded)
         {
@@ -168,6 +170,8 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
             }
             args.add("-A");
             args.add("DepthPerSampleHC");
+            args.add("--max_alternate_alleles");
+            args.add("12");
 
             args.add("-startFromScratch");
             args.add("-scatterCount");

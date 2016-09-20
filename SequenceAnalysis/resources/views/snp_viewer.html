@@ -18,7 +18,8 @@ Ext4.onReady(function (){
         '<div id="snpReportDiv_'+webpart.wrapperDivId+'"></div>');
 
     Ext4.create('SequenceAnalysis.panel.SnpAlignmentPanel', {
-        analysisIds: analysisIds
+        analysisIds: analysisIds,
+        autoLoadData: LABKEY.ActionURL.getParameter('autoLoadData')
     }).render('snpReportDiv_'+webpart.wrapperDivId);
 });
 

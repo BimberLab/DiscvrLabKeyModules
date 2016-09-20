@@ -1,4 +1,4 @@
-<view xmlns="http://labkey.org/data/xml/view" title="SNP Viewer" frame="portal">
+<view xmlns="http://labkey.org/data/xml/view" title="Quasispecies Viewer" frame="portal">
     <dependencies>
         <dependency path="laboratory.context"/>
         <dependency path="SequenceAnalysis/sequenceAnalysis"/>

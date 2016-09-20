@@ -51,10 +51,10 @@ FROM (
 
   from sequenceanalysis.alignment_summary a
   join sequenceanalysis.alignment_summary_junction j ON (j.alignment_id = a.rowid and j.status = true)
-  left join sequenceanalysis.haplotype_sequences hs ON (
+  left join sequenceanalysis.haplotype_sequences hs ON ((
     (hs.name = j.ref_nt_id.lineage AND hs.type = 'Lineage') OR
     (hs.name = j.ref_nt_id.name AND hs.type = 'Allele')
-  )
+  ) AND hs.haplotype.datedisabled IS NULL)
   group by a.analysis_id, a.rowid, a.total
 
 ) a

@@ -127,8 +127,11 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
         }
 
         @Override
-        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            PipelineJob job = ctx.getJob();
+            JSONObject params = ctx.getParams();
+
             String name = params.getString("name");
 
             int gtf = params.optInt("gtf");
@@ -137,7 +140,7 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
                 throw new PipelineJobException("No GTF file provided");
             }
 
-            File gtfFile = support.getCachedData(gtf);
+            File gtfFile = ctx.getSequenceSupport().getCachedData(gtf);
             if (gtfFile == null || !gtfFile.exists())
             {
                 throw new PipelineJobException("Unable to find GTF file: " + gtfFile);
@@ -175,8 +178,8 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
             List<String> extraParams = getClientCommandArgs(params);
 
             RnaSeQCWrapper wrapper = new RnaSeQCWrapper(job.getLogger());
-            ReferenceGenome g = support.getCachedGenome(inputFiles.get(0).getLibrary_id());
-            File outputReport = wrapper.execute(bams, sampleIds, notes, g.getWorkingFastaFile(), gtfFile, outputDir, name, extraParams);
+            ReferenceGenome g = ctx.getSequenceSupport().getCachedGenome(inputFiles.get(0).getLibrary_id());
+            File outputReport = wrapper.execute(bams, sampleIds, notes, g.getWorkingFastaFile(), gtfFile, ctx.getOutputDir(), name, extraParams);
 
             File indexHtml = new File(outputReport, "index.html");
             SequenceOutputFile so = new SequenceOutputFile();
@@ -184,10 +187,10 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
             so.setFile(indexHtml);
             so.setContainer(job.getContainerId());
             so.setName(params.getString("name"));
-            outputsToCreate.add(so);
+            ctx.addSequenceOutput(so);
 
             action.setEndTime(new Date());
-            actions.add(action);
+            ctx.addActions(action);
         }
     }
 }

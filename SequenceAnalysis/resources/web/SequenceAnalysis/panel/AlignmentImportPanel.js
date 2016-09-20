@@ -1,10 +1,8 @@
 Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
     extend: 'SequenceAnalysis.panel.BaseSequencePanel',
-    analysisController: 'sequenceanalysis',
-    splitJobs: false,
+    jobType: 'alignmentImport',
 
     initComponent: function(){
-        this.taskId = 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:AlignmentImportPipeline';
         Ext4.QuickTips.init();
 
         Ext4.apply(this, {
@@ -70,21 +68,13 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 fieldLabel: 'Job Name',
                 width: 600,
                 helpPopup: 'This is the name assigned to this job, which must be unique.  Results will be moved into a folder with this name.',
-                name: 'protocolName',
-                itemId: 'protocolName',
+                name: 'jobName',
+                itemId: 'jobName',
                 allowBlank:false,
                 value: 'SequenceImport_'+ Ext4.Date.format(new Date(), 'Ymd'),
                 maskRe: new RegExp('[A-Za-z0-9_]'),
                 validator: function(val){
                     return (this.isValidProtocol === false ? 'Job Name Already In Use' : true);
-                },
-                listeners: {
-                    scope: this,
-                    change: {
-                        fn: this.checkProtocol,
-                        buffer: 200,
-                        scope: this
-                    }
                 }
             },{
                 fieldLabel: 'Description',
@@ -92,8 +82,8 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 width: 600,
                 height: 100,
                 helpPopup: 'Description for this run, such as detail about the source of the alignments (optional)',
-                itemId: 'protocolDescription',
-                name: 'protocolDescription',
+                itemId: 'jobDescription',
+                name: 'jobDescription',
                 allowBlank: true
             },{
                 fieldLabel: 'Delete Intermediate Files',
@@ -313,6 +303,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                         type: 'labkey-store',
                         schemaName: 'sequenceanalysis',
                         queryName: 'reference_libraries',
+                        filterArray: [LABKEY.Filter.create('datedisabled', null, LABKEY.Filter.Types.ISBLANK)],
                         storeId: 'sequenceanalysis||reference_libraries',
                         sort: 'name',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
@@ -611,8 +602,6 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
         }, this);
 
         this.down('#fileListView').refresh();
-
-        this.checkProtocol();
         this.populateSamples();
     },
 
@@ -649,22 +638,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
         if (!json)
             return;
 
-        var distinctIds = [];
-        var distinctNames = [];
-        this.down('#sampleGrid').getStore().each(function(r) {
-            if (!r.data['fileId'])
-                distinctNames.push(r.data['fileName']);
-            else
-                distinctIds.push(r.data['fileId']);
-        }, this);
-
-        var ret = {
-            json: json,
-            distinctIds: distinctIds,
-            distinctNames: distinctNames
-        };
-
-        this.startAnalysis(ret.json, ret.distinctIds, ret.distinctNames);
+        this.startAnalysis(json);
     },
 
     getJsonParams: function(ignoreErrors){
@@ -705,6 +679,19 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
             Ext4.Msg.alert('Error', 'All input files had errors and cannot be used.  Please hover over the red cells near the top of the page to see more detail on these errors');
             return;
         }
+
+        var totalErrors = 0;
+        fields.inputFiles = [];
+        this.down('#sampleGrid').getStore().each(function(rec) {
+            if (rec.get('error'))
+                totalErrors++;
+            else {
+                if (!rec.get('fileId'))
+                    fields.inputFiles.push({fileName: rec.get('fileName')});
+                else
+                    fields.inputFiles.push({dataId: rec.get('fileId')});
+            }
+        }, this);
 
         return fields;
     },

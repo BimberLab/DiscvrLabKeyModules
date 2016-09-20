@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Created by bimber on 8/8/2014.
  */
-public class SelectVariantsWrapper extends AbstractCommandWrapper
+public class SelectVariantsWrapper extends AbstractGatkWrapper
 {
     public SelectVariantsWrapper(Logger log)
     {
@@ -28,8 +28,8 @@ public class SelectVariantsWrapper extends AbstractCommandWrapper
         ensureDictionary(referenceFasta);
 
         List<String> args = new ArrayList<>();
-        args.add("java");
-        //args.addAll(get)
+        args.add(SequencePipelineService.get().getJavaFilepath());
+        args.addAll(SequencePipelineService.get().getJavaOpts());
         args.add("-jar");
         args.add(getJAR().getPath());
         args.add("-T");
@@ -53,28 +53,5 @@ public class SelectVariantsWrapper extends AbstractCommandWrapper
         {
             throw new PipelineJobException("Expected output not found: " + outputVcf.getPath());
         }
-    }
-
-    protected File getJAR()
-    {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("GATKPATH");
-        if (path != null)
-        {
-            return new File(path);
-        }
-
-        path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
-        if (path == null)
-        {
-            path = PipelineJobService.get().getAppProperties().getToolsDirectory();
-        }
-
-        return path == null ? new File("GenomeAnalysisTK.jar") : new File(path, "GenomeAnalysisTK.jar");
-    }
-
-    protected void ensureDictionary(File referenceFasta) throws PipelineJobException
-    {
-        getLogger().info("\tensure dictionary exists");
-        SequencePipelineService.get().ensureSequenceDictionaryExists(referenceFasta, getLogger(), false);
     }
 }

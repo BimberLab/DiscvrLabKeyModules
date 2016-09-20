@@ -7,12 +7,9 @@
 Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     extend: 'SequenceAnalysis.panel.BaseSequencePanel',
     alias: 'widget.sequenceanalysis-sequenceimportpanel',
-    analysisController: 'sequenceanalysis',
-    splitJobs: false,
+    jobType: 'readsetImport',
 
     initComponent: function(){
-        this.taskId = 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceImportPipeline';
-
         Ext4.override(Ext4.data.validations, {
             presenceMessage: 'Field is required'
         });
@@ -554,18 +551,18 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         }
 
         //make sure input files are valid
-        var distinctIds = [];
-        var distinctNames = [];
         var totalErrors = 0;
+        values.inputFiles = [];
         this.fileNameStore.clearFilter();
         this.fileNameStore.each(function(rec){
             if (rec.get('error'))
                 totalErrors++;
-
-            if (!rec.get('dataId'))
-                distinctNames.push(rec.get('fileName'));
-            else
-                distinctIds.push(rec.get('dataId'));
+            else {
+                if (!rec.get('dataId'))
+                    values.inputFiles.push({fileName: rec.get('fileName')});
+                else
+                    values.inputFiles.push({dataId: rec.get('dataId')});
+            }
         }, this);
 
         if (totalErrors){
@@ -577,11 +574,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             return false;
         }
 
-        return {
-            json: values,
-            distinctIds: distinctIds,
-            distinctNames: distinctNames
-        };
+        return values;
     },
 
     getReadsetParams: function(values){
@@ -721,7 +714,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         if (!ret)
             return;
 
-        this.startAnalysis(ret.json, ret.distinctIds, ret.distinctNames);
+        this.startAnalysis(ret);
     },
 
     getFilePanelCfg: function(){
@@ -778,21 +771,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 fieldLabel: 'Job Name',
                 width: 600,
                 helpPopup: 'This is the name assigned to this job, which must be unique.  Results will be moved into a folder with this name.',
-                name: 'protocolName',
-                itemId: 'protocolName',
+                name: 'jobName',
+                itemId: 'jobName',
                 allowBlank:false,
                 value: 'SequenceImport_'+ Ext4.Date.format(new Date(), 'Ymd'),
                 maskRe: new RegExp('[A-Za-z0-9_]'),
                 validator: function(val){
                     return (this.isValidProtocol === false ? 'Job Name Already In Use' : true);
-                },
-                listeners: {
-                    scope: this,
-                    change: {
-                        fn: this.checkProtocol,
-                        buffer: 200,
-                        scope: this
-                    }
                 }
             },{
                 fieldLabel: 'Run Description',
@@ -800,8 +785,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 width: 600,
                 height: 100,
                 helpPopup: 'Description for this protocol (optional)',
-                itemId: 'protocolDescription',
-                name: 'protocolDescription',
+                itemId: 'runDescription',
+                name: 'runDescription',
                 allowBlank:true
             }]
         }
@@ -875,7 +860,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         this.fileNameStoreCopy.sort('displayName');
 
         this.down('#fileListView').refresh();
-        this.checkProtocol();
         this.populateSamples();
 
         Ext4.Msg.hide();

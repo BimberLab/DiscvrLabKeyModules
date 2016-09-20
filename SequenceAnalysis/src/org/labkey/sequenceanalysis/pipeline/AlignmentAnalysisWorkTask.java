@@ -11,15 +11,15 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
-import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -80,10 +80,15 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
         }
     }
 
+    private AlignmentAnalysisJob getPipelineJob()
+    {
+        return (AlignmentAnalysisJob)getJob();
+    }
+
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
-        _taskHelper = new SequenceTaskHelper(getJob(), _wd);
+        _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
         List<RecordedAction> actions = new ArrayList<>();
 
@@ -96,7 +101,7 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
         getJob().getLogger().info("Processing Alignments");
         List<AnalysisStep.Output> outputs = new ArrayList<>();
         Map<String, AnalysisModel> alignmentMap = getAnalysisMap();
-        for (File inputBam : getTaskHelper().getSupport().getInputFiles())
+        for (File inputBam : getTaskHelper().getJob().getInputFiles())
         {
             AnalysisModel m = alignmentMap.get(inputBam.getName());
             if (m == null)
@@ -121,7 +126,7 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
                 throw new PipelineJobException("Unable to find reference FASTA for file: " + inputBam.getName());
             }
 
-            File outDir = new File(getTaskHelper().getSupport().getAnalysisDirectory(), FileUtil.getBaseName(inputBam));
+            File outDir = new File(getTaskHelper().getJob().getAnalysisDirectory(), FileUtil.getBaseName(inputBam));
             if (!outDir.exists())
             {
                 outDir.mkdirs();

@@ -34,6 +34,7 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
@@ -43,9 +44,9 @@ import org.labkey.sequenceanalysis.FileGroup;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
+import org.labkey.sequenceanalysis.run.preprocessing.SeqtkRunner;
 import org.labkey.sequenceanalysis.run.preprocessing.Sff2FastqRunner;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
-import org.labkey.sequenceanalysis.run.util.SFFExtractRunner;
 import org.labkey.sequenceanalysis.run.util.SamToFastqWrapper;
 import org.labkey.sequenceanalysis.util.Barcoder;
 import org.labkey.sequenceanalysis.util.FastaToFastqConverter;
@@ -56,7 +57,6 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -151,12 +151,17 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
     {
         SequencePipelineSettings settings = new SequencePipelineSettings(job.getParameters());
 
-        return getFilesToNormalize(job, ((FileAnalysisJobSupport) job).getInputFiles(), true).size() > 0 || settings.isRunFastqc();
+        return settings.isRunFastqc() || getFilesToNormalize(job, ((FileAnalysisJobSupport) job).getInputFiles(), true).size() > 0;
     }
 
     public static List<File> getFilesToNormalize(PipelineJob job, List<File> files) throws FileNotFoundException
     {
         return getFilesToNormalize(job, files, false);
+    }
+
+    private ReadsetImportJob getPipelineJob()
+    {
+        return (ReadsetImportJob)getJob();
     }
 
     private static List<File> getFilesToNormalize(PipelineJob job, List<File> files, boolean allowMissingFiles) throws FileNotFoundException
@@ -184,7 +189,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
         try
         {
-            List<FileGroup> fileGroups = settings.getFileGroups(job.getJobSupport(SequenceAnalysisJob.class));
+            List<FileGroup> fileGroups = settings.getFileGroups((ReadsetImportJob)job);
             for (FileGroup fg : fileGroups)
             {
                 List<List<FileGroup.FilePair>> filePairs = fg.groupByPlatformUnit();
@@ -258,19 +263,19 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 QualityEncodingDetector detector = new QualityEncodingDetector();
                 try (FastqReader reader = new FastqReader(f))
                 {
-                    detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE * 2, reader);
+                    detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE * 10, reader);
                 }
 
                 if (detector.isDeterminationAmbiguous())
                 {
                     job.getLogger().warn("ambigous encoding detected: " + f.getPath() + ". matched:");
-                    EnumSet<FastqQualityFormat> formats = detector.generateCandidateQualities(false);
+                    EnumSet<FastqQualityFormat> formats = detector.generateCandidateQualities(true);
                     for (FastqQualityFormat fmt : formats)
                     {
                         job.getLogger().warn(fmt.name());
                     }
 
-                    return false;
+                    return true;
                 }
                 else if (!FastqQualityFormat.Standard.equals(detector.generateBestGuess(QualityEncodingDetector.FileContext.FASTQ, null)))
                 {
@@ -301,10 +306,12 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         return _taskHelper;
     }
 
+    private Set<File> _finalOutputs = new HashSet<>();
+
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
-        _taskHelper = new SequenceTaskHelper(getJob(), _wd);
+        _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
         List<RecordedAction> actions = new ArrayList<>();
 
         getJob().getLogger().info("Starting Normalization Task");
@@ -314,7 +321,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         try
         {
             List<FileGroup> normalizedGroups = new ArrayList<>();
-            List<FileGroup> fileGroups = getHelper().getSettings().getFileGroups(getJob().getJobSupport(SequenceAnalysisJob.class));
+            List<FileGroup> fileGroups = getHelper().getSettings().getFileGroups(getPipelineJob());
             for (FileGroup fg : fileGroups)
             {
                 getJob().getLogger().debug("processing group: " + fg.name);
@@ -431,8 +438,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
             getJob().getLogger().debug("total file groups: " + normalizedGroups.size());
 
-            SequenceAnalysisJob pipelineJob = getJob().getJobSupport(SequenceAnalysisJob.class);
-            List<SequenceReadsetImpl> readsets = pipelineJob.getCachedReadsetModels();
+            List<SequenceReadsetImpl> readsets = getPipelineJob().getCachedReadsetModels();
 
             //barcode, if needed
             if (getHelper().getSettings().isDoBarcode())
@@ -571,7 +577,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                         getJob().getLogger().debug("compressed size: " + FileUtils.byteCountToDisplaySize(summaryLogCompressed.length()));
                     }
 
-                    getHelper().getFileManager().addFinalOutputFiles(outputs);
+                    _finalOutputs.addAll(outputs);
                     if (outputDir.list().length == 0)
                     {
                         getJob().getLogger().debug("deleting empty directory: " + outputDir.getName());
@@ -588,10 +594,10 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 {
                     for (FileGroup.FilePair pair : fg.filePairs)
                     {
-                        getHelper().getFileManager().addFinalOutputFile(pair.file1);
+                        _finalOutputs.add(pair.file1);
                         if (pair.file2 != null)
                         {
-                            getHelper().getFileManager().addFinalOutputFile(pair.file2);
+                            _finalOutputs.add(pair.file2);
                         }
                     }
                 }
@@ -631,7 +637,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             baseDirectory.mkdirs();
 
             FileType gz = new FileType("gz");
-            for (File f : getHelper().getFileManager().getFinalOutputFiles())
+            for (File f : _finalOutputs)
             {
                 if (!gz.isType(f))
                 {
@@ -682,8 +688,8 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             }
 
             getJob().setStatus(PipelineJob.TaskStatus.running, "CLEANUP FILES");
-            getHelper().getFileManager().handleInputs();
-            getHelper().getFileManager().cleanup();
+            ReadsetInitTask.handleInputs(getPipelineJob(), getHelper().getFileManager(), actions, _finalOutputs, null);
+            getHelper().getFileManager().cleanup(actions);
         }
         catch (IOException e)
         {
@@ -842,10 +848,10 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             QualityEncodingDetector detector = new QualityEncodingDetector();
             try (FastqReader reader = new FastqReader(input))
             {
-                detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE * 2, reader);
+                detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE * 10, reader);
             }
 
-            EnumSet<FastqQualityFormat> formats = detector.generateCandidateQualities(false);
+            EnumSet<FastqQualityFormat> formats = detector.generateCandidateQualities(true);
             if (formats.isEmpty())
             {
                 throw new PipelineJobException("Unable to infer FASTQ encoding for file: " + input.getPath());
@@ -857,9 +863,29 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 {
                     job.getLogger().warn(fmt.name());
                 }
+
+                job.getLogger().info("trying to scan more reads to reduce ambiguity.  new formats detected: ");
+                detector = new QualityEncodingDetector();
+                try (FastqReader reader = new FastqReader(input))
+                {
+                    detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE * 5000, reader);
+                }
+
+                formats = detector.generateCandidateQualities(true);
+                for (FastqQualityFormat fmt : formats)
+                {
+                    job.getLogger().warn(fmt.name());
+                }
+                if (formats.isEmpty())
+                {
+                    throw new PipelineJobException("Unable to infer FASTQ encoding for file: " + input.getPath());
+                }
             }
 
-            if (formats.contains(FastqQualityFormat.Standard))
+            //NOTE: apparently it's common to have data ambiguous between Solexa and Illumina encoding
+            //so long as we dont also potentially match Standard encoding, assume
+            //Illumina and convert
+            if (formats.contains(FastqQualityFormat.Standard) && formats.size() == 1)
             {
                 if (!gz.isType(input))
                 {
@@ -873,26 +899,24 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     output = input;
                 }
             }
-            else if (formats.contains(FastqQualityFormat.Illumina) || formats.contains(FastqQualityFormat.Solexa))
+            else if (formats.contains(FastqQualityFormat.Illumina) && !formats.contains(FastqQualityFormat.Standard))
             {
                 getJob().getLogger().info("Converting Illumina/Solexa FASTQ (ASCII 64) to standard encoding (ASCII 33)");
                 File toConvert = input;
-                if (gz.isType(input))
-                {
-                    getJob().getLogger().info("decompressing file: " + input.getName());
-                    toConvert = new File(output.getPath().replaceAll("\\.gz$", ""));
-                    Compress.decompressGzip(input, toConvert);
-                }
 
-                Sff2FastqRunner runner = new Sff2FastqRunner(getJob().getLogger());
+                SeqtkRunner runner = new SeqtkRunner(getJob().getLogger());
                 output = new File(workingDir, SequenceTaskHelper.getUnzippedBaseName(input.getName()) + ".fastq");
-                runner.convertFormat(toConvert, output);
+                runner.convertIlluminaToSanger(toConvert, output);
 
                 File compressed = new File(output.getPath() + ".gz");
                 getJob().getLogger().info("compressing file: " + output.getName());
                 Compress.compressGzip(output, compressed);
                 output.delete();
                 output = compressed;
+            }
+            else
+            {
+                throw new PipelineJobException("Unknown FASTQ encoding");
             }
         }
         else if (type.equals(SequenceUtil.FILETYPE.fasta))
@@ -910,9 +934,9 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         }
         else if (type.equals(SequenceUtil.FILETYPE.sff))
         {
-            SFFExtractRunner sff = new SFFExtractRunner(getJob().getLogger());
+            Sff2FastqRunner sff = new Sff2FastqRunner(getJob().getLogger());
             output = new File(workingDir, SequenceTaskHelper.getUnzippedBaseName(input.getName()) + ".fastq");
-            sff.convert(input, output);
+            sff.convertFormat(input, output);
 
             File compressed = new File(output.getPath() + ".gz");
             getJob().getLogger().info("compressing file: " + output.getName());
@@ -997,17 +1021,13 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
     public List<BarcodeModel> getExtraBarcodesFromFile() throws PipelineJobException
     {
         List<BarcodeModel> models = new ArrayList<>();
-        File barcodes = ReadsetImportTask.getExtraBarcodesFile(getHelper());
-
+        File barcodes = ReadsetInitTask.getExtraBarcodesFile(getHelper());
         if (barcodes.exists())
         {
             getJob().getLogger().debug("\tReading additional barcodes from file");
 
-            CSVReader reader = null;
-
-            try
+            try (CSVReader reader = new CSVReader(Readers.getReader(barcodes), '\t'))
             {
-                reader = new CSVReader(new FileReader(barcodes), '\t');
                 String[] line;
                 while ((line = reader.readNext()) != null)
                 {
@@ -1020,27 +1040,9 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     }
                 }
             }
-            catch (FileNotFoundException e)
-            {
-                throw new PipelineJobException(e);
-            }
             catch (IOException e)
             {
                 throw new PipelineJobException(e);
-            }
-            finally
-            {
-                try
-                {
-                    if (reader != null)
-                        reader.close();
-
-                    barcodes.delete();
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
             }
         }
 

@@ -1,7 +1,6 @@
 package org.labkey.sequenceanalysis.analysis;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -80,8 +79,11 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler
         }
 
         @Override
-        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            PipelineJob job = ctx.getJob();
+            JSONObject params = ctx.getParams();
+
             if (inputFiles.isEmpty())
             {
                 job.getLogger().warn("no input files");
@@ -94,8 +96,8 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler
 
                 action.addInput(so.getFile(), "Input BAM File");
 
-                File outputFile = new File(outputDir, FileUtil.getBaseName(so.getFile()) + ".g.vcf.gz");
-                File idxFile = new File(outputDir, FileUtil.getBaseName(so.getFile()) + ".g.vcf.gz.idx");
+                File outputFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()) + ".g.vcf.gz");
+                File idxFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()) + ".g.vcf.gz.idx");
 
                 HaplotypeCallerWrapper wrapper = new HaplotypeCallerWrapper(job.getLogger());
                 if ("on".equals(params.optString("multithreaded")))
@@ -104,9 +106,9 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler
                     wrapper.setMultiThreaded(true);
                 }
 
-                wrapper.setOutputDir(outputDir);
+                wrapper.setOutputDir(ctx.getOutputDir());
 
-                ReferenceGenome referenceGenome = support.getCachedGenome(so.getLibrary_id());
+                ReferenceGenome referenceGenome = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id());
                 if (referenceGenome == null)
                 {
                     throw new PipelineJobException("No reference genome found for output: " + so.getRowid());
@@ -138,9 +140,10 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler
                 o.setLibrary_id(so.getLibrary_id());
                 o.setCategory("gVCF File");
                 o.setReadset(so.getReadset());
-                outputsToCreate.add(o);
+                o.setDescription("GATK Version: " + wrapper.getVersionString());
+                ctx.addSequenceOutput(o);
 
-                actions.add(action);
+                ctx.addActions(action);
             }
         }
 

@@ -113,7 +113,7 @@ public class LaboratoryController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermission(ReadPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class PrepareExptRunAction extends SimpleViewAction<PlanExptRunForm>
     {
         @Override

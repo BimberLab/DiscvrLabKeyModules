@@ -49,10 +49,10 @@ asg.analysis_id
 
 ) t
 
-LEFT JOIN (select haplotype, count(h.required) as totalRequired, group_concat(h.name, chr(10)) as requiredLineages FROM sequenceanalysis.haplotype_sequences h WHERE required = true GROUP BY haplotype) t2
+LEFT JOIN (select haplotype, count(h.required) as totalRequired, group_concat(h.name, chr(10)) as requiredLineages FROM sequenceanalysis.haplotype_sequences h WHERE haplotype.datedisabled IS NULL AND required = true GROUP BY haplotype) t2
 ON (t2.haplotype = t.haplotype)
 
-LEFT JOIN (select haplotype, count(*) as total, group_concat(h.name, chr(10)) as lineages FROM sequenceanalysis.haplotype_sequences h GROUP BY haplotype) t3
+LEFT JOIN (select haplotype, count(*) as total, group_concat(h.name, chr(10)) as lineages FROM sequenceanalysis.haplotype_sequences h WHERE haplotype.datedisabled IS NULL GROUP BY haplotype) t3
 ON (t3.haplotype = t.haplotype)
 
 WHERE totalRequiredLineagesPresent >= totalRequired

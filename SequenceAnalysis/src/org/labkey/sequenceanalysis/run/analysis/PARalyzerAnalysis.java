@@ -1,11 +1,11 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
-import htsjdk.samtools.SAMFileHeader;
 import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
@@ -15,17 +15,9 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.run.alignment.FastaToTwoBitRunner;
 import org.labkey.sequenceanalysis.run.util.PARalyzerRunner;
-import org.labkey.sequenceanalysis.run.util.SamFormatConverterWrapper;
-import org.labkey.sequenceanalysis.run.util.SortSamWrapper;
-import org.labkey.sequenceanalysis.util.SequenceUtil;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,12 +59,6 @@ public class PARalyzerAnalysis extends AbstractCommandPipelineStep<PARalyzerRunn
     }
 
     @Override
-    public void init(List<AnalysisModel> models) throws PipelineJobException
-    {
-
-    }
-
-    @Override
     public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
@@ -97,7 +83,7 @@ public class PARalyzerAnalysis extends AbstractCommandPipelineStep<PARalyzerRunn
 
         File clusterFile = new PARalyzerRunner(getPipelineCtx().getLogger()).execute(inputBam, outputDir, twoBit, toolParams);
         output.addOutput(clusterFile, "Cluster File");
-        output.addSequenceOutput(clusterFile, rs.getName() + " Clusters", "Cluster File", rs.getReadsetId(), null, referenceGenome.getGenomeId());
+        output.addSequenceOutput(clusterFile, rs.getName() + " Clusters", "Cluster File", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
         //write parameter file
         output.addIntermediateFile(new File(outputDir, FileUtil.getBaseName(inputBam) + ".paralyzer.ini"));

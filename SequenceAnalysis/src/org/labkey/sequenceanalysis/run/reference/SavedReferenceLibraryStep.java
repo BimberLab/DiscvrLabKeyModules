@@ -56,6 +56,7 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
                             put("schemaName", "sequenceanalysis");
                             put("queryName", "reference_libraries");
                             put("containerPath", "js:Laboratory.Utils.getQueryContainerPath()");
+                            put("filterArray", "js:[LABKEY.Filter.create('datedisabled', null, LABKEY.Filter.Types.ISBLANK)]");
                             put("displayField", "name");
                             put("valueField", "rowid");
                             put("allowBlank", false);

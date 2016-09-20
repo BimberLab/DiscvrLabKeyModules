@@ -21,6 +21,9 @@ class HaplotypeCallerRunner extends QScript {
   @Argument(fullName="scatterCount", shortName="scatterCount", doc="the number of concurrent jobs", required=false)
   var scatterCount: Int = 1
 
+  @Argument(fullName="max_alternate_alleles", shortName="max_alternate_alleles", doc="Maximum number of alternate alleles to genotype", required=false)
+  var maxAltAlleles: Int = 6
+
   @Argument(fullName="annotation", shortName="A", doc="one or more annotations to apply", required=false)
   var annotation: List[String] = Nil
 
@@ -35,6 +38,7 @@ class HaplotypeCallerRunner extends QScript {
     hc.out = this.output
     hc.annotation = this.annotation
     hc.scatterCount = this.scatterCount
+    hc.maxAltAlleles = this.maxAltAlleles
 
     //optional
     hc.emitRefConfidence = ReferenceConfidenceMode.GVCF

@@ -30,12 +30,12 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.run.util.LiftoverVcfWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Arrays;
@@ -164,10 +164,13 @@ public class LiftoverHandler implements SequenceOutputHandler
         }
 
         @Override
-        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            PipelineJob job = ctx.getJob();
+            JSONObject params = ctx.getParams();
+
             Integer chainFileId = params.getInt("chainFileId");
-            File chainFile = support.getCachedData(chainFileId);
+            File chainFile = ctx.getSequenceSupport().getCachedData(chainFileId);
             int targetGenomeId = params.getInt("targetGenomeId");
 
             for (SequenceOutputFile f : inputFiles)
@@ -213,7 +216,7 @@ public class LiftoverHandler implements SequenceOutputHandler
                     }
                     else if (_vcfFileType.isType(f.getFile()))
                     {
-                        ReferenceGenome targetGenome = support.getCachedGenome(targetGenomeId);
+                        ReferenceGenome targetGenome = ctx.getSequenceSupport().getCachedGenome(targetGenomeId);
                         liftOverVcf(targetGenome, chainFile, f.getFile(), lifted, unmappedOutput, job, pct);
                     }
                 }
@@ -245,7 +248,7 @@ public class LiftoverHandler implements SequenceOutputHandler
                     so1.setCreated(new Date());
                     so1.setModified(new Date());
 
-                    outputsToCreate.add(so1);
+                    ctx.addSequenceOutput(so1);
                 }
 
                 if (!unmappedOutput.exists())
@@ -281,11 +284,11 @@ public class LiftoverHandler implements SequenceOutputHandler
                     so2.setCreated(new Date());
                     so2.setModified(new Date());
 
-                    outputsToCreate.add(so2);
+                    ctx.addSequenceOutput(so2);
                 }
 
                 action.setEndTime(new Date());
-                actions.add(action);
+                ctx.addActions(action);
             }
         }
     }
@@ -299,7 +302,7 @@ public class LiftoverHandler implements SequenceOutputHandler
     public void liftOverBed(File chain, File input, File output, File unmappedOutput, PipelineJob job, double pct) throws IOException, PipelineJobException
     {
         LiftOver lo = new LiftOver(chain);
-        try (CSVWriter writer = new CSVWriter(new FileWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER);CSVWriter unmappedWriter = new CSVWriter(new FileWriter(unmappedOutput), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER);CSVWriter unmappedWriter = new CSVWriter(PrintWriters.getPrintWriter(unmappedOutput), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             try (FeatureReader<BEDFeature> reader = AbstractFeatureReader.getFeatureReader(input.getAbsolutePath(), new BEDCodec(), false))
             {

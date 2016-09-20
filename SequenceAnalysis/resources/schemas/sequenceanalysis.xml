@@ -530,7 +530,7 @@
                     <ns:item text="Predicted Drug Resistance Mutations">
                         <ns:onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'drug_resistance_snps'})</ns:onClick>
                     </ns:item>
-                    <ns:item text="SNP Viewer">
+                    <ns:item text="Quasispecies Viewer">
                         <ns:onClick>SequenceAnalysis.Buttons.viewSNPs(dataRegionName)</ns:onClick>
                     </ns:item>
                 </ns:item>
@@ -1339,7 +1339,9 @@
             <ns:column columnName="comment">
                 <ns:inputType>textarea</ns:inputType>
             </ns:column>
-
+            <ns:column columnName="datedisabled">
+                <ns:columnTitle>Date Disabled</ns:columnTitle>
+            </ns:column>
             <ns:column columnName="createdby">
                 <ns:isUserEditable>false</ns:isUserEditable>
                 <ns:shownInInsertView>false</ns:shownInInsertView>
@@ -2005,6 +2007,7 @@
             </ns:column>
             <ns:column columnName="fasta_file">
                 <ns:columnTitle>FASTA File</ns:columnTitle>
+                <ns:isUserEditable>false</ns:isUserEditable>
                 <ns:fk>
                     <ns:fkDbSchema>exp</ns:fkDbSchema>
                     <ns:fkTable>data</ns:fkTable>

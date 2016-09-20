@@ -6,14 +6,11 @@
 
 Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
     extend: 'SequenceAnalysis.panel.BaseSequencePanel',
-    analysisController: 'sequenceanalysis',
     alias: 'widget.sequenceanalysis-sequenceanalysispanel',
-    splitJobs: true,
+    jobType: 'alignment',
     statics: {
         TASKID: 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceAnalysisPipeline'
     },
-
-    taskId: 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceAnalysisPipeline',
 
     initComponent: function(){
         this.readsets = this.readsets ? this.readsets.split(';') : [];
@@ -202,8 +199,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             this.errorNames = Ext4.unique(this.errorNames);
         }
         if (this.storesLoaded == 2){
-            this.checkProtocol();
-
             var dv = this.down('dataview');
             LDK.Assert.assertNotEmpty('Dataview Not Found In SequenceAnalaysisPanel', dv);
             if (dv){
@@ -245,14 +240,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
         //first add the general params
         Ext4.apply(json, this.down('#runInformation').getForm().getValues());
 
-        //and readset information
-        this.readsetStore.each(function(rec, idx){
-            json['readset_' + idx] = {
-                readsetname: rec.get('name'),
-                readset: rec.get('rowid')
-            };
-        }, this);
-
         json['alignment.doAlignment'] = this.down('#doAlignment').getValue();
 
         //then append each section
@@ -260,6 +247,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
         Ext4.Array.forEach(sections, function(s){
             Ext4.apply(json, s.toJSON());
         }, this);
+
+        json.readsetIds = this.readsets;
 
         return json;
     },
@@ -280,29 +269,18 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 fieldLabel: 'Job Name',
                 width: 600,
                 helpPopup: 'This is the name assigned to this job, which must be unique.  Results will be moved into a folder with this name.',
-                name: 'protocolName',
-                itemId: 'protocolName',
+                name: 'jobName',
+                itemId: 'jobName',
                 allowBlank:false,
                 value: 'SequenceAnalysis_'+ Ext4.Date.format(new Date(), 'Ymd'),
-                maskRe: new RegExp('[A-Za-z0-9_]'),
-                validator: function(val){
-                    return (this.isValidProtocol === false ? 'Job Name Already In Use' : true);
-                },
-                listeners: {
-                    scope: this,
-                    change: {
-                        fn: this.checkProtocol,
-                        buffer: 200,
-                        scope: this
-                    }
-                }
+                maskRe: new RegExp('[A-Za-z0-9_]')
             },{
                 fieldLabel: 'Description',
                 xtype: 'textarea',
                 width: 600,
                 height: 100,
                 helpPopup: 'Description for this analysis (optional)',
-                name: 'protocolDescription',
+                name: 'jobDescription',
                 allowBlank:true
             },{
                 fieldLabel: 'Delete Intermediate Files',

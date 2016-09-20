@@ -2,7 +2,6 @@ package org.labkey.sequenceanalysis.analysis;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.filter.DuplicateReadFilter;
-import htsjdk.samtools.filter.SamRecordFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.iterator.CloseableIterator;
@@ -191,10 +190,13 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
         }
 
         @Override
-        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
-            File jointUnmappedCollapsed = new File(outputDir, "unmapped_collapsed.fasta");
-            File jointUnmappedCollapsedTsv = new File(outputDir, "unmapped_collapsed.txt");
+            PipelineJob job = ctx.getJob();
+            JSONObject params = ctx.getParams();
+
+            File jointUnmappedCollapsed = new File(ctx.getOutputDir(), "unmapped_collapsed.fasta");
+            File jointUnmappedCollapsedTsv = new File(ctx.getOutputDir(), "unmapped_collapsed.txt");
 
             Map<String, FastqAggregate> uniqueReads = new HashMap<>();
             RecordedAction action = new RecordedAction(getName());
@@ -212,7 +214,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
 
                     action.addInput(so.getFile(), "Input BAM");
 
-                    ReferenceGenome rg = support.getCachedGenome(so.getLibrary_id());
+                    ReferenceGenome rg = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id());
 
                     //first calculate avg qualities at each position
                     job.getLogger().info("Calculating avg quality scores");
@@ -239,7 +241,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     File outputLog = null;
                     if (params.containsKey("writeLog") && "on".equals(params.getString("writeLog")))
                     {
-                        outputLog = new File(outputDir, FileUtil.getBaseName(so.getFile()) + ".sbt.txt.gz");
+                        outputLog = new File(ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()) + ".sbt.txt.gz");
                         agg.setOutputLog(outputLog);
                     }
 
@@ -254,7 +256,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
 
                     agg.writeSummary();
                     job.getLogger().info("writing unmapped reads");
-                    Pair<File, File> outputs = agg.outputUnmappedReads(so.getFile(), outputDir, FileUtil.getBaseName(so.getFile()));
+                    Pair<File, File> outputs = agg.outputUnmappedReads(so.getFile(), ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()));
                     if (outputs == null)
                     {
                         job.getLogger().info("no unmapped reads, skipping");
@@ -353,7 +355,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
             action.addOutput(jointUnmappedCollapsedTsv, "Combined Unmapped Summaary", false);
 
             action.setEndTime(new Date());
-            actions.add(action);
+            ctx.addActions(action);
         }
 
         @Override

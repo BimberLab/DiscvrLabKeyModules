@@ -68,4 +68,8 @@ abstract public class SequenceAnalysisService
     abstract public ReferenceGenome getReferenceGenome(int rowId, User u) throws PipelineJobException;
 
     abstract public File ensureVcfIndex(File vcf, Logger log) throws IOException;
+
+    abstract public File bgzipFile(File input, Logger log) throws PipelineJobException;
+
+    abstract public void ensureFastaIndex(File fasta, Logger log) throws PipelineJobException;
 }

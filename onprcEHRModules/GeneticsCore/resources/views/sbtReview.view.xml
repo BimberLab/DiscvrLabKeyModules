@@ -2,5 +2,6 @@
     <dependencies>
         <dependency path="laboratory.context"/>
         <dependency path="SequenceAnalysis/sequenceAnalysis"/>
+        <dependency path="geneticscore/panel/HaplotypePanel.js"/>
     </dependencies>
 </view>

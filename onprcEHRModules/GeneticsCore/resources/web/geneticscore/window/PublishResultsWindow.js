@@ -15,22 +15,22 @@ Ext4.define('GeneticsCore.window.PublishResultsWindow', {
                 dataRegionName: dataRegionName,
                 actionName: 'cacheAnalyses'
             }).show();
-        },
-
-        haplotypeButtonHandler: function(dataRegionName){
-            var dr = LABKEY.DataRegions[dataRegionName];
-            LDK.Assert.assertNotEmpty('Unable to find dataregion in PublishResultsWindow', dr);
-
-            if (!dr.getChecked().length) {
-                Ext4.Msg.alert('Error', 'No rows selected');
-                return;
-            }
-
-            Ext4.create('GeneticsCore.window.PublishResultsWindow', {
-                dataRegionName: dataRegionName,
-                actionName: 'cacheHaplotypes'
-            }).show();
         }
+
+        // haplotypeButtonHandler: function(dataRegionName){
+        //     var dr = LABKEY.DataRegions[dataRegionName];
+        //     LDK.Assert.assertNotEmpty('Unable to find dataregion in PublishResultsWindow', dr);
+        //
+        //     if (!dr.getChecked().length) {
+        //         Ext4.Msg.alert('Error', 'No rows selected');
+        //         return;
+        //     }
+        //
+        //     Ext4.create('GeneticsCore.window.PublishResultsWindow', {
+        //         dataRegionName: dataRegionName,
+        //         actionName: 'cacheHaplotypes'
+        //     }).show();
+        // }
     },
 
     initComponent: function(){
@@ -107,18 +107,23 @@ Ext4.define('GeneticsCore.window.PublishResultsWindow', {
     },
 
     onSubmit: function(){
-        var alleleNames = LABKEY.DataRegions[this.dataRegionName].getChecked();
+        var alleleNames = this.alleleNames || (this.dataRegionName ? LABKEY.DataRegions[this.dataRegionName].getChecked() : null) || [];
         var protocol = this.down('#protocolField').getValue();
-        if (!alleleNames.length || !protocol){
+        if ((!alleleNames.length && !this.json) || !protocol){
             Ext4.Msg.alert('Error', 'Missing either alleles or the target assay');
         }
 
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('geneticscore', this.actionName, null, {alleleNames: alleleNames, protocolId: protocol}),
+            url: LABKEY.ActionURL.buildURL('geneticscore', this.actionName, null),
             method: 'post',
             timeout: 10000000,
             scope: this,
+            jsonData: {
+                alleleNames: alleleNames,
+                json: Ext4.encode(this.json),
+                protocolId: protocol
+            },
             failure: LDK.Utils.getErrorCallback(),
             success: LABKEY.Utils.getCallbackWrapper(function(results){
                 Ext4.Msg.hide();
@@ -134,13 +139,15 @@ Ext4.define('GeneticsCore.window.PublishResultsWindow', {
                         }
                     }, this);
 
-                    LABKEY.DataRegions[this.dataRegionName].clearSelected();
-                    LABKEY.DataRegions[this.dataRegionName].refresh();
+                    if (this.dataRegionName){
+                        LABKEY.DataRegions[this.dataRegionName].clearSelected();
+                        LABKEY.DataRegions[this.dataRegionName].refresh();
+                    }
                 }
                 else {
                     Ext4.Msg.alert('Error', 'Something may have gone wrong');
                 }
             }, this)
-        })
+        });
     }
 });

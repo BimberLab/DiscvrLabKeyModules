@@ -185,6 +185,12 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         //inspect within library
                         List<String> expectedChildren = new ArrayList<>();
                         Integer fastaId = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file")).getObject(Integer.parseInt(child.getName()), Integer.class);
+                        if (fastaId == null)
+                        {
+                            _log.error("Unable to find FASTA ExpData in DB matching jbrowse directory: " + child.getPath());
+                            continue;
+                        }
+
                         ExpData fastaData = ExperimentService.get().getExpData(fastaId);
                         File fasta = fastaData.getFile();
                         if (!fasta.exists())

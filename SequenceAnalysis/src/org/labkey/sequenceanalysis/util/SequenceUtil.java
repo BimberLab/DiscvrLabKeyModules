@@ -407,11 +407,11 @@ public class SequenceUtil
                     }
                 }
             }
-
-            //then sort/append the records
-            CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
-            wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + input.getPath() + "' | grep -v '^#' | sort -k1,1 -k2,2n"), ProcessBuilder.Redirect.appendTo(sorted));
         }
+
+        //then sort/append the records
+        CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
+        wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + input.getPath() + "' | grep -v '^#' | sort -k1,1 -k2,2n"), ProcessBuilder.Redirect.appendTo(sorted));
 
         //replace the non-sorted output
         input.delete();

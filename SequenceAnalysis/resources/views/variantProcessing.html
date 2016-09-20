@@ -3,6 +3,7 @@
         var webpart = <%=webpartContext%>;
 
         Ext4.create('SequenceAnalysis.panel.VariantProcessingPanel', {
+            showGenotypeGVCFs: LABKEY.ActionURL.getParameter("showGenotypeGVCFs"),
             outputFileIds: LABKEY.ActionURL.getParameter("outputFileIds") ? LABKEY.ActionURL.getParameter("outputFileIds").split(';') : []
         }).render(webpart.wrapperDivId);
     });

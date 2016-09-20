@@ -1,6 +1,5 @@
 package org.labkey.sequenceanalysis.analysis;
 
-import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
@@ -132,8 +131,11 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
         }
 
         @Override
-        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            PipelineJob job = ctx.getJob();
+            JSONObject params = ctx.getParams();
+
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
@@ -145,7 +147,7 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                 throw new PipelineJobException("No GTF file provided");
             }
 
-            File gtfFile = support.getCachedData(gtf);
+            File gtfFile = ctx.getSequenceSupport().getCachedData(gtf);
             if (gtfFile == null || !gtfFile.exists())
             {
                 throw new PipelineJobException("Unable to find GTF file: " + gtfFile);
@@ -155,7 +157,7 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
 
             //first build a map of all geneIDs and other attributes
             job.getLogger().info("reading GTF file");
-            Map<String, Map<String, String>> geneMap = new HashMap();
+            Map<String, Map<String, String>> geneMap = new HashMap<>();
             try (BufferedReader gtfReader = Readers.getReader(gtfFile))
             {
                 Pattern geneIdPattern = Pattern.compile("(gene_id \")([^\"]+)\"(.*)");
@@ -286,7 +288,7 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
             }
 
             job.getLogger().info("writing output.  total genes: " + distinctGenes.size());
-            File outputFile = new File(outputDir, name + ".txt");
+            File outputFile = new File(ctx.getOutputDir(), name + ".txt");
             try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(outputFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 //header
@@ -297,9 +299,9 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
 
                 for (SequenceOutputFile so : inputFiles)
                 {
-                    if (so.getReadset() != null && support.getCachedReadset(so.getReadset()) != null)
+                    if (so.getReadset() != null && ctx.getSequenceSupport().getCachedReadset(so.getReadset()) != null)
                     {
-                        Readset rs = support.getCachedReadset(so.getReadset());
+                        Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
                         header.add(rs.getName());
                     }
                     else
@@ -344,10 +346,10 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
             so.setCategory("Gene Count Table");
             so.setFile(outputFile);
             so.setName(params.getString("name"));
-            outputsToCreate.add(so);
+            ctx.addSequenceOutput(so);
 
             action.setEndTime(new Date());
-            actions.add(action);
+            ctx.addActions(action);
         }
     }
 }

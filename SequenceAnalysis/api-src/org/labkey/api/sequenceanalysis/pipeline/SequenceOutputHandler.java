@@ -27,6 +27,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.view.ActionURL;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -133,6 +134,28 @@ public interface SequenceOutputHandler
          */
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
 
-        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
+        public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException;
+    }
+
+    public interface JobContext extends PipelineContext
+    {
+        public PipelineJob getJob();
+
+        public SequenceAnalysisJobSupport getSequenceSupport();
+
+        public JSONObject getParams();
+
+        public File getOutputDir();
+
+        public void addActions(RecordedAction... action);
+
+        public TaskFileManager getFileManager();
+
+        public void addSequenceOutput(SequenceOutputFile o);
+    }
+
+    public interface HasActionNames
+    {
+        public Collection<String> getAllowableActionNames();
     }
 }

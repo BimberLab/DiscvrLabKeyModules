@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
@@ -67,12 +68,6 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
         {
             return new SnpCountAnalysis(this, ctx);
         }
-    }
-
-    @Override
-    public void init(List<AnalysisModel> models) throws PipelineJobException
-    {
-
     }
 
     @Override
@@ -137,7 +132,7 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
             throw new PipelineJobException(e);
         }
 
-        output.addSequenceOutput(outputFile, "SNP Count: " + rs.getName(), "SNP Count Output", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+        output.addSequenceOutput(outputFile, "SNP Count: " + rs.getName(), "SNP Count Output", model.getReadset(), model.getAnalysisId(), model.getLibraryId(), null);
 
         return output;
     }

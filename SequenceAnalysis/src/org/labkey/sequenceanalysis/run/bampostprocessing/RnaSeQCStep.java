@@ -58,12 +58,6 @@ public class RnaSeQCStep extends AbstractCommandPipelineStep<RnaSeQCWrapper> imp
     }
 
     @Override
-    public void init(List<AnalysisModel> models) throws PipelineJobException
-    {
-
-    }
-
-    @Override
     public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         List<String> extraParams = new ArrayList<>();

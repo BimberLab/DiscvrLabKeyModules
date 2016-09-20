@@ -1,27 +1,36 @@
 package org.labkey.sequenceanalysis;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
-import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
+import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
+import org.labkey.sequenceanalysis.run.util.SortVcfWrapper;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -132,14 +141,24 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
 
     public <StepType extends PipelineStep> List<PipelineStepProvider<StepType>> getSteps(PipelineJob job, Class<StepType> stepType)
     {
+        Map<String, String> params;
+        if (job instanceof HasJobParams)
+        {
+            params = ((HasJobParams)job).getJobParams();
+        }
+        else
+        {
+            params = job.getParameters();
+        }
+
         PipelineStep.StepType type = PipelineStep.StepType.getStepType(stepType);
-        if (!job.getParameters().containsKey(type.name()) || StringUtils.isEmpty(job.getParameters().get(type.name())))
+        if (!params.containsKey(type.name()) || StringUtils.isEmpty(params.get(type.name())))
         {
             return Collections.EMPTY_LIST;
         }
 
         List<PipelineStepProvider<StepType>> providers = new ArrayList<>();
-        String[] pipelineSteps = job.getParameters().get(type.name()).split(";");
+        String[] pipelineSteps = params.get(type.name()).split(";");
         for (String stepName : pipelineSteps)
         {
             providers.add(SequencePipelineService.get().getProviderByName(stepName, stepType));
@@ -192,11 +211,21 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
             params.add("-Djava.io.tmpdir=" + tmpDir);
         }
 
-        String xmx = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_MEMORY");
-        if (StringUtils.trimToNull(xmx) != null)
+        //try environment first:
+        String maxRam = StringUtils.trimToNull(System.getenv("SEQUENCEANALYSIS_MAX_RAM"));
+        if (maxRam != null)
         {
-            String[] tokens = xmx.split(" ");
-            params.addAll(Arrays.asList(tokens));
+            params.add("-Xmx" + maxRam + "g");
+            params.add("-Xms" + maxRam + "g");
+        }
+        else
+        {
+            String xmx = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_MEMORY");
+            if (StringUtils.trimToNull(xmx) != null)
+            {
+                String[] tokens = xmx.split(" ");
+                params.addAll(Arrays.asList(tokens));
+            }
         }
 
         return params;
@@ -219,42 +248,63 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     @Override
     public List<File> getSequenceJobInputFiles(PipelineJob job)
     {
-        if (!(job instanceof SequenceAnalysisJob))
+        if (!(job instanceof SequenceAlignmentJob))
         {
             return null;
         }
 
-        SequenceAnalysisJob pipelineJob = (SequenceAnalysisJob)job;
-        List<File> ret = new ArrayList<>();
-
-        List<SequenceReadsetImpl> readsets = pipelineJob.getCachedReadsetModels();
-        for (SequenceReadsetImpl rs : readsets)
-        {
-            //NOTE: because these jobs can be split, we only process the readsets we chose to include
-            if (pipelineJob.getReadsetIdToProcesss() != null && !pipelineJob.getReadsetIdToProcesss().contains(rs.getReadsetId()))
-            {
-                continue;
-            }
-
-            for (ReadDataImpl d : rs.getReadData())
-            {
-                if (d.getFile1() != null)
-                {
-                    ret.add(d.getFile1());
-                }
-
-                if (d.getFile2() != null)
-                {
-                    ret.add(d.getFile2());
-                }
-            }
-        }
-
-        return ret;
+        return ((SequenceAlignmentJob) job).getInputFiles();
     }
 
     public Integer getExpRunIdForJob(PipelineJob job) throws PipelineJobException
     {
         return SequenceTaskHelper.getExpRunIdForJob(job);
+    }
+
+    public long getLineCount(File f) throws PipelineJobException
+    {
+        return SequenceUtil.getLineCount(f);
+    }
+
+    public File ensureBamIndex(File inputBam, Logger log, boolean forceDeleteExisting) throws PipelineJobException
+    {
+        File expectedIndex = new File(inputBam.getPath() + ".bai");
+        if (expectedIndex.exists() && (expectedIndex.lastModified() < inputBam.lastModified() || forceDeleteExisting))
+        {
+            log.info("deleting out of date index: " + expectedIndex.getPath());
+            expectedIndex.delete();
+        }
+
+        if (!expectedIndex.exists())
+        {
+            log.debug("\tcreating temp index for BAM: " + inputBam.getName());
+            BuildBamIndexWrapper buildBamIndexWrapper = new BuildBamIndexWrapper(log);
+            buildBamIndexWrapper.setStringency(ValidationStringency.SILENT);
+            buildBamIndexWrapper.executeCommand(inputBam);
+
+            return expectedIndex;
+        }
+        else
+        {
+            log.debug("BAM index already exists: " + expectedIndex.getPath());
+        }
+
+        return null;
+    }
+
+    public SAMFileHeader.SortOrder getBamSortOrder(File bam) throws IOException
+    {
+        return SequenceUtil.getBamSortOrder(bam);
+    }
+
+    public File sortVcf(File inputVcf, @Nullable File outputVcf, File sequenceDictionary, Logger log) throws PipelineJobException
+    {
+        SortVcfWrapper wrapper = new SortVcfWrapper(log);
+        return wrapper.sortVcf(inputVcf, outputVcf, sequenceDictionary);
+    }
+
+    public void sortROD(File input, Logger log) throws IOException, PipelineJobException
+    {
+        SequenceUtil.sortROD(input, log);
     }
 }

@@ -69,36 +69,6 @@ Ext4.onReady(function (){
         var row = data.rows[0];
         var readset = row.readset;
 
-//        var panel = Ext4.create('LDK.panel.WebpartPanel', {
-//            title: 'Reports',
-//            items: [{
-//                xtype: 'ldk-navpanel',
-//                border: false,
-//                colWidth: 450,
-//                sections: [
-//                    {header: 'Raw Data',
-//                    items: [
-//                        {name: 'View Files', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=exp&query.run~eq='+row.runid+'&query.queryName=datas'}
-//                    ]},
-//                    {header: 'Alignment Reports',
-//                    items: [
-//                        {name: 'View/Search All Alignments', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=sequenceanalysis&query.analysis_id~eq='+analysisId+'&query.queryName=sequence_alignments'},
-//                        {name: 'View/Search Sequence Coverage', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=sequenceanalysis&query.analysis_id~eq='+analysisId+'&query.queryName=sequence_coverage'},
-//                        {name: 'Alignment Summary, By Read', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=sequenceanalysis&query.analysis_id~eq='+analysisId+'&query.queryName=alignment_summary_grouped'}
-//                    ]},
-//                    {header: 'NT SNP Reports',
-//                    items: [
-//                        {name: 'NT Mutation Summary, By Position and Base', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=sequenceanalysis&query.analysis_id~eq='+analysisId+'&query.queryName=nt_snps_by_pos'}
-//                    ]},
-//                    {header: 'AA SNP Reports',
-//                    items: [
-//                        {name: 'AA Mutation Summary, By Position and Codon', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=sequenceanalysis&query.analysis_id~eq='+analysisId+'&query.queryName=aa_snps_by_codon'},
-//                        {name: 'Predicted Drug Resistance Mutations', url: '<%=contextPath%>/query<%=containerPath%>/executeQuery.view?schemaName=sequenceanalysis&query.analysis_id~eq='+analysisId+'&query.queryName=drug_resistance_snps'}
-//                    ]}
-//                ]
-//            }]
-//        }).render('analysisNav_'+webpart.wrapperDivId);
-
         var panel = Ext4.create('LDK.panel.DetailsPanel', {
             title: 'Readset Details:',
             showBackBtn: false,

@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.run.bampostprocessing;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.BamProcessingOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
@@ -52,6 +53,7 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
     {
         BamProcessingOutputImpl output = new BamProcessingOutputImpl();
         getWrapper().setOutputDir(outputDirectory);
+        getWrapper().setWorkingDir(outputDirectory);
 
         File dictionary = new File(referenceGenome.getWorkingFastaFile().getParentFile(), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".dict");
         boolean dictionaryExists = dictionary.exists();

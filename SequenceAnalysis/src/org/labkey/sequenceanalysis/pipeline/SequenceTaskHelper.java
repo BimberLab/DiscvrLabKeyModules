@@ -39,15 +39,12 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -59,35 +56,33 @@ import java.util.Map;
  */
 public class SequenceTaskHelper implements PipelineContext
 {
-    private PipelineJob _job;
+    private SequenceJob _job;
     private WorkDirectory _wd;
     private SequencePipelineSettings _settings;
-    private TaskFileManager _fileManager;
+    private TaskFileManagerImpl _fileManager;
     private File _workLocation;
     public static final String FASTQ_DATA_INPUT_NAME = "Input FASTQ File";
     public static final String BAM_INPUT_NAME = "Input BAM File";
     public static final String SEQUENCE_DATA_INPUT_NAME = "Input Sequence File";
     public static final String NORMALIZED_FASTQ_OUTPUTNAME = "Normalized FASTQ File";
-    public static final String MERGED_FASTQ_OUTPUTNAME = "Merged FASTQ File";
     public static final String BARCODED_FASTQ_OUTPUTNAME = "Barcoded FASTQ File";
     public static final String NORMALIZATION_SUBFOLDER_NAME = "Normalization";
     public static final String PREPROCESSING_SUBFOLDER_NAME = "Preprocessing";
     public static final String SHARED_SUBFOLDER_NAME = "Shared";  //the subfolder within which the Reference DB and aligner index files will be created
-    public static final String ARCHIVED_INPUT_SEQUENCE = "Archived Input Sequence";
 
     public static final int CORES = Runtime.getRuntime().availableProcessors();
 
-    public SequenceTaskHelper(PipelineJob job, WorkDirectory wd)
+    public SequenceTaskHelper(SequenceJob job, WorkDirectory wd)
     {
         this(job, wd, null);
     }
 
-    public SequenceTaskHelper(PipelineJob job, File workLocation)
+    public SequenceTaskHelper(SequenceJob job, File workLocation)
     {
         this(job, null, workLocation);
     }
 
-    private SequenceTaskHelper(PipelineJob job, WorkDirectory wd, @Nullable File workLocation)
+    private SequenceTaskHelper(SequenceJob job, WorkDirectory wd, @Nullable File workLocation)
     {
         _job = job;
         _wd = wd;
@@ -96,9 +91,14 @@ public class SequenceTaskHelper implements PipelineContext
         _settings = new SequencePipelineSettings(_job.getParameters());
     }
 
-    public TaskFileManager getFileManager()
+    public TaskFileManagerImpl getFileManager()
     {
         return _fileManager;
+    }
+
+    public void setFileManager(TaskFileManagerImpl fileManager)
+    {
+        _fileManager = fileManager;
     }
 
     public Logger getLogger()
@@ -106,50 +106,27 @@ public class SequenceTaskHelper implements PipelineContext
         return getJob().getLogger();
     }
 
-    //make sure Exp data objects exist for all input files.
-    public void createExpDatasForInputs()
-    {
-        for (SequenceReadsetImpl rs : _settings.getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class)))
-        {
-            for (ReadDataImpl rd : rs.getReadData())
-            {
-                if (rd.getFileId1() == null && rd.getFile1() != null)
-                {
-                    ExpData d = createExpData(rd.getFile1());
-                    if (d != null)
-                    {
-                        rd.setFileId1(d.getRowId());
-                    }
-                }
-
-                if (rd.getFileId2() == null && rd.getFile2() != null)
-                {
-                    ExpData d = createExpData(rd.getFile2());
-                    if (d != null)
-                    {
-                        rd.setFileId2(d.getRowId());
-                    }
-                }
-            }
-        }
-    }
-
     public ExpData createExpData(File f)
     {
-        _job.getLogger().debug("Creating Exp data for file: " + f.getName());
-        ExpData d = ExperimentService.get().createData(_job.getContainer(), new DataType("SequenceFile"));
+        return createExpData(f, _job);
+    }
+
+    public static ExpData createExpData(File f, PipelineJob job)
+    {
+        job.getLogger().debug("Creating Exp data for file: " + f.getName());
+        ExpData d = ExperimentService.get().createData(job.getContainer(), new DataType("SequenceFile"));
 
         f = FileUtil.getAbsoluteCaseSensitiveFile(f);
 
         d.setName(f.getName());
         d.setDataFileURI(f.toURI());
-        _job.getLogger().debug("The saved filepath is: " + f.getPath());
-        d.save(_job.getUser());
+        job.getLogger().debug("The saved filepath is: " + f.getPath());
+        d.save(job.getUser());
         return d;
     }
 
     @Override
-    public PipelineJob getJob()
+    public SequenceJob getJob()
     {
         return _job;
     }
@@ -169,7 +146,7 @@ public class SequenceTaskHelper implements PipelineContext
     @Override
     public File getSourceDirectory()
     {
-        return getSupport().getAnalysisDirectory();
+        return _job.getAnalysisDirectory();
     }
 
     public <StepType extends PipelineStep> PipelineStepProvider<StepType> getSingleStep(Class<StepType> stepType) throws PipelineJobException
@@ -190,15 +167,6 @@ public class SequenceTaskHelper implements PipelineContext
     public SequencePipelineSettings getSettings()
     {
         return _settings;
-    }
-
-    public static String getExpectedNameForInput(String fn)
-    {
-        FileType gz = new FileType(".gz");
-        if (gz.isType(fn))
-            return fn.replaceAll(".gz$", "");
-        else
-            return fn;
     }
 
     public static Integer getExpRunIdForJob(PipelineJob job) throws PipelineJobException
@@ -254,14 +222,14 @@ public class SequenceTaskHelper implements PipelineContext
         return filename;
     }
 
-    public FileAnalysisJobSupport getSupport()
-    {
-        return (FileAnalysisJobSupport)_job;
-    }
-
     public SequenceAnalysisJobSupport getSequenceSupport()
     {
-        return (SequenceAnalysisJobSupport)_job;
+        return _job.getSequenceSupport();
+    }
+
+    public FileAnalysisJobSupport getSupport()
+    {
+        return _job.getJobSupport(FileAnalysisJobSupport.class);
     }
 
     public static boolean isAlignmentUsed(PipelineJob job)
@@ -269,10 +237,21 @@ public class SequenceTaskHelper implements PipelineContext
         return !StringUtils.isEmpty(job.getParameters().get(PipelineStep.StepType.alignment.name()));
     }
 
-    public void logModuleVersions()
+    public static void logModuleVersions(Logger log)
     {
-        getLogger().info("SequenceAnalysis Module Version: " + ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getFormattedVersion() + " (r" + (ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getVcsRevision()) + ")");
-        getLogger().info("Pipeline Module Version: " + ModuleLoader.getInstance().getModule("pipeline").getFormattedVersion() + " (r" + (ModuleLoader.getInstance().getModule("pipeline").getVcsRevision()) + ")");
+        log.info("SequenceAnalysis Module Version: " + ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getFormattedVersion() + " (r" + (ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getVcsRevision()) + ")");
+        log.info("Pipeline Module Version: " + ModuleLoader.getInstance().getModule("pipeline").getFormattedVersion() + " (r" + (ModuleLoader.getInstance().getModule("pipeline").getVcsRevision()) + ")");
+        log.debug("java.io.tmpDir: " + System.getProperty("java.io.tmpdir"));
+        try
+        {
+            File tmp = File.createTempFile("sa-tmp", "tmp");
+            log.debug("temp file location: " + tmp.getParent());
+            tmp.delete();
+        }
+        catch (IOException e)
+        {
+            log.error(e);
+        }
     }
 
     public static Integer getMaxThreads(PipelineJob job)
@@ -280,9 +259,26 @@ public class SequenceTaskHelper implements PipelineContext
         return getMaxThreads(job.getLogger());
     }
 
+    private static final String THREAD_PROP_NAME = "SEQUENCEANALYSIS_MAX_THREADS";
+
     public static Integer getMaxThreads(Logger log)
     {
-        String threads = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("SEQUENCEANALYSIS_MAX_THREADS");
+
+        //read environment
+        String threads = StringUtils.trimToNull(System.getenv(THREAD_PROP_NAME));
+        if (threads != null && NumberUtils.isNumber(threads))
+        {
+            try
+            {
+                return Integer.parseInt(threads);
+            }
+            catch (NumberFormatException e)
+            {
+                log.error("Non-integer value for SEQUENCEANALYSIS_MAX_THREADS: " + threads, new Exception());
+            }
+        }
+
+        threads = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(THREAD_PROP_NAME);
         if (StringUtils.trimToNull(threads) != null && NumberUtils.isNumber(threads))
         {
             try
@@ -291,7 +287,7 @@ public class SequenceTaskHelper implements PipelineContext
             }
             catch (NumberFormatException e)
             {
-                log.error("Non-integer value for SEQUENCEANALYSIS_MAX_THREADS: " + threads);
+                log.error("Non-integer value for SEQUENCEANALYSIS_MAX_THREADS: " + threads, new Exception());
             }
         }
         else

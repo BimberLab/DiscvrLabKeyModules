@@ -2,28 +2,27 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.filter.DuplicateReadFilter;
-import htsjdk.samtools.filter.SamRecordFilter;
 import org.json.JSONObject;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SqlSelector;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.query.QueryService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Pair;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
@@ -34,10 +33,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * User: bimber
@@ -51,6 +48,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
         super(provider, ctx);
     }
 
+    private static final String EXPORT_UNMAPPED = "EXPORT_UNMAPPED";
     public static class Provider extends AbstractAnalysisStepProvider<SequenceBasedTypingAnalysis>
     {
         public Provider()
@@ -74,7 +72,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                         }}, 17),
                     ToolParameterDescriptor.create("onlyImportValidPairs", "Only Import Valid Pairs", "If selected, only alignments consisting of valid forward/reverse pairs will be imported.  Do not check this unless you are using paired-end sequence.", "checkbox", new JSONObject()
                     {{
-                            put("checked", false);
+                            put("checked", true);
                         }}, null),
                     ToolParameterDescriptor.create("minCountForRef", "Min Read # Per Reference", "If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this many reads across each sample.  This can be a way to reduce ambiguity among allele calls.", "ldk-integerfield", new JSONObject()
                     {{
@@ -94,7 +92,8 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                     {{
                         put("minValue", 0);
                         put("maxValue", 1);
-                    }}, 0.05),
+                        put("decimalPrecision", 4);
+                    }}, 0.025),
                     ToolParameterDescriptor.create("minAlignmentLength", "Min Alignment Length", "If a value is provided, any alignment with a length less than this value will be discarded.", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
@@ -102,7 +101,12 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                     ToolParameterDescriptor.create("writeLog", "Write Detailed Log", "If checked, the analysis will write a detailed log file of read mapping and calls.  This is intended for debugging purposes", "checkbox", new JSONObject()
                     {{
                             put("checked", false);
-                    }}, null)
+                    }}, null),
+                    ToolParameterDescriptor.create(EXPORT_UNMAPPED, "Export Unmapped Threshold", "If provided, unmapped reads will be exported as FASTQ if at least this fraction of all reads do not have passing hits.", "ldk-numberfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                    }}, 0.4)
             ), null, null);
         }
 
@@ -114,29 +118,20 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
     }
 
     @Override
-    public void init(List<AnalysisModel> models) throws PipelineJobException
+    public void init(SequenceAnalysisJobSupport support) throws PipelineJobException
     {
-        Set<Integer> distinctGenomeIds = new HashSet<>();
-        for (AnalysisModel m : models)
+        for (ReferenceGenome genome : support.getCachedGenomes())
         {
-            if (m.getLibraryId() != null)
+            if (genome.getGenomeId() == null)
             {
-                distinctGenomeIds.add(m.getLibraryId());
-            }
-        }
-
-        for (Integer libraryId : distinctGenomeIds)
-        {
-            ReferenceGenome referenceGenome = SequenceAnalysisService.get().getReferenceGenome(libraryId, getPipelineCtx().getJob().getUser());
-            if (referenceGenome == null)
-            {
-                throw new PipelineJobException("Genome not found: " + libraryId);
+                continue;
             }
 
-            File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
+            File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), genome.getGenomeId() + "_lineageMap.txt");
             try (final CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(lineageMapFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                SQLFragment sql = new SQLFragment("SELECT r.name, r.lineage FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES + " r WHERE r.rowid IN (SELECT ref_nt_id FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS + " WHERE library_id = ?)", libraryId);
+                getPipelineCtx().getLogger().info("writing lineage map file");
+                SQLFragment sql = new SQLFragment("SELECT r.name, r.lineage FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES + " r WHERE r.rowid IN (SELECT ref_nt_id FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS + " WHERE library_id = ?)", genome.getGenomeId());
                 SqlSelector ss = new SqlSelector(DbScope.getLabKeyScope(), sql);
                 ss.forEach(new Selector.ForEachBlock<ResultSet>()
                 {
@@ -159,6 +154,8 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
     @Override
     public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
+        //TODO: store pct of mapped matching MHC
+
         File expectedTxt = getSBTSummaryFile(outDir, inputBam);
         if (expectedTxt.exists())
         {
@@ -177,7 +174,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             getPipelineCtx().getLogger().info("SBT output not found, skipping: " + expectedTxt.getPath());
         }
 
-        //delete lineage files, if present
+        //delete lineage files
         if (model.getLibraryId() != null)
         {
             ReferenceGenome referenceGenome = SequenceAnalysisService.get().getReferenceGenome(model.getLibraryId(), getPipelineCtx().getJob().getUser());
@@ -189,6 +186,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
             if (lineageMapFile.exists())
             {
+                getPipelineCtx().getLogger().debug("deleting lineage map file: " + lineageMapFile.getName());
                 lineageMapFile.delete();
             }
         }
@@ -201,6 +199,8 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
     {
         try
         {
+            AnalysisOutputImpl output = new AnalysisOutputImpl();
+
             Map<String, String> toolParams = new HashMap<>();
             List<ToolParameterDescriptor> params = getProvider().getParameters();
             for (ToolParameterDescriptor td : params)
@@ -230,23 +230,23 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                 }
                 File outputLog = new File(workDir, FileUtil.getBaseName(inputBam) + ".sbt.txt.gz");
                 agg.setOutputLog(outputLog);
+            }
 
-                File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
-                if (lineageMapFile.exists())
-                {
-                    getPipelineCtx().getLogger().debug("using lineage map: " + lineageMapFile.getName());
-                    agg.setLineageMapFile(lineageMapFile);
+            File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
+            if (lineageMapFile.exists())
+            {
+                getPipelineCtx().getLogger().debug("using lineage map: " + lineageMapFile.getName());
+                agg.setLineageMapFile(lineageMapFile);
 
-                    Double minPctForLineageFiltering = getProvider().getParameterByName("minPctForLineageFiltering").extractValue(getPipelineCtx().getJob(), getProvider(), Double.class);
-                    if (minPctForLineageFiltering != null)
-                    {
-                        agg.setMinPctForLineageFiltering(minPctForLineageFiltering);
-                    }
-                }
-                else
+                Double minPctForLineageFiltering = getProvider().getParameterByName("minPctForLineageFiltering").extractValue(getPipelineCtx().getJob(), getProvider(), Double.class);
+                if (minPctForLineageFiltering != null)
                 {
-                    getPipelineCtx().getLogger().debug("lineage map not found, skipping");
+                    agg.setMinPctForLineageFiltering(minPctForLineageFiltering);
                 }
+            }
+            else
+            {
+                getPipelineCtx().getLogger().debug("lineage map not found, skipping");
             }
 
             aggregators.add(agg);
@@ -258,7 +258,37 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             //write output as TSV
             agg.writeTable(getSBTSummaryFile(outputDir, inputBam));
 
-            return null;
+            //optionally output FASTQ of unmapped reads
+            Double exportThreshold = getProvider().getParameterByName(EXPORT_UNMAPPED).extractValue(getPipelineCtx().getJob(), getProvider(), Double.class);
+            if (exportThreshold != null)
+            {
+                double pctUnmapped = agg.getPctUnmapped();
+                getPipelineCtx().getLogger().debug("fraction reads unmapped: " + pctUnmapped);
+                if (pctUnmapped >= exportThreshold)
+                {
+                    getPipelineCtx().getLogger().debug("exporting unmapped reads");
+                    Pair<File, File> unmapped = agg.outputUnmappedReads(inputBam, outputDir, FileUtil.getBaseName(inputBam) + ".unmapped");
+                    if (unmapped != null)
+                    {
+                        if (unmapped.first != null)
+                        {
+                            output.addOutput(unmapped.first, "Joined Unmapped Reads");
+                        }
+
+                        if (unmapped.second != null)
+                        {
+                            output.addOutput(unmapped.second, "Singleton Unmapped Reads");
+                        }
+                    }
+                }
+                else
+                {
+                    getPipelineCtx().getLogger().debug("will not export unmapped");
+                }
+            }
+
+
+            return output;
         }
         catch (IOException e)
         {

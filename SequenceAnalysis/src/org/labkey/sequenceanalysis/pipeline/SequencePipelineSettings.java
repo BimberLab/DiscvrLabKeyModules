@@ -84,7 +84,7 @@ public class SequencePipelineSettings
         _runDate = StringUtils.trimToNull(_params.get("runDate")) == null ? null : ConvertHelper.convert(_params.get("runDate"), Date.class);
     }
 
-    private void parseReadsets(@Nullable SequenceAnalysisJob job) throws PipelineJobException
+    private void parseReadsets(@Nullable SequenceJob job) throws PipelineJobException
     {
         _readsets = new ArrayList<>();
         _fileGroups = new ArrayList<>();
@@ -108,7 +108,7 @@ public class SequencePipelineSettings
         }
     }
 
-    private FileGroup createFileGroup(JSONObject o, @Nullable SequenceAnalysisJob job) throws PipelineJobException
+    private FileGroup createFileGroup(JSONObject o, @Nullable SequenceJob job) throws PipelineJobException
     {
         if (!o.containsKey("files"))
         {
@@ -158,7 +158,6 @@ public class SequencePipelineSettings
             Date date;
             try
             {
-                //TODO: support other parsing
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
                 date = format.parse(o.getString("sampledate"));
                 model.setSampleDate(date);
@@ -195,7 +194,7 @@ public class SequencePipelineSettings
         return model;
     }
 
-    private File resolveFile(JSONObject json, @Nullable SequenceAnalysisJob job)
+    private File resolveFile(JSONObject json, @Nullable SequenceJob job)
     {
         if (json.containsKey("dataId"))
         {
@@ -214,10 +213,10 @@ public class SequencePipelineSettings
                 }
                 else
                 {
-                    if (job != null && job.getCachedData(dataId) != null)
+                    if (job != null && job.getSequenceSupport().getCachedData(dataId) != null)
                     {
                         job.getLogger().debug("found using cached ExpData");
-                        return job.getCachedData(dataId);
+                        return job.getSequenceSupport().getCachedData(dataId);
                     }
                 }
             }
@@ -278,9 +277,9 @@ public class SequencePipelineSettings
         return "true".equals(_params.get("collectWgsMetrics"));
     }
 
-    public String getProtocolDescription()
+    public String getJobDescription()
     {
-        return _params.get("protocolDescription");
+        return _params.get("jobDescription");
     }
 
     public List<BarcodeModel> getBarcodes()
@@ -329,7 +328,7 @@ public class SequencePipelineSettings
         return ("true".equals(_params.get("debugMode")));
     }
 
-    public List<SequenceReadsetImpl> getReadsets(@Nullable SequenceAnalysisJob job)
+    public List<SequenceReadsetImpl> getReadsets(@Nullable SequenceJob job)
     {
         if (_readsets == null)
         {
@@ -346,7 +345,7 @@ public class SequencePipelineSettings
         return _readsets;
     }
 
-    public List<FileGroup> getFileGroups(SequenceAnalysisJob job) throws PipelineJobException
+    public List<FileGroup> getFileGroups(SequenceJob job) throws PipelineJobException
     {
         if (_fileGroups == null)
         {

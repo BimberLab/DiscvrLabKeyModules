@@ -99,10 +99,10 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
 
         getJob().getLogger().info("total inputs: " + getPipelineJob().getFiles().size());
 
-        if (getPipelineJob().getJsonParams() != null)
+        if (getPipelineJob().getParameterJson() != null)
         {
             getJob().getLogger().debug("job parameters:");
-            getJob().getLogger().debug(getPipelineJob().getJsonParams().toString(1));
+            getJob().getLogger().debug(getPipelineJob().getParameterJson().toString(1));
         }
 
         if (handler instanceof ParameterizedOutputHandler)
@@ -111,13 +111,13 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
             {
                 if (pd instanceof ToolParameterDescriptor.CachableParam)
                 {
-                    Object val = getPipelineJob().getJsonParams().opt(pd.getName());
+                    Object val = getPipelineJob().getParameterJson().opt(pd.getName());
                     ((ToolParameterDescriptor.CachableParam)pd).doCache(getJob(), val, getPipelineJob().getSequenceSupport());
                 }
             }
         }
 
-        handler.getProcessor().init(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
+        handler.getProcessor().init(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getParameterJson(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
 
         if (!outputsToCreate.isEmpty())
         {

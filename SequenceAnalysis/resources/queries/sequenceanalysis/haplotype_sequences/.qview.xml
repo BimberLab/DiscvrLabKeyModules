@@ -7,6 +7,7 @@
         <column name="type"/>
         <column name="present"/>
         <column name="required"/>
+        <column name="haplotype/datedisabled"/>
     </columns>
     <sorts>
         <sort column="haplotype"/>

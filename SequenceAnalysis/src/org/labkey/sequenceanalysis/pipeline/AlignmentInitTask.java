@@ -5,11 +5,11 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
-import org.labkey.api.util.FileType;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.sequenceanalysis.SequenceReadsetImpl;
+import org.labkey.api.util.FileType;
 
 import java.io.File;
 import java.util.Arrays;
@@ -88,15 +88,14 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
         return _taskHelper;
     }
 
+    private SequenceAlignmentJob getPipelineJob()
+    {
+        return (SequenceAlignmentJob)getJob();
+    }
+
     public RecordedActionSet run() throws PipelineJobException
     {
-        SequenceAnalysisJob pipelineJob = getJob().getJobSupport(SequenceAnalysisJob.class);
-        _taskHelper = new SequenceTaskHelper(getJob(), _wd);
-
-        for (SequenceReadsetImpl rs : getHelper().getSettings().getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class)))
-        {
-            pipelineJob.cacheReadset(rs);
-        }
+        _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
         getHelper().cacheExpDatasForParams();
 
@@ -115,13 +114,13 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
             }
             else
             {
-                getHelper().getFileManager().addInput(action, "Job Parameters", getHelper().getSupport().getParametersFile());
+                getHelper().getFileManager().addInput(action, "Job Parameters", getHelper().getJob().getParametersFile());
                 getJob().getLogger().info("Creating Reference Library FASTA");
 
                 ReferenceLibraryStep step = providers.get(0).create(getHelper());
 
                 //ensure the FASTA exists
-                File sharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
+                File sharedDirectory = new File(getHelper().getJob().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
                 if (!sharedDirectory.exists())
                 {
                     sharedDirectory.mkdirs();
@@ -134,10 +133,22 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
                     throw new PipelineJobException("Reference file does not exist: " + refFasta.getPath());
                 }
 
-                pipelineJob.setReferenceGenome(output.getReferenceGenome());
+                getPipelineJob().getSequenceSupport().cacheGenome(output.getReferenceGenome());
 
                 getHelper().getFileManager().addStepOutputs(action, output);
-                getHelper().getFileManager().cleanup();
+                getHelper().getFileManager().cleanup(Collections.singleton(action));
+
+                List<PipelineStepProvider<AnalysisStep>> analysisProviders = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
+                if (!analysisProviders.isEmpty())
+                {
+                    getJob().getLogger().info("Preparing for analysis");
+                    for (PipelineStepProvider<AnalysisStep> provider : analysisProviders)
+                    {
+                        SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
+                        AnalysisStep aStep = provider.create(taskHelper);
+                        aStep.init(taskHelper.getSequenceSupport());
+                    }
+                }
             }
 
             return new RecordedActionSet(action);

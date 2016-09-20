@@ -34,6 +34,8 @@ public class ProcessUtils
             final Process tmpProcess2 = process2;
             new Thread(new Runnable()
             {
+                private static final int BUFFER_SIZE = 1024 * 4;
+
                 @Override
                 public void run()
                 {
@@ -41,14 +43,19 @@ public class ProcessUtils
                          BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(tmpProcess2.getOutputStream());
                     )
                     {
-                        IOUtils.copy(bufferedInputStream, bufferedOutputStream);
+                        //NOTE: switch from IOUtils.copy() so we can test for proccess.isAlive()
+                        int n;
+                        byte[] buffer = new byte[BUFFER_SIZE];
+                        while (tmpProcess1.isAlive() && -1 != (n = bufferedInputStream.read(buffer))) {
+                            bufferedOutputStream.write(buffer, 0, n);
+                        }
                     }
                     catch (IOException e)
                     {
                         _log.error(e.getMessage(), e);
                     }
                 }
-            }).start();
+            }, "ProcessUtils.StreamRedirector").start();
         }
     }
 
@@ -90,7 +97,7 @@ public class ProcessUtils
                         }
                     }
                 }
-            }).start();
+            }, "ProcessUtils.ProcessReader").start();
         }
     }
 }

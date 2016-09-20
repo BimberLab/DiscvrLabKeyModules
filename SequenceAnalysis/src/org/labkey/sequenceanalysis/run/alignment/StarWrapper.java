@@ -176,7 +176,7 @@ public class StarWrapper extends AbstractCommandWrapper
 
             output.addOutput(readCounts, "Reads Per Gene");
 
-            output.addSequenceOutput(readCounts, rs.getName() + " Gene Counts (STAR)", "Reads Per Gene", rs.getRowId(), null, referenceGenome.getGenomeId());
+            output.addSequenceOutput(readCounts, rs.getName() + " Gene Counts (STAR)", "Reads Per Gene", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             //set permissions on directories.  it is possible we actually want to delete these

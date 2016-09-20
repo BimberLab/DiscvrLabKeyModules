@@ -15,20 +15,9 @@
  */
 package org.labkey.api.sequenceanalysis.model;
 
-import org.apache.commons.lang3.StringUtils;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
-import org.labkey.api.query.FieldKey;
-import org.labkey.api.security.User;
-import org.labkey.api.security.permissions.ReadPermission;
-import org.labkey.api.view.UnauthorizedException;
-
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * User: bimber
@@ -78,4 +67,6 @@ public interface Readset extends Serializable
     public Integer getRunId();
 
     public boolean hasPairedData();
+
+    public List<? extends ReadData> getReadData();
 }

@@ -12,11 +12,14 @@ set -e
 set -u
 set -x
 
+echo $JAVA_HOME
+
 JAVA_HOME=/home/groups/prime-seq/exacloud/java/current
 JAVA=${JAVA_HOME}/bin/java
 TEMP_BASEDIR=/home/exacloud/lustre1/ONPRCPGP/prime-seq-pipeline-tempdir
+LK_DIR=/home/exacloud/lustre1/ONPRCPGP/prime-seq/labkey
 
-umask 0002
+umask 0007
 
 #expect args like:
 #/home/groups/prime-seq/exacloud/java/current/bin/java -Xmx8g -cp /home/groups/prime-seq/exacloud/labkey/labkeyBootstrap.jar org.labkey.bootstrap.ClusterBootstrap -modulesdir=/home/groups/prime-seq/exacloud/labkey/modules -webappdir=/home/groups/prime-seq/exacloud/labkey/labkeywebapp -configdir=/home/groups/prime-seq/exacloud/labkey/config file:/home/groups/prime-seq/production/Internal/Bimber/19/@files/sequenceAnalysis/SequenceAnalysis_20160603_9/SequenceAnalysis_20160603_9.job.xml
@@ -40,13 +43,15 @@ if grep -lq 'WEEK_LONG_JOB' $CONDOR_SCRIPT ;then
     BASENAME=`basename $JOB_FILE '.job.xml'`
 
     #make new temp directory
-    TEMP_DIR=${TEMP_BASEDIR}/$BASENAME
+    TEMP_DIR=`mktemp -d --tmpdir=$TEMP_BASEDIR --suffix=$BASENAME`
+    echo $TEMP_DIR
     mkdir -p $TEMP_DIR
     lfs setstripe -c 1 $TEMP_DIR
 
-    TMPDIR=$TEMP_DIR
-    TMP=$TEMP_DIR
-    TEMP=$TEMP_DIR
+    export TEMP_DIR=$TEMP_DIR
+    export TMPDIR=$TEMP_DIR
+    export TMP=$TEMP_DIR
+    export TEMP=$TEMP_DIR
 
     #TMPDIR=`dirname $(mktemp -u -t tmp.XXXXXXXXXX)`
     #echo $TMPDIR
@@ -62,24 +67,18 @@ if grep -lq 'WEEK_LONG_JOB' $CONDOR_SCRIPT ;then
 	#try/catch/finally
 	{
 		#copy relevant code locally
-		LK_DIR=/home/groups/prime-seq/exacloud/labkey
-		cp -R $LK_DIR/labkeyBootstrap.jar $LK_DIR_NAME
-		cp -R $LK_DIR/labkeywebapp $LK_DIR_NAME
-		cp -R $LK_DIR/modules $LK_DIR_NAME
-		cp -R $LK_DIR/pipeline-lib $LK_DIR_NAME
-		cp -R $LK_DIR/externalModules $LK_DIR_NAME
+		cp -R -p $LK_DIR/labkeyBootstrap.jar $LK_DIR_NAME
+		cp -R -p $LK_DIR/labkeywebapp $LK_DIR_NAME
+		cp -R -p $LK_DIR/modules $LK_DIR_NAME
+		cp -R -p $LK_DIR/pipeline-lib $LK_DIR_NAME
+		cp -R -p $LK_DIR/externalModules $LK_DIR_NAME
+        cp -R -p $LK_DIR/config $LK_DIR_NAME
 
 		#edit arguments
 		updatedArgs=( "$@" )
 		for(( a=0; a<${#updatedArgs[@]}-1 ;a++ ));  do
 			arg=${updatedArgs[$a]}
-			echo $arg
-
-			#skip config dir
-			if [[ $arg == *"configdir"* ]];then
-				updatedArgs[$a]=$arg
-				continue
-			fi
+			#echo $arg
 
 			#if matches origial dir, replace path
 			TO_SUB=$LK_DIR
@@ -92,7 +91,10 @@ if grep -lq 'WEEK_LONG_JOB' $CONDOR_SCRIPT ;then
 		updatedArgs[${#updatedArgs[@]}]=$lastArg
 
         #add -Djava.io.tmpdir
-		$JAVA -Djava.io.tmpdir=${TEMP_DIR} ${updatedArgs[@]}
+        ESCAPE=$(echo $TEMP_DIR | sed 's/\//\\\//g')
+        sed -i 's/<!--<entry key="JAVA_TMP_DIR" value=""\/>-->/<entry key="JAVA_TMP_DIR" value="'$ESCAPE'"\/>/g' ${LK_DIR_NAME}/config/pipelineConfig.xml
+        $JAVA -Djava.io.tmpdir=${TEMP_DIR} ${updatedArgs[@]}
+
 	} || {
 		echo "ERROR RUNNING JOB"
 	}

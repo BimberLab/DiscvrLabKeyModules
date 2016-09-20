@@ -20,16 +20,13 @@ import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.SequenceIntegrationTests;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
-import org.labkey.sequenceanalysis.TestHelper;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.model.SequenceTag;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.NumberFormat;
@@ -541,7 +538,7 @@ public class Barcoder extends AbstractSequenceMatcher
 
     public static class TestCase extends Assert
     {
-        TestHelper _helper = TestHelper.get();
+        SequenceIntegrationTests _helper = SequenceIntegrationTests.get();
         File _input = null;
 
         @Before

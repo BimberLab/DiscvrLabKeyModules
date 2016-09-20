@@ -13,7 +13,6 @@ import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
-import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -96,12 +95,12 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
         try
         {
             List<RecordedAction> actions = new ArrayList<>();
-            _taskHelper = new SequenceTaskHelper(getJob(), _wd);
+            _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
             //move and make sure BAMs are indexed
             FileType bamFile = new FileType("bam");
             Map<String, File> bamMap = new HashMap<>();
-            for (File f : getTaskHelper().getSupport().getInputFiles())
+            for (File f : getTaskHelper().getJob().getInputFiles())
             {
                 getJob().getLogger().debug("input file: " + f.getPath());
                 bamMap.put(f.getName(), f);
@@ -109,7 +108,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
 
 
             Map<String, String> params = getJob().getParameters();
-            List<Readset> readsets = getJob().getJobSupport(SequenceAnalysisJobSupport.class).getCachedReadsets();
+            List<Readset> readsets = getPipelineJob().getSequenceSupport().getCachedReadsets();
             int idx = 0;
             for (String key : params.keySet())
             {
@@ -137,7 +136,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                     continue;
                 }
 
-                ReferenceGenome referenceGenome = getJob().getJobSupport(SequenceAnalysisJobSupport.class).getCachedGenome(o.getInt("library_id"));
+                ReferenceGenome referenceGenome = getPipelineJob().getSequenceSupport().getCachedGenome(o.getInt("library_id"));
                 List<PipelineStepProvider<BamProcessingStep>> providers = SequencePipelineService.get().getSteps(getJob(), BamProcessingStep.class);
                 File bam = originalFile;
                 if (providers.isEmpty())
@@ -177,7 +176,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
 
                 //first copy the end product to the final location
                 getJob().setStatus(PipelineJob.TaskStatus.running, "MOVING BAM");
-                File finalDestination = new File(getTaskHelper().getSupport().getAnalysisDirectory(), originalFile.getName());
+                File finalDestination = new File(getTaskHelper().getJob().getAnalysisDirectory(), originalFile.getName());
                 RecordedAction moveAction = new RecordedAction(ACTION_NAME);
                 getTaskHelper().getFileManager().addInput(moveAction, "Input BAM", bam);
                 actions.add(moveAction);
@@ -192,6 +191,12 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                     else
                     {
                         FileUtils.moveFile(bam, finalDestination);
+                        File idxOrig = new File(originalFile.getPath() + ".bai");
+                        if (idxOrig.exists())
+                        {
+                            getJob().getLogger().debug("deleting original BAM index: " + idxOrig.getPath());
+                            idxOrig.delete();
+                        }
                     }
                 }
                 getTaskHelper().getFileManager().addOutput(moveAction, SequenceAlignmentTask.FINAL_BAM_ROLE, finalDestination);
@@ -261,7 +266,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
             }
 
             getTaskHelper().getFileManager().deleteIntermediateFiles();
-            getTaskHelper().getFileManager().cleanup();
+            getTaskHelper().getFileManager().cleanup(actions);
 
             return new RecordedActionSet(actions);
         }
@@ -274,5 +279,10 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
     public SequenceTaskHelper getTaskHelper()
     {
         return _taskHelper;
+    }
+
+    private AlignmentImportJob getPipelineJob()
+    {
+        return (AlignmentImportJob)getJob();
     }
 }

@@ -13,7 +13,7 @@ import java.util.TreeMap;
  */
 public class HTCondorServiceImpl extends HTCondorService
 {
-    private List<HTCondorJobResourceAllocator> _allocatorList = new ArrayList<>();
+    private List<HTCondorJobResourceAllocator.Factory> _allocatorList = new ArrayList<>();
 
     public static HTCondorServiceImpl get()
     {
@@ -25,15 +25,15 @@ public class HTCondorServiceImpl extends HTCondorService
 
     }
 
-    public void registerResourceAllocator(HTCondorJobResourceAllocator allocator)
+    public void registerResourceAllocator(HTCondorJobResourceAllocator.Factory allocator)
     {
         _allocatorList.add(allocator);
     }
 
-    public HTCondorJobResourceAllocator getAllocator(TaskId taskId)
+    public HTCondorJobResourceAllocator.Factory getAllocator(TaskId taskId)
     {
-        TreeMap<Integer, List<HTCondorJobResourceAllocator>> ret = new TreeMap<>();
-        for (HTCondorJobResourceAllocator allocator : _allocatorList)
+        TreeMap<Integer, List<HTCondorJobResourceAllocator.Factory>> ret = new TreeMap<>();
+        for (HTCondorJobResourceAllocator.Factory allocator : _allocatorList)
         {
             Integer priorty = allocator.getPriority(taskId);
             if (priorty != null)
@@ -52,7 +52,7 @@ public class HTCondorServiceImpl extends HTCondorService
             return null;
         }
 
-        List<HTCondorJobResourceAllocator> highest = ret.get(ret.descendingKeySet().first());
+        List<HTCondorJobResourceAllocator.Factory> highest = ret.get(ret.descendingKeySet().first());
 
         return highest.get(highest.size() - 1);
     }

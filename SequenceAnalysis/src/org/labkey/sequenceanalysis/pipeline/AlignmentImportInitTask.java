@@ -15,7 +15,6 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
@@ -71,6 +70,11 @@ public class AlignmentImportInitTask extends WorkDirectoryTask<AlignmentImportIn
         }
     }
 
+    private AlignmentImportJob getPipelineJob()
+    {
+        return (AlignmentImportJob)getJob();
+    }
+
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
@@ -122,8 +126,8 @@ public class AlignmentImportInitTask extends WorkDirectoryTask<AlignmentImportIn
                         }
                     }
 
-                    getJob().getJobSupport(SequenceAnalysisJobSupport.class).cacheGenome(SequenceAnalysisService.get().getReferenceGenome(o.getInt("library_id"), getJob().getUser()));
-                    ((SequenceAnalysisJob)getJob()).cacheReadset(r);
+                    getPipelineJob().getSequenceSupport().cacheGenome(SequenceAnalysisService.get().getReferenceGenome(o.getInt("library_id"), getJob().getUser()));
+                    getPipelineJob().getSequenceSupport().cacheReadset(r);
                 }
             }
 

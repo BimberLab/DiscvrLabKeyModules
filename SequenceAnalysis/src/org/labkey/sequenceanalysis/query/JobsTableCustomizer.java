@@ -52,6 +52,14 @@ public class JobsTableCustomizer implements TableCustomizer
                 ((AbstractTableInfo)ti).addColumn(newCol);
             }
 
+            String totalRuns = "totalRuns";
+            if (ti.getColumn(totalRuns) == null)
+            {
+                ExprColumn newCol = new ExprColumn(ti, totalRuns, new SQLFragment("(SELECT count(*) as _expr FROM exp.experimentrun r WHERE r.jobid = " + ExprColumn.STR_TABLE_ALIAS + ".RowId OR r.jobid = (SELECT p.RowId FROM pipeline.statusfiles p WHERE " + ExprColumn.STR_TABLE_ALIAS + ".jobparent = p.job))"), JdbcType.INTEGER, ti.getColumn("RowId"));
+                newCol.setLabel("ExpRuns Using This Job");
+                ((AbstractTableInfo)ti).addColumn(newCol);
+            }
+
             String hasSequenceData = "hasSequenceData";
             if (ti.getColumn(hasSequenceData) == null)
             {
@@ -61,7 +69,7 @@ public class JobsTableCustomizer implements TableCustomizer
                         "(SELECT count(o.rowid) FROM sequenceanalysis.outputfiles o WHERE r.RowId = o.runid) > 0\n" +
                         ") THEN " + ti.getSqlDialect().getBooleanTRUE() + " ELSE " + ti.getSqlDialect().getBooleanFALSE() + " END as expr\n" +
                         "FROM exp.experimentrun r\n" +
-                        "WHERE (r.jobid = " + ExprColumn.STR_TABLE_ALIAS + ".RowId OR r.rowid = (SELECT p.RowId FROM pipeline.statusfiles p WHERE " + ExprColumn.STR_TABLE_ALIAS + ".jobparent = p.job))\n" +
+                        "WHERE (r.jobid = " + ExprColumn.STR_TABLE_ALIAS + ".RowId OR r.jobid = (SELECT p.RowId FROM pipeline.statusfiles p WHERE " + ExprColumn.STR_TABLE_ALIAS + ".jobparent = p.job))\n" +
                         ")");
                 ExprColumn newCol = new ExprColumn(ti, hasSequenceData, sql, JdbcType.BOOLEAN, ti.getColumn("RowId"));
                 newCol.setLabel("Has Sequence Data?");

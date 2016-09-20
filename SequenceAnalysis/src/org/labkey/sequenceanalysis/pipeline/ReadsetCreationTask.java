@@ -122,6 +122,11 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         }
     }
 
+    private ReadsetImportJob getPipelineJob()
+    {
+        return (ReadsetImportJob)getJob();
+    }
+
     private void importReadsets() throws PipelineJobException
     {
         SequencePipelineSettings settings = getSettings();
@@ -142,8 +147,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             TableInfo readsetTable = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
             TableInfo readDataTable = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
-            SequenceAnalysisJob pipelineJob = getJob().getJobSupport(SequenceAnalysisJob.class);
-            for (Readset rs : pipelineJob.getCachedReadsets())
+            for (Readset rs : getPipelineJob().getSequenceSupport().getCachedReadsets())
             {
                 SequenceReadsetImpl r = (SequenceReadsetImpl)rs;
 
@@ -168,7 +172,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setCreated(new Date());
 
                 List<ReadDataImpl> readDatas = new ArrayList<>();
-                for (ReadDataImpl rd : r.getReadData())
+                for (ReadDataImpl rd : r.getReadDataImpl())
                 {
                     File f1 = rd.getFile1();
                     File f2 = rd.getFile2();
@@ -294,7 +298,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         {
             idx++;
             getJob().getLogger().info("calculating quality metrics for readset: " + model.getName() + ", " + idx + " of " + newReadsets.size());
-            for (ReadDataImpl d : model.getReadData())
+            for (ReadDataImpl d : model.getReadDataImpl())
             {
                 getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING QUALITY METRICS");
                 addQualityMetricsForReadset(model, d.getFileId1());

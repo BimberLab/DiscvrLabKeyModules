@@ -16,13 +16,17 @@
 
 package org.labkey.GeneticsCore;
 
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.GeneticsCore.analysis.MethylationRateComparison;
 import org.labkey.GeneticsCore.button.ChangeReadsetStatusButton;
+import org.labkey.GeneticsCore.button.HaplotypeReviewButton;
 import org.labkey.GeneticsCore.button.PublishSBTHaplotypesButton;
 import org.labkey.GeneticsCore.button.PublishSBTResultsButton;
 import org.labkey.GeneticsCore.button.SBTReviewButton;
 import org.labkey.GeneticsCore.notification.GeneticsCoreNotification;
+import org.labkey.GeneticsCore.pipeline.BisSnpGenotyperAnalysis;
+import org.labkey.GeneticsCore.pipeline.BisSnpIndelRealignerStep;
 import org.labkey.GeneticsCore.pipeline.BlastPipelineJobResourceAllocator;
 import org.labkey.GeneticsCore.pipeline.SequenceJobResourceAllocator;
 import org.labkey.api.data.Container;
@@ -35,6 +39,7 @@ import org.labkey.api.ldk.notification.NotificationService;
 import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.view.template.ClientDependency;
 
 import java.util.Collection;
@@ -82,17 +87,21 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
         NotificationService.get().registerNotification(new GeneticsCoreNotification());
 
         LDKService.get().registerQueryButton(new SBTReviewButton(), "sequenceanalysis", "sequence_analyses");
+        LDKService.get().registerQueryButton(new HaplotypeReviewButton(), "sequenceanalysis", "sequence_analyses");
         LDKService.get().registerQueryButton(new ChangeReadsetStatusButton(), "sequenceanalysis", "sequence_analyses");
         LDKService.get().registerQueryButton(new PublishSBTResultsButton(), "sequenceanalysis", "alignment_summary_by_lineage");
-        LDKService.get().registerQueryButton(new PublishSBTHaplotypesButton(), "sequenceanalysis", "haplotypeMatches");
+        //LDKService.get().registerQueryButton(new PublishSBTHaplotypesButton(), "sequenceanalysis", "haplotypeMatches");
         LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "sequence_analyses");
         LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "alignment_summary_by_lineage");
         LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "alignment_summary_grouped");
 
         SequenceAnalysisService.get().registerFileHandler(new MethylationRateComparison());
 
-        HTCondorService.get().registerResourceAllocator(new BlastPipelineJobResourceAllocator());
-        HTCondorService.get().registerResourceAllocator(new SequenceJobResourceAllocator());
+        HTCondorService.get().registerResourceAllocator(new BlastPipelineJobResourceAllocator.Factory());
+        HTCondorService.get().registerResourceAllocator(new SequenceJobResourceAllocator.Factory());
+
+        //register resources
+        new PipelineStartup();
     }
 
     @Override
@@ -120,5 +129,26 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
     public Set<DbSchema> getSchemasToTest()
     {
         return Collections.emptySet();
+    }
+
+    public static class PipelineStartup
+    {
+        private static final Logger _log = Logger.getLogger(PipelineStartup.class);
+        private static boolean _hasRegistered = false;
+
+        public PipelineStartup()
+        {
+            if (_hasRegistered)
+            {
+                _log.warn("GeneticsCore resources have already been registered, skipping");
+            }
+            else
+            {
+                SequencePipelineService.get().registerPipelineStep(new BisSnpIndelRealignerStep.Provider());
+                SequencePipelineService.get().registerPipelineStep(new BisSnpGenotyperAnalysis.Provider());
+
+                _hasRegistered = true;
+            }
+        }
     }
 }

@@ -184,6 +184,35 @@ else
 fi
 
 #
+# gffread
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install gffread"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/gffread || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf bwa-0.6.2*
+    rm -Rf bwa-0.7.9a*
+    rm -Rf bwa-0.7.12*
+    rm -Rf $LKTOOLS_DIR/gffread
+
+    wget $WGET_OPTS http://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz
+    gunzip cufflinks-2.2.1.Linux_x86_64.tar.gz
+    tar -xf cufflinks-2.2.1.Linux_x86_64.tar
+    gzip cufflinks-2.2.1.Linux_x86_64.tar
+    cd cufflinks-2.2.1.Linux_x86_64
+
+    install gffread $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
+
+#
 #FLASH
 #
 echo ""
@@ -236,7 +265,7 @@ then
     echo "Downloading GATK from GIT"
     git clone git://github.com/broadgsa/gatk-protected.git
     cd gatk-protected
-    git checkout tags/3.5
+    git checkout tags/3.6
     cd ../
 
     #this is a custom extension: https://github.com/biodev/HTCondor_drivers
@@ -249,8 +278,6 @@ then
     svn co --username cpas --password cpas --no-auth-cache https://hedgehog.fhcrc.org/tor/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code/gatk ${LK_HOME}/svn/trunk/pipeline_code/gatk/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationCount.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MinorAlleleFrequency.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
-    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/ConflictingReadCount.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
-    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/ConflictingReadCountBySample.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MultipleAllelesAtLoci.java ./gatk-protected/public/gatk-tools-public/src/main/java/org/broadinstitute/gatk/tools/walkers/coverage/
 
     cd gatk-protected
@@ -261,8 +288,8 @@ then
 
     mvn verify
     mvn package
-    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.5.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
-    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.5.jar ${LKTOOLS_DIR}/Queue.jar
+    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.6.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
+    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.6.jar ${LKTOOLS_DIR}/Queue.jar
 fi
 
 
@@ -355,6 +382,30 @@ then
     wget $WGET_OPTS http://www.broadinstitute.org/cancer/cga/tools/rnaseqc/RNA-SeQC_v1.1.8.jar
 
     install ./RNA-SeQC_v1.1.8.jar $LKTOOLS_DIR/RNA-SeQC.jar
+else
+    echo "Already installed"
+fi
+
+
+#
+# BisSNP
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install BisSNP"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/BisSNP.jar || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf BisSNP*
+    rm -Rf $LKTOOLS_DIR/BisSNP.jar
+
+    wget $WGET_OPTS http://downloads.sourceforge.net/project/bissnp/BisSNP-0.82.2/BisSNP-0.82.2.jar
+
+    install ./BisSNP-0.82.2.jar $LKTOOLS_DIR/BisSNP.jar
 else
     echo "Already installed"
 fi
@@ -904,6 +955,32 @@ then
     make
 
     install ./sff2fastq $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
+
+
+#
+#seqtk
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install seqtk"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/seqtk || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf seqtk*
+    rm -Rf $LKTOOLS_DIR/seqtk
+
+    git clone https://github.com/lh3/seqtk.git
+    cd seqtk
+    make
+
+    install ./seqtk $LKTOOLS_DIR/
 else
     echo "Already installed"
 fi

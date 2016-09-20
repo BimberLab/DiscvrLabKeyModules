@@ -25,6 +25,8 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 
+import java.util.Map;
+
 /**
  * User: bimber
  * Date: 6/13/2014
@@ -160,9 +162,19 @@ public class ToolParameterDescriptor
     public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider provider, Class<ParamType> clazz, @Nullable ParamType defaultValue)
     {
         String key = getJsonParamName(provider);
-        if (job.getParameters().containsKey(key))
+        Map jobParams;
+        if (job instanceof HasJobParams)
         {
-            String val = job.getParameters().get(key);
+            jobParams = ((HasJobParams)job).getParameterJson();
+        }
+        else
+        {
+            jobParams = job.getParameters();
+        }
+
+        if (jobParams.containsKey(key))
+        {
+            Object val = jobParams.get(key);
 
             return ConvertHelper.convert(val, clazz);
         }
@@ -187,6 +199,8 @@ public class ToolParameterDescriptor
         {
             if (value != null && !StringUtils.isEmpty(String.valueOf(value)))
             {
+                job.getLogger().debug("caching expData: " + value);
+
                 try
                 {
                     Integer dataId = ConvertHelper.convert(value, Integer.class);

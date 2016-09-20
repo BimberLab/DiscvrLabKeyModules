@@ -12,6 +12,7 @@ import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +24,6 @@ import java.util.Map;
 public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Serializable
 {
     private Map<Integer, File> _cachedFilePaths = new HashMap<>();
-    private ReferenceGenome _referenceGenome;
     private List<SequenceReadsetImpl> _cachedReadsets = new ArrayList<>();
     private Map<Integer, AnalysisModel> _cachedAnalyses = new HashMap<>();
     private Map<Integer, ReferenceGenome> _cachedGenomes = new HashMap<>();
@@ -37,7 +37,6 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     public SequenceJobSupportImpl(SequenceJobSupportImpl support)
     {
         _cachedFilePaths.putAll(support._cachedFilePaths);
-        _referenceGenome = support.getReferenceGenome();
         _cachedAnalyses.putAll(support._cachedAnalyses);
         _cachedReadsets.addAll(support._cachedReadsets);
         _cachedGenomes.putAll(support._cachedGenomes);
@@ -89,19 +88,28 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         _cachedGenomes.put(m.getGenomeId(), m);
     }
 
+    @Override
     public List<Readset> getCachedReadsets()
     {
         return Collections.unmodifiableList(new ArrayList<Readset>(_cachedReadsets));
     }
 
+    @Override
     public List<AnalysisModel> getCachedAnalyses()
     {
         return Collections.unmodifiableList(new ArrayList<>(_cachedAnalyses.values()));
     }
 
+    @Override
     public ReferenceGenome getCachedGenome(int genomeId)
     {
         return _cachedGenomes.get(genomeId);
+    }
+
+    @Override
+    public Collection<ReferenceGenome> getCachedGenomes()
+    {
+        return Collections.unmodifiableCollection(_cachedGenomes.values());
     }
 
     @Override
@@ -123,17 +131,6 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     public Map<Integer, File> getAllCachedData()
     {
         return Collections.unmodifiableMap(_cachedFilePaths);
-    }
-
-    @Override
-    public ReferenceGenome getReferenceGenome()
-    {
-        return _referenceGenome;
-    }
-
-    public void setReferenceGenome(ReferenceGenome referenceGenome)
-    {
-        _referenceGenome = referenceGenome;
     }
 
     @Override

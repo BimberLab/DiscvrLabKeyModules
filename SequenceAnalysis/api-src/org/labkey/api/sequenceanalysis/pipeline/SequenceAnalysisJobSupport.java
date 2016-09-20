@@ -21,6 +21,7 @@ import org.labkey.api.sequenceanalysis.model.Readset;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -29,8 +30,6 @@ import java.util.Map;
  */
 public interface SequenceAnalysisJobSupport extends Serializable
 {
-    public ReferenceGenome getReferenceGenome();
-
     public void cacheExpData(ExpData data);
 
     public File getCachedData(int dataId);
@@ -48,6 +47,8 @@ public interface SequenceAnalysisJobSupport extends Serializable
     public void cacheGenome(ReferenceGenome m);
 
     public ReferenceGenome getCachedGenome(int genomeId);
+
+    public Collection<ReferenceGenome> getCachedGenomes();
 
     public void cacheObject(String key, Serializable object);
 

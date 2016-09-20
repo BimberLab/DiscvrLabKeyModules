@@ -30,7 +30,9 @@ import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.Compress;
@@ -40,7 +42,6 @@ import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,7 +58,7 @@ import java.util.Map;
  */
 public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Factory>
 {
-    private SequenceTaskHelper _helper;
+    private SequencePipelineSettings _settings;
     private Integer _instrumentRunId = null;
     private static String ACTION_NAME = "Import Illumina Reads";
 
@@ -100,18 +101,23 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         }
     }
 
+    private FileAnalysisJobSupport getSupport()
+    {
+        return getJob().getJobSupport(FileAnalysisJobSupport.class);
+    }
+
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();
-        _helper = new SequenceTaskHelper(job, _wd);
+        _settings = new SequencePipelineSettings(getJob().getParameters());
 
         List<RecordedAction> actions = new ArrayList<>();
 
         job.getLogger().info("Starting analysis");
         String prefix = job.getParameters().get("fastqPrefix");
 
-        List<File> inputFiles = _helper.getSupport().getInputFiles();
+        List<File> inputFiles = getSupport().getInputFiles();
         if (inputFiles.size() == 0)
             throw new PipelineJobException("No input files");
 
@@ -130,7 +136,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             //this step will be slow
             IlluminaFastqSplitter<Integer> parser = new IlluminaFastqSplitter<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
             parser.setOutputGzip(true);
-            parser.setDestinationDir(_helper.getSupport().getAnalysisDirectory());
+            parser.setDestinationDir(getSupport().getAnalysisDirectory());
 
             // the first element of the pair is the sample ID.  the second is either 1 or 2,
             // depending on whether the file represents the forward or reverse reads
@@ -260,9 +266,9 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
         //otherwise create the machine run record:
         Map<String, Object> runRow = new HashMap<>();
-        runRow.put("name", _helper.getSettings().getRunName());
-        runRow.put("rundate", _helper.getSettings().getRunDate());
-        runRow.put("instrumentid", _helper.getSettings().getInstrumentId());
+        runRow.put("name", _settings.getRunName());
+        runRow.put("rundate", _settings.getRunDate());
+        runRow.put("instrumentid", _settings.getInstrumentId());
 
         runRow.put("container", getJob().getContainer().getId());
         runRow.put("createdby", getJob().getUser().getUserId());
@@ -300,14 +306,13 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
     private ExpData createExpData(File f)
     {
-        //return _helper.createExpData(new File(FileUtil.relativePath(_support.getAnalysisDirectory().getPath(), f.getPath())));
-        return _helper.createExpData(f);
+        return SequenceTaskHelper.createExpData(f, getJob());
     }
 
     private Map<Integer, Integer> parseCsv(File sampleFile, DbSchema schema) throws PipelineJobException
     {
         getJob().getLogger().info("Parsing Sample File: " + sampleFile.getName());
-        try (CSVReader reader = new CSVReader(new FileReader(sampleFile)))
+        try (CSVReader reader = new CSVReader(Readers.getReader(sampleFile)))
         {
             //parse the samples file
             String [] nextLine;
@@ -393,7 +398,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
     private Integer tryCreateReadset(DbSchema schema, String[] line) throws PipelineJobException
     {
-        if (!_helper.getSettings().doAutoCreateReadsets())
+        if (!_settings.doAutoCreateReadsets())
             throw new PipelineJobException("Unable to find existing readset matching ID: " + line[0]);
 
         String name = line[0];

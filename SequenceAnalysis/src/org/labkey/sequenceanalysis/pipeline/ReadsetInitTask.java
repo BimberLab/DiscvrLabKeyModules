@@ -18,6 +18,8 @@ package org.labkey.sequenceanalysis.pipeline;
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
@@ -26,8 +28,11 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.FileGroup;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
@@ -36,11 +41,10 @@ import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.NucleotideSequenceFileType;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -60,7 +64,7 @@ import java.util.Set;
  * Date: 4/23/12
  * Time: 8:48 AM
  */
-public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Factory>
+public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
 {
     private SequenceTaskHelper _taskHelper;
     private FileAnalysisJobSupport _support;
@@ -68,7 +72,7 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
     private static final String ACTION_NAME = "IMPORTING READSET";
     private static String COMPRESS_INPUT_ACTIONNAME = "Compressing FASTQ Files";
 
-    protected ReadsetImportTask(Factory factory, PipelineJob job)
+    protected ReadsetInitTask(Factory factory, PipelineJob job)
     {
         super(factory, job);
     }
@@ -77,14 +81,14 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
     {
         public Factory()
         {
-            super(ReadsetImportTask.class);
+            super(ReadsetInitTask.class);
 
             setJoin(true);  // Do this once per file-set.
         }
 
         public PipelineJob.Task createTask(PipelineJob job)
         {
-            return new ReadsetImportTask(this, job);
+            return new ReadsetInitTask(this, job);
         }
 
         public List<FileType> getInputTypes()
@@ -121,21 +125,29 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
         return _taskHelper;
     }
 
+    private Set<File> _finalOutputFiles = new HashSet<>();
+    private Set<File> _unalteredInputs = new HashSet<>();
+
+    private ReadsetImportJob getPipelineJob()
+    {
+        return (ReadsetImportJob)getJob();
+    }
+
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();
         _support = (FileAnalysisJobSupport) job;
-        _taskHelper = new SequenceTaskHelper(job, _wd);
+        _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
-        getJob().getLogger().info("Importing sequence data");
+        getJob().getLogger().info("Preparing to import sequence data");
         getJob().getLogger().info("input files:");
-        for (File input : getHelper().getSupport().getInputFiles())
+        for (File input : getPipelineJob().getInputFiles())
         {
             getJob().getLogger().info(input.getPath());
         }
 
-        _taskHelper.createExpDatasForInputs();
+        createExpDatasForInputs();
 
         List<RecordedAction> actions = new ArrayList<>();
         RecordedAction action = new RecordedAction(COMPRESS_INPUT_ACTIONNAME);
@@ -146,8 +158,8 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
 
         try
         {
-            List<FileGroup> fileGroups = getHelper().getSettings().getFileGroups(getJob().getJobSupport(SequenceAnalysisJob.class));
-            List<SequenceReadsetImpl> readsets = getHelper().getSettings().getReadsets(getJob().getJobSupport(SequenceAnalysisJob.class));
+            List<FileGroup> fileGroups = getHelper().getSettings().getFileGroups(getPipelineJob());
+            List<SequenceReadsetImpl> readsets = getHelper().getSettings().getReadsets(getPipelineJob());
 
             if (!SequenceNormalizationTask.shouldRunRemote(getJob()))
             {
@@ -184,7 +196,7 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
                     rs.setReadData(rd);
                 }
 
-                getHelper().getFileManager().handleInputs();
+                handleInputs(getPipelineJob(), getHelper().getFileManager(), actions, _finalOutputFiles, _unalteredInputs);
             }
             else
             {
@@ -196,11 +208,10 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
                 writeExtraBarcodes();
             }
 
-            SequenceAnalysisJob pipelineJob = getJob().getJobSupport(SequenceAnalysisJob.class);
             for (SequenceReadsetImpl rs : readsets)
             {
                 getJob().getLogger().debug("caching readset: " + rs.getName() + " with " + rs.getReadData().size() + " files");
-                pipelineJob.cacheReadset(rs);
+                getPipelineJob().getSequenceSupport().cacheReadset(rs);
             }
         }
         catch (IOException e)
@@ -208,9 +219,36 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
             throw new PipelineJobException(e);
         }
 
-        getHelper().getFileManager().cleanup();
+        getHelper().getFileManager().cleanup(actions);
 
         return new RecordedActionSet(actions);
+    }
+
+    private void createExpDatasForInputs()
+    {
+        for (SequenceReadsetImpl rs : getHelper().getSettings().getReadsets(getPipelineJob()))
+        {
+            for (ReadDataImpl rd : rs.getReadDataImpl())
+            {
+                if (rd.getFileId1() == null && rd.getFile1() != null)
+                {
+                    ExpData d = getHelper().createExpData(rd.getFile1());
+                    if (d != null)
+                    {
+                        rd.setFileId1(d.getRowId());
+                    }
+                }
+
+                if (rd.getFileId2() == null && rd.getFile2() != null)
+                {
+                    ExpData d = getHelper().createExpData(rd.getFile2());
+                    if (d != null)
+                    {
+                        rd.setFileId2(d.getRowId());
+                    }
+                }
+            }
+        }
     }
 
     private File processFile(File f, RecordedAction action) throws IOException
@@ -227,19 +265,19 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
             return null;
         }
 
-        getHelper().getFileManager().addInput(action, getHelper().SEQUENCE_DATA_INPUT_NAME, f);
+        getHelper().getFileManager().addInput(action, SequenceTaskHelper.SEQUENCE_DATA_INPUT_NAME, f);
 
         File output;
         if (!gz.isType(f))
         {
             getJob().getLogger().info("\tcompressing input file: " + f.getName());
-            output = new File(getHelper().getSupport().getAnalysisDirectory(), f.getName() + ".gz");
+            output = new File(getHelper().getJob().getAnalysisDirectory(), f.getName() + ".gz");
             //note: the non-compressed file will potentially be deleted during cleanup, depending on the selection for input handling
             Compress.compressGzip(f, output);
         }
         else
         {
-            output = new File(getHelper().getSupport().getAnalysisDirectory(), f.getName());
+            output = new File(getHelper().getJob().getAnalysisDirectory(), f.getName());
             if (!output.exists())
             {
                 if (getHelper().getFileManager().getInputfileTreatment().equals("delete") || getHelper().getFileManager().getInputfileTreatment().equals("compress"))
@@ -257,9 +295,9 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
             }
         }
 
-        getHelper().getFileManager().addOutput(action, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, output);
-        getHelper().getFileManager().addUnalteredOutput(output); //even if compressed, it was not really changed and we shouldnt copy it back to the server
-        getHelper().getFileManager().addFinalOutputFile(output);
+        getHelper().getFileManager().addOutput(action, SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, output);
+        _unalteredInputs.add(output); //even if compressed, it was not really changed and we shouldnt copy it back to the server
+        _finalOutputFiles.add(output);
 
         return output;
     }
@@ -271,10 +309,8 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
         {
             File extraBarcodes = getExtraBarcodesFile(getHelper());
             getJob().getLogger().debug("\tWriting additional barcodes to file: " + extraBarcodes.getPath());
-            CSVWriter writer = null;
-            try
+            try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(extraBarcodes), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                writer = new CSVWriter(new FileWriter(extraBarcodes), '\t', CSVWriter.NO_QUOTE_CHARACTER);
                 for (BarcodeModel m : models)
                 {
                     writer.writeNext(new String[]{m.getName(), m.getSequence()});
@@ -283,20 +319,6 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
             catch (IOException e)
             {
                 throw new PipelineJobException(e);
-            }
-            finally
-            {
-                if (writer != null)
-                {
-                    try
-                    {
-                        writer.close();
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-                }
             }
         }
     }
@@ -313,7 +335,145 @@ public class ReadsetImportTask extends WorkDirectoryTask<ReadsetImportTask.Facto
 
     public static File getExtraBarcodesFile(SequenceTaskHelper helper)
     {
-        return new File(helper.getSupport().getAnalysisDirectory(), "extraBarcodes.txt");
+        return new File(helper.getJob().getAnalysisDirectory(), "extraBarcodes.txt");
+    }
+
+    public static void handleInputs(SequenceJob job, TaskFileManager manager, Collection<RecordedAction> actions, Set<File> outputFiles, Set<File> unalteredInputs) throws PipelineJobException
+    {
+        Set<File> inputs = new HashSet<>();
+        inputs.addAll(job.getInputFiles());
+
+        job.getLogger().info("Cleaning up input files");
+
+        try
+        {
+            Thread.sleep(1000);
+        }
+        catch (InterruptedException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        String handling = manager.getInputfileTreatment();
+        if ("delete".equals(handling))
+        {
+            for (File input : inputs)
+            {
+                if (input.exists())
+                {
+                    if (!outputFiles.contains(input))
+                    {
+                        job.getLogger().info("Deleting input file: " + input.getPath());
+
+                        input.delete();
+                        if (input.exists())
+                        {
+                            throw new PipelineJobException("Unable to delete file: " + input.getPath());
+                        }
+                    }
+                    else
+                    {
+                        //this input file was not altered during normalization.  in this case, we move it into the analysis folder
+                        job.getLogger().info("File was not altered by normalization.  Copying to analysis folder: " + input.getPath());
+                        copyInputToAnalysisDir(input, job, actions, unalteredInputs);
+                    }
+                }
+            }
+        }
+        else if ("compress".equals(handling))
+        {
+            FileType gz = new FileType(".gz");
+            for (File input : inputs)
+            {
+                if (input.exists())
+                {
+                    if (gz.isType(input))
+                    {
+                        job.getLogger().debug("Moving input file to analysis directory: " + input.getPath());
+                        copyInputToAnalysisDir(input, job, actions, unalteredInputs);
+                    }
+                    else
+                    {
+                        job.getLogger().info("Compressing/Moving input file to analysis directory: " + input.getPath());
+                        File compressed = Compress.compressGzip(input);
+                        if (!compressed.exists())
+                            throw new PipelineJobException("Unable to compress file: " + input);
+
+                        TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, compressed, actions, job);
+
+                        input.delete();
+                        copyInputToAnalysisDir(compressed, job, actions, unalteredInputs);
+                    }
+                }
+            }
+        }
+        else
+        {
+            job.getLogger().info("\tInput files will be left alone");
+        }
+
+        manager.deleteIntermediateFiles();
+    }
+
+    private static File copyInputToAnalysisDir(File input, SequenceJob job, Collection<RecordedAction> actions, @Nullable Set<File> unalteredInputs) throws PipelineJobException
+    {
+        job.getLogger().debug("Copying input file to analysis directory: " + input.getPath());
+
+        try
+        {
+            //NOTE: we assume the input is gzipped already
+            File outputDir = job.getAnalysisDirectory();
+            File output = new File(outputDir, input.getName());
+            if (output.exists())
+            {
+                if (unalteredInputs != null && unalteredInputs.contains(output))
+                {
+                    job.getLogger().debug("\tThis input was unaltered during normalization and a copy already exists in the analysis folder so the original will be discarded");
+                    input.delete();
+                    TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job);
+                    return output;
+                }
+                else
+                {
+                    output = new File(outputDir, FileUtil.getBaseName(input.getName()) + ".orig.gz");
+                    job.getLogger().debug("\tA file with the expected output name already exists, so the original will be renamed: " + output.getPath());
+                }
+            }
+
+            FileUtils.moveFile(input, output);
+            if (!output.exists())
+            {
+                throw new PipelineJobException("Unable to move file: " + input.getPath());
+            }
+
+            //TODO: kinda of a hack
+            List<File> toMove = Arrays.asList(new File(input.getParentFile(), input.getName().replaceAll(".fastq.gz", "") + "_fastqc.html.gz"), new File(input.getParentFile(), input.getName().replaceAll(".fastq.gz", "") + "_fastqc.zip"));
+            for (File f : toMove)
+            {
+                if (f.exists())
+                {
+                    job.getLogger().debug("also moving FASTQC file: " + f.getName());
+                    File target = new File(output.getParentFile(), f.getName());
+                    if (target.exists())
+                    {
+                        job.getLogger().warn("FASTQC file already exists on the server.  was not expected: " + target.getPath());
+                    }
+                    else
+                    {
+                        FileUtils.moveFile(f, target);
+                        TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), f, target, actions, job);
+                    }
+                }
+            }
+
+            TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job);
+
+            return output;
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 }
 

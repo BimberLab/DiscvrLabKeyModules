@@ -29,9 +29,12 @@
                <property name="columnTitle" value="Readset Status"/>
            </properties>
        </column>
+       <column name="readset/totalForwardReads"/>
+       <column name="totalSbtReads"/>
+       <column name="pctUnmappedReads"/>
        <column name="numCachedResults"/>
        <column name="numCachedHaplotypes"/>
-       <column name="pctUnmappedReads"/>
+       <column name="numReadsDisabled"/>
        <column name="readset/instrument_run_id"/>
    </columns>
    <sorts>

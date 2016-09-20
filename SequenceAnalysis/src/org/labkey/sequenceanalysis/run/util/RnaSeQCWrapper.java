@@ -121,7 +121,7 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
                 }
             }
 
-            getLogger().debug(String.format("total lines in original GTF: %d, in filtered GTF: %d, total filtered: %d", lineNo, totalLines, filteredLines));
+            getLogger().info(String.format("total lines in original GTF: %d, in filtered GTF: %d, total filtered: %d", lineNo, totalLines, filteredLines));
         }
         catch (IOException e)
         {

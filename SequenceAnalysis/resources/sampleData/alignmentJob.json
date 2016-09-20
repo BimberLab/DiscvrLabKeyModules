@@ -1,5 +1,4 @@
 {
-    "fileNames":"@@FILENAMES@@",
     "containerId":"@@CONTAINERID@@",
     "containerPath":"@@CONTAINERPATH@@",
     "userId":@@USERID@@,

@@ -34,7 +34,6 @@ import java.util.Map;
  */
 public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReadsetCreationTask.Factory>
 {
-    private SequenceTaskHelper _helper;
     private static String ACTION_NAME = "Import Illumina Reads";
 
     protected IlluminaReadsetCreationTask(Factory factory, PipelineJob job)
@@ -80,7 +79,6 @@ public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReads
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();
-        _helper = new SequenceTaskHelper(job, _wd);
 
         job.getLogger().info("Updating readsets");
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());

@@ -17,5 +17,5 @@ abstract public class HTCondorService
         _instance = instance;
     }
 
-    abstract public void registerResourceAllocator(HTCondorJobResourceAllocator allocator);
+    abstract public void registerResourceAllocator(HTCondorJobResourceAllocator.Factory allocator);
 }

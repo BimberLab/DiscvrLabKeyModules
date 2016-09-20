@@ -15,6 +15,7 @@
 
 package org.labkey.sequenceanalysis;
 
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
@@ -27,9 +28,11 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
+import org.labkey.api.ldk.buttons.ShowEditUIButton;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.search.SearchService;
+import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.services.ServiceRegistry;
@@ -48,10 +51,16 @@ import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.GenomeLoadButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
+import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
+import org.labkey.sequenceanalysis.pipeline.AlignmentImportJob;
+import org.labkey.sequenceanalysis.pipeline.IlluminaImportJob;
 import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
+import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
+import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerPipelineProvider;
+import org.labkey.sequenceanalysis.pipeline.SequencePipelineProvider;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
 import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
@@ -88,11 +97,14 @@ import org.labkey.sequenceanalysis.run.reference.CustomReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.DNAReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.SavedReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.VirusReferenceLibraryStep;
+import org.labkey.sequenceanalysis.run.variant.GenotypeFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
 import org.labkey.sequenceanalysis.run.variant.SelectSNVsStep;
 import org.labkey.sequenceanalysis.run.variant.SelectVariantsStep;
 import org.labkey.sequenceanalysis.run.variant.VariantAnnotatorStep;
 import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
+import org.labkey.sequenceanalysis.run.variant.VariantsSummaryStep;
+import org.labkey.sequenceanalysis.run.variant.VariantsToTableStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
 
 import java.util.Arrays;
@@ -104,6 +116,8 @@ import java.util.Set;
 
 public class SequenceAnalysisModule extends ExtendedSimpleModule
 {
+    private static final Logger _log = Logger.getLogger(SequenceAnalysisModule.class);
+
     public static final String NAME = "SequenceAnalysis";
     public static final String CONTROLLER_NAME = "sequenceanalysis";
     public static final String PROTOCOL = "Sequence Analysis";
@@ -116,7 +130,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.301;
+        return 12.302;
     }
 
     public boolean hasScripts()
@@ -132,9 +146,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     protected void init()
     {
-        //NOTE: because this is not called on the remote server, startup tasks have been moved to the following:
-        new PipelineStartup();
-
         addController(CONTROLLER_NAME, SequenceAnalysisController.class);
     }
 
@@ -159,6 +170,21 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public static void registerPipelineSteps()
     {
+        //pipelines
+        try
+        {
+            AlignmentImportJob.register();
+            SequenceAlignmentJob.register();
+            ReadsetImportJob.register();
+            IlluminaImportJob.register();
+            AlignmentAnalysisJob.register();
+        }
+        catch (CloneNotSupportedException e)
+        {
+            _log.error(e.getMessage(), e);
+        }
+
+
         //preprocessing
         SequencePipelineService.get().registerPipelineStep(new DownsampleFastqWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.ReadLengthFilterProvider());
@@ -216,15 +242,18 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RnaSeQCStep.Provider());
 
         //variant processing
-        SequencePipelineService.get().registerPipelineStep(new SNPEffStep.Provider());
-        SequencePipelineService.get().registerPipelineStep(new SelectVariantsStep.Provider());
-        SequencePipelineService.get().registerPipelineStep(new VariantFiltrationStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new GenotypeFiltrationStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SelectSNVsStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SelectVariantsStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SNPEffStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantAnnotatorStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VariantFiltrationStep.Provider());
+
+        SequencePipelineService.get().registerPipelineStep(new VariantsToTableStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VariantsSummaryStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
-        //SequenceAnalysisService.get().registerFileHandler(new CoverageDepthHandler());
         SequenceAnalysisService.get().registerFileHandler(new GenotypeGVCFHandler());
         //SequenceAnalysisService.get().registerFileHandler(new AlignmentMetricsHandler());
         SequenceAnalysisService.get().registerFileHandler(new UnmappedSequenceBasedGenotypeHandler());
@@ -263,9 +292,14 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     @Override
     public void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
+        //NOTE: because this is not called on the remote server, startup tasks have been moved to the following:
+        new PipelineStartup();
+
         LaboratoryService.get().registerDataProvider(new SequenceProvider(this));
         SequenceAnalysisService.get().registerDataProvider(new SequenceProvider(this));
 
+        LDKService.get().registerQueryButton(new ShowEditUIButton(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES, UpdatePermission.class), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
+        LDKService.get().registerQueryButton(new ShowEditUIButton(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES, UpdatePermission.class), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
         ExperimentService.get().registerExperimentRunTypeSource(new ExperimentRunTypeSource()
         {
             @NotNull
@@ -283,7 +317,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         PipelineService.get().registerPipelineProvider(new NcbiGenomeImportPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new SequenceOutputHandlerPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new ImportFastaSequencesPipelineJob.Provider(this));
-        //PipelineService.get().registerPipelineProvider(new SequencePipelineProvider(this));
+        PipelineService.get().registerPipelineProvider(new SequencePipelineProvider(this));
 
         LDKService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         LDKService.get().registerQueryButton(new GenomeLoadButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
@@ -310,10 +344,11 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         Set<Class> testClasses = new HashSet<Class>(Arrays.asList(
             Barcoder.TestCase.class,
             BamIterator.TestCase.class,
-            TestHelper.SequenceImportPipelineTestCase.class,
-            //TestHelper.SequenceAnalysisPipelineTestCase3.class,
-            TestHelper.SequenceAnalysisPipelineTestCase1.class,
-            TestHelper.SequenceAnalysisPipelineTestCase2.class
+            SequenceIntegrationTests.SequenceImportPipelineTestCase.class,
+            //SequenceIntegrationTests.SequenceAnalysisPipelineTestCase3.class,
+            SequenceIntegrationTests.SequenceAnalysisPipelineTestCase1.class,
+            SequenceIntegrationTests.SequenceAnalysisPipelineTestCase2.class,
+            OutputIntegrationTests.VariantProcessingTest.class
         ));
 
         return testClasses;

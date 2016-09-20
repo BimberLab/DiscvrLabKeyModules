@@ -1,18 +1,14 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.NotNull;
-import org.labkey.api.data.Table;
-import org.labkey.api.data.TableInfo;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
-import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
-import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 
 import java.io.IOException;
@@ -23,7 +19,7 @@ import java.util.List;
 /**
  * Created by bimber on 1/16/2015.
  */
-public class SequenceOutputHandlerRemoteTask extends PipelineJob.Task<SequenceOutputHandlerRemoteTask.Factory>
+public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceOutputHandlerRemoteTask.Factory>
 {
     protected SequenceOutputHandlerRemoteTask(Factory factory, PipelineJob job)
     {
@@ -53,6 +49,11 @@ public class SequenceOutputHandlerRemoteTask extends PipelineJob.Task<SequenceOu
             for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers())
             {
                 allowableNames.add(handler.getName());
+
+                if (handler instanceof SequenceOutputHandler.HasActionNames)
+                {
+                    allowableNames.addAll(((SequenceOutputHandler.HasActionNames)handler).getAllowableActionNames());
+                }
             }
 
             return allowableNames;
@@ -92,27 +93,18 @@ public class SequenceOutputHandlerRemoteTask extends PipelineJob.Task<SequenceOu
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
-        List<RecordedAction> actions = new ArrayList<>();
+        TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd);
 
         SequenceOutputHandler handler = getPipelineJob().getHandler();
-        List<SequenceOutputFile> outputsToCreate = new ArrayList<>();
+        JobContextImpl ctx = new JobContextImpl(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), manager, _wd);
 
-        handler.getProcessor().processFilesRemote(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getJsonParams(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
+        getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
+        handler.getProcessor().processFilesRemote(getPipelineJob().getFiles(), ctx);
 
-        if (!outputsToCreate.isEmpty())
-        {
-            getJob().getLogger().info(outputsToCreate.size() + " to create");
-            for (SequenceOutputFile o : outputsToCreate)
-            {
-                getPipelineJob().addOutputToCreate(o);
-            }
-        }
-        else
-        {
-            getJob().debug("no sequence outputs created");
-        }
+        manager.deleteIntermediateFiles();
+        manager.cleanup(ctx.getActions());
 
-        return new RecordedActionSet(actions);
+        return new RecordedActionSet(ctx.getActions());
     }
 
 }

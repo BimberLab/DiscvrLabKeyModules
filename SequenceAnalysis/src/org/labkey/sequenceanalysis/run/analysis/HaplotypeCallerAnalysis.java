@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.run.analysis;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
@@ -13,15 +14,12 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.HaplotypeCallerWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * User: bimber
@@ -61,12 +59,6 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
     }
 
     @Override
-    public void init(List<AnalysisModel> models) throws PipelineJobException
-    {
-
-    }
-
-    @Override
     public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
@@ -82,6 +74,7 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         }
 
         getWrapper().setOutputDir(outputDir);
+        getWrapper().setWorkingDir(outputDir);
 
         if (getProvider().getParameterByName("useQueue").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
         {
@@ -98,7 +91,7 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         }
 
         output.addOutput(outputFile, "gVCF File");
-        output.addSequenceOutput(outputFile, outputFile.getName(), "gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId());
+        output.addSequenceOutput(outputFile, outputFile.getName(), "gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "GATK Version: " + getWrapper().getVersionString());
         if (idxFile.exists())
         {
             output.addOutput(idxFile, "VCF Index");

@@ -40,25 +40,28 @@
                     style: 'padding-bottom:10px;',
                     html: 'This page provide helpers to ensure the sequence module\'s pipeline is configured correctly.  These are automated tests that will attempt to perform several sequence analysis and import pipeline jobs that exercise most aspects of the pipeline.  If you have configured the sequence pipeline and installed the external tools, you must then perform one additional step to enable these tests.  Have your site admin modify the tomcat startup script and include the following additional params in the CATALINA_OPTIONS setting:<br><br>' +
                         '-DsequencePipelineEnabled=true<br>' +
-                        'and also:<br>' +
-                        '-DgatkInstalled=true<br><br>' +
-                        'If you have installed the GATK JAR.  These parameters are typically added to the init script used to start tomcat, usually /etc/init.d/tomcat on a linux server.<br><br>' +
+                        'This is typically added to the init script used to start tomcat, usually /etc/init.d/tomcat on a linux server.<br><br>' +
                         'Note: this is not required to use the pipeline - just for these tests.  Please see the <b><a href="https://www.labkey.org/wiki/home/Documentation/page.view?name=configWebappMemory">documentation on configuring webapp memory</a></b>, which is analogous to the setting you need to add.  Once you have done this, click the links below to run the tests:'
                 },{
                     xtype: 'ldk-linkbutton',
                     linkCls: 'labkey-text-link',
                     text: 'Run Sequence Analysis Test 1',
-                    href: LABKEY.ActionURL.buildURL('junit', 'run', '/', {testCase: 'org.labkey.sequenceanalysis.TestHelper$SequenceAnalysisPipelineTestCase1'})
+                    href: LABKEY.ActionURL.buildURL('junit', 'run', '/', {testCase: 'org.labkey.sequenceanalysis.SequenceIntegrationTests$SequenceAnalysisPipelineTestCase1', skipTestCleanup: 1})
                 },{
                     xtype: 'ldk-linkbutton',
                     linkCls: 'labkey-text-link',
                     text: 'Run Sequence Analysis Test 2',
-                    href: LABKEY.ActionURL.buildURL('junit', 'run', '/', {testCase: 'org.labkey.sequenceanalysis.TestHelper$SequenceAnalysisPipelineTestCase2'})
+                    href: LABKEY.ActionURL.buildURL('junit', 'run', '/', {testCase: 'org.labkey.sequenceanalysis.SequenceIntegrationTests$SequenceAnalysisPipelineTestCase2', skipTestCleanup: 1})
                 },{
                     xtype: 'ldk-linkbutton',
                     linkCls: 'labkey-text-link',
                     text: 'Run Sequence Import Test',
-                    href: LABKEY.ActionURL.buildURL('junit', 'run', '/', {testCase: 'org.labkey.sequenceanalysis.TestHelper$SequenceImportPipelineTestCase'})
+                    href: LABKEY.ActionURL.buildURL('junit', 'run', '/', {testCase: 'org.labkey.sequenceanalysis.SequenceIntegrationTests$SequenceImportPipelineTestCase', skipTestCleanup: 1})
+                },{
+                    xtype: 'ldk-linkbutton',
+                    linkCls: 'labkey-text-link',
+                    text: 'Run Sequence Output Test',
+                    href: LABKEY.ActionURL.buildURL('junit', 'run', '/', {testCase: 'org.labkey.sequenceanalysis.OutputIntegrationTests$VariantProcessingTest', skipTestCleanup: 1})
                 },{
                     style: 'margin-top:10px;margin-bottom:10px;',
                     html: 'If tests fail, please check your site log file for additional information.  Note: if you did not enable the startup param, the tests will pass without actually exercising the pipeline (this is by design).  However, your site log file should contain the line "Sequence pipeline is not enabled on this server, so some tests will be skipped"<br>'

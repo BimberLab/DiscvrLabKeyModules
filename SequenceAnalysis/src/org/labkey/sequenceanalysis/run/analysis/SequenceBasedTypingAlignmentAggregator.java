@@ -17,9 +17,11 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
@@ -40,6 +42,7 @@ import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.Pair;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
 import org.labkey.sequenceanalysis.run.alignment.FastqCollapser;
@@ -90,7 +93,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
     private Set<String> _unaligned = new HashSet<>();
     private Set<String> _unmappedWithMappedMate = new HashSet<>();
-    //private Set<String> _mappedWithoutHits = new HashSet<>();
+    private Set<String> _mappedWithoutHits = new HashSet<>();
     private int _totalAlignmentsInspected = 0;
     private int _maxSNPs = 0;
     private int _skippedReferencesByPct = 0;
@@ -279,7 +282,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             //stage 3 filters: filtering within each set
             Map<String, HitSet> totals3 = doFilterStage3(writer, totals2);
 
-            //stage 4 filters: filtering within each set
+            //stage 4 filters: filtering by lineage
             Map<String, HitSet> totals4 = doFilterStage4(writer, totals3);
 
             Map<String, Integer> totalByReferenceFinal = new HashMap<>();
@@ -389,7 +392,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 {
                     _rejectedSingletons++;
                     _unaligned.add(readName);
-                    //_mappedWithoutHits.add(readName);
+                    _mappedWithoutHits.add(readName);
 
                     if (writer != null)
                     {
@@ -400,7 +403,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             else
             {
                 _unaligned.add(readName);
-                //_mappedWithoutHits.add(readName);
+                _mappedWithoutHits.add(readName);
             }
         }
 
@@ -424,7 +427,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 else
                 {
                     _unaligned.add(mateName);
-                    //_mappedWithoutHits.add(mateName);
+                    _mappedWithoutHits.add(mateName);
 
                     if (writer != null)
                     {
@@ -436,7 +439,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             {
                 _rejectedSingletons++;
                 _unaligned.add(mateName);
-                //_mappedWithoutHits.add(mateName);
+                _mappedWithoutHits.add(mateName);
             }
 
             if (writer != null)
@@ -513,6 +516,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             if (refNames.isEmpty())
             {
                 _unaligned.addAll(hs.readNames);
+                _mappedWithoutHits.addAll(hs.readNames);
             }
             else
             {
@@ -601,7 +605,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 {
                     msg = "**discarded due to group pct filter";
                     _unaligned.addAll(hs.readNames);
-                    //_mappedWithoutHits.addAll(hs.readNames);
+                    _mappedWithoutHits.addAll(hs.readNames);
                     totalFiltered++;
                 }
                 else
@@ -629,7 +633,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             if (passingRefs.isEmpty())
             {
                 _unaligned.addAll(hs.readNames);
-                //_mappedWithoutHits.addAll(hs.readNames);
+                _mappedWithoutHits.addAll(hs.readNames);
             }
             else
             {
@@ -655,7 +659,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         }
 
         Map<String, String> ret = new HashMap<>();
-        try (CSVReader reader = new CSVReader(Readers.getReader(_lineageMapFile)))
+        try (CSVReader reader = new CSVReader(Readers.getReader(_lineageMapFile), '\t'))
         {
             String[] line;
             while ((line = reader.readNext()) != null)
@@ -713,10 +717,14 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 }
 
                 resultByLineage.get(lineage).add(hs);
-                totalByLineage.put(lineage, totalByLineage.get(lineage + hs.readNames.size()));
+                totalByLineage.put(lineage, totalByLineage.get(lineage) + hs.readNames.size());
             }
             else
             {
+                if (writer != null)
+                {
+                    writer.writeNext(new String[]{"Stage4Filters", hs.getKey(), "MultipleLineges", StringUtils.join(distinctLineages, ";")});
+                }
                 stage4Totals.put(key, hs);
             }
         }
@@ -727,36 +735,59 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         Set<String> distinctAllelesPruned = new HashSet<>();
         for (String lineage : resultByLineage.keySet())
         {
+            getLogger().debug("inspecting lineage: " + lineage);
             List<HitSet> sets = resultByLineage.get(lineage);
             if (sets.size() == 1)
             {
+                getLogger().debug("only one set, no filtering");
                 stage4Totals.put(sets.get(0).getKey(), sets.get(0));
+                continue;
+            }
+
+            if (!totalByLineage.containsKey(lineage))
+            {
+                getLogger().warn("unable to find lineage, cannot filter: [" + lineage + "]");
+                for (HitSet hs : sets)
+                {
+                    stage4Totals.put(hs.getKey(), hs);
+                }
                 continue;
             }
 
             Set<String> sharedRefNames = new HashSet<>();
             boolean hasPassingSet = false;
-            for (int i = 0; i<sets.size(); i++)
+            getLogger().debug("total hit sets: " + sets.size());
+            int setsSkipped = 0;
+            for (HitSet hs : sets)
             {
-                double pctOfLineage = (double)sets.get(i).readNames.size() / (double)totalByLineage.get(lineage);
+                double pctOfLineage = (double)hs.readNames.size() / (double)totalByLineage.get(lineage);
                 if (pctOfLineage < _minPctForLineageFiltering)
                 {
+                    setsSkipped++;
                     continue;
                 }
 
                 if (!hasPassingSet)
                 {
-                    sharedRefNames.addAll(sets.get(i).refNames);
+                    sharedRefNames.addAll(hs.refNames);
                     hasPassingSet = true;
+                    getLogger().debug("initial size: " + sharedRefNames.size());
                 }
                 else
                 {
-                    sharedRefNames.retainAll(sets.get(i).refNames);
+                    boolean changed = sharedRefNames.retainAll(hs.refNames);
+                    if (changed)
+                    {
+                        getLogger().debug("new size: " + sharedRefNames.size());
+                    }
                 }
             }
 
+            getLogger().debug("total sets skipped due to pct: " + setsSkipped);
             if (sharedRefNames.isEmpty())
             {
+                getLogger().debug("no shared references, will not filter");
+
                 //if empty, there are no alleles common to all, so keep original data
                 for (HitSet hs : sets)
                 {
@@ -901,7 +932,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
         getLogger().info("\tReads with no alignments: " + _unaligned.size());
         getLogger().info("\tReads unmapped with a mate mapped: " + _unmappedWithMappedMate.size());
-        //getLogger().info("\tMapped reads without passing hits: " + _mappedWithoutHits.size());
+        getLogger().info("\tMapped reads without passing hits: " + _mappedWithoutHits.size());
         getLogger().info("\tSingleton or First Mate Reads with at least 1 alignment that passed thresholds: " + _alignmentsByReadM1.keySet().size());
         getLogger().info("\tSecond Mate Reads with at least 1 alignment that passed thresholds: " + _alignmentsByReadM2.keySet().size());
 
@@ -1007,7 +1038,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
     public void writeTable(File output) throws PipelineJobException
     {
-        try (CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(output), "UTF-8")), '\t'))
+        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), '\t'))
         {
             Map<String, HitSet> map = writeSummary();
 
@@ -1030,7 +1061,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
     public Pair<File, File> outputUnmappedReads(File bam, File outDir, String basename) throws PipelineJobException
     {
-        if (!_unaligned.isEmpty())
+        if (!_mappedWithoutHits.isEmpty())
         {
             File unmappedReadsF = new File(outDir, basename + ".unmapped-R1.fastq");
             File unmappedReadsR = new File(outDir, basename + ".unmapped-R2.fastq");
@@ -1039,7 +1070,9 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             try (FastqWriter w1 = fact.newWriter(unmappedReadsF);FastqWriter w2 = fact.newWriter(unmappedReadsR))
             {
                 Set<String> encountered = new HashSet<>();
-                try (SAMFileReader reader = new SAMFileReader(bam);SAMFileReader mateReader = new SAMFileReader(bam))
+                SamReaderFactory fact1 = SamReaderFactory.makeDefault();
+                fact1.validationStringency(ValidationStringency.SILENT);
+                try (SamReader reader = fact1.open(bam);SamReader mateReader = fact1.open(bam))
                 {
                     try (SAMRecordIterator it = reader.iterator())
                     {
@@ -1047,7 +1080,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                         {
                             SAMRecord r = it.next();
                             //note: should we account for forward/reverse?
-                            if (_unaligned.contains(r.getReadName()))
+                            if (_mappedWithoutHits.contains(r.getReadName()))
                             {
                                 if (r.isSecondaryOrSupplementary())
                                 {
@@ -1077,6 +1110,10 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                             }
                         }
                     }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
                 }
             }
 
@@ -1139,5 +1176,10 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     public Set<String> getUniqueReads()
     {
         return _uniqueReads;
+    }
+
+    public double getPctUnmapped()
+    {
+        return (double)_unaligned.size() / (double)_uniqueReads.size();
     }
 }

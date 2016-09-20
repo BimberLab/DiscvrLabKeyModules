@@ -33,7 +33,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
-import org.labkey.sequenceanalysis.run.analysis.AnalysisOutputImpl;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.sequenceanalysis.run.util.SamtoolsRunner;
 
 import java.io.BufferedReader;
@@ -150,13 +150,13 @@ public class BismarkWrapper extends AbstractCommandWrapper
         @Override
         public boolean doAddReadGroups()
         {
-            return false;
+            return getProvider().getParameterByName("formatForBisSNP").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
         }
 
         @Override
         public boolean doSortIndexBam()
         {
-            return false;
+            return getProvider().getParameterByName("formatForBisSNP").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
         }
 
         @Override
@@ -263,7 +263,8 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-N"), "max_seed_mismatches", "Max Seed Mismatches", "Sets the number of mismatches to be allowed in a seed alignment during multiseed alignment. Can be set to 0 or 1. Setting this higher makes alignment slower (often much slower) but increases sensitivity. Default: 0.", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
-                    }}, 1)
+                    }}, 1),
+                    ToolParameterDescriptor.create("formatForBisSNP", "Format For BisSNP", "If checked, the BAM will be sorted and read groups added.  This is required for BisSNP; however, it will make the BAM incompatible with bismark methylation extractor.", "checkbox", null, false)
             ), null, "http://www.bioinformatics.babraham.ac.uk/projects/bismark/", true, false);
         }
 
@@ -278,12 +279,6 @@ public class BismarkWrapper extends AbstractCommandWrapper
         public BismarkExtractorStep(PipelineStepProvider provider, PipelineContext ctx)
         {
             super(provider, ctx, new BismarkWrapper(ctx.getLogger()));
-        }
-
-        @Override
-        public void init(List<AnalysisModel> models) throws PipelineJobException
-        {
-
         }
 
         @Override
@@ -383,14 +378,14 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     if (siteReportPng != null && siteReportPng.exists())
                     {
                         output.addOutput(siteReportPng, "Bismark CpG Methylation Report");
-                        output.addSequenceOutput(siteReportPng, rs.getName() + " methylation rates", "Bismark CpG Methylation Report", rs.getReadsetId(), null, referenceGenome.getGenomeId());
+                        output.addSequenceOutput(siteReportPng, rs.getName() + " methylation rates", "Bismark CpG Methylation Report", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
                     }
                 }
 
                 if (outputGff.exists())
                 {
                     output.addOutput(outputGff, "Bismark CpG Methylation Rates");
-                    output.addSequenceOutput(outputGff, rs.getName() + " methylation rates (GFF)", "CpG Methylation Rates", rs.getReadsetId(), null, referenceGenome.getGenomeId());
+                    output.addSequenceOutput(outputGff, rs.getName() + " methylation rates (GFF)", "CpG Methylation Rates", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
                 }
 
 //                File siteReport2 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".NonCpG_Site_Summary.txt");

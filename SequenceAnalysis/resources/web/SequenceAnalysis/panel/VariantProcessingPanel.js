@@ -6,14 +6,9 @@
 
 Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 	extend: 'SequenceAnalysis.panel.BaseSequencePanel',
-	analysisController: 'sequenceanalysis',
 	alias: 'widget.sequenceanalysis-variantprocessingpanel',
-	splitJobs: true,
-	statics: {
-		TASKID: 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceAnalysisPipeline'
-	},
-
-	taskId: 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:sequenceAnalysisPipeline',
+	showGenotypeGVCFs: false,
+	jobType: 'variantProcessing',
 
 	initComponent: function(){
 		Ext4.apply(this, {
@@ -53,29 +48,18 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 				fieldLabel: 'Job Name',
 				width: 600,
 				helpPopup: 'This is the name assigned to this job, which must be unique.  Results will be moved into a folder with this name.',
-				name: 'protocolName',
-				itemId: 'protocolName',
+				name: 'jobName',
+				itemId: 'jobName',
 				allowBlank:false,
-				value: 'SequenceAnalysis_'+new Date().format('Ymd'),
-				maskRe: new RegExp('[A-Za-z0-9_]'),
-				validator: function(val){
-					return (this.isValidProtocol === false ? 'Job Name Already In Use' : true);
-				},
-				listeners: {
-					scope: this,
-					change: {
-						fn: this.checkProtocol,
-						buffer: 200,
-						scope: this
-					}
-				}
+				value: 'VariantProcessing_' + (Ext4.Date.format(new Date(), 'Ymd')),
+				maskRe: new RegExp('[A-Za-z0-9_]')
 			},{
 				fieldLabel: 'Description',
 				xtype: 'textarea',
 				width: 600,
 				height: 100,
 				helpPopup: 'Description for this analysis (optional)',
-				name: 'protocolDescription',
+				name: 'jobDescription',
 				allowBlank:true
 			},{
 				fieldLabel: 'Delete Intermediate Files',
@@ -141,8 +125,6 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 					}
 
 					this.libraryIds = Ext4.unique(libraryIds);
-
-					this.checkProtocol();
 				}
 			}
 		});
@@ -201,11 +183,64 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 
 		var panel = this.down('#analysisOptions');
 
+        results.variantCalling = [{
+            description: 'This will run GATK\'s GenotypeGVCFs on a set of GVCF files',
+            label: 'GenotypeGVCFs',
+            name: 'GenotypeGVCFs',
+            parameters: [{
+                fieldXtype: 'textfield',
+                name: 'fileBaseName',
+                label: 'Filename',
+                description: 'This is the basename that will be used for the output gzipped VCF',
+                commandLineParam: false,
+                defaultValue: 'CombinedGenotypes'
+            },{
+                fieldXtype: 'ldk-integerfield',
+                name: 'stand_call_conf',
+                label: 'Threshold For Calling Variants',
+                description: 'The minimum phred-scaled confidence threshold at which variants should be called',
+                commandLineParam: '-stand_call_conf',
+                defaultValue: 30
+            },{
+                fieldXtype: 'ldk-integerfield',
+                name: 'stand_emit_conf',
+                label: 'Threshold For Emitting Variants',
+                description: 'The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold)',
+                commandLineParam: '-stand_emit_conf',
+                defaultValue: 20
+            },{
+                fieldXtype: 'ldk-integerfield',
+                name: 'max_alternate_alleles',
+                label: 'Max Alternate Alleles',
+                description: 'Maximum number of alternate alleles to genotype',
+                commandLineParam: '--max_alternate_alleles',
+                defaultValue: 12
+            },{
+                fieldXtype: 'checkbox',
+                name: 'includeNonVariantSites',
+                label: 'Include Non-Variant Sites',
+                description: 'If checked, all sites will be output into the VCF, instead of just those where variants are detected.  This can dramatically increase the size of the VCF.',
+                commandLineParam: '--includeNonVariantSites',
+                defaultValue: false
+            }]
+        }];
+
 		var items = [];
+        if (this.showGenotypeGVCFs){
+            items.push({
+                xtype: 'sequenceanalysis-analysissectionpanel',
+                title: 'Variant Calling',
+                stepType: 'variantCalling',
+                singleTool: true,
+                sectionDescription: 'This section allows you to call variants from a set of gVCF inputs',
+                toolConfig: results
+            })
+        }
 		items.push({
 			xtype: 'sequenceanalysis-analysissectionpanel',
 			title: 'Variant Preprocessing',
 			stepType: 'variantProcessing',
+			allowDuplicateSteps: true,
 			sectionDescription: 'This steps in this section will act on VCF files.  They will take an input VCF, perform an action such as annotation or filtering, and produce an output VCF.  The steps will be executed in the order listed.  Use the button below to add steps.',
 			toolConfig: results
 		});
@@ -231,10 +266,17 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 	},
 	
 	onSubmit: function(){
+		var values = this.getJsonParams();
+		if (!values){
+			return;
+		}
+
+		Ext4.Msg.wait('Submitting...');
+
 		LABKEY.Ajax.request({
 			url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler'),
 			jsonData: {
-				handlerClass: 'org.labkey.sequenceanalysis.analysis.CoverageDepthHandler',
+				handlerClass: 'org.labkey.sequenceanalysis.analysis.' + (this.showGenotypeGVCFs ? 'GenotypeGVCFHandler' : 'ProcessVariantsHandler'),
 				outputFileIds: this.outputFileIds,
 				params: Ext4.encode(values)
 			},
@@ -246,6 +288,43 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 			},
 			failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback())
 		});
-	}
+	},
 
+	getJsonParams: function(ignoreErrors){
+		var errors = this.getErrors();
+		if (errors.length && !ignoreErrors){
+			Ext4.Msg.alert('Error', errors.join('<br>'));
+			return;
+		}
+
+		var json = {
+			version: 2
+		};
+
+		//first add the general params
+		Ext4.apply(json, this.down('#runInformation').getForm().getValues());
+
+		//then append each section
+		var sections = this.query('sequenceanalysis-analysissectionpanel');
+		Ext4.Array.forEach(sections, function(s){
+			Ext4.apply(json, s.toJSON());
+		}, this);
+
+		return json;
+	},
+
+	getErrors: function(){
+		var errors = [];
+
+		var sections = this.query('sequenceanalysis-analysissectionpanel');
+		Ext4.Array.forEach(sections, function(s){
+			var errs = s.getErrors();
+			if (errs.length){
+				errors = errors.concat(errs);
+			}
+		}, this);
+
+		errors = Ext4.unique(errors);
+		return errors;
+	}
 });

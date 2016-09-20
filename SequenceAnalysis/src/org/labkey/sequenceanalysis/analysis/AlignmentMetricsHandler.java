@@ -86,8 +86,11 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler
         }
 
         @Override
-        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            PipelineJob job = ctx.getJob();
+            JSONObject params = ctx.getParams();
+
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
@@ -132,15 +135,15 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler
                 }
             }
 
-            File totalAlignmentsFile = new File(outputDir, "totalAlignments.bed");
+            File totalAlignmentsFile = new File(ctx.getOutputDir(), "totalAlignments.bed");
             action.addOutput(totalAlignmentsFile, "Total Alignments BED", false, true);
-            File totalReadsFile = new File(outputDir, "totalReads.bed");
+            File totalReadsFile = new File(ctx.getOutputDir(), "totalReads.bed");
             action.addOutput(totalReadsFile, "Total Reads BED", false, true);
-            File duplicateReadsFile = new File(outputDir, "duplicateReads.bed");
+            File duplicateReadsFile = new File(ctx.getOutputDir(), "duplicateReads.bed");
             action.addOutput(duplicateReadsFile, "Duplicate Reads BED", false, true);
-            File notPrimaryAlignmentsFile = new File(outputDir, "notPrimaryAlignments.bed");
+            File notPrimaryAlignmentsFile = new File(ctx.getOutputDir(), "notPrimaryAlignments.bed");
             action.addOutput(notPrimaryAlignmentsFile, "Not Primary Alignments BED", false, true);
-            File avgMappingQualFile = new File(outputDir, "avgMappingQual.bed");
+            File avgMappingQualFile = new File(ctx.getOutputDir(), "avgMappingQual.bed");
             action.addOutput(avgMappingQualFile, "Avg Mapping Quality BED", false, true);
 
             try (
@@ -245,7 +248,7 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler
                 }
 
                 action.setEndTime(new Date());
-                actions.add(action);
+                ctx.addActions(action);
             }
             catch (IOException e)
             {

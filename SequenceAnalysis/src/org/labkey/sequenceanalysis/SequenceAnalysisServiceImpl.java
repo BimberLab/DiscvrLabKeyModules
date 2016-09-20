@@ -28,6 +28,8 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
+import org.labkey.sequenceanalysis.run.util.BgzipRunner;
+import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 
@@ -246,6 +248,23 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         catch (PipelineJobException e)
         {
             throw new IOException(e);
+        }
+    }
+
+    public File bgzipFile(File input, Logger log) throws PipelineJobException
+    {
+        return new BgzipRunner(log).execute(input);
+    }
+
+    @Override
+    public void ensureFastaIndex(File fasta, Logger log) throws PipelineJobException
+    {
+        FastaIndexer indexer = new FastaIndexer(log);
+        File index = indexer.getExpectedIndexName(fasta);
+        if (!index.exists())
+        {
+            log.info("creating FASTA index: " + fasta.getName());
+            indexer.execute(fasta);
         }
     }
 }

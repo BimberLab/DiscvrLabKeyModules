@@ -6,6 +6,7 @@
 Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
     extend: 'Ext.panel.Panel',
     alias: 'widget.alignmentpanel',
+    autoLoadData: false,
 
     MAX_ROWS: 250000,
     FEATURE_COLOR_MAP: {
@@ -83,6 +84,17 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                 itemId: 'alignmentDiv'
             }]
         });
+
+        if (this.autoLoadData && this.allowableStrains.length){
+            var pf = this.down('#proteinField');
+            if (pf && pf.store){
+                pf.store.on('load', function(s){
+                    if (pf.getValue() && pf.getValue().length) {
+                        this.doAlignment();
+                    }
+                }, this, {single: true});
+            }
+        }
     },
 
     doAlignment: function(){
@@ -187,7 +199,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             containerPath: Laboratory.Utils.getQueryContainerPath(),
             schemaName: 'SequenceAnalysis',
             queryName: 'aa_snps_by_position',
-            maxRows: this.MAX_ROWS,
+            maxRows: -1,
             timeout: 0,
             includeTotalCount: false,
             columns: 'analysis_id,q_aas,q_non_ref_aas,ref_aa,ref_aa_id,ref_aa_insert_index,ref_aa_position,ref_nt_id,ref_aa,readcount,adj_depth,pct,indel_pct,ref_aa_id/name,ref_nt_id/name',

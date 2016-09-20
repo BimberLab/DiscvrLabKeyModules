@@ -19,6 +19,7 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileUtil;
 
@@ -286,7 +287,13 @@ public class SequenceReadsetImpl implements Readset
         _modifiedBy = modifiedBy;
     }
 
-    public List<ReadDataImpl> getReadData()
+    @Override
+    public List<? extends ReadData> getReadData()
+    {
+        return getReadDataImpl();
+    }
+
+    public List<ReadDataImpl> getReadDataImpl()
     {
         if (_readData != null)
         {
@@ -310,7 +317,7 @@ public class SequenceReadsetImpl implements Readset
 
     public void cacheForRemoteServer()
     {
-        for (ReadDataImpl d : getReadData())
+        for (ReadDataImpl d : getReadDataImpl())
         {
             d.cacheForRemoteServer();
         }
@@ -319,7 +326,7 @@ public class SequenceReadsetImpl implements Readset
     @Override
     public boolean hasPairedData()
     {
-        for (ReadDataImpl d : getReadData())
+        for (ReadDataImpl d : getReadDataImpl())
         {
             if (d.isPairedEnd())
             {

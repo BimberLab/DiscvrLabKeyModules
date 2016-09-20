@@ -17,19 +17,20 @@ import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.run.alignment.FastqCollapser;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,12 +62,6 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
         {
             return new UnmappedReadExportAnalysis(this, ctx);
         }
-    }
-
-    @Override
-    public void init(List<AnalysisModel> models) throws PipelineJobException
-    {
-
     }
 
     @Override
@@ -102,7 +97,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
                 long collapsedLineCount = SequenceUtil.getLineCount(collapsed);
                 getPipelineCtx().getLogger().info("total collapsed FASTA sequences: " + (collapsedLineCount / 2));
 
-                output.addSequenceOutput(collapsed, "Unmapped reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+                output.addSequenceOutput(collapsed, "Unmapped reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId(), null);
             }
         }
         else
@@ -120,7 +115,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
             }
             else
             {
-                output.addSequenceOutput(paired1, "Unmapped first mate reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+                output.addSequenceOutput(paired1, "Unmapped first mate reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId(), null);
             }
 
             long paired2Count = SequenceUtil.getLineCount(paired2);
@@ -131,7 +126,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
             }
             else
             {
-                output.addSequenceOutput(paired2, "Unmapped second mate reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+                output.addSequenceOutput(paired2, "Unmapped second mate reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId(), null);
             }
 
             long singletonsCount = SequenceUtil.getLineCount(singletons);
@@ -142,7 +137,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
             }
             else
             {
-                output.addSequenceOutput(singletons, "Unmapped singleton reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId());
+                output.addSequenceOutput(singletons, "Unmapped singleton reads: " + inputBam.getName(), "Unmapped Reads", model.getReadset(), model.getAnalysisId(), model.getLibraryId(), null);
             }
         }
 
@@ -237,10 +232,10 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
         List<File> ret = new ArrayList<>();
         ret.add(fasta);
 
-        List<BufferedWriter> writers = new ArrayList<>();
+        List<PrintWriter> writers = new ArrayList<>();
         try
         {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(fasta));
+            PrintWriter writer = PrintWriters.getPrintWriter(fasta);
             writers.add(writer);
 
             long readsEncountered = 0;
@@ -265,7 +260,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
 
                                     ret.add(newFile);
 
-                                    writer = new BufferedWriter(new FileWriter(newFile));
+                                    writer = PrintWriters.getPrintWriter(newFile);
                                     writers.add(writer);
                                 }
                             }

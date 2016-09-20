@@ -16,8 +16,8 @@
 package org.labkey.sequenceanalysis.run.util;
 
 import org.biojava3.core.sequence.DNASequence;
-import org.biojava3.core.sequence.transcription.DNAToRNATranslator;
-import org.biojava3.core.sequence.transcription.RNAToAminoAcidTranslator;
+import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
+import org.biojava3.core.sequence.compound.AmbiguityRNACompoundSet;
 import org.biojava3.core.sequence.transcription.TranscriptionEngine;
 import org.labkey.sequenceanalysis.model.SequenceModel;
 
@@ -39,8 +39,7 @@ public class AASnp
     private String _residueString;
     private String _ntPositionString;
 
-    private static final DNAToRNATranslator _dna2rnaTranslator = TranscriptionEngine.getDefault().getDnaRnaTranslator();
-    private static final RNAToAminoAcidTranslator _rnaTranslator = TranscriptionEngine.getDefault().getRnaAminoAcidTranslator();
+    private static final TranscriptionEngine _engine = new TranscriptionEngine.Builder().dnaCompounds(AmbiguityDNACompoundSet.getDNACompoundSet()).rnaCompounds(AmbiguityRNACompoundSet.getDNACompoundSet()).build();
 
     public AASnp(NTSnp ntSnp, SequenceModel aaRef, int aaPosInProtein, int aaInsertIndex, String codon, int frame, List<NTSnp> allSnps, byte[] refBases)
     {
@@ -84,8 +83,8 @@ public class AASnp
             }
             else
             {
-                DNASequence dna = new DNASequence(_codon);
-                _residueString = _rnaTranslator.createSequence(_dna2rnaTranslator.createSequence(dna)).getSequenceAsString();
+                DNASequence dna = new DNASequence(_codon, AmbiguityDNACompoundSet.getDNACompoundSet());
+                _residueString = _engine.getRnaAminoAcidTranslator().createSequence(_engine.getDnaRnaTranslator().createSequence(dna)).getSequenceAsString();
                 if (_residueString == null || "".equals(_residueString))
                 {
                     _residueString = "*";

@@ -172,6 +172,12 @@ public class FastqcRunner
         {
             basename = FileUtil.getBaseName(basename);
         }
+
+        if (f.getName().endsWith(".fq.gz") || f.getName().endsWith(".fq"))
+        {
+            basename = basename + ".fq";
+        }
+
         return basename;
     }
 

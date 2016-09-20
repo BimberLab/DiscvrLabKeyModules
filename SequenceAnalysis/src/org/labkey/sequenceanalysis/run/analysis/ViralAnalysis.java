@@ -64,12 +64,6 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
     }
 
     @Override
-    public void init(List<AnalysisModel> models) throws PipelineJobException
-    {
-
-    }
-
-    @Override
     public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
         try

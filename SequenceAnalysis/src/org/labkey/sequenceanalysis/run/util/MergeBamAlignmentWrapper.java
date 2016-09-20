@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
@@ -44,12 +45,13 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             getLogger().info("Running MergeBamAlignment: " + alignedBam.getPath());
             setStringency(ValidationStringency.SILENT);
 
-            if (SequenceUtil.getBamSortOrder(alignedBam) != SAMFileHeader.SortOrder.queryname)
-            {
-                getLogger().info("Queryname Sorting BAM: " + alignedBam.getPath());
-                SortSamWrapper sortSamWrapper = new SortSamWrapper(getLogger());
-                sortSamWrapper.execute(alignedBam, null, SAMFileHeader.SortOrder.queryname);
-            }
+            //NOTE: i dont think this is required for the input BAM; however, mosaik might cause issues
+            //if (SequenceUtil.getBamSortOrder(alignedBam) != SAMFileHeader.SortOrder.queryname)
+            //{
+            //    getLogger().info("Queryname Sorting BAM: " + alignedBam.getPath());
+            //    SortSamWrapper sortSamWrapper = new SortSamWrapper(getLogger());
+            //    sortSamWrapper.execute(alignedBam, null, SAMFileHeader.SortOrder.queryname);
+            //}
 
             List<String> params = new LinkedList<>();
             params.add(SequencePipelineService.get().getJavaFilepath());
@@ -115,6 +117,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             params.add("INCLUDE_SECONDARY_ALIGNMENTS=true");
             params.add("ALIGNER_PROPER_PAIR_FLAGS=false");
             params.add("VALIDATION_STRINGENCY=" + getStringency().name());
+            params.add("SORT_ORDER=" + SAMFileHeader.SortOrder.coordinate.name());
 
             File mergedFile = new File(getOutputDir(alignedBam), FileUtil.getBaseName(alignedBam) + ".merged.bam");
             params.add("OUTPUT=" + mergedFile.getPath());

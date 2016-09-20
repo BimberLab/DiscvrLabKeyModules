@@ -1,6 +1,6 @@
 Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
     extend: 'SequenceAnalysis.panel.SequenceAnalysisPanel',
-    taskId : 'org.labkey.api.pipeline.file.FileAnalysisTaskPipeline:AlignmentAnalysisPipeline',
+    jobType: 'alignmentAnalysis',
 
     initComponent: function(){
         this.callParent(arguments);

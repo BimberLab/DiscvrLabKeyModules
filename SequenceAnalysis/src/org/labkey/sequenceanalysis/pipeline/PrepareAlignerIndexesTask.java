@@ -6,10 +6,10 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
-import org.labkey.api.util.FileType;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
+import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.run.alignment.AlignerIndexUtil;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
@@ -53,10 +53,16 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
 
             try
             {
-                SequenceTaskHelper taskHelper = new SequenceTaskHelper(job, job.getLogFile().getParentFile());
+                SequenceTaskHelper taskHelper = new SequenceTaskHelper((SequenceAlignmentJob)job, job.getLogFile().getParentFile());
                 AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
 
-                ReferenceGenome referenceGenome = taskHelper.getSequenceSupport().getReferenceGenome();
+                if (!(job instanceof SequenceAlignmentJob))
+                {
+                    job.getLogger().error("Job is not a SequenceAlignmentJob");
+                    return true;
+                }
+
+                ReferenceGenome referenceGenome = ((SequenceAlignmentJob)job).getTargetGenome();
                 if (referenceGenome == null)
                 {
                     job.getLogger().warn("No reference genome was cached prior to preparing aligned indexes");
@@ -133,11 +139,16 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
     public RecordedActionSet run() throws PipelineJobException
     {
         PipelineJob job = getJob();
-        _taskHelper = new SequenceTaskHelper(job, _wd);
+        _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
         RecordedAction action = ensureIndexExists();
 
         return new RecordedActionSet(action);
+    }
+
+    private SequenceAlignmentJob getPipelineJob()
+    {
+        return (SequenceAlignmentJob)getJob();
     }
 
     private RecordedAction ensureIndexExists() throws PipelineJobException
@@ -151,7 +162,7 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
 
         AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
 
-        ReferenceGenome referenceGenome = getHelper().getSequenceSupport().getReferenceGenome();
+        ReferenceGenome referenceGenome = getPipelineJob().getTargetGenome();
         if (referenceGenome == null)
         {
             throw new PipelineJobException("No reference genome was cached prior to preparing aligned indexes");
@@ -172,10 +183,10 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
             getHelper().getFileManager().addOutput(action, "Reference DB FASTA Index", refFastaIndex);
         }
 
-        getJob().getLogger().debug("location of source FASTA: " + getHelper().getSequenceSupport().getReferenceGenome().getSourceFastaFile().getPath());
+        getJob().getLogger().debug("location of source FASTA: " + getPipelineJob().getTargetGenome().getSourceFastaFile().getPath());
 
         //NOTE: always create the index back in the local working dir, since we'll need to move it back there anyway
-        File localSharedDirectory = new File(getHelper().getSupport().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
+        File localSharedDirectory = new File(getHelper().getJob().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
         if (!localSharedDirectory.exists())
         {
             localSharedDirectory.mkdirs();

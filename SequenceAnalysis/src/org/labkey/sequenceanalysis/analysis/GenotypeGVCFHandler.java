@@ -1,45 +1,115 @@
 package org.labkey.sequenceanalysis.analysis;
 
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.data.Container;
+import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
-import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.query.DetailsURL;
+import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
-import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.util.FileType;
+import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.run.util.GenotypeGVCFsWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
  * Created by bimber on 8/26/2014.
  */
-public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
+public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutputHandler.HasActionNames
 {
     private FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
 
+    @Override
+    public String getName()
+    {
+        return "GATK Genotype GVCFs";
+    }
+
+    @Override
+    public String getDescription()
+    {
+        return "This will run GATK\'s GenotypeGVCF on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK\'s HaplotypeCaller.";
+    }
+
+    @Nullable
+    @Override
+    public String getButtonJSHandler()
+    {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public ActionURL getButtonSuccessUrl(Container c, User u, List<Integer> outputFileIds)
+    {
+        return DetailsURL.fromString("/sequenceanalysis/variantProcessing.view?showGenotypeGVCFs=1&outputFileIds=" + StringUtils.join(outputFileIds, ";"), c).getActionURL();
+    }
+
+    @Override
+    public Module getOwningModule()
+    {
+        return ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
+    }
+
+    @Override
+    public LinkedHashSet<String> getClientDependencies()
+    {
+        return null;
+    }
+
+    @Override
+    public boolean useWorkbooks()
+    {
+        return true;
+    }
+
+    @Override
+    public boolean doSplitJobs()
+    {
+        return false;
+    }
+
+    @Override
+    public Collection<String> getAllowableActionNames()
+    {
+        Set<String> allowableNames = new HashSet<>();
+        allowableNames.add(getName());
+        for (PipelineStepProvider provider: SequencePipelineService.get().getProviders(VariantProcessingStep.class))
+        {
+            allowableNames.add(provider.getLabel());
+        }
+
+        return allowableNames;
+    }
+
     public GenotypeGVCFHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "GATK Genotype GVCFs", "This will run GATK\'s GenotypeGVCF on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK\'s HaplotypeCaller.  ", null, Arrays.asList(
-                ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", null, "CombinedGenotypes"),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-stand_call_conf"), "stand_call_conf", "Threshold For Calling Variants", "The minimum phred-scaled confidence threshold at which variants should be called", "ldk-numberfield", null, 20),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-stand_emit_conf"), "stand_emit_conf", "Threshold For Emitting Variants", "The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold)", "ldk-numberfield", null, 20),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--max_alternate_alleles"), "max_alternate_alleles", "Max Alternate Alleles", "Maximum number of alternate alleles to genotype", "ldk-integerfield", null, 8),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--includeNonVariantSites"), "includeNonVariantSites", "Include Non-Variant Sites", "If checked, all sites will be output into the VCF, instead of just those where variants are detected.  This can dramatically increase the site of the VCF.", "checkbox", null, false)
-        ));
+//                ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", null, "CombinedGenotypes"),
+//                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-stand_call_conf"), "stand_call_conf", "Threshold For Calling Variants", "The minimum phred-scaled confidence threshold at which variants should be called", "ldk-numberfield", null, 30),
+//                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-stand_emit_conf"), "stand_emit_conf", "Threshold For Emitting Variants", "The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold)", "ldk-numberfield", null, 20),
+//                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--max_alternate_alleles"), "max_alternate_alleles", "Max Alternate Alleles", "Maximum number of alternate alleles to genotype", "ldk-integerfield", null, 12),
+//                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--includeNonVariantSites"), "includeNonVariantSites", "Include Non-Variant Sites", "If checked, all sites will be output into the VCF, instead of just those where variants are detected.  This can dramatically increase the size of the VCF.", "checkbox", null, false)
     }
 
     @Override
@@ -77,12 +147,15 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-
+            ProcessVariantsHandler.initVariantProcessing(job, support);
         }
 
         @Override
-        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            PipelineJob job = ctx.getJob();
+            JSONObject params = ctx.getParams();
+
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
@@ -104,38 +177,38 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
             }
 
             int genomeId = genomeIds.iterator().next();
-            ReferenceGenome genome = support.getCachedGenome(genomeId);
+            ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeId);
             if (genome == null)
             {
                 throw new PipelineJobException("Unable to find cached genome for Id: " + genomeId);
             }
 
-            File outDir = ((FileAnalysisJobSupport) job).getAnalysisDirectory();
-            String basename = params.get("fileBaseName") != null ? params.getString("fileBaseName") : "CombinedGenotypes";
-            basename.replaceAll(".vcf.gz$", "");
-            basename.replaceAll(".vcf$", "");
+            File outDir = ctx.getOutputDir();
+            String basename = params.get("variantCalling.GenotypeGVCFs.fileBaseName") != null ? params.getString("variantCalling.GenotypeGVCFs.fileBaseName") : "CombinedGenotypes";
+            basename = basename.replaceAll(".vcf.gz$", "");
+            basename = basename.replaceAll(".vcf$", "");
 
             File outputVcf = new File(outDir, basename + ".vcf.gz");
             List<String> toolParams = new ArrayList<>();
-            if (params.get("stand_call_conf") != null)
+            if (params.get("variantCalling.GenotypeGVCFs.stand_call_conf") != null)
             {
                 toolParams.add("-stand_call_conf");
-                toolParams.add(params.get("stand_call_conf").toString());
+                toolParams.add(params.get("variantCalling.GenotypeGVCFs.stand_call_conf").toString());
             }
 
-            if (params.get("stand_emit_conf") != null)
+            if (params.get("variantCalling.GenotypeGVCFs.stand_emit_conf") != null)
             {
                 toolParams.add("-stand_emit_conf");
-                toolParams.add(params.get("stand_emit_conf").toString());
+                toolParams.add(params.get("variantCalling.GenotypeGVCFs.stand_emit_conf").toString());
             }
 
-            if (params.get("max_alternate_alleles") != null)
+            if (params.get("variantCalling.GenotypeGVCFs.max_alternate_alleles") != null)
             {
                 toolParams.add("--max_alternate_alleles");
-                toolParams.add(params.get("max_alternate_alleles").toString());
+                toolParams.add(params.get("variantCalling.GenotypeGVCFs.max_alternate_alleles").toString());
             }
 
-            if (params.get("includeNonVariantSites") != null)
+            if (params.optBoolean("variantCalling.GenotypeGVCFs.includeNonVariantSites"))
             {
                 toolParams.add("--includeNonVariantSites");
             }
@@ -145,24 +218,30 @@ public class GenotypeGVCFHandler extends AbstractParameterizedOutputHandler
 
             wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcfs.toArray(new File[inputVcfs.size()]));
             action.addOutput(outputVcf, "VCF", outputVcf.exists(), true);
+            action.setEndTime(new Date());
+            ctx.addActions(action);
 
-            if (outputVcf.exists())
+            //run post processing, if needed
+            File processed = ProcessVariantsHandler.processVCF(outputVcf, genomeId, ctx);
+            if (processed == null)
             {
-                SequenceOutputFile so1 = new SequenceOutputFile();
-                so1.setName(outputVcf.getName());
-                so1.setDescription("GATK GenotypeGVCF output");
-                so1.setFile(outputVcf);
-                so1.setLibrary_id(genomeId);
-                so1.setCategory("VCF File");
-                so1.setContainer(job.getContainerId());
-                so1.setCreated(new Date());
-                so1.setModified(new Date());
-
-                outputsToCreate.add(so1);
+                ctx.getLogger().debug("adding GenotypeGVCFs output because no processing was selected");
+                processed = outputVcf;
             }
 
-            action.setEndTime(new Date());
-            actions.add(action);
+            SequenceOutputFile so1 = new SequenceOutputFile();
+            so1.setName(processed.getName());
+            so1.setDescription("GATK GenotypeGVCF output");
+            so1.setFile(outputVcf);
+            so1.setLibrary_id(genomeId);
+            so1.setCategory("VCF File");
+            so1.setContainer(job.getContainerId());
+            so1.setCreated(new Date());
+            so1.setModified(new Date());
+
+            ctx.addSequenceOutput(so1);
+
+            //TODO: rename output?
         }
 
         @Override

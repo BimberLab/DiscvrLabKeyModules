@@ -16,13 +16,15 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 
-import org.apache.commons.io.FilenameUtils;
+import htsjdk.samtools.SAMFileHeader;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -77,4 +79,14 @@ abstract public class SequencePipelineService
      * Throws exception if no run is found
      */
     abstract public Integer getExpRunIdForJob(PipelineJob job) throws PipelineJobException;
+
+    abstract public long getLineCount(File f) throws PipelineJobException;
+
+    abstract public File ensureBamIndex(File f, Logger log, boolean forceDeleteExisting) throws PipelineJobException;
+
+    abstract public SAMFileHeader.SortOrder getBamSortOrder(File bam) throws IOException;
+
+    abstract public File sortVcf(File inputVcf, @Nullable File outputVcf, File sequenceDictionary, Logger log) throws PipelineJobException;
+
+    abstract public void sortROD(File input, Logger log) throws IOException, PipelineJobException;
 }

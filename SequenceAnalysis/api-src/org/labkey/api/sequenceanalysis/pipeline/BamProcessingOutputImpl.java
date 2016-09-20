@@ -1,4 +1,4 @@
-package org.labkey.sequenceanalysis.run.bampostprocessing;
+package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.DefaultPipelineStepOutput;

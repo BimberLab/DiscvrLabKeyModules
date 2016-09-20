@@ -40,6 +40,7 @@ import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.ReturnUrlForm;
+import org.labkey.api.action.SimpleApiJsonForm;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
@@ -71,22 +72,10 @@ import org.labkey.api.laboratory.NavItem;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleHtmlView;
 import org.labkey.api.module.ModuleLoader;
-import org.labkey.api.pipeline.ParamParser;
 import org.labkey.api.pipeline.PipeRoot;
-import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
-import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.pipeline.PipelineValidationException;
-import org.labkey.api.pipeline.TaskId;
-import org.labkey.api.pipeline.TaskPipeline;
-import org.labkey.api.pipeline.browse.PipelinePathForm;
-import org.labkey.api.pipeline.file.AbstractFileAnalysisJob;
-import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocol;
-import org.labkey.api.pipeline.file.AbstractFileAnalysisProtocolFactory;
-import org.labkey.api.pipeline.file.AbstractFileAnalysisProvider;
-import org.labkey.api.pipeline.file.FileAnalysisTaskPipeline;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryForm;
@@ -131,13 +120,17 @@ import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
+import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
+import org.labkey.sequenceanalysis.pipeline.AlignmentImportJob;
+import org.labkey.sequenceanalysis.pipeline.IlluminaImportJob;
 import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
+import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
-import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
-import org.labkey.sequenceanalysis.pipeline.SequencePipelineSettings;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.BamHaplotyper;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByCodonAggregator;
@@ -249,7 +242,7 @@ public class SequenceAnalysisController extends SpringActionController
                 for (int id : form.getReadsets())
                 {
                     SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(id, getUser());
-                    for (ReadDataImpl d : rs.getReadData())
+                    for (ReadDataImpl d : rs.getReadDataImpl())
                     {
                         if (d.getFile1() != null)
                         {
@@ -308,34 +301,11 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class SequenceAnalysisAction extends SimpleViewAction<Object>
+    public class SequenceAnalysisAction extends BasePipelineStepAction
     {
-        public void validateCommand(Object form, Errors errors)
+        public SequenceAnalysisAction ()
         {
-
-        }
-
-        public URLHelper getSuccessURL(Object form)
-        {
-            return getContainer().getStartURL(getUser());
-        }
-
-        public ModelAndView getView(Object form, BindException errors) throws Exception
-        {
-            LinkedHashSet<ClientDependency> cds = new LinkedHashSet<>();
-            for (PipelineStepProvider fact : SequencePipelineService.get().getAllProviders())
-            {
-                cds.addAll(fact.getClientDependencies());
-            }
-
-            Resource r = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class).getModuleResource(Path.parse("views/sequenceAnalysis.html"));
-            assert r != null;
-
-            ModuleHtmlView view = new ModuleHtmlView(r);
-            view.addClientDependencies(cds);
-            //getPageConfig().setTemplate(view.getPageTemplate());
-
-            return view;
+            super("views/sequenceAnalysis.html");
         }
 
         public NavTree appendNavTrail(NavTree tree)
@@ -345,8 +315,44 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class AlignmentAnalysisAction extends SimpleViewAction<Object>
+    public class VariantProcessingAction extends BasePipelineStepAction
     {
+        public VariantProcessingAction()
+        {
+            super("views/variantProcessing.html");
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree tree)
+        {
+            return tree.addChild("1".equals(getViewContext().getActionURL().getParameter("showGenotypeGVCFs")) ? "Genotype gVCFs" : "Filter/Process Variants");
+        }
+    }
+
+    @RequiresPermission(InsertPermission.class)
+    public class AlignmentImportAction extends BasePipelineStepAction
+    {
+        public AlignmentImportAction()
+        {
+            super("views/alignmentImport.html");
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree tree)
+        {
+            return tree.addChild("Import Alignments");
+        }
+    }
+
+    abstract public class BasePipelineStepAction extends SimpleViewAction<Object>
+    {
+        protected String _htmlFile;
+
+        public BasePipelineStepAction(String htmlFile)
+        {
+            _htmlFile = htmlFile;
+        }
+
         public void validateCommand(Object form, Errors errors)
         {
 
@@ -365,14 +371,22 @@ public class SequenceAnalysisController extends SpringActionController
                 cds.addAll(fact.getClientDependencies());
             }
 
-            Resource r = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class).getModuleResource(Path.parse("views/alignmentAnalysis.html"));
+            Resource r = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class).getModuleResource(Path.parse(_htmlFile));
             assert r != null;
 
             ModuleHtmlView view = new ModuleHtmlView(r);
             view.addClientDependencies(cds);
-            //getPageConfig().setTemplate(view.getPageTemplate());
 
             return view;
+        }
+    }
+
+    @RequiresPermission(InsertPermission.class)
+    public class AlignmentAnalysisAction extends BasePipelineStepAction
+    {
+        public AlignmentAnalysisAction ()
+        {
+            super("views/alignmentAnalysis.html");
         }
 
         public NavTree appendNavTrail(NavTree tree)
@@ -503,7 +517,7 @@ public class SequenceAnalysisController extends SpringActionController
         public ModelAndView getConfirmView(QueryForm form, BindException errors) throws Exception
         {
             Set<String> ids = DataRegionSelection.getSelected(form.getViewContext(), true);
-            List<Object> keys = new ArrayList<Object>(ids);
+            List<String> keys = new ArrayList<>(ids);
 
             StringBuilder msg = new StringBuilder("Are you sure you want to delete the ");
             if (SequenceAnalysisSchema.TABLE_ANALYSES.equals(_table.getName()))
@@ -521,11 +535,14 @@ public class SequenceAnalysisController extends SpringActionController
                 msg.append("readsets " + StringUtils.join(keys, ", ") + "?  This will delete the readsets, plus all associated data.  This includes:<br>");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_READ_DATA, "Sequence File Records", keys, "readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_ANALYSES, "Analyses", keys, "readset");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Output Files", keys, "readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "analysis_id/readset");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_QUALITY_METRICS, "Quality Metrics", keys, "readset");
+                //TODO
+                //List<PipelineJob> jobs = SequenceAnalysisManager.get().getPipelineJobsForReadsets(keys);
             }
             else if (SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES.equals(_table.getName()))
             {
@@ -549,7 +566,7 @@ public class SequenceAnalysisController extends SpringActionController
             return new HtmlView(msg.toString());
         }
 
-        private void appendTotal(StringBuilder sb, String tableName, String noun, List<Object> keys, String filterCol)
+        private void appendTotal(StringBuilder sb, String tableName, String noun, List<String> keys, String filterCol)
         {
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString(filterCol), StringUtils.join(keys, ";"), CompareType.IN);
             TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(tableName), filter, null);
@@ -1605,412 +1622,174 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    /**
-     * Called from LABKEY.Pipeline.startAnalysis()
-     */
     @RequiresPermission(InsertPermission.class)
     @CSRF
-    public class StartAnalysisAction extends ApiAction<AnalyzeForm>
+    public class StartPipelineJobAction extends ApiAction<AnalyzeForm>
     {
         public ApiResponse execute(AnalyzeForm form, BindException errors) throws Exception
         {
-            PipeRoot pr = PipelineService.get().findPipelineRoot(getContainer());
-            if (pr == null || !pr.isValid())
-                throw new NotFoundException();
-
-            File dirData = null;
-            if (form.getPath() != null)
-            {
-                dirData = pr.resolvePath(form.getPath());
-                if (dirData == null || !NetworkDrive.exists(dirData))
-                    throw new NotFoundException("Could not resolve path: " + form.getPath());
-            }
-
-            TaskId taskId = new TaskId(form.getTaskId());
-            TaskPipeline taskPipeline = PipelineJobService.get().getTaskPipeline(taskId);
-
-            AbstractFileAnalysisProtocolFactory factory = getProtocolFactory(taskPipeline);
-            return execute(form, pr, factory);
-        }
-
-        protected ApiResponse execute(AnalyzeForm form, PipeRoot root, AbstractFileAnalysisProtocolFactory factory) throws IOException, PipelineValidationException, PipelineJobException
-        {
             try
             {
-                TaskId taskId = new TaskId(form.getTaskId());
-                TaskPipeline taskPipeline = PipelineJobService.get().getTaskPipeline(taskId);
-
-                if (form.getProtocolName() == null)
+                if (form.getJobName() == null)
                 {
-                    throw new IllegalArgumentException("Must specify a protocol name");
+                    errors.reject(ERROR_MSG, "Must specify a protocol name");
+                    return null;
                 }
 
-                JSONObject o = new JSONObject(form.getConfigureJson());
-                Map<String, String> params = new HashMap<>();
-                for (Map.Entry<String, Object> entry : o.entrySet())
+                if (form.getType() == null)
                 {
-                    params.put(entry.getKey(), entry.getValue() == null ? null : entry.getValue().toString());
+                    errors.reject(ERROR_MSG, "Must specify a job type");
+                    return null;
                 }
 
-                Boolean allowNonExistentFiles = form.isAllowNonExistentFiles() != null ? form.isAllowNonExistentFiles() : false;
-                List<File> filesInputList = form.getValidatedFiles(getContainer(), allowNonExistentFiles);
-
-                if (form.isActiveJobs())
+                if (form.getJobParameters() == null)
                 {
-                    throw new IllegalArgumentException("Active jobs already exist for this protocol.");
+                    errors.reject(ERROR_MSG, "Must specify job parameters");
+                    return null;
+                }
+
+                PipeRoot pr = PipelineService.get().findPipelineRoot(getContainer());
+                if (pr == null || !pr.isValid())
+                    throw new NotFoundException();
+
+                Set<SequenceJob> jobs = new HashSet<>();
+                switch (form.getType())
+                {
+                    case alignment:
+                        if (form.getReadsetIds() == null)
+                        {
+                            errors.reject(ERROR_MSG, "Must supply readset Ids");
+                            return null;
+                        }
+
+                        jobs.addAll(SequenceAlignmentJob.createForReadsets(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getReadsetIds()));
+                        break;
+                    case alignmentAnalysis:
+                        if (form.getAnalysisIds() == null)
+                        {
+                            errors.reject(ERROR_MSG, "Must supply analysis Ids");
+                            return null;
+                        }
+
+                        jobs.addAll(AlignmentAnalysisJob.createForAnalyses(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getAnalysisIds()));
+                        break;
+                    case readsetImport:
+                        jobs.addAll(ReadsetImportJob.create(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getFiles(pr)));
+                        break;
+                    case illuminaImport:
+                        jobs.addAll(IlluminaImportJob.create(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getFiles(pr)));
+                        break;
+                    case alignmentImport:
+                        jobs.addAll(AlignmentImportJob.create(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getFiles(pr)));
+                        break;
+                    default:
+                        throw new PipelineJobException("Unknown analysis type: " + form.getType());
+                }
+
+                Set<String> jobGUIDs = new HashSet<>();
+                for (SequenceJob j : jobs)
+                {
+                    PipelineService.get().queueJob(j);
+                    jobGUIDs.add(j.getJobGUID());
                 }
 
                 Map<String, Object> resultProperties = new HashMap<>();
-                // TODO: this isnt quite the right thing to do here.  i think i need to split up jobs on the client, and pass a flag that makes the server-side
-                // action resolve inputFiles based on readsetIds
-                if (form.getSplitJobs())
-                {
-                    List<String> jobGUIDs = new ArrayList<>();
-                    SequencePipelineSettings settings = new SequencePipelineSettings(params);
-                    List<SequenceReadsetImpl> readsets = settings.getReadsets(null);
-                    _log.info("creating split sequence jobs for " + filesInputList.size() + " files.  divided into: " + readsets.size() + " jobs.");
-                    int readsetIdx = 0;
-                    for (SequenceReadsetImpl r : readsets)
-                    {
-                        //NOTE: copy the params, but only include one readset per job
-                        Map<String, String> paramsCopy = new HashMap<>();
-                        for (String key : params.keySet())
-                        {
-                            if (key.startsWith("readset_"))
-                            {
-                                if (key.equals("readset_" + readsetIdx))
-                                {
-                                    paramsCopy.put("readset_0", params.get(key));
-                                }
-                            }
-                            else
-                            {
-                                paramsCopy.put(key, params.get(key));
-                            }
-                        }
-
-                        List<File> fileList = new ArrayList<>();
-                        for (ReadDataImpl d : r.getReadData())
-                        {
-                            fileList.add(d.getFile1());
-                            if (d.getFile2() != null)
-                            {
-                                fileList.add(d.getFile2());
-                            }
-                        }
-
-                        String protocolName = form.getProtocolName() + "_" + (readsetIdx + 1);
-                        AbstractFileAnalysisProtocol protocol = getFileAnalysisProtocol(form, taskPipeline, paramsCopy, root, root.getRootPath(), factory, protocolName);
-                        protocol.getFactory().ensureDefaultParameters(root);
-
-                        File fileParameters = factory.getParametersFile(root.getRootPath(), protocolName, root);
-                        // Make sure configure.xml file exists for the job when it runs.
-                        if (fileParameters != null && !fileParameters.exists())
-                        {
-                            protocol.setEmail(getUser().getEmail());
-                            protocol.saveInstance(fileParameters, getContainer());
-                        }
-
-                        AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, protocolName, getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, fileList);
-                        PipelineService.get().queueJob(job);
-                        jobGUIDs.add(job.getJobGUID());
-                        readsetIdx++;
-                    }
-
-                    resultProperties.put("jobGUIDs", jobGUIDs);
-                }
-                else
-                {
-                    AbstractFileAnalysisProtocol protocol = getFileAnalysisProtocol(form, taskPipeline, params, root, root.getRootPath(), factory, form.getProtocolName());
-                    protocol.getFactory().ensureDefaultParameters(root);
-
-                    File fileParameters = protocol.getParametersFile(root.getRootPath(), root);
-                    // Make sure configure.xml file exists for the job when it runs.
-                    if (fileParameters != null && !fileParameters.exists())
-                    {
-                        protocol.setEmail(getUser().getEmail());
-                        protocol.saveInstance(fileParameters, getContainer());
-                    }
-
-                    _log.info("creating single sequence job for " + filesInputList.size() + " files.");
-                    AbstractFileAnalysisJob job = new SequenceAnalysisJob(protocol, protocol.getName(), getViewBackgroundInfo(), root, taskPipeline.getId(), fileParameters, filesInputList);
-                    PipelineService.get().queueJob(job);
-
-                    resultProperties.put("jobGUIDs", Arrays.asList(job.getJobGUID()));
-                }
-
+                resultProperties.put("jobGUIDs", jobGUIDs);
                 resultProperties.put("status", "success");
 
                 return new ApiSimpleResponse(resultProperties);
             }
-            catch (IOException | ClassNotFoundException | PipelineValidationException e)
+            catch (ClassNotFoundException e)
             {
                 throw new ApiUsageException(e);
             }
         }
+    }
 
-        private AbstractFileAnalysisProtocol getFileAnalysisProtocol(AnalyzeForm form, TaskPipeline taskPipeline, Map<String, String> params, PipeRoot root, File dirData, AbstractFileAnalysisProtocolFactory factory, String protocolName) throws PipelineValidationException, IOException
+    public static class AnalyzeForm extends SimpleApiJsonForm
+    {
+        public static enum TYPE
         {
-            AbstractFileAnalysisProtocol protocol = getProtocol(root, dirData, factory, protocolName);
-            if (protocol == null)
+            alignment(),
+            readsetImport(),
+            illuminaImport(),
+            alignmentImport(),
+            alignmentAnalysis(),
+        }
+
+        public String getJobName()
+        {
+            return getJsonObject().optString("jobName");
+        }
+
+        public String getDescription()
+        {
+            return getJsonObject().optString("description");
+        }
+
+        public TYPE getType()
+        {
+            return !getJsonObject().containsKey("type") ? null : TYPE.valueOf(getJsonObject().getString("type"));
+        }
+
+        public JSONObject getJobParameters()
+        {
+            return getJsonObject().optJSONObject("jobParameters");
+        }
+
+        public JSONArray getReadsetIds()
+        {
+            return getJobParameters() == null ?  null : getJobParameters().optJSONArray("readsetIds");
+        }
+
+        public JSONArray getAnalysisIds()
+        {
+            return getJsonObject().optJSONArray("analysisIds");
+        }
+
+        public List<File> getFiles(PipeRoot pr) throws PipelineValidationException
+        {
+            if (getJobParameters() == null || getJobParameters().get("inputFiles") == null)
             {
-                String xml;
-                if (form.getConfigureXml() != null)
+                return null;
+            }
+
+            List<File> ret = new ArrayList<>();
+            JSONArray inputFiles = getJobParameters().getJSONArray("inputFiles");
+            for (JSONObject o : inputFiles.toJSONObjectArray())
+            {
+                if (o.containsKey("dataId"))
                 {
-                    if (form.getConfigureJson() != null)
+                    ExpData d = ExperimentService.get().getExpData(o.getInt("dataId"));
+                    if (d == null || d.getFile() == null)
                     {
-                        throw new IllegalArgumentException("The parameters should be defined as XML or JSON, not both");
+                        throw new PipelineValidationException("Unknown dataId: " + o.get("dataId"));
                     }
-                    xml = form.getConfigureXml();
+                    else if (!d.getFile().exists())
+                    {
+                        throw new PipelineValidationException("Missing file for data: " + o.get("dataId"));
+                    }
+
+                    ret.add(d.getFile());
+                }
+                else if (o.containsKey("relPath") || o.containsKey("fileName"))
+                {
+                    File f = pr.resolvePath(o.get("relPath") == null ? o.getString("fileName"): o.getString("relPath"));
+                    if (f == null || !f.exists())
+                    {
+                        throw new PipelineValidationException("Unknown file: " + o.getString("relPath"));
+                    }
+
+                    ret.add(f);
                 }
                 else
                 {
-                    if (form.getConfigureJson() == null)
-                    {
-                        throw new IllegalArgumentException("Parameters must be defined, either as XML or JSON");
-                    }
-                    ParamParser parser = PipelineJobService.get().createParamParser();
-                    xml = parser.getXMLFromMap(params);
-                }
-
-                protocol = getProtocolFactory(taskPipeline).createProtocolInstance(
-                        protocolName,
-                        form.getProtocolDescription(),
-                        xml);
-
-                protocol.setEmail(getUser().getEmail());
-                protocol.validateToSave(root);
-                if (form.isSaveProtocol())
-                {
-                    protocol.saveDefinition(root);
-                    PipelineService.get().rememberLastProtocolSetting(protocol.getFactory(), getContainer(), getUser(), protocol.getName());
+                    throw new PipelineValidationException("Invalid file: " + o.toString());
                 }
             }
-            else
-            {
-                if (form.getConfigureXml() != null || form.getConfigureJson() != null)
-                {
-                    throw new IllegalArgumentException("Cannot redefine an existing protocol");
-                }
-                PipelineService.get().rememberLastProtocolSetting(protocol.getFactory(), getContainer(), getUser(), protocol.getName());
-            }
 
-            return protocol;
+            return ret;
         }
-    }
-
-    public static class AnalyzeForm extends PipelinePathForm
-    {
-        public enum Params
-        {
-            path, taskId, file
-        }
-
-        private String _taskId = "";
-        private String _protocolName = "";
-        private String _protocolDescription = "";
-        private String[] _fileInputStatus = null;
-        private String _configureXml;
-        private String _configureJson;
-        private boolean _saveProtocol = false;
-        private boolean _runAnalysis = false;
-        private boolean _activeJobs = false;
-        private Boolean _allowNonExistentFiles;
-        private Boolean _splitJobs = false;
-
-        private static final String UNKNOWN_STATUS = "UNKNOWN";
-
-        public void initStatus(AbstractFileAnalysisProtocol protocol, File dirData, File dirAnalysis)
-        {
-            if (_fileInputStatus != null)
-                return;
-
-            _activeJobs = false;
-
-            int len = getFile().length;
-            _fileInputStatus = new String[len + 1];
-            for (int i = 0; i < len; i++)
-                _fileInputStatus[i] = initStatusFile(protocol, dirData, dirAnalysis, getFile()[i], true);
-            _fileInputStatus[len] = initStatusFile(protocol, dirData, dirAnalysis, null, false);
-        }
-
-        private String initStatusFile(AbstractFileAnalysisProtocol protocol, File dirData, File dirAnalysis,
-                                      String fileInputName, boolean statusSingle)
-        {
-            if (protocol == null)
-            {
-                return UNKNOWN_STATUS;
-            }
-
-            File fileStatus = null;
-
-            if (!statusSingle)
-            {
-                fileStatus = PipelineJob.FT_LOG.newFile(dirAnalysis,
-                        protocol.getJoinedBaseName());
-            }
-            else if (fileInputName != null)
-            {
-                File fileInput = new File(dirData, fileInputName);
-                FileType ft = protocol.findInputType(fileInput);
-                if (ft != null)
-                    fileStatus = PipelineJob.FT_LOG.newFile(dirAnalysis, ft.getBaseName(fileInput));
-            }
-
-            if (fileStatus != null)
-            {
-                PipelineStatusFile sf = PipelineService.get().getStatusFile(fileStatus);
-                if (sf == null)
-                    return null;
-
-                _activeJobs = _activeJobs || sf.isActive();
-                return sf.getStatus();
-            }
-
-            // Failed to get status.  Assume job is active, and return unknown status.
-            _activeJobs = true;
-            return UNKNOWN_STATUS;
-        }
-
-        public String getTaskId()
-        {
-            return _taskId;
-        }
-
-        public void setTaskId(String taskId)
-        {
-            _taskId = taskId;
-        }
-
-        public String getConfigureXml()
-        {
-            return _configureXml;
-        }
-
-        public void setConfigureXml(String configureXml)
-        {
-            _configureXml = (configureXml == null ? "" : configureXml);
-        }
-
-        public String getConfigureJson()
-        {
-            return _configureJson;
-        }
-
-        public void setConfigureJson(String configureJson)
-        {
-            _configureJson = configureJson;
-        }
-
-        public String getProtocolName()
-        {
-            return _protocolName;
-        }
-
-        public void setProtocolName(String protocolName)
-        {
-            _protocolName = (protocolName == null ? "" : protocolName);
-        }
-
-        public String getProtocolDescription()
-        {
-            return _protocolDescription;
-        }
-
-        public void setProtocolDescription(String protocolDescription)
-        {
-            _protocolDescription = (protocolDescription == null ? "" : protocolDescription);
-        }
-
-        public String[] getFileInputStatus()
-        {
-            return _fileInputStatus;
-        }
-
-        public boolean isActiveJobs()
-        {
-            return _activeJobs;
-        }
-
-        public boolean isSaveProtocol()
-        {
-            return _saveProtocol;
-        }
-
-        public void setSaveProtocol(boolean saveProtocol)
-        {
-            _saveProtocol = saveProtocol;
-        }
-
-        public boolean isRunAnalysis()
-        {
-            return _runAnalysis;
-        }
-
-        public void setRunAnalysis(boolean runAnalysis)
-        {
-            _runAnalysis = runAnalysis;
-        }
-
-        public Boolean isAllowNonExistentFiles()
-        {
-            return _allowNonExistentFiles;
-        }
-
-        public void setAllowNonExistentFiles(Boolean allowNonExistentFiles)
-        {
-            _allowNonExistentFiles = allowNonExistentFiles;
-        }
-
-        public Boolean getSplitJobs()
-        {
-            return _splitJobs == null ? false : _splitJobs;
-        }
-
-        public void setSplitJobs(Boolean splitJobs)
-        {
-            _splitJobs = splitJobs;
-        }
-    }
-
-    private AbstractFileAnalysisProtocol getProtocol(PipeRoot root, File dirData, AbstractFileAnalysisProtocolFactory factory, String protocolName)
-    {
-        try
-        {
-            File protocolFile = factory.getParametersFile(dirData, protocolName, root);
-            AbstractFileAnalysisProtocol result;
-            if (NetworkDrive.exists(protocolFile))
-            {
-                result = factory.loadInstance(protocolFile);
-
-                // Don't allow the instance file to override the protocol name.
-                result.setName(protocolName);
-            }
-            else
-            {
-                result = factory.load(root, protocolName);
-            }
-            return result;
-        }
-        catch (IOException e)
-        {
-            return null;
-        }
-    }
-
-    private AbstractFileAnalysisProtocolFactory getProtocolFactory(TaskPipeline taskPipeline)
-    {
-        //TODO: FileAnalysisPipelineProvider.name
-        AbstractFileAnalysisProvider provider = (AbstractFileAnalysisProvider) PipelineService.get().getPipelineProvider("File Analysis");
-        if (provider == null)
-            throw new NotFoundException("No pipeline provider found for task pipeline: " + taskPipeline);
-
-        if (!(taskPipeline instanceof FileAnalysisTaskPipeline))
-            throw new NotFoundException("Task pipeline is not a FileAnalysisTaskPipeline: " + taskPipeline);
-
-        FileAnalysisTaskPipeline fatp = (FileAnalysisTaskPipeline) taskPipeline;
-        //noinspection unchecked
-        return provider.getProtocolFactory(fatp);
     }
 
     @RequiresPermission(InsertPermission.class)
@@ -3496,9 +3275,15 @@ public class SequenceAnalysisController extends SpringActionController
                 for (int outputFileId : form.getOutputFileIds())
                 {
                     SequenceOutputFile o = SequenceOutputFile.getForId(outputFileId);
-                    if (o == null)
+                    if (o == null || o.getFile() == null)
                     {
                         errors.reject(ERROR_MSG, "Unable to find file: " + outputFileId);
+                        return null;
+                    }
+
+                    if (!o.getFile().exists())
+                    {
+                        errors.reject(ERROR_MSG, "Unable to find file: " + o.getFile().getPath());
                         return null;
                     }
 
@@ -3514,29 +3299,39 @@ public class SequenceAnalysisController extends SpringActionController
 
             try
             {
+                List<String> guids = new ArrayList<>();
                 if (handler.doSplitJobs())
                 {
                     for (SequenceOutputFile o : files)
                     {
                         JSONObject json = new JSONObject(form.getParams());
                         String jobName = form.getJobName();
-                        if (jobName != null)
+                        if (StringUtils.isEmpty(jobName))
                         {
-                            jobName = jobName + "." + o.getRowid();
+                            jobName = handler.getName().replaceAll(" ", "_") + "_" + FileUtil.getTimestamp();
                         }
-                        SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(getContainer(), getUser(), getViewContext().getActionURL(), jobName, pr, handler, Arrays.asList(o), json);
+
+                        jobName = jobName + "." + o.getRowid();
+
+                        SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(getContainer(), getUser(), jobName, pr, handler, Arrays.asList(o), json);
                         PipelineService.get().queueJob(job);
+                        guids.add(job.getJobGUID());
                     }
                 }
                 else
                 {
                     JSONObject json = new JSONObject(form.getParams());
 
-                    SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(getContainer(), getUser(), getViewContext().getActionURL(), form.getJobName(), pr, handler, files, json);
+                    SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(getContainer(), getUser(), (StringUtils.isEmpty(form.getJobName()) ? handler.getName().replaceAll(" ", "_") + "_" + FileUtil.getTimestamp() : form.getJobName()), pr, handler, files, json);
                     PipelineService.get().queueJob(job);
+                    guids.add(job.getJobGUID());
                 }
 
-                return new ApiSimpleResponse("success", true);
+                Map<String, Object> ret = new HashMap<>();
+                ret.put("jobGUIDs", guids);
+                ret.put("success", true);
+
+                return new ApiSimpleResponse(ret);
             }
             catch (JSONException e)
             {

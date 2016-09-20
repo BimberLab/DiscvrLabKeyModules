@@ -31,6 +31,7 @@
                <property name="columnTitle" value="Workbook"/>
            </properties>
        </column>
+       <column name="edit"/>
    </columns>
     <sorts>
         <sort column="analysis_id/readset"/>

@@ -177,8 +177,11 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
         }
 
         @Override
-        public void processFilesRemote(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            PipelineJob job = ctx.getJob();
+            JSONObject params = ctx.getParams();
+
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
@@ -202,33 +205,33 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                 {
                     job.getLogger().info("calculating summary metrics");
                     job.setStatus(PipelineJob.TaskStatus.running, "CALCULATING SUMMARY METRICS");
-                    File metricsFile = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".summary.metrics");
+                    File metricsFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".summary.metrics");
                     AlignmentSummaryMetricsWrapper wrapper = new AlignmentSummaryMetricsWrapper(job.getLogger());
-                    wrapper.executeCommand(o.getFile(), support.getCachedGenome(o.getLibrary_id()).getWorkingFastaFile(), metricsFile);
+                    wrapper.executeCommand(o.getFile(), ctx.getSequenceSupport().getCachedGenome(o.getLibrary_id()).getWorkingFastaFile(), metricsFile);
                 }
 
                 if (collectWgs)
                 {
                     job.getLogger().info("calculating wgs metrics");
                     job.setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
-                    File wgsMetricsFile = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".wgs.metrics");
+                    File wgsMetricsFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".wgs.metrics");
                     CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(job.getLogger());
-                    wgsWrapper.executeCommand(o.getFile(), wgsMetricsFile, support.getCachedGenome(o.getLibrary_id()).getWorkingFastaFile());
+                    wgsWrapper.executeCommand(o.getFile(), wgsMetricsFile, ctx.getSequenceSupport().getCachedGenome(o.getLibrary_id()).getWorkingFastaFile());
                 }
 
                 if (collectInsertSize)
                 {
                     job.getLogger().info("calculating insert size metrics");
                     job.setStatus(PipelineJob.TaskStatus.running, "CALCULATING INSERT SIZE METRICS");
-                    File metricsFile = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics");
-                    File metricsHistogram = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics.pdf");
+                    File metricsFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics");
+                    File metricsHistogram = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics.pdf");
                     CollectInsertSizeMetricsWrapper wrapper = new CollectInsertSizeMetricsWrapper(job.getLogger());
                     wrapper.executeCommand(o.getFile(), metricsFile, metricsHistogram);
                 }
             }
 
             action.setEndTime(new Date());
-            actions.add(action);
+            ctx.addActions(action);
         }
     }
 }

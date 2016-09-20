@@ -3,13 +3,16 @@ package org.labkey.sequenceanalysis.run.util;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
@@ -115,7 +118,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
             //args.addAll(SequencePipelineService.get().getJavaOpts());
             args.add("-classpath");
             args.add(getJAR().getPath());
-
+            args.addAll(SequencePipelineService.get().getJavaOpts());
             args.add("-jar");
             args.add(getQueueJAR().getPath());
             args.add("-S");
@@ -130,6 +133,16 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
             args.add(workingBam.getPath());
             args.add("-targetIntervals");
             args.add(intervalsFile.getPath());
+
+            args.add("-runDir");
+            args.add(outputBam.getParentFile().getPath());
+
+            String tmpDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_TMP_DIR");
+            if (StringUtils.trimToNull(tmpDir) != null)
+            {
+                args.add("-tempDir");
+                args.add(tmpDir);
+            }
 
             args.add("-o");
 

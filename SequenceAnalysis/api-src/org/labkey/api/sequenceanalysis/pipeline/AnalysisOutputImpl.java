@@ -1,4 +1,4 @@
-package org.labkey.sequenceanalysis.run.analysis;
+package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.DefaultPipelineStepOutput;
