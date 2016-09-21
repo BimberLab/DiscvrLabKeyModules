@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ * Copyright (c) 2015 LabKey Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+
+ -->
+<tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd" xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <table tableName="wo_recipient_codes" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="code"/>
+            <column columnName="description"/>
+            <column columnName="name"/>
+            <column columnName="mailstop"/>
+            <column columnName="copiesTo"/>
+            <column columnName="copiesToFile"/>
+            <column columnName="copiesToRS"/>
+            <column columnName="copiesToTherap"/>
+            <column columnName="copiesCC"/>
+            <column columnName="copiesCCFile"/>
+            <column columnName="userName"/>
+            <column columnName="printQueue"/>
+            <column columnName="email"/>
+            <column columnName="fax"/>
+            <column columnName="handlingTo"/>
+            <column columnName="copiesRqFile"/>
+            <column columnName="includeWOS012"/>
+            <column columnName="toDestinationType"/>
+            <column columnName="ccDestinationType"/>
+            <column columnName="requestDestinationType"/>
+            <column columnName="isGroupRecipient"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="wo_line_item" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="workOrderNum"/>
+            <column columnName="lineNum"/>
+            <column columnName="itemCode"/>
+            <column columnName="description"/>
+            <column columnName="quantity"/>
+            <column columnName="uom"/>
+            <column columnName="chargeAmount"/>
+            <column columnName="exemptAmount"/>
+            <column columnName="rcCode"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="wo_costing" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="workOrderNumber"/>
+            <column columnName="lineNumber"/>
+            <column columnName="costSequence"/>
+            <column columnName="itemCode"/>
+            <column columnName="description"/>
+            <column columnName="costCode"/>
+            <column columnName="costCodeType"/>
+            <column columnName="exemptFactor"/>
+            <column columnName="compositeQuantity"/>
+            <column columnName="componentQuantity"/>
+            <column columnName="componentQuantityUOM"/>
+            <column columnName="basicRate"/>
+            <column columnName="basicRateUOM"/>
+            <column columnName="basicAdjustedQuantity"/>
+            <column columnName="costRate"/>
+            <column columnName="costUnits"/>
+            <column columnName="chargeAmount"/>
+            <column columnName="exemptAmount"/>
+            <column columnName="RCCode"/>
+            <column columnName="rateTierCodeFk"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="work_order" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="workOrderNumber"/>
+            <column columnName="completionStatus"/>
+            <column columnName="periodEndingDate"/>
+            <column columnName="serviceType"/>
+            <column columnName="projectCode"/>
+            <column columnName="chargeId"/>
+            <column columnName="accountId"/>
+            <column columnName="accountFundType"/>
+            <column columnName="copiedFormatId"/>
+            <column columnName="beginDate"/>
+            <column columnName="endDate"/>
+            <column columnName="finishDate"/>
+            <column columnName="submittedOn"/>
+            <column columnName="writtenOn"/>
+            <column columnName="printedOn"/>
+            <column columnName="modifiedOn"/>
+            <column columnName="closedOn"/>
+            <column columnName="investigator"/>
+            <column columnName="requestor"/>
+            <column columnName="description"/>
+            <column columnName="printFlag"/>
+            <column columnName="printVersionTally"/>
+            <column columnName="printPagesTally"/>
+            <column columnName="exPrFlag"/>
+            <column columnName="exChargeFlag"/>
+            <column columnName="exPrChargeFlag"/>
+            <column columnName="exFundServiceFlag"/>
+            <column columnName="totalChargeAmount"/>
+            <column columnName="totalExemptAmount"/>
+            <column columnName="workOrderText"/>
+            <column columnName="serviceCode"/>
+            <column columnName="clientPONumber"/>
+            <column columnName="hasWorkOrderCredit"/>
+            <column columnName="creditComment"/>
+            <column columnName="creditWorkOrder"/>
+            <column columnName="creditPriorWorkOrderNumber"/>
+            <column columnName="creditPriorInvoiceNumber"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="wo_recipients" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="workOrderNumber"/>
+            <column columnName="toRecipient"/>
+            <column columnName="ccRecipient"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="resource_center" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="code"/>
+            <column columnName="altCode"/>
+            <column columnName="title"/>
+            <column columnName="isAnimalCare"/>
+            <column columnName="isActive"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="resource_rate_item" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="itemCode"/>
+            <column columnName="altItemCode"/>
+            <column columnName="description"/>
+            <column columnName="category"/>
+            <column columnName="basicCompositeType"/>
+            <column columnName="basicRate"/>
+            <column columnName="basicUOM"/>
+            <column columnName="basicCostCode"/>
+            <column columnName="resourceRateItemPk"/>
+            <column columnName="tieredRateLaborType"/>
+            <column columnName="rateTierCodeFk"/>
+            <column columnName="rateReportGroup"/>
+            <column columnName="isBasicItemLabor"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="wo_template" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="templateId"/>
+            <column columnName="serviceType"/>
+            <column columnName="prCode"/>
+            <column columnName="chargeId"/>
+            <column columnName="beginDate"/>
+            <column columnName="endDate"/>
+            <column columnName="submittedOn"/>
+            <column columnName="writtenOn"/>
+            <column columnName="modifiedOn"/>
+            <column columnName="copiedOn"/>
+            <column columnName="copiedWorkOrderNumber"/>
+            <column columnName="printFlag"/>
+            <column columnName="investigator"/>
+            <column columnName="requestor"/>
+            <column columnName="description"/>
+            <column columnName="templateText"/>
+            <column columnName="rcCode"/>
+            <column columnName="serviceCode"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+</tables>

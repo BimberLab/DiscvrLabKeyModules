@@ -1,0 +1,33 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="wo_line_item" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="workOrderNum"/>
+                    <column columnName="lineNum"/>
+                    <column columnName="itemCode">
+                        <fk>
+                            <fkDbSchema>cnprc_billing</fkDbSchema>
+                            <fkTable>resource_rate_item</fkTable>
+                            <fkColumnName>itemCode</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="description"/>
+                    <column columnName="quantity"/>
+                    <column columnName="uom"/>
+                    <column columnName="chargeAmount"/>
+                    <column columnName="exemptAmount"/>
+                    <column columnName="rcCode">
+                        <columnTitle>RC Code</columnTitle>
+                        <fk>
+                            <fkDbSchema>cnprc_billing</fkDbSchema>
+                            <fkTable>resource_center</fkTable>
+                            <fkColumnName>code</fkColumnName>
+                            <fkDisplayColumnName>Title</fkDisplayColumnName>
+                        </fk>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

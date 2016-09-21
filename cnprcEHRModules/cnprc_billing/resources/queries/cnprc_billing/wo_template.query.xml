@@ -1,0 +1,28 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="wo_template" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="templateId"/>
+                    <column columnName="serviceType"/>
+                    <column columnName="prCode"/>
+                    <column columnName="chargeId"/>
+                    <column columnName="beginDate"/>
+                    <column columnName="endDate"/>
+                    <column columnName="submittedOn"/>
+                    <column columnName="writtenOn"/>
+                    <column columnName="modifiedOn"/>
+                    <column columnName="copiedOn"/>
+                    <column columnName="copiedWorkOrderNumber"/>
+                    <column columnName="printFlag"/>
+                    <column columnName="investigator"/>
+                    <column columnName="requestor"/>
+                    <column columnName="description"/>
+                    <column columnName="templateText"/>
+                    <column columnName="rcCode"/>
+                    <column columnName="serviceCode"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

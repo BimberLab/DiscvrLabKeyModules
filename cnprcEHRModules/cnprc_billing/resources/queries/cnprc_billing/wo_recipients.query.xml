@@ -1,0 +1,34 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="work_order" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="workOrderNumber">
+                        <fk>
+                            <fkDbSchema>cnprc_billing</fkDbSchema>
+                            <fkTable>work_order</fkTable>
+                            <fkColumnName>workOrderNumber</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="toRecipient">
+                        <fk>
+                            <fkDbSchema>cnprc_billing</fkDbSchema>
+                            <fkTable>wo_recipient_codes</fkTable>
+                            <fkColumnName>code</fkColumnName>
+                            <fkDisplayColumnName>name</fkDisplayColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="ccRecipient">
+                        <columnTitle>CC Recipient</columnTitle>
+                        <fk>
+                            <fkDbSchema>cnprc_billing</fkDbSchema>
+                            <fkTable>wo_recipient_codes</fkTable>
+                            <fkColumnName>code</fkColumnName>
+                            <fkDisplayColumnName>name</fkDisplayColumnName>
+                        </fk>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

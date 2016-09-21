@@ -1,0 +1,23 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="resource_rate_item" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="itemCode"/>
+                    <column columnName="altItemCode"/>
+                    <column columnName="description"/>
+                    <column columnName="category"/>
+                    <column columnName="basicCompositeType"/>
+                    <column columnName="basicRate"/>
+                    <column columnName="basicUOM"/>
+                    <column columnName="basicCostCode"/>
+                    <column columnName="resourceRateItemPk"/>
+                    <column columnName="tieredRateLaborType"/>
+                    <column columnName="rateTierCodeFk"/>
+                    <column columnName="rateReportGroup"/>
+                    <column columnName="isBasicItemLabor"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

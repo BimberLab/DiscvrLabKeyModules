@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<etl xmlns="http://labkey.org/etl/xml">
+    <name>WO Costing</name>
+    <description>Work Order Costing</description>
+    <transforms>
+        <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
+            <description>Copy to target</description>
+            <source schemaName="cnprcSrc_billing" queryName="q_wo_costing" />
+            <destination schemaName="cnprc_billing" queryName="wo_costing" bulkLoad="true" batchSize="5000" targetOption="truncate"/>
+        </transform>
+    </transforms>
+    <schedule>
+        <poll interval="60m" />
+    </schedule>
+</etl>

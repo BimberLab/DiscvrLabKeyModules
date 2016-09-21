@@ -1,0 +1,33 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="wo_recipient_codes" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="code"/>
+                    <column columnName="description"/>
+                    <column columnName="name"/>
+                    <column columnName="mailstop"/>
+                    <column columnName="copiesTo"/>
+                    <column columnName="copiesToFile"/>
+                    <column columnName="copiesToRS"/>
+                    <column columnName="copiesToTherap"/>
+                    <column columnName="copiesCC"/>
+                    <column columnName="copiesCCFile">
+                        <columnTitle>Copies CC File</columnTitle>
+                    </column>
+                    <column columnName="userName"/>
+                    <column columnName="printQueue"/>
+                    <column columnName="email"/>
+                    <column columnName="fax"/>
+                    <column columnName="handlingTo"/>
+                    <column columnName="copiesRqFile"/>
+                    <column columnName="includeWOS012"/>
+                    <column columnName="toDestinationType"/>
+                    <column columnName="ccDestinationType"/>
+                    <column columnName="requestDestinationType"/>
+                    <column columnName="isGroupRecipient"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>
