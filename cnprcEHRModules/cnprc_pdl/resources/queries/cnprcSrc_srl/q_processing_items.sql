@@ -1,0 +1,7 @@
+SELECT
+SPI_PK AS key,
+SPI_SSAT_FK AS sampleType,
+SPI_STT_FK AS testType,
+SPI_PROCESSING_ITEM AS processingItem,
+SPI_COMMENT AS comments
+FROM cnprcSrc_srl.SRL_PROCESSING_ITEM

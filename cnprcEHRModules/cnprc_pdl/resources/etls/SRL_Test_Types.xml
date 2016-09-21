@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<etl xmlns="http://labkey.org/etl/xml">
+    <name>SRL Test Types</name>
+    <description>Test Types</description>
+    <transforms>
+        <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
+            <description>Copy to target</description>
+            <source schemaName="cnprcSrc_srl" queryName="q_test_types" />
+            <destination schemaName="lists" queryName="Test Types" bulkLoad="true" batchSize="500" targetOption="truncate">
+            </destination>
+        </transform>
+    </transforms>
+    <schedule>
+        <poll interval="60m" />
+    </schedule>
+</etl>

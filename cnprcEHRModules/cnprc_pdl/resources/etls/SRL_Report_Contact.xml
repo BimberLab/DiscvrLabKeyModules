@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<etl xmlns="http://labkey.org/etl/xml">
+    <name>SRL Report Contact</name>
+    <description>Client Report Contact Details</description>
+    <transforms>
+        <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
+            <description>Copy to target</description>
+            <source schemaName="cnprcSrc_srl" queryName="q_report_contact" />
+            <destination schemaName="lists" queryName="Report Contact" bulkLoad="true" batchSize="500" targetOption="truncate">
+            </destination>
+        </transform>
+    </transforms>
+    <schedule>
+        <poll interval="60m" />
+    </schedule>
+</etl>
