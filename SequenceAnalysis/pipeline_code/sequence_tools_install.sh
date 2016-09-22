@@ -286,6 +286,10 @@ then
     rm ./public/external-example/src/main/java/org/mycompany/app/*
     rm ./public/external-example/src/test/java/org/mycompany/app/*
 
+    #for debugging
+    echo $JAVA_HOME
+    java -version
+
     mvn verify
     mvn package
     cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.6.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
