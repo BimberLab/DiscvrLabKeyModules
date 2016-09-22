@@ -10,7 +10,8 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
             width: '100%',
             border: false,
             defaults: {
-                border: false
+                border: false,
+                labelWidth: 220
             },
             items: [{
                 html: 'This will use the lineage output from above and attempt to identify the haplotypes that best explain the lineages from this subject (i.e. which two account for the most total lineages).  If you edit the data above, you will need to manually refresh the page or hit the reload button below to update this table.',
@@ -19,9 +20,19 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
             },{
                 xtype: 'ldk-numberfield',
                 style: 'padding-top: 10px',
-                fieldLabel: 'Min Pct',
+                fieldLabel: 'Min Pct From Lineage',
                 itemId: 'minPct',
                 value: 0.25
+            },{
+                fieldLabel: 'Min % Found For Haplotype',
+                value: 25,
+                xtype: 'ldk-integerfield',
+                itemId: 'minPctForHaplotype'
+            },{
+                fieldLabel: 'Min % Explained By Pair',
+                value: 60,
+                xtype: 'ldk-integerfield',
+                itemId: 'minPctExplained'
             },{
                 xtype: 'ldk-linkbutton',
                 text: 'Click Here View Haplotype Definitions',
@@ -233,7 +244,7 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                             if (!r.get('haplotype1') && !r.get('haplotype2')){
                                 var name = 'Cannot Call Haplotype: ' + r.get('locus');
                                 haplotypeNames.push(name);
-                                json.push({haplotype: name, analysisId: r.get('analysisId'), pct: 0});
+                                json.push({haplotype: name, analysisId: r.get('analysisId'), pct: 0, category: r.get('locus')});
                             }
                         }, this);
 
@@ -466,6 +477,8 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
     onDataLoad: function(){
         Ext4.Msg.hide();
         var store = this.down('grid').store;
+        var minPctExplained = this.down('#minPctExplained').getValue();
+        var minPctForHaplotype = this.down('#minPctForHaplotype').getValue();
         store.removeAll();
         Ext4.each(Ext4.Object.getKeys(this.resultsByLoci), function(analysisId){
             Ext4.each(Ext4.Object.getKeys(this.resultsByLoci[analysisId]), function(locus){
@@ -480,7 +493,13 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                     var h = this.haplotypes[locus][haplotypeName];
                     var matchingLineages = h.getMatchingLineages(lineages);
                     if (matchingLineages){
-                        haplotypeMatches[haplotypeName] = matchingLineages;
+                        var pctMatch = 100 * (matchingLineages.length / h.getLineageNames().length);
+                        if (minPctForHaplotype && pctMatch < minPctForHaplotype){
+                            console.log('haplotype below minPctForHaplotype: ' + analysisId + ', ' + haplotypeName + ', ' + pctMatch);
+                        }
+                        else {
+                            haplotypeMatches[haplotypeName] = matchingLineages;
+                        }
                     }
                 }, this);
 
@@ -517,11 +536,17 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                         }, this);
                         totalPctPresent = Ext4.util.Format.number(totalPctPresent, '0.00');
                         rankedPctMatches[totalPctPresent] = rankedPctMatches[totalPctPresent] || [];
-                        if (rankedPctMatches[totalPctPresent].indexOf(names) == -1) {
-                            rankedPctMatches[totalPctPresent].push(names);
-                        }
 
-                        pctExplainedByMatch[names] = totalPctPresent;
+                        if (minPctExplained && totalPctPresent < minPctExplained) {
+                            console.log('haplotype below minPctExplained: ' + analysisId + ', ' + names + ', ' + totalPctPresent);
+                        }
+                        else {
+                            if (rankedPctMatches[totalPctPresent].indexOf(names) == -1) {
+                                rankedPctMatches[totalPctPresent].push(names);
+                            }
+
+                            pctExplainedByMatch[names] = totalPctPresent;
+                        }
                     }, this);
                 }, this);
 

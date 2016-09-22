@@ -3441,6 +3441,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentIm
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentImportTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentInitTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentNormalizationTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/CacheAlignerIndexesTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/CreateReferenceLibraryTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaFastqSplitter.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaImportJob.java -text
@@ -3915,6 +3916,7 @@ onprcEHRModules/GeneticsCore/build.xml -text
 onprcEHRModules/GeneticsCore/distributions/prime-seq-modules.xml -text
 onprcEHRModules/GeneticsCore/module.properties -text
 onprcEHRModules/GeneticsCore/resources/external/amplicon_standard_curve.R -text
+onprcEHRModules/GeneticsCore/resources/external/run_wilcox.R -text
 onprcEHRModules/GeneticsCore/resources/module.xml -text
 onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/alignment_summary_by_lineage/.qview.xml -text
 onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/alignment_summary_by_lineage/With[!!-~]Haplotype[!!-~]Matches.qview.xml -text
@@ -3940,9 +3942,14 @@ onprcEHRModules/GeneticsCore/resources/views/geneticsMenu.view.xml -text
 onprcEHRModules/GeneticsCore/resources/views/geneticsMenu.webpart.xml -text
 onprcEHRModules/GeneticsCore/resources/views/methylationComparison.html -text
 onprcEHRModules/GeneticsCore/resources/views/methylationComparison.view.xml -text
+onprcEHRModules/GeneticsCore/resources/views/methylationRateComparison.html -text
+onprcEHRModules/GeneticsCore/resources/views/methylationRateComparison.view.xml -text
 onprcEHRModules/GeneticsCore/resources/views/sbtReview.html -text
 onprcEHRModules/GeneticsCore/resources/views/sbtReview.view.xml -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/buttons.js -text
+onprcEHRModules/GeneticsCore/resources/web/geneticscore/field/ItemSelector.css -text
+onprcEHRModules/GeneticsCore/resources/web/geneticscore/field/ItemSelector.js -text
+onprcEHRModules/GeneticsCore/resources/web/geneticscore/field/MultiSelect.js -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/panel/HaplotypePanel.js -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/window/ChangeReadsetStatusWindow.js -text
 onprcEHRModules/GeneticsCore/resources/web/geneticscore/window/EditAlignmentsWindow.js -text
@@ -3954,6 +3961,7 @@ onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreManager.jav
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreModule.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsTableCustomizer.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/analysis/MethylationRateComparison.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/analysis/MethylationRateComparisonHandler.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/ChangeReadsetStatusButton.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/HaplotypeReviewButton.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/PublishSBTHaplotypesButton.java -text

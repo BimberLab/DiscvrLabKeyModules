@@ -41,7 +41,7 @@ public class SequenceAlignmentJob extends SequenceJob
 
     private SequenceAlignmentJob(Container c, User u, String jobName, PipeRoot root, JSONObject params, SequenceReadsetImpl readset) throws IOException
     {
-        super(c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), "sequenceAnalysis");
+        super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), "sequenceAnalysis");
 
         _readsetId = readset.getRowId();
         getSequenceSupport().cacheReadset(readset);

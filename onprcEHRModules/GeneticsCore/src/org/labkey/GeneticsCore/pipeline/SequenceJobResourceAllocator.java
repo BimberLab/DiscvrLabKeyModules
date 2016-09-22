@@ -40,6 +40,11 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
         return (job.getActiveTaskId() != null && job.getActiveTaskId().getNamespaceClass().getName().endsWith("SequenceNormalizationTask"));
     }
 
+    private boolean isSequenceAlignmentTask(PipelineJob job)
+    {
+        return (job.getActiveTaskId() != null && job.getActiveTaskId().getNamespaceClass().getName().endsWith("SequenceAlignmentTask"));
+    }
+
     private Long _totalFileSize = null;
     private static final Long UNABLE_TO_DETERMINE = -1L;
 
@@ -72,7 +77,7 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
             return 16;
         }
 
-        return null;
+        return 24;
     }
 
     @Override
@@ -90,20 +95,24 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
             return null;
         }
 
-        if (totalFileSize < 10e9)
+        if (totalFileSize <= 10e9)
         {
-            job.getLogger().debug("file size less than 10gb, lowering memory to 16");
+            job.getLogger().debug("file size less than 10gb, setting memory to 16");
 
             return 16;
         }
-        else if (totalFileSize < 20e9)
+        else if (totalFileSize <= 30e9)
         {
-            job.getLogger().debug("file size less than 20gb, lowering memory to 24");
+            job.getLogger().debug("file size greater than 10gb, setting memory to 24");
 
             return 24;
         }
+        else
+        {
+            job.getLogger().debug("file size greater than 30gb, setting memory to 48");
 
-        return null;
+            return 48;
+        }
     }
 
     @Override
@@ -115,8 +124,8 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
             return null;
         }
 
-        //30gb
-        if (totalFileSize > 30e9)
+        //30gb alignment
+        if (isSequenceAlignmentTask(job) && totalFileSize > 30e9)
         {
             return Arrays.asList("concurrency_limits = WEEK_LONG_JOBS");
         }

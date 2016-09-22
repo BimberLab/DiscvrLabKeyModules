@@ -360,14 +360,13 @@ public class RefNtSequenceModel
         return _sequenceBytes;
     }
 
-    public void createFileForSequence(User u, String sequence) throws IOException
+    public void createFileForSequence(User u, String sequence, @Nullable File outDir) throws IOException
     {
-        File output = getExpectedSequenceFile();
+        File output = getExpectedSequenceFile(outDir);
         if (output.exists())
         {
             output.delete();
         }
-        //output.createNewFile();
 
         try (Writer writer = PrintWriters.getPrintWriter(new GZIPOutputStream(new FileOutputStream(output))))
         {
@@ -388,9 +387,9 @@ public class RefNtSequenceModel
         Table.update(u, ti, this, _rowid);
     }
 
-    private File getExpectedSequenceFile() throws IllegalArgumentException
+    private File getExpectedSequenceFile(@Nullable File outDir) throws IllegalArgumentException
     {
-        return new File(getSequenceDir(true), _rowid + ".txt.gz");
+        return new File(getSequenceDir(true, outDir), _rowid + ".txt.gz");
     }
 
     private Container getLabKeyContainer()
@@ -404,10 +403,10 @@ public class RefNtSequenceModel
         return c;
     }
 
-    private File getSequenceDir(boolean create) throws IllegalArgumentException
+    private File getSequenceDir(boolean create, @Nullable File outDir) throws IllegalArgumentException
     {
         Container c = getLabKeyContainer();
-        File ret = getReferenceSequenceDir(c);
+        File ret = outDir == null ? getReferenceSequenceDir(c) : outDir;
         if (create && !ret.exists())
         {
             ret.mkdirs();
@@ -416,7 +415,7 @@ public class RefNtSequenceModel
         return ret;
     }
 
-    public static File getReferenceSequenceDir(Container c) throws IllegalArgumentException
+    private File getReferenceSequenceDir(Container c) throws IllegalArgumentException
     {
         FileContentService fileService = ServiceRegistry.get().getService(FileContentService.class);
         File root = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);

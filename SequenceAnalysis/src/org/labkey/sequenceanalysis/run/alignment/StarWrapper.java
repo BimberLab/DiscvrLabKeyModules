@@ -343,6 +343,8 @@ public class StarWrapper extends AbstractCommandWrapper
                     put("checked", true);
                 }}, true)
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://github.com/alexdobin/STAR/", true, true);
+
+            setAlwaysCacheIndex(true);
         }
 
         public StarAlignmentStep create(PipelineContext context)

@@ -2765,7 +2765,7 @@ public class SequenceAnalysisController extends SpringActionController
                         throw new PipelineValidationException("Insufficient permissions to update reference genome: " + libraryId);
                     }
 
-                    PipelineService.get().queueJob(new ReferenceLibraryPipelineJob(c, getUser(), null, root, libraryId));
+                    PipelineService.get().queueJob(ReferenceLibraryPipelineJob.recreate(c, getUser(), root, libraryId));
                 }
 
                 return new ApiSimpleResponse("success", true);

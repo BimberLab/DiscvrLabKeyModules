@@ -36,7 +36,7 @@ public class AlignmentAnalysisJob extends SequenceJob
 
     private AlignmentAnalysisJob(Container c, User u, String jobName, PipeRoot root, JSONObject params, AnalysisModelImpl model) throws IOException
     {
-        super(c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), "sequenceAnalysis");
+        super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), "sequenceAnalysis");
 
         _analyisId = model.getAnalysisId();
         _readsetId = model.getReadset();

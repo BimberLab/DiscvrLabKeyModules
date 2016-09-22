@@ -78,7 +78,7 @@ public class SequenceTriggerHelper
         if (sequence != null)
         {
             RefNtSequenceModel model = new TableSelector(getRefNts(), new SimpleFilter(FieldKey.fromString("rowid"), rowId), null).getObject(RefNtSequenceModel.class);
-            model.createFileForSequence(getUser(), sequence);
+            model.createFileForSequence(getUser(), sequence, null);
 
         }
     }

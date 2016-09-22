@@ -28,7 +28,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
 
     public SequenceOutputHandlerJob(Container c, User user, @Nullable String jobName, PipeRoot pipeRoot, SequenceOutputHandler handler, List<SequenceOutputFile> files, JSONObject jsonParams) throws IOException
     {
-        super(c, user, jobName, pipeRoot, jsonParams, null, "sequenceOutput");
+        super(SequenceOutputHandlerPipelineProvider.NAME, c, user, jobName, pipeRoot, jsonParams, null, "sequenceOutput");
 
         _handlerClassName = handler.getClass().getName();
         _files = files;

@@ -89,4 +89,6 @@ abstract public class SequencePipelineService
     abstract public File sortVcf(File inputVcf, @Nullable File outputVcf, File sequenceDictionary, Logger log) throws PipelineJobException;
 
     abstract public void sortROD(File input, Logger log) throws IOException, PipelineJobException;
+
+    abstract public String inferRPath(Logger log);
 }

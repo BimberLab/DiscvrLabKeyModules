@@ -9,6 +9,9 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.reports.ExternalScriptEngineDefinition;
+import org.labkey.api.reports.LabkeyScriptEngineManager;
+import org.labkey.api.reports.RScriptEngineFactory;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
@@ -16,7 +19,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
-import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 import org.labkey.sequenceanalysis.run.util.SortVcfWrapper;
@@ -248,12 +251,12 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     @Override
     public List<File> getSequenceJobInputFiles(PipelineJob job)
     {
-        if (!(job instanceof SequenceAlignmentJob))
+        if (!(job instanceof SequenceJob))
         {
             return null;
         }
 
-        return ((SequenceAlignmentJob) job).getInputFiles();
+        return ((SequenceJob) job).getInputFiles();
     }
 
     public Integer getExpRunIdForJob(PipelineJob job) throws PipelineJobException
@@ -306,5 +309,46 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     public void sortROD(File input, Logger log) throws IOException, PipelineJobException
     {
         SequenceUtil.sortROD(input, log);
+    }
+
+    @Override
+    public String inferRPath(Logger log)
+    {
+        String path;
+
+        //preferentially use R config setup in scripting props.  only works if running locally.
+        if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
+        {
+            for (ExternalScriptEngineDefinition def : LabkeyScriptEngineManager.getEngineDefinitions())
+            {
+                if (RScriptEngineFactory.isRScriptEngine(def.getExtensions()))
+                {
+                    path = new File(def.getExePath()).getParent();
+                    log.info("Using RSciptEngine path: " + path);
+                    return path;
+                }
+            }
+        }
+
+        //then pipeline config
+        String packagePath = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("R");
+        if (StringUtils.trimToNull(packagePath) != null)
+        {
+            log.info("Using path from pipeline config: " + packagePath);
+            return packagePath;
+        }
+
+        //then RHOME
+        Map<String, String> env = System.getenv();
+        if (env.containsKey("RHOME"))
+        {
+            log.info("Using path from RHOME: " + env.get("RHOME"));
+            return env.get("RHOME");
+        }
+
+        //else assume it's in the PATH
+        log.info("Unable to infer R path, using null");
+
+        return null;
     }
 }

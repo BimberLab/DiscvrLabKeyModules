@@ -43,7 +43,7 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
                 if (StringUtils.trimToNull(seq) != null)
                 {
                     _log.info("writing sequence: " + nt.getName());
-                    nt.createFileForSequence(moduleContext.getUpgradeUser(), seq);
+                    nt.createFileForSequence(moduleContext.getUpgradeUser(), seq, null);
                 }
             }
         }

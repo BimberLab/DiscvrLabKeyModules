@@ -34,7 +34,7 @@ public class ReadsetImportJob extends SequenceJob
 {
     private ReadsetImportJob(Container c, User u, String jobName, PipeRoot root, JSONObject params) throws IOException, PipelineJobException
     {
-        super(c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), "sequenceImport");
+        super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), "sequenceImport");
     }
 
     public static List<ReadsetImportJob> create(Container c, User u, String jobName, String description, JSONObject params, List<File> inputFiles) throws PipelineJobException, IOException, PipelineValidationException

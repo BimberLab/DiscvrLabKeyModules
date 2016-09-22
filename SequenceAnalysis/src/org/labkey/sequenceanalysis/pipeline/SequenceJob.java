@@ -58,9 +58,9 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     transient private JSONObject _params;
 
-    public SequenceJob(Container c, User u, @Nullable String jobName, PipeRoot pipeRoot, JSONObject params, TaskId taskPipelineId, String folderPrefix) throws IOException
+    public SequenceJob(String providerName, Container c, User u, @Nullable String jobName, PipeRoot pipeRoot, JSONObject params, TaskId taskPipelineId, String folderPrefix) throws IOException
     {
-        super(SequenceOutputHandlerPipelineProvider.NAME, new ViewBackgroundInfo(c, u, null), pipeRoot);
+        super(providerName, new ViewBackgroundInfo(c, u, null), pipeRoot);
 
         _support = new SequenceJobSupportImpl();
 
@@ -71,6 +71,11 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         _params = params;
         writeParameters(params);
 
+        createLogFile();
+    }
+
+    protected void createLogFile() throws IOException
+    {
         setLogFile(new File(getDataDirectory(), FileUtil.makeLegalName(_jobName) + ".log"));
     }
 
@@ -96,7 +101,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         _description = description;
     }
 
-    private File createLocalDirectory(PipeRoot pipeRoot)
+    protected File createLocalDirectory(PipeRoot pipeRoot) throws IOException
     {
         File webserverOutDir = new File(pipeRoot.getRootPath(), _folderPrefix + "Pipeline");
         if (!webserverOutDir.exists())

@@ -12,6 +12,8 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
+import org.labkey.api.util.DefaultSystemMaintenanceTask;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -133,18 +135,26 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             if (sequenceDir.exists())
             {
                 TableInfo tableRefNtSequences = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
-                TableSelector ts = new TableSelector(tableRefNtSequences, Collections.singleton("rowid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
+                TableSelector ts = new TableSelector(tableRefNtSequences, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
                 final Set<String> expectedSequences = new HashSet<>();
-                for (Integer rowId : ts.getArrayList(Integer.class))
+                for (RefNtSequenceModel m : ts.getArrayList(RefNtSequenceModel.class))
                 {
-                    String fileName = rowId + ".txt.gz";
-                    expectedSequences.add(fileName);
-
-                    //check whether file exists
-                    File expected = new File(sequenceDir, fileName);
-                    if (!expected.exists())
+                    ExpData d = ExperimentService.get().getExpData(m.getSequenceFile());
+                    if (d == null || d.getFile() == null)
                     {
-                        _log.error("expected sequence file does not exist: " + expected.getPath());
+                        _log.error("file was null for sequence: " + m.getRowid());
+                        continue;
+                    }
+
+                    if (!d.getFile().exists())
+                    {
+                        _log.error("expected sequence file does not exist for sequence: " + m.getRowid() + ", expected: " + d.getFile().getPath());
+                        continue;
+                    }
+
+                    if (d.getFile().getAbsolutePath().toLowerCase().startsWith(sequenceDir.getAbsolutePath().toLowerCase()))
+                    {
+                        expectedSequences.add(d.getFile().getName());
                     }
                 }
 

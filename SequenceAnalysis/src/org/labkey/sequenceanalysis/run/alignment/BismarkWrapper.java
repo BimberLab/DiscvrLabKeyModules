@@ -9,31 +9,27 @@ import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.pipeline.PipelineJobService;
-import org.labkey.api.reports.ExternalScriptEngineDefinition;
-import org.labkey.api.reports.LabkeyScriptEngineManager;
-import org.labkey.api.reports.RScriptEngineFactory;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.Resource;
-import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.Pair;
-import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
-import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Pair;
+import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
-import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.sequenceanalysis.run.util.SamtoolsRunner;
 
 import java.io.BufferedReader;
@@ -661,52 +657,12 @@ public class BismarkWrapper extends AbstractCommandWrapper
             }
         }
 
-        private String inferRPath()
-        {
-            String path;
-
-            //preferentially use R config setup in scripting props.  only works if running locally.
-            if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
-            {
-                for (ExternalScriptEngineDefinition def : LabkeyScriptEngineManager.getEngineDefinitions())
-                {
-                    if (RScriptEngineFactory.isRScriptEngine(def.getExtensions()))
-                    {
-                        path = new File(def.getExePath()).getParent();
-                        getPipelineCtx().getJob().getLogger().info("Using RSciptEngine path: " + path);
-                        return path;
-                    }
-                }
-            }
-
-            //then pipeline config
-            String packagePath = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("R");
-            if (StringUtils.trimToNull(packagePath) != null)
-            {
-                getPipelineCtx().getJob().getLogger().info("Using path from pipeline config: " + packagePath);
-                return packagePath;
-            }
-
-            //then RHOME
-            Map<String, String> env = System.getenv();
-            if (env.containsKey("RHOME"))
-            {
-                getPipelineCtx().getJob().getLogger().info("Using path from RHOME: " + env.get("RHOME"));
-                return env.get("RHOME");
-            }
-
-            //else assume it's in the PATH
-            getPipelineCtx().getJob().getLogger().info("Unable to infer R path, using null");
-
-            return null;
-        }
-
         private String getRPath()
         {
             String exePath = "Rscript";
 
             //NOTE: this was added to better support team city agents, where R is not in the PATH, but RHOME is defined
-            String packagePath = inferRPath();
+            String packagePath = SequencePipelineService.get().inferRPath(getPipelineCtx().getLogger());
             if (StringUtils.trimToNull(packagePath) != null)
             {
                 exePath = (new File(packagePath, exePath)).getPath();
@@ -718,7 +674,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
         private String getScriptPath() throws PipelineJobException
         {
             Module module = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
-            Resource script = module.getModuleResource("/external/R/methylationBasicStats.R");
+            Resource script = module.getModuleResource("/external/R/methylationBasiftats.R");
             if (!script.exists())
                 throw new PipelineJobException("Unable to find file: " + script.getPath());
 

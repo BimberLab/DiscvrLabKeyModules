@@ -1,25 +1,23 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.files.FileUrls;
 import org.labkey.api.pipeline.PipeRoot;
-import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
-import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
+import org.labkey.api.pipeline.TaskPipelineSettings;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
@@ -34,29 +32,31 @@ import java.util.Map;
  * Date: 7/21/2014
  * Time: 10:33 AM
  */
-public class ReferenceLibraryPipelineJob extends PipelineJob
+public class ReferenceLibraryPipelineJob extends SequenceJob
 {
-    private String _name;
     private String _description;
     private List<ReferenceLibraryMember> _libraryMembers;
     private Integer _libraryId = null;
+    private ReferenceGenomeImpl _referenceGenome = null;
 
-    public ReferenceLibraryPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, String name, String description, List<ReferenceLibraryMember> libraryMembers) throws IOException
+    public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId) throws IOException
     {
-        super(ReferenceLibraryPipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
-        _name = name;
+        super(ReferenceLibraryPipelineProvider.NAME, c, user, name, pipeRoot, new JSONObject(), new TaskId(TaskPipelineSettings.class, "referenceLibraryPipeline"), null);
         _description = description;
         _libraryMembers = libraryMembers;
+        _libraryId = libraryId;
+    }
 
-        File outputDir = getOutputDir();
+    @Override
+    protected void createLogFile() throws IOException
+    {
+        File outputDir = createLocalDirectory(getPipeRoot());
         setLogFile(new File(outputDir, FileUtil.makeFileNameWithTimestamp("referenceLibrary", "log")));
     }
 
     //for recreating an existing library
-    public ReferenceLibraryPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, Integer libraryId)throws IOException
+    public static ReferenceLibraryPipelineJob recreate(Container c, User user, PipeRoot pipeRoot, Integer libraryId)throws IOException
     {
-        super(null, new ViewBackgroundInfo(c, user, url), pipeRoot);
-
         TableInfo ti = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         Map rowMap = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(Map.class);
         if (rowMap == null)
@@ -64,13 +64,12 @@ public class ReferenceLibraryPipelineJob extends PipelineJob
             throw new IllegalArgumentException("Library not found: " + libraryId);
         }
 
-        _name = (String)rowMap.get("name");
-        _description = (String)rowMap.get("description");
-        _libraryMembers = null;
-        _libraryId = libraryId;
+        return new ReferenceLibraryPipelineJob(c, user, pipeRoot, (String)rowMap.get("name"), (String)rowMap.get("description"), null, libraryId);
+    }
 
-        File outputDir = getOutputDir();
-        setLogFile(new File(outputDir, FileUtil.makeFileNameWithTimestamp("referenceLibrary", "log")));
+    public String getName()
+    {
+        return getProtocolName();
     }
 
     @Override
@@ -83,11 +82,6 @@ public class ReferenceLibraryPipelineJob extends PipelineJob
     public TaskPipeline getTaskPipeline()
     {
         return PipelineJobService.get().getTaskPipeline(new TaskId(ReferenceLibraryPipelineJob.class));
-    }
-
-    public String getName()
-    {
-        return _name;
     }
 
     public String getLibraryDescription()
@@ -115,7 +109,7 @@ public class ReferenceLibraryPipelineJob extends PipelineJob
         return getLibraryId() == null;
     }
 
-    public File getOutputDir() throws IOException
+    protected File createLocalDirectory(PipeRoot pipeRoot) throws IOException
     {
         File outputDir = SequenceAnalysisManager.get().getReferenceLibraryDir(getContainer());
         if (outputDir == null)
@@ -142,5 +136,15 @@ public class ReferenceLibraryPipelineJob extends PipelineJob
             return ret;
         }
         return null;
+    }
+
+    public ReferenceGenomeImpl getReferenceGenome()
+    {
+        return _referenceGenome;
+    }
+
+    public void setReferenceGenome(ReferenceGenomeImpl referenceGenome)
+    {
+        _referenceGenome = referenceGenome;
     }
 }

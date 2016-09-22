@@ -12,7 +12,7 @@ import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.InsertPermission;
-import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
+import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
@@ -32,12 +32,14 @@ import java.util.Map;
  */
 public class ImportFastaSequencesPipelineJob extends PipelineJob
 {
+    public static String _folderPrefix = "refSequenceImport";
     private List<File> _fastas;
     private Map<String, String> _params;
     private boolean _splitWhitespace;
     private boolean _createLibrary;
     private boolean _deleteInputs = false;
     private Map<String, String> _libraryParams;
+    private File _outDir;
 
     public ImportFastaSequencesPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, List<File> fastas, Map<String, String> params, boolean splitWhitespace, boolean createLibrary, Map<String, String> libraryParams) throws IOException
     {
@@ -48,8 +50,27 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
         _createLibrary = createLibrary;
         _libraryParams = libraryParams;
 
-        File outputDir = RefNtSequenceModel.getReferenceSequenceDir(c);
-        setLogFile(new File(outputDir, FileUtil.makeFileNameWithTimestamp("fastaImport", "log")));
+        _outDir = createLocalDirectory(pipeRoot);
+        setLogFile(new File(_outDir, FileUtil.makeFileNameWithTimestamp("fastaImport", "log")));
+    }
+
+    private File createLocalDirectory(PipeRoot pipeRoot) throws IOException
+    {
+        File webserverOutDir = new File(pipeRoot.getRootPath(), _folderPrefix);
+        if (!webserverOutDir.exists())
+        {
+            webserverOutDir.mkdir();
+        }
+
+        AssayFileWriter writer = new AssayFileWriter();
+        String folderName = "SequenceImport_" + FileUtil.getTimestamp();
+        webserverOutDir = writer.findUniqueFileName(folderName, webserverOutDir);
+        if (!webserverOutDir.exists())
+        {
+            webserverOutDir.mkdirs();
+        }
+
+        return webserverOutDir;
     }
 
     @Override
@@ -128,6 +149,11 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
     public ActionURL getStatusHref()
     {
         return null;
+    }
+
+    public File getOutDir()
+    {
+        return _outDir;
     }
 
     public static class Provider extends PipelineProvider

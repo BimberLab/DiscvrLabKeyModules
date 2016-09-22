@@ -1,0 +1,9 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Methylation Site Rates Comparison">
+    <dependencies>
+        <dependency path="SequenceAnalysis/sequenceAnalysis.lib.xml"/>
+        <dependency path="laboratory.context" />
+        <dependency path="geneticscore/field/ItemSelector.css" />
+        <dependency path="geneticscore/field/MultiSelect.js" />
+        <dependency path="geneticscore/field/ItemSelector.js" />
+    </dependencies>
+</view>

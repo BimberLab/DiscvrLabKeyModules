@@ -18,7 +18,9 @@ package org.labkey.sequenceanalysis;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
@@ -37,6 +39,7 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
@@ -49,7 +52,6 @@ import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
@@ -59,6 +61,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -156,6 +159,8 @@ public class SequenceAnalysisManager
             for (int rowId : rowIds)
             {
                 String subselect = " analysis_id IN (select rowid from " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " WHERE readset = ?)";
+
+                //TODO: find any jobs that will no longer be associated with data
 
                 //delete all analyses and associated records
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION + " WHERE " + subselect, rowId));
@@ -378,7 +383,7 @@ public class SequenceAnalysisManager
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, null, root, name, description, libraryMembers);
+            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, root, name, description, libraryMembers, null);
             PipelineService.get().queueJob(job);
 
             return job;
@@ -389,7 +394,7 @@ public class SequenceAnalysisManager
         }
     }
 
-    public List<Integer> importRefSequencesFromFasta(Container c, User u, File file, boolean splitWhitespace, Map<String, String> params, Logger log) throws IOException
+    public List<Integer> importRefSequencesFromFasta(Container c, User u, File file, boolean splitWhitespace, Map<String, String> params, Logger log, @Nullable File outDir) throws IOException
     {
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root == null)
@@ -446,7 +451,7 @@ public class SequenceAnalysisManager
                     RefNtSequenceModel m = new TableSelector(dnaTable, new SimpleFilter(FieldKey.fromString("rowid"), map.get("rowid")), null).getObject(RefNtSequenceModel.class);
 
                     //to better handle large sequences, write sequence to a gzipped text file
-                    m.createFileForSequence(u, (String) fastaRecord.get("sequence"));
+                    m.createFileForSequence(u, (String) fastaRecord.get("sequence"), outDir);
                 }
             }
         }
@@ -592,5 +597,19 @@ public class SequenceAnalysisManager
         }
 
         return new File(pipelineDir, ".referenceLibraries");
+    }
+
+    public List<PipelineJob> getPipelineJobsForReadsets(Collection<String> readsetIds)
+    {
+        //first find any runs referenced by these readsets
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), readsetIds, CompareType.IN);
+        //Set<Integer> runIds = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_READSETS), PageFlowUtil.set("runId"), filter, null).getObject(Integer.class);
+
+        //then analyses also using those
+
+        //then outputfiles using either those readsets or analyses
+
+
+        return null;
     }
 }

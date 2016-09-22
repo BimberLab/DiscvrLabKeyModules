@@ -77,6 +77,10 @@
                     <property name="location" value="webserver" />
                     <!--<property name="join" value="true" />-->
                 </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.CacheAlignerIndexesTask$Factory">
+                    <property name="location" value="webserver" />
+                    <!--<property name="join" value="true" />-->
+                </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportTask$Factory">
 
                 </bean>
@@ -101,6 +105,7 @@
                     <property name="taskProgressionSpec">
                         <list>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.CreateReferenceLibraryTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.CacheAlignerIndexesTask</value>
                         </list>
                     </property>
                 </bean>

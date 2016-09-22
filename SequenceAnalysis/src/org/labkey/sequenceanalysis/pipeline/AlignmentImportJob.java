@@ -30,7 +30,7 @@ public class AlignmentImportJob extends SequenceJob
 {
     private AlignmentImportJob(Container c, User u, String jobName, PipeRoot root, JSONObject params) throws IOException
     {
-        super(c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), "sequenceImport");
+        super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), "sequenceImport");
     }
 
     public static List<AlignmentImportJob> create(Container c, User u, String jobName, String description, JSONObject params, Collection<File> inputFiles) throws IOException, PipelineValidationException

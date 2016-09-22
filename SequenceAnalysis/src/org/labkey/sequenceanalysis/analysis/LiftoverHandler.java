@@ -48,9 +48,9 @@ import java.util.List;
  */
 public class LiftoverHandler implements SequenceOutputHandler
 {
-    private FileType _bedFileType = new FileType("bed", false);
+    private FileType _bedFileType = new FileType(".bed", false);
     //private FileType _gffFileType = new FileType("gff", false);
-    private FileType _vcfFileType = new FileType(Arrays.asList("vcf", "bcf"), "vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
+    private FileType _vcfFileType = new FileType(Arrays.asList(".vcf", ".bcf"), ".vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
 
     public LiftoverHandler()
     {

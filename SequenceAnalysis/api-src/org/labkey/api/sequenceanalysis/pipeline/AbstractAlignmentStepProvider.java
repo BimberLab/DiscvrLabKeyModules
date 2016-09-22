@@ -34,6 +34,7 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
 
     private boolean _supportsPairedEnd;
     private boolean _supportsMergeUnaligned;
+    private boolean _alwaysCacheIndex;
 
     public AbstractAlignmentStepProvider(String name, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL, boolean supportsPairedEnd, boolean supportsMergeUnaligned)
     {
@@ -41,6 +42,17 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
 
         _supportsPairedEnd = supportsPairedEnd;
         _supportsMergeUnaligned = supportsMergeUnaligned;
+        _alwaysCacheIndex = false;
+    }
+
+    public boolean isAlwaysCacheIndex()
+    {
+        return _alwaysCacheIndex;
+    }
+
+    public void setAlwaysCacheIndex(boolean alwaysCacheIndex)
+    {
+        _alwaysCacheIndex = alwaysCacheIndex;
     }
 
     private static List<ToolParameterDescriptor> getParamList(List<ToolParameterDescriptor> list, boolean supportsMergeUnaligned)

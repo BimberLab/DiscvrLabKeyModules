@@ -5,17 +5,17 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
-import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.SamFormatConverterWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -47,6 +47,8 @@ public class BWAWrapper extends AbstractCommandWrapper
                     //ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), ),
                     //ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), )
             ), null, "http://bio-bwa.sourceforge.net/", true, true);
+
+            setAlwaysCacheIndex(true);
         }
 
         public String getName()

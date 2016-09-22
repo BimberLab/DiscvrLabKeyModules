@@ -174,7 +174,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             getPipelineJob().setLibraryId(rowId);
 
             String basename = FileUtil.makeLegalName(rowId + "_" + getPipelineJob().getName().replace(" ", "_"));
-            File outputDir = new File(getPipelineJob().getOutputDir(), rowId.toString());
+            File outputDir = new File(getPipelineJob().getAnalysisDirectory(), rowId.toString());
             if (!outputDir.exists())
             {
                 outputDir.mkdirs();
@@ -343,6 +343,9 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
 
             throw new PipelineJobException(e);
         }
+
+        ReferenceGenomeImpl genome = SequenceAnalysisServiceImpl.get().getReferenceGenome(getPipelineJob().getLibraryId(), getJob().getUser());
+        getPipelineJob().setReferenceGenome(genome);
 
         return new RecordedActionSet(new RecordedAction("Create Reference Genome"));
     }

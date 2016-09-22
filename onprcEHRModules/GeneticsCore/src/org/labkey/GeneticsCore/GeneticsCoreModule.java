@@ -18,10 +18,9 @@ package org.labkey.GeneticsCore;
 
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.labkey.GeneticsCore.analysis.MethylationRateComparison;
+import org.labkey.GeneticsCore.analysis.MethylationRateComparisonHandler;
 import org.labkey.GeneticsCore.button.ChangeReadsetStatusButton;
 import org.labkey.GeneticsCore.button.HaplotypeReviewButton;
-import org.labkey.GeneticsCore.button.PublishSBTHaplotypesButton;
 import org.labkey.GeneticsCore.button.PublishSBTResultsButton;
 import org.labkey.GeneticsCore.button.SBTReviewButton;
 import org.labkey.GeneticsCore.notification.GeneticsCoreNotification;
@@ -95,8 +94,6 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
         LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "alignment_summary_by_lineage");
         LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "alignment_summary_grouped");
 
-        SequenceAnalysisService.get().registerFileHandler(new MethylationRateComparison());
-
         HTCondorService.get().registerResourceAllocator(new BlastPipelineJobResourceAllocator.Factory());
         HTCondorService.get().registerResourceAllocator(new SequenceJobResourceAllocator.Factory());
 
@@ -146,6 +143,8 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
             {
                 SequencePipelineService.get().registerPipelineStep(new BisSnpIndelRealignerStep.Provider());
                 SequencePipelineService.get().registerPipelineStep(new BisSnpGenotyperAnalysis.Provider());
+
+                SequenceAnalysisService.get().registerFileHandler(new MethylationRateComparisonHandler());
 
                 _hasRegistered = true;
             }

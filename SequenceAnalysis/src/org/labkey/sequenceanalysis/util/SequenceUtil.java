@@ -63,11 +63,11 @@ public class SequenceUtil
     public static enum FILETYPE
     {
         fastq(Arrays.asList(".fastq", ".fq"), true),
-        fasta(Arrays.asList("fasta", "fa"), true),
+        fasta(Arrays.asList(".fasta", ".fa", ".fna"), true),
         bam(".bam"),
         sff(".sff"),
         gtf(".gtf"),
-        gff(".gff"),
+        gff(Arrays.asList(".gff", ".gff3"), false),
         bed(".bed"),
         vcf(Arrays.asList(".vcf"), true);
 
