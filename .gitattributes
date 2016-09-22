@@ -2803,6 +2803,7 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/wo_template.query.
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/work_order.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/schemas/cnprc_billing.xml -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.20-16.21.sql -text
+cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.21-16.22.sql -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingController.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingModule.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingSchema.java -text
