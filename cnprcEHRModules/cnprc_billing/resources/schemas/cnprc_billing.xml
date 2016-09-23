@@ -221,6 +221,8 @@
             <column columnName="templateText"/>
             <column columnName="rcCode"/>
             <column columnName="serviceCode"/>
+            <column columnName="templateTo"/>
+            <column columnName="templateCC"/>
             <column columnName="Created"/>
             <column columnName="CreatedBy"/>
             <column columnName="Modified"/>
