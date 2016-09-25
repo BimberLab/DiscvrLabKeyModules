@@ -41,7 +41,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
 
     public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId) throws IOException
     {
-        super(ReferenceLibraryPipelineProvider.NAME, c, user, name, pipeRoot, new JSONObject(), new TaskId(TaskPipelineSettings.class, "referenceLibraryPipeline"), null);
+        super(ReferenceLibraryPipelineProvider.NAME, c, user, name, pipeRoot, new JSONObject(), new TaskId(TaskPipelineSettings.class, "referenceLibraryPipeline"), "referenceLibraryPipeline");
         _description = description;
         _libraryMembers = libraryMembers;
         _libraryId = libraryId;

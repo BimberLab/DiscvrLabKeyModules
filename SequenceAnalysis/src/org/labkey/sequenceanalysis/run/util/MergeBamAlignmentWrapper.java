@@ -14,7 +14,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -140,7 +139,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
 
             if (outputFile == null)
             {
-                getLogger().info("renaming BAM");
+                getLogger().info("renaming BAM to: " + alignedBam.getName());
                 alignedBam.delete();
                 try
                 {

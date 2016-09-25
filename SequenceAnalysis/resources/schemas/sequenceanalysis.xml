@@ -1716,6 +1716,28 @@
                 <ns:columnTitle>Status</ns:columnTitle>
                 <ns:defaultValue>true</ns:defaultValue>
             </ns:column>
+            <ns:column columnName="createdby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="created">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modifiedby">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="modified">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>false</ns:shownInUpdateView>
+                <ns:nullable>true</ns:nullable>
+                <ns:scale>29</ns:scale>
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
         </ns:columns>
     </ns:table>
     <ns:table tableName="nt_snps_by_pos" tableDbType="TABLE" useColumnOrder="true">

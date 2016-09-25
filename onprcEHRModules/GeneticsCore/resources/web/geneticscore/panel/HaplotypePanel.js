@@ -514,12 +514,9 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                         union = union.concat(haplotypeMatches[h2]);
                         union = Ext4.unique(union);
 
-                        rankedMatches[union.length] = rankedMatches[union.length] || [];
                         var names = [h1, h2].sort().join('<>');
-                        if (rankedMatches[union.length].indexOf(names) == -1) {
-                            rankedMatches[union.length].push(names);
-                        }
 
+                        //calculate total pct present
                         var totalPctPresent = 0;
                         Ext4.Array.forEach(union.sort(), function(l){
                             if (this.lineagePctMap[analysisId][l]){
@@ -535,17 +532,22 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                             }
                         }, this);
                         totalPctPresent = Ext4.util.Format.number(totalPctPresent, '0.00');
-                        rankedPctMatches[totalPctPresent] = rankedPctMatches[totalPctPresent] || [];
 
                         if (minPctExplained && totalPctPresent < minPctExplained) {
                             console.log('haplotype below minPctExplained: ' + analysisId + ', ' + names + ', ' + totalPctPresent);
                         }
                         else {
+                            rankedPctMatches[totalPctPresent] = rankedPctMatches[totalPctPresent] || [];
                             if (rankedPctMatches[totalPctPresent].indexOf(names) == -1) {
                                 rankedPctMatches[totalPctPresent].push(names);
                             }
 
                             pctExplainedByMatch[names] = totalPctPresent;
+
+                            rankedMatches[union.length] = rankedMatches[union.length] || [];
+                            if (rankedMatches[union.length].indexOf(names) == -1) {
+                                rankedMatches[union.length].push(names);
+                            }
                         }
                     }, this);
                 }, this);

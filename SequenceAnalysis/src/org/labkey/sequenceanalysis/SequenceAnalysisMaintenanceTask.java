@@ -132,32 +132,38 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         {
             //first sequences
             File sequenceDir = new File(root.getRootPath(), ".sequences");
-            if (sequenceDir.exists())
+            TableInfo tableRefNtSequences = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
+            TableSelector ntTs = new TableSelector(tableRefNtSequences, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
+            final Set<String> expectedSequences = new HashSet<>();
+            for (RefNtSequenceModel m : ntTs.getArrayList(RefNtSequenceModel.class))
             {
-                TableInfo tableRefNtSequences = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
-                TableSelector ts = new TableSelector(tableRefNtSequences, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
-                final Set<String> expectedSequences = new HashSet<>();
-                for (RefNtSequenceModel m : ts.getArrayList(RefNtSequenceModel.class))
+                if (m.getSequenceFile() == null || m.getSequenceFile() == 0)
                 {
-                    ExpData d = ExperimentService.get().getExpData(m.getSequenceFile());
-                    if (d == null || d.getFile() == null)
-                    {
-                        _log.error("file was null for sequence: " + m.getRowid());
-                        continue;
-                    }
-
-                    if (!d.getFile().exists())
-                    {
-                        _log.error("expected sequence file does not exist for sequence: " + m.getRowid() + ", expected: " + d.getFile().getPath());
-                        continue;
-                    }
-
-                    if (d.getFile().getAbsolutePath().toLowerCase().startsWith(sequenceDir.getAbsolutePath().toLowerCase()))
-                    {
-                        expectedSequences.add(d.getFile().getName());
-                    }
+                    _log.error("sequence record lacks a sequence file Id: " + m.getRowid());
+                    continue;
                 }
 
+                ExpData d = ExperimentService.get().getExpData(m.getSequenceFile());
+                if (d == null || d.getFile() == null)
+                {
+                    _log.error("file was null for sequence: " + m.getRowid());
+                    continue;
+                }
+
+                if (!d.getFile().exists())
+                {
+                    _log.error("expected sequence file does not exist for sequence: " + m.getRowid() + ", expected: " + d.getFile().getPath());
+                    continue;
+                }
+
+                if (d.getFile().getAbsolutePath().toLowerCase().startsWith(sequenceDir.getAbsolutePath().toLowerCase()))
+                {
+                    expectedSequences.add(d.getFile().getName());
+                }
+            }
+
+            if (sequenceDir.exists())
+            {
                 for (File child : sequenceDir.listFiles())
                 {
                     if (!expectedSequences.contains(child.getName()))

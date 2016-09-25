@@ -3,15 +3,15 @@ package org.labkey.sequenceanalysis.run.bampostprocessing;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.sequenceanalysis.pipeline.BamProcessingOutputImpl;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.BamProcessingOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.run.util.IndelRealignerWrapper;
 
 import java.io.File;
@@ -56,23 +56,33 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
         getWrapper().setWorkingDir(outputDirectory);
 
         File dictionary = new File(referenceGenome.getWorkingFastaFile().getParentFile(), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".dict");
-        boolean dictionaryExists = dictionary.exists();
-        getPipelineCtx().getLogger().debug("dict exists: " + dictionaryExists + ", " + dictionary.getPath());
+        boolean preExistingDictionary = dictionary.exists();
+        getPipelineCtx().getLogger().debug("dict exists: " + preExistingDictionary + ", " + dictionary.getPath());
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".realigned.bam");
+        File created;
         if (getProvider().getParameterByName("useQueue").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
         {
-            output.setBAM(getWrapper().executeWithQueue(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null));
+            created = getWrapper().executeWithQueue(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null);
         }
         else
         {
-            output.setBAM(getWrapper().execute(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null));
+            created = getWrapper().execute(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null);
         }
 
-        output.addIntermediateFile(outputBam);
+        if (created != null)
+        {
+            output.setBAM(created);
+            output.addIntermediateFile(outputBam);
+        }
+        else
+        {
+            //NOTE: not setting an output should result in the next step using the input from this step
+        }
+
         output.addIntermediateFile(getWrapper().getExpectedIntervalsFile(inputBam), "Realigner Intervals File");
 
-        if (!dictionaryExists)
+        if (!preExistingDictionary)
         {
             if (dictionary.exists())
             {
@@ -84,7 +94,7 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
             }
         }
 
-        //note: we might sort the input
+        //note: we might have sorted the input
         File sortedBam = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + ".sorted.bam");
         if (sortedBam.exists())
         {

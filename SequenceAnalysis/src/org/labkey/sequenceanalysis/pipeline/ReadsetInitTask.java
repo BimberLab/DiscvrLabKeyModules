@@ -28,7 +28,6 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
-import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -196,7 +195,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                     rs.setReadData(rd);
                 }
 
-                handleInputs(getPipelineJob(), getHelper().getFileManager(), actions, _finalOutputFiles, _unalteredInputs);
+                handleInputs(getPipelineJob(), getHelper().getFileManager().getInputfileTreatment(), actions, _finalOutputFiles, _unalteredInputs);
             }
             else
             {
@@ -338,7 +337,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
         return new File(helper.getJob().getAnalysisDirectory(), "extraBarcodes.txt");
     }
 
-    public static void handleInputs(SequenceJob job, TaskFileManager manager, Collection<RecordedAction> actions, Set<File> outputFiles, Set<File> unalteredInputs) throws PipelineJobException
+    public static Set<File> handleInputs(SequenceJob job, String inputFileTreatment, Collection<RecordedAction> actions, Set<File> outputFiles, Set<File> unalteredInputs) throws PipelineJobException
     {
         Set<File> inputs = new HashSet<>();
         inputs.addAll(job.getInputFiles());
@@ -354,8 +353,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
             throw new PipelineJobException(e);
         }
 
-        String handling = manager.getInputfileTreatment();
-        if ("delete".equals(handling))
+        if ("delete".equals(inputFileTreatment))
         {
             for (File input : inputs)
             {
@@ -374,13 +372,13 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                     else
                     {
                         //this input file was not altered during normalization.  in this case, we move it into the analysis folder
-                        job.getLogger().info("File was not altered by normalization.  Copying to analysis folder: " + input.getPath());
-                        copyInputToAnalysisDir(input, job, actions, unalteredInputs);
+                        job.getLogger().info("File was not altered by normalization.  Moving to analysis folder: " + input.getPath());
+                        moveInputToAnalysisDir(input, job, actions, unalteredInputs, outputFiles);
                     }
                 }
             }
         }
-        else if ("compress".equals(handling))
+        else if ("compress".equals(inputFileTreatment))
         {
             FileType gz = new FileType(".gz");
             for (File input : inputs)
@@ -390,7 +388,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                     if (gz.isType(input))
                     {
                         job.getLogger().debug("Moving input file to analysis directory: " + input.getPath());
-                        copyInputToAnalysisDir(input, job, actions, unalteredInputs);
+                        moveInputToAnalysisDir(input, job, actions, unalteredInputs, outputFiles);
                     }
                     else
                     {
@@ -402,7 +400,14 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                         TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, compressed, actions, job);
 
                         input.delete();
-                        copyInputToAnalysisDir(compressed, job, actions, unalteredInputs);
+                        if (outputFiles != null && outputFiles.contains(input))
+                        {
+                            job.getLogger().debug("replacing file in final outputs: " + input.getPath() + " to " + compressed.getPath());
+                            outputFiles.remove(input);
+                            outputFiles.add(compressed);
+                        }
+
+                        moveInputToAnalysisDir(compressed, job, actions, unalteredInputs, outputFiles);
                     }
                 }
             }
@@ -412,12 +417,12 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
             job.getLogger().info("\tInput files will be left alone");
         }
 
-        manager.deleteIntermediateFiles();
+        return outputFiles;
     }
 
-    private static File copyInputToAnalysisDir(File input, SequenceJob job, Collection<RecordedAction> actions, @Nullable Set<File> unalteredInputs) throws PipelineJobException
+    private static File moveInputToAnalysisDir(File input, SequenceJob job, Collection<RecordedAction> actions, @Nullable Set<File> unalteredInputs, Set<File> outputs) throws PipelineJobException
     {
-        job.getLogger().debug("Copying input file to analysis directory: " + input.getPath());
+        job.getLogger().debug("Moving input file to analysis directory: " + input.getPath());
 
         try
         {
@@ -446,24 +451,11 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                 throw new PipelineJobException("Unable to move file: " + input.getPath());
             }
 
-            //TODO: kinda of a hack
-            List<File> toMove = Arrays.asList(new File(input.getParentFile(), input.getName().replaceAll(".fastq.gz", "") + "_fastqc.html.gz"), new File(input.getParentFile(), input.getName().replaceAll(".fastq.gz", "") + "_fastqc.zip"));
-            for (File f : toMove)
+            if (outputs != null && outputs.contains(input))
             {
-                if (f.exists())
-                {
-                    job.getLogger().debug("also moving FASTQC file: " + f.getName());
-                    File target = new File(output.getParentFile(), f.getName());
-                    if (target.exists())
-                    {
-                        job.getLogger().warn("FASTQC file already exists on the server.  was not expected: " + target.getPath());
-                    }
-                    else
-                    {
-                        FileUtils.moveFile(f, target);
-                        TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), f, target, actions, job);
-                    }
-                }
+                job.getLogger().debug("replacing swapping moved final sequence file: " + input.getPath() + " to " + output.getPath());
+                outputs.remove(input);
+                outputs.add(output);
             }
 
             TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job);

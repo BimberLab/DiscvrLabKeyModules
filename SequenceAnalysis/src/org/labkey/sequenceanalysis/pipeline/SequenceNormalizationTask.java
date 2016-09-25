@@ -636,8 +636,9 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             File baseDirectory = new File(_wd.getDir(), SequenceTaskHelper.NORMALIZATION_SUBFOLDER_NAME);
             baseDirectory.mkdirs();
 
+            Set<File> finalOutputs = ReadsetInitTask.handleInputs(getPipelineJob(), getHelper().getFileManager().getInputfileTreatment(), actions, _finalOutputs, null);
             FileType gz = new FileType("gz");
-            for (File f : _finalOutputs)
+            for (File f : finalOutputs)
             {
                 if (!gz.isType(f))
                 {
@@ -688,7 +689,8 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             }
 
             getJob().setStatus(PipelineJob.TaskStatus.running, "CLEANUP FILES");
-            ReadsetInitTask.handleInputs(getPipelineJob(), getHelper().getFileManager(), actions, _finalOutputs, null);
+
+            getHelper().getFileManager().deleteIntermediateFiles();
             getHelper().getFileManager().cleanup(actions);
         }
         catch (IOException e)

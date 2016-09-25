@@ -44,6 +44,7 @@ select
       SELECT distinct asj.alignment_id from sequenceanalysis.alignment_summary_junction asj WHERE asj.ref_nt_id.locus = a.loci and asj.status = true
     )
   ) as float) END), 2) as percent_from_locus,
+  max(lastModified) as lastModified
 
 FROM (
 
@@ -62,7 +63,7 @@ FROM (
     total_reverse,
     valid_pairs,
     (select sum(total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = a.analysis_id) as total_reads,
-
+    max(j.modified) as lastModified
   from sequenceanalysis.alignment_summary a
   left join sequenceanalysis.alignment_summary_junction j ON (j.alignment_id = a.rowid and j.status = true)
   left join sequenceanalysis.haplotype_sequences hs ON ((

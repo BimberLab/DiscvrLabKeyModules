@@ -1022,6 +1022,11 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                             junction_row.put("ref_nt_id", refId);
                             junction_row.put("alignment_id", newRow.get("rowid"));
                             junction_row.put("status", true);
+                            junction_row.put("container", c.getEntityId());
+                            junction_row.put("createdby", u.getUserId());
+                            junction_row.put("modifiedby", u.getUserId());
+                            junction_row.put("created", new Date());
+                            junction_row.put("modified", new Date());
                             Table.insert(u, ti_junction, junction_row);
                         }
                     }

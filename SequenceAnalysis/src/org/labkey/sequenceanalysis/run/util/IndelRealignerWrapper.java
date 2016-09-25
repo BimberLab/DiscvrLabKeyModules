@@ -50,6 +50,11 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
         }
 
         File intervalsFile = buildTargetIntervals(referenceFasta, workingBam, knownIndelsVcf, getExpectedIntervalsFile(inputBam));
+        if (intervalsFile == null)
+        {
+            getLogger().info("no intervals to realign, skipping");
+            return processOutput(tempFiles, inputBam, outputBam, null);
+        }
 
         //then run realigner
         getLogger().info("\trunning IndelRealigner");
@@ -99,6 +104,11 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
         }
 
         File intervalsFile = buildTargetIntervals(referenceFasta, workingBam, knownIndelsVcf, getExpectedIntervalsFile(inputBam));
+        if (intervalsFile == null)
+        {
+            getLogger().info("no intervals to realign, skipping");
+            return processOutput(tempFiles, inputBam, outputBam, null);
+        }
 
         try
         {
@@ -186,6 +196,11 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
             }
         }
 
+        if (realignedBam == null)
+        {
+            return null;
+        }
+
         try
         {
             if (outputBam == null)
@@ -244,7 +259,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
         long lineCount = SequenceUtil.getLineCount(intervalsFile);
         getLogger().info("\ttarget intervals to realign: " + lineCount);
 
-        return intervalsFile;
+        return lineCount == 0 ? null : intervalsFile;
     }
 
     private File performSharedWork(File inputBam, File outputBam, File referenceFasta, List<File> tempFiles) throws PipelineJobException

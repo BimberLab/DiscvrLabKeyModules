@@ -612,6 +612,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         {
             getJob().getLogger().info("resuming initial alignment from saved state");
             bam = _resumer.getMergedBamFile();
+            getJob().getLogger().info("file: " + bam.getPath());
         }
         else
         {
@@ -671,6 +672,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         {
             getJob().getLogger().info("resuming BAM post processing from saved state");
             bam = _resumer.getPostProcessedBamFile();
+            getJob().getLogger().info("file: " + bam.getPath());
         }
         else
         {
@@ -704,10 +706,15 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     if (output.getBAM() != null)
                     {
                         bam = output.getBAM();
+
+                        //can take a long time to execute
+                        //getJob().getLogger().info("\ttotal alignments in processed BAM: " + SequenceUtil.getAlignmentCount(bam));
+                        getJob().getLogger().info("\tfile size: " + FileUtils.byteCountToDisplaySize(bam.length()));
                     }
-                    //can take a long time to execute
-                    //getJob().getLogger().info("\ttotal alignments in processed BAM: " + SequenceUtil.getAlignmentCount(bam));
-                    getJob().getLogger().info("\tfile size: " + FileUtils.byteCountToDisplaySize(bam.length()));
+                    else
+                    {
+                        getJob().getLogger().info("no BAM created by step, using output from previous step");
+                    }
 
                     getJob().getLogger().debug("index exists: " + (new File(bam.getPath() + ".bai")).exists());
 
@@ -722,23 +729,26 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
 
         //always end with coordinate sorted
-        File finalBam;
-        if (_resumer.isFinalBamProcessingDone())
+        getJob().setStatus(PipelineJob.TaskStatus.running, "SORTING BAM");
+        AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
+        if (_resumer.isBamSortDone())
         {
-            finalBam = _resumer.getFinalBamFile();
+            getJob().getLogger().info("BAM sort already performed, resuming");
+            bam = _resumer.getSortedBamFile();
+            getJob().getLogger().info("file: " + bam.getPath());
         }
         else
         {
-            List<RecordedAction> bamActions = new ArrayList<>();
-            AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
+            RecordedAction sortAction = null;
             if (alignmentStep.doSortIndexBam())
             {
                 if (SequenceUtil.getBamSortOrder(bam) != SAMFileHeader.SortOrder.coordinate)
                 {
                     getJob().getLogger().info("***Sorting BAM: " + bam.getPath());
                     getJob().setStatus(PipelineJob.TaskStatus.running, "SORTING BAM");
-                    RecordedAction sortAction = new RecordedAction(SORT_BAM_ACTION);
+
                     Date start = new Date();
+                    sortAction = new RecordedAction(SORT_BAM_ACTION);
                     sortAction.setStartTime(start);
                     getHelper().getFileManager().addInput(sortAction, "Input BAM", bam);
 
@@ -753,13 +763,73 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     Date end = new Date();
                     sortAction.setEndTime(end);
                     getJob().getLogger().info("SortBam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-                    bamActions.add(sortAction);
                 }
                 else
                 {
                     getJob().getLogger().debug("BAM is already coordinate sorted, no need to sort");
                 }
+            }
 
+            _resumer.setBamSortDone(bam, sortAction);
+        }
+
+        File renamedBam;
+        getJob().setStatus(PipelineJob.TaskStatus.running, "RENAMING BAM");
+        if (_resumer.isBamRenameDone())
+        {
+            getJob().getLogger().info("BAM rename already performed, resuming");
+            renamedBam = _resumer.getRenamedBamFile();
+        }
+        else
+        {
+            getJob().setStatus(PipelineJob.TaskStatus.running, "MOVING BAM");
+            RecordedAction renameAction = new RecordedAction(RENAME_BAM_ACTION);
+            Date start = new Date();
+            renameAction.setStartTime(start);
+            getHelper().getFileManager().addInput(renameAction, "Input BAM", bam);
+            renamedBam = new File(bam.getParentFile(), basename + ".bam");
+            if (!renamedBam.getPath().equalsIgnoreCase(bam.getPath()))
+            {
+                getJob().getLogger().info("\tnormalizing BAM name to: " + renamedBam.getPath());
+                if (renamedBam.exists())
+                {
+                    getJob().getLogger().warn("unexpected file, deleting: " + renamedBam.getPath());
+                }
+
+                FileUtils.moveFile(bam, renamedBam);
+
+                File bamIdxOrig = new File(bam.getPath() + ".bai");
+                File finalBamIdx = new File(renamedBam.getPath() + ".bai");
+                if (bamIdxOrig.exists())
+                {
+                    getJob().getLogger().debug("also moving bam index");
+                    if (finalBamIdx.exists())
+                    {
+                        getJob().getLogger().warn("unexpected file, deleting: " + finalBamIdx.getPath());
+                    }
+
+                    FileUtils.moveFile(bamIdxOrig, finalBamIdx);
+                }
+            }
+            getHelper().getFileManager().addOutput(renameAction, FINAL_BAM_ROLE, renamedBam);
+
+            Date end = new Date();
+            renameAction.setEndTime(end);
+            getJob().getLogger().info("Move Bam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+
+            _resumer.setBamRenameDone(renamedBam, Arrays.asList(renameAction));
+        }
+
+        getJob().setStatus(PipelineJob.TaskStatus.running, "INDEXING BAM");
+        if (_resumer.isIndexBamDone())
+        {
+            getJob().getLogger().info("BAM indexing already performed");
+        }
+        else
+        {
+            List<RecordedAction> bamActions = new ArrayList<>();
+            if (alignmentStep.doSortIndexBam())
+            {
                 //finally index
                 getJob().setStatus(PipelineJob.TaskStatus.running, "INDEXING BAM");
                 RecordedAction indexAction = new RecordedAction(INDEX_ACTION);
@@ -773,20 +843,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     originalIndex.delete();
                 }
 
-                finalBam = new File(bam.getParentFile(), basename + ".bam");
-                if (!finalBam.getPath().equalsIgnoreCase(bam.getPath()))
-                {
-                    getJob().getLogger().info("\tnormalizing BAM name to: " + finalBam.getPath());
-                    if (finalBam.exists())
-                    {
-                        getJob().getLogger().warn("unexpected file, deleting: " + finalBam.getPath());
-                    }
+                renamedBam = new File(bam.getParentFile(), basename + ".bam");
+                getHelper().getFileManager().addInput(indexAction, FINAL_BAM_ROLE, renamedBam);
 
-                    FileUtils.moveFile(bam, finalBam);
-                }
-                getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_ROLE, finalBam);
-
-                File bai = new File(finalBam.getPath() + ".bai");
+                File bai = new File(renamedBam.getPath() + ".bai");
                 if (bai.exists())
                 {
                     getJob().getLogger().debug("deleting existing BAM index: " + bai.getName());
@@ -795,7 +855,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
                 BuildBamIndexWrapper buildBamIndexWrapper = new BuildBamIndexWrapper(getJob().getLogger());
                 buildBamIndexWrapper.setStringency(ValidationStringency.SILENT);
-                buildBamIndexWrapper.executeCommand(finalBam);
+                buildBamIndexWrapper.executeCommand(renamedBam);
                 getHelper().getFileManager().addOutput(indexAction, FINAL_BAM_INDEX_ROLE, bai);
                 getHelper().getFileManager().addCommandsToAction(buildBamIndexWrapper.getCommandsExecuted(), indexAction);
 
@@ -805,66 +865,34 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 indexAction.setEndTime(end);
                 getJob().getLogger().info("IndexBam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
                 bamActions.add(indexAction);
+
+                _resumer.setIndexBamDone(true, indexAction);
             }
-            else
-            {
-                getJob().setStatus(PipelineJob.TaskStatus.running, "MOVING BAM");
-                RecordedAction renameAction = new RecordedAction(RENAME_BAM_ACTION);
-                Date start = new Date();
-                renameAction.setStartTime(start);
-                getHelper().getFileManager().addInput(renameAction, "Input BAM", bam);
-                finalBam = new File(bam.getParentFile(), basename + ".bam");
-                if (!finalBam.getPath().equalsIgnoreCase(bam.getPath()))
-                {
-                    getJob().getLogger().info("\tnormalizing BAM name to: " + finalBam.getPath());
-                    if (finalBam.exists())
-                    {
-                        getJob().getLogger().warn("unexpected file, deleting: " + finalBam.getPath());
-                    }
+        }
 
-                    FileUtils.moveFile(bam, finalBam);
-
-                    File bamIdxOrig = new File(bam.getPath() + ".bai");
-                    File finalBamIdx = new File(finalBam.getPath() + ".bai");
-                    if (bamIdxOrig.exists())
-                    {
-                        getJob().getLogger().debug("also moving bam index");
-                        if (finalBamIdx.exists())
-                        {
-                            getJob().getLogger().warn("unexpected file, deleting: " + finalBamIdx.getPath());
-                        }
-
-                        FileUtils.moveFile(bamIdxOrig, finalBamIdx);
-                    }
-                    else
-                    {
-                        SequencePipelineService.get().ensureBamIndex(finalBam, getJob().getLogger(), true);
-                    }
-
-                }
-                getHelper().getFileManager().addOutput(renameAction, FINAL_BAM_ROLE, finalBam);
-
-                Date end = new Date();
-                renameAction.setEndTime(end);
-                getJob().getLogger().info("Move Bam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-                bamActions.add(renameAction);
-            }
-
+        getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING BAM METRICS");
+        if (_resumer.isAlignmentMetricsDone())
+        {
+            getJob().getLogger().info("alignment metrics step has already been completed, will not repeat");
+        }
+        else
+        {
             //generate alignment metrics
+            RecordedAction metricsAction = null;
             if (alignmentStep.doSortIndexBam())
             {
-                RecordedAction metricsAction = new RecordedAction(ALIGNMENT_METRICS_ACTIONNAME);
+                metricsAction = new RecordedAction(ALIGNMENT_METRICS_ACTIONNAME);
 
                 Date start = new Date();
                 metricsAction.setStartTime(start);
                 getJob().getLogger().info("calculating alignment metrics");
                 getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING ALIGNMENT SUMMARY METRICS");
-                File metricsFile = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".summary.metrics");
+                File metricsFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".summary.metrics");
                 AlignmentSummaryMetricsWrapper wrapper = new AlignmentSummaryMetricsWrapper(getJob().getLogger());
-                wrapper.executeCommand(finalBam, referenceGenome.getWorkingFastaFile(), metricsFile);
-                getHelper().getFileManager().addInput(metricsAction, "BAM File", finalBam);
+                wrapper.executeCommand(renamedBam, referenceGenome.getWorkingFastaFile(), metricsFile);
+                getHelper().getFileManager().addInput(metricsAction, "BAM File", renamedBam);
                 getHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
-                getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, finalBam, rs.getRowId())));
+                getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, renamedBam, rs.getRowId())));
                 getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), metricsAction);
 
                 //wgs metrics
@@ -875,11 +903,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 {
                     getJob().getLogger().info("calculating wgs metrics");
                     getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
-                    File wgsMetricsFile = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".wgs.metrics");
+                    File wgsMetricsFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".wgs.metrics");
                     CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
-                    wgsWrapper.executeCommand(finalBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
+                    wgsWrapper.executeCommand(renamedBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
                     getHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
-                    getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, finalBam, rs.getRowId())));
+                    getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, renamedBam, rs.getRowId())));
                     getHelper().getFileManager().addCommandsToAction(wgsWrapper.getCommandsExecuted(), metricsAction);
                 }
 
@@ -888,14 +916,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 {
                     getJob().getLogger().info("calculating insert size metrics");
                     getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING INSERT SIZE METRICS");
-                    File metricsFile2 = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".insertsize.metrics");
-                    File metricsHistogram = new File(finalBam.getParentFile(), FileUtil.getBaseName(finalBam) + ".insertsize.metrics.pdf");
+                    File metricsFile2 = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics");
+                    File metricsHistogram = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics.pdf");
                     CollectInsertSizeMetricsWrapper collectInsertSizeMetricsWrapper = new CollectInsertSizeMetricsWrapper(getJob().getLogger());
-                    if (collectInsertSizeMetricsWrapper.executeCommand(finalBam, metricsFile2, metricsHistogram) != null)
+                    if (collectInsertSizeMetricsWrapper.executeCommand(renamedBam, metricsFile2, metricsHistogram) != null)
                     {
                         getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
                         getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics Histogram", metricsHistogram);
-                        getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile2, finalBam, rs.getRowId())));
+                        getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile2, renamedBam, rs.getRowId())));
                         getHelper().getFileManager().addCommandsToAction(collectInsertSizeMetricsWrapper.getCommandsExecuted(), metricsAction);
                     }
                 }
@@ -903,18 +931,17 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 Date end = new Date();
                 metricsAction.setEndTime(end);
                 getJob().getLogger().info("Alignment Summary Metrics Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-                bamActions.add(metricsAction);
             }
             else
             {
                 getJob().getLogger().info("BAM was not coordinate sorted, skipping capture of alignment metrics");
             }
 
-            getJob().setStatus(PipelineJob.TaskStatus.running, "PROCESSING BAM");
-            _resumer.setFinalBamProcessingDone(finalBam, bamActions);
+            _resumer.setAlignmentMetricsDone(true, metricsAction);
         }
 
         //perform remote analyses, if necessary
+        getJob().setStatus(PipelineJob.TaskStatus.running, "PERFORMING ANALYSES");
         if (_resumer.isBamAnalysisDone())
         {
             getJob().getLogger().info("resuming BAM analyses from saved state");
@@ -935,14 +962,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + provider.getLabel().toUpperCase());
 
                     getHelper().getJob().getLogger().info("Running analysis " + provider.getLabel() + " for readset: " + rs.getReadsetId());
-                    getHelper().getJob().getLogger().info("\tUsing alignment: " + finalBam.getPath());
+                    getHelper().getJob().getLogger().info("\tUsing alignment: " + renamedBam.getPath());
 
                     RecordedAction action = new RecordedAction(provider.getLabel());
-                    getHelper().getFileManager().addInput(action, "Input BAM File", finalBam);
+                    getHelper().getFileManager().addInput(action, "Input BAM File", renamedBam);
                     getHelper().getFileManager().addInput(action, "Reference DB FASTA", referenceGenome.getWorkingFastaFile());
 
                     AnalysisStep step = provider.create(getHelper());
-                    AnalysisStep.Output o = step.performAnalysisPerSampleRemote(rs, finalBam, referenceGenome, finalBam.getParentFile());
+                    AnalysisStep.Output o = step.performAnalysisPerSampleRemote(rs, renamedBam, referenceGenome, renamedBam.getParentFile());
                     if (o != null)
                     {
                         getHelper().getFileManager().addStepOutputs(action, o);
@@ -1068,8 +1095,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         private Map<ReadData, Pair<File, File>> _filesToAlign = null;
         private File _mergedBamFile = null;
         private File _postProcessedBamFile = null;
-        private File _finalBamFile = null;
+        private File _sortedBamFile = null;
         private boolean _bamAnalysisDone = false;
+        private boolean _alignmentMetricsDone = false;
+        private File _renamedBamFile = null;
+        private boolean _indexBamDone = false;
 
         //for serialization
         public Resumer()
@@ -1232,19 +1262,46 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             saveState();
         }
 
-        public boolean isFinalBamProcessingDone()
+        public boolean isBamSortDone()
         {
-            return _finalBamFile != null;
+            return _sortedBamFile != null;
         }
 
-        public void setFinalBamProcessingDone(File finalBamFile, List<RecordedAction> actions) throws PipelineJobException
+        public void setBamSortDone(File sortedBamFile, @Nullable RecordedAction action) throws PipelineJobException
         {
-            _finalBamFile = finalBamFile;
+            _sortedBamFile = sortedBamFile;
+            if (action != null)
+            {
+                _recordedActionSet.add(action);
+            }
+
+            saveState();
+        }
+
+        public boolean isBamRenameDone()
+        {
+            return _renamedBamFile != null;
+        }
+
+        public void setBamRenameDone(File renamedBamFile, List<RecordedAction> actions) throws PipelineJobException
+        {
+            _renamedBamFile = renamedBamFile;
             for (RecordedAction action : actions)
             {
                 _recordedActionSet.add(action);
             }
+
             saveState();
+        }
+
+        public File getRenamedBamFile()
+        {
+            return _renamedBamFile;
+        }
+
+        public void setRenamedBamFile(File renamedBamFile)
+        {
+            _renamedBamFile = renamedBamFile;
         }
 
         public void setBamAnalysisComplete(List<RecordedAction> actions) throws PipelineJobException
@@ -1322,14 +1379,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _postProcessedBamFile = postProcessedBamFile;
         }
 
-        public File getFinalBamFile()
+        public File getSortedBamFile()
         {
-            return _finalBamFile;
+            return _sortedBamFile;
         }
 
-        public void setFinalBamFile(File finalBamFile)
+        public void setSortedBamFile(File sortedBamFile)
         {
-            _finalBamFile = finalBamFile;
+            _sortedBamFile = sortedBamFile;
         }
 
         public boolean isBamAnalysisDone()
@@ -1350,6 +1407,46 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         public void setRecordedActionSet(RecordedActionSet recordedActionSet)
         {
             _recordedActionSet = recordedActionSet;
+        }
+
+        public boolean isAlignmentMetricsDone()
+        {
+            return _alignmentMetricsDone;
+        }
+
+        public void setAlignmentMetricsDone(boolean alignmentMetricsDone)
+        {
+            _alignmentMetricsDone = alignmentMetricsDone;
+        }
+
+        public boolean isIndexBamDone()
+        {
+            return _indexBamDone;
+        }
+
+        public void setIndexBamDone(boolean indexBamDone)
+        {
+            _indexBamDone = indexBamDone;
+        }
+
+        public void setIndexBamDone(boolean indexBamDone, @Nullable RecordedAction action) throws PipelineJobException
+        {
+            _indexBamDone = indexBamDone;
+            if (action != null)
+            {
+                _recordedActionSet.add(action);
+            }
+            saveState();
+        }
+
+        public void setAlignmentMetricsDone(boolean alignmentMetricsDone, RecordedAction action) throws PipelineJobException
+        {
+            _alignmentMetricsDone = alignmentMetricsDone;
+            if (action != null)
+            {
+                _recordedActionSet.add(action);
+            }
+            saveState();
         }
     }
 

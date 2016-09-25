@@ -77,8 +77,6 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
                     }
 
                     this.libraryIds = Ext4.unique(libraryIds);
-
-                    this.checkProtocol();
                 }
             }
         });

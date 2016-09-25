@@ -11,8 +11,13 @@
         Ext4.define('GeneticsCore.panel.SBTReviewPanel', {
             extend: 'Ext.panel.Panel',
             initComponent: function () {
+                Ext4.Array.forEach(this.analysisIds, function(id, idx){
+                    this.analysisIds[idx] = parseInt(id);
+                }, this);
+
                 this.analysisIds = this.analysisIds.sort();
                 var analysisId = LABKEY.ActionURL.getParameter('analysisId') || this.analysisIds[0];
+                analysisId = parseInt(analysisId);
 
                 Ext4.apply(this, {
                     border: false,
@@ -123,6 +128,7 @@
             },
 
             loadAnalysis: function (analysisId) {
+                analysisId = parseInt(analysisId);
                 this.activeAnalysisId = analysisId;
                 this.down('#analysisCombo').setValue(analysisId);
 

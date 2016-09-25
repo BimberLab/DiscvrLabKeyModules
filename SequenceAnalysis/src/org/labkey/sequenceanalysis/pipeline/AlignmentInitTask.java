@@ -97,7 +97,7 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
     {
         _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
-        getJob().getLogger().info("Starting to process readset: " + getPipelineJob().getReadset());
+        getJob().getLogger().info("Starting to process readset: " + getPipelineJob().getReadset().getName() + " (" + getPipelineJob().getReadset().getRowId() + ")");
 
         getHelper().cacheExpDatasForParams();
 

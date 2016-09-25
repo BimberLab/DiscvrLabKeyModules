@@ -88,7 +88,14 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
         File refFastaIdx = new File(referenceGenome.getSourceFastaFile().getPath() + ".fai");
         if (!refFastaIdx.exists())
         {
-            new FastaIndexer(getJob().getLogger()).execute(refFasta);
+            try
+            {
+                new FastaIndexer(getJob().getLogger()).execute(refFasta);
+            }
+            catch (PipelineJobException e)
+            {
+                getJob().getLogger().warn("Unable to create FASTA index");
+            }
         }
 
         SequencePipelineService.get().ensureSequenceDictionaryExists(refFasta, getJob().getLogger(), false);

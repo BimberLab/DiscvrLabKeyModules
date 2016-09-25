@@ -69,6 +69,12 @@ public class GeneticsTableCustomizer extends AbstractTableCustomizer implements 
             ExprColumn newCol4 = new ExprColumn(ti, "numReadsDisabled", sql4, JdbcType.INTEGER, ti.getColumn("rowid"));
             newCol.setLabel("# Allele Calls Disabled");
             ti.addColumn(newCol4);
+
+            //lastModified
+            SQLFragment lastModifiedSql = new SQLFragment("(select max(modified) as expr from sequenceanalysis.alignment_summary_junction j WHERE j.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn lastModifiedCol = new ExprColumn(ti, "allelesLastModified", lastModifiedSql, JdbcType.TIMESTAMP, ti.getColumn("rowid"));
+            lastModifiedCol.setLabel("Date Alleles Last Modified");
+            ti.addColumn(lastModifiedCol);
         }
 
         addAssayFieldsToAnalyses(ti);

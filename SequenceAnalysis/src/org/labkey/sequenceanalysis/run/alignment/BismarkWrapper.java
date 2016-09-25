@@ -9,6 +9,7 @@ import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
@@ -38,7 +39,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -501,7 +501,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
                         continue;
                     }
 
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(pair.first)))))
+                    try (BufferedReader reader = Readers.getReader(new GZIPInputStream(new FileInputStream(pair.first))))
                     {
                         String line;
                         String[] tokens;

@@ -13,7 +13,6 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.DefaultSystemMaintenanceTask;
-import org.labkey.api.util.SystemMaintenance;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
