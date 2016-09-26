@@ -152,7 +152,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
                 if (!d.getFile().exists())
                 {
-                    _log.error("expected sequence file does not exist for sequence: " + m.getRowid() + ", expected: " + d.getFile().getPath());
+                    _log.error("expected sequence file does not exist for sequence: " + m.getRowid() + " " + m.getName() + ", expected: " + d.getFile().getPath());
                     continue;
                 }
 
