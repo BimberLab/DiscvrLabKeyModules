@@ -1,0 +1,58 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="orders" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="order_pk">
+                        <columnTitle>Order Id</columnTitle>
+                    </column>
+                    <column columnName="client_fk">
+                        <columnTitle>Client Id</columnTitle>
+                        <fk>
+                            <fkDbSchema>lists</fkDbSchema>
+                            <fkTable>Clients</fkTable>
+                            <fkColumnName>key</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
+                    </column>
+                    <column columnName="billingContact_fk">
+                        <columnTitle>Billing Contact Id</columnTitle>
+                        <fk>
+                            <fkDbSchema>lists</fkDbSchema>
+                            <fkTable>Billing Contact</fkTable>
+                            <fkColumnName>key</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
+                    </column>
+                    <column columnName="reportContact_fk">
+                        <columnTitle>Report Contact Id</columnTitle>
+                        <fk>
+                            <fkDbSchema>lists</fkDbSchema>
+                            <fkTable>Report Contact</fkTable>
+                            <fkColumnName>key</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
+                    </column>
+                    <column columnName="purchaseOrder"/>
+                    <column columnName="orderDate"/>
+                    <column columnName="requestNumber"/>
+                    <column columnName="billingDate"/>
+                    <column columnName="reportDate"/>
+                    <column columnName="isHideComment"/>
+                    <column columnName="comment"/>
+                    <column columnName="chargeId"/>
+                    <column columnName="accountId"/>
+                    <column columnName="orderClosedDate"/>
+                    <column columnName="project"/>
+                    <column columnName="enteredBy"/>
+                    <column columnName="invoiceNumber"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

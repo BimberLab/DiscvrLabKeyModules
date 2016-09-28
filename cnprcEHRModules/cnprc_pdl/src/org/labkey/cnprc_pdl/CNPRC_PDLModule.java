@@ -19,6 +19,7 @@ package org.labkey.cnprc_pdl;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.CodeOnlyModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.view.WebPartFactory;
@@ -26,7 +27,7 @@ import org.labkey.api.view.WebPartFactory;
 import java.util.Collection;
 import java.util.Collections;
 
-public class CNPRC_PDLModule extends CodeOnlyModule
+public class CNPRC_PDLModule extends ExtendedSimpleModule
 {
     public static final String NAME = "CNPRC_PDL";
 
@@ -34,6 +35,19 @@ public class CNPRC_PDLModule extends CodeOnlyModule
     public String getName()
     {
         return NAME;
+    }
+
+    @NotNull
+    @Override
+    public Collection<String> getSchemaNames()
+    {
+        return Collections.singleton(CNPRC_PDLSchema.SCHEMA_NAME);
+    }
+
+    @Override
+    public double getVersion()
+    {
+        return 16.21;
     }
 
     @Override
@@ -47,13 +61,6 @@ public class CNPRC_PDLModule extends CodeOnlyModule
     protected void init()
     {
         addController(CNPRC_PDLController.NAME, CNPRC_PDLController.class);
-    }
-
-    @Override
-    public void doStartup(ModuleContext moduleContext)
-    {
-        // add a container listener so we'll know when our container is deleted:
-        ContainerManager.addContainerListener(new CNPRC_PDLContainerListener());
     }
 
     @Override

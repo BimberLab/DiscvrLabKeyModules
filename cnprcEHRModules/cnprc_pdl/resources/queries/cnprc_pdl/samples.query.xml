@@ -1,0 +1,47 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="samples" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="sample_pk">
+                        <columnTitle>Sample Id</columnTitle>
+                    </column>
+
+                    <column columnName="order_fk">
+                        <columnTitle>Order</columnTitle>
+                        <fk>
+                            <fkDbSchema>cnprc_pdl</fkDbSchema>
+                            <fkTable>orders</fkTable>
+                            <fkColumnName>order_pk</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
+                    </column>
+                    <column columnName="animalId">
+                        <fk>
+                            <fkFolderPath>/CNPRC</fkFolderPath>
+                            <fkDbSchema>study</fkDbSchema>
+                            <fkTable>animal</fkTable>
+                            <fkColumnName>Id</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="logNumber"/>
+                    <column columnName="species"/>
+                    <column columnName="sampleType"/>
+                    <column columnName="sampleDate"/>
+                    <column columnName="receivedDate"/>
+                    <column columnName="isHideComment"/>
+                    <column columnName="comment"/>
+                    <column columnName="isEstimateSampleDate"/>
+                    <column columnName="isProcessing"/>
+                    <column columnName="isAssign"/>
+                    <column columnName="isAllTestsDone"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

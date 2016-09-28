@@ -1,0 +1,37 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="tests" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="test_pk">
+                        <columnTitle>Test Id</columnTitle>
+                    </column>
+                    <column columnName="sample_fk">
+                        <columnTitle>Sample</columnTitle>
+                        <fk>
+                            <fkDbSchema>cnprc_pdl</fkDbSchema>
+                            <fkTable>samples</fkTable>
+                            <fkColumnName>sample_pk</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
+                    </column>
+                    <column columnName="type"/>
+                    <column columnName="isFlag"/>
+                    <column columnName="results"/>
+                    <column columnName="reportDate"/>
+                    <column columnName="testDoneDate"/>
+                    <column columnName="isNoCharge"/>
+                    <column columnName="comment"/>
+                    <column columnName="isHideComment"/>
+                    <column columnName="isPanelYn"/>
+                    <column columnName="isHideOnReport"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

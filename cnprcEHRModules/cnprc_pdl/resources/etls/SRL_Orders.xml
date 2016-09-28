@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <etl xmlns="http://labkey.org/etl/xml">
-    <name>SRL Sub Tests</name>
-    <description>Sub Test Results</description>
+    <name>SRL Orders</name>
+    <description>Order Info</description>
     <transforms>
         <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
             <description>Copy to target</description>
-            <source schemaName="cnprcSrc_srl" queryName="q_sub_tests" />
-            <destination schemaName="cnprc_pdl" queryName="sub_tests" bulkLoad="true" batchSize="500" targetOption="truncate">
+            <source schemaName="cnprcSrc_srl" queryName="q_orders" />
+            <destination schemaName="cnprc_pdl" queryName="orders" bulkLoad="true" batchSize="500" targetOption="truncate">
             </destination>
         </transform>
     </transforms>
