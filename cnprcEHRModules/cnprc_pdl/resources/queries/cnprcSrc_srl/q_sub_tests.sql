@@ -2,7 +2,7 @@
 SELECT
 SUBT_PK AS subtest_pk,
 SUBT_ST_FK AS test_fk,
-SUBT_TYPE AS type_fk,
+SUBT_TYPE AS type,
 (CASE WHEN SUBT_FLAG = 'Y' THEN 1 ELSE 0 END) AS isFlag,
 SUBT_RESULTS AS results,
 SUBT_RPT_DATE AS reportDate,

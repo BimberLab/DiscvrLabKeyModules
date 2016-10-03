@@ -1,0 +1,5 @@
+CREATE INDEX CNPRC_PDL_ORDERS_CONTAINER_INDEX     ON cnprc_pdl.orders (Container);
+CREATE INDEX CNPRC_PDL_SAMPLES_CONTAINER_INDEX    ON cnprc_pdl.samples (Container);
+CREATE INDEX CNPRC_PDL_SUB_TESTS_CONTAINER_INDEX  ON cnprc_pdl.sub_tests (Container);
+CREATE INDEX CNPRC_PDL_TESTS_CONTAINER_INDEX      ON cnprc_pdl.tests (Container);
+GO

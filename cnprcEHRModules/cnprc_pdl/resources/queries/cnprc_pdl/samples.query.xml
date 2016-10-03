@@ -25,8 +25,22 @@
                         </fk>
                     </column>
                     <column columnName="logNumber"/>
-                    <column columnName="species"/>
-                    <column columnName="sampleType"/>
+                    <column columnName="species">
+                        <fk>
+                            <fkDbSchema>lists</fkDbSchema>
+                            <fkTable>Species Types</fkTable>
+                            <fkColumnName>species</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
+                    </column>
+                    <column columnName="sampleType">
+                        <fk>
+                            <fkDbSchema>lists</fkDbSchema>
+                            <fkTable>Sample Types</fkTable>
+                            <fkColumnName>sample</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
+                    </column>
                     <column columnName="sampleDate"/>
                     <column columnName="receivedDate"/>
                     <column columnName="isHideComment"/>

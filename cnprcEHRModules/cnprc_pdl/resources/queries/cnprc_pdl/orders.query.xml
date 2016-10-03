@@ -43,7 +43,15 @@
                     <column columnName="chargeId"/>
                     <column columnName="accountId"/>
                     <column columnName="orderClosedDate"/>
-                    <column columnName="project"/>
+                    <column columnName="project">
+                        <columnTitle>Project Code</columnTitle>
+                        <fk>
+                            <fkFolderPath>/CNPRC</fkFolderPath>
+                            <fkDbSchema>ehr</fkDbSchema>
+                            <fkTable>project</fkTable>
+                            <fkColumnName>name</fkColumnName>
+                        </fk>
+                    </column>
                     <column columnName="enteredBy"/>
                     <column columnName="invoiceNumber"/>
                     <column columnName="Created"/>

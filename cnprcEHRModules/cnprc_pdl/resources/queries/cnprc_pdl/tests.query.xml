@@ -15,9 +15,23 @@
                             <fkDisplayColumnName useRawValue="true"/>
                         </fk>
                     </column>
-                    <column columnName="type"/>
+                    <column columnName="type">
+                        <fk>
+                            <fkDbSchema>lists</fkDbSchema>
+                            <fkTable>Test Types</fkTable>
+                            <fkColumnName>testType</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
+                    </column>
                     <column columnName="isFlag"/>
-                    <column columnName="results"/>
+                    <column columnName="results">
+                        <fk>
+                            <fkDbSchema>lists</fkDbSchema>
+                            <fkTable>Result Types</fkTable>
+                            <fkColumnName>result</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
+                    </column>
                     <column columnName="reportDate"/>
                     <column columnName="testDoneDate"/>
                     <column columnName="isNoCharge"/>
