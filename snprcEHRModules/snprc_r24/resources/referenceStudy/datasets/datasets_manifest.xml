@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<datasets metaDataFile="datasets_metadata.xml" xmlns="http://labkey.org/study/xml">
+  <datasets>
+    <dataset name="demographics" id="5001" demographicData="true" type="Standard">
+      <tags/>
+    </dataset>
+    <dataset name="weight" id="5002" type="Standard">
+      <tags/>
+    </dataset>
+    <dataset name="idHistory" id="5003" type="Standard">
+      <tags/>
+    </dataset>
+  </datasets>
+</datasets>

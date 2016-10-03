@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tables xmlns="http://labkey.org/data/xml">
+  <table tableName="demographics" tableDbType="TABLE">
+    <description>Contains up to one row of demographics data for each Animal Id.</description>
+    <columns>
+      <column columnName="AnimalId">
+        <datatype>varchar</datatype>
+        <columnTitle>Animal Id</columnTitle>
+        <description>Subject identifier</description>
+        <propertyURI>http://cpas.labkey.com/Study#ParticipantId</propertyURI>
+        <nullable>false</nullable>
+        <importAliases>
+          <importAlias>ptid</importAlias>
+        </importAliases>
+        <fk>
+          <fkDbSchema>study</fkDbSchema>
+          <fkTable>AnimalId</fkTable>
+          <fkColumnName>AnimalId</fkColumnName>
+        </fk>
+        <scale>32</scale>
+      </column>
+      <column columnName="date">
+        <datatype>timestamp</datatype>
+        <columnTitle>Date</columnTitle>
+        <propertyURI>http://cpas.labkey.com/Study#VisitDate</propertyURI>
+        <conceptURI>http://cpas.labkey.com/Study#VisitDate</conceptURI>
+        <nullable>false</nullable>
+        <formatString>Date</formatString>
+      </column>
+      <column columnName="birth">
+        <datatype>timestamp</datatype>
+        <columnTitle>DOB</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#dateTime</rangeURI>
+      </column>
+      <column columnName="death">
+        <datatype>timestamp</datatype>
+        <columnTitle>DOD</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#dateTime</rangeURI>
+      </column>
+      <column columnName="status">
+        <datatype>varchar</datatype>
+        <columnTitle>Status</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+      <column columnName="objectid">
+        <datatype>varchar</datatype>
+        <columnTitle>Object Id</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+      <column columnName="species">
+        <datatype>varchar</datatype>
+        <columnTitle>Species</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+      <column columnName="sourceColony">
+        <datatype>varchar</datatype>
+        <columnTitle>Source Colony</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+      <column columnName="gender">
+        <datatype>varchar</datatype>
+        <columnTitle>Sex</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+      <column columnName="dam">
+        <datatype>varchar</datatype>
+        <columnTitle>Dam</columnTitle>
+        <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <dimension>false</dimension>
+        <scale>4000</scale>
+      </column>
+      <column columnName="sire">
+        <datatype>varchar</datatype>
+        <columnTitle>Sire</columnTitle>
+        <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <dimension>false</dimension>
+        <scale>4000</scale>
+      </column>
+    </columns>
+    <tableTitle>demographics</tableTitle>
+  </table>
+  <table tableName="weight" tableDbType="TABLE">
+    <description>Contains up to one row of weight data for each Animal Id/Date combination.</description>
+    <columns>
+      <column columnName="AnimalId">
+        <datatype>varchar</datatype>
+        <columnTitle>Animal Id</columnTitle>
+        <description>Subject identifier</description>
+        <propertyURI>http://cpas.labkey.com/Study#ParticipantId</propertyURI>
+        <nullable>false</nullable>
+        <importAliases>
+          <importAlias>ptid</importAlias>
+        </importAliases>
+        <fk>
+          <fkDbSchema>study</fkDbSchema>
+          <fkTable>AnimalId</fkTable>
+          <fkColumnName>AnimalId</fkColumnName>
+        </fk>
+        <scale>32</scale>
+      </column>
+      <column columnName="date">
+        <datatype>timestamp</datatype>
+        <columnTitle>Date</columnTitle>
+        <propertyURI>http://cpas.labkey.com/Study#VisitDate</propertyURI>
+        <conceptURI>http://cpas.labkey.com/Study#VisitDate</conceptURI>
+        <nullable>false</nullable>
+        <formatString>Date</formatString>
+      </column>
+      <column columnName="weight">
+        <datatype>double</datatype>
+        <columnTitle>Weight (kg)</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#double</rangeURI>
+      </column>
+      <column columnName="objectid">
+        <datatype>varchar</datatype>
+        <columnTitle>Object Id</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+    </columns>
+    <tableTitle>weight</tableTitle>
+  </table>
+  <table tableName="idHistory" tableDbType="TABLE">
+    <description>Contains up to one row of idHistory data for each Animal Id/Date/objectid combination.</description>
+    <columns>
+      <column columnName="AnimalId">
+        <datatype>varchar</datatype>
+        <columnTitle>Animal Id</columnTitle>
+        <description>Subject identifier</description>
+        <propertyURI>http://cpas.labkey.com/Study#ParticipantId</propertyURI>
+        <nullable>false</nullable>
+        <importAliases>
+          <importAlias>ptid</importAlias>
+        </importAliases>
+        <fk>
+          <fkDbSchema>study</fkDbSchema>
+          <fkTable>AnimalId</fkTable>
+          <fkColumnName>AnimalId</fkColumnName>
+        </fk>
+        <scale>32</scale>
+      </column>
+      <column columnName="date">
+        <datatype>timestamp</datatype>
+        <columnTitle>Date</columnTitle>
+        <propertyURI>http://cpas.labkey.com/Study#VisitDate</propertyURI>
+        <conceptURI>http://cpas.labkey.com/Study#VisitDate</conceptURI>
+        <nullable>false</nullable>
+        <formatString>Date</formatString>
+      </column>
+      <column columnName="value">
+        <datatype>varchar</datatype>
+        <columnTitle>Id value</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+      <column columnName="idType">
+        <datatype>varchar</datatype>
+        <columnTitle>Id Type</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+      <column columnName="source">
+        <datatype>varchar</datatype>
+        <columnTitle>Id Source</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+      <column columnName="objectid">
+        <datatype>varchar</datatype>
+        <columnTitle>Object Id</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+        <isKeyField>true</isKeyField>
+      </column>
+    </columns>
+    <tableTitle>idHistory</tableTitle>
+  </table>
+</tables>

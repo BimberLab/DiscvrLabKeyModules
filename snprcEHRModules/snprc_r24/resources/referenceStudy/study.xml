@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<study archiveVersion="11.31" label="snprc_r24" timepointType="CONTINUOUS" subjectNounSingular="Animal" subjectNounPlural="Animals" subjectColumnName="AnimalId" description="" descriptionRendererType="TEXT_WITH_LINKS" investigator="" grant="" startDate="1990-01-01-06:00" securityType="ADVANCED_WRITE" xmlns="http://labkey.org/study/xml">
+  <!--<lists dir="lists"/>-->
+  <!--<views dir="views"/>-->
+  <!--<reports dir="reports"/>-->
+  <!--<cohorts type="AUTOMATIC" mode="SIMPLE" datasetId="1012" datasetProperty="v_status"/>-->
+  <qcStates showPrivateDataByDefault="true"/>
+  <datasets dir="datasets" file="datasets_manifest.xml">
+    <definition file="snprc_r24.dataset"/>
+  </datasets>
+  <comments/>
+  <missingValueIndicators>
+    <missingValueIndicator indicator="E" label="Value is estimated."/>
+    <missingValueIndicator indicator="Q" label="Data currently under quality control review."/>
+    <missingValueIndicator indicator="A" label="Data value is abnormal."/>
+    <missingValueIndicator indicator="N" label="Required field marked by site as 'data not available'."/>
+  </missingValueIndicators>
+</study>
