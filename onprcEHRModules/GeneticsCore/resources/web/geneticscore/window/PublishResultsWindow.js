@@ -111,6 +111,7 @@ Ext4.define('GeneticsCore.window.PublishResultsWindow', {
         var protocol = this.down('#protocolField').getValue();
         if ((!alleleNames.length && !this.json) || !protocol){
             Ext4.Msg.alert('Error', 'Missing either alleles or the target assay');
+            return;
         }
 
         Ext4.Msg.wait('Saving...');

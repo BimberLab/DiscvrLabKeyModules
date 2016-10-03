@@ -52,20 +52,27 @@ import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
+import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
+import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class SequenceAnalysisManager
 {
@@ -371,7 +378,7 @@ public class SequenceAnalysisManager
         for (Integer sequenceId : sequenceIds)
         {
             ReferenceLibraryMember m = new ReferenceLibraryMember();
-            m.setRef_nt_id(sequenceId);
+            m.setRefNtId(sequenceId);
             libraryMembers.add(m);
         }
 
@@ -394,7 +401,7 @@ public class SequenceAnalysisManager
         }
     }
 
-    public List<Integer> importRefSequencesFromFasta(Container c, User u, File file, boolean splitWhitespace, Map<String, String> params, Logger log, @Nullable File outDir) throws IOException
+    public List<Integer> importRefSequencesFromFasta(Container c, User u, File file, boolean splitWhitespace, Map<String, String> params, Logger log, @Nullable File outDir, @Nullable Integer jobId) throws IOException
     {
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root == null)
@@ -444,6 +451,9 @@ public class SequenceAnalysisManager
                     map.put("createdby", u.getUserId());
                     map.put("modified", new Date());
                     map.put("modifiedby", u.getUserId());
+
+                    if (jobId != null)
+                        map.put("jobId", jobId);
 
                     map = Table.insert(u, dnaTable, map);
                     sequenceIds.add((Integer) map.get("rowid"));
@@ -611,5 +621,93 @@ public class SequenceAnalysisManager
 
 
         return null;
+    }
+
+    public void getOrphanFiles(Container c, Set<File> orphanFiles, Set<File> orphanIndexes, Set<File> orphanJobs)
+    {
+        PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
+        if (root == null)
+        {
+            return;
+        }
+
+        Set<File> readData = new HashSet<>();
+        Set<File> sequenceOutputs = new HashSet<>();
+
+        File r = root.getRootPath();
+        getOrphanFilesForDirectory(r, orphanFiles, orphanIndexes, 0);
+
+        List<? extends ExpData> datas = ExperimentService.get().getExpDatasUnderPath(r, c);
+        //BAMs, fastqs, w/o record
+        File sequenceImport = new File(r, ReadsetImportJob.FOLDER_NAME);
+        if (sequenceImport.exists())
+        {
+
+        }
+        //orphan indexes?
+    }
+
+    private static final Set<String> pipelineDirs = PageFlowUtil.set(ReadsetImportJob.FOLDER_NAME, "sequenceAnalyses", "sequenceOutputs", "sequenceOutputPipeline");
+    private static final Set<String> skippedDirs = PageFlowUtil.set(".sequences", ".jbrowse");
+
+    private void getOrphanFilesForDirectory(File dir, Set<File> sequenceFiles, Set<File> orphanIndexes, int depth)
+    {
+        if (!dir.exists() || Files.isSymbolicLink(dir.toPath()))
+        {
+            return;
+        }
+
+        if (depth == 0)
+        {
+            //will be inspected separately
+            if (dir.isDirectory() && (pipelineDirs.contains(dir.getName()) || skippedDirs.contains(dir.getName())))
+            {
+                return;
+            }
+        }
+
+        for (File f : dir.listFiles())
+        {
+            if (Files.isSymbolicLink(f.toPath()))
+            {
+                continue;
+            }
+
+            if (f.isDirectory())
+            {
+                getOrphanFilesForDirectory(f, sequenceFiles, orphanIndexes, (depth + 1));
+            }
+            else
+            {
+                //iterate possible issues:
+
+
+                //orphan index
+                if (f.getPath().toLowerCase().endsWith(".bai") || f.getPath().toLowerCase().endsWith(".tbi") || f.getPath().toLowerCase().endsWith(".idx"))
+                {
+                    if (!new File(FileUtil.getBaseName(f.getPath())).exists())
+                    {
+                        orphanIndexes.add(f);
+                        continue;
+                    }
+                }
+
+                //sequence files not associated w/ DB records:
+                if (depth == 0)
+                {
+                    continue;
+                }
+
+                if (SequenceUtil.FILETYPE.fastq.getFileType().isType(f))
+                {
+
+                }
+                else if (SequenceUtil.FILETYPE.bam.getFileType().isType(f))
+                {
+
+                }
+
+            }
+        }
     }
 }

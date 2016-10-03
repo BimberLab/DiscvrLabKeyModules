@@ -13,6 +13,7 @@ import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.util.Compress;
@@ -225,7 +226,8 @@ public class NcbiGenomeImportTask extends PipelineJob.Task<NcbiGenomeImportTask.
         params.put("species", getPipelineJob().getSpecies());
         params.put("name", name);
 
-        List<Integer> seqIds = SequenceAnalysisManager.get().importRefSequencesFromFasta(getJob().getContainer(), getJob().getUser(), decompressed, true, params, getJob().getLogger(), null);
+        Integer jobId = PipelineService.get().getJobId(getJob().getUser(), getJob().getContainer(), getJob().getJobGUID());
+        List<Integer> seqIds = SequenceAnalysisManager.get().importRefSequencesFromFasta(getJob().getContainer(), getJob().getUser(), decompressed, true, params, getJob().getLogger(), null, jobId);
         decompressed.delete();
         if (seqIds.size() == 1)
         {

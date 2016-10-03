@@ -125,7 +125,7 @@ public class GeneticsCoreManager
 
             final Map<Integer, List<Map<String, Object>>> rowHash = new HashMap<>();
             final Map<Integer, Set<Integer>> toDeleteByAnalysis = new HashMap<>();
-            final String runType = "SBT";
+
             TableSelector tsAlignments = new TableSelector(tableAlignments, cols.values(), new SimpleFilter(FieldKey.fromString("key"), Arrays.asList(pks), CompareType.IN), null);
             tsAlignments.forEach(new Selector.ForEachBlock<ResultSet>()
             {
@@ -141,7 +141,7 @@ public class GeneticsCoreManager
                     SimpleFilter filter = new SimpleFilter(FieldKey.fromString("analysisId"), analysisId);
                     filter.addCondition(FieldKey.fromString("marker"), lineages);
                     filter.addCondition(FieldKey.fromString("analysisId"), null, CompareType.NONBLANK);
-                    filter.addCondition(FieldKey.fromString("Run/assayType"), runType);
+                    filter.addCondition(FieldKey.fromString("Run/assayType"), SBT_LINEAGE_ASSAY_TYPE);
 
                     TableSelector ts = new TableSelector(assayDataTable, PageFlowUtil.set("RowId"), filter, null);
                     Set<Integer> existing = new HashSet<>(ts.getArrayList(Integer.class));
@@ -174,7 +174,7 @@ public class GeneticsCoreManager
 
             if (!rowHash.isEmpty())
             {
-                processSet(runType, rowHash, assayDataTable, u, ctx, toDeleteByAnalysis, ap, protocol, runsCreated);
+                processSet(SBT_LINEAGE_ASSAY_TYPE, rowHash, assayDataTable, u, ctx, toDeleteByAnalysis, ap, protocol, runsCreated);
             }
 
             transaction.commit();
@@ -182,6 +182,9 @@ public class GeneticsCoreManager
             return Pair.of(runsCreated, runsDeleted);
         }
     }
+
+    public static final String HAPLOTYPE_ASSAY_TYPE = "SBT Haplotypes";
+    public static final String SBT_LINEAGE_ASSAY_TYPE = "SBT";
 
     public Pair<List<Integer>, List<Integer>> cacheHaplotypes(final ViewContext ctx, final ExpProtocol protocol, JSONArray data) throws IllegalArgumentException
     {
@@ -226,7 +229,6 @@ public class GeneticsCoreManager
         final Map<Integer, Set<Integer>> toDeleteByAnalysis = new HashMap<>();
 
         TableSelector tsAlignments = new TableSelector(tableAnalyses, cols.values(), new SimpleFilter(FieldKey.fromString("rowid"), analysisIds, CompareType.IN), null);
-        final String runType = "SBT Haplotypes";
         tsAlignments.forEach(new Selector.ForEachBlock<ResultSet>()
         {
             @Override
@@ -247,7 +249,7 @@ public class GeneticsCoreManager
                     SimpleFilter filter = new SimpleFilter(FieldKey.fromString("analysisId"), analysisId);
                     filter.addCondition(FieldKey.fromString("marker"), haplotype);
                     filter.addCondition(FieldKey.fromString("analysisId"), null, CompareType.NONBLANK);
-                    filter.addCondition(FieldKey.fromString("Run/assayType"), runType);
+                    filter.addCondition(FieldKey.fromString("Run/assayType"), HAPLOTYPE_ASSAY_TYPE);
 
                     TableSelector ts = new TableSelector(assayDataTable, PageFlowUtil.set("RowId"), filter, null);
                     Set<Integer> existing = new HashSet<>(ts.getArrayList(Integer.class));
@@ -285,7 +287,7 @@ public class GeneticsCoreManager
         {
             try (DbScope.Transaction transaction = DbScope.getLabKeyScope().ensureTransaction())
             {
-                processSet(runType, rowHash, assayDataTable, u, ctx, toDeleteByAnalysis, ap, protocol, runsCreated);
+                processSet(HAPLOTYPE_ASSAY_TYPE, rowHash, assayDataTable, u, ctx, toDeleteByAnalysis, ap, protocol, runsCreated);
 
                 transaction.commit();
             }

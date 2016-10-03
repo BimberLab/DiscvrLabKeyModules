@@ -94,6 +94,7 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceDataProvider;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.pipeline.JobResourceSettings;
 import org.labkey.api.sequenceanalysis.pipeline.ParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
@@ -118,6 +119,7 @@ import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.template.ClientDependency;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
@@ -158,6 +160,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -467,6 +470,29 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
+    @RequiresPermission(ReadPermission.class)
+    public class FindOrphanFilesAction extends SimpleViewAction<Object>
+    {
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root.addChild("Orphan Sequence Files");
+        }
+
+        @Override
+        public ModelAndView getView(Object o, BindException errors) throws Exception
+        {
+            StringBuilder html = new StringBuilder();
+            html.append("The following sections list any files or pipeline jobs that appear to be orphans, not connected to any imported readsets or sequence outputs:<p>");
+
+            Set<File> orphanFiles = new HashSet<>();
+            Set<File> orphanIndexes = new HashSet<>();
+            Set<File> orphanJobs = new HashSet<>();
+            SequenceAnalysisManager.get().getOrphanFiles(getContainer(), orphanFiles, orphanIndexes, orphanJobs);
+
+            return new HtmlView(html.toString());
+        }
+    }
 
     @RequiresPermission(DeletePermission.class)
     public class DeleteRecordsAction extends ConfirmAction<QueryForm>
@@ -635,6 +661,30 @@ public class SequenceAnalysisController extends SpringActionController
                 }
 
                 ret.put(stepType.name(), list);
+            }
+
+            JSONArray resourceSettings = new JSONArray();
+            for (JobResourceSettings settings : SequencePipelineServiceImpl.get().getResourceSettings())
+            {
+                if (settings.isAvailable(getContainer()))
+                {
+                    for (ToolParameterDescriptor pd : settings.getParams())
+                    {
+                        resourceSettings.put(pd.toJSON());
+                    }
+                }
+            }
+
+            if (resourceSettings.length() > 0)
+            {
+                JSONObject json = new JSONObject();
+                json.put("name", "resourceSettings");
+                json.put("description", "The following options are available to adjust the resources given to this job when it executes.  The are often chosen automatically, so you can generally leave these blank if you are unsure.");
+                json.put("parameters", resourceSettings);
+
+                JSONArray arr = new JSONArray();
+                arr.put(json);
+                ret.put("resourceSettings", arr);
             }
 
             return new ApiSimpleResponse(ret);
@@ -1662,7 +1712,9 @@ public class SequenceAnalysisController extends SpringActionController
                             return null;
                         }
 
-                        jobs.addAll(SequenceAlignmentJob.createForReadsets(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getReadsetIds()));
+                        JSONObject params = new JSONObject(form.getJobParameters());
+                        params.remove("readsetIds");
+                        jobs.addAll(SequenceAlignmentJob.createForReadsets(getContainer(), getUser(), form.getJobName(), form.getDescription(), params, form.getReadsetIds()));
                         break;
                     case alignmentAnalysis:
                         if (form.getAnalysisIds() == null)
@@ -1744,7 +1796,7 @@ public class SequenceAnalysisController extends SpringActionController
 
         public JSONArray getAnalysisIds()
         {
-            return getJsonObject().optJSONArray("analysisIds");
+            return getJobParameters() == null ?  null : getJobParameters().optJSONArray("analysisIds");
         }
 
         public List<File> getFiles(PipeRoot pr) throws PipelineValidationException
@@ -1837,7 +1889,7 @@ public class SequenceAnalysisController extends SpringActionController
                         for (String t : intervals.split(","))
                         {
                             ReferenceLibraryMember m = new ReferenceLibraryMember();
-                            m.setRef_nt_id(seqId);
+                            m.setRefNtId(seqId);
 
                             String[] coordinates = t.split("-");
                             if (coordinates.length != 2)
@@ -1857,14 +1909,14 @@ public class SequenceAnalysisController extends SpringActionController
                     else
                     {
                         ReferenceLibraryMember m = new ReferenceLibraryMember();
-                        m.setRef_nt_id(seqId);
+                        m.setRefNtId(seqId);
                         members.add(m);
                     }
                 }
                 else
                 {
                     ReferenceLibraryMember m = new ReferenceLibraryMember();
-                    m.setRef_nt_id(seqId);
+                    m.setRefNtId(seqId);
                     members.add(m);
                 }
 
@@ -3048,9 +3100,11 @@ public class SequenceAnalysisController extends SpringActionController
                         ZipEntry errorEntry = new ZipEntry("error.log");
                         zOut.putNextEntry(errorEntry);
 
-                        final PrintStream ps = new PrintStream(zOut, true);
-                        ps.println("Failed to complete export of the file: ");
-                        e.printStackTrace(ps);
+                        try (PrintWriter ps = PrintWriters.getPrintWriter(new PrintStream(zOut, true)))
+                        {
+                            ps.println("Failed to complete export of the file: ");
+                            e.printStackTrace(ps);
+                        }
                         zOut.closeEntry();
                     }
                 }

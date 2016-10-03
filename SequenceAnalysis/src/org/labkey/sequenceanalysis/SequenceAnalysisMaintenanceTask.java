@@ -217,6 +217,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         expectedChildren.add(fasta.getName() + ".fai");
                         expectedChildren.add(FileUtil.getBaseName(fasta.getName()) + ".idKey.txt");
                         expectedChildren.add(FileUtil.getBaseName(fasta.getName()) + ".dict");
+                        expectedChildren.add("libraryMembers.xml");  //temp file creating during pipeline job
                         expectedChildren.add("alignerIndexes");
                         expectedChildren.add("tracks");
                         expectedChildren.add("chainFiles");

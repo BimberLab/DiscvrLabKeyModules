@@ -144,6 +144,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
 
     public static File processVCF(File input, Integer libraryId, JobContext ctx) throws PipelineJobException
     {
+        try
+        {
+            SequenceAnalysisService.get().ensureVcfIndex(input, ctx.getLogger());
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
         File currentVCF = input;
 
         ctx.getJob().getLogger().info("***Starting processing of file: " + input.getName());
@@ -183,15 +192,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
             if (output.getVCF() != null)
             {
                 currentVCF = output.getVCF();
+
+                ctx.getJob().getLogger().info("total variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), false));
+                ctx.getJob().getLogger().info("passing variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), true));
+                ctx.getJob().getLogger().debug("index exists: " + (new File(currentVCF.getPath() + ".tbi")).exists());
             }
             else
             {
-                throw new PipelineJobException("no output VCF produced");
+                ctx.getLogger().info("no output VCF produced");
             }
-
-            ctx.getJob().getLogger().info("total variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), false));
-            ctx.getJob().getLogger().info("passing variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), true));
-            ctx.getJob().getLogger().debug("index exists: " + (new File(currentVCF.getPath() + ".tbi")).exists());
 
             try
             {
@@ -215,6 +224,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
 
             return currentVCF;
         }
+
+        ctx.getLogger().debug("no VCF produced at end of processing");
 
         return null;
     }
@@ -243,6 +254,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
                 File processed = processVCF(input.getFile(), input.getLibrary_id(), ctx);
                 if (processed != null && processed.exists())
                 {
+                    ctx.getLogger().debug("adding sequence output: " + processed.getPath());
                     SequenceOutputFile so1 = new SequenceOutputFile();
                     so1.setName(processed.getName());
                     so1.setFile(processed);

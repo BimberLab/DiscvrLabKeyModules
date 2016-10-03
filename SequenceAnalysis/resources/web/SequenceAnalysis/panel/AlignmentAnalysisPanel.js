@@ -20,6 +20,8 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
             toolConfig: results
         });
 
+        items.push(this.getJobResourcesCfg(results));
+
         this.remove(panel);
         this.add(items);
     },
@@ -123,9 +125,9 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
         }
     },
 
-    getJsonParams: function(){
+    getJsonParams: function(ignoreErrors){
         var errors = this.getErrors();
-        if (errors.length){
+        if (!ignoreErrors && errors.length){
             Ext4.Msg.alert('Error', errors.join('<br>'));
             return;
         }
@@ -138,14 +140,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
         Ext4.apply(json, this.down('#runInformation').getForm().getValues());
 
         //and sample information
-        this.analysesStore.each(function(rec, idx){
-            json['sample_' + idx] = {
-                analysisid: rec.get('rowid'),
-                readset: rec.get('readset/rowid'),
-                alignmentfile: rec.get('alignmentfile'),
-                alignmentfileName: rec.get('alignmentfile/name')
-            };
-        }, this);
+        json.analysisIds = this.analyses;
 
         //then append each section
         var sections = this.query('sequenceanalysis-analysissectionpanel');

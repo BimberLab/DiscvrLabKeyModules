@@ -28,6 +28,7 @@ Ext4.define('SequenceAnalysis.panel.VariantMaskPanel', {
                     itemId: 'selectionType',
                     columns: 1,
                     isFormField: false,
+                    value: 'none',
                     items: [{
                         boxLabel: 'None',
                         inputValue: 'none',
@@ -77,7 +78,8 @@ Ext4.define('SequenceAnalysis.panel.VariantMaskPanel', {
         return [{
             xtype: 'textfield',
             fieldLabel: 'Mask Name',
-            allowBlank: false
+            allowBlank: false,
+            itemId: 'maskName'
         },{
             xtype: 'sequenceanalysis-genomefileselectorfield',
             fieldLabel: 'Track',
@@ -96,19 +98,50 @@ Ext4.define('SequenceAnalysis.panel.VariantMaskPanel', {
         },{
             xtype: 'ldk-expdatafield',
             fieldLabel: 'File Id',
-            allowBlank: false
+            allowBlank: false,
+            itemId: 'maskName'
         }];
     },
 
     getValue: function(){
-        console.log('not implemented');
+        var selectionType = this.down('radiogroup').getValue().selectionType;
+        if (selectionType && selectionType != 'none'){
+            return {
+                selectionType: selectionType,
+                maskName: this.down('#maskName').getValue(),
+                fileId: this.down('#fileId').getValue()
+            }
+        }
     },
 
-    setValue: function(){
-        console.log('not implemented');
+    setValue: function(val){
+        if (val){
+            if (val.selectionType){
+                this.down('#selectionType').setValue({selectionType: val.selectionType});
+            }
+
+            if (val.maskName){
+                this.down('#maskName').setValue(val.maskName);
+            }
+
+            if (val.fileId){
+                this.down('#fileId').setValue(val.fileId);
+            }
+        }
+        else {
+            this.down('radiogroup').setValue('none');
+        }
     },
 
     getErrors: function(){
-        console.log('not implemented');
+        var msgs = [];
+        var selectionType = this.down('radiogroup').getValue().selectionType;
+        if (selectionType && selectionType != 'none'){
+            if (!this.down('#maskName').getValue() || !this.down('#fileId').getValue()){
+                msgs.push('Missing one or more required fields');
+            }
+        }
+
+        return msgs;
     }
 });

@@ -13,6 +13,7 @@ import org.labkey.api.reports.ExternalScriptEngineDefinition;
 import org.labkey.api.reports.LabkeyScriptEngineManager;
 import org.labkey.api.reports.RScriptEngineFactory;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
+import org.labkey.api.sequenceanalysis.pipeline.JobResourceSettings;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -23,6 +24,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 import org.labkey.sequenceanalysis.run.util.SortVcfWrapper;
+import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -47,6 +49,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
 
     private static final Logger _log = Logger.getLogger(SequencePipelineServiceImpl.class);
     private Set<PipelineStepProvider> _providers = new HashSet<>();
+    private Set<JobResourceSettings> _resourceSettings = new HashSet<>();
 
     private SequencePipelineServiceImpl()
     {
@@ -235,6 +238,22 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
+    public File getRemoteGenomeCacheDirectory()
+    {
+        String dir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("REMOTE_GENOME_CACHE_DIR");
+        if (StringUtils.trimToNull(dir) != null)
+        {
+            File ret = new File(dir);
+            if (ret.exists())
+            {
+                return ret;
+            }
+        }
+
+        return null;
+    }
+
+    @Override
     public Integer getMaxThreads(PipelineJob job)
     {
         return SequenceTaskHelper.getMaxThreads(job);
@@ -350,5 +369,22 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         log.info("Unable to infer R path, using null");
 
         return null;
+    }
+
+    @Override
+    public void registerResourceSettings(JobResourceSettings settings)
+    {
+        _resourceSettings.add(settings);
+    }
+
+    public Set<JobResourceSettings> getResourceSettings()
+    {
+        return _resourceSettings;
+    }
+
+    @Override
+    public Map<String, Object> getQualityMetrics(File fastq, Logger log)
+    {
+        return FastqUtils.getQualityMetrics(fastq, log);
     }
 }

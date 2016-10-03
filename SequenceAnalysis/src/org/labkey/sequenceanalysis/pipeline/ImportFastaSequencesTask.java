@@ -20,6 +20,7 @@ import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.util.FileType;
@@ -91,7 +92,8 @@ public class ImportFastaSequencesTask extends PipelineJob.Task<ImportFastaSequen
             List<Integer> sequenceIds = new ArrayList<>();
             for (File f : getPipelineJob().getFastas())
             {
-                sequenceIds.addAll(SequenceAnalysisManager.get().importRefSequencesFromFasta(getJob().getContainer(), getJob().getUser(), f, getPipelineJob().isSplitWhitespace(), getPipelineJob().getParams(), getJob().getLogger(), getPipelineJob().getOutDir()));
+                Integer jobId = PipelineService.get().getJobId(getJob().getUser(), getJob().getContainer(), getJob().getJobGUID());
+                sequenceIds.addAll(SequenceAnalysisManager.get().importRefSequencesFromFasta(getJob().getContainer(), getJob().getUser(), f, getPipelineJob().isSplitWhitespace(), getPipelineJob().getParams(), getJob().getLogger(), getPipelineJob().getOutDir(), jobId));
             }
 
             if (getPipelineJob().isCreateLibrary())

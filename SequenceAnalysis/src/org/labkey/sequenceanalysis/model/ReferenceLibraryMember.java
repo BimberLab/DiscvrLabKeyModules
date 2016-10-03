@@ -1,19 +1,18 @@
 package org.labkey.sequenceanalysis.model;
 
-import org.labkey.api.data.CompareType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
+import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by bimber on 8/18/2014.
  */
-public class ReferenceLibraryMember
+public class ReferenceLibraryMember implements Serializable
 {
     private int _rowid;
     private int _library_id;
@@ -27,7 +26,7 @@ public class ReferenceLibraryMember
     private String _modifiedby;
     private Date _modified;
 
-    private RefNtSequenceModel _model = null;
+    transient private RefNtSequenceModel _model = null;
 
     public ReferenceLibraryMember()
     {
@@ -42,6 +41,26 @@ public class ReferenceLibraryMember
     public void setRowid(int rowid)
     {
         _rowid = rowid;
+    }
+
+    public int getLibraryId()
+    {
+        return _library_id;
+    }
+
+    public void setLibraryId(int libraryId)
+    {
+        _library_id = libraryId;
+    }
+
+    public Integer getRefNtId()
+    {
+        return _ref_nt_id;
+    }
+
+    public void setRefNtId(Integer refNtId)
+    {
+        _ref_nt_id = refNtId;
     }
 
     public int getRef_nt_id()

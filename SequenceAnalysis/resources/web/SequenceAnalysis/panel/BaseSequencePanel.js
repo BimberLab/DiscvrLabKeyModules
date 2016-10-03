@@ -95,6 +95,23 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         }
     },
 
+    getJobResourcesCfg: function(results){
+        if (results.resourceSettings){
+            console.log(results.resourceSettings);
+
+            return {
+                xtype: 'sequenceanalysis-analysissectionpanel',
+                title: 'Job Resources',
+                stepType: 'resourceSettings',
+                sectionDescription: '',
+                toolConfig: results,
+                toolIdx: 0
+            }
+        }
+
+        return null;
+    },
+
     getBasename: function(str){
         var base = new String(str).substring(str.lastIndexOf('/') + 1);
         if (base.lastIndexOf(".") != -1)

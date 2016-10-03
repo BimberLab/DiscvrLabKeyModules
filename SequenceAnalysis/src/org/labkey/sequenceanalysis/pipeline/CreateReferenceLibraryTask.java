@@ -134,7 +134,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             RefNtSequenceModel m = lm.getSequenceModel();
             if (m == null)
             {
-                throw new PipelineJobException("Unable to find reference sequence with rowid: " + lm.getRef_nt_id());
+                throw new PipelineJobException("Unable to find reference sequence with rowid: " + lm.getRefNtId());
             }
 
             if (names.contains(lm.getHeaderName()))
@@ -284,7 +284,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 {
                     CaseInsensitiveHashMap childRow = new CaseInsensitiveHashMap();
                     childRow.put("library_id", rowId);
-                    childRow.put("ref_nt_id", row.getRef_nt_id());
+                    childRow.put("ref_nt_id", row.getRefNtId());
                     childRow.put("start", row.getStart());
                     childRow.put("stop", row.getStop());
                     toInsert.add(childRow);
@@ -301,6 +301,13 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 {
                     throw errors;
                 }
+            }
+
+            File xml = getPipelineJob().getSerializedLibraryMembersFile();
+            if (xml.exists())
+            {
+                getJob().getLogger().debug("deleting XML file: " + xml.getPath());
+                xml.delete();
             }
 
             getJob().getLogger().info("creation complete");

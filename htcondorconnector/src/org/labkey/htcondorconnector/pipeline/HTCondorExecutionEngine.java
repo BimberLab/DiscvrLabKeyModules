@@ -33,7 +33,6 @@ import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
-import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.test.TestTimeout;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
@@ -248,77 +247,85 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
 
             job.writeToFile(serializedJobFile);
 
-            File submitScript = AssayFileWriter.findUniqueFileName("condor.submit", outDir);
-            try (FileWriter writer = new FileWriter(submitScript, false))
+            //we want this unique for each task, but reused if submitted multiple times
+            File submitScript = new File(outDir, "condor_" + (job.getActiveTaskId().getNamespaceClass().getSimpleName()) + ".submit");
+            if (!submitScript.exists())
             {
-                writer.write("initialdir=" + getConfig().getClusterPath(job.getLogFile().getParentFile()) + "\n");
-                writer.write("executable=" + getConfig().getRemoteExecutable() + "\n");
-
-                //NOTE: this is just the output of the java process, so do not put into regular pipeline log
-                String basename = FileUtil.getBaseName(job.getLogFile());
-                writer.write("output=" + getConfig().getClusterPath(new File(outDir, basename + "-$(Cluster).$(Process).java.log")) + "\n");
-                writer.write("error=" + getConfig().getClusterPath(new File(outDir, basename + "-$(Cluster).$(Process).java.log")) + "\n");
-                writer.write("log=" + getConfig().getClusterPath(new File(outDir, basename + "-$(Cluster).$(Process).condor.log")) + "\n");
-
-                // This allows modules to register code to modify resource usage per task.
-                Integer maxCpus = null;
-                Integer maxRam = null;
-                List<String> extraLines = null;
-
-                if (job.getActiveTaskId() != null)
+                try (FileWriter writer = new FileWriter(submitScript, false))
                 {
-                    HTCondorJobResourceAllocator.Factory allocatorFact = HTCondorServiceImpl.get().getAllocator(job.getActiveTaskId());
-                    if (allocatorFact != null)
+                    writer.write("initialdir=" + getConfig().getClusterPath(job.getLogFile().getParentFile()) + "\n");
+                    writer.write("executable=" + getConfig().getRemoteExecutable() + "\n");
+
+                    //NOTE: this is just the output of the java process, so do not put into regular pipeline log
+                    String basename = FileUtil.getBaseName(job.getLogFile());
+                    writer.write("output=" + getConfig().getClusterPath(new File(outDir, basename + "-$(Cluster).$(Process).java.log")) + "\n");
+                    writer.write("error=" + getConfig().getClusterPath(new File(outDir, basename + "-$(Cluster).$(Process).java.log")) + "\n");
+                    writer.write("log=" + getConfig().getClusterPath(new File(outDir, basename + "-$(Cluster).$(Process).condor.log")) + "\n");
+
+                    // This allows modules to register code to modify resource usage per task.
+                    Integer maxCpus = null;
+                    Integer maxRam = null;
+                    List<String> extraLines = null;
+
+                    if (job.getActiveTaskId() != null)
                     {
-                        HTCondorJobResourceAllocator allocator = allocatorFact.getAllocator();
-                        job.getLogger().debug("using resource allocator: " + allocator.getClass().getName());
-                        maxCpus = allocator.getMaxRequestCpus(job);
-                        maxRam = allocator.getMaxRequestMemory(job);
-                        extraLines = allocator.getExtraSubmitScriptLines(job);
+                        HTCondorJobResourceAllocator.Factory allocatorFact = HTCondorServiceImpl.get().getAllocator(job.getActiveTaskId());
+                        if (allocatorFact != null)
+                        {
+                            HTCondorJobResourceAllocator allocator = allocatorFact.getAllocator();
+                            job.getLogger().debug("using resource allocator: " + allocator.getClass().getName());
+                            maxCpus = allocator.getMaxRequestCpus(job);
+                            maxRam = allocator.getMaxRequestMemory(job);
+                            extraLines = allocator.getExtraSubmitScriptLines(job);
+                        }
                     }
-                }
 
-                Integer cpus = null;
-                if (getConfig().getRequestCpus() != null)
-                {
-                    cpus = maxCpus != null ? Math.min(maxCpus, getConfig().getRequestCpus()) : getConfig().getRequestCpus();
-                    writer.write("request_cpus = " + cpus + "\n");
-                }
-
-                Integer ram = null;
-                if (getConfig().getRequestMemory() != null)
-                {
-                    ram = maxRam != null ? Math.min(maxRam, getConfig().getRequestMemory()) : getConfig().getRequestMemory();
-                    writer.write("request_memory = " + ram + " GB\n");
-                }
-
-                if (StringUtils.trimToNull(getConfig().getJavaHome()) != null)
-                {
-                    String suffix = "";
-                    if (getConfig().getEnvironmentVars() != null && !getConfig().getEnvironmentVars().isEmpty())
+                    Integer cpus = null;
+                    if (getConfig().getRequestCpus() != null)
                     {
-                        suffix += " " + StringUtils.join(getConfig().getEnvironmentVars(), " ");
+                        cpus = maxCpus != null ? Math.min(maxCpus, getConfig().getRequestCpus()) : getConfig().getRequestCpus();
+                        writer.write("request_cpus = " + cpus + "\n");
                     }
-                    writer.write("environment = \"" + (cpus == null ? "" : "SEQUENCEANALYSIS_MAX_THREADS=" + cpus + " ") + (ram == null ? "" : "SEQUENCEANALYSIS_MAX_RAM=" + ram + " ") + "JAVA_HOME='" + StringUtils.trimToNull(getConfig().getJavaHome()) + "'" + (suffix) +"\"\n");
-                }
-                writer.write("getenv = True\n");
 
-                for (String line : getConfig().getExtraSubmitLines())
-                {
-                    writer.write(line + "\n");
-                }
-
-                if (extraLines != null)
-                {
-                    for (String line : extraLines)
+                    Integer ram = null;
+                    if (getConfig().getRequestMemory() != null)
                     {
-                        job.getLogger().debug("adding line to submit script: [" + line + "]");
+                        ram = maxRam != null ? Math.min(maxRam, getConfig().getRequestMemory()) : getConfig().getRequestMemory();
+                        writer.write("request_memory = " + ram + " GB\n");
+                    }
+
+                    if (StringUtils.trimToNull(getConfig().getJavaHome()) != null)
+                    {
+                        String suffix = "";
+                        if (getConfig().getEnvironmentVars() != null && !getConfig().getEnvironmentVars().isEmpty())
+                        {
+                            suffix += " " + StringUtils.join(getConfig().getEnvironmentVars(), " ");
+                        }
+                        writer.write("environment = \"" + (cpus == null ? "" : "SEQUENCEANALYSIS_MAX_THREADS=" + cpus + " ") + (ram == null ? "" : "SEQUENCEANALYSIS_MAX_RAM=" + ram + " ") + "JAVA_HOME='" + StringUtils.trimToNull(getConfig().getJavaHome()) + "'" + (suffix) + "\"\n");
+                    }
+                    writer.write("getenv = True\n");
+
+                    for (String line : getConfig().getExtraSubmitLines())
+                    {
                         writer.write(line + "\n");
                     }
-                }
 
-                writer.write("arguments = \"'" + StringUtils.join(getConfig().getJobArgs(outDir, serializedJobFile), "' '").replaceAll("\"", "\"\"") + "'\"\n");
-                writer.write("queue 1");
+                    if (extraLines != null)
+                    {
+                        for (String line : extraLines)
+                        {
+                            job.getLogger().debug("adding line to submit script: [" + line + "]");
+                            writer.write(line + "\n");
+                        }
+                    }
+
+                    writer.write("arguments = \"'" + StringUtils.join(getConfig().getJobArgs(outDir, serializedJobFile), "' '").replaceAll("\"", "\"\"") + "'\"\n");
+                    writer.write("queue 1");
+                }
+            }
+            else
+            {
+                job.getLogger().debug("existing submit script found, reusing");
             }
 
             return submitScript;

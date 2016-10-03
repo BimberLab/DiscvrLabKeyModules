@@ -2894,6 +2894,7 @@ labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/Com
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/DefaultPipelineStepOutput.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/HasJobParams.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/InputReads.java -text
+labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/JobResourceSettings.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/JoinableStep.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/ParameterizedOutputHandler.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/PipelineContext.java -text
@@ -3189,6 +3190,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.300-12.301.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.301-12.302.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.302-12.303.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.303-12.304.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -3268,6 +3270,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.300-12.301.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.301-12.302.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.302-12.303.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.303-12.304.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -3357,6 +3360,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/docs/import8.jpg -tex
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/fastqc.css -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/GenomeFileSelectorField.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/ReadsetField.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/VariantFieldSelector.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/icons/dna_folder.png -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/icons/error.png -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/icons/fastqc_icon.png -text
@@ -3934,7 +3938,7 @@ onprcEHRModules/GeneticsCore/build.xml -text
 onprcEHRModules/GeneticsCore/distributions/prime-seq-modules.xml -text
 onprcEHRModules/GeneticsCore/module.properties -text
 onprcEHRModules/GeneticsCore/resources/external/amplicon_standard_curve.R -text
-onprcEHRModules/GeneticsCore/resources/external/run_wilcox.R -text
+onprcEHRModules/GeneticsCore/resources/external/methylationComparison.R -text
 onprcEHRModules/GeneticsCore/resources/module.xml -text
 onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/alignment_summary_by_lineage/.qview.xml -text
 onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/alignment_summary_by_lineage/With[!!-~]Haplotype[!!-~]Matches.qview.xml -text
@@ -3992,6 +3996,7 @@ onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/BisSnpIndelRea
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/BisSnpIndelRealignerWrapper.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/BisulfiteGenotyperWrapper.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/BlastPipelineJobResourceAllocator.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/ExacloudResourceSettings.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/SequenceJobResourceAllocator.java -text
 onprcEHRModules/GeneticsCore/tools/installLabkey.sh -text
 onprcEHRModules/GeneticsCore/tools/javaWrapper.sh -text

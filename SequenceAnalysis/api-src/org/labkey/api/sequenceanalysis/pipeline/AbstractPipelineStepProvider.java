@@ -124,7 +124,7 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
         {
             for (ToolParameterDescriptor t : _parameters)
             {
-                if (t.getName().equals(name))
+                if (name.equals(t.getName()))
                 {
                     return t;
                 }

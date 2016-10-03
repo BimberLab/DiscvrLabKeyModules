@@ -173,6 +173,7 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
             Integer minDatapointsPerGroup = ctx.getParams().optInt("minDatapointsPerGroup");
             Integer minDepthPerSite = ctx.getParams().optInt("minDepthPerSite");
             String jobDescription = ctx.getParams().optString("jobDescription");
+            String statisticalMethod = ctx.getParams().optString("statisticalMethod");
 
             //build map of site rates
             Map<String, Map<Integer, Map<Integer, Set<Double>>>> rateMap = new HashMap<>();
@@ -183,12 +184,14 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                 i++;
                 ctx.getJob().getLogger().info("processing: " + o.getName() + ", " + i + " of " + inputFiles.size());
 
-                Integer groupNum = fileToGroupMap.get(o.getRowid());
-                if (groupNum == null)
+                if (!fileToGroupMap.containsKey(o.getRowid()))
                 {
                     ctx.getLogger().warn("sample is not part of a group, skipping: " + o.getName());
                     continue;
                 }
+
+                Integer groupNum = fileToGroupMap.get(o.getRowid());
+                ctx.getJob().getLogger().debug("group #: " + groupNum);
 
                 action.addInput(o.getFile(), "Site Methylation Rates");
 
@@ -269,20 +272,47 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                     ctx.getLogger().info("no data for chromosome, skipping");
                     continue;
                 }
+                ctx.getLogger().info("total positions: " + posMap.size());
 
                 File tsvOut = new File(ctx.getOutputDir(), "chrCombined." + chr + ".txt");
                 int totalLines = 0;
+                int group1Skipped = 0;
+                int group2Skipped = 0;
                 try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(tsvOut), '\t', CSVWriter.NO_QUOTE_CHARACTER))
                 {
                     for (Integer pos : posMap.keySet())
                     {
                         Set<Double> group1 = posMap.get(pos).get(0);
+                        if (group1 == null)
+                        {
+                            group1Skipped++;
+                            continue;
+                        }
+
                         Set<Double> group2 = posMap.get(pos).get(1);
+                        if (group2 == null)
+                        {
+                            group2Skipped++;
+                            continue;
+                        }
+
                         if (minDatapointsPerGroup != null)
                         {
-                            if (group1.size() < minDatapointsPerGroup || group2.size() < minDatapointsPerGroup)
+                            boolean doSkip = false;
+                            if (group1.size() < minDatapointsPerGroup)
                             {
-                                ctx.getLogger().info("insufficient datapoints, skipping: " + chr + " " + pos + ".  totals: " + group1.size() + " / " + group2.size());
+                                group1Skipped++;
+                                doSkip = true;
+                            }
+
+                            if (group2.size() < minDatapointsPerGroup)
+                            {
+                                group2Skipped++;
+                                doSkip = true;
+                            }
+
+                            if (doSkip)
+                            {
                                 continue;
                             }
                         }
@@ -305,6 +335,9 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                     throw new PipelineJobException(e);
                 }
 
+                ctx.getLogger().info("total skipped due to insufficient group1 datapoints: " + group1Skipped);
+                ctx.getLogger().info("total skipped due to insufficient group2 datapoints: " + group2Skipped);
+
                 if (totalLines == 0)
                 {
                     ctx.getLogger().info("no passing positions, skipping chr: " + chr);
@@ -324,6 +357,7 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                 args.add(getRPath(ctx.getLogger()));
                 args.add(getScriptPath());
                 args.add(tsvOut.getPath());
+                args.add(statisticalMethod);
 
                 File pvalOut = new File(ctx.getOutputDir(), "chrCombined." + chr + ".pval.txt");
                 args.add(pvalOut.getPath());
@@ -408,7 +442,7 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
 
         private String getScriptPath() throws PipelineJobException
         {
-            String path = "/external/run_wilcox.R";
+            String path = "/external/methylationComparison.R";
             Module module = ModuleLoader.getInstance().getModule(GeneticsCoreModule.NAME);
             Resource script = module.getModuleResource(path);
             if (script == null || !script.exists())

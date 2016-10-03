@@ -15,7 +15,6 @@ import org.labkey.api.pipeline.file.FileAnalysisTaskPipelineSettings;
 import org.labkey.api.security.User;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
@@ -31,19 +30,20 @@ import java.util.List;
  */
 public class AlignmentAnalysisJob extends SequenceJob
 {
+    public static final String FOLDER_NAME = "sequenceAnalysis";
+
     private int _analyisId;
     private int _readsetId;
 
     private AlignmentAnalysisJob(Container c, User u, String jobName, PipeRoot root, JSONObject params, AnalysisModelImpl model) throws IOException
     {
-        super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), "sequenceAnalysis");
+        super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), FOLDER_NAME);
 
         _analyisId = model.getAnalysisId();
         _readsetId = model.getReadset();
 
-        getSequenceSupport().cacheAnalysis(model);
-        if (model.getReadset() != null)
-            getSequenceSupport().cacheReadset(SequenceAnalysisServiceImpl.get().getReadset(model.getAnalysisId(), u));
+        getLogger().debug("caching analysis for use on remote server: " + model.getRowId());
+        getSequenceSupport().cacheAnalysis(model, this);
     }
 
     public static List<AlignmentAnalysisJob> createForAnalyses(Container c, User u, String jobName, String description, JSONObject params, JSONArray analysisIds) throws ClassNotFoundException, IOException, PipelineValidationException

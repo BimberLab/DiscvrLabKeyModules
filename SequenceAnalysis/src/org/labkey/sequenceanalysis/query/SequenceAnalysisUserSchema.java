@@ -151,6 +151,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             ExprColumn newCol = new ExprColumn(ret, "totalForwardReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.dataid~eq=${fileid1}&query.metricname~eq=Total Reads"));
             newCol.setLabel("Total Forward Reads");
+            newCol.setFormat("#,##0.##");
 
             ret.addColumn(newCol);
         }
@@ -163,7 +164,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             ExprColumn newCol = new ExprColumn(ret, "totalReverseReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.dataid~eq=${fileid2}&query.metricname~eq=Total Reads"));
             newCol.setLabel("Total Reverse Reads");
-
+            newCol.setFormat("#,##0.##");
             ret.addColumn(newCol);
         }
 
@@ -252,6 +253,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             ExprColumn newCol = new ExprColumn(ret, "totalForwardReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.readset~eq=${rowid}&query.metricname~eq=Total Reads", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
             newCol.setLabel("Total Forward Reads");
+            newCol.setFormat("#,##0.##");
 
             ret.addColumn(newCol);
         }
@@ -264,6 +266,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             ExprColumn newCol = new ExprColumn(ret, "totalReverseReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.readset~eq=${rowid}&query.metricname~eq=Total Reads", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
             newCol.setLabel("Total Reverse Reads");
+            newCol.setFormat("#,##0.##");
 
             ret.addColumn(newCol);
         }

@@ -58,6 +58,7 @@ public class RefNtSequenceModel
     //deprecated
     private String _sequence;
     private Integer _sequenceFile;
+    private Integer _jobId;
     private String _category;
     private String _subset;
     private String _locus;
@@ -338,6 +339,16 @@ public class RefNtSequenceModel
     public void setModified(Date modified)
     {
         _modified = modified;
+    }
+
+    public Integer getJobId()
+    {
+        return _jobId;
+    }
+
+    public void setJobId(Integer jobId)
+    {
+        _jobId = jobId;
     }
 
     public byte[] getSequenceBases()

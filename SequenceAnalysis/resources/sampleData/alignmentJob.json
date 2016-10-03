@@ -12,6 +12,7 @@
     "fastqProcessing": "",
     "referenceLibraryCreation": "Virus",
 	"referenceLibraryCreation.Virus.subset":"SIVmac239",
+    "copyGenomeLocally": false,
 
     "analysis.SBT.minPctToImport":0,
 	"analysis.SBT.onlyImportPairs":false,

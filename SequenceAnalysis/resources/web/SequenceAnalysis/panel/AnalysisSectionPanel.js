@@ -80,6 +80,9 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         if (this.singleTool) {
             items = items.concat(this.getSingleSelectCombo(toolConfig));
         }
+        else if (!Ext4.isEmpty(this.toolIdx)){
+            items = this.getSingleToolConfig(toolConfig, this.toolIdx);
+        }
         else {
             items.push({
                 xtype: 'button',
@@ -293,13 +296,31 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         }];
     },
 
-    onComboSelect: function(field){
+    getSingleToolConfig: function(toolConfig, toolIdx){
+        var config = this.getToolStore().getAt(toolIdx).get('config');
+
+        return {
+            itemId: 'toolConfgPanel',
+            width: '100%',
+            border: false,
+            defaults: {
+                width: 450
+            },
+            items: this.getCfgForItem(config)
+        }
+    },
+
+    onComboSelect: function(field) {
         var recIdx = field.store.find('name', field.getValue());
-        if (recIdx == -1){
+        if (recIdx == -1) {
             return;
         }
 
-        var config = field.store.getAt(recIdx).get('config');
+        this.loadConfigForTool(recIdx);
+    },
+
+    loadConfigForTool: function(recIdx){
+        var config = this.getToolStore().getAt(recIdx).get('config');
         var target = this.down('#toolConfgPanel');
         target.removeAll();
         target.add(this.getCfgForItem(config));
@@ -310,6 +331,9 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         if (combo) {
             LDK.Assert.assertTrue('AnalysisSectionPanel.setActiveTools() called with more than 1 name', toolNames != null && toolNames.length <= 1);
             combo.setValue(toolNames && toolNames.length == 1 ? toolNames[0] : null);
+        }
+        else if (!Ext4.isEmpty(this.toolIdx)){
+            //this is always the same tool, ignore
         }
         else {
             var toAdd = [];

@@ -120,7 +120,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         return webserverOutDir;
     }
 
-    private void writeParameters(JSONObject params) throws IOException
+    protected void writeParameters(JSONObject params) throws IOException
     {
         try (PrintWriter writer = PrintWriters.getPrintWriter(getParametersFile()))
         {

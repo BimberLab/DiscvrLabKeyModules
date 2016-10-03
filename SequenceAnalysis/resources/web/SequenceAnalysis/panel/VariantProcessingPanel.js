@@ -245,6 +245,8 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 			toolConfig: results
 		});
 
+		items.push(this.getJobResourcesCfg(results));
+
 		items.push({
 			xtype: 'panel',
 			style: 'padding-bottom: 0px;',

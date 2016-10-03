@@ -27,6 +27,7 @@ import org.labkey.GeneticsCore.notification.GeneticsCoreNotification;
 import org.labkey.GeneticsCore.pipeline.BisSnpGenotyperAnalysis;
 import org.labkey.GeneticsCore.pipeline.BisSnpIndelRealignerStep;
 import org.labkey.GeneticsCore.pipeline.BlastPipelineJobResourceAllocator;
+import org.labkey.GeneticsCore.pipeline.ExacloudResourceSettings;
 import org.labkey.GeneticsCore.pipeline.SequenceJobResourceAllocator;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
@@ -96,6 +97,8 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
 
         HTCondorService.get().registerResourceAllocator(new BlastPipelineJobResourceAllocator.Factory());
         HTCondorService.get().registerResourceAllocator(new SequenceJobResourceAllocator.Factory());
+
+        SequencePipelineService.get().registerResourceSettings(new ExacloudResourceSettings());
 
         //register resources
         new PipelineStartup();

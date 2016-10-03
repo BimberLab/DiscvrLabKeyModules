@@ -1,13 +1,18 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
+import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
 import java.io.File;
 import java.io.Serializable;
@@ -77,8 +82,30 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         _cachedReadsets.add(m);
     }
 
-    public void cacheAnalysis(AnalysisModel m)
+    public void cacheAnalysis(AnalysisModelImpl m, PipelineJob job)
     {
+        if (m.getAlignmentFile() != null)
+        {
+            cacheExpData(m.getAlignmentData());
+        }
+
+        SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(m.getReadset(), job.getUser());
+        cacheReadset(rs);
+
+        if (m.getLibraryId() != null)
+        {
+            try
+            {
+                ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(m.getLibraryId(), job.getUser());
+                cacheGenome(rg);
+                cacheExpData(ExperimentService.get().getExpData(rg.getFastaExpDataId()));
+            }
+            catch (PipelineJobException e)
+            {
+                job.getLogger().error(e.getMessage(), e);
+            }
+        }
+
         _cachedAnalyses.put(m.getRowId(), m);
     }
 

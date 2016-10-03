@@ -772,6 +772,17 @@
                     <ns:fkColumnName>RowId</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
+            <ns:column columnName="jobid">
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:isUnselectable>false</ns:isUnselectable>
+                <ns:columnTitle>Job Id</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>pipeline</ns:fkDbSchema>
+                    <ns:fkTable>Job</ns:fkTable>
+                    <ns:fkColumnName>Job</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>RowId</ns:fkDisplayColumnName>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="datedisabled">
                 <ns:columnTitle>Date Disabled</ns:columnTitle>
                 <ns:nullable>true</ns:nullable>
@@ -838,9 +849,9 @@
             <ns:item text="Reports">
                 <ns:originalText>Reports</ns:originalText>
             </ns:item>
-            <ns:item hidden="true">
-                <ns:originalText>Delete</ns:originalText>
-            </ns:item>
+            <!--<ns:item hidden="true">-->
+                <!--<ns:originalText>Delete</ns:originalText>-->
+            <!--</ns:item>-->
             <ns:item hidden="true">
                 <ns:originalText>Charts</ns:originalText>
             </ns:item>

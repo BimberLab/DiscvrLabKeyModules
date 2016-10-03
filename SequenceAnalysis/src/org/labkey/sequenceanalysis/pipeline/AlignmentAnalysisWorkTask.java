@@ -1,7 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
@@ -24,9 +23,7 @@ import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by bimber on 8/4/2014.
@@ -100,66 +97,34 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
 
         getJob().getLogger().info("Processing Alignments");
         List<AnalysisStep.Output> outputs = new ArrayList<>();
-        Map<String, AnalysisModel> alignmentMap = getAnalysisMap();
-        for (File inputBam : getTaskHelper().getJob().getInputFiles())
+        AnalysisModel m = AnalysisModelImpl.getFromDb(getPipelineJob().getAnalyisId(), getJob().getUser());
+
+        File refFasta = m.getReferenceLibraryFile(getJob().getUser());
+        if (refFasta == null)
         {
-            AnalysisModel m = alignmentMap.get(inputBam.getName());
-            if (m == null)
+            TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
+            Integer refFastaId = new TableSelector(ti, PageFlowUtil.set("fasta_file")).getObject(m.getLibraryId(), Integer.class);
+            if (refFastaId != null)
             {
-                throw new PipelineJobException("Unable to find analysis details for file: " + inputBam.getName());
+                ExpData d = ExperimentService.get().getExpData(refFastaId);
+                refFasta = d == null ? null : d.getFile();
             }
-
-            File refFasta = m.getReferenceLibraryFile(getJob().getUser());
-            if (refFasta == null)
-            {
-                TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
-                Integer refFastaId = new TableSelector(ti, PageFlowUtil.set("fasta_file")).getObject(m.getLibraryId(), Integer.class);
-                if (refFastaId != null)
-                {
-                    ExpData d = ExperimentService.get().getExpData(refFastaId);
-                    refFasta = d == null ? null : d.getFile();
-                }
-            }
-
-            if (refFasta == null)
-            {
-                throw new PipelineJobException("Unable to find reference FASTA for file: " + inputBam.getName());
-            }
-
-            File outDir = new File(getTaskHelper().getJob().getAnalysisDirectory(), FileUtil.getBaseName(inputBam));
-            if (!outDir.exists())
-            {
-                outDir.mkdirs();
-            }
-
-            outputs.addAll(SequenceAnalysisTask.runAnalysesLocal(actions, m, inputBam, refFasta, providers, getTaskHelper(), outDir));
         }
+
+        if (refFasta == null)
+        {
+            throw new PipelineJobException("Unable to find reference FASTA for analysis: " + getPipelineJob().getAnalyisId());
+        }
+
+        File outDir = new File(getTaskHelper().getJob().getAnalysisDirectory(), FileUtil.getBaseName(m.getAlignmentFileObject()));
+        if (!outDir.exists())
+        {
+            outDir.mkdirs();
+        }
+
+        outputs.addAll(SequenceAnalysisTask.runAnalysesLocal(actions, m, m.getAlignmentFileObject(), refFasta, providers, getTaskHelper(), outDir));
 
         return new RecordedActionSet(actions);
-    }
-
-    private Map<String, AnalysisModel> getAnalysisMap() throws PipelineJobException
-    {
-        Map<String, AnalysisModel> ret = new HashMap<>();
-        for (String key : getTaskHelper().getJob().getParameters().keySet())
-        {
-            if (key.startsWith("sample_"))
-            {
-                JSONObject o = new JSONObject(getTaskHelper().getJob().getParameters().get(key));
-                Integer analysisId = o.getInt("analysisid");
-                AnalysisModel m = AnalysisModelImpl.getFromDb(analysisId, getTaskHelper().getJob().getUser());
-                ExpData d = m.getAlignmentData();
-                if (d == null)
-                {
-                    getTaskHelper().getLogger().error("Analysis lacks an alignment file: " + m.getRowId());
-                    continue;
-                }
-
-                ret.put(d.getFile().getName(), m);
-            }
-        }
-
-        return ret;
     }
 
     public SequenceTaskHelper getTaskHelper()

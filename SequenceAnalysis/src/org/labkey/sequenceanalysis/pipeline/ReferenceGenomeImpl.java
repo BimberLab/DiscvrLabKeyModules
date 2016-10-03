@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.run.alignment.AlignerIndexUtil;
 
 import java.io.File;
@@ -72,7 +73,18 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         }
         else
         {
-            return new File(_workingFasta.getParentFile(), name);
+            //if we rsync locally, these are cached w/ the same structure as the server
+            File remoteDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
+            if (remoteDir == null)
+            {
+                return new File(_workingFasta.getParentFile(), name);
+            }
+            else
+            {
+                File ret = new File(_workingFasta.getParentFile(), AlignerIndexUtil.INDEX_DIR);
+
+                return new File(ret, name);
+            }
         }
     }
 }

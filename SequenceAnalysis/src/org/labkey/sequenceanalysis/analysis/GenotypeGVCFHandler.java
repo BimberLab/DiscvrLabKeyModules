@@ -229,6 +229,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutpu
                 processed = outputVcf;
             }
 
+            ctx.getLogger().debug("adding sequence output: " + processed.getPath());
             SequenceOutputFile so1 = new SequenceOutputFile();
             so1.setName(processed.getName());
             so1.setDescription("GATK GenotypeGVCF output");

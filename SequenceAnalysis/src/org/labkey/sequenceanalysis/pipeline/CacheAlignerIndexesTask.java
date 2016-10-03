@@ -123,7 +123,8 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
                     alignmentStep.createIndex(referenceGenome, _wd.getDir());
                     File outDir = new File(_wd.getDir(), alignmentStep.getIndexCachedDirName());
 
-                    AlignerIndexUtil.saveCachedIndex(false, ctx, outDir, provider.getName(), referenceGenome);
+                    //NOTE: the AlignerSteps are doing this themselves.  not sure if that is the right behvior
+                    //AlignerIndexUtil.saveCachedIndex(false, ctx, outDir, provider.getName(), referenceGenome);
 
                     try
                     {
@@ -135,6 +136,13 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
                     }
                 }
             }
+        }
+
+        //also try to rsync, if enabled
+        File cacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
+        if (cacheDir != null)
+        {
+            AlignerIndexUtil.cacheGenomeLocally(referenceGenome, cacheDir, getJob().getLogger());
         }
 
         return new RecordedActionSet();

@@ -19,7 +19,7 @@ JAVA=${JAVA_HOME}/bin/java
 TEMP_BASEDIR=/home/exacloud/lustre1/ONPRCPGP/prime-seq-pipeline-tempdir
 LK_DIR=/home/exacloud/lustre1/ONPRCPGP/prime-seq/labkey
 
-umask 0007
+umask 0006
 
 #expect args like:
 #/home/groups/prime-seq/exacloud/java/current/bin/java -Xmx8g -cp /home/groups/prime-seq/exacloud/labkey/labkeyBootstrap.jar org.labkey.bootstrap.ClusterBootstrap -modulesdir=/home/groups/prime-seq/exacloud/labkey/modules -webappdir=/home/groups/prime-seq/exacloud/labkey/labkeywebapp -configdir=/home/groups/prime-seq/exacloud/labkey/config file:/home/groups/prime-seq/production/Internal/Bimber/19/@files/sequenceAnalysis/SequenceAnalysis_20160603_9/SequenceAnalysis_20160603_9.job.xml

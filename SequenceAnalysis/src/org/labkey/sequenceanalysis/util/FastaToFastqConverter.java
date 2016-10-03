@@ -26,44 +26,31 @@ public class FastaToFastqConverter
 
     public File execute(File input, File output)
     {
-        FastaSequenceFile fasta = null;
-        FastqWriter writer = null;
         FastqWriterFactory fact = new FastqWriterFactory();
 
         _logger.info("Converting FASTA to FASTQ: " + input.getPath());
 
-        try
+        try (FastaSequenceFile fasta = new FastaSequenceFile(input, false);FastqWriter writer = fact.newWriter(output))
         {
-            fasta = new FastaSequenceFile(input, false);
-            writer = fact.newWriter(output);
-
             ReferenceSequence seq;
             int total = 0;
             while ((seq = fasta.nextSequence()) != null)
             {
-                String qual = "";
-                String nt = "";
+                StringBuilder qual = new StringBuilder();
+                StringBuilder nt = new StringBuilder();
                 String c = String.valueOf(Character.toChars(_defaultQual)[0]);
 
                 for (int i = 0; i <= seq.getBases().length; i++) {
-                    qual.concat(c);
-                    nt.concat(Character.toString((char)seq.getBases()[i]));
+                    qual.append(c);
+                    nt.append(Character.toString((char)seq.getBases()[i]));
                 }
 
-                FastqRecord rec = new FastqRecord(seq.getName(), nt, null, qual);
+                FastqRecord rec = new FastqRecord(seq.getName(), nt.toString(), null, qual.toString());
                 writer.write(rec);
                 total++;
             }
 
             _logger.info("\t" + total + " sequences");
-        }
-        finally
-        {
-            if (writer != null)
-                writer.close();
-
-            if (fasta != null)
-                fasta.close();
         }
 
         return output;

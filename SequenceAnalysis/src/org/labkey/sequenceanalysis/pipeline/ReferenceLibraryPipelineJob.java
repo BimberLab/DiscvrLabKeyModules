@@ -22,7 +22,13 @@ import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -34,17 +40,66 @@ import java.util.Map;
  */
 public class ReferenceLibraryPipelineJob extends SequenceJob
 {
+    public static final String FOLDER_NAME = "referenceLibrary";
+
     private String _description;
-    private List<ReferenceLibraryMember> _libraryMembers;
+    transient private List<ReferenceLibraryMember> _libraryMembers = null;
     private Integer _libraryId = null;
     private ReferenceGenomeImpl _referenceGenome = null;
+    private boolean _isNew;
 
     public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId) throws IOException
     {
-        super(ReferenceLibraryPipelineProvider.NAME, c, user, name, pipeRoot, new JSONObject(), new TaskId(TaskPipelineSettings.class, "referenceLibraryPipeline"), "referenceLibraryPipeline");
+        super(ReferenceLibraryPipelineProvider.NAME, c, user, name, pipeRoot, new JSONObject(), new TaskId(TaskPipelineSettings.class, "referenceLibraryPipeline"), FOLDER_NAME);
         _description = description;
-        _libraryMembers = libraryMembers;
         _libraryId = libraryId;
+        _isNew = libraryId == null;
+
+        saveLibraryMembersToFile(libraryMembers);
+    }
+
+    private void saveLibraryMembersToFile(List<ReferenceLibraryMember> libraryMembers) throws IOException
+    {
+        if (libraryMembers != null)
+        {
+            try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(getSerializedLibraryMembersFile()))))
+            {
+                getLogger().info("writing libraryMembers to XML: " + libraryMembers.size());
+                encoder.writeObject(libraryMembers);
+            }
+        }
+
+        _libraryMembers = libraryMembers;
+    }
+
+    private List<ReferenceLibraryMember> readLibraryMembersFromFile() throws IOException
+    {
+        File xml = getSerializedLibraryMembersFile();
+        if (xml.exists())
+        {
+            try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(xml))))
+            {
+                List<ReferenceLibraryMember> ret = (List<ReferenceLibraryMember>) decoder.readObject();
+                getLogger().debug("read libraryMembers from file: " + ret.size());
+
+                return ret;
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    protected void writeParameters(JSONObject params) throws IOException
+    {
+        //no need to write params
+    }
+
+    public File getSerializedLibraryMembersFile()
+    {
+        File outputDir = createLocalDirectory(getPipeRoot());
+
+        return new File(outputDir, FileUtil.makeLegalName(getName()) + ".xml");
     }
 
     @Override
@@ -91,6 +146,18 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
 
     public List<ReferenceLibraryMember> getLibraryMembers()
     {
+        if (_libraryMembers == null)
+        {
+            try
+            {
+                _libraryMembers = readLibraryMembersFromFile();
+            }
+            catch (IOException e)
+            {
+                getLogger().error("Unable to read library file: " + getSerializedLibraryMembersFile().getPath(), e);
+            }
+        }
+
         return _libraryMembers;
     }
 
@@ -106,15 +173,15 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
 
     public boolean isCreateNew()
     {
-        return getLibraryId() == null;
+        return _isNew;
     }
 
-    protected File createLocalDirectory(PipeRoot pipeRoot) throws IOException
+    protected File createLocalDirectory(PipeRoot pipeRoot)
     {
         File outputDir = SequenceAnalysisManager.get().getReferenceLibraryDir(getContainer());
         if (outputDir == null)
         {
-            throw new IOException("No pipeline directory set for folder: " + getContainer().getPath());
+            throw new RuntimeException("No pipeline directory set for folder: " + getContainer().getPath());
         }
 
         if (!outputDir.exists())

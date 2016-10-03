@@ -1,16 +1,19 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Created by bimber on 9/6/2014.
@@ -162,5 +165,18 @@ public class AlignerIndexUtil
                 throw new PipelineJobException(e);
             }
         }
+    }
+
+    public static void cacheGenomeLocally(ReferenceGenome genome, File localCacheDir, Logger log) throws PipelineJobException
+    {
+        log.info("attempting to rsync genome to local disks: " + localCacheDir.getPath());
+
+        File sourceDir = genome.getSourceFastaFile().getParentFile();
+
+        new SimpleScriptWrapper(log).execute(Arrays.asList(
+                "rsync", "-r", "-vi", "-a", "--delete", "--delete-excluded", "--exclude", "tracks/*", "--exclude", "chainFiles/*", "--no-owner", "--no-group", sourceDir.getPath(), localCacheDir.getPath()
+        ));
+
+        genome.setWorkingFasta(new File(new File(localCacheDir, genome.getGenomeId().toString()), genome.getSourceFastaFile().getName()));
     }
 }

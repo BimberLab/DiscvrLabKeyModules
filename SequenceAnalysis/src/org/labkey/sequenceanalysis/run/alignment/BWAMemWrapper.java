@@ -131,7 +131,7 @@ public class BWAMemWrapper extends BWAWrapper
                 int lastReturnCode = samtoolsProcess.waitFor();
                 if (lastReturnCode != 0)
                 {
-                    getLogger().warn("\tprocess exited with non-zero value: " + lastReturnCode);
+                    throw new PipelineJobException("process exited with non-zero value: " + lastReturnCode);
                 }
             }
             catch (InterruptedException e)

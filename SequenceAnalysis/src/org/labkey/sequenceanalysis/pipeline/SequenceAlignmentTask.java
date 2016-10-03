@@ -50,6 +50,7 @@ import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
+import org.labkey.sequenceanalysis.run.alignment.AlignerIndexUtil;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
 import org.labkey.sequenceanalysis.run.util.AddOrReplaceReadGroupsWrapper;
@@ -83,6 +84,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -256,7 +258,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             getHelper().getFileManager().processUnzippedInputs();
             getHelper().getFileManager().deleteIntermediateFiles();
             getHelper().getFileManager().deleteDeferredIntermediateFiles();
-            getHelper().getFileManager().cleanup(_resumer.getRecordedActionSet().getActions());
+            getHelper().getFileManager().cleanup(_resumer.getRecordedActions());
             _resumer.markComplete();
         }
         catch (IOException e)
@@ -264,7 +266,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             throw new PipelineJobException(e);
         }
 
-        return new RecordedActionSet(_resumer.getRecordedActionSet());
+        return new RecordedActionSet(new RecordedActionSet(_resumer.getRecordedActions()));
     }
 
     private void logEnvironment() throws PipelineJobException
@@ -404,7 +406,12 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             doCopy = true;
         }
 
-        if (doCopy)
+        File localCachedIndexDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
+        if (localCachedIndexDir != null)
+        {
+            AlignerIndexUtil.cacheGenomeLocally(referenceGenome, localCachedIndexDir, getJob().getLogger());
+        }
+        else if (doCopy)
         {
             try
             {
@@ -612,7 +619,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         {
             getJob().getLogger().info("resuming initial alignment from saved state");
             bam = _resumer.getMergedBamFile();
-            getJob().getLogger().info("file: " + bam.getPath());
+            getJob().getLogger().debug("file: " + bam.getPath());
         }
         else
         {
@@ -672,7 +679,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         {
             getJob().getLogger().info("resuming BAM post processing from saved state");
             bam = _resumer.getPostProcessedBamFile();
-            getJob().getLogger().info("file: " + bam.getPath());
+            getJob().getLogger().debug("file: " + bam.getPath());
         }
         else
         {
@@ -796,6 +803,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     getJob().getLogger().warn("unexpected file, deleting: " + renamedBam.getPath());
                 }
 
+                if (renamedBam.exists())
+                {
+                    getJob().getLogger().debug("deleting existing BAM: " + renamedBam.getName());
+                    renamedBam.delete();
+                }
                 FileUtils.moveFile(bam, renamedBam);
 
                 File bamIdxOrig = new File(bam.getPath() + ".bai");
@@ -815,7 +827,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             Date end = new Date();
             renameAction.setEndTime(end);
-            getJob().getLogger().info("Move Bam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+            getJob().getLogger().info("Rename Bam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
 
             _resumer.setBamRenameDone(renamedBam, Arrays.asList(renameAction));
         }
@@ -1087,7 +1099,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         transient SequenceAlignmentTask _task;
 
         private TaskFileManagerImpl _fileManager;
-        private RecordedActionSet _recordedActionSet = new RecordedActionSet();
+        private LinkedHashSet<RecordedAction> _recordedActions = null;
         private Map<File, File> _copiedInputs = new HashMap<>();
         private boolean _isResume = false;
 
@@ -1111,6 +1123,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         {
             _task = task;
             _fileManager = _task.getHelper().getFileManager();
+            _recordedActions = new LinkedHashSet<>();
         }
 
         public static Resumer create(SequenceAlignmentJob job, SequenceAlignmentTask task) throws PipelineJobException
@@ -1167,7 +1180,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         private void writeToXml() throws PipelineJobException
         {
-            _task.getJob().getLogger().info("saving job checkpoint to file");
+            _task.getJob().getLogger().debug("saving job checkpoint to file");
+            _task.getJob().getLogger().debug("total actions: " + _recordedActions.size());
             try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(getSerializedXml(_task.getPipelineJob())))))
             {
                 encoder.setPersistenceDelegate(File.class, FilePersistenceDelegate);
@@ -1205,7 +1219,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _workingFasta = workingFasta;
             for (RecordedAction action : actions)
             {
-                _recordedActionSet.add(action);
+                _recordedActions.add(action);
             }
             _copiedInputs.putAll(copiedInputs);
             saveState();
@@ -1226,7 +1240,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _filesToAlign = toAlign;
             for (RecordedAction action : actions)
             {
-                _recordedActionSet.add(action);
+                _recordedActions.add(action);
             }
             _copiedInputs.putAll(copiedInputs);
             saveState();
@@ -1242,7 +1256,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _mergedBamFile = mergedBamFile;
             for (RecordedAction action : actions)
             {
-                _recordedActionSet.add(action);
+                _recordedActions.add(action);
             }
             saveState();
         }
@@ -1257,7 +1271,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _postProcessedBamFile = postProcessedBamFile;
             for (RecordedAction action : actions)
             {
-                _recordedActionSet.add(action);
+                _recordedActions.add(action);
             }
             saveState();
         }
@@ -1272,7 +1286,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _sortedBamFile = sortedBamFile;
             if (action != null)
             {
-                _recordedActionSet.add(action);
+                _recordedActions.add(action);
             }
 
             saveState();
@@ -1288,7 +1302,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _renamedBamFile = renamedBamFile;
             for (RecordedAction action : actions)
             {
-                _recordedActionSet.add(action);
+                _recordedActions.add(action);
             }
 
             saveState();
@@ -1309,7 +1323,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _bamAnalysisDone = true;
             for (RecordedAction action : actions)
             {
-                _recordedActionSet.add(action);
+                _recordedActions.add(action);
             }
             saveState();
         }
@@ -1399,14 +1413,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _bamAnalysisDone = bamAnalysisDone;
         }
 
-        public RecordedActionSet getRecordedActionSet()
+        public LinkedHashSet<RecordedAction> getRecordedActions()
         {
-            return _recordedActionSet;
+            return _recordedActions;
         }
 
-        public void setRecordedActionSet(RecordedActionSet recordedActionSet)
+        public void setRecordedActions(LinkedHashSet<RecordedAction> recordedActions)
         {
-            _recordedActionSet = recordedActionSet;
+            _recordedActions = recordedActions;
         }
 
         public boolean isAlignmentMetricsDone()
@@ -1434,7 +1448,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _indexBamDone = indexBamDone;
             if (action != null)
             {
-                _recordedActionSet.add(action);
+                _recordedActions.add(action);
             }
             saveState();
         }
@@ -1444,7 +1458,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _alignmentMetricsDone = alignmentMetricsDone;
             if (action != null)
             {
-                _recordedActionSet.add(action);
+                _recordedActions.add(action);
             }
             saveState();
         }

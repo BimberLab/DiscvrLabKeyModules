@@ -26,6 +26,7 @@ import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -69,6 +70,9 @@ abstract public class SequencePipelineService
 
     abstract public List<String> getJavaOpts();
 
+    @Nullable
+    abstract public File getRemoteGenomeCacheDirectory();
+
     abstract public Integer getMaxThreads(PipelineJob job);
 
     abstract public CommandWrapper getCommandWrapper(Logger log);
@@ -91,4 +95,8 @@ abstract public class SequencePipelineService
     abstract public void sortROD(File input, Logger log) throws IOException, PipelineJobException;
 
     abstract public String inferRPath(Logger log);
+
+    abstract public void registerResourceSettings(JobResourceSettings settings);
+
+    abstract public Map<String, Object> getQualityMetrics(File fastq, Logger log);
 }

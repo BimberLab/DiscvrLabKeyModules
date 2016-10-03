@@ -28,9 +28,11 @@ import java.util.List;
  */
 public class AlignmentImportJob extends SequenceJob
 {
+    public static final String FOLDER_NAME = "sequenceImport";
+
     private AlignmentImportJob(Container c, User u, String jobName, PipeRoot root, JSONObject params) throws IOException
     {
-        super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), "sequenceImport");
+        super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), FOLDER_NAME);
     }
 
     public static List<AlignmentImportJob> create(Container c, User u, String jobName, String description, JSONObject params, Collection<File> inputFiles) throws IOException, PipelineValidationException

@@ -110,6 +110,17 @@
                             fieldLabel: 'Min Datapoints Per Group',
                             name: 'minDatapointsPerGroup',
                             value: 3
+                        },{
+                            xtype: 'radiogroup',
+                            allowBlank: true,
+                            fieldLabel: 'Statistical Method',
+                            name: 'statisticalMethod',
+                            items: [{
+                                inputValue: 'wilcox',
+                                name: 'statisticalMethod',
+                                checked: true,
+                                boxLabel: 'Wilcoxon p-value'
+                            }]
                         }]
                     },{
                         title: 'Step 2: Define Groups',

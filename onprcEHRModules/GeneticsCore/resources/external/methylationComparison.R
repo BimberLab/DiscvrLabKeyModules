@@ -3,7 +3,8 @@ require(reshape)
 
 args <- commandArgs(TRUE)
 inputFile <- args[1]
-outputFile <- args[2]
+method <- args[2]
+outputFile <- args[3]
 
 # Read input data table
 D<-read.table(inputFile,header=FALSE)
@@ -16,12 +17,16 @@ wx <- function(d){
         paired=FALSE,
         exact=FALSE
     )
-    str(w)
+
     return(w$p.value)
 }
 
-DW<-ddply(D, .(Chr, Pos), .fun = wx  )
-names(DW)<-c("Chr","Pos","Wilcox_Pval")
+if (method == "wilcox"){
+    DW<-ddply(D, .(Chr, Pos), .fun = wx  )
+    names(DW)<-c("Chr","Pos","Wilcox_Pval")
+} else {
+    stop(paste0("Unknown statistical method: ", method))
+}
 
 write.table(DW,file=outputFile, row.names = FALSE, col.names = FALSE, sep= "\t")
 

@@ -39,6 +39,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,8 +56,7 @@ import java.util.zip.GZIPInputStream;
  */
 public class BismarkWrapper extends AbstractCommandWrapper
 {
-    private static String WORKING_GENOME_NAME = "Bisulfite_Genome";
-    private static String CACHED_NAME_BOWTIE2 = "Bisulfite_Genome_Bowtie2";
+    private static String CONVERTED_GENOME_NAME = "Bisulfite_Genome";
 
     public BismarkWrapper(@Nullable Logger logger)
     {
@@ -80,18 +81,45 @@ public class BismarkWrapper extends AbstractCommandWrapper
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, WORKING_GENOME_NAME, CACHED_NAME_BOWTIE2, referenceGenome, true);
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, CONVERTED_GENOME_NAME, getIndexCachedDirName() + "/" + CONVERTED_GENOME_NAME, referenceGenome);
             BismarkWrapper wrapper = getWrapper();
 
             List<String> args = new ArrayList<>();
             args.add(wrapper.getExe().getPath());
+            
+            //NOTE: bismark requires both the index dir and FASTA to be in the same directory.  to sidestep this, make a local dir and create symlinks
+            File existingIndexDir = referenceGenome.getAlignerIndexDir(getIndexCachedDirName());
+            getPipelineCtx().getLogger().debug("using index from: " + existingIndexDir.getPath());
 
-            //NOTE: this currently will only work when copied to remote server
-            args.add(referenceGenome.getWorkingFastaFile().getParentFile().getPath());
+            try
+            {
+                File convertedGenome = new File(existingIndexDir, CONVERTED_GENOME_NAME);
+                File localIndexDir = new File(outputDirectory, "genome");
+                if (localIndexDir.exists())
+                {
+                    FileUtils.deleteDirectory(localIndexDir);
+                }
+                localIndexDir.mkdirs();
+                output.addIntermediateFile(localIndexDir);
+
+                getPipelineCtx().getLogger().debug("adding Genome and FASTA symlinks");
+                Path link1 = Files.createSymbolicLink(new File(localIndexDir, CONVERTED_GENOME_NAME).toPath(), convertedGenome.toPath());
+                Path link2 = Files.createSymbolicLink(new File(localIndexDir, referenceGenome.getWorkingFastaFile().getName()).toPath(), referenceGenome.getWorkingFastaFile().toPath());
+                //output.addIntermediateFile(link1.toFile());
+                //output.addIntermediateFile(link2.toFile());
+
+                args.add(localIndexDir.getPath());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
 
             args.add("--samtools_path");
             args.add(new SamtoolsRunner(getPipelineCtx().getLogger()).getSamtoolsPath().getParentFile().getPath());
             args.add("--path_to_bowtie");
+
+            //TODO: consider param for bowtie vs. bowtie2
             args.add(new Bowtie2Wrapper(getPipelineCtx().getLogger()).getExe().getParentFile().getPath());
 
             if (getClientCommandArgs() != null)
@@ -158,13 +186,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
         @Override
         public boolean alwaysCopyIndexToWorkingDir()
         {
-            return true;
-        }
-
-        @Override
-        public String getIndexCachedDirName()
-        {
-            return CACHED_NAME_BOWTIE2;
+            return false;
         }
 
         @Override
@@ -176,7 +198,6 @@ public class BismarkWrapper extends AbstractCommandWrapper
             //always make sure FASTA is in analysis directory
             File localFasta = new File(outputDir, referenceGenome.getWorkingFastaFile().getName());
             File indexOutputDir = localFasta.getParentFile();
-            File genomeBuild = new File(indexOutputDir, WORKING_GENOME_NAME);
 
             boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(), referenceGenome);
             if (!hasCachedIndex)
@@ -205,45 +226,56 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     }
                 }
 
+                //first build for bowtie2
                 List<String> args = new ArrayList<>();
                 args.add(getWrapper().getBuildExe().getPath());
                 args.add("--bowtie2");
                 args.add("--path_to_bowtie");
                 args.add(new Bowtie2Wrapper(getPipelineCtx().getLogger()).getExe().getParentFile().getPath());
-
-                //args.add("--verbose");
-                if (!indexOutputDir.exists())
-                {
-                    indexOutputDir.mkdirs();
-                }
-                //NOTE: this needs to be where the FASTA is located (probably the top level /Shared dir)
                 args.add(indexOutputDir.getPath());
-
                 getWrapper().execute(args);
 
-                if (!genomeBuild.exists())
+                File genomeBuild = new File(indexOutputDir, CONVERTED_GENOME_NAME);
+                File bowtie2TestFile = new File(genomeBuild, "CT_conversion/BS_CT.1.bt2");
+                if (!bowtie2TestFile.exists())
                 {
-                    throw new PipelineJobException("Unable to find file, expected: " + genomeBuild.getPath());
+                    throw new PipelineJobException("Unable to find file, expected: " + bowtie2TestFile.getPath());
                 }
 
-                //rename this to be unique to bowtie2 for caching.  will be renamed when we use it
-                File renamedDir = new File(indexOutputDir, CACHED_NAME_BOWTIE2);
+                //then build for bowtie
+                List<String> args2 = new ArrayList<>();
+                args2.add(getWrapper().getBuildExe().getPath());
+                args2.add("--bowtie1");
+                args2.add("--path_to_bowtie");
+                args2.add(new BowtieWrapper(getPipelineCtx().getLogger()).getExe().getParentFile().getPath());
+                args2.add(indexOutputDir.getPath());
+                getWrapper().execute(args2);
+
+                File bowtieTestFile = new File(genomeBuild, "CT_conversion/BS_CT.1.ebwt");
+                if (!bowtieTestFile.exists())
+                {
+                    throw new PipelineJobException("Unable to find file, expected: " + bowtieTestFile.getPath());
+                }
+
+                File indexBaseDir = new File(localFasta.getParentFile(), getIndexCachedDirName());
+                if (!indexBaseDir.exists())
+                {
+                    indexBaseDir.mkdirs();
+                }
+
+                File movedDir = new File(indexBaseDir, genomeBuild.getName());
                 try
                 {
-                    FileUtils.moveDirectory(genomeBuild, renamedDir);
+                    FileUtils.moveDirectory(genomeBuild, movedDir);
+                    output.appendOutputs(referenceGenome.getWorkingFastaFile(), movedDir, true);
                 }
                 catch (IOException e)
                 {
                     throw new PipelineJobException(e);
                 }
 
-                genomeBuild = renamedDir;
-
-                output.appendOutputs(referenceGenome.getWorkingFastaFile(), genomeBuild, true);
-
                 //recache if not already
-                AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), genomeBuild, CACHED_NAME_BOWTIE2, referenceGenome);
-
+                AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexBaseDir, getIndexCachedDirName(), referenceGenome);
             }
 
             return output;
@@ -674,7 +706,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
         private String getScriptPath() throws PipelineJobException
         {
             Module module = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
-            Resource script = module.getModuleResource("/external/R/methylationBasiftats.R");
+            Resource script = module.getModuleResource("/external/R/methylationBasicStats.R");
             if (!script.exists())
                 throw new PipelineJobException("Unable to find file: " + script.getPath());
 

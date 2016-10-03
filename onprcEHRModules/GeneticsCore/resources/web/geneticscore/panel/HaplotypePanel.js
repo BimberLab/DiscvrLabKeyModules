@@ -3,7 +3,6 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
     alias: 'widget.geneticscore-haplotypepanel',
     analysisIds: null,
     showCheckBoxes: false,
-    pctDifferentialFilter: 10,
 
     initComponent: function(){
         Ext4.apply(this, {
@@ -33,6 +32,18 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                 value: 60,
                 xtype: 'ldk-integerfield',
                 itemId: 'minPctExplained'
+            },{
+                fieldLabel: 'Threshold For Secondary Hits',
+                helpPopup: 'Normally this will retain only the haplotypes that explain the highest percent of lineages.  If provided, other matches within this percent of the highest will also be included.',
+                value: 10,
+                xtype: 'ldk-integerfield',
+                itemId: 'pctDiffThreshold'
+            },{
+                fieldLabel: 'Pct Differential Filter',
+                helpPopup: 'If there is a differential greater than this value between the haplotypes that explain the highest # of alleles compared to the highest percent, the matches explaining the greatest number will be discarded.',
+                value: 10,
+                xtype: 'ldk-integerfield',
+                itemId: 'pctDifferentialFilter'
             },{
                 xtype: 'ldk-linkbutton',
                 text: 'Click Here View Haplotype Definitions',
@@ -229,6 +240,7 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                                 json.push({haplotype: r.get('haplotype1').getName(), analysisId: r.get('analysisId'), pct: pct, category: r.get('locus'), comments: getComments(r, 1, 2)});
                             }
                             else if (r.get('omit1')){
+                                haplotypeNames.push(omitMsg);
                                 json.push({haplotype: omitMsg, analysisId: r.get('analysisId'), pct: 0.0, category: r.get('locus'), comments: getComments(r, 1, 2)});
                             }
 
@@ -238,6 +250,7 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                                 json.push({haplotype: r.get('haplotype2').getName(), analysisId: r.get('analysisId'), pct: pct, category: r.get('locus'), comments: getComments(r, 2, 1)});
                             }
                             else if (r.get('omit2')){
+                                haplotypeNames.push(omitMsg);
                                 json.push({haplotype: omitMsg, analysisId: r.get('analysisId'), pct: 0.0, category: r.get('locus'), comments: getComments(r, 2, 1)});
                             }
 
@@ -479,6 +492,9 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
         var store = this.down('grid').store;
         var minPctExplained = this.down('#minPctExplained').getValue();
         var minPctForHaplotype = this.down('#minPctForHaplotype').getValue();
+        var pctDiffThreshold = this.down('#pctDiffThreshold').getValue() || 0;
+        var pctDifferentialFilter = this.down('#pctDifferentialFilter').getValue();
+
         store.removeAll();
         Ext4.each(Ext4.Object.getKeys(this.resultsByLoci), function(analysisId){
             Ext4.each(Ext4.Object.getKeys(this.resultsByLoci[analysisId]), function(locus){
@@ -559,6 +575,14 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                 var pctRank = Ext4.Array.map(Ext4.Object.getKeys(rankedPctMatches), function(x){return Ext4.util.Format.number(parseFloat(x), '0.00')}).sort(function(a,b){return a - b});
                 var totalPct = pctRank.pop();
                 var highestByPct = rankedPctMatches[totalPct];
+                if (pctRank.length){
+                    Ext4.Array.forEach(pctRank, function(p){
+                        if ((totalPct - p) <= pctDiffThreshold){
+                            console.log('adding based on pctDiffThreshold: ' + rankedPctMatches[p].join(','));
+                            highestByPct = highestByPct.concat(rankedPctMatches[p]);
+                        }
+                    }, this);
+                }
 
                 if (!highest && !highestByPct){
                     var record = store.createModel({
@@ -601,12 +625,14 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                     //attempt to resolve:
                     if (highest && highestByPct && matches.length > 1){
                         var initial = matches.length;
-                        Ext4.Array.forEach(highest, function(n){
-                            //if there's a 20% differential, ignore the one explaining more hits
-                            if (totalPct - pctExplainedByMatch[n] > this.pctDifferentialFilter){
-                                matches.remove(n);
-                            }
-                        }, this);
+                        if (pctDifferentialFilter) {
+                            Ext4.Array.forEach(highest, function (n) {
+                                //if there's a 20% differential, ignore the one explaining more hits
+                                if (totalPct - pctExplainedByMatch[n] > pctDifferentialFilter) {
+                                    matches.remove(n);
+                                }
+                            }, this);
+                        }
 
                         if (matches.length != initial){
                             console.log('haplotypes remaining after pct filter: ' + matches.length + ' (' + initial + ')');

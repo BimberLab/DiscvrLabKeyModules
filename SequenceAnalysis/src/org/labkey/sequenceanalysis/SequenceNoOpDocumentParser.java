@@ -22,7 +22,7 @@ public class SequenceNoOpDocumentParser extends AbstractDocumentParser
     protected void parseContent(InputStream stream, ContentHandler handler) throws IOException, SAXException
     {
         // Intentionally no-op as the content isn't very interesting for full text search and might be enormous
-        _log.info("skipping indexing of sequence document");
+        //_log.info("skipping indexing of sequence document");
     }
 
     public String getMediaType()

@@ -1,23 +1,14 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
-import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
-import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
-import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
-import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
-import org.labkey.sequenceanalysis.SequenceReadsetImpl;
-import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -86,7 +77,6 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
         _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
         getTaskHelper().cacheExpDatasForParams();
-        cacheAnalysisModels();
 
         List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
         if (providers.isEmpty())
@@ -102,45 +92,6 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
         }
 
         return new RecordedActionSet();
-    }
-
-    public List<AnalysisModel> cacheAnalysisModels() throws PipelineJobException
-    {
-        List<AnalysisModel> ret = new ArrayList<>();
-        for (String key : getTaskHelper().getJob().getParameters().keySet())
-        {
-            if (key.startsWith("sample_"))
-            {
-                JSONObject o = new JSONObject(getTaskHelper().getJob().getParameters().get(key));
-                Integer analysisId = o.getInt("analysisid");
-                AnalysisModel m = AnalysisModelImpl.getFromDb(analysisId, getTaskHelper().getJob().getUser());
-                ExpData d = m.getAlignmentData();
-                if (d == null)
-                {
-                    getTaskHelper().getLogger().error("Analysis lacks an alignment file: " + m.getRowId());
-                    continue;
-                }
-
-                ret.add(m);
-            }
-        }
-
-        getTaskHelper().getLogger().debug("caching " + ret.size() + " analyses for use on remote server");
-        for (AnalysisModel m : ret)
-        {
-            getTaskHelper().getSequenceSupport().cacheExpData(m.getAlignmentData());
-            getTaskHelper().getSequenceSupport().cacheExpData(m.getReferenceLibraryData(getJob().getUser()));
-            getPipelineJob().getSequenceSupport().cacheAnalysis(m);
-
-            SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(m.getReadset(), getJob().getUser());
-            getPipelineJob().getSequenceSupport().cacheReadset(rs);
-
-            ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(m.getLibraryId(), getJob().getUser());
-            getTaskHelper().getSequenceSupport().cacheGenome(rg);
-            (getTaskHelper().getSequenceSupport()).cacheExpData(ExperimentService.get().getExpData(rg.getFastaExpDataId()));
-        }
-
-        return ret;
     }
 
     private AlignmentAnalysisJob getPipelineJob()

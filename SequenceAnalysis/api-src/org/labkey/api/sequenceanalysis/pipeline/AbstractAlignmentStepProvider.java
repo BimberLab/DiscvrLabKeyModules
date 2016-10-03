@@ -97,6 +97,7 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
         JSONObject json = super.toJSON();
         json.put("supportsPairedEnd", supportsPairedEnd());
         json.put("supportsMergeUnaligned", isSupportsMergeUnaligned());
+        json.put("alwaysCacheIndex", isAlwaysCacheIndex());
 
         return json;
     }

@@ -102,6 +102,8 @@ import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
 import org.labkey.sequenceanalysis.run.variant.SelectSNVsStep;
 import org.labkey.sequenceanalysis.run.variant.SelectVariantsStep;
 import org.labkey.sequenceanalysis.run.variant.VariantAnnotatorStep;
+import org.labkey.sequenceanalysis.run.variant.VariantEvalBySampleStep;
+import org.labkey.sequenceanalysis.run.variant.VariantEvalStep;
 import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.VariantsSummaryStep;
 import org.labkey.sequenceanalysis.run.variant.VariantsToTableStep;
@@ -130,7 +132,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.303;
+        return 12.304;
     }
 
     public boolean hasScripts()
@@ -249,6 +251,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new VariantAnnotatorStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantFiltrationStep.Provider());
 
+        SequencePipelineService.get().registerPipelineStep(new VariantEvalStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VariantEvalBySampleStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantsToTableStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantsSummaryStep.Provider());
 

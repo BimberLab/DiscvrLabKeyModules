@@ -3,6 +3,7 @@ package org.labkey.GeneticsCore;
 import org.labkey.api.data.AbstractTableInfo;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExpProtocol;
@@ -10,9 +11,13 @@ import org.labkey.api.exp.property.Domain;
 import org.labkey.api.ldk.table.AbstractTableCustomizer;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.study.assay.AssayProtocolSchema;
 import org.labkey.api.study.assay.AssayProvider;
 import org.labkey.api.study.assay.AssayService;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -96,17 +101,21 @@ public class GeneticsTableCustomizer extends AbstractTableCustomizer implements 
                 return;
             }
 
-            Domain d = ap.getResultsDomain(protocols.get(0));
-            SQLFragment sql = new SQLFragment("(select count(*) FROM assayresult." + d.getStorageTableName() + " a WHERE a.analysisId = " + ExprColumn.STR_TABLE_ALIAS + ".rowid AND a.result IS NOT NULL)");
+            AssayProtocolSchema schema = ap.createProtocolSchema(ti.getUserSchema().getUser(), ti.getUserSchema().getContainer(), protocols.get(0), null);
+            TableInfo data = schema.getTable("data");
+
+            SQLFragment selectSql = QueryService.get().getSelectSQL(data, Collections.singleton(data.getColumn("analysisId")), new SimpleFilter(FieldKey.fromString("run/assayType"), GeneticsCoreManager.SBT_LINEAGE_ASSAY_TYPE), null, 999999, 0, false);
+            SQLFragment sql = new SQLFragment("(select count(*) FROM (").append(selectSql).append(") a WHERE a.analysisId = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ti, "numCachedResults", sql, JdbcType.INTEGER, ti.getColumn("rowid"));
-            newCol.setLabel("# Cached Results");
-            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=assay." + ap.getName().replaceAll(" ", "") + "." + protocols.get(0).getName() + "&query.queryName=data&query.analysisId~eq=${rowid}", (ti.getUserSchema().getContainer().isWorkbook() ? ti.getUserSchema().getContainer().getParent() : ti.getUserSchema().getContainer())));
+            newCol.setLabel("# Cached Lineages");
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=assay." + ap.getName().replaceAll(" ", "") + "." + protocols.get(0).getName() + "&query.queryName=data&query.analysisId~eq=${rowid}&query.run/assayType~eq=" + GeneticsCoreManager.SBT_LINEAGE_ASSAY_TYPE, (ti.getUserSchema().getContainer().isWorkbook() ? ti.getUserSchema().getContainer().getParent() : ti.getUserSchema().getContainer())));
             ti.addColumn(newCol);
 
-            SQLFragment sql2 = new SQLFragment("(select count(*) FROM assayresult." + d.getStorageTableName() + " a WHERE a.analysisId = " + ExprColumn.STR_TABLE_ALIAS + ".rowid AND a.result IS NULL)");
+            SQLFragment selectSql2 = QueryService.get().getSelectSQL(data, Collections.singleton(data.getColumn("analysisId")), new SimpleFilter(FieldKey.fromString("run/assayType"), GeneticsCoreManager.HAPLOTYPE_ASSAY_TYPE), null, 999999, 0, false);
+            SQLFragment sql2 = new SQLFragment("(select count(*) FROM (").append(selectSql2).append(") a WHERE a.analysisId = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol2 = new ExprColumn(ti, "numCachedHaplotypes", sql2, JdbcType.INTEGER, ti.getColumn("rowid"));
             newCol2.setLabel("# Cached Haplotypes");
-            newCol2.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=assay." + ap.getName().replaceAll(" ", "") + "." + protocols.get(0).getName() + "&query.queryName=data&query.analysisId~eq=${rowid}", (ti.getUserSchema().getContainer().isWorkbook() ? ti.getUserSchema().getContainer().getParent() : ti.getUserSchema().getContainer())));
+            newCol2.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=assay." + ap.getName().replaceAll(" ", "") + "." + protocols.get(0).getName() + "&query.queryName=data&query.analysisId~eq=${rowid}&query.run/assayType~eq=" + GeneticsCoreManager.HAPLOTYPE_ASSAY_TYPE, (ti.getUserSchema().getContainer().isWorkbook() ? ti.getUserSchema().getContainer().getParent() : ti.getUserSchema().getContainer())));
             ti.addColumn(newCol2);
         }
     }
