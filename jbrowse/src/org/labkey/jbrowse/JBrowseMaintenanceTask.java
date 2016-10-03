@@ -12,7 +12,7 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.util.DefaultSystemMaintenanceTask;
+import org.labkey.api.util.SystemMaintenance.MaintenanceTask;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
@@ -27,7 +27,7 @@ import java.util.Set;
  * Date: 7/20/2014
  * Time: 3:34 PM
  */
-public class JBrowseMaintenanceTask extends DefaultSystemMaintenanceTask
+public class JBrowseMaintenanceTask implements MaintenanceTask
 {
     private static Logger _log = Logger.getLogger(JBrowseMaintenanceTask.class);
 
