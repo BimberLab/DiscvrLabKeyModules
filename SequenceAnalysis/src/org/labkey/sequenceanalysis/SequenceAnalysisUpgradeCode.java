@@ -31,9 +31,21 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
     @SuppressWarnings({"UnusedDeclaration"})
     public void migrateSequenceField(final ModuleContext moduleContext)
     {
+        TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
+
+        // original installs used SQL scripts to populate data into the ref NT table.  with the
+        // new storage scheme this is not ideal, so simply delete these for new installs
         try
         {
-            TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
+            if (moduleContext.isNewInstall())
+            {
+                TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"));
+                List<Integer> rowIds = ts.getArrayList(Integer.class);
+
+                SequenceAnalysisManager.get().deleteRefNtSequence(rowIds);
+                return;
+            }
+
             TableSelector ts = new TableSelector(ti);
             List<RefNtSequenceModel> nts = ts.getArrayList(RefNtSequenceModel.class);
             _log.info(nts.size() + " total sequences to migrate");
