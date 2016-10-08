@@ -59,6 +59,7 @@ import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequencePipelineProvider;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
@@ -132,7 +133,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.304;
+        return 12.305;
     }
 
     public boolean hasScripts()
@@ -357,6 +358,11 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         return testClasses;
     }
+
+//    public Set<Class> getUnitTests()
+//    {
+//        return PageFlowUtil.set(SequenceAlignmentTask.TestCase.class);
+//    }
 
     @Override
     public UpgradeCode getUpgradeCode()
