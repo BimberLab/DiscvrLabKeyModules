@@ -32,6 +32,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.RuntimeSQLException;
@@ -55,6 +56,7 @@ import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.TestContext;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
@@ -66,6 +68,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -472,6 +475,15 @@ public class BamIterator
             TableInfo tableNt = QueryService.get().getUserSchema(TestContext.get().getUser(), _project, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
             SimpleFilter ntFilter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
             TableSelector tsNt = new TableSelector(tableNt, ntFilter, null);
+            if (!tsNt.exists())
+            {
+                Map<String, Object> map = new CaseInsensitiveHashMap<>();
+                map.put("name", "SIVmac239");
+                map.put("category", "Virus");
+
+                Table.insert(TestContext.get().getUser(), tableNt, map);
+            }
+
             RefNtSequenceModel nt = tsNt.getObject(RefNtSequenceModel.class);
 
             File output = new File(_pipelineRoot, "Ref_DB.fasta");
@@ -492,7 +504,7 @@ public class BamIterator
                 index.delete();
             }
 
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(idFile)))
+            try (PrintWriter writer = PrintWriters.getPrintWriter(idFile))
             {
                 FileUtil.copyFile(file, new File(_pipelineRoot, "Ref_DB.fasta"));
                 FileUtil.copyFile(new File(getSampleDataDir(), "Ref_DB.fasta.fai"), new File(_pipelineRoot, "Ref_DB.fasta.fai"));
