@@ -123,6 +123,7 @@
         <columnTitle>Object Id</columnTitle>
         <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
         <scale>4000</scale>
+        <isKeyField>true</isKeyField>
       </column>
     </columns>
     <tableTitle>weight</tableTitle>
