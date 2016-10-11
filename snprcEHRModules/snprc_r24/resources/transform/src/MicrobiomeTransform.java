@@ -77,7 +77,7 @@ public class MicrobiomeTransform extends AbstractAssayValidator
         String s;
 
         // column header lookup HashMap
-        _dictionary.put("Marmoset ID", "AnimalId\t");
+        _dictionary.put("Marmoset ID", "ParticipantId\t");
         _dictionary.put("Sample Date", "Date\t");
         _dictionary.put("UI ID", "UiId\t");
         _dictionary.put("GRC ID", "GrcId\t");

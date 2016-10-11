@@ -87,7 +87,7 @@
     <tableTitle>demographics</tableTitle>
   </table>
   <table tableName="weight" tableDbType="TABLE">
-    <description>Contains up to one row of weight data for each Animal Id/Date combination.</description>
+    <description>Contains up to one row of weight data for each Animal Id/Date/objectid combination.</description>
     <columns>
       <column columnName="AnimalId">
         <datatype>varchar</datatype>
@@ -182,5 +182,98 @@
       </column>
     </columns>
     <tableTitle>idHistory</tableTitle>
+  </table>
+  <table tableName="Microbiome" tableDbType="TABLE">
+    <description>Contains up to one row of Microbiome (Microbiome (unpivoted)) data for each Animal Id/Date/RowId combination.</description>
+    <columns>
+      <column columnName="AnimalId">
+        <datatype>varchar</datatype>
+        <columnTitle>Animal Id</columnTitle>
+        <description>Subject identifier</description>
+        <propertyURI>http://cpas.labkey.com/Study#ParticipantId</propertyURI>
+        <nullable>false</nullable>
+        <importAliases>
+          <importAlias>ptid</importAlias>
+        </importAliases>
+        <fk>
+          <fkDbSchema>study</fkDbSchema>
+          <fkTable>AnimalId</fkTable>
+          <fkColumnName>AnimalId</fkColumnName>
+        </fk>
+        <scale>32</scale>
+      </column>
+      <column columnName="date">
+        <datatype>timestamp</datatype>
+        <columnTitle>Date</columnTitle>
+        <propertyURI>http://cpas.labkey.com/Study#VisitDate</propertyURI>
+        <conceptURI>http://cpas.labkey.com/Study#VisitDate</conceptURI>
+        <nullable>false</nullable>
+        <formatString>Date</formatString>
+      </column>
+      <column columnName="RowId">
+        <datatype>integer</datatype>
+        <columnTitle>Row Id</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#int</rangeURI>
+        <isHidden>true</isHidden>
+        <isKeyField>true</isKeyField>
+      </column>
+      <column columnName="ParticipantId">
+        <datatype>varchar</datatype>
+        <columnTitle>Animal ID</columnTitle>
+        <description>When a matching specimen exists in a study, can be used to identify subject and timepoint for assay. Alternately, supply ParticipantID and either VisitID or Date.</description>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <importAliases>
+          <importAlias>specId</importAlias>
+          <importAlias>vialId</importAlias>
+          <importAlias>vialId1</importAlias>
+          <importAlias>vial1_id</importAlias>
+          <importAlias>guspec</importAlias>
+        </importAliases>
+        <scale>4000</scale>
+      </column>
+      <column columnName="UiId">
+        <datatype>varchar</datatype>
+        <columnTitle>UI ID</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+      <column columnName="GrcId">
+        <datatype>varchar</datatype>
+        <columnTitle>GRC ID</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+      <column columnName="SampleId">
+        <datatype>varchar</datatype>
+        <columnTitle>Sample Id</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+      <column columnName="Otu">
+        <datatype>varchar</datatype>
+        <columnTitle>OTU</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
+        <scale>4000</scale>
+      </column>
+      <column columnName="Value">
+        <datatype>integer</datatype>
+        <columnTitle>OTU Value</columnTitle>
+        <rangeURI>http://www.w3.org/2001/XMLSchema#int</rangeURI>
+      </column>
+      <column columnName="Run.Name">
+        <datatype>varchar</datatype>
+        <columnTitle>Assay Id</columnTitle>
+        <description>The assay/experiment ID that uniquely identifies this assay run.</description>
+        <scale>200</scale>
+      </column>
+      <column columnName="Run.Comments">
+        <datatype>varchar</datatype>
+        <inputType>textarea</inputType>
+        <columnTitle>Comments</columnTitle>
+        <description>Contains comments about this run</description>
+        <scale>1073741823</scale>
+      </column>
+    </columns>
+    <tableTitle>Microbiome (unpivoted)</tableTitle>
   </table>
 </tables>

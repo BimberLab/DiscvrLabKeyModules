@@ -4539,6 +4539,7 @@ snprcEHRModules/snprc_r24/resources/etls/SNPRC_idHistory.xml -text
 snprcEHRModules/snprc_r24/resources/etls/SNPRC_weights.xml -text
 snprcEHRModules/snprc_r24/resources/queries/assay/General/Microbiome/micro_default.sql -text
 snprcEHRModules/snprc_r24/resources/queries/assay/General/Microbiome/microbiome_pivot.sql -text
+snprcEHRModules/snprc_r24/resources/queries/study/microbiome_pivot.sql -text
 snprcEHRModules/snprc_r24/resources/referenceStudy/datasets/datasets_manifest.xml -text
 snprcEHRModules/snprc_r24/resources/referenceStudy/datasets/datasets_metadata.xml -text
 snprcEHRModules/snprc_r24/resources/referenceStudy/datasets/snprc_r24.dataset -text

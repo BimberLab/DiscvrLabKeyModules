@@ -1,4 +1,4 @@
-SELECT d.ParticipantId as AnimalId,
+SELECT d.AnimalId,
 	d.Date,
 	d.UiId,
 	d.GrcId,
