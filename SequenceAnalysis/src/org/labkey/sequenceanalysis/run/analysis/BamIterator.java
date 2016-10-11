@@ -481,7 +481,7 @@ public class BamIterator
                 map.put("name", "SIVmac239");
                 map.put("category", "Virus");
 
-                Table.insert(TestContext.get().getUser(), tableNt, map);
+                Table.insert(TestContext.get().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), map);
             }
 
             RefNtSequenceModel nt = tsNt.getObject(RefNtSequenceModel.class);
