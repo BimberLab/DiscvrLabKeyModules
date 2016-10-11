@@ -184,7 +184,7 @@
     <tableTitle>idHistory</tableTitle>
   </table>
   <table tableName="Microbiome" tableDbType="TABLE">
-    <description>Contains up to one row of Microbiome (Microbiome (unpivoted)) data for each Animal Id/Date/RowId combination.</description>
+    <description>Contains up to one row of Microbiome (unpivoted data for each Animal Id/Date/RowId combination.</description>
     <columns>
       <column columnName="AnimalId">
         <datatype>varchar</datatype>
@@ -219,7 +219,7 @@
       </column>
       <column columnName="ParticipantId">
         <datatype>varchar</datatype>
-        <columnTitle>Animal ID</columnTitle>
+        <columnTitle>Participant Id</columnTitle>
         <description>When a matching specimen exists in a study, can be used to identify subject and timepoint for assay. Alternately, supply ParticipantID and either VisitID or Date.</description>
         <rangeURI>http://www.w3.org/2001/XMLSchema#string</rangeURI>
         <importAliases>
