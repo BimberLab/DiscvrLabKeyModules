@@ -15,6 +15,8 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.XppDriver;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
@@ -22,6 +24,8 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -48,6 +52,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.Pair;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.run.alignment.AlignerIndexUtil;
@@ -65,19 +70,12 @@ import org.labkey.sequenceanalysis.run.util.MergeSamFilesWrapper;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
-import java.beans.Encoder;
-import java.beans.Expression;
-import java.beans.PersistenceDelegate;
-import java.beans.XMLDecoder;
-import java.beans.XMLEncoder;
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1097,6 +1095,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
     public static class Resumer implements Serializable
     {
         transient SequenceAlignmentTask _task;
+        transient Logger _log;
+        transient static final XStream _xstream = new XStream(new XppDriver());
 
         private TaskFileManagerImpl _fileManager;
         private LinkedHashSet<RecordedAction> _recordedActions = null;
@@ -1122,13 +1122,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         private Resumer(SequenceAlignmentTask task)
         {
             _task = task;
+            _log = task.getJob().getLogger();
             _fileManager = _task.getHelper().getFileManager();
             _recordedActions = new LinkedHashSet<>();
         }
 
         public static Resumer create(SequenceAlignmentJob job, SequenceAlignmentTask task) throws PipelineJobException
         {
-            File xml = getSerializedXml(job);
+            File xml = getSerializedXml(job.getAnalysisDirectory());
             if (!xml.exists())
             {
                 return new Resumer(task);
@@ -1138,6 +1139,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 Resumer ret = readFromXml(xml);
                 ret._isResume = true;
                 ret._task = task;
+                ret._log = task.getJob().getLogger();
                 ret._fileManager._job = job;
                 ret._fileManager._wd = task._wd;
                 ret._fileManager._workLocation = task._wd.getDir();
@@ -1157,20 +1159,34 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     throw new PipelineJobException(e);
                 }
 
+                //debugging:
+                job.getLogger().debug("loaded from XML.  total recorded actions: " + ret.getRecordedActions().size());
+                for (RecordedAction a : ret.getRecordedActions())
+                {
+                    job.getLogger().debug("action: " + a.getName() + ", inputs: " + a.getInputs().size() + ", outputs: " + a.getOutputs().size());
+                }
+
+                if (ret._recordedActions == null)
+                {
+                    throw new PipelineJobException("Job read from XML, but did not have any saved actions.  This indicates a problem w/ serialization.");
+                }
+
                 return ret;
             }
         }
 
-        private static File getSerializedXml(SequenceAlignmentJob job)
+        private static String XML_NAME = "alignmentCheckpoint.xml";
+
+        private static File getSerializedXml(File outdir)
         {
-            return new File(job.getAnalysisDirectory(), "alignmentCheckpoint.xml");
+            return new File(outdir, XML_NAME);
         }
 
         private static Resumer readFromXml(File xml) throws PipelineJobException
         {
-            try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(xml))))
+            try (BufferedInputStream bus = new BufferedInputStream(new FileInputStream(xml)))
             {
-                return (Resumer)decoder.readObject();
+                return (Resumer)_xstream.fromXML(bus);
             }
             catch (IOException e)
             {
@@ -1180,13 +1196,17 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         private void writeToXml() throws PipelineJobException
         {
-            _task.getJob().getLogger().debug("saving job checkpoint to file");
-            _task.getJob().getLogger().debug("total actions: " + _recordedActions.size());
-            try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(getSerializedXml(_task.getPipelineJob())))))
+            writeToXml(_task.getPipelineJob().getAnalysisDirectory());
+        }
+
+        private void writeToXml(File outDir) throws PipelineJobException
+        {
+            _log.debug("saving job checkpoint to file");
+            _log.debug("total actions: " + _recordedActions.size());
+            try (PrintWriter writer = PrintWriters.getPrintWriter(getSerializedXml(outDir)))
             {
-                encoder.setPersistenceDelegate(File.class, FilePersistenceDelegate);
-                encoder.setPersistenceDelegate(Pair.class, PairPersistenceDelegate);
-                encoder.writeObject(this);
+                String xml = _xstream.toXML(this);
+                writer.write(xml);
             }
             catch (IOException e)
             {
@@ -1196,10 +1216,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         public void markComplete()
         {
-            File xml = getSerializedXml(_task.getPipelineJob());
+            File xml = getSerializedXml(_task.getPipelineJob().getAnalysisDirectory());
             if (xml.exists())
             {
-                _task.getPipelineJob().getLogger().info("closing job resumer");
+                _log.info("closing job resumer");
                 xml.delete();
             }
         }
@@ -1464,22 +1484,40 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
     }
 
-    private static final PersistenceDelegate FilePersistenceDelegate = new PersistenceDelegate()
+    public static class TestCase extends Assert
     {
-        @Override
-        protected Expression instantiate(final Object oldInstance, final Encoder out)
-        {
-            return new Expression(oldInstance, File.class, "new", new URI[] { ((File) oldInstance).toURI() });
-        }
-    };
+        private static final Logger _log = Logger.getLogger(TestCase.class);
 
-    private static final PersistenceDelegate PairPersistenceDelegate = new PersistenceDelegate()
-    {
-        @Override
-        protected Expression instantiate(final Object oldInstance, final Encoder out)
+        @Test
+        public void serializeTest() throws Exception
         {
-            return new Expression(oldInstance, Pair.class, "new", new Object[] { ((Pair) oldInstance).first, ((Pair) oldInstance).second });
+            Resumer r = new Resumer();
+            r._log = _log;
+            r._recordedActions = new LinkedHashSet<>();
+            RecordedAction action1 = new RecordedAction();
+            action1.setName("Action1");
+            action1.setDescription("Description");
+            action1.addInput(new File("/input"), "Input");
+            action1.addOutput(new File("/output"), "Output", false);
+            r._recordedActions.add(action1);
+
+            File tmp = new File(System.getProperty("java.io.tmpdir"));
+            File xml = new File(tmp, Resumer.XML_NAME);
+            r.writeToXml(tmp);
+
+            //after deserialization the RecordedAction should match the original
+            Resumer r2 = Resumer.readFromXml(xml);
+            assertEquals(1, r2._recordedActions.size());
+            RecordedAction action2 = r2._recordedActions.iterator().next();
+            assertEquals("Action1", action2.getName());
+            assertEquals("Description", action2.getDescription());
+            assertEquals(1, action2.getInputs().size());
+            assertEquals(new File("/input").toURI(), action1.getInputs().iterator().next().getURI());
+            assertEquals(1, action2.getOutputs().size());
+            assertEquals(new File("/output").toURI(), action2.getOutputs().iterator().next().getURI());
+
+            xml.delete();
         }
-    };
+    }
 }
 

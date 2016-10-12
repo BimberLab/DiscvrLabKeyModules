@@ -8,6 +8,7 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
@@ -43,7 +44,6 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     public static final String FOLDER_NAME = "referenceLibrary";
 
     private String _description;
-    transient private List<ReferenceLibraryMember> _libraryMembers = null;
     private Integer _libraryId = null;
     private ReferenceGenomeImpl _referenceGenome = null;
     private boolean _isNew;
@@ -68,8 +68,6 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
                 encoder.writeObject(libraryMembers);
             }
         }
-
-        _libraryMembers = libraryMembers;
     }
 
     private List<ReferenceLibraryMember> readLibraryMembersFromFile() throws IOException
@@ -130,7 +128,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     @Override
     public String getDescription()
     {
-        return "Create Reference Genome";
+        return (isCreateNew() ? "Create" : "Recreate") + " Reference Genome";
     }
 
     @Override
@@ -144,21 +142,22 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
         return _description;
     }
 
-    public List<ReferenceLibraryMember> getLibraryMembers()
+    public List<ReferenceLibraryMember> getLibraryMembers() throws PipelineJobException
     {
-        if (_libraryMembers == null)
+        try
         {
-            try
-            {
-                _libraryMembers = readLibraryMembersFromFile();
-            }
-            catch (IOException e)
-            {
-                getLogger().error("Unable to read library file: " + getSerializedLibraryMembersFile().getPath(), e);
-            }
+            return readLibraryMembersFromFile();
         }
+        catch (IOException e)
+        {
+            throw new PipelineJobException("Unable to read library file: " + getSerializedLibraryMembersFile().getPath(), e);
+        }
+    }
 
-        return _libraryMembers;
+    @Override
+    public JSONObject getParameterJson()
+    {
+        return new JSONObject();
     }
 
     public Integer getLibraryId()

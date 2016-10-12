@@ -162,7 +162,7 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
             try (BufferedReader reader = Readers.getReader(data.getFile()); PrintWriter writer = PrintWriters.getPrintWriter(fastaCopy))
             {
                 getJob().getLogger().info("creating FASTA copy of: " + data.getFile().getPath());
-                getJob().getLogger().info("to file: " + fastaCopy.getPath());
+                getJob().getLogger().info("location: " + fastaCopy.getPath());
 
                 String line, refName;
                 Integer rowId;
@@ -183,6 +183,11 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
                     else
                     {
                         writer.write(line + System.getProperty("line.separator"));
+                    }
+
+                    if (sequenceCount % 1000 == 0)
+                    {
+                        getJob().getLogger().info("processed " + sequenceCount + " sequences");
                     }
                 }
 

@@ -359,10 +359,10 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         return testClasses;
     }
 
-//    public Set<Class> getUnitTests()
-//    {
-//        return PageFlowUtil.set(SequenceAlignmentTask.TestCase.class);
-//    }
+    public Set<Class> getUnitTests()
+    {
+        return PageFlowUtil.set(SequenceAlignmentTask.TestCase.class);
+    }
 
     @Override
     public UpgradeCode getUpgradeCode()

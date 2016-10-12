@@ -106,6 +106,11 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
             }
         }
 
+        if (m.getReferenceLibrary() != null)
+        {
+            cacheExpData(ExperimentService.get().getExpData(m.getReferenceLibrary()));
+        }
+
         _cachedAnalyses.put(m.getRowId(), m);
     }
 

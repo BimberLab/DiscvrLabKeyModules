@@ -139,12 +139,19 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     {
         if (_params == null)
         {
-
             try
             {
-                List<String> lines = IOUtils.readLines(Readers.getReader(getParametersFile()));
+                File paramFile = getParametersFile();
+                if (paramFile.exists())
+                {
+                    List<String> lines = IOUtils.readLines(Readers.getReader(getParametersFile()));
 
-                _params = new JSONObject(StringUtils.join(lines, '\n'));
+                    _params = new JSONObject(StringUtils.join(lines, '\n'));
+                }
+                else
+                {
+                    getLogger().error("parameter file not found: " + paramFile.getPath());
+                }
             }
             catch (IOException e)
             {
@@ -160,6 +167,12 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     {
         Map<String, String> ret = new HashMap<>();
         JSONObject json = getParameterJson();
+        if (json == null)
+        {
+            getLogger().error("getParameterJson() was null for job: " + getDescription());
+            return null;
+        }
+
         for (String key : json.keySet())
         {
             ret.put(key, json.getString(key));

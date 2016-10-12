@@ -29,16 +29,16 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.SamtoolsRunner;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
@@ -620,7 +620,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     outputGff.createNewFile();
                 }
 
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(output, true)); BufferedWriter gffWriter = new BufferedWriter(new FileWriter(outputGff, true)))
+                try (PrintWriter writer = PrintWriters.getPrintWriter(output); PrintWriter gffWriter = PrintWriters.getPrintWriter(outputGff))
                 {
                     log.info("writing output, " + keys.size() + " total positions");
                     DecimalFormat df = new DecimalFormat("0.00");

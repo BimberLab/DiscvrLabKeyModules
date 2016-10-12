@@ -15,9 +15,9 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.FixBAMWrapper;
@@ -27,7 +27,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -37,6 +39,7 @@ import java.util.List;
 public class MosaikWrapper extends AbstractCommandWrapper
 {
     private static final String MFL = "median_fragment_length";
+    private static final String LOCAL_SEARCH_RADIUS = "local_search_radius";
 
     public MosaikWrapper(@Nullable Logger logger)
     {
@@ -92,13 +95,25 @@ public class MosaikWrapper extends AbstractCommandWrapper
             getWrapper().setOutputDir(outputDirectory);
 
             String mfl = StringUtils.trimToNull(getProvider().getParameterByName(MFL).extractValue(getPipelineCtx().getJob(), getProvider()));
+            String localAlignmentRadius = StringUtils.trimToNull(getProvider().getParameterByName(LOCAL_SEARCH_RADIUS).extractValue(getPipelineCtx().getJob(), getProvider()));
 
             //TODO: can we infer the technology?
             File reads = getWrapper().buildFastqReads(outputDirectory, inputFastq1, inputFastq2, SequencingTechnology.illumina_long, mfl);
             output.addIntermediateFile(reads);
 
             List<String> params = new ArrayList<>();
-            params.addAll(getClientCommandArgs(" ", PageFlowUtil.set(MFL)));
+            Set<String> blacklist = new HashSet<>(PageFlowUtil.set(MFL));
+            if (mfl == null)
+            {
+                if (localAlignmentRadius != null)
+                {
+                    getPipelineCtx().getLogger().warn("local search radius supplied without median fragment length and will be ignored.");
+                }
+
+                blacklist.add(LOCAL_SEARCH_RADIUS);
+            }
+
+            params.addAll(getClientCommandArgs(" ", blacklist));
             if (SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob()) != null)
             {
                 params.add("-p");
@@ -172,7 +187,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-act"), "align_threshold", "Alignment Threshold", "The alignment score (length) required for an alignment to continue to local alignment. Because the latter is slow, a higher value can improve speed", "ldk-integerfield", null, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-bw"), "banded_smith_waterman", "Use Banded Smith-Waterman", "Uses the banded Smith-Waterman algorithm for increased performance", "ldk-integerfield", null, 51),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mfl"), MFL, "Median Fragment Length", "This is used by Mosaik for local alignments to rescue paired reads.  If median fragment length is 200bp, and the local search radius  is set to 100bp, then Mosaik will search 100-300bp downstream for a proper mate alignment.  This can be useful for PCR amplicons.", "ldk-integerfield", null, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ls"), "local_search_radius", "Local Search Radius", "This is used by Mosaik for local alignments to rescue paired reads.  If median fragment length is 200bp, and the local search radius is set to 100bp, then Mosaik will search 100-300bp downstream for a proper mate alignment.  This can be useful for PCR amplicons.", "ldk-integerfield", null, 150)
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ls"), LOCAL_SEARCH_RADIUS, "Local Search Radius", "This is used by Mosaik for local alignments to rescue paired reads.  If median fragment length is 200bp, and the local search radius is set to 100bp, then Mosaik will search 100-300bp downstream for a proper mate alignment.  This can be useful for PCR amplicons.", "ldk-integerfield", null, 150)
                     ), null, "https://code.google.com/p/mosaik-aligner/", true, true);
         }
 

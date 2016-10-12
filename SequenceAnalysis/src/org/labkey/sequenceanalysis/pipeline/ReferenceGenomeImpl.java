@@ -64,6 +64,12 @@ public class ReferenceGenomeImpl implements ReferenceGenome
 
     public File getAlignerIndexDir(String name)
     {
+        //if genomeId is null, we are using an ad hoc genome
+        if (_genomeId == null)
+        {
+            return new File(getWorkingFastaFile().getParentFile(), name);
+        }
+
         //if _workingFasta is null, we are working on the primary webserver dir
         if (_workingFasta == null)
         {
@@ -74,6 +80,7 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         else
         {
             //if we rsync locally, these are cached w/ the same structure as the server
+            //this only applies for saved reference genomes (i.e. genomeId != null)
             File remoteDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
             if (remoteDir == null)
             {

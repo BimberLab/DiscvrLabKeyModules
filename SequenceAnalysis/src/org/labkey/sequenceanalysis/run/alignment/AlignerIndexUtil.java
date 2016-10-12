@@ -170,6 +170,11 @@ public class AlignerIndexUtil
     public static void cacheGenomeLocally(ReferenceGenome genome, File localCacheDir, Logger log) throws PipelineJobException
     {
         log.info("attempting to rsync genome to local disks: " + localCacheDir.getPath());
+        if (genome.getGenomeId() == null)
+        {
+            log.info("cannot cache custom genomes, skipping");
+            return;
+        }
 
         File sourceDir = genome.getSourceFastaFile().getParentFile();
 
