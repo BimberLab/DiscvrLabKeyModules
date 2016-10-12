@@ -480,11 +480,20 @@ public class BamIterator
                 Map<String, Object> map = new CaseInsensitiveHashMap<>();
                 map.put("name", "SIVmac239");
                 map.put("category", "Virus");
+                map.put("container", _project.getId());
+                map.put("createdby", TestContext.get().getUser().getUserId());
+                map.put("created", new Date());
+                map.put("modifiedby", TestContext.get().getUser().getUserId());
+                map.put("modified", new Date());
 
                 Table.insert(TestContext.get().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), map);
             }
 
             RefNtSequenceModel nt = tsNt.getObject(RefNtSequenceModel.class);
+            if (nt == null)
+            {
+                throw new RuntimeException("Unable to find RefNtSequenceModel");
+            }
 
             File output = new File(_pipelineRoot, "Ref_DB.fasta");
             File index = new File(_pipelineRoot, "Ref_DB.fasta.fai");
