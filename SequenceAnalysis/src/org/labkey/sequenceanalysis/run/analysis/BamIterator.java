@@ -290,6 +290,7 @@ public class BamIterator
         private File _sampleData;
         private File _bam;
         private File _refFasta;
+        private Integer _refNtId = null;
 
         @BeforeClass
         public static void before() throws Exception
@@ -345,6 +346,15 @@ public class BamIterator
         @Test
         public void basicTest() throws Exception
         {
+            // NOTE: this expects additional records in the DB for amino acids and exons
+            // new instances are no longer getting populated automatically.  for now, abort if we dont find the
+            // proper records.  ultimately we should have this test provide its own data
+            TableInfo ti = QueryService.get().getUserSchema(TestContext.get().getUser(), _project, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES);
+            if (!new TableSelector(ti, new SimpleFilter(FieldKey.fromString("ref_nt_id"), _refNtId), null).exists())
+            {
+                return;
+            }
+
             Map<String, String> params = new HashMap<>();
             params.put("minAvgSnpQual", "17");
             params.put("minSnpQual", "17");
@@ -494,6 +504,8 @@ public class BamIterator
             {
                 throw new RuntimeException("Unable to find RefNtSequenceModel");
             }
+
+            _refNtId = nt.getRowid();
 
             File output = new File(_pipelineRoot, "Ref_DB.fasta");
             File index = new File(_pipelineRoot, "Ref_DB.fasta.fai");
