@@ -17,14 +17,7 @@
                     </column>
                     <column columnName="type"/>
                     <column columnName="isFlag"/>
-                    <column columnName="results">
-                        <fk>
-                            <fkDbSchema>lists</fkDbSchema>
-                            <fkTable>Result Types</fkTable>
-                            <fkColumnName>result</fkColumnName>
-                            <fkDisplayColumnName useRawValue="true"/>
-                        </fk>
-                    </column>
+                    <column columnName="results"/>
                     <column columnName="reportDate"/>
                     <column columnName="testDoneDate"/>
                     <column columnName="isNoCharge"/>

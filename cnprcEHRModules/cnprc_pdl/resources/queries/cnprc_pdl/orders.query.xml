@@ -12,7 +12,7 @@
                             <fkDbSchema>lists</fkDbSchema>
                             <fkTable>Clients</fkTable>
                             <fkColumnName>key</fkColumnName>
-                            <fkDisplayColumnName useRawValue="true"/>
+                            <fkDisplayColumnName>client</fkDisplayColumnName>
                         </fk>
                     </column>
                     <column columnName="billingContact_fk">
@@ -21,7 +21,7 @@
                             <fkDbSchema>lists</fkDbSchema>
                             <fkTable>Billing Contact</fkTable>
                             <fkColumnName>key</fkColumnName>
-                            <fkDisplayColumnName useRawValue="true"/>
+                            <fkDisplayColumnName>contact</fkDisplayColumnName>
                         </fk>
                     </column>
                     <column columnName="reportContact_fk">
@@ -30,7 +30,7 @@
                             <fkDbSchema>lists</fkDbSchema>
                             <fkTable>Report Contact</fkTable>
                             <fkColumnName>key</fkColumnName>
-                            <fkDisplayColumnName useRawValue="true"/>
+                            <fkDisplayColumnName>reportContact</fkDisplayColumnName>
                         </fk>
                     </column>
                     <column columnName="purchaseOrder"/>
