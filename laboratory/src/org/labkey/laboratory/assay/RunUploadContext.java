@@ -22,7 +22,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
-import org.labkey.api.exp.property.Domain;
 import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.qc.DefaultTransformResult;
 import org.labkey.api.qc.TransformResult;
@@ -199,5 +198,11 @@ public class RunUploadContext<ProviderType extends AssayProvider> implements Ass
 	public Logger getLogger()
 	{
 		return null;
+    }
+
+    @Override
+    public void init() throws ExperimentException
+    {
+
     }
 }
