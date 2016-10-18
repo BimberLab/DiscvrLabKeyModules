@@ -4528,7 +4528,6 @@ snprcEHRModules/snprc_genetics/resources/queries/assay/General/SNPs/total_assays
 snprcEHRModules/snprc_genetics/resources/queries/assay/total_assays.query.xml -text
 snprcEHRModules/snprc_genetics/resources/queries/assay/total_assays.sql -text
 snprcEHRModules/snprc_genetics/resources/queries/study/demographics/Genetics[!!-~]Info.qview.xml -text
-snprcEHRModules/snprc_genetics/resources/schemas/snprc_genetics.xml -text
 snprcEHRModules/snprc_genetics/src/org/labkey/snprc_genetics/SNPRC_GeneticsContainerListener.java -text
 snprcEHRModules/snprc_genetics/src/org/labkey/snprc_genetics/SNPRC_GeneticsController.java -text
 snprcEHRModules/snprc_genetics/src/org/labkey/snprc_genetics/SNPRC_GeneticsModule.java -text
