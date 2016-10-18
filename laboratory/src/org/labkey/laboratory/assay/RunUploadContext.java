@@ -200,9 +200,4 @@ public class RunUploadContext<ProviderType extends AssayProvider> implements Ass
 		return null;
     }
 
-    @Override
-    public void init() throws ExperimentException
-    {
-
-    }
 }
