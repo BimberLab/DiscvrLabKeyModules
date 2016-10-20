@@ -779,7 +779,7 @@
                 <ns:fk>
                     <ns:fkDbSchema>pipeline</ns:fkDbSchema>
                     <ns:fkTable>Job</ns:fkTable>
-                    <ns:fkColumnName>Job</ns:fkColumnName>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
                     <ns:fkDisplayColumnName>RowId</ns:fkDisplayColumnName>
                 </ns:fk>
             </ns:column>
