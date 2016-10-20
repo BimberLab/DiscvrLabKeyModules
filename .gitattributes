@@ -2784,6 +2784,7 @@ cnprcEHRModules/cnprc_billing/resources/etls/resource_rate_item.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/wo_costing.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/wo_line_item.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/wo_recipient_codes.xml -text
+cnprcEHRModules/cnprc_billing/resources/etls/wo_recipients.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/wo_template.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/work_order.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_resource_center.sql -text
@@ -2794,6 +2795,14 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_wo_recipient_
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_wo_recipients.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_wo_template.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_work_order.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_resource_center_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_resource_rate_item_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_wo_costing_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_wo_line_item_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_wo_recipient_codes_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_wo_recipients_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_wo_template_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_work_order_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/resource_rate_item.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/wo_costing.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/wo_line_item.query.xml -text
@@ -2805,6 +2814,7 @@ cnprcEHRModules/cnprc_billing/resources/schemas/cnprc_billing.xml -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.20-16.21.sql -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.21-16.22.sql -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.22-16.23.sql -text
+cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.23-16.24.sql -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingController.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingModule.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingSchema.java -text

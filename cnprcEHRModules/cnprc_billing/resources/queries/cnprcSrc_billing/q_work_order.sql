@@ -53,6 +53,8 @@ CWO_CLIENT_PO_NUMBER AS clientPONumber,
 CWO_CREDIT_COMMENT AS creditComment,
 CWO_CREDIT_WORKORDER_YN AS creditWorkOrder,
 CWO_CREDIT_PRIOR_WO_NO AS creditPriorWorkOrderNumber,
-CWO_CREDIT_PRIOR_INVOICE_NO AS creditPriorInvoiceNumber
+CWO_CREDIT_PRIOR_INVOICE_NO AS creditPriorInvoiceNumber,
+OBJECTID AS objectid,
+DATE_TIME
 FROM cnprcSrc_billing.ZCWOS_WO
 WHERE CWO_BEGIN_DATE > to_date('01-01-1900', 'DD-MM-YYYY');

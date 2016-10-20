@@ -6,14 +6,16 @@
         <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
             <description>Copy to target</description>
             <source schemaName="cnprcSrc_billing" queryName="q_work_order" />
-            <destination schemaName="cnprc_billing" queryName="work_order" bulkLoad="true" batchSize="5000" targetOption="truncate"/>
-        </transform>
-        <transform id="step2" type="org.labkey.di.pipeline.TransformTask">
-            <description>Copy to target</description>
-            <source schemaName="cnprcSrc_billing" queryName="q_wo_recipients" />
-            <destination schemaName="cnprc_billing" queryName="wo_recipients" bulkLoad="true" batchSize="5000" targetOption="truncate"/>
+            <destination schemaName="cnprc_billing" queryName="work_order" bulkLoad="true" batchSize="5000" targetOption="merge">
+            <alternateKeys>
+                <column name="objectid"/>
+            </alternateKeys>
+        </destination>
         </transform>
     </transforms>
+    <incrementalFilter className="ModifiedSinceFilterStrategy" timestampColumnName="date_time">
+        <deletedRowsSource schemaName="cnprcSrc_billing_aud" queryName="q_work_order_delete" timestampColumnName="date_time" deletedSourceKeyColumnName="objectid" targetKeyColumnName="objectid"/>
+    </incrementalFilter>
     <schedule>
         <poll interval="60m" />
     </schedule>

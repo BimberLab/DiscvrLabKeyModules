@@ -19,4 +19,6 @@ CWOC_CHARGE_AMT AS chargeAmount,
 CWOC_EXEMPT_AMT AS exemptAmount,
 CWOC_RC_CODE AS RCCode,
 CWOC_RATE_TIER_CODE_FK AS rateTierCodeFk,
+OBJECTID AS objectid,
+DATE_TIME
 FROM cnprcSrc_billing.ZCWOS_WO_COSTING;

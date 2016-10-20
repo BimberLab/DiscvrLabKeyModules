@@ -19,5 +19,7 @@ CRCP_COPIES_RQ_FILE AS copiesRqFile,
 CRCP_TO_DEST_TYPE AS toDestinationType,
 CRCP_CC_DEST_TYPE AS ccDestinationType,
 CRCP_REQ_DEST_TYPE AS requestDestinationType,
-(CASE WHEN CRCP_GROUP_RECIPIENT_YN = 'Y' THEN 1 ELSE 0 END) AS isGroupRecipient
+(CASE WHEN CRCP_GROUP_RECIPIENT_YN = 'Y' THEN 1 ELSE 0 END) AS isGroupRecipient,
+OBJECTID AS objectid,
+DATE_TIME
 FROM cnprcSrc_billing.ZCWOS_RECIPIENT;

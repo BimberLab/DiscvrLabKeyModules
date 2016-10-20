@@ -41,6 +41,7 @@
             <column columnName="ccDestinationType"/>
             <column columnName="requestDestinationType"/>
             <column columnName="isGroupRecipient"/>
+            <column columnName="objectid"/>
             <column columnName="Created"/>
             <column columnName="CreatedBy"/>
             <column columnName="Modified"/>
@@ -169,6 +170,7 @@
             <column columnName="title"/>
             <column columnName="isAnimalCare"/>
             <column columnName="isActive"/>
+            <column columnName="objectid"/>
             <column columnName="Created"/>
             <column columnName="CreatedBy"/>
             <column columnName="Modified"/>
@@ -223,6 +225,7 @@
             <column columnName="serviceCode"/>
             <column columnName="templateTo"/>
             <column columnName="templateCC"/>
+            <column columnName="objectid"/>
             <column columnName="Created"/>
             <column columnName="CreatedBy"/>
             <column columnName="Modified"/>
