@@ -6,10 +6,16 @@
         <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
             <description>Copy to target</description>
             <source schemaName="cnprcSrc_srl" queryName="q_samples" />
-            <destination schemaName="cnprc_pdl" queryName="samples" bulkLoad="true" batchSize="500" targetOption="truncate">
+            <destination schemaName="cnprc_pdl" queryName="samples" bulkLoad="true" batchSize="500" targetOption="merge">
+                <alternateKeys>
+                    <column name="objectid"/>
+                </alternateKeys>
             </destination>
         </transform>
     </transforms>
+    <incrementalFilter className="ModifiedSinceFilterStrategy" timestampColumnName="date_time">
+        <deletedRowsSource schemaName="cnprcSrc_srl_aud" queryName="q_samples_delete" timestampColumnName="date_time" deletedSourceKeyColumnName="objectid" targetKeyColumnName="objectid"/>
+    </incrementalFilter>
     <schedule>
         <poll interval="60m" />
     </schedule>

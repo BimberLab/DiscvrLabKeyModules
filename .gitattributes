@@ -2864,6 +2864,10 @@ cnprcEHRModules/cnprc_pdl/resources/queries/cnprcSrc_srl/q_sub_test_types.sql -t
 cnprcEHRModules/cnprc_pdl/resources/queries/cnprcSrc_srl/q_sub_tests.sql -text
 cnprcEHRModules/cnprc_pdl/resources/queries/cnprcSrc_srl/q_test_types.sql -text
 cnprcEHRModules/cnprc_pdl/resources/queries/cnprcSrc_srl/q_tests.sql -text
+cnprcEHRModules/cnprc_pdl/resources/queries/cnprcSrc_srl_aud/q_orders_delete.sql -text
+cnprcEHRModules/cnprc_pdl/resources/queries/cnprcSrc_srl_aud/q_samples_delete.sql -text
+cnprcEHRModules/cnprc_pdl/resources/queries/cnprcSrc_srl_aud/q_sub_tests_delete.sql -text
+cnprcEHRModules/cnprc_pdl/resources/queries/cnprcSrc_srl_aud/q_tests_delete.sql -text
 cnprcEHRModules/cnprc_pdl/resources/queries/cnprc_pdl/orders.query.xml -text
 cnprcEHRModules/cnprc_pdl/resources/queries/cnprc_pdl/samples.query.xml -text
 cnprcEHRModules/cnprc_pdl/resources/queries/cnprc_pdl/sub_tests.query.xml -text
@@ -2871,6 +2875,7 @@ cnprcEHRModules/cnprc_pdl/resources/queries/cnprc_pdl/tests.query.xml -text
 cnprcEHRModules/cnprc_pdl/resources/schemas/dbscripts/cnprc_pdl.xml -text
 cnprcEHRModules/cnprc_pdl/resources/schemas/dbscripts/sqlserver/cnprc_pdl-16.20-16.21.sql -text
 cnprcEHRModules/cnprc_pdl/resources/schemas/dbscripts/sqlserver/cnprc_pdl-16.21-16.22.sql -text
+cnprcEHRModules/cnprc_pdl/resources/schemas/dbscripts/sqlserver/cnprc_pdl-16.22-16.23.sql -text
 cnprcEHRModules/cnprc_pdl/src/org/labkey/cnprc_pdl/CNPRC_PDLContainerListener.java -text
 cnprcEHRModules/cnprc_pdl/src/org/labkey/cnprc_pdl/CNPRC_PDLController.java -text
 cnprcEHRModules/cnprc_pdl/src/org/labkey/cnprc_pdl/CNPRC_PDLModule.java -text

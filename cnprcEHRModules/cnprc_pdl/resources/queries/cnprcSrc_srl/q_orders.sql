@@ -16,5 +16,7 @@ SO_ACCOUNT_ID         AS accountId,
 SO_ORDER_CLOSED_DATE  AS orderClosedDate,
 SO_PROJECT            AS project,
 SO_ENTERED_BY         AS enteredBy,
-SO_PC_INVOICE_NUMBER  AS invoiceNumber
+SO_PC_INVOICE_NUMBER  AS invoiceNumber,
+OBJECTID AS objectid,
+DATE_TIME
 FROM cnprcSrc_srl.SRL_ORDERS

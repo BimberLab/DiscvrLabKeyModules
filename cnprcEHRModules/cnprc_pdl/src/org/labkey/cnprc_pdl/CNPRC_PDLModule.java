@@ -18,10 +18,7 @@ package org.labkey.cnprc_pdl;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager;
 import org.labkey.api.ldk.ExtendedSimpleModule;
-import org.labkey.api.module.CodeOnlyModule;
-import org.labkey.api.module.ModuleContext;
 import org.labkey.api.view.WebPartFactory;
 
 import java.util.Collection;
@@ -47,7 +44,7 @@ public class CNPRC_PDLModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 16.22;
+        return 16.23;
     }
 
     @Override
