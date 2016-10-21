@@ -36,11 +36,14 @@ import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -131,6 +134,10 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         List<RecordedAction> actions = new ArrayList<>();
 
         job.getLogger().info("Processing Alignments");
+        //optionally delete the BAM itself:
+        AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
+        ToolParameterDescriptor discardBamParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM);
+        Boolean discardBam = discardBamParam.extractValue(getJob(), alignmentStep.getProvider(), Boolean.class, false);
 
         //first validate all analysis records before actually creating any DB records
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
@@ -248,7 +255,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         }
         else
         {
-            processAnalyses(analysisModel, runId, actions, taskHelper);
+            processAnalyses(analysisModel, runId, actions, taskHelper, discardBam);
         }
 
         //build map used next to import metrics
@@ -259,14 +266,34 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
         typeMap.get(analysisModel.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.bam, analysisModel.getAlignmentFileObject());
         typeMap.get(analysisModel.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.reads, analysisModel.getAlignmentFileObject());
-
-        taskHelper.getFileManager().createSequenceOutputRecords(analysisModel.getRowId());
         taskHelper.getFileManager().writeMetricsToDb(readsetToAnalysisMap, typeMap);
+        taskHelper.getFileManager().createSequenceOutputRecords(analysisModel.getRowId());
+
+        if (discardBam)
+        {
+            File bam = analysisModel.getAlignmentFileObject();
+            if (bam != null)
+            {
+                getJob().getLogger().info("BAM will be discarded: " + bam.getName());
+                bam.delete();
+                File idx = new File(bam.getPath() + ".bai");
+                if (idx.exists())
+                {
+                    idx.delete();
+                }
+
+                analysisModel.setAlignmentFile(null);
+                getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
+                TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
+
+                Table.update(getJob().getUser(), ti, analysisModel, analysisModel.getRowId());
+            }
+        }
 
         return new RecordedActionSet();
     }
 
-    private void processAnalyses(AnalysisModelImpl analysisModel, int runId, List<RecordedAction> actions, SequenceTaskHelper taskHelper) throws PipelineJobException
+    private void processAnalyses(AnalysisModelImpl analysisModel, int runId, List<RecordedAction> actions, SequenceTaskHelper taskHelper, boolean discardBam) throws PipelineJobException
     {
         List<AnalysisStep.Output> outputs = new ArrayList<>();
         List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
@@ -295,27 +322,36 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
         Table.insert(getJob().getUser(), ti, analysisModel);
 
-        SequenceOutputFile so = new SequenceOutputFile();
-        so.setName(bam.getName());
-        so.setCategory("Alignment");
-        so.setAnalysis_id(analysisModel.getAnalysisId());
-        so.setReadset(analysisModel.getReadset());
-        so.setLibrary_id(analysisModel.getLibrary_Id());
-        ExpData d = ExperimentService.get().getExpDataByURL(bam, getJob().getContainer());
-        if (d == null)
+        if (!discardBam)
         {
-            getJob().getLogger().info("creating ExpData for file: " + bam.getPath());
+            SequenceOutputFile so = new SequenceOutputFile();
+            so.setName(bam.getName());
+            so.setCategory("Alignment");
+            so.setAnalysis_id(analysisModel.getAnalysisId());
+            so.setReadset(analysisModel.getReadset());
+            so.setLibrary_id(analysisModel.getLibrary_Id());
+            AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
+            so.setDescription("Aligner: " + alignmentStep.getProvider().getName());
+            ExpData d = ExperimentService.get().getExpDataByURL(bam, getJob().getContainer());
+            if (d == null)
+            {
+                getJob().getLogger().info("creating ExpData for file: " + bam.getPath());
 
-            d = ExperimentService.get().createData(getJob().getContainer(), new DataType("Alignment"));
-            d.setDataFileURI(bam.toURI());
-            d.setName(bam.getName());
-            d.save(getJob().getUser());
+                d = ExperimentService.get().createData(getJob().getContainer(), new DataType("Alignment"));
+                d.setDataFileURI(bam.toURI());
+                d.setName(bam.getName());
+                d.save(getJob().getUser());
+            }
+            so.setDataId(d.getRowId());
+            so.setContainer(getJob().getContainerId());
+            so.setRunId(runId);
+
+            Table.insert(getJob().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), so);
         }
-        so.setDataId(d.getRowId());
-        so.setContainer(getJob().getContainerId());
-        so.setRunId(runId);
-
-        Table.insert(getJob().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), so);
+        else
+        {
+            getJob().getLogger().debug("BAM will be discarded, will not create output file");
+        }
 
         if (!providers.isEmpty())
         {

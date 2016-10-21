@@ -129,7 +129,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         for (File input : inputFiles)
         {
             RecordedAction action = new RecordedAction(ACTION_NAME);
-            action.addInput(input, "Illumina Sample CSV");
+            action.addInputIfNotPresent(input, "Illumina Sample CSV");
 
             Map<Integer, Integer> sampleMap = parseCsv(input, schema);
 
@@ -144,7 +144,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
             for (File f : parser.getFiles())
             {
-                action.addInput(f, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME);
+                action.addInputIfNotPresent(f, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME);
             }
 
             getJob().getLogger().info("Created " + fileMap.keySet().size() + " FASTQ files");

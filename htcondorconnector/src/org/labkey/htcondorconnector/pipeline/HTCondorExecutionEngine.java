@@ -248,7 +248,8 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
             job.writeToFile(serializedJobFile);
 
             //we want this unique for each task, but reused if submitted multiple times
-            File submitScript = new File(outDir, "condor_" + (job.getActiveTaskId().getNamespaceClass().getSimpleName()) + ".submit");
+            String basename = FileUtil.getBaseName(job.getLogFile());
+            File submitScript = new File(outDir, basename + "." + (job.getActiveTaskId().getNamespaceClass().getSimpleName()) + ".submit");
             if (!submitScript.exists())
             {
                 try (FileWriter writer = new FileWriter(submitScript, false))
@@ -257,7 +258,6 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
                     writer.write("executable=" + getConfig().getRemoteExecutable() + "\n");
 
                     //NOTE: this is just the output of the java process, so do not put into regular pipeline log
-                    String basename = FileUtil.getBaseName(job.getLogFile());
                     writer.write("output=" + getConfig().getClusterPath(new File(outDir, basename + "-$(Cluster).$(Process).java.log")) + "\n");
                     writer.write("error=" + getConfig().getClusterPath(new File(outDir, basename + "-$(Cluster).$(Process).java.log")) + "\n");
                     writer.write("log=" + getConfig().getClusterPath(new File(outDir, basename + "-$(Cluster).$(Process).condor.log")) + "\n");

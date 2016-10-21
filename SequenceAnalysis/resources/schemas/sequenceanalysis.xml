@@ -1235,6 +1235,20 @@
                     <ns:fkColumnName>RowId</ns:fkColumnName>
                 </ns:fk>
             </ns:column>
+            <ns:column columnName="runid">
+                <ns:nullable>true</ns:nullable>
+                <ns:shownInInsertView>false</ns:shownInInsertView>
+                <ns:shownInUpdateView>true</ns:shownInUpdateView>
+                <ns:isUserEditable>false</ns:isUserEditable>
+                <ns:columnTitle>Run</ns:columnTitle>
+                <ns:fk>
+                    <ns:fkDbSchema>exp</ns:fkDbSchema>
+                    <ns:fkTable>runs</ns:fkTable>
+                    <ns:fkColumnName>RowId</ns:fkColumnName>
+                    <ns:fkDisplayColumnName>RowId</ns:fkDisplayColumnName>
+                </ns:fk>
+                <ns:url>/experiment/showRunGraphDetail.view?rowId=${runid}</ns:url>
+            </ns:column>
             <ns:column columnName="description">
                 <ns:columnTitle>Description/Comments</ns:columnTitle>
             </ns:column>

@@ -298,7 +298,7 @@ public class JBrowseRoot
 
         AssayFileWriter afw = new AssayFileWriter();
         File fasta = afw.findUniqueFileName(FileUtil.makeLegalName(model.getName()) + ".fasta", outDir);
-        fasta.createNewFile();
+        //fasta.createNewFile();
 
         try (PrintWriter writer = PrintWriters.getPrintWriter(fasta))
         {

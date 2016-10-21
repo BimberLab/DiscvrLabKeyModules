@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
+import htsjdk.samtools.SAMFileHeader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -24,6 +25,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
@@ -174,13 +176,13 @@ public class BismarkWrapper extends AbstractCommandWrapper
         @Override
         public boolean doAddReadGroups()
         {
-            return getProvider().getParameterByName("formatForBisSNP").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
+            return true;
         }
 
         @Override
         public boolean doSortIndexBam()
         {
-            return getProvider().getParameterByName("formatForBisSNP").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
+            return true;
         }
 
         @Override
@@ -291,8 +293,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-N"), "max_seed_mismatches", "Max Seed Mismatches", "Sets the number of mismatches to be allowed in a seed alignment during multiseed alignment. Can be set to 0 or 1. Setting this higher makes alignment slower (often much slower) but increases sensitivity. Default: 0.", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
-                    }}, 1),
-                    ToolParameterDescriptor.create("formatForBisSNP", "Format For BisSNP", "If checked, the BAM will be sorted and read groups added.  This is required for BisSNP; however, it will make the BAM incompatible with bismark methylation extractor.", "checkbox", null, false)
+                    }}, 1)
             ), null, "http://www.bioinformatics.babraham.ac.uk/projects/bismark/", true, false);
         }
 
@@ -314,160 +315,189 @@ public class BismarkWrapper extends AbstractCommandWrapper
         {
             AnalysisOutputImpl output = new AnalysisOutputImpl();
             BismarkWrapper wrapper = getWrapper();
-
-            List<String> args = new ArrayList<>();
-            args.add(wrapper.getMethylationExtractorExe().getPath());
-            args.add(inputBam.getPath());
-
-            Integer threads = SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob());
-            if (threads != null)
+            try
             {
-                args.add("--multicore"); //multi-threaded
-                args.add(threads.toString());
-            }
-
-            args.add("--samtools_path");
-            args.add(new SamtoolsRunner(getPipelineCtx().getLogger()).getSamtoolsPath().getParentFile().getPath());
-
-            //paired end vs. single
-            if (!rs.hasPairedData())
-            {
-                args.add("-s");
-            }
-            else
-            {
-                args.add("-p");
-            }
-
-            if (getClientCommandArgs() != null)
-            {
-                args.addAll(getClientCommandArgs());
-            }
-
-            args.add("-o");
-            args.add(outputDir.getPath());
-
-            getWrapper().setWorkingDir(outputDir);
-            getWrapper().execute(args);
-
-            //add outputs
-            String outputBasename = FileUtil.getBaseName(inputBam);
-            getWrapper().getLogger().debug("using basename: " + outputBasename);
-            output.addOutput(new File(outputDir, outputBasename + ".M-bias.txt"), "Bismark M-Bias Report");
-
-            File graph1 = new File(outputDir, outputBasename + ".M-bias_R1.png");
-            if (graph1.exists())
-            {
-                output.addOutput(graph1, "Bismark M-Bias Image");
-            }
-
-            File graph2 = new File(outputDir, outputBasename + ".M-bias_R2.png");
-            if (graph2.exists())
-            {
-                output.addOutput(graph2, "Bismark M-Bias Image");
-            }
-
-            output.addOutput(new File(outputDir, outputBasename + ".bam_splitting_report.txt"), "Bismark Splitting Report");
-
-            //NOTE: because the data are likely directional, we will not encounter CTOB
-            List<Pair<File, Integer>> CpGmethlyationData = Arrays.asList(
-                    Pair.of(new File(outputDir, "CpG_OT_" + outputBasename + ".txt.gz"), 0),
-                    Pair.of(new File(outputDir, "CpG_CTOT_" + outputBasename + ".txt.gz"), 0),
-                    Pair.of(new File(outputDir, "CpG_OB_" + outputBasename + ".txt.gz"), -1),
-                    Pair.of(new File(outputDir, "CpG_CTOB_" + outputBasename + ".txt.gz"), -1)
-            );
-
-            List<Pair<File, Integer>> NonCpGmethlyationData = Arrays.asList(
-                    Pair.of(new File(outputDir, "NonCpG_OT_" + outputBasename + ".txt.gz"), 0),
-                    Pair.of(new File(outputDir, "NonCpG_CTOT_" + outputBasename + ".txt.gz"), 0),
-                    Pair.of(new File(outputDir, "NonCpG_OB_" + outputBasename + ".txt.gz"), -1),
-                    Pair.of(new File(outputDir, "NonCpG_CTOB_" + outputBasename + ".txt.gz"), -1)
-            );
-
-            if (getProvider().getParameterByName("mbias_only") != null && getProvider().getParameterByName("mbias_only").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
-            {
-                getPipelineCtx().getJob().getLogger().info("mbias only was selected, no report will be created");
-            }
-            else if (getProvider().getParameterByName("siteReport") != null && getProvider().getParameterByName("siteReport").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
-            {
-                getPipelineCtx().getLogger().info("creating per-site summary report");
-
-                Integer minCoverageDepth = getProvider().getParameterByName("minCoverageDepth").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class);
-                File siteReport = new File(outputDir, FileUtil.getBaseName(inputBam) + ".CpG_Site_Summary.methylation.txt");
-                File outputGff = new File(outputDir, FileUtil.getBaseName(inputBam) + ".CpG_Site_Summary.gff");
-
-                produceSiteReport(getWrapper().getLogger(), siteReport, outputGff, CpGmethlyationData, minCoverageDepth);
-                if (siteReport.exists())
+                String basename = FileUtil.getBaseName(inputBam);
+                String outputBasename;
+                File queryNameSortBam;
+                if (SequencePipelineService.get().getBamSortOrder(inputBam) != SAMFileHeader.SortOrder.queryname)
                 {
-                    output.addOutput(siteReport, "Bismark CpG Methylation Raw Data");
+                    queryNameSortBam = new SortSamWrapper(getPipelineCtx().getLogger()).execute(inputBam, new File(outputDir, basename + ".querySort.bam"), SAMFileHeader.SortOrder.queryname);
+                    outputBasename = FileUtil.getBaseName(queryNameSortBam);
 
-                    //also try to create an image summarizing:
-                    File siteReportPng = createSummaryReport(getWrapper().getLogger(), siteReport, minCoverageDepth);
-                    if (siteReportPng != null && siteReportPng.exists())
+                    output.addIntermediateFile(queryNameSortBam);
+                }
+                else
+                {
+                    queryNameSortBam = inputBam;
+                    outputBasename = basename;
+                }
+
+                List<String> args = new ArrayList<>();
+                args.add(wrapper.getMethylationExtractorExe().getPath());
+                args.add(queryNameSortBam.getPath());
+
+                Integer threads = SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob());
+                if (threads != null)
+                {
+                    args.add("--multicore"); //multi-threaded
+                    args.add(threads.toString());
+                }
+
+                args.add("--samtools_path");
+                args.add(new SamtoolsRunner(getPipelineCtx().getLogger()).getSamtoolsPath().getParentFile().getPath());
+
+                //paired end vs. single
+                if (!rs.hasPairedData())
+                {
+                    args.add("-s");
+                }
+                else
+                {
+                    args.add("-p");
+                }
+
+                if (getClientCommandArgs() != null)
+                {
+                    args.addAll(getClientCommandArgs());
+                }
+
+                args.add("-o");
+                args.add(outputDir.getPath());
+
+                getWrapper().setWorkingDir(outputDir);
+                getWrapper().execute(args);
+
+                //add outputs
+                getWrapper().getLogger().debug("using basename: " + outputBasename);
+                output.addOutput(new File(outputDir, outputBasename + ".M-bias.txt"), "Bismark M-Bias Report");
+
+                File graph1 = new File(outputDir, outputBasename + ".M-bias_R1.png");
+                if (graph1.exists())
+                {
+                    output.addOutput(graph1, "Bismark M-Bias Image");
+                }
+                else
+                {
+                    getPipelineCtx().getLogger().warn("file not found: " + graph1.getPath());
+                }
+
+                File graph2 = new File(outputDir, outputBasename + ".M-bias_R2.png");
+                if (graph2.exists())
+                {
+                    output.addOutput(graph2, "Bismark M-Bias Image");
+                }
+                else
+                {
+                    getPipelineCtx().getLogger().warn("file not found: " + graph2.getPath());
+                }
+
+                output.addOutput(new File(outputDir, outputBasename + ".bam_splitting_report.txt"), "Bismark Splitting Report");
+
+                //NOTE: because the data are likely directional, we will not encounter CTOB
+                List<Pair<File, Integer>> CpGmethlyationData = Arrays.asList(
+                        Pair.of(new File(outputDir, "CpG_OT_" + outputBasename + ".txt.gz"), 0),
+                        Pair.of(new File(outputDir, "CpG_CTOT_" + outputBasename + ".txt.gz"), 0),
+                        Pair.of(new File(outputDir, "CpG_OB_" + outputBasename + ".txt.gz"), -1),
+                        Pair.of(new File(outputDir, "CpG_CTOB_" + outputBasename + ".txt.gz"), -1)
+                );
+
+                List<Pair<File, Integer>> NonCpGmethlyationData = Arrays.asList(
+                        Pair.of(new File(outputDir, "NonCpG_OT_" + outputBasename + ".txt.gz"), 0),
+                        Pair.of(new File(outputDir, "NonCpG_CTOT_" + outputBasename + ".txt.gz"), 0),
+                        Pair.of(new File(outputDir, "NonCpG_OB_" + outputBasename + ".txt.gz"), -1),
+                        Pair.of(new File(outputDir, "NonCpG_CTOB_" + outputBasename + ".txt.gz"), -1)
+                );
+
+                if (getProvider().getParameterByName("mbias_only") != null && getProvider().getParameterByName("mbias_only").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+                {
+                    getPipelineCtx().getJob().getLogger().info("mbias only was selected, no report will be created");
+                }
+                else if (getProvider().getParameterByName("siteReport") != null && getProvider().getParameterByName("siteReport").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+                {
+                    getPipelineCtx().getLogger().info("creating per-site summary report");
+
+                    Integer minCoverageDepth = getProvider().getParameterByName("minCoverageDepth").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class);
+                    File siteReport = new File(outputDir, basename + ".CpG_Site_Summary.methylation.txt");
+                    File outputGff = new File(outputDir, basename + ".CpG_Site_Summary.gff");
+
+                    produceSiteReport(getWrapper().getLogger(), siteReport, outputGff, CpGmethlyationData, minCoverageDepth);
+                    if (siteReport.exists())
                     {
-                        output.addOutput(siteReportPng, "Bismark CpG Methylation Report");
-                        output.addSequenceOutput(siteReportPng, rs.getName() + " methylation rates", "Bismark CpG Methylation Report", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+                        output.addOutput(siteReport, "Bismark CpG Methylation Raw Data");
+
+                        //also try to create an image summarizing:
+                        File siteReportPng = createSummaryReport(getWrapper().getLogger(), siteReport, minCoverageDepth);
+                        if (siteReportPng != null && siteReportPng.exists())
+                        {
+                            output.addOutput(siteReportPng, "Bismark CpG Methylation Report");
+                            output.addSequenceOutput(siteReportPng, rs.getName() + " methylation rates", "Bismark CpG Methylation Report", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+                        }
+                    }
+
+                    if (outputGff.exists())
+                    {
+                        output.addOutput(outputGff, "Bismark CpG Methylation Rates");
+                        output.addSequenceOutput(outputGff, rs.getName() + " methylation rates (GFF)", "CpG Methylation Rates", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+                    }
+
+                    //                File siteReport2 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".NonCpG_Site_Summary.txt");
+                    //                File outputGff2 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".NonCpG_Site_Summary.gff");
+                    //
+                    //                produceSiteReport(getWrapper().getLogger(), siteReport2, outputGff2, NonCpGmethlyationData, minCoverageDepth);
+                    //                if (siteReport2.exists())
+                    //                {
+                    //                    output.addOutput(siteReport2, "Bismark NonCpG Methylation Site Report");
+                    //                }
+                    //                if (outputGff2.exists())
+                    //                {
+                    //                    output.addOutput(outputGff2, "Bismark NonCpG Methylation Site Data");
+                    //                    output.addSequenceOutput(outputGff2, rs.getName() + " methylation", "NonCpG Methylation Rate Data", rs);
+                    //                }
+
+                    //NOTE: if we produce the summary report, assume these are discardable intermediates.  otherwise retain them
+                    for (Pair<File, Integer> pair : CpGmethlyationData)
+                    {
+                        if (pair.first.exists())
+                        {
+                            output.addIntermediateFile(pair.first, "Bismark Methlyation Site Data");
+                        }
+                    }
+
+                    for (Pair<File, Integer> pair : NonCpGmethlyationData)
+                    {
+                        if (pair.first.exists())
+                        {
+                            output.addIntermediateFile(pair.first, "Bismark Methlyation Site Data");
+                        }
+                    }
+                }
+                else
+                {
+                    getPipelineCtx().getLogger().info("per-site report not selected, skipping");
+                    for (Pair<File, Integer> pair : CpGmethlyationData)
+                    {
+                        if (pair.first.exists())
+                        {
+                            output.addOutput(pair.first, "Bismark Methlyation Site Data");
+                        }
+                    }
+
+                    for (Pair<File, Integer> pair : NonCpGmethlyationData)
+                    {
+                        if (pair.first.exists())
+                        {
+                            output.addOutput(pair.first, "Bismark Methlyation Site Data");
+                        }
                     }
                 }
 
-                if (outputGff.exists())
-                {
-                    output.addOutput(outputGff, "Bismark CpG Methylation Rates");
-                    output.addSequenceOutput(outputGff, rs.getName() + " methylation rates (GFF)", "CpG Methylation Rates", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
-                }
-
-//                File siteReport2 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".NonCpG_Site_Summary.txt");
-//                File outputGff2 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".NonCpG_Site_Summary.gff");
-//
-//                produceSiteReport(getWrapper().getLogger(), siteReport2, outputGff2, NonCpGmethlyationData, minCoverageDepth);
-//                if (siteReport2.exists())
-//                {
-//                    output.addOutput(siteReport2, "Bismark NonCpG Methylation Site Report");
-//                }
-//                if (outputGff2.exists())
-//                {
-//                    output.addOutput(outputGff2, "Bismark NonCpG Methylation Site Data");
-//                    output.addSequenceOutput(outputGff2, rs.getName() + " methylation", "NonCpG Methylation Rate Data", rs);
-//                }
-
-                //NOTE: if we produce the summary report, assume these are discardable intermediates.  otherwise retain them
-                for (Pair<File, Integer> pair : CpGmethlyationData)
-                {
-                    if (pair.first.exists())
-                    {
-                        output.addIntermediateFile(pair.first, "Bismark Methlyation Site Data");
-                    }
-                }
-
-                for (Pair<File, Integer> pair : NonCpGmethlyationData)
-                {
-                    if (pair.first.exists())
-                    {
-                        output.addIntermediateFile(pair.first, "Bismark Methlyation Site Data");
-                    }
-                }
+                return output;
             }
-            else
+            catch (IOException e)
             {
-                getPipelineCtx().getLogger().info("per-site report not selected, skipping");
-                for (Pair<File, Integer> pair : CpGmethlyationData)
-                {
-                    if (pair.first.exists())
-                    {
-                        output.addOutput(pair.first, "Bismark Methlyation Site Data");
-                    }
-                }
-
-                for (Pair<File, Integer> pair : NonCpGmethlyationData)
-                {
-                    if (pair.first.exists())
-                    {
-                        output.addOutput(pair.first, "Bismark Methlyation Site Data");
-                    }
-                }
+                throw new PipelineJobException(e);
             }
-
-            return output;
         }
 
         @Override

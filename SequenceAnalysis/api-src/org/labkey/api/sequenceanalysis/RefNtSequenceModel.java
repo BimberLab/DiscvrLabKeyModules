@@ -39,6 +39,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.Date;
@@ -379,10 +380,9 @@ public class RefNtSequenceModel
             output.delete();
         }
 
-        try (Writer writer = PrintWriters.getPrintWriter(new GZIPOutputStream(new FileOutputStream(output))))
+        try (PrintWriter writer = PrintWriters.getPrintWriter(new GZIPOutputStream(new FileOutputStream(output))))
         {
             writer.write(sequence);
-            writer.flush();
         }
 
         Container c = getLabKeyContainer();

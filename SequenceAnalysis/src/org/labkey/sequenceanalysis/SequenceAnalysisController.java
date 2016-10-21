@@ -75,6 +75,7 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
@@ -483,12 +484,51 @@ public class SequenceAnalysisController extends SpringActionController
         public ModelAndView getView(Object o, BindException errors) throws Exception
         {
             StringBuilder html = new StringBuilder();
-            html.append("The following sections list any files or pipeline jobs that appear to be orphans, not connected to any imported readsets or sequence outputs:<p>");
+            html.append("## The following sections list any files or pipeline jobs that appear to be orphans, not connected to any imported readsets or sequence outputs:<p>");
 
             Set<File> orphanFiles = new HashSet<>();
             Set<File> orphanIndexes = new HashSet<>();
-            Set<File> orphanJobs = new HashSet<>();
-            SequenceAnalysisManager.get().getOrphanFiles(getContainer(), orphanFiles, orphanIndexes, orphanJobs);
+            Set<PipelineStatusFile> orphanJobs = new HashSet<>();
+            List<String> messages = new ArrayList<>();
+            SequenceAnalysisManager.get().getOrphanFilesForContainer(getContainer(), getUser(), orphanFiles, orphanIndexes, orphanJobs, messages);
+
+            if (!orphanFiles.isEmpty())
+            {
+                html.append("## The following sequence files are not referenced by readsets, analyses or output files:<br>");
+                for (File f : orphanFiles)
+                {
+                    html.append(f.getPath() + "<br>");
+                }
+                html.append("<p>");
+            }
+
+            if (!orphanIndexes.isEmpty())
+            {
+                html.append("## The following index files appear to be orphans:<br>");
+                for (File f : orphanIndexes)
+                {
+                    html.append(f.getPath() + "<br>");
+                }
+                html.append("<p>");
+            }
+
+            if (!orphanJobs.isEmpty())
+            {
+                html.append("## The following sequence jobs are not referenced by readsets, analyses or output files:<br>");
+                for (PipelineStatusFile sf : orphanJobs)
+                {
+                    File f = new File(sf.getFilePath()).getParentFile();
+                    long size = FileUtils.sizeOfDirectory(f);
+                    html.append(f.getPath() + "<br>");
+                    html.append("## size: " + FileUtils.byteCountToDisplaySize(size) + "<br>");
+                }
+            }
+
+            if (!messages.isEmpty())
+            {
+                html.append("## The following messages were generated:<br>");
+                html.append(StringUtils.join(messages, "<br>"));
+            }
 
             return new HtmlView(html.toString());
         }
@@ -815,7 +855,8 @@ public class SequenceAnalysisController extends SpringActionController
                 if (form.getFileNames() != null)
                 {
                     //TODO: consider proper container??
-                    File base = PipelineService.get().getPipelineRootSetting(getContainer()).getRootPath();
+                    File root = PipelineService.get().getPipelineRootSetting(getContainer()).getRootPath();
+                    File base = root;
                     if (form.getPath() != null)
                         base = new File(base, form.getPath());
 
@@ -832,6 +873,7 @@ public class SequenceAnalysisController extends SpringActionController
                             Map<String, Object> map = new HashMap<>();
                             map.put("fileName", fileName);
                             map.put("filePath", f.getPath());
+                            map.put("relPath", FileUtil.relativePath(FileUtil.getAbsoluteCaseSensitiveFile(root).getPath(), FileUtil.getAbsoluteCaseSensitiveFile(f).getPath()));
                             map.put("container", getContainer().getId());
                             map.put("containerPath", getContainer().getPath());
                             String basename = SequenceTaskHelper.getUnzippedBaseName(fileName);
@@ -1751,7 +1793,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                 return new ApiSimpleResponse(resultProperties);
             }
-            catch (ClassNotFoundException e)
+            catch (ClassNotFoundException | PipelineValidationException e)
             {
                 throw new ApiUsageException(e);
             }
@@ -1808,6 +1850,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             List<File> ret = new ArrayList<>();
             JSONArray inputFiles = getJobParameters().getJSONArray("inputFiles");
+            String path = getJobParameters().optString("path");
             for (JSONObject o : inputFiles.toJSONObjectArray())
             {
                 if (o.containsKey("dataId"))
@@ -1826,13 +1869,38 @@ public class SequenceAnalysisController extends SpringActionController
                 }
                 else if (o.containsKey("relPath") || o.containsKey("fileName"))
                 {
-                    File f = pr.resolvePath(o.get("relPath") == null ? o.getString("fileName"): o.getString("relPath"));
+                    File f;
+                    if (o.get("relPath") == null)
+                    {
+                        if (path != null)
+                        {
+                            f = pr.resolvePath(path);
+                            f = new File(f, o.getString("fileName"));
+                        }
+                        else
+                        {
+                            f = pr.resolvePath(o.getString("fileName"));
+                        }
+                    }
+                    else
+                    {
+                        f = pr.resolvePath(o.getString("relPath"));
+                    }
+
                     if (f == null || !f.exists())
                     {
                         throw new PipelineValidationException("Unknown file: " + o.getString("relPath"));
                     }
 
                     ret.add(f);
+                }
+                else if (o.containsKey("filePath"))
+                {
+                    File f = new File(o.getString("filePath"));
+                    if (!f.exists())
+                    {
+                        throw new PipelineValidationException("Unknown file: " + o.getString("filePath"));
+                    }
                 }
                 else
                 {

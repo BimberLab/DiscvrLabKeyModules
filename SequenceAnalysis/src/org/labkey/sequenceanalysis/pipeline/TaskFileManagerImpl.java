@@ -81,7 +81,6 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     @Override
     public void addSequenceOutput(SequenceOutputFile o)
     {
-
         _job.addOutputToCreate(o);
     }
 
@@ -103,13 +102,13 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     @Override
     public void addOutput(RecordedAction action, String role, File file)
     {
-        action.addOutput(file, role, false);
+        action.addOutputIfNotPresent(file, role, false);
     }
 
     @Override
     public void addInput(RecordedAction action, String role, File file)
     {
-        action.addInput(file, role);
+        action.addInputIfNotPresent(file, role);
     }
 
     @Override
@@ -555,7 +554,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     {
         log.debug("Swapping copied output file in actions: ");
         log.debug("\tOriginal file: " + original.getPath());
-        log.debug("\tNew locations: " + newFile.getPath());
+        log.debug("\tNew location: " + newFile.getPath());
 
         for (RecordedAction a : actions)
         {
@@ -566,6 +565,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         }
 
         //also sequence outputs
+        log.debug("also inspecting outputs: " + job.getOutputsToCreate().size());
         for (SequenceOutputFile so : job.getOutputsToCreate())
         {
             if (so.getFile().equals(original))
@@ -875,8 +875,8 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
             _unzippedMap.put(i, unzipped);
 
-            action.addInput(i, "Compressed File");
-            action.addOutput(unzipped, "Decompressed File", true, true);
+            action.addInputIfNotPresent(i, "Compressed File");
+            action.addOutputIfNotPresent(unzipped, "Decompressed File", true);
 
             Date end = new Date();
             action.setEndTime(end);

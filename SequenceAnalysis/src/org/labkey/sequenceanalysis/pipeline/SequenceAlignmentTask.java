@@ -426,8 +426,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         getJob().getLogger().debug("copying reference file: " + f.getPath());
                         File movedFile = _wd.inputFile(f, new File(targetDir, f.getName()), true);
                         copiedInputs.put(f, movedFile);
-                        action.addInput(f, "Reference File");
-                        action.addOutput(movedFile, "Copied Reference File", true, true);
+                        action.addInputIfNotPresent(f, "Reference File");
+                        action.addOutputIfNotPresent(movedFile, "Copied Reference File", true);
                     }
                 }
 

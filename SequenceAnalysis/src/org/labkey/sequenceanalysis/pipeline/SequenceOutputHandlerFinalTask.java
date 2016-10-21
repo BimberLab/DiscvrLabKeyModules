@@ -18,7 +18,9 @@ import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by bimber on 1/16/2015.
@@ -90,6 +92,24 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         am.setModifiedby(getJob().getUser().getUserId());
         am.setType(getPipelineJob().getHandler().getName());
         TableInfo analysisTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
+
+        Set<Integer> readsetIds = new HashSet<>();
+        for (SequenceOutputFile so : getPipelineJob().getFiles())
+        {
+            if (so.getReadset() == null)
+            {
+                readsetIds.clear();
+                break;
+            }
+
+            readsetIds.add(so.getReadset());
+        }
+
+        if (readsetIds.size() == 1)
+        {
+            am.setReadset(readsetIds.iterator().next());
+        }
+
         Table.insert(getJob().getUser(), analysisTable, am);
         int analysisId = am.getRowId();
 

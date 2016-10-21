@@ -106,7 +106,6 @@ import org.labkey.sequenceanalysis.run.variant.VariantAnnotatorStep;
 import org.labkey.sequenceanalysis.run.variant.VariantEvalBySampleStep;
 import org.labkey.sequenceanalysis.run.variant.VariantEvalStep;
 import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
-import org.labkey.sequenceanalysis.run.variant.VariantsSummaryStep;
 import org.labkey.sequenceanalysis.run.variant.VariantsToTableStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
 
@@ -133,7 +132,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.305;
+        return 12.306;
     }
 
     public boolean hasScripts()
@@ -255,7 +254,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new VariantEvalStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantEvalBySampleStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantsToTableStep.Provider());
-        SequencePipelineService.get().registerPipelineStep(new VariantsSummaryStep.Provider());
+        //SequencePipelineService.get().registerPipelineStep(new VariantsSummaryStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());

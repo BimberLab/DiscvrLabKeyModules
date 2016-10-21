@@ -233,7 +233,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutpu
             SequenceOutputFile so1 = new SequenceOutputFile();
             so1.setName(processed.getName());
             so1.setDescription("GATK GenotypeGVCF output");
-            so1.setFile(outputVcf);
+            so1.setFile(processed);
             so1.setLibrary_id(genomeId);
             so1.setCategory("VCF File");
             so1.setContainer(job.getContainerId());

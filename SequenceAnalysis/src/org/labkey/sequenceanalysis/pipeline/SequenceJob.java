@@ -323,6 +323,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     public void addOutputToCreate(SequenceOutputFile o)
     {
+        getLogger().debug("adding sequence output: " + (o.getFile() == null ? o.getName() : o.getFile().getPath()));
         _outputsToCreate.add(o);
     }
 

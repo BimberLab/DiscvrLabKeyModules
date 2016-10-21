@@ -64,33 +64,34 @@ Ext4.onReady(function (){
 
 
     function onSuccess(data){
-        if(!data.rows.length) return;
+        if (!data.rows.length)
+            return;
 
         var row = data.rows[0];
-        var readset = row.readset;
-
-        var panel = Ext4.create('LDK.panel.DetailsPanel', {
-            title: 'Readset Details:',
-            showBackBtn: false,
-            renderTo: 'sampleDetails_'+webpart.wrapperDivId,
-            store: {
-                containerPath: Laboratory.Utils.getQueryContainerPath(),
-                schemaName: 'sequenceanalysis',
-                queryName: 'sequence_readsets',
-                filterArray: [LABKEY.Filter.create('rowid', row.readset, LABKEY.Filter.Types.EQUAL)]
-            },
-            detailsConfig: {
-                buttons: [{
-                    text: 'More Actions',
-                    menu: [{
-                        text: 'Edit Readset Details',
-                        href: LABKEY.ActionURL.buildURL('ldk', 'manageRecord', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', keyField: 'rowid', key: row.readset}) + '&returnUrl=' + LDK.Utils.getSrcURL()
+        if (row.readset){
+            var panel = Ext4.create('LDK.panel.DetailsPanel', {
+                title: 'Readset Details:',
+                showBackBtn: false,
+                renderTo: 'sampleDetails_' + webpart.wrapperDivId,
+                store: {
+                    containerPath: Laboratory.Utils.getQueryContainerPath(),
+                    schemaName: 'sequenceanalysis',
+                    queryName: 'sequence_readsets',
+                    filterArray: [LABKEY.Filter.create('rowid', row.readset, LABKEY.Filter.Types.EQUAL)]
+                },
+                detailsConfig: {
+                    buttons: [{
+                        text: 'More Actions',
+                        menu: [{
+                            text: 'Edit Readset Details',
+                            href: LABKEY.ActionURL.buildURL('ldk', 'manageRecord', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', keyField: 'rowid', key: row.readset}) + '&returnUrl=' + LDK.Utils.getSrcURL()
+                        }]
                     }]
-                }]
-            }
-        });
+                }
+            });
+        }
 
-        if(row['runid/name']){
+        if (row['runid/name']){
             LABKEY.Query.selectRows({
                 schemaName: 'pipeline',
                 queryName: 'job',

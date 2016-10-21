@@ -179,15 +179,15 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
 
                         writer.write(">lcl|" + refName + " [" + rowId + "]" + System.getProperty("line.separator"));
                         sequenceCount++;
+
+                        if (sequenceCount % 1000 == 0)
+                        {
+                            getJob().getLogger().info("processed " + sequenceCount + " sequences");
+                        }
                     }
                     else
                     {
                         writer.write(line + System.getProperty("line.separator"));
-                    }
-
-                    if (sequenceCount % 1000 == 0)
-                    {
-                        getJob().getLogger().info("processed " + sequenceCount + " sequences");
                     }
                 }
 

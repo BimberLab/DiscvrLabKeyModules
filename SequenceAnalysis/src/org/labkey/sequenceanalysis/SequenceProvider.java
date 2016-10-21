@@ -22,12 +22,12 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.laboratory.DetailsUrlWithoutLabelNavItem;
 import org.labkey.api.laboratory.LaboratoryService;
+import org.labkey.api.laboratory.NavItem;
 import org.labkey.api.laboratory.QueryCountNavItem;
 import org.labkey.api.laboratory.QueryTabbedReportItem;
 import org.labkey.api.laboratory.SimpleSettingsItem;
 import org.labkey.api.laboratory.SummaryNavItem;
 import org.labkey.api.laboratory.TabbedReportItem;
-import org.labkey.api.laboratory.NavItem;
 import org.labkey.api.ldk.table.QueryCache;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
@@ -124,6 +124,8 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         {
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "readset_status", categoryName, "Readset Status Values"));
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "library_types", categoryName, "Library Types"));
+
+            items.add(new DetailsUrlWithoutLabelNavItem(this, "Find Orphan Sequence Files", DetailsURL.fromString("/sequenceAnalysis/findOrphanFiles.view", c), LaboratoryService.NavItemCategory.settings, categoryName));
         }
 
         return items;

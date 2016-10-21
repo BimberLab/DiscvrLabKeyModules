@@ -193,7 +193,7 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                 Integer groupNum = fileToGroupMap.get(o.getRowid());
                 ctx.getJob().getLogger().debug("group #: " + groupNum);
 
-                action.addInput(o.getFile(), "Site Methylation Rates");
+                action.addInputIfNotPresent(o.getFile(), "Site Methylation Rates");
 
                 try (BufferedReader reader = Readers.getReader(o.getFile()))
                 {

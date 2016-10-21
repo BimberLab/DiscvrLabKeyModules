@@ -103,16 +103,16 @@ then
     rm -Rf MORGAN_V*
     rm -Rf $LKTOOLS_DIR/MORGAN
 
-    wget http://faculty.washington.edu/eathomp/Anonftp/PANGAEA/MORGAN/morgan_v331_release.tar.gz
-    gunzip morgan_v331_release.tar.gz
-    tar -xf morgan_v331_release.tar
+    wget http://faculty.washington.edu/eathomp/Anonftp/PANGAEA/MORGAN/morgan_v332_release.tar.gz
+    gunzip morgan_v332_release.tar.gz
+    tar -xf morgan_v332_release.tar
     echo "Compressing TAR"
-    gzip morgan_v331_release.tar
-    cd MORGAN_V331_Release
+    gzip morgan_v332_release.tar
+    cd MORGAN_V332_Release
     make morgan
 
     cd ../
-    cp -R ./MORGAN_V331_Release $LKTOOLS_DIR/MORGAN
+    cp -R ./MORGAN_V332_Release $LKTOOLS_DIR/MORGAN
 else
     echo "Already installed"
 fi
@@ -368,34 +368,4 @@ fi
 #else
 #    echo "Already installed"
 #fi
-
-
-#MixCR
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install MixCR"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/MixCR || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf mixcr*
-    rm -Rf $LKTOOLS_DIR/importFromIMGT.sh
-    rm -Rf $LKTOOLS_DIR/mixcr.jar
-
-    wget https://github.com/milaboratory/mixcr/releases/download/v1.7.1/mixcr-1.7.1.zip
-    gunzip mixcr-1.7.1.zip
-    echo "Compressing TAR"
-    cd mixcr-1.7.1
-
-    install mixcr $LKTOOLS_DIR/
-    install mixcr.jar $LKTOOLS_DIR/
-    install importFromIMGT.sh $LKTOOLS_DIR/
-
-else
-    echo "Already installed"
-fi
 

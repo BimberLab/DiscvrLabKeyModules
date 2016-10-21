@@ -20,11 +20,11 @@ import org.labkey.api.sequenceanalysis.run.RCommandWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.writer.PrintWriters;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -157,10 +157,10 @@ public class MethylationRateComparison implements SequenceOutputHandler
                 }
 
                 File ampliconFile = new File(outputDir, "amplicons.txt");
-                action.addInput(ampliconFile, "Amplicons");
+                action.addInputIfNotPresent(ampliconFile, "Amplicons");
 
                 Set<String> ampliconNames = new HashSet<>();
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(ampliconFile)))
+                try (PrintWriter writer = PrintWriters.getPrintWriter(ampliconFile))
                 {
                     String[] amplicons = ampliconBorders.split("\\r?\\n");
                     for (String a : amplicons)
@@ -184,14 +184,14 @@ public class MethylationRateComparison implements SequenceOutputHandler
                 Map<String, SequenceOutputFile> fileMap = new HashMap<>();
                 for (SequenceOutputFile f : inputFiles)
                 {
-                    action.addInput(f.getFile(), "Methlylation Rates");
+                    action.addInputIfNotPresent(f.getFile(), "Methlylation Rates");
                     fileMap.put(f.getRowid().toString(), f);
                 }
 
                 JSONObject stds = params.getJSONObject("stds");
                 File stdsFile = new File(outputDir, "files.txt");
-                action.addInput(stdsFile, "Input Files");
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(stdsFile)))
+                action.addInputIfNotPresent(stdsFile, "Input Files");
+                try (PrintWriter writer = PrintWriters.getPrintWriter(stdsFile))
                 {
                     for (String rowId : stds.keySet())
                     {

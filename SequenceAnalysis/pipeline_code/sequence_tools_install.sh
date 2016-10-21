@@ -490,12 +490,12 @@ then
     rm -Rf $LKTOOLS_DIR/coverage2cytosine
     rm -Rf $LKTOOLS_DIR/deduplicate_bismark
 
-    wget $WGET_OPTS http://www.bioinformatics.babraham.ac.uk/projects/bismark/bismark_v0.14.5.tar.gz
-    gunzip bismark_v0.14.5.tar.gz
-    tar -xf bismark_v0.14.5.tar
+    wget $WGET_OPTS http://www.bioinformatics.babraham.ac.uk/projects/bismark/bismark_v0.16.3.tar.gz
+    gunzip bismark_v0.16.3.tar.gz
+    tar -xf bismark_v0.16.3.tar
     echo "Compressing TAR"
-    gzip bismark_v0.14.5.tar
-    cd bismark_v0.14.5
+    gzip bismark_v0.16.3.tar
+    cd bismark_v0.16.3
 
     install ./bismark $LKTOOLS_DIR/bismark
     install ./bismark2bedGraph $LKTOOLS_DIR/bismark2bedGraph
@@ -758,10 +758,9 @@ then
     rm -Rf $LKTOOLS_DIR/htsjdk-*
     rm -Rf $LKTOOLS_DIR/libIntelDeflater.so
 
-    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/2.5.0/picard-tools-2.5.0.zip
-    unzip picard-tools-2.5.0.zip
+    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/2.6.0/picard.jar
 
-    cp -R ./picard-tools-2.5.0/* $LKTOOLS_DIR/
+    cp -R ./picard.jar $LKTOOLS_DIR/
 else
     echo "Already installed"
 fi

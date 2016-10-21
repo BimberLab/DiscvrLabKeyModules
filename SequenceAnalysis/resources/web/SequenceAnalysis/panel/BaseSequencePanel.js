@@ -97,8 +97,6 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
 
     getJobResourcesCfg: function(results){
         if (results.resourceSettings){
-            console.log(results.resourceSettings);
-
             return {
                 xtype: 'sequenceanalysis-analysissectionpanel',
                 title: 'Job Resources',

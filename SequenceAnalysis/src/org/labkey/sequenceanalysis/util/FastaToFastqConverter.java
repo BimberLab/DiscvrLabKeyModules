@@ -40,7 +40,7 @@ public class FastaToFastqConverter
                 StringBuilder nt = new StringBuilder();
                 String c = String.valueOf(Character.toChars(_defaultQual)[0]);
 
-                for (int i = 0; i <= seq.getBases().length; i++) {
+                for (int i = 0; i < seq.getBases().length; i++) {
                     qual.append(c);
                     nt.append(Character.toString((char)seq.getBases()[i]));
                 }

@@ -354,6 +354,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     //<sample name>_<barcode sequence>_L<lane (0-padded to 3 digits)>_R<read number>_<set number (0-padded to 3 digits>.fastq.gz
     ILLUMINA_REGEX: /^(.+)_(.+)_L(.+)_R(.+)_(.+)(\.fastq)(\.gz)?$/i,
 
+    //Example from NextSeq: RNA160915BB_34A_22436_Gag120_Clone-10_S10_R1_001.fastq.gz
+    ILLUMINA_REGEX_NO_LANE: /^(.+)_S([0-9]+)_R([0-9])_([0-9]+)(\.fastq)(\.gz)?$/i,
+
     populateSamples: function(orderType, isPaired){
         this.fileNameStore.sort('displayName', 'ASC');
         this.readDataStore.removeAll();
@@ -378,37 +381,19 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     var platformUnit = match[1] + '-' + match[2] + '_L' + match[3];
                     var lane = match[5];
                     var setId = match[1] + '-' + match[2] + '_L' + match[3] + '_' + lane;
-                    map[sample] = map[sample] || {};
-                    map[sample][setId] = map[sample][setId] || [];
                     var readSet = match[4];
-                    if (readSet == 1){
-                        var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
-                        m.set('fileRecord1', rec.get('id'));
-                        m.set('fileGroupId', sample);
-                        m.set('platformUnit', platformUnit);
-                        map[sample][setId].push(m);
-                    }
-                    else {
-                        var arr = map[sample][setId];
-                        if (!arr.length){
-                            var msg = 'Possible error parsing file groups on SequenceImportPanel.  Encountered reverse reads prior to forward for file: [' + setId + '].  Names were:\n';
-                            this.fileNameStore.each(function(f){
-                                msg += '[' + f.get('fileName') + ']\n';
-                            }, this);
-
-                            LDK.Utils.logError(msg);
-
-                            var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
-                            m.set('fileRecord2', rec.get('id'));
-                            m.set('fileGroupId', sample);
-                            m.set('platformUnit', platformUnit);
-                            map[sample][setId].push(m);
-                        }
-                        else {
-                            arr[arr.length - 1].set('fileRecord2', rec.get('id'));
-                        }
-                    }
+                    this.processIlluminaMatch(sample, platformUnit, lane, setId, readSet, rec, map);
                 }
+                //else if (this.ILLUMINA_REGEX_NO_LANE.test(rec.get('fileName'))){
+                //    //TODO
+                //    var match = this.ILLUMINA_REGEX_NO_LANE.exec(rec.get('fileName'));
+                //    var sample = match[1] + '-' + match[2];
+                //    var platformUnit = match[1] + '-' + match[2] + '_L' + match[3];
+                //    var lane = match[5];
+                //    var setId = match[1] + '-' + match[2] + '_L' + match[3] + '_' + lane;
+                //    var readSet = match[4];
+                //    this.processIlluminaMatch(sample, platformUnit, lane, setId, readSet, rec, map);
+                //}
                 else {
                     var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
                     m.set('fileRecord1', rec.get('id'));
@@ -544,6 +529,39 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         }
     },
 
+    processIlluminaMatch: function(sample, platformUnit, lane, setId, readSet, rec, map){
+        map[sample] = map[sample] || {};
+        map[sample][setId] = map[sample][setId] || [];
+
+        if (readSet == 1){
+            var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
+            m.set('fileRecord1', rec.get('id'));
+            m.set('fileGroupId', sample);
+            m.set('platformUnit', platformUnit);
+            map[sample][setId].push(m);
+        }
+        else {
+            var arr = map[sample][setId];
+            if (!arr.length){
+                var msg = 'Possible error parsing file groups on SequenceImportPanel.  Encountered reverse reads prior to forward for file: [' + setId + '].  Names were:\n';
+                this.fileNameStore.each(function(f){
+                    msg += '[' + f.get('fileName') + ']\n';
+                }, this);
+
+                LDK.Utils.logError(msg);
+
+                var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
+                m.set('fileRecord2', rec.get('id'));
+                m.set('fileGroupId', sample);
+                m.set('platformUnit', platformUnit);
+                map[sample][setId].push(m);
+            }
+            else {
+                arr[arr.length - 1].set('fileRecord2', rec.get('id'));
+            }
+        }
+    },
+
     getJsonParams: function(btn){
         var values = this.callParent(arguments);
         if (!values) {
@@ -559,7 +577,10 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 totalErrors++;
             else {
                 if (!rec.get('dataId'))
-                    values.inputFiles.push({fileName: rec.get('fileName')});
+                    values.inputFiles.push({
+                        fileName: rec.get('fileName'),
+                        relPath: rec.get('relPath')
+                    });
                 else
                     values.inputFiles.push({dataId: rec.get('dataId')});
             }
@@ -612,6 +633,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     if (fileDataRec){
                         readData['file' + i] = {
                             fileName: fileDataRec.get('fileName'),
+                            relPath: fileDataRec.get('relPath'),
                             dataId: fileDataRec.get('dataId')
                         }
                     }
@@ -794,7 +816,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
     initFiles: function(){
         this.fileNameStore = Ext4.create('Ext.data.Store', {
-            fields: ['id', 'displayName', 'fileName', 'filePath', 'basename', 'container', 'containerPath', 'dataId', 'readgroup', 'error', 'uses', 'info']
+            fields: ['id', 'displayName', 'fileName', 'filePath', 'relPath', 'basename', 'container', 'containerPath', 'dataId', 'readgroup', 'error', 'uses', 'info']
         });
 
         this.fileNameStoreCopy = Ext4.create('Ext.data.Store', {
@@ -838,6 +860,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         filePath: f.filePath,
                         displayName: f.fileName + ' (Read Group: ' + (rg.readGroupId || rg.id) + ')',
                         fileName: f.fileName,
+                        relPath: f.relPath,
                         dataId: f.dataId,
                         container: f.container,
                         containerPath: f.containerPath,
@@ -1809,7 +1832,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             var editor = Ext4.ComponentManager.create(col.editor);
 
                             if (col.editor.store && !Ext4.isEmpty(value)){
-                                console.log('lookup');
                                 var recIdx = col.editor.store.find(col.editor.valueField, value, null, false, false);
                                 if (recIdx == -1){
                                     errors.push('Invalid value for field ' + col.text + ': ' + value);
@@ -1842,7 +1864,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 }
 
                 this.readsetStore.removeAll();
-                console.log(toAdd);
                 this.readsetStore.add(toAdd);
 
                 this.readsetStore.validateAll();

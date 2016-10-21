@@ -15,6 +15,7 @@
 
 package org.labkey.sequenceanalysis;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -27,9 +28,11 @@ import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SchemaTableInfo;
+import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.StopIteratingException;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -41,6 +44,7 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
@@ -56,19 +60,24 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
+import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -613,7 +622,7 @@ public class SequenceAnalysisManager
     {
         //first find any runs referenced by these readsets
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), readsetIds, CompareType.IN);
-        //Set<Integer> runIds = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_READSETS), PageFlowUtil.set("runId"), filter, null).getObject(Integer.class);
+        List<Integer> runIds = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_READSETS), PageFlowUtil.set("runId"), filter, null).getArrayList(Integer.class);
 
         //then analyses also using those
 
@@ -623,7 +632,10 @@ public class SequenceAnalysisManager
         return null;
     }
 
-    public void getOrphanFiles(Container c, Set<File> orphanFiles, Set<File> orphanIndexes, Set<File> orphanJobs)
+    private static final Set<String> pipelineDirs = PageFlowUtil.set(ReadsetImportJob.FOLDER_NAME + "Pipeline", AlignmentAnalysisJob.FOLDER_NAME + "Pipeline", "sequenceOutputs", SequenceOutputHandlerJob.FOLDER_NAME + "Pipeline");
+    private static final Set<String> skippedDirs = PageFlowUtil.set(".sequences", ".jbrowse");
+
+    public void getOrphanFilesForContainer(Container c, User u, Set<File> orphanFiles, Set<File> orphanIndexes, Set<PipelineStatusFile> orphanJobs, List<String> messages)
     {
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root == null)
@@ -631,56 +643,177 @@ public class SequenceAnalysisManager
             return;
         }
 
-        Set<File> readData = new HashSet<>();
-        Set<File> sequenceOutputs = new HashSet<>();
+        messages.add("## processing container: " + c.getPath());
 
-        File r = root.getRootPath();
-        getOrphanFilesForDirectory(r, orphanFiles, orphanIndexes, 0);
+        TableInfo jobsTable = PipelineService.get().getJobsTable(u, c);
 
-        List<? extends ExpData> datas = ExperimentService.get().getExpDatasUnderPath(r, c);
-        //BAMs, fastqs, w/o record
-        File sequenceImport = new File(r, ReadsetImportJob.FOLDER_NAME);
-        if (sequenceImport.exists())
+        //find known ExpDatas
+        Set<Integer> knownExpDatas = new HashSet<>();
+        knownExpDatas.addAll(new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA), PageFlowUtil.set("fileid1"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null).getArrayList(Integer.class));
+        knownExpDatas.addAll(new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA), PageFlowUtil.set("fileid2"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null).getArrayList(Integer.class));
+        knownExpDatas.addAll(new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES), PageFlowUtil.set("alignmentfile"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null).getArrayList(Integer.class));
+        knownExpDatas.addAll(new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), PageFlowUtil.set("dataId"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null).getArrayList(Integer.class));
+        knownExpDatas = Collections.unmodifiableSet(knownExpDatas);
+        messages.add("## total registered sequence ExpData: " + knownExpDatas.size());
+
+        SimpleFilter dataFilter = new SimpleFilter(FieldKey.fromString("container"), c.getId());
+        TableInfo dataTable = ExperimentService.get().getTinfoData();
+        TableSelector ts = new TableSelector(dataTable, PageFlowUtil.set("RowId", "DataFileUrl"), dataFilter, null);
+        final Map<URI, Set<Integer>> dataMap = new HashMap<>();
+        ts.forEach(new Selector.ForEachBlock<ResultSet>()
         {
+            @Override
+            public void exec(ResultSet rs) throws SQLException, StopIteratingException
+            {
+                if (rs.getString("DataFileUrl") == null)
+                {
+                    return;
+                }
 
+                try
+                {
+                    URI uri = new URI(rs.getString("DataFileUrl"));
+                    if (!dataMap.containsKey(uri))
+                    {
+                        dataMap.put(uri, new HashSet<>());
+                    }
+
+                    dataMap.get(uri).add(rs.getInt("RowId"));
+                }
+                catch (URISyntaxException e)
+                {
+                    _log.error(e.getMessage(), e);
+                }
+            }
+        });
+        messages.add("## total ExpData paths: " + dataMap.size());
+
+        for (String dirName : pipelineDirs)
+        {
+            File dir = new File(root.getRootPath(), dirName);
+            if (dir.exists())
+            {
+                for (File subdir : dir.listFiles())
+                {
+                    if (!subdir.isDirectory())
+                    {
+                        continue;
+                    }
+
+                    inspectPipelineDir(jobsTable, subdir, c, knownExpDatas, orphanJobs, messages);
+                    getOrphanFilesForDirectory(c, knownExpDatas, dataMap, subdir, orphanFiles, orphanIndexes);
+                }
+            }
         }
-        //orphan indexes?
+
+        //TODO: look for .deleted and /archive
+        File deletedDir = new File(root.getRootPath().getParentFile(), ".deleted");
+        if (deletedDir.exists())
+        {
+            messages.add("## .deleted dir found: " + deletedDir.getPath());
+        }
+
+        File assayData = new File(root.getRootPath(), "assaydata");
+        if (assayData.exists())
+        {
+            File[] bigFiles = assayData.listFiles(new FileFilter()
+            {
+                @Override
+                public boolean accept(File pathname)
+                {
+                    //50mb
+                    return (pathname.length() >= 5e7);
+                }
+            });
+
+            if (bigFiles != null && bigFiles.length > 0)
+            {
+                messages.add("## large files in assaydata, might be unnecessary:");
+                for (File f : bigFiles)
+                {
+                    messages.add(f.getPath());
+                }
+            }
+
+            File archive = new File(assayData, "archive");
+            if (archive.exists())
+            {
+                File[] files = archive.listFiles();
+                if (files != null && files.length > 0)
+                {
+                    messages.add("## the following files are in assaydata/archive, and were probably automatically moved here after delete.  they might be unnecessary:");
+                    for (File f : files)
+                    {
+                        messages.add(f.getPath());
+                    }
+                }
+            }
+        }
+
+        for (Container child : ContainerManager.getChildren(c))
+        {
+            if (child.isWorkbook())
+            {
+                getOrphanFilesForContainer(child, u, orphanFiles, orphanIndexes, orphanJobs, messages);
+            }
+        }
     }
 
-    private static final Set<String> pipelineDirs = PageFlowUtil.set(ReadsetImportJob.FOLDER_NAME, "sequenceAnalyses", "sequenceOutputs", "sequenceOutputPipeline");
-    private static final Set<String> skippedDirs = PageFlowUtil.set(".sequences", ".jbrowse");
-
-    private void getOrphanFilesForDirectory(File dir, Set<File> sequenceFiles, Set<File> orphanIndexes, int depth)
+    private void inspectPipelineDir(TableInfo jobsTable, File dir, Container c, Set<Integer> knownExpDatas, Set<PipelineStatusFile> orphanJobs, List<String> messages)
     {
-        if (!dir.exists() || Files.isSymbolicLink(dir.toPath()))
+        //find statusfile
+        List<Integer> jobIds = new TableSelector(jobsTable, PageFlowUtil.set("RowId"), new SimpleFilter(FieldKey.fromString("FilePath"), dir.getPath(), CompareType.STARTS_WITH), null).getArrayList(Integer.class);
+        if (jobIds.isEmpty())
         {
+            messages.add("## Unable to find matching job, might be orphan: ");
+            messages.add(dir.getPath());
+            return;
+        }
+        else if (jobIds.size() > 1)
+        {
+            messages.add("## More than one possible job found: " + dir.getPath());
             return;
         }
 
-        if (depth == 0)
+        //find ExpDatas
+        List<? extends ExpData> dataUnderPath = ExperimentService.get().getExpDatasUnderPath(dir, c);
+        if (!CollectionUtils.containsAny(dataUnderPath, knownExpDatas))
         {
-            //will be inspected separately
-            if (dir.isDirectory() && (pipelineDirs.contains(dir.getName()) || skippedDirs.contains(dir.getName())))
-            {
-                return;
-            }
+            PipelineStatusFile sf = PipelineService.get().getStatusFile(jobIds.get(0));
+            orphanJobs.add(sf);
+        }
+    }
+
+    private void getOrphanFilesForDirectory(Container c, Set<Integer> knownExpDatas, Map<URI, Set<Integer>> dataMap, File dir, Set<File> orphanSequenceFiles, Set<File> orphanIndexes)
+    {
+        //skipped for perf reasons.  extremely unlikely
+        //if (!dir.exists() || Files.isSymbolicLink(dir.toPath()))
+        //{
+        //    return;
+        //}
+
+        File[] arr = dir.listFiles();
+        if (arr == null)
+        {
+            _log.error("unable to list files: " + dir.getPath());
+            return;
         }
 
-        for (File f : dir.listFiles())
+        for (File f : arr)
         {
-            if (Files.isSymbolicLink(f.toPath()))
-            {
-                continue;
-            }
+            //skipped for perf reasons.  extremely unlikely
+            //if (Files.isSymbolicLink(f.toPath()))
+            //{
+            //    continue;
+            //}
 
             if (f.isDirectory())
             {
-                getOrphanFilesForDirectory(f, sequenceFiles, orphanIndexes, (depth + 1));
+                getOrphanFilesForDirectory(c, knownExpDatas, dataMap, f, orphanSequenceFiles, orphanIndexes);
             }
             else
             {
                 //iterate possible issues:
-
 
                 //orphan index
                 if (f.getPath().toLowerCase().endsWith(".bai") || f.getPath().toLowerCase().endsWith(".tbi") || f.getPath().toLowerCase().endsWith(".idx"))
@@ -693,20 +826,15 @@ public class SequenceAnalysisManager
                 }
 
                 //sequence files not associated w/ DB records:
-                if (depth == 0)
+                if (SequenceUtil.FILETYPE.fastq.getFileType().isType(f) || SequenceUtil.FILETYPE.bam.getFileType().isType(f))
                 {
-                    continue;
+                    //find all ExpDatas referencing this file
+                    Set<Integer> dataIdsForFile = dataMap.get(FileUtil.getAbsoluteCaseSensitiveFile(f).toURI());
+                    if (dataIdsForFile == null || !CollectionUtils.containsAny(dataIdsForFile, knownExpDatas))
+                    {
+                        orphanSequenceFiles.add(f);
+                    }
                 }
-
-                if (SequenceUtil.FILETYPE.fastq.getFileType().isType(f))
-                {
-
-                }
-                else if (SequenceUtil.FILETYPE.bam.getFileType().isType(f))
-                {
-
-                }
-
             }
         }
     }

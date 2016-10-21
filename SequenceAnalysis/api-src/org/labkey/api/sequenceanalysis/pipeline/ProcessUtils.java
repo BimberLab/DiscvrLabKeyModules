@@ -3,8 +3,6 @@ package org.labkey.api.sequenceanalysis.pipeline;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.labkey.api.util.Job;
-import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.StringUtilsLabKey;
 
 import java.io.BufferedInputStream;
@@ -43,16 +41,18 @@ public class ProcessUtils
                          BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(tmpProcess2.getOutputStream());
                     )
                     {
-                        //NOTE: switch from IOUtils.copy() so we can test for proccess.isAlive()
-                        int n;
-                        byte[] buffer = new byte[BUFFER_SIZE];
-                        while (tmpProcess1.isAlive() && -1 != (n = bufferedInputStream.read(buffer))) {
-                            bufferedOutputStream.write(buffer, 0, n);
-                        }
+                        IOUtils.copy(bufferedInputStream, bufferedOutputStream);
                     }
                     catch (IOException e)
                     {
-                        _log.error(e.getMessage(), e);
+                        if (tmpProcess1.isAlive())
+                        {
+                            _log.error(e.getMessage(), e);
+                        }
+                        else
+                        {
+                            _log.info("process closed");
+                        }
                     }
                 }
             }, "ProcessUtils.StreamRedirector").start();

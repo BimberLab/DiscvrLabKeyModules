@@ -1,8 +1,5 @@
 package org.labkey.sequenceanalysis.run.util;
 
-import htsjdk.samtools.BAMIndexer;
-import htsjdk.samtools.SAMFileReader;
-import htsjdk.samtools.ValidationStringency;
 import org.apache.log4j.Logger;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
@@ -76,6 +73,9 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
         }
         args.add("-A");
         args.add("DepthPerSampleHC");
+        args.add("-A");
+        args.add("HomopolymerRun");
+
         args.add("--max_alternate_alleles");
         args.add("12");
 
@@ -170,6 +170,8 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
             }
             args.add("-A");
             args.add("DepthPerSampleHC");
+            args.add("-A");
+            args.add("HomopolymerRun");
             args.add("--max_alternate_alleles");
             args.add("12");
 
