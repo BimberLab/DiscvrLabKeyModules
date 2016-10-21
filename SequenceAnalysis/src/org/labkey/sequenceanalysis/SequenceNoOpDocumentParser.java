@@ -45,6 +45,12 @@ public class SequenceNoOpDocumentParser extends AbstractDocumentParser
     {
         return resource.getFile() != null && (resource.getFile().getPath().contains("/sequenceAnalysis/") ||
                 resource.getFile().getPath().contains("/analyzeAlignment/") ||
+                resource.getFile().getPath().contains("/analyzeAlignmentPipeline/") ||
+                resource.getFile().getPath().contains("/.sequences/") ||
+                resource.getFile().getPath().contains("/sequenceImportPipeline/") ||
+                resource.getFile().getPath().contains("/sequenceImport/") ||
+                resource.getFile().getPath().contains("/.referenceLibraries/") ||
+                resource.getFile().getPath().contains("/refSequenceImport/") ||
                 resource.getFile().getPath().contains("/sequenceOutputPipeline/"));
     }
 }
