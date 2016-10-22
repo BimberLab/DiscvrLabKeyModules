@@ -468,7 +468,7 @@ public class BamIterator
             if (!file.exists())
                 throw new FileNotFoundException("File not found: " + file.getPath());
 
-            RefNtSequenceModel nt = SequenceIntegrationTests.ensureSivMac239(_project);
+            RefNtSequenceModel nt = SequenceIntegrationTests.ensureSivMac239(_project, _log);
             _refNtId = nt.getRowid();
 
             File output = new File(_pipelineRoot, "Ref_DB.fasta");

@@ -139,7 +139,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
         TaskPipeline taskPipeline = PipelineJobService.get().getTaskPipeline(new TaskId(ReferenceLibraryPipelineJob.class));
         if (taskPipeline != null)
         {
-            getLogger().debug("active task: " + getActiveTaskId().getNamespaceClass());
+            getLogger().debug("active task: " + (getActiveTaskId() == null ? "null" : getActiveTaskId().getNamespaceClass()));
             for (TaskId taskId : taskPipeline.getTaskProgression())
             {
                 getLogger().debug("task: " + taskId.getNamespaceClass());

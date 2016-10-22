@@ -1375,7 +1375,7 @@ public class SequenceIntegrationTests
                     _readsets = createReadsets();
                     _hasPerformedSetup = true;
 
-                    ensureSivMac239(_project);
+                    ensureSivMac239(_project, _log);
                     ensureSivMac239Sequence(_project, _log);
                 }
             }
@@ -1578,7 +1578,6 @@ public class SequenceIntegrationTests
 
             //otherwise create saved library
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
-            filter.addCondition(FieldKey.fromString("container"), ContainerManager.getSharedContainer().getId());
             Integer mac239Id = new TableSelector(QueryService.get().getUserSchema(_context.getUser(), _project, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("rowid"), filter, null).getObject(Integer.class);
             if (mac239Id == null)
             {
@@ -2998,16 +2997,20 @@ public class SequenceIntegrationTests
         }
     }
 
-    public static RefNtSequenceModel ensureSivMac239(Container c)
+    public static RefNtSequenceModel ensureSivMac239(Container c, Logger log)
     {
+        log.info("ensure SIVMac239 NT record exists");
+
         //NOTE: we cant guarantee that the NT Id of the test data will be identical to that of the server.  therefore we find mac239's rowId here an swap in later
         TableInfo tableNt = QueryService.get().getUserSchema(TestContext.get().getUser(), c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
         SimpleFilter ntFilter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
-        ntFilter.addCondition(FieldKey.fromString("container"), c.getId());
+        //note: dont use container filter so this could include /shared
+        //ntFilter.addCondition(FieldKey.fromString("container"), c.getId());
 
         TableSelector tsNt = new TableSelector(tableNt, ntFilter, null);
         if (!tsNt.exists())
         {
+            log.info("creating SIVmac239 record");
             Map<String, Object> map = new CaseInsensitiveHashMap<>();
             map.put("name", "SIVmac239");
             map.put("category", "Virus");
@@ -3023,6 +3026,7 @@ public class SequenceIntegrationTests
         //step added to clean state of team city agents
         else if (tsNt.getRowCount() > 1)
         {
+            log.info("more than one SIVmac239 record found, removing duplicates");
             List<Integer> rowIds = tsNt.getArrayList(Integer.class);
             Collections.sort(rowIds);
             rowIds.remove(0); //preserve the lowest (first inserted)
@@ -3049,7 +3053,8 @@ public class SequenceIntegrationTests
     {
         TableInfo ti = QueryService.get().getUserSchema(TestContext.get().getUser(), c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
-        filter.addCondition(FieldKey.fromString("container"), c.getId());
+        //note: dont use container filter so this could include /shared
+        //filter.addCondition(FieldKey.fromString("container"), c.getId());
         RefNtSequenceModel model = new TableSelector(ti, filter, null).getObject(RefNtSequenceModel.class);
         if (model == null)
         {
