@@ -387,6 +387,11 @@ public class SequenceAnalysisManager
         for (Integer sequenceId : sequenceIds)
         {
             ReferenceLibraryMember m = new ReferenceLibraryMember();
+            if (sequenceId == null)
+            {
+                throw new IllegalArgumentException("NT ID cannot be null");
+            }
+
             m.setRefNtId(sequenceId);
             libraryMembers.add(m);
         }

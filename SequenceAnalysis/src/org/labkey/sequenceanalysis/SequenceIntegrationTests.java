@@ -1579,6 +1579,11 @@ public class SequenceIntegrationTests
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
             filter.addCondition(FieldKey.fromString("container"), ContainerManager.getSharedContainer().getId());
             Integer mac239Id = new TableSelector(QueryService.get().getUserSchema(_context.getUser(), _project, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("rowid"), filter, null).getObject(Integer.class);
+            if (mac239Id == null)
+            {
+                throw new PipelineJobException("Unable to find SIVMac239 NT sequence");
+            }
+
             ReferenceLibraryPipelineJob libraryJob = SequenceAnalysisManager.get().createReferenceLibrary(Arrays.asList(mac239Id), _project, _context.getUser(), libraryName, null);
             waitForJobs(Collections.singleton(libraryJob));
 
