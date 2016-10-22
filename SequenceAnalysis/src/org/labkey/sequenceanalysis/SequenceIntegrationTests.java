@@ -3007,7 +3007,7 @@ public class SequenceIntegrationTests
         //note: dont use container filter so this could include /shared
         //ntFilter.addCondition(FieldKey.fromString("container"), c.getId());
 
-        TableSelector tsNt = new TableSelector(tableNt, ntFilter, null);
+        TableSelector tsNt = new TableSelector(tableNt, PageFlowUtil.set("rowId"), ntFilter, null);
         if (!tsNt.exists())
         {
             log.info("creating SIVmac239 record");
