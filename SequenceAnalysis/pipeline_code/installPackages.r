@@ -6,3 +6,8 @@ install.packages('reshape2', dependencies=TRUE, repos='http://cran.rstudio.com')
 install.packages('gridExtra', dependencies=TRUE, repos='http://cran.rstudio.com')
 install.packages('ggplot2', dependencies=TRUE, repos='http://cran.rstudio.com')
 install.packages('data.table', dependencies=TRUE, repos='http://cran.rstudio.com')
+install.packages('grid', dependencies=TRUE, repos='http://cran.rstudio.com')
+
+install.packages('gsalib', dependencies = TRUE, repos='http://cran.us.r-project.org')
+install.packages('gplots', dependencies = TRUE, repos='http://cran.us.r-project.org')
+#install.packages('tools', dependencies = TRUE, repos='http://cran.us.r-project.org')

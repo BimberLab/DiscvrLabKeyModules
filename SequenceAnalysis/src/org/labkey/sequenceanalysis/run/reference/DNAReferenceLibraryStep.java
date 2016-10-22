@@ -19,13 +19,14 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -153,7 +154,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
         File idKey = getExpectedIdKeyFile(outputDirectory);
         getPipelineCtx().getLogger().debug("writing FASTA to: " + refFasta.getPath());
 
-        try (FileWriter writer = new FileWriter(refFasta);FileWriter idWriter = new FileWriter(idKey))
+        try (PrintWriter writer = PrintWriters.getPrintWriter(refFasta); PrintWriter idWriter = PrintWriters.getPrintWriter(idKey))
         {
             if (!refFasta.exists())
                 refFasta.createNewFile();

@@ -2997,12 +2997,15 @@ public class SequenceIntegrationTests
         //NOTE: we cant guarantee that the NT Id of the test data will be identical to that of the server.  therefore we find mac239's rowId here an swap in later
         TableInfo tableNt = QueryService.get().getUserSchema(TestContext.get().getUser(), c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
         SimpleFilter ntFilter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
+        ntFilter.addCondition(FieldKey.fromString("container"), c.getId());
+
         TableSelector tsNt = new TableSelector(tableNt, ntFilter, null);
         if (!tsNt.exists())
         {
             Map<String, Object> map = new CaseInsensitiveHashMap<>();
             map.put("name", "SIVmac239");
             map.put("category", "Virus");
+            map.put("subset", "SIVmac239");
             map.put("container", c.getId());
             map.put("createdby", TestContext.get().getUser().getUserId());
             map.put("created", new Date());
@@ -3024,7 +3027,9 @@ public class SequenceIntegrationTests
     public static void ensureSivMac239Sequence(Container c, Logger log) throws IOException
     {
         TableInfo ti = QueryService.get().getUserSchema(TestContext.get().getUser(), c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
-        RefNtSequenceModel model = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("name"), "SIVmac239"), null).getObject(RefNtSequenceModel.class);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
+        filter.addCondition(FieldKey.fromString("container"), c.getId());
+        RefNtSequenceModel model = new TableSelector(ti, filter, null).getObject(RefNtSequenceModel.class);
         if (model == null)
         {
             log.error("unable to find SIVmac239 sequence");
