@@ -74,6 +74,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -3018,6 +3019,21 @@ public class SequenceIntegrationTests
             map.put("modified", new Date());
 
             Table.insert(TestContext.get().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), map);
+        }
+        //step added to clean state of team city agents
+        else if (tsNt.getRowCount() > 1)
+        {
+            List<Integer> rowIds = tsNt.getArrayList(Integer.class);
+            Collections.sort(rowIds);
+            rowIds.remove(0); //preserve the lowest (first inserted)
+            try
+            {
+                SequenceAnalysisManager.get().deleteRefNtSequence(rowIds);
+            }
+            catch (SQLException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
 
         RefNtSequenceModel nt = tsNt.getObject(RefNtSequenceModel.class);
