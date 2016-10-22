@@ -381,7 +381,7 @@ public class SequenceAnalysisManager
         return new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), sql).getObject(String.class);
     }
 
-    public ReferenceLibraryPipelineJob createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String description) throws IOException
+    public ReferenceLibraryPipelineJob createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String description, boolean skipCacheIndexes) throws IOException
     {
         List<ReferenceLibraryMember> libraryMembers = new ArrayList<>();
         for (Integer sequenceId : sequenceIds)
@@ -396,15 +396,15 @@ public class SequenceAnalysisManager
             libraryMembers.add(m);
         }
 
-        return createReferenceLibrary(c, u, name, description, libraryMembers);
+        return createReferenceLibrary(c, u, name, description, libraryMembers, skipCacheIndexes);
     }
 
-    public ReferenceLibraryPipelineJob createReferenceLibrary(Container c, User u, String name, String description, List<ReferenceLibraryMember> libraryMembers) throws IOException
+    public ReferenceLibraryPipelineJob createReferenceLibrary(Container c, User u, String name, String description, List<ReferenceLibraryMember> libraryMembers, boolean skipCacheIndexes) throws IOException
     {
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, root, name, description, libraryMembers, null);
+            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, root, name, description, libraryMembers, null, skipCacheIndexes);
             PipelineService.get().queueJob(job);
 
             return job;

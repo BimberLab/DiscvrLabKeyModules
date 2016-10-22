@@ -1991,7 +1991,7 @@ public class SequenceAnalysisController extends SpringActionController
                 idx++;
             }
 
-            SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getName(), form.getDescription(), members);
+            SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getName(), form.getDescription(), members, form.isSkipCacheIndexes());
 
             return new ApiSimpleResponse("Success", true);
         }
@@ -2003,6 +2003,7 @@ public class SequenceAnalysisController extends SpringActionController
         private String _description;
         private Integer[] _sequenceIds;
         private String[] _intervals;
+        private boolean _skipCacheIndexes = false;
 
         public String getName()
         {
@@ -2042,6 +2043,16 @@ public class SequenceAnalysisController extends SpringActionController
         public void setIntervals(String[] intervals)
         {
             _intervals = intervals;
+        }
+
+        public boolean isSkipCacheIndexes()
+        {
+            return _skipCacheIndexes;
+        }
+
+        public void setSkipCacheIndexes(boolean skipCacheIndexes)
+        {
+            _skipCacheIndexes = skipCacheIndexes;
         }
     }
 
@@ -2885,7 +2896,7 @@ public class SequenceAnalysisController extends SpringActionController
                         throw new PipelineValidationException("Insufficient permissions to update reference genome: " + libraryId);
                     }
 
-                    PipelineService.get().queueJob(ReferenceLibraryPipelineJob.recreate(c, getUser(), root, libraryId));
+                    PipelineService.get().queueJob(ReferenceLibraryPipelineJob.recreate(c, getUser(), root, libraryId, form.isSkipCacheIndexes()));
                 }
 
                 return new ApiSimpleResponse("success", true);
@@ -2901,6 +2912,7 @@ public class SequenceAnalysisController extends SpringActionController
     public static class RecreateReferenceLibraryForm
     {
         private int[] _libraryIds;
+        private boolean _skipCacheIndexes = false;
 
         public int[] getLibraryIds()
         {
@@ -2910,6 +2922,16 @@ public class SequenceAnalysisController extends SpringActionController
         public void setLibraryIds(int[] libraryIds)
         {
             _libraryIds = libraryIds;
+        }
+
+        public boolean isSkipCacheIndexes()
+        {
+            return _skipCacheIndexes;
+        }
+
+        public void setSkipCacheIndexes(boolean skipCacheIndexes)
+        {
+            _skipCacheIndexes = skipCacheIndexes;
         }
     }
 

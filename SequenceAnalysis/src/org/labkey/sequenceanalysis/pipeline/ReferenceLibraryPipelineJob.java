@@ -10,6 +10,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.pipeline.TaskFactory;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.query.FieldKey;
@@ -46,13 +47,15 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     private Integer _libraryId = null;
     private ReferenceGenomeImpl _referenceGenome = null;
     private boolean _isNew;
+    private boolean _skipCacheIndexes = false;
 
-    public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId) throws IOException
+    public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId, boolean skipCacheIndexes) throws IOException
     {
         super(ReferenceLibraryPipelineProvider.NAME, c, user, name, pipeRoot, new JSONObject(), new TaskId(ReferenceLibraryPipelineJob.class), FOLDER_NAME);
         _description = description;
         _libraryId = libraryId;
         _isNew = libraryId == null;
+        _skipCacheIndexes = skipCacheIndexes;
 
         saveLibraryMembersToFile(libraryMembers);
     }
@@ -107,7 +110,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     }
 
     //for recreating an existing library
-    public static ReferenceLibraryPipelineJob recreate(Container c, User user, PipeRoot pipeRoot, Integer libraryId)throws IOException
+    public static ReferenceLibraryPipelineJob recreate(Container c, User user, PipeRoot pipeRoot, Integer libraryId, boolean skipCacheIndexes)throws IOException
     {
         TableInfo ti = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         Map rowMap = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(Map.class);
@@ -116,7 +119,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
             throw new IllegalArgumentException("Library not found: " + libraryId);
         }
 
-        return new ReferenceLibraryPipelineJob(c, user, pipeRoot, (String)rowMap.get("name"), (String)rowMap.get("description"), null, libraryId);
+        return new ReferenceLibraryPipelineJob(c, user, pipeRoot, (String)rowMap.get("name"), (String)rowMap.get("description"), null, libraryId, skipCacheIndexes);
     }
 
     public String getName()
@@ -133,7 +136,26 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     @Override
     public TaskPipeline getTaskPipeline()
     {
-        return PipelineJobService.get().getTaskPipeline(new TaskId(ReferenceLibraryPipelineJob.class));
+        TaskPipeline taskPipeline = PipelineJobService.get().getTaskPipeline(new TaskId(ReferenceLibraryPipelineJob.class));
+        if (taskPipeline != null)
+        {
+            getLogger().debug("active task: " + getActiveTaskId().getNamespaceClass());
+            for (TaskId taskId : taskPipeline.getTaskProgression())
+            {
+                getLogger().debug("task: " + taskId.getNamespaceClass());
+                TaskFactory taskFactory = PipelineJobService.get().getTaskFactory(taskId);
+                if (taskFactory == null)
+                    getLogger().warn("Task '" + taskId + "' not found");
+                else
+                    getLogger().debug("location: " + taskFactory.getExecutionLocation());
+            }
+        }
+        else
+        {
+            getLogger().warn("taskPipeline is null");
+        }
+
+        return taskPipeline;
     }
 
     public String getLibraryDescription()
@@ -211,5 +233,10 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     public void setReferenceGenome(ReferenceGenomeImpl referenceGenome)
     {
         _referenceGenome = referenceGenome;
+    }
+
+    public boolean skipCacheIndexes()
+    {
+        return _skipCacheIndexes;
     }
 }

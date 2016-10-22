@@ -38,10 +38,11 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.writer.PrintWriters;
@@ -51,10 +52,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -170,6 +168,36 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             else
             {
                 rowId = getPipelineJob().getLibraryId();
+
+                //if a previous FASTA exists, delete it
+                ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(rowId, getJob().getUser());
+                ExpData existingFasta = ExperimentService.get().getExpData(rg.getFastaExpDataId());
+                if (existingFasta != null && existingFasta.getFile().exists())
+                {
+                    getJob().getLogger().debug("deleting existing FASTA: " + existingFasta.getFile().getPath());
+                    existingFasta.getFile().delete();
+
+                    //also indexes/dict
+                    String basename = FileUtil.getBaseName(existingFasta.getName());
+
+                    File fai = new File(existingFasta.getFile().getPath() + ".fai");
+                    if (fai.exists())
+                    {
+                        fai.delete();
+                    }
+
+                    File dict = new File(existingFasta.getFile().getParentFile(), basename + ".dict");
+                    if (dict.exists())
+                    {
+                        dict.delete();
+                    }
+
+                    File idKey = new File(existingFasta.getFile().getParentFile(), basename + ".idKey.txt");
+                    if (idKey.exists())
+                    {
+                        idKey.delete();
+                    }
+                }
             }
             getPipelineJob().setLibraryId(rowId);
 
@@ -204,7 +232,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             }
 
             //then gather sequences and create the FASTA
-            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fasta), StringUtilsLabKey.DEFAULT_CHARSET)); PrintWriter idWriter = PrintWriters.getPrintWriter(idFile))
+            try (PrintWriter writer = PrintWriters.getPrintWriter(fasta); PrintWriter idWriter = PrintWriters.getPrintWriter(idFile))
             {
                 idWriter.write("RowId\tName\tAccession\tStart\tStop\n");
 

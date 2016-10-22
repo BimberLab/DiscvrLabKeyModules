@@ -93,7 +93,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     @Override
     public List<File> getInputFiles()
     {
-        return Collections.unmodifiableList(_inputFiles);
+        return _inputFiles == null ? Collections.emptyList() : Collections.unmodifiableList(_inputFiles);
     }
 
     public void setDescription(String description)

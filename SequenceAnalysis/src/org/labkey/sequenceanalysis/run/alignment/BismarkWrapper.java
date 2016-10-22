@@ -156,7 +156,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
                 args.add(inputFastq1.getPath());
             }
 
-            String outputBasename = inputFastq1.getName() + "_bismark_bt2" + (inputFastq2 == null ? "" : "_pe");
+            String outputBasename = SequenceTaskHelper.getUnzippedBaseName(inputFastq1) + "_bismark_bt2" + (inputFastq2 == null ? "" : "_pe");
             File bam = new File(outputDirectory, outputBasename + ".bam");
             getWrapper().setWorkingDir(outputDirectory);
             getWrapper().execute(args);
@@ -167,7 +167,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
             }
 
             output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
-            output.addOutput(new File(outputDirectory, inputFastq1.getName() + "_bismark_" + (inputFastq2 == null ? "SE" : "PE") + "_report.txt"), "Bismark Summary Report");
+            output.addOutput(new File(outputDirectory, outputBasename + "_bismark_" + (inputFastq2 == null ? "SE" : "PE") + "_report.txt"), "Bismark Summary Report");
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;

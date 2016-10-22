@@ -63,6 +63,17 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
             return new CacheAlignerIndexesTask(this, job);
         }
 
+        @Override
+        public boolean isParticipant(PipelineJob job) throws IOException
+        {
+            if (((ReferenceLibraryPipelineJob)job).skipCacheIndexes())
+            {
+                return false;
+            }
+
+            return super.isParticipant(job);
+        }
+
         public boolean isJobComplete(PipelineJob job)
         {
             return false;

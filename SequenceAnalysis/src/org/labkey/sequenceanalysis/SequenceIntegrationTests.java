@@ -1585,7 +1585,7 @@ public class SequenceIntegrationTests
                 throw new PipelineJobException("Unable to find SIVMac239 NT sequence");
             }
 
-            ReferenceLibraryPipelineJob libraryJob = SequenceAnalysisManager.get().createReferenceLibrary(Arrays.asList(mac239Id), _project, _context.getUser(), libraryName, null);
+            ReferenceLibraryPipelineJob libraryJob = SequenceAnalysisManager.get().createReferenceLibrary(Arrays.asList(mac239Id), _project, _context.getUser(), libraryName, null, true);
             waitForJobs(Collections.singleton(libraryJob));
 
             return new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid"), libraryFilter, null).getObject(Integer.class);
@@ -2733,7 +2733,7 @@ public class SequenceIntegrationTests
             Integer libraryId = createSavedLibrary();
             Integer dataId = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(Integer.class);
             ExpData data = ExperimentService.get().getExpData(dataId);
-            File alignmentIndexDir = new File(data.getFile().getParentFile(), AlignerIndexUtil.INDEX_DIR + "/Bisulfite_Genome_Bowtie2");
+            File alignmentIndexDir = new File(data.getFile().getParentFile(), AlignerIndexUtil.INDEX_DIR + "/Bismark");
             if (alignmentIndexDir.exists())
             {
                 FileUtils.deleteDirectory(alignmentIndexDir);
@@ -2814,8 +2814,8 @@ public class SequenceIntegrationTests
             job1Files.add("paired1/Alignment/TestReadset1.M-bias.txt");
             job1Files.add("paired1/Alignment/TestReadset1.M-bias_R1.png");
             job1Files.add("paired1/Alignment/TestReadset1.M-bias_R2.png");
-            job1Files.add("paired1/Alignment/paired1.preprocessed.fastq.gz_bismark_PE.alignment_overview.png");
-            job1Files.add("paired1/Alignment/paired1.preprocessed.fastq.gz_bismark_bt2_PE_report.txt");
+            job1Files.add("paired1/Alignment/paired1.preprocessed_bismark_PE.alignment_overview.png");
+            job1Files.add("paired1/Alignment/paired1.preprocessed_bismark_bt2_PE_report.txt");
 
             //job2
             Set<String> job2Files = new HashSet<>(extraFiles);
@@ -2940,8 +2940,8 @@ public class SequenceIntegrationTests
             job1Files.add("paired1/Alignment/TestReadset1.M-bias.txt");
             job1Files.add("paired1/Alignment/TestReadset1.M-bias_R1.png");
             job1Files.add("paired1/Alignment/TestReadset1.M-bias_R2.png");
-            job1Files.add("paired1/Alignment/paired1.preprocessed.fastq.gz_bismark_PE.alignment_overview.png");
-            job1Files.add("paired1/Alignment/paired1.preprocessed.fastq.gz_bismark_PE_report.txt");
+            job1Files.add("paired1/Alignment/paired1.preprocessed_bismark_PE.alignment_overview.png");
+            job1Files.add("paired1/Alignment/paired1.preprocessed_bismark_PE_report.txt");
 
             //job2
             Set<String> job2Files = new HashSet<>(extraFiles);

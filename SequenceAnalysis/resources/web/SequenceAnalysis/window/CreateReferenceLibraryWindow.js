@@ -49,6 +49,10 @@ Ext4.define('SequenceAnalysis.window.CreateReferenceLibraryWindow', {
                     itemId: 'description'
                 },{
                     xtype: 'checkbox',
+                    fieldLabel: 'Skip Aligner Index Creation',
+                    itemId: 'skipCacheIndexes'
+                },{
+                    xtype: 'checkbox',
                     itemId: 'customIntervals',
                     fieldLabel: 'Choose Custom Intervals',
                     helpPopup: 'This option will allow you to construct a genome using custom segments/intervals from the selected reference sequences.  This is often useful if you want to inspect a custom set of regions of interest.',
@@ -180,10 +184,12 @@ Ext4.define('SequenceAnalysis.window.CreateReferenceLibraryWindow', {
         }
 
         var description = this.down('#description').getValue();
+        var skipCacheIndexes = this.down('#skipCacheIndexes').getValue();
         var jsonData = {
             name: name,
             description: description,
-            sequenceIds: this.rowIds
+            sequenceIds: this.rowIds,
+            skipCacheIndexes: skipCacheIndexes
         };
 
         if (this.down('#customIntervals').getValue()){
