@@ -196,7 +196,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                         if (idxOrig.exists())
                         {
                             getJob().getLogger().debug("moving BAM index: " + idxOrig.getPath());
-                            FileUtils.moveFile(bam, new File(finalDestination.getPath() + ".bai"));
+                            FileUtils.moveFile(idxOrig, new File(finalDestination.getPath() + ".bai"));
                         }
                     }
                 }
