@@ -154,11 +154,6 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         return settings.isRunFastqc() || getFilesToNormalize(job, ((FileAnalysisJobSupport) job).getInputFiles(), true).size() > 0;
     }
 
-    public static List<File> getFilesToNormalize(PipelineJob job, List<File> files) throws FileNotFoundException
-    {
-        return getFilesToNormalize(job, files, false);
-    }
-
     private ReadsetImportJob getPipelineJob()
     {
         return (ReadsetImportJob)getJob();
@@ -189,7 +184,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
         try
         {
-            List<FileGroup> fileGroups = settings.getFileGroups((ReadsetImportJob)job);
+            List<FileGroup> fileGroups = settings.getFileGroups((ReadsetImportJob)job, allowMissingFiles);
             for (FileGroup fg : fileGroups)
             {
                 List<List<FileGroup.FilePair>> filePairs = fg.groupByPlatformUnit();
@@ -321,7 +316,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         try
         {
             List<FileGroup> normalizedGroups = new ArrayList<>();
-            List<FileGroup> fileGroups = getHelper().getSettings().getFileGroups(getPipelineJob());
+            List<FileGroup> fileGroups = getHelper().getSettings().getFileGroups(getPipelineJob(), false);
             for (FileGroup fg : fileGroups)
             {
                 getJob().getLogger().debug("processing group: " + fg.name);

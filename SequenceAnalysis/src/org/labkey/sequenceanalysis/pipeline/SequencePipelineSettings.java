@@ -84,7 +84,7 @@ public class SequencePipelineSettings
         _runDate = StringUtils.trimToNull(_params.get("runDate")) == null ? null : ConvertHelper.convert(_params.get("runDate"), Date.class);
     }
 
-    private void parseReadsets(@Nullable SequenceJob job) throws PipelineJobException
+    private void parseReadsets(@Nullable SequenceJob job, boolean allowMissingFiles) throws PipelineJobException
     {
         _readsets = new ArrayList<>();
         _fileGroups = new ArrayList<>();
@@ -93,7 +93,7 @@ public class SequencePipelineSettings
         {
             if (key.startsWith("fileGroup_"))
             {
-                _fileGroups.add(createFileGroup(new JSONObject(_params.get(key)), job));
+                _fileGroups.add(createFileGroup(new JSONObject(_params.get(key)), job, allowMissingFiles));
             }
         }
 
@@ -108,7 +108,7 @@ public class SequencePipelineSettings
         }
     }
 
-    private FileGroup createFileGroup(JSONObject o, @Nullable SequenceJob job) throws PipelineJobException
+    private FileGroup createFileGroup(JSONObject o, @Nullable SequenceJob job, boolean allowMissingFiles) throws PipelineJobException
     {
         if (!o.containsKey("files"))
         {
@@ -128,13 +128,13 @@ public class SequencePipelineSettings
             if (json.containsKey("file1"))
             {
                 JSONObject fileJson = json.getJSONObject("file1");
-                File f = resolveFile(fileJson, job);
+                File f = resolveFile(fileJson, job, allowMissingFiles);
                 p.file1 = f;
             }
 
             if (json.containsKey("file2"))
             {
-                File f = resolveFile(json.getJSONObject("file2"), job);
+                File f = resolveFile(json.getJSONObject("file2"), job, allowMissingFiles);
                 p.file2 = f;
             }
 
@@ -194,7 +194,7 @@ public class SequencePipelineSettings
         return model;
     }
 
-    private File resolveFile(JSONObject json, @Nullable SequenceJob job)
+    private File resolveFile(JSONObject json, @Nullable SequenceJob job, boolean allowMissingFiles)
     {
         if (json.containsKey("dataId"))
         {
@@ -249,7 +249,7 @@ public class SequencePipelineSettings
             }
         }
 
-        if (job != null)
+        if (job != null && allowMissingFiles)
         {
             job.getLogger().error("unable to find file: " + json.toString() + ", active task: " + job.getActiveTaskId().getName(), new Exception());
             job.getLogger().debug("input files were: ");
@@ -334,7 +334,7 @@ public class SequencePipelineSettings
         {
             try
             {
-                parseReadsets(job);
+                parseReadsets(job, false);
             }
             catch (PipelineJobException e)
             {
@@ -347,9 +347,14 @@ public class SequencePipelineSettings
 
     public List<FileGroup> getFileGroups(SequenceJob job) throws PipelineJobException
     {
+        return getFileGroups(job, false);
+    }
+
+    public List<FileGroup> getFileGroups(SequenceJob job, boolean allowMissingFiles) throws PipelineJobException
+    {
         if (_fileGroups == null)
         {
-            parseReadsets(job);
+            parseReadsets(job, allowMissingFiles);
         }
 
         return _fileGroups;
