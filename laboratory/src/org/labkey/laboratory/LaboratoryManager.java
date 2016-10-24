@@ -395,7 +395,7 @@ public class LaboratoryManager
 
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString(colName), null, CompareType.NONBLANK);
         TableSelector ts = new TableSelector(ct, PageFlowUtil.set(colName), filter, null);
-        Map<String, List<Aggregate.Result>> aggs = ts.getAggregates(Collections.singletonList(new Aggregate(table.getColumn(colName), Aggregate.Type.MAX)));
+        Map<String, List<Aggregate.Result>> aggs = ts.getAggregates(Collections.singletonList(new Aggregate(table.getColumn(colName), Aggregate.BaseType.MAX)));
         Integer max = (Integer)aggs.get(colName).get(0).getValue();
 
         SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString(colName), null, CompareType.ISBLANK);

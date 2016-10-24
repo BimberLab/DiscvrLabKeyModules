@@ -86,7 +86,7 @@ public class BillingTriggerHelper
             }
 
             TableSelector ts = new TableSelector(ti);
-            Map<String, List<Aggregate.Result>> aggs = ts.getAggregates(Arrays.asList(new Aggregate(FieldKey.fromString("billingPeriodEnd"), Aggregate.Type.MAX)));
+            Map<String, List<Aggregate.Result>> aggs = ts.getAggregates(Arrays.asList(new Aggregate(FieldKey.fromString("billingPeriodEnd"), Aggregate.BaseType.MAX)));
             for (List<Aggregate.Result> ag : aggs.values())
             {
                 for (Aggregate.Result r : ag)

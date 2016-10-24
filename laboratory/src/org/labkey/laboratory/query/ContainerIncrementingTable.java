@@ -198,7 +198,7 @@ public class ContainerIncrementingTable extends SimpleUserSchema.SimpleTable
         assert ti != null;
 
         TableSelector ts = new TableSelector(ti, Collections.singleton(_incrementingCol), null, null);
-        Map<String, List<Aggregate.Result>> aggs = ts.getAggregates(Collections.singletonList(new Aggregate(FieldKey.fromString(_incrementingCol), Aggregate.Type.MAX)));
+        Map<String, List<Aggregate.Result>> aggs = ts.getAggregates(Collections.singletonList(new Aggregate(FieldKey.fromString(_incrementingCol), Aggregate.BaseType.MAX)));
         for (List<Aggregate.Result> ag : aggs.values())
         {
             for (Aggregate.Result r : ag)

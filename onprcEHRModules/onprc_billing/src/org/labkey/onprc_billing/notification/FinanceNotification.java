@@ -623,7 +623,7 @@ public class FinanceNotification extends AbstractNotification
 
         TableInfo ti = QueryService.get().getUserSchema(u, financeContainer, ONPRC_BillingSchema.NAME).getTable(ONPRC_BillingSchema.TABLE_INVOICE_RUNS);
         TableSelector ts = new TableSelector(ti);
-        Map<String, List<Aggregate.Result>> aggs = ts.getAggregates(Collections.singletonList(new Aggregate(FieldKey.fromString("billingPeriodEnd"), Aggregate.Type.MAX)));
+        Map<String, List<Aggregate.Result>> aggs = ts.getAggregates(Collections.singletonList(new Aggregate(FieldKey.fromString("billingPeriodEnd"), Aggregate.BaseType.MAX)));
         for (List<Aggregate.Result> ag : aggs.values())
         {
             for (Aggregate.Result r : ag)
