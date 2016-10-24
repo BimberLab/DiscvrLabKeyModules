@@ -249,7 +249,7 @@ public class SequencePipelineSettings
             }
         }
 
-        if (job != null && allowMissingFiles)
+        if (job != null && !allowMissingFiles)
         {
             job.getLogger().error("unable to find file: " + json.toString() + ", active task: " + job.getActiveTaskId().getName(), new Exception());
             job.getLogger().debug("input files were: ");
