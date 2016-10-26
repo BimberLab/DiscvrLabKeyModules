@@ -23,7 +23,7 @@
 
     <target name="build" depends="build_module_api, build_module" />
     <target name="build_module"
-            depends="init, compile-geneticstransform-jar"
+            depends="init, copy-geneticstransform-jar"
             description="Builds local module only.  Deploys local module into LabKey installation.">
         <ant antfile="${basedir}/build.xml"
              target="sub_build_module"
@@ -33,6 +33,10 @@
 
     <target name="compile-geneticstransform-jar" description="Builds GeneticsTransform.jar from sources">
         <ant antfile="build.xml" target="build" dir="${jar.dir}"/>
+    </target>
+
+    <target name="copy-geneticstransform-jar" description="Copy GeneticsTransform.jar to production directory"
+        depends="compile-geneticstransform-jar" if="${addAdditionalFiles}">
         <mkdir dir="${cnprc.dir}" />
         <copy todir="${cnprc.dir}" preservelastmodified="true">
             <fileset dir="${jar.dir}/jar"/>
