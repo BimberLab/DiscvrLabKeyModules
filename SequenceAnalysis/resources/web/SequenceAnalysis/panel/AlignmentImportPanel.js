@@ -665,7 +665,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
 
         if (errors.getCount() && !ignoreErrors){
             Ext4.Msg.alert('Error', 'There are ' + errors.getCount() + ' errors.  Please review the cells highlighted in red.  Note: you can hover over the cell for more information on the issue.');
-            return false;
+            return;
         }
 
         //make sure input files are valid
