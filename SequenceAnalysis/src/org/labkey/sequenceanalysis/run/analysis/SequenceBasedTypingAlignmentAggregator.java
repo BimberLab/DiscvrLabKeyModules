@@ -17,6 +17,7 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import htsjdk.samtools.SAMFormatException;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
@@ -1101,15 +1102,22 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
                                     encountered.add(r.getReadName());
 
-                                    SAMRecord mate = mateReader.queryMate(r);
-                                    if (mate != null)
+                                    try
                                     {
-                                        w1.write(new FastqRecord(r.getReadName(), r.getReadString(), null, r.getBaseQualityString()));
-                                        w2.write(new FastqRecord(mate.getReadName(), mate.getReadString(), null, mate.getBaseQualityString()));
+                                        SAMRecord mate = mateReader.queryMate(r);
+                                        if (mate != null)
+                                        {
+                                            w1.write(new FastqRecord(r.getReadName(), r.getReadString(), null, r.getBaseQualityString()));
+                                            w2.write(new FastqRecord(mate.getReadName(), mate.getReadString(), null, mate.getBaseQualityString()));
+                                        }
+                                        else
+                                        {
+                                            getLogger().warn("unable to find mate for read: " + r.getReadName() + ", skipping");
+                                        }
                                     }
-                                    else
+                                    catch (SAMFormatException e)
                                     {
-                                        getLogger().warn("unable to find mate for read: " + r.getReadName() + ", skipping");
+                                        getLogger().warn(e.getMessage(), e);
                                     }
                                 }
                             }

@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -48,6 +49,7 @@ import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
+import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.FastaDataLoader;
 import org.labkey.api.reader.FastaLoader;
 import org.labkey.api.security.User;
@@ -661,6 +663,40 @@ public class SequenceAnalysisManager
         knownExpDatas = Collections.unmodifiableSet(knownExpDatas);
         messages.add("## total registered sequence ExpData: " + knownExpDatas.size());
 
+        Set<Integer> knownPipelineJobs = new HashSet<>();
+        UserSchema us = QueryService.get().getUserSchema(u, c, SequenceAnalysisSchema.SCHEMA_NAME);
+        TableInfo rd = us.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
+        knownPipelineJobs.addAll(new TableSelector(rd, new HashSet<ColumnInfo>(QueryService.get().getColumns(rd, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("container"), c.getId()).addCondition(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
+
+        TableInfo rs = us.getTable(SequenceAnalysisSchema.TABLE_READSETS);
+        knownPipelineJobs.addAll(new TableSelector(rs, new HashSet<ColumnInfo>(QueryService.get().getColumns(rs, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("container"), c.getId()).addCondition(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
+
+        TableInfo a = us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
+        knownPipelineJobs.addAll(new TableSelector(a, new HashSet<ColumnInfo>(QueryService.get().getColumns(a, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("container"), c.getId()).addCondition(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
+
+        TableInfo of = us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+        knownPipelineJobs.addAll(new TableSelector(of, new HashSet<ColumnInfo>(QueryService.get().getColumns(of, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("container"), c.getId()).addCondition(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
+
+        knownPipelineJobs.addAll(new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("jobId"), new SimpleFilter(FieldKey.fromString("container"), c.getId()).addCondition(FieldKey.fromString("jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
+        knownPipelineJobs = Collections.unmodifiableSet(knownPipelineJobs);
+        messages.add("## total expected pipeline job folders: " + knownPipelineJobs.size());
+
+        TableSelector jobTs = new TableSelector(jobsTable, PageFlowUtil.set("FilePath"), new SimpleFilter(FieldKey.fromString("RowId"), knownPipelineJobs, CompareType.IN), null);
+
+        Set<File> knownJobPaths = new HashSet<>();
+        for (String filePath : jobTs.getArrayList(String.class))
+        {
+            File f = new File(filePath).getParentFile();
+            if (!f.exists())
+            {
+                messages.add("## unable to find expected pipeline job folder: " + f.getPath());
+            }
+            else
+            {
+                knownJobPaths.add(f);
+            }
+        }
+
         SimpleFilter dataFilter = new SimpleFilter(FieldKey.fromString("container"), c.getId());
         TableInfo dataTable = ExperimentService.get().getTinfoData();
         TableSelector ts = new TableSelector(dataTable, PageFlowUtil.set("RowId", "DataFileUrl"), dataFilter, null);
@@ -705,9 +741,23 @@ public class SequenceAnalysisManager
                         continue;
                     }
 
-                    inspectPipelineDir(jobsTable, subdir, c, knownExpDatas, orphanJobs, messages);
-                    getOrphanFilesForDirectory(c, knownExpDatas, dataMap, subdir, orphanFiles, orphanIndexes);
+                    boolean isOrphanPipelineDir = isOrphanPipelineDir(jobsTable, subdir, c, knownExpDatas, knownJobPaths, orphanJobs, messages);
+                    if (!isOrphanPipelineDir)
+                    {
+                        getOrphanFilesForDirectory(c, knownExpDatas, dataMap, subdir, orphanFiles, orphanIndexes);
+                    }
                 }
+            }
+        }
+
+        // any files remaining in knownJobPaths indicates that we didnt find registered sequence data.  this could be a job
+        // that either failed or for whatever reason is no longer important
+        if (!knownJobPaths.isEmpty())
+        {
+            messages.add("## The following directories match existing pipeline jobs, but do not contain registered data:");
+            for (File f : knownJobPaths)
+            {
+                messages.add(f.getPath());
             }
         }
 
@@ -764,7 +814,7 @@ public class SequenceAnalysisManager
         }
     }
 
-    private void inspectPipelineDir(TableInfo jobsTable, File dir, Container c, Set<Integer> knownExpDatas, Set<PipelineStatusFile> orphanJobs, List<String> messages)
+    private boolean isOrphanPipelineDir(TableInfo jobsTable, File dir, Container c, Set<Integer> knownExpDatas, Set<File> knownJobPaths, Set<PipelineStatusFile> orphanJobs, List<String> messages)
     {
         //find statusfile
         List<Integer> jobIds = new TableSelector(jobsTable, PageFlowUtil.set("RowId"), new SimpleFilter(FieldKey.fromString("FilePath"), dir.getPath(), CompareType.STARTS_WITH), null).getArrayList(Integer.class);
@@ -772,21 +822,30 @@ public class SequenceAnalysisManager
         {
             messages.add("## Unable to find matching job, might be orphan: ");
             messages.add(dir.getPath());
-            return;
+            return false;
         }
         else if (jobIds.size() > 1)
         {
             messages.add("## More than one possible job found: " + dir.getPath());
-            return;
+            return false;
         }
 
-        //find ExpDatas
+        // NOTE: if this files within a known job path, it still could be an orphan.  first check whether the directory has registered files.
+        // If so, remove that path from the set of known job paths
         List<? extends ExpData> dataUnderPath = ExperimentService.get().getExpDatasUnderPath(dir, c);
         if (!CollectionUtils.containsAny(dataUnderPath, knownExpDatas))
         {
             PipelineStatusFile sf = PipelineService.get().getStatusFile(jobIds.get(0));
             orphanJobs.add(sf);
+
+            return true;
         }
+        else
+        {
+            knownJobPaths.remove(dir);
+        }
+
+        return false;
     }
 
     private void getOrphanFilesForDirectory(Container c, Set<Integer> knownExpDatas, Map<URI, Set<Integer>> dataMap, File dir, Set<File> orphanSequenceFiles, Set<File> orphanIndexes)

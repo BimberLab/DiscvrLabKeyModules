@@ -519,8 +519,12 @@ public class SequenceAnalysisController extends SpringActionController
                 {
                     File f = new File(sf.getFilePath()).getParentFile();
                     long size = FileUtils.sizeOfDirectory(f);
-                    html.append(f.getPath() + "<br>");
-                    html.append("## size: " + FileUtils.byteCountToDisplaySize(size) + "<br>");
+                    //ignore if less than 1mb
+                    if (size > 1e6)
+                    {
+                        html.append("## size: " + FileUtils.byteCountToDisplaySize(size) + "<br>");
+                        html.append(f.getPath() + "<br>");
+                    }
                 }
             }
 
