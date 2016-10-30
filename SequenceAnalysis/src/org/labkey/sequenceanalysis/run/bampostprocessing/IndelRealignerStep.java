@@ -36,8 +36,9 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
             super("IndelRealigner", "Indel Realigner", "GATK", "The step runs GATK's IndelRealigner tool.  This tools performs local realignment to minmize the number of mismatching bases across all the reads.", Arrays.asList(
                     ToolParameterDescriptor.create("useQueue", "Use Queue?", "If checked, this tool will attempt to run using GATK queue, allowing parallelization using scatter/gather.", "checkbox", new JSONObject()
                     {{
-                        put("checked", true);
-                    }}, false)
+                        put("checked", false);
+                    }}, false),
+                    ToolParameterDescriptor.create("minRamPerQueueJob", "Min RAM Per Queue Job", "This only applies if queue is checked.  If provided, the scatter count (number of jobs) for queue will be adjusted to ensure at least this amount of RAM, in GB, is available for each job", "ldk-integerfield", null, null)
             ), null, "http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_indels_IndelRealigner.html");
         }
 
@@ -63,6 +64,12 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
         File created;
         if (getProvider().getParameterByName("useQueue").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
         {
+            Integer minRamPerQueueJob = getProvider().getParameterByName("minRamPerQueueJob").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class);
+            if (minRamPerQueueJob != null)
+            {
+                getWrapper().setMinRamPerQueueJob(minRamPerQueueJob);
+            }
+
             created = getWrapper().executeWithQueue(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null);
         }
         else

@@ -5,8 +5,8 @@ import htsjdk.samtools.SAMFileHeader;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.util.FileUtil;
 
 import java.io.File;
@@ -163,7 +163,7 @@ public class BisSnpIndelRealignerWrapper extends AbstractBisSnpWrapper
             {
                 getLogger().info("coordinate sorting BAM, order was: " + (order == null ? "not provided" : order.name()));
                 File sorted = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + ".sorted.bam");
-                new SortSamWrapper(getLogger()).execute(inputBam, sorted, SAMFileHeader.SortOrder.coordinate);
+                new SamSorter(getLogger()).execute(inputBam, sorted, SAMFileHeader.SortOrder.coordinate);
 
                 //this indicates we expect to replace the original in place, in which case we should delete the unsorted BAM
                 if (outputBam == null)

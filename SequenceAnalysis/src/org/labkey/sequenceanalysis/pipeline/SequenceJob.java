@@ -31,6 +31,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.api.writer.PrintWriters;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -144,9 +145,12 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
                 File paramFile = getParametersFile();
                 if (paramFile.exists())
                 {
-                    List<String> lines = IOUtils.readLines(Readers.getReader(getParametersFile()));
+                    try (BufferedReader reader = Readers.getReader(getParametersFile()))
+                    {
+                        List<String> lines = IOUtils.readLines(reader);
 
-                    _params = new JSONObject(StringUtils.join(lines, '\n'));
+                        _params = lines.isEmpty() ? new JSONObject() : new JSONObject(StringUtils.join(lines, '\n'));
+                    }
                 }
                 else
                 {

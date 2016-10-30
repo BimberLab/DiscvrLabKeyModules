@@ -100,7 +100,7 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler
                 File idxFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()) + ".g.vcf.gz.idx");
 
                 HaplotypeCallerWrapper wrapper = new HaplotypeCallerWrapper(job.getLogger());
-                if ("on".equals(params.optString("multithreaded")))
+                if (params.optBoolean("multithreaded", false))
                 {
                     job.getLogger().debug("HaplotypeCaller will run multi-threaded");
                     wrapper.setMultiThreaded(true);
@@ -114,8 +114,14 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler
                     throw new PipelineJobException("No reference genome found for output: " + so.getRowid());
                 }
 
-                if ("on".equals(params.optString("useQueue")))
+                if (params.optBoolean("useQueue", false))
                 {
+                    Integer minRamPerQueueJob = params.optInt("minRamPerQueueJob");
+                    if (minRamPerQueueJob != null)
+                    {
+                        wrapper.setMinRamPerQueueJob(minRamPerQueueJob);
+                    }
+
                     wrapper.executeWithQueue(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, getClientCommandArgs(params));
                 }
                 else

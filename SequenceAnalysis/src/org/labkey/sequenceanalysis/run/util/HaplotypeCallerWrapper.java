@@ -177,15 +177,7 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
 
             args.add("-startFromScratch");
             args.add("-scatterCount");
-            Integer maxThreads = SequenceTaskHelper.getMaxThreads(getLogger());
-            if (maxThreads != null)
-            {
-                args.add(maxThreads.toString());
-            }
-            else
-            {
-                args.add("1");
-            }
+            args.add(getScatterForQueueJob().toString());
 
             execute(args);
             if (!outputFile.exists())

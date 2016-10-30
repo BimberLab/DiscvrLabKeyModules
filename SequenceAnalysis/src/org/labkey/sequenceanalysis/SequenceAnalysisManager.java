@@ -639,7 +639,7 @@ public class SequenceAnalysisManager
         return null;
     }
 
-    private static final Set<String> pipelineDirs = PageFlowUtil.set(ReadsetImportJob.FOLDER_NAME + "Pipeline", AlignmentAnalysisJob.FOLDER_NAME + "Pipeline", "sequenceOutputs", SequenceOutputHandlerJob.FOLDER_NAME + "Pipeline");
+    private static final Set<String> pipelineDirs = PageFlowUtil.set(ReadsetImportJob.FOLDER_NAME, ReadsetImportJob.FOLDER_NAME + "Pipeline", AlignmentAnalysisJob.FOLDER_NAME, AlignmentAnalysisJob.FOLDER_NAME + "Pipeline", "sequenceOutputs", SequenceOutputHandlerJob.FOLDER_NAME + "Pipeline");
     private static final Set<String> skippedDirs = PageFlowUtil.set(".sequences", ".jbrowse");
 
     public void getOrphanFilesForContainer(Container c, User u, Set<File> orphanFiles, Set<File> orphanIndexes, Set<PipelineStatusFile> orphanJobs, List<String> messages)
@@ -696,6 +696,7 @@ public class SequenceAnalysisManager
                 knownJobPaths.add(f);
             }
         }
+        messages.add("## total job paths: " + knownJobPaths.size());
 
         SimpleFilter dataFilter = new SimpleFilter(FieldKey.fromString("container"), c.getId());
         TableInfo dataTable = ExperimentService.get().getTinfoData();
@@ -744,6 +745,11 @@ public class SequenceAnalysisManager
                     boolean isOrphanPipelineDir = isOrphanPipelineDir(jobsTable, subdir, c, knownExpDatas, knownJobPaths, orphanJobs, messages);
                     if (!isOrphanPipelineDir)
                     {
+                        if (!knownJobPaths.remove(subdir))
+                        {
+                            messages.add("pipeline path listed as orphan, but not present in known paths: " + subdir.getPath());
+                        }
+
                         getOrphanFilesForDirectory(c, knownExpDatas, dataMap, subdir, orphanFiles, orphanIndexes);
                     }
                 }
@@ -757,7 +763,13 @@ public class SequenceAnalysisManager
             messages.add("## The following directories match existing pipeline jobs, but do not contain registered data:");
             for (File f : knownJobPaths)
             {
-                messages.add(f.getPath());
+                long size = FileUtils.sizeOfDirectory(f);
+                //ignore if less than 1mb
+                if (size > 1e6)
+                {
+                    messages.add("## size: " + FileUtils.byteCountToDisplaySize(size));
+                    messages.add(f.getPath());
+                }
             }
         }
 
@@ -814,13 +826,15 @@ public class SequenceAnalysisManager
         }
     }
 
-    private boolean isOrphanPipelineDir(TableInfo jobsTable, File dir, Container c, Set<Integer> knownExpDatas, Set<File> knownJobPaths, Set<PipelineStatusFile> orphanJobs, List<String> messages)
+    private boolean isOrphanPipelineDir(TableInfo jobsTable, File dir, Container c, Set<Integer> knownExpDataIds, Set<File> knownJobPaths, Set<PipelineStatusFile> orphanJobs, List<String> messages)
     {
         //find statusfile
-        List<Integer> jobIds = new TableSelector(jobsTable, PageFlowUtil.set("RowId"), new SimpleFilter(FieldKey.fromString("FilePath"), dir.getPath(), CompareType.STARTS_WITH), null).getArrayList(Integer.class);
+        List<Integer> jobIds = new TableSelector(jobsTable, PageFlowUtil.set("RowId"), new SimpleFilter(FieldKey.fromString("FilePath"), dir.getPath() + System.getProperty("file.separator"), CompareType.STARTS_WITH), null).getArrayList(Integer.class);
         if (jobIds.isEmpty())
         {
+            long size = FileUtils.sizeOfDirectory(dir);
             messages.add("## Unable to find matching job, might be orphan: ");
+            messages.add("## size: " + FileUtils.byteCountToDisplaySize(size));
             messages.add(dir.getPath());
             return false;
         }
@@ -833,16 +847,18 @@ public class SequenceAnalysisManager
         // NOTE: if this files within a known job path, it still could be an orphan.  first check whether the directory has registered files.
         // If so, remove that path from the set of known job paths
         List<? extends ExpData> dataUnderPath = ExperimentService.get().getExpDatasUnderPath(dir, c);
-        if (!CollectionUtils.containsAny(dataUnderPath, knownExpDatas))
+        Set<Integer> dataIdsUnderPath = new HashSet<>();
+        for (ExpData d : dataUnderPath)
+        {
+            dataIdsUnderPath.add(d.getRowId());
+        }
+
+        if (!CollectionUtils.containsAny(dataIdsUnderPath, knownExpDataIds))
         {
             PipelineStatusFile sf = PipelineService.get().getStatusFile(jobIds.get(0));
             orphanJobs.add(sf);
 
             return true;
-        }
-        else
-        {
-            knownJobPaths.remove(dir);
         }
 
         return false;

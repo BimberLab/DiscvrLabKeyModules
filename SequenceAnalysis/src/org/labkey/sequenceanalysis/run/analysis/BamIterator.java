@@ -360,7 +360,7 @@ public class BamIterator
                 oneOf(log2).info("Saving Coverage Results");
                 oneOf(log2).info("\tReference sequences saved: 1");
                 oneOf(log2).info("\tPositions saved by reference (may include indels, so total could exceed reference length):");
-                oneOf(log2).info("\tSIVmac239: 8892");
+                oneOf(log2).info("\tSIVmac239_Test: 8892");
             }});
 
             final Logger log3 = mock.mock(Logger.class, "log3");
@@ -368,7 +368,7 @@ public class BamIterator
                 oneOf(log3).info("Saving NT SNP results");
                 oneOf(log3).info("\tReference sequences saved: 1");
                 oneOf(log3).info("\tSNPs saved by reference:");
-                oneOf(log3).info("\tSIVmac239: 473");
+                oneOf(log3).info("\tSIVmac239_Test: 473");
             }});
 
             final Logger log4 = mock.mock(Logger.class, "log4");
@@ -376,17 +376,17 @@ public class BamIterator
                 oneOf(log4).info("Saving AA SNP Results");
                 oneOf(log4).info("\tTotal AA Reference sequences encountered: 11");
                 oneOf(log4).info("\tSNPs saved by reference:");
-                oneOf(log4).info("\tSIVmac239 Nef: 9");
-                oneOf(log4).info("\tSIVmac239 Tat: 22");
-                oneOf(log4).info("\tSIVmac239 Env ARF 10: 10");
-                oneOf(log4).info("\tSIVmac239 vpX: 14");
-                oneOf(log4).info("\tSIVmac239 Env: 50");
-                oneOf(log4).info("\tSIVmac239 Rev: 9");
-                oneOf(log4).info("\tSIVmac239 Vif: 20");
-                oneOf(log4).info("\tSIVmac239 Gag: 23");
-                oneOf(log4).info("\tSIVmac239 Env ARF 1: 6");
-                oneOf(log4).info("\tSIVmac239 vpR: 10");
-                oneOf(log4).info("\tSIVmac239 Pol: 86");
+                oneOf(log4).info("\tSIVmac239_Test Nef: 9");
+                oneOf(log4).info("\tSIVmac239_Test Tat: 22");
+                oneOf(log4).info("\tSIVmac239_Test Env ARF 10: 10");
+                oneOf(log4).info("\tSIVmac239_Test vpX: 14");
+                oneOf(log4).info("\tSIVmac239_Test Env: 50");
+                oneOf(log4).info("\tSIVmac239_Test Rev: 9");
+                oneOf(log4).info("\tSIVmac239_Test Vif: 20");
+                oneOf(log4).info("\tSIVmac239_Test Gag: 23");
+                oneOf(log4).info("\tSIVmac239_Test Env ARF 1: 6");
+                oneOf(log4).info("\tSIVmac239_Test vpR: 10");
+                oneOf(log4).info("\tSIVmac239_Test Pol: 86");
             }});
 
             File refFasta = getRefFasta();

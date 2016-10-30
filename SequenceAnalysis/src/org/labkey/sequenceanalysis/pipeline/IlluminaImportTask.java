@@ -169,6 +169,8 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             TableInfo rs = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
             TableInfo readDataTable = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
+            Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
+
             //update the readsets
             Map<String, Object> row;
             for (Object key : sampleMap.values())
@@ -185,6 +187,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 rd.setCreatedBy(getJob().getUser().getUserId());
                 rd.setModified(new Date());
                 rd.setModifiedBy(getJob().getUser().getUserId());
+                rd.setRunId(runId);
                 rd.setPlatformUnit(readsetId.toString());  //this isnt quite correct, but we dont have much else to work with
 
                 if (fileMap.containsKey(pair))
@@ -234,7 +237,6 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 if (_instrumentRunId != null)
                     row.put("instrument_run_id", _instrumentRunId);
 
-                Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
                 if (runId != null)
                     row.put("runid", runId);
 

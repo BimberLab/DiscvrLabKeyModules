@@ -45,7 +45,7 @@
                         <!--<entry key="JAVA_TMP_DIR" value="/tmp"/>-->
 
                         <!--a whitespace separated list of arguments passed directly to java when running picard tools and GATK-->
-                        <entry key="JAVA_MEMORY" value="-Xmx8g"/>
+                        <entry key="SEQUENCEANALYSIS_JAVA_OPTS" value="-Xmx8g"/>
                     </map>
                 </property>
             </bean>

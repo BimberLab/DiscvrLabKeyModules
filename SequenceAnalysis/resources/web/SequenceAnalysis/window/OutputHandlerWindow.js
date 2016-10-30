@@ -156,6 +156,11 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                 Ext4.apply(o, i.additionalExtConfig);
             }
 
+            //force checkboxes to submit true instead of 'on'
+            if (o.xtype == 'checkbox' && !Ext4.isDefined(o.inputValue)){
+                o.inputValue = true;
+            }
+
             paramCfg.push(o);
         }, this);
 

@@ -137,16 +137,37 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
         @Override
         public void doCache(PipelineJob job, Object value, SequenceAnalysisJobSupport support) throws PipelineJobException
         {
+            job.getLogger().debug("caching param " + getName() + ": " + value);
             if (value != null)
             {
-                JSONObject mask = new JSONObject(value);
-                if (mask.opt("fileId") != null)
+                JSONObject mask;
+                if (!(value instanceof JSONObject))
+                {
+                    mask = new JSONObject(value.toString());
+                }
+                else
+                {
+                    mask = (JSONObject)value;
+                }
+
+                if (mask.get("fileId") != null)
                 {
                     ExpData d = ExperimentService.get().getExpData(mask.getInt("fileId"));
                     if (d != null)
                     {
                         support.cacheExpData(d);
                     }
+                }
+                else
+                {
+                    job.getLogger().warn("mask filter step lacks a fileId: " + value);
+                    job.getLogger().debug("type: " + value.getClass());
+                    for (String key : mask.keySet())
+                    {
+                        job.getLogger().warn(key + ": " + mask.get(key));
+                    }
+
+                    throw new PipelineJobException("No fileId provided for mask step");
                 }
             }
         }

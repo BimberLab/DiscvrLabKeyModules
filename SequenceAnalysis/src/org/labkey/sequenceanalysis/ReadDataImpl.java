@@ -1,21 +1,10 @@
 package org.labkey.sequenceanalysis;
 
-import org.json.JSONObject;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.Transient;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJobService;
-import org.labkey.api.query.FieldKey;
-import org.labkey.api.security.User;
-import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.model.ReadData;
-import org.labkey.api.view.UnauthorizedException;
 
 import java.io.File;
 import java.util.Date;
@@ -40,6 +29,7 @@ public class ReadDataImpl implements ReadData
     private Integer _createdBy;
     private Date _modified;
     private Integer _modifiedBy;
+    private Integer _runId;
 
     private Map<Integer, File> _cachedFiles = new HashMap<>();
 
@@ -121,6 +111,16 @@ public class ReadDataImpl implements ReadData
     public String getDescription()
     {
         return _description;
+    }
+
+    public Integer getRunId()
+    {
+        return _runId;
+    }
+
+    public void setRunId(Integer runId)
+    {
+        _runId = runId;
     }
 
     public void setDescription(String description)

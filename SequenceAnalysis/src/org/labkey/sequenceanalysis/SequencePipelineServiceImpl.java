@@ -226,7 +226,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         }
         else
         {
-            String xmx = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_MEMORY");
+            String xmx = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("SEQUENCEANALYSIS_JAVA_OPTS");
             if (StringUtils.trimToNull(xmx) != null)
             {
                 String[] tokens = xmx.split(" ");
@@ -254,9 +254,9 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
-    public Integer getMaxThreads(PipelineJob job)
+    public Integer getMaxThreads(Logger log)
     {
-        return SequenceTaskHelper.getMaxThreads(job);
+        return SequenceTaskHelper.getMaxThreads(log);
     }
 
     @Override

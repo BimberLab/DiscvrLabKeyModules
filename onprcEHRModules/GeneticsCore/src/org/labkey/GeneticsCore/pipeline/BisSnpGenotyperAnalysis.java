@@ -1,7 +1,6 @@
 package org.labkey.GeneticsCore.pipeline;
 
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
@@ -17,7 +16,6 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.util.FileUtil;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -70,7 +68,7 @@ public class BisSnpGenotyperAnalysis extends AbstractCommandPipelineStep<Bisulfi
         List<String> args = new ArrayList<>();
         args.addAll(getClientCommandArgs());
 
-        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getJob());
+        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getJob().getLogger());
         getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), cpgOutputFile, snpOutputFile, maxThreads, args);
 
         //sort, which will also create indexes

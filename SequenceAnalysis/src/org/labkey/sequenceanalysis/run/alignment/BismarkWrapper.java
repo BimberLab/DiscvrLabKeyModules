@@ -24,8 +24,9 @@ import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
+import org.labkey.api.sequenceanalysis.pipeline.SamtoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
@@ -34,7 +35,6 @@ import org.labkey.api.util.Pair;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
-import org.labkey.sequenceanalysis.run.util.SamtoolsRunner;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -322,7 +322,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
                 File queryNameSortBam;
                 if (SequencePipelineService.get().getBamSortOrder(inputBam) != SAMFileHeader.SortOrder.queryname)
                 {
-                    queryNameSortBam = new SortSamWrapper(getPipelineCtx().getLogger()).execute(inputBam, new File(outputDir, basename + ".querySort.bam"), SAMFileHeader.SortOrder.queryname);
+                    queryNameSortBam = new SamSorter(getPipelineCtx().getLogger()).execute(inputBam, new File(outputDir, basename + ".querySort.bam"), SAMFileHeader.SortOrder.queryname);
                     outputBasename = FileUtil.getBaseName(queryNameSortBam);
 
                     output.addIntermediateFile(queryNameSortBam);

@@ -1,8 +1,7 @@
-package org.labkey.sequenceanalysis.run.util;
+package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 
 import java.io.File;

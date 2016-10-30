@@ -33,12 +33,10 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -429,6 +427,20 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                         put("minValue", 0);
                         put("maxValue", 1);
                     }}, 0.9)
+            ), null);
+        }
+    }
+
+    public static class AvgQualProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    {
+        public AvgQualProvider()
+        {
+            super("AVGQUAL", "AvgQualFilter", "Average Quality Filter", "This step will discard any reads where the average of all base qualities is below the provided threshold.", Arrays.asList(
+                    ToolParameterDescriptor.create("avgqual", "Avg Qual", "Any read where the average quality of all bases is below this threshold will be discarded.", "ldk-numberfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                        put("allowBlank", false);
+                    }}, 20)
             ), null);
         }
     }

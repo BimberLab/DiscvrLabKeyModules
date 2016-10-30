@@ -337,7 +337,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
         return new File(helper.getJob().getAnalysisDirectory(), "extraBarcodes.txt");
     }
 
-    public static Set<File> handleInputs(SequenceJob job, String inputFileTreatment, Collection<RecordedAction> actions, Set<File> outputFiles, Set<File> unalteredInputs) throws PipelineJobException
+    public static Set<File> handleInputs(SequenceJob job, String inputFileTreatment, Collection<RecordedAction> actions, Set<File> outputFiles, @Nullable Set<File> unalteredInputs) throws PipelineJobException
     {
         Set<File> inputs = new HashSet<>();
         inputs.addAll(job.getInputFiles());
@@ -355,6 +355,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
 
         if ("delete".equals(inputFileTreatment))
         {
+            job.getLogger().info("deleting input files");
             for (File input : inputs)
             {
                 if (input.exists())
@@ -380,6 +381,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
         }
         else if ("compress".equals(inputFileTreatment))
         {
+            job.getLogger().info("compressing input files");
             FileType gz = new FileType(".gz");
             for (File input : inputs)
             {
@@ -392,7 +394,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                     }
                     else
                     {
-                        job.getLogger().info("Compressing/Moving input file to analysis directory: " + input.getPath());
+                        job.getLogger().info("Compressing/moving input file to analysis directory: " + input.getPath());
                         File compressed = Compress.compressGzip(input);
                         if (!compressed.exists())
                             throw new PipelineJobException("Unable to compress file: " + input);
@@ -420,7 +422,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
         return outputFiles;
     }
 
-    private static File moveInputToAnalysisDir(File input, SequenceJob job, Collection<RecordedAction> actions, @Nullable Set<File> unalteredInputs, Set<File> outputs) throws PipelineJobException
+    private static void moveInputToAnalysisDir(File input, SequenceJob job, Collection<RecordedAction> actions, @Nullable Set<File> unalteredInputs, Set<File> outputs) throws PipelineJobException
     {
         job.getLogger().debug("Moving input file to analysis directory: " + input.getPath());
 
@@ -436,7 +438,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                     job.getLogger().debug("\tThis input was unaltered during normalization and a copy already exists in the analysis folder so the original will be discarded");
                     input.delete();
                     TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job);
-                    return output;
+                    return;
                 }
                 else
                 {
@@ -451,16 +453,21 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                 throw new PipelineJobException("Unable to move file: " + input.getPath());
             }
 
-            if (outputs != null && outputs.contains(input))
+            if (outputs != null)
             {
-                job.getLogger().debug("replacing swapping moved final sequence file: " + input.getPath() + " to " + output.getPath());
-                outputs.remove(input);
-                outputs.add(output);
+                job.getLogger().debug("swapping moved final sequence file: " + input.getPath() + " to " + output.getPath());
+                if (outputs.contains(input))
+                {
+                    outputs.remove(input);
+                    outputs.add(output);
+                }
+                else
+                {
+                    job.getLogger().debug("file was not listed as an output, do not update path: " + input.getPath());
+                }
             }
 
             TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job);
-
-            return output;
         }
         catch (IOException e)
         {

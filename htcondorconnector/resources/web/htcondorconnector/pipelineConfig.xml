@@ -46,7 +46,7 @@
         <!--<property name="workingDir" value="/pipeline" />-->
         <!--Value for JAVA_HOME.  If empty or omitted, nothing will be set.-->
         <!--<property name="javaHome" value="" />-->
-        <!--Additional arguments passed to java.  Typically would be memory, etc: -Xmx4g-->
+        <!--Additional arguments passed to the remote java process.  Typically would be memory, etc: -Xmx4g-->
         <!--<property name="javaOpts">-->
             <!--<list>-->
                 <!--<value>-Xmx4g</value>-->

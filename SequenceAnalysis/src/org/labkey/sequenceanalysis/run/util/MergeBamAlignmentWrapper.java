@@ -9,8 +9,8 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
@@ -96,8 +96,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
                 }
             }
 
-            SortSamWrapper sorter = new SortSamWrapper(getLogger());
-            sorter.setStringency(ValidationStringency.SILENT);
+            SamSorter sorter = new SamSorter(getLogger());
             unmappedReadsBam = sorter.execute(unmappedReadsBam, null, SAMFileHeader.SortOrder.queryname);
 
             params.add("UNMAPPED_BAM=" + unmappedReadsBam.getPath());

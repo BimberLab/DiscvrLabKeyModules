@@ -1,7 +1,9 @@
 package org.labkey.api.sequenceanalysis.run;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.exception.ConvergenceException;
 import org.apache.log4j.Logger;
+import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -16,6 +18,8 @@ import java.util.List;
  */
 abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
 {
+    protected Integer _minRamPerQueueJob = 2;
+
     public AbstractGatkWrapper(Logger log)
     {
         super(log);
@@ -79,5 +83,56 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
         args.add("--version");
 
         return StringUtils.trimToNull(executeWithOutput(args));
+    }
+
+    public Integer getMinRamPerQueueJob()
+    {
+        return _minRamPerQueueJob;
+    }
+
+    public void setMinRamPerQueueJob(Integer minRamPerQueueJob)
+    {
+        _minRamPerQueueJob = minRamPerQueueJob;
+    }
+
+    protected Integer getScatterForQueueJob()
+    {
+        // NOTE: Queue will create n number of jobs, dividing memory evenly between them.  Because it is possible
+        // to submit a job w/ lower available RAM and comparably high CPUs, this could result in queue not having enough memory per job.
+        // therefore do a quick check and potentially scale down scatter
+        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
+        if (maxThreads != null)
+        {
+            if (_minRamPerQueueJob != null)
+            {
+                String maxRamSetting = StringUtils.trimToNull(System.getenv("SEQUENCEANALYSIS_MAX_RAM"));
+                if (maxRamSetting != null)
+                {
+                    try
+                    {
+                        Integer maxRamAllowed = ConvertHelper.convert(maxRamSetting, Integer.class);
+                        if (maxRamAllowed != null)
+                        {
+                            int adjusted = Math.max(maxRamAllowed / _minRamPerQueueJob, 1);
+                            if (adjusted < maxThreads)
+                            {
+                                getLogger().debug("lowering max threads to match available RAM.  setting to: " + adjusted);
+                                maxThreads = adjusted;
+                            }
+                        }
+                    }
+                    catch (ConvergenceException e)
+                    {
+                        getLogger().warn("non-numeric value for SEQUENCEANALYSIS_MAX_RAM: [" + maxRamSetting + "]");
+                    }
+                }
+            }
+        }
+        else
+        {
+            maxThreads = 1;
+        }
+
+        return maxThreads;
     }
 }

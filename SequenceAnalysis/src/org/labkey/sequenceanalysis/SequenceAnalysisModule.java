@@ -77,7 +77,7 @@ import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.PARalyzerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
-import org.labkey.sequenceanalysis.run.analysis.UnmappedReadExportAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.UnmappedReadExportHandler;
 import org.labkey.sequenceanalysis.run.analysis.ViralAnalysis;
 import org.labkey.sequenceanalysis.run.assembly.TrinityRunner;
 import org.labkey.sequenceanalysis.run.bampostprocessing.AddOrReplaceReadGroupsStep;
@@ -195,6 +195,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.HeadCropReadsProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.MaxInfoTrimmingProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.AdapterTrimmingProvider());
+        SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.AvgQualProvider());
         SequencePipelineService.get().registerPipelineStep(new CutadaptWrapper.Provider());
         //SequencePipelineService.get().registerPipelineStep(new BlastFilterPipelineStep.Provider());
 
@@ -238,7 +239,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new HaplotypeCallerAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new SnpCountAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.MethylationExtractorProvider());
-        SequencePipelineService.get().registerPipelineStep(new UnmappedReadExportAnalysis.Provider());
         //SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new RnaSeQCStep.Provider());
@@ -268,6 +268,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new RnaSeqcHandler());
         SequenceAnalysisService.get().registerFileHandler(new CombineStarGeneCountsHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessVariantsHandler());
+        SequenceAnalysisService.get().registerFileHandler(new UnmappedReadExportHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));

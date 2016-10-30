@@ -232,10 +232,12 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                         }
                     }
 
+                    rd.setRunId(runId);
+
                     readDatas.add(rd);
                 }
 
-                row.setRunId(SequenceTaskHelper.getExpRunIdForJob(getJob()));
+                row.setRunId(runId);
 
                 //then import
                 if (readDatas.isEmpty())

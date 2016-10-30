@@ -17,9 +17,9 @@ import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.run.alignment.FastqCollapser;
 import org.labkey.sequenceanalysis.run.util.BlastNWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -86,7 +86,7 @@ public class BlastUnmappedReadAnalysis extends AbstractCommandPipelineStep<Blast
         }
 
         File fasta = new File(outputDir, FileUtil.getBaseName(inputBam) + "_unmapped.fasta");
-        UnmappedReadExportAnalysis.writeUnmappedReadsAsFasta(inputBam, fasta, getPipelineCtx().getLogger(), null, null).get(0);
+        UnmappedReadExportHandler.Processor.writeUnmappedReadsAsFasta(inputBam, fasta, getPipelineCtx().getLogger(), null, null).get(0);
         long lineCount = SequenceUtil.getLineCount(fasta);
         if (lineCount == 0)
         {

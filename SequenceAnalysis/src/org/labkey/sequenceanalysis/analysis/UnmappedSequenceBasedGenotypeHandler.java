@@ -239,7 +239,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     aggregators.add(agg);
 
                     File outputLog = null;
-                    if (params.containsKey("writeLog") && "on".equals(params.getString("writeLog")))
+                    if (params.containsKey("writeLog") && params.optBoolean("writeLog", false))
                     {
                         outputLog = new File(ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()) + ".sbt.txt.gz");
                         agg.setOutputLog(outputLog);

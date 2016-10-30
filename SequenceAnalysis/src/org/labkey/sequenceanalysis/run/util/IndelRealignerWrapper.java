@@ -11,8 +11,8 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.resource.FileResource;
+import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
@@ -161,15 +161,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
 
             args.add("-startFromScratch");
             args.add("-scatterCount");
-            Integer maxThreads = SequenceTaskHelper.getMaxThreads(getLogger());
-            if (maxThreads != null)
-            {
-                args.add(maxThreads.toString());
-            }
-            else
-            {
-                args.add("1");
-            }
+            args.add(getScatterForQueueJob().toString());
 
             execute(args);
             if (!realignedBam.exists())
@@ -273,12 +265,27 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
             {
                 getLogger().info("coordinate sorting BAM, order was: " + (order == null ? "not provided" : order.name()));
                 File sorted = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + ".sorted.bam");
-                new SortSamWrapper(getLogger()).execute(inputBam, sorted, SAMFileHeader.SortOrder.coordinate);
+                new SamSorter(getLogger()).execute(inputBam, sorted, SAMFileHeader.SortOrder.coordinate);
 
                 //this indicates we expect to replace the original in place, in which case we should delete the unsorted BAM
                 if (outputBam == null)
                 {
                     tempFiles.add(inputBam);
+                    File idx = new File(inputBam.getPath() + ".bai");
+                    if (idx.exists())
+                    {
+                        tempFiles.add(idx);
+                    }
+                }
+                else
+                {
+                    tempFiles.add(sorted);
+
+                    File idx = new File(sorted.getPath() + ".bai");
+                    if (idx.exists())
+                    {
+                        tempFiles.add(idx);
+                    }
                 }
 
                 inputBam = sorted;

@@ -10,8 +10,8 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
-import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -123,7 +123,7 @@ public class BamCleanupHandler extends AbstractParameterizedOutputHandler
                 Set<File> toDelete = new HashSet<>();
 
                 String addReadGroups = params.optString("addReadGroups", null);
-                if ("on".equals(addReadGroups))
+                if (params.optBoolean(addReadGroups, false))
                 {
                     if (so.getReadset() == null)
                     {
@@ -153,10 +153,10 @@ public class BamCleanupHandler extends AbstractParameterizedOutputHandler
                 }
 
                 String sortBam = params.optString("sortBam", null);
-                if ("on".equals(sortBam))
+                if (params.optBoolean(sortBam, false))
                 {
                     output = new File(ctx.getOutputDir(), FileUtil.getBaseName(input) + ".sorted.bam");
-                    new SortSamWrapper(job.getLogger()).execute(input, output, SAMFileHeader.SortOrder.coordinate);
+                    new SamSorter(job.getLogger()).execute(input, output, SAMFileHeader.SortOrder.coordinate);
                     if (!output.exists())
                     {
                         throw new PipelineJobException("Expected output not found: " + output.getPath());

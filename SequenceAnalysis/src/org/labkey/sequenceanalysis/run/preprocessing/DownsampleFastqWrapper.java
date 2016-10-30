@@ -4,15 +4,15 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.Pair;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.DownsampleSamWrapper;
 import org.labkey.sequenceanalysis.run.util.FastqToSamWrapper;
@@ -59,15 +59,14 @@ public class DownsampleFastqWrapper extends AbstractCommandWrapper
 
             if (pctRetained == 1)
             {
-                getPipelineCtx().getLogger().info("\tNothing to do");
+                getPipelineCtx().getLogger().warn("Inputs already have desired read count or fewer, nothing to do");
+                output.setProcessedFastq(Pair.of(inputFile, inputFile2));
             }
             else
             {
                 getWrapper().setOutputDir(outputDir);
                 output.setProcessedFastq(getWrapper().downsampleFile(inputFile, inputFile2, pctRetained));
                 output.addCommandsExecuted(getWrapper().getCommandsExecuted());
-
-                return output;
             }
 
             return output;

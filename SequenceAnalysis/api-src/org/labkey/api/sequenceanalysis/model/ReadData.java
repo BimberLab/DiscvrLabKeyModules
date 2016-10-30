@@ -44,6 +44,8 @@ public interface ReadData extends Serializable
 
     public String getDescription();
 
+    public Integer getRunId();
+
     public String getContainer();
 
     public Date getCreated();

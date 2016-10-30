@@ -2920,6 +2920,8 @@ labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/Pre
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/ProcessUtils.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/ReferenceGenome.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/ReferenceLibraryStep.java -text
+labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SamSorter.java -text
+labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SamtoolsRunner.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SequenceAnalysisJobSupport.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SequenceOutputHandler.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SequencePipelineService.java -text
@@ -3556,6 +3558,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/Sequenc
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SequenceBasedTypingAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SnpCountAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/UnmappedReadExportAnalysis.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/UnmappedReadExportHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/ViralAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/assembly/TrinityRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/bampostprocessing/AddOrReplaceReadGroupsStep.java -text
@@ -3614,9 +3617,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/PARalyzerRu
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/RnaSeQCWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SFFExtractRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SamFormatConverterWrapper.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SamSorter.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SamToFastqWrapper.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SamtoolsRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SortVcfWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SplitNCigarReadsWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/TabixRunner.java -text
@@ -4019,12 +4020,6 @@ onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/ExacloudResour
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/SequenceJobResourceAllocator.java -text
 onprcEHRModules/GeneticsCore/tools/installLabkey.sh -text
 onprcEHRModules/GeneticsCore/tools/javaWrapper.sh -text
-onprcEHRModules/GeneticsCore/tools/pipelineConfig/fergie2/pipelineConfig.xml -text
-onprcEHRModules/GeneticsCore/tools/pipelineConfig/fergie2/remoteMuleConfig.xml -text
-onprcEHRModules/GeneticsCore/tools/pipelineConfig/hoolock/pipelineConfig.xml -text
-onprcEHRModules/GeneticsCore/tools/pipelineConfig/hoolock/remoteMuleConfig.xml -text
-onprcEHRModules/GeneticsCore/tools/pipelineConfig/prcLabkey4/pipelineConfig.xml -text
-onprcEHRModules/GeneticsCore/tools/pipelineConfig/prcLabkey4/remoteMuleConfig.xml -text
 onprcEHRModules/GeneticsCore/webapp/WEB-INF/geneticscoreContext.xml -text
 onprcEHRModules/README.txt -text
 onprcEHRModules/mergesync/MergeSync.iml -text

@@ -253,13 +253,6 @@ public class SequenceIntegrationTests
                 throw new Exception("sampledata folder does not exist: " + _sampleData.getPath());
             }
 
-            //debug intermittent failure
-            _log.info("files in " + _sampleData.getPath());
-            for (String f : _sampleData.list())
-            {
-                _log.info(f);
-            }
-
             _project = ContainerManager.getForPath(getProjectName());
             _pipelineRoot = PipelineService.get().getPipelineRootSetting(_project).getRootPath();
 
@@ -294,11 +287,7 @@ public class SequenceIntegrationTests
                 }
             }
 
-            if (file != null && file.exists())
-            {
-                _log.info("total files in sampledata: " + file.list().length);
-            }
-            else
+            if (file == null || !file.exists())
             {
                 _log.error("unable to find sampledata directory");
             }
@@ -1270,6 +1259,8 @@ public class SequenceIntegrationTests
                 for (ReadData d : m.getReadData())
                 {
                     expected = expected + (d.getFileId2() == null ? 4 : 8);
+
+                    Assert.assertNotNull("RunId not set for ReadData", d.getRunId());
                 }
 
                 Assert.assertEquals("Incorrect number of quality metrics created", expected, metrics.length);
@@ -1320,9 +1311,9 @@ public class SequenceIntegrationTests
             additionalFiles.add("Shared");
             if (includeRefFiles)
             {
-                additionalFiles.add("Shared/SIVmac239.fasta");
-                additionalFiles.add("Shared/SIVmac239.fasta.fai");
-                additionalFiles.add("Shared/SIVmac239.idKey.txt");
+                additionalFiles.add("Shared/SIVmac239_Test.fasta");
+                additionalFiles.add("Shared/SIVmac239_Test.fasta.fai");
+                additionalFiles.add("Shared/SIVmac239_Test.idKey.txt");
             }
 
             for (String fn : additionalFiles)
@@ -1577,7 +1568,7 @@ public class SequenceIntegrationTests
             }
 
             //otherwise create saved library
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239_Test");
             Integer mac239Id = new TableSelector(QueryService.get().getUserSchema(_context.getUser(), _project, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("rowid"), filter, null).getObject(Integer.class);
             if (mac239Id == null)
             {
@@ -1636,7 +1627,7 @@ public class SequenceIntegrationTests
             config.put("alignment.Mosaik.banded_smith_waterman", 51);
             config.put("alignment.Mosaik.max_mismatch_pct", 0.20);  //this is primary here to ensure it doesnt get copied into the build command.  20% should include everything
             config.put("analysis", "SBT;ViralAnalysis;SnpCountAnalysis");
-            config.put("analysis.SnpCountAnalysis.intervals", "SIVmac239:5500-5600\nSIVmac239:9700-9900\nSIVmac239:10000-10020");
+            config.put("analysis.SnpCountAnalysis.intervals", "SIVmac239_Test:5500-5600\nSIVmac239_Test:9700-9900\nSIVmac239_Test:10000-10020");
 
             appendSamplesForAlignment(config, _readsets);
 
@@ -1647,7 +1638,7 @@ public class SequenceIntegrationTests
 
             validateAlignmentJob(jobs, Arrays.asList(
                 "Shared/Mosaik",
-                "Shared/Mosaik/SIVmac239.mosaik",
+                "Shared/Mosaik/SIVmac239_Test.mosaik",
                 "paired1/Alignment/paired1.mosaikreads",
                 "paired1/Alignment/paired1.mosaik.stat",
                 "paired1/Alignment/paired1.mosaik.bam",
@@ -1659,7 +1650,7 @@ public class SequenceIntegrationTests
 
             validateAlignmentJob(jobs, Arrays.asList(
                 "Shared/Mosaik",
-                "Shared/Mosaik/SIVmac239.mosaik",
+                "Shared/Mosaik/SIVmac239_Test.mosaik",
                 "paired3/Alignment/paired3.mosaikreads",
                 "paired3/Alignment/paired3.mosaik.stat",
                 "paired3/Alignment/paired3.mosaik.bam",
@@ -1669,7 +1660,7 @@ public class SequenceIntegrationTests
 
             validateAlignmentJob(jobs, Arrays.asList(
                 "Shared/Mosaik",
-                "Shared/Mosaik/SIVmac239.mosaik",
+                "Shared/Mosaik/SIVmac239_Test.mosaik",
                 "paired4/Alignment/paired4.mosaikreads",
                 "paired4/Alignment/paired4.mosaik.stat",
                 "paired4/Alignment/paired4.mosaik.bam",
@@ -1697,13 +1688,13 @@ public class SequenceIntegrationTests
             List<String> extraFiles = new ArrayList<>();
             extraFiles.addAll(Arrays.asList(
                     "Shared/Mosaik",
-                    "Shared/Mosaik/SIVmac239.mosaik",
+                    "Shared/Mosaik/SIVmac239_Test.mosaik",
                     "paired1/Alignment/paired1.mosaikreads",
                     "paired1/Alignment/paired1.mosaik.stat",
                     "paired1/Alignment/paired1.mosaik.bam"
             ));
 
-            extraFiles.add("Shared/SIVmac239.dict");
+            extraFiles.add("Shared/SIVmac239_Test.dict");
 
             extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.bam");
             extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.bam");
@@ -1727,13 +1718,13 @@ public class SequenceIntegrationTests
             extraFiles = new ArrayList<>();
             extraFiles.addAll(Arrays.asList(
                     "Shared/Mosaik",
-                    "Shared/Mosaik/SIVmac239.mosaik",
+                    "Shared/Mosaik/SIVmac239_Test.mosaik",
                     "paired3/Alignment/paired3.mosaikreads",
                     "paired3/Alignment/paired3.mosaik.stat",
                     "paired3/Alignment/paired3.mosaik.bam"
             ));
 
-            extraFiles.add("Shared/SIVmac239.dict");
+            extraFiles.add("Shared/SIVmac239_Test.dict");
 
             extraFiles.add("paired3/Alignment/paired3.mosaikreads");
             extraFiles.add("paired3/Alignment/paired3.mosaik.stat");
@@ -1759,13 +1750,13 @@ public class SequenceIntegrationTests
             extraFiles = new ArrayList<>();
             extraFiles.addAll(Arrays.asList(
                     "Shared/Mosaik",
-                    "Shared/Mosaik/SIVmac239.mosaik",
+                    "Shared/Mosaik/SIVmac239_Test.mosaik",
                     "paired4/Alignment/paired4.mosaikreads",
                     "paired4/Alignment/paired4.mosaik.stat",
                     "paired4/Alignment/paired4.mosaik.bam"
             ));
 
-            extraFiles.add("Shared/SIVmac239.dict");
+            extraFiles.add("Shared/SIVmac239_Test.dict");
 
             extraFiles.add("paired4");
             extraFiles.add("paired4/Alignment");
@@ -1815,9 +1806,9 @@ public class SequenceIntegrationTests
             extraFiles.add("sequenceAnalysis.json");
 
             extraFiles.add("Shared");
-            extraFiles.add("Shared/SIVmac239.fasta");
-            extraFiles.add("Shared/SIVmac239.fasta.fai");
-            extraFiles.add("Shared/SIVmac239.idKey.txt");
+            extraFiles.add("Shared/SIVmac239_Test.fasta");
+            extraFiles.add("Shared/SIVmac239_Test.fasta.fai");
+            extraFiles.add("Shared/SIVmac239_Test.idKey.txt");
 
             //job1
             Set<String> job1Files = new HashSet<>(extraFiles);
@@ -1873,9 +1864,9 @@ public class SequenceIntegrationTests
             extraFiles.add(jobName + ".log");
             extraFiles.add("sequenceAnalysis.json");
             extraFiles.add("Shared");
-            extraFiles.add("Shared/SIVmac239.fasta");
-            extraFiles.add("Shared/SIVmac239.fasta.fai");
-            extraFiles.add("Shared/SIVmac239.idKey.txt");
+            extraFiles.add("Shared/SIVmac239_Test.fasta");
+            extraFiles.add("Shared/SIVmac239_Test.fasta.fai");
+            extraFiles.add("Shared/SIVmac239_Test.idKey.txt");
 
             //job1
             Set<String> job1Files = new HashSet<>(extraFiles);
@@ -1927,16 +1918,16 @@ public class SequenceIntegrationTests
             extraFiles.add(jobName + ".log");
             extraFiles.add("sequenceAnalysis.json");
             extraFiles.add("Shared");
-            extraFiles.add("Shared/SIVmac239.fasta");
-            extraFiles.add("Shared/SIVmac239.fasta.fai");
-            extraFiles.add("Shared/SIVmac239.idKey.txt");
+            extraFiles.add("Shared/SIVmac239_Test.fasta");
+            extraFiles.add("Shared/SIVmac239_Test.fasta.fai");
+            extraFiles.add("Shared/SIVmac239_Test.idKey.txt");
 
             extraFiles.add("Shared/bwa");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.amb");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.ann");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.bwt");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.pac");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.sa");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.amb");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.ann");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.bwt");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.pac");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.sa");
 
             //job1
             Set<String> job1Files = new HashSet<>(extraFiles);
@@ -1991,16 +1982,16 @@ public class SequenceIntegrationTests
             extraFiles.add(jobName + ".log");
             extraFiles.add("sequenceAnalysis.json");
             extraFiles.add("Shared");
-            extraFiles.add("Shared/SIVmac239.fasta");
-            extraFiles.add("Shared/SIVmac239.fasta.fai");
-            extraFiles.add("Shared/SIVmac239.idKey.txt");
+            extraFiles.add("Shared/SIVmac239_Test.fasta");
+            extraFiles.add("Shared/SIVmac239_Test.fasta.fai");
+            extraFiles.add("Shared/SIVmac239_Test.idKey.txt");
 
             extraFiles.add("Shared/bwa");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.amb");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.ann");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.bwt");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.pac");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.sa");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.amb");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.ann");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.bwt");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.pac");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.sa");
 
             //job1
             Set<String> job1Files = new HashSet<>(extraFiles);
@@ -2060,16 +2051,16 @@ public class SequenceIntegrationTests
             extraFiles.add("sequenceAnalysis.json");
 
             extraFiles.add("Shared");
-            extraFiles.add("Shared/SIVmac239.fasta");
-            extraFiles.add("Shared/SIVmac239.fasta.fai");
-            extraFiles.add("Shared/SIVmac239.idKey.txt");
+            extraFiles.add("Shared/SIVmac239_Test.fasta");
+            extraFiles.add("Shared/SIVmac239_Test.fasta.fai");
+            extraFiles.add("Shared/SIVmac239_Test.idKey.txt");
 
             extraFiles.add("Shared/bwa");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.amb");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.ann");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.bwt");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.pac");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.sa");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.amb");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.ann");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.bwt");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.pac");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.sa");
 
             //job1
             Set<String> job1Files = new HashSet<>(extraFiles);
@@ -2160,16 +2151,16 @@ public class SequenceIntegrationTests
             extraFiles.add("sequenceAnalysis.json");
 
             extraFiles.add("Shared");
-            extraFiles.add("Shared/SIVmac239.fasta");
-            extraFiles.add("Shared/SIVmac239.fasta.fai");
-            extraFiles.add("Shared/SIVmac239.idKey.txt");
+            extraFiles.add("Shared/SIVmac239_Test.fasta");
+            extraFiles.add("Shared/SIVmac239_Test.fasta.fai");
+            extraFiles.add("Shared/SIVmac239_Test.idKey.txt");
 
             extraFiles.add("Shared/bwa");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.amb");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.ann");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.bwt");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.pac");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.sa");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.amb");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.ann");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.bwt");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.pac");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.sa");
 
             //job1
             Set<String> job1Files = new HashSet<>(extraFiles);
@@ -2230,17 +2221,17 @@ public class SequenceIntegrationTests
             extraFiles.add("sequenceAnalysis.json");
 
             extraFiles.add("Shared");
-            extraFiles.add("Shared/SIVmac239.fasta");
-            extraFiles.add("Shared/SIVmac239.fasta.fai");
-            extraFiles.add("Shared/SIVmac239.idKey.txt");
+            extraFiles.add("Shared/SIVmac239_Test.fasta");
+            extraFiles.add("Shared/SIVmac239_Test.fasta.fai");
+            extraFiles.add("Shared/SIVmac239_Test.idKey.txt");
 
             extraFiles.add("Shared/Bowtie");
-            extraFiles.add("Shared/Bowtie/SIVmac239.bowtie.index.1.ebwt");
-            extraFiles.add("Shared/Bowtie/SIVmac239.bowtie.index.2.ebwt");
-            extraFiles.add("Shared/Bowtie/SIVmac239.bowtie.index.3.ebwt");
-            extraFiles.add("Shared/Bowtie/SIVmac239.bowtie.index.4.ebwt");
-            extraFiles.add("Shared/Bowtie/SIVmac239.bowtie.index.rev.1.ebwt");
-            extraFiles.add("Shared/Bowtie/SIVmac239.bowtie.index.rev.2.ebwt");
+            extraFiles.add("Shared/Bowtie/SIVmac239_Test.bowtie.index.1.ebwt");
+            extraFiles.add("Shared/Bowtie/SIVmac239_Test.bowtie.index.2.ebwt");
+            extraFiles.add("Shared/Bowtie/SIVmac239_Test.bowtie.index.3.ebwt");
+            extraFiles.add("Shared/Bowtie/SIVmac239_Test.bowtie.index.4.ebwt");
+            extraFiles.add("Shared/Bowtie/SIVmac239_Test.bowtie.index.rev.1.ebwt");
+            extraFiles.add("Shared/Bowtie/SIVmac239_Test.bowtie.index.rev.2.ebwt");
 
             //job1
             Set<String> job1Files = new HashSet<>(extraFiles);
@@ -2301,9 +2292,9 @@ public class SequenceIntegrationTests
             extraFiles.add("sequenceAnalysis.json");
 
             extraFiles.add("Shared");
-            extraFiles.add("Shared/SIVmac239.fasta");
-            extraFiles.add("Shared/SIVmac239.fasta.fai");
-            extraFiles.add("Shared/SIVmac239.idKey.txt");
+            extraFiles.add("Shared/SIVmac239_Test.fasta");
+            extraFiles.add("Shared/SIVmac239_Test.fasta.fai");
+            extraFiles.add("Shared/SIVmac239_Test.idKey.txt");
 
             //job1
             Set<String> job1Files = new HashSet<>(extraFiles);
@@ -2531,16 +2522,16 @@ public class SequenceIntegrationTests
             extraFiles.add("sequenceAnalysis.json");
 
             extraFiles.add("Shared");
-            extraFiles.add("Shared/SIVmac239.fasta");
-            extraFiles.add("Shared/SIVmac239.fasta.fai");
-            extraFiles.add("Shared/SIVmac239.idKey.txt");
+            extraFiles.add("Shared/SIVmac239_Test.fasta");
+            extraFiles.add("Shared/SIVmac239_Test.fasta.fai");
+            extraFiles.add("Shared/SIVmac239_Test.idKey.txt");
 
             extraFiles.add("Shared/bwa");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.amb");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.ann");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.bwt");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.pac");
-            extraFiles.add("Shared/bwa/SIVmac239.bwa.index.sa");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.amb");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.ann");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.bwt");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.pac");
+            extraFiles.add("Shared/bwa/SIVmac239_Test.bwa.index.sa");
 
             //job1
             Set<String> job1Files = new HashSet<>(extraFiles);
@@ -2577,17 +2568,17 @@ public class SequenceIntegrationTests
             extraFiles.add("sequenceAnalysis.json");
 
             extraFiles.add("Shared");
-            extraFiles.add("Shared/SIVmac239.fasta");
-            extraFiles.add("Shared/SIVmac239.fasta.fai");
-            extraFiles.add("Shared/SIVmac239.idKey.txt");
+            extraFiles.add("Shared/SIVmac239_Test.fasta");
+            extraFiles.add("Shared/SIVmac239_Test.fasta.fai");
+            extraFiles.add("Shared/SIVmac239_Test.idKey.txt");
 
             extraFiles.add("Shared/Bowtie2");
-            extraFiles.add("Shared/Bowtie2/SIVmac239.bowtie2.index.1.bt2");
-            extraFiles.add("Shared/Bowtie2/SIVmac239.bowtie2.index.2.bt2");
-            extraFiles.add("Shared/Bowtie2/SIVmac239.bowtie2.index.3.bt2");
-            extraFiles.add("Shared/Bowtie2/SIVmac239.bowtie2.index.4.bt2");
-            extraFiles.add("Shared/Bowtie2/SIVmac239.bowtie2.index.rev.1.bt2");
-            extraFiles.add("Shared/Bowtie2/SIVmac239.bowtie2.index.rev.2.bt2");
+            extraFiles.add("Shared/Bowtie2/SIVmac239_Test.bowtie2.index.1.bt2");
+            extraFiles.add("Shared/Bowtie2/SIVmac239_Test.bowtie2.index.2.bt2");
+            extraFiles.add("Shared/Bowtie2/SIVmac239_Test.bowtie2.index.3.bt2");
+            extraFiles.add("Shared/Bowtie2/SIVmac239_Test.bowtie2.index.4.bt2");
+            extraFiles.add("Shared/Bowtie2/SIVmac239_Test.bowtie2.index.rev.1.bt2");
+            extraFiles.add("Shared/Bowtie2/SIVmac239_Test.bowtie2.index.rev.2.bt2");
 
             //job1
             Set<String> job1Files = new HashSet<>(extraFiles);
@@ -2675,17 +2666,17 @@ public class SequenceIntegrationTests
             extraFiles.add("sequenceAnalysis.json");
 
             extraFiles.add("Shared");
-            extraFiles.add("Shared/SIVmac239.fasta");
-            extraFiles.add("Shared/SIVmac239.fasta.fai");
-            extraFiles.add("Shared/SIVmac239.idKey.txt");
+            extraFiles.add("Shared/SIVmac239_Test.fasta");
+            extraFiles.add("Shared/SIVmac239_Test.fasta.fai");
+            extraFiles.add("Shared/SIVmac239_Test.idKey.txt");
 
             extraFiles.add("Shared/Bowtie");
-            extraFiles.add("Shared/Bowtie/SIVmac239.bowtie.index.1.ebwt");
-            extraFiles.add("Shared/Bowtie/SIVmac239.bowtie.index.2.ebwt");
-            extraFiles.add("Shared/Bowtie/SIVmac239.bowtie.index.3.ebwt");
-            extraFiles.add("Shared/Bowtie/SIVmac239.bowtie.index.4.ebwt");
-            extraFiles.add("Shared/Bowtie/SIVmac239.bowtie.index.rev.1.ebwt");
-            extraFiles.add("Shared/Bowtie/SIVmac239.bowtie.index.rev.2.ebwt");
+            extraFiles.add("Shared/Bowtie/SIVmac239_Test.bowtie.index.1.ebwt");
+            extraFiles.add("Shared/Bowtie/SIVmac239_Test.bowtie.index.2.ebwt");
+            extraFiles.add("Shared/Bowtie/SIVmac239_Test.bowtie.index.3.ebwt");
+            extraFiles.add("Shared/Bowtie/SIVmac239_Test.bowtie.index.4.ebwt");
+            extraFiles.add("Shared/Bowtie/SIVmac239_Test.bowtie.index.rev.1.ebwt");
+            extraFiles.add("Shared/Bowtie/SIVmac239_Test.bowtie.index.rev.2.ebwt");
 
             Set<String> job1Files = new HashSet<>(extraFiles);
             job1Files.add("paired1");
@@ -3003,7 +2994,7 @@ public class SequenceIntegrationTests
 
         //NOTE: we cant guarantee that the NT Id of the test data will be identical to that of the server.  therefore we find mac239's rowId here an swap in later
         TableInfo tableNt = QueryService.get().getUserSchema(TestContext.get().getUser(), c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
-        SimpleFilter ntFilter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
+        SimpleFilter ntFilter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239_Test");
         //note: dont use container filter so this could include /shared
         //ntFilter.addCondition(FieldKey.fromString("container"), c.getId());
 
@@ -3012,9 +3003,9 @@ public class SequenceIntegrationTests
         {
             log.info("creating SIVmac239 record");
             Map<String, Object> map = new CaseInsensitiveHashMap<>();
-            map.put("name", "SIVmac239");
+            map.put("name", "SIVmac239_Test");
             map.put("category", "Virus");
-            map.put("subset", "SIVmac239");
+            map.put("subset", "SIVmac239_Test");
             map.put("container", c.getId());
             map.put("createdby", TestContext.get().getUser().getUserId());
             map.put("created", new Date());
@@ -3052,7 +3043,7 @@ public class SequenceIntegrationTests
     public static void ensureSivMac239Sequence(Container c, Logger log) throws IOException
     {
         TableInfo ti = QueryService.get().getUserSchema(TestContext.get().getUser(), c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239");
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239_Test");
         //note: dont use container filter so this could include /shared
         //filter.addCondition(FieldKey.fromString("container"), c.getId());
         RefNtSequenceModel model = new TableSelector(ti, filter, null).getObject(RefNtSequenceModel.class);

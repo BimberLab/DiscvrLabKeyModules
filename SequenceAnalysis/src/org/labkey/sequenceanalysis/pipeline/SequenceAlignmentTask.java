@@ -545,6 +545,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 }
 
                 pair = output.getProcessedFastqFiles();
+                if (pair == null)
+                {
+                    throw new PipelineJobException("No FASTQ files found after preprocessing, aborting");
+                }
+
                 getHelper().getFileManager().addStepOutputs(action, output);
                 getHelper().getFileManager().addIntermediateFile(pair.first);
 

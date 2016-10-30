@@ -54,7 +54,7 @@ public class BisSnpIndelRealignerStep extends AbstractCommandPipelineStep<BisSnp
         getPipelineCtx().getLogger().debug("dict exists: " + dictionaryExists + ", " + dictionary.getPath());
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".bissnp-realigned.bam");
-        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getJob());
+        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getJob().getLogger());
         output.setBAM(getWrapper().execute(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null, maxThreads));
 
         output.addIntermediateFile(outputBam);

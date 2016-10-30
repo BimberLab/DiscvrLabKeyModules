@@ -73,7 +73,7 @@ abstract public class SequencePipelineService
     @Nullable
     abstract public File getRemoteGenomeCacheDirectory();
 
-    abstract public Integer getMaxThreads(PipelineJob job);
+    abstract public Integer getMaxThreads(Logger log);
 
     abstract public CommandWrapper getCommandWrapper(Logger log);
 

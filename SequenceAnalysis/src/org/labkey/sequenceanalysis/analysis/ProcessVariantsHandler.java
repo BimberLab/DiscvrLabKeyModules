@@ -135,6 +135,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
             {
                 if (pd instanceof ToolParameterDescriptor.CachableParam)
                 {
+                    job.getLogger().debug("caching params for : " + pd.getName());
                     Object val = pd.extractValue(job, provider, Object.class);
                     ((ToolParameterDescriptor.CachableParam)pd).doCache(job, val, support);
                 }
@@ -235,7 +236,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
         String cat = vcf.getName().endsWith(".gz") ? "zcat" : "cat";
         SimpleScriptWrapper wrapper = new SimpleScriptWrapper(null);
 
-        return wrapper.executeWithOutput(Arrays.asList("/bin/bash", "-c", cat + " \"" + vcf.getPath() + "\" | grep -v \"#\" | " + (passOnly ? "awk ' $7 == \"PASS\" ' | " : "") + "wc -l | awk \" { print $1 } \""));
+        return wrapper.executeWithOutput(Arrays.asList("/bin/bash", "-c", cat + " \"" + vcf.getPath() + "\" | grep -v \"#\" | " + (passOnly ? "awk ' $7 == \"PASS\" || $7 == \"\\.\" ' | " : "") + "wc -l | awk \" { print $1 } \""));
     }
 
     public class Processor implements OutputProcessor

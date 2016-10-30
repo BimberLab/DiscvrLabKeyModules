@@ -134,10 +134,6 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         List<RecordedAction> actions = new ArrayList<>();
 
         job.getLogger().info("Processing Alignments");
-        //optionally delete the BAM itself:
-        AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
-        ToolParameterDescriptor discardBamParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM);
-        Boolean discardBam = discardBamParam.extractValue(getJob(), alignmentStep.getProvider(), Boolean.class, false);
 
         //first validate all analysis records before actually creating any DB records
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
@@ -249,6 +245,15 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             }
         }
 
+        //optionally delete the BAM itself:
+        boolean discardBam = false;
+        if (SequenceTaskHelper.isAlignmentUsed(getJob()))
+        {
+            AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
+            ToolParameterDescriptor discardBamParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM);
+            discardBam = discardBamParam.extractValue(getJob(), alignmentStep.getProvider(), Boolean.class, false);
+        }
+
         if (analysisModel == null)
         {
             getJob().getLogger().info("No analyses were created");
@@ -258,35 +263,39 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             processAnalyses(analysisModel, runId, actions, taskHelper, discardBam);
         }
 
-        //build map used next to import metrics
-        Map<Integer, Integer> readsetToAnalysisMap = new HashMap<>();
-        Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new HashMap<>();
-        readsetToAnalysisMap.put(analysisModel.getReadset(), analysisModel.getRowId());
-        typeMap.put(analysisModel.getReadset(), new HashMap<>());
 
-        typeMap.get(analysisModel.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.bam, analysisModel.getAlignmentFileObject());
-        typeMap.get(analysisModel.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.reads, analysisModel.getAlignmentFileObject());
-        taskHelper.getFileManager().writeMetricsToDb(readsetToAnalysisMap, typeMap);
-        taskHelper.getFileManager().createSequenceOutputRecords(analysisModel.getRowId());
-
-        if (discardBam)
+        if (SequenceTaskHelper.isAlignmentUsed(getJob()))
         {
-            File bam = analysisModel.getAlignmentFileObject();
-            if (bam != null)
+            //build map used next to import metrics
+            Map<Integer, Integer> readsetToAnalysisMap = new HashMap<>();
+            Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new HashMap<>();
+            readsetToAnalysisMap.put(analysisModel.getReadset(), analysisModel.getRowId());
+            typeMap.put(analysisModel.getReadset(), new HashMap<>());
+
+            typeMap.get(analysisModel.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.bam, analysisModel.getAlignmentFileObject());
+            typeMap.get(analysisModel.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.reads, analysisModel.getAlignmentFileObject());
+            taskHelper.getFileManager().writeMetricsToDb(readsetToAnalysisMap, typeMap);
+            taskHelper.getFileManager().createSequenceOutputRecords(analysisModel.getRowId());
+
+            if (discardBam)
             {
-                getJob().getLogger().info("BAM will be discarded: " + bam.getName());
-                bam.delete();
-                File idx = new File(bam.getPath() + ".bai");
-                if (idx.exists())
+                File bam = analysisModel.getAlignmentFileObject();
+                if (bam != null)
                 {
-                    idx.delete();
+                    getJob().getLogger().info("BAM will be discarded: " + bam.getName());
+                    bam.delete();
+                    File idx = new File(bam.getPath() + ".bai");
+                    if (idx.exists())
+                    {
+                        idx.delete();
+                    }
+
+                    analysisModel.setAlignmentFile(null);
+                    getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
+                    TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
+
+                    Table.update(getJob().getUser(), ti, analysisModel, analysisModel.getRowId());
                 }
-
-                analysisModel.setAlignmentFile(null);
-                getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
-                TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
-
-                Table.update(getJob().getUser(), ti, analysisModel, analysisModel.getRowId());
             }
         }
 
@@ -302,7 +311,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             getJob().getLogger().info("no analyses were selected");
         }
 
-        getJob().getLogger().info("processing BAM " + analysisModel.getRowId());
+        getJob().getLogger().info("processing analysis: " + analysisModel.getRowId());
 
         File bam = ExperimentService.get().getExpData(analysisModel.getAlignmentFile()).getFile();
         if (bam == null)

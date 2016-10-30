@@ -185,9 +185,9 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
-            boolean collectSummary = params.containsKey("collectSummary") && params.get("collectSummary") != null ? "on".equals(params.getString("collectSummary")) : false;
-            boolean collectInsertSize = params.containsKey("collectInsertSize") && params.get("collectInsertSize") != null ? "on".equals(params.getString("collectInsertSize")) : false;
-            boolean collectWgs = params.containsKey("collectWgs") && params.get("collectWgs") != null ? "on".equals(params.getString("collectWgs")) : false;
+            boolean collectSummary = params.containsKey("collectSummary") && params.optBoolean("collectSummary", false);
+            boolean collectInsertSize = params.containsKey("collectInsertSize") && params.optBoolean("collectInsertSize", false);
+            boolean collectWgs = params.containsKey("collectWgs") && params.optBoolean("collectWgs", false);
 
             int i = 1;
             for (SequenceOutputFile o : inputFiles)
