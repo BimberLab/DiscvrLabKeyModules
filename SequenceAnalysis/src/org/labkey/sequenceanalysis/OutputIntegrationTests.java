@@ -202,7 +202,7 @@ public class OutputIntegrationTests
                 writer.writeHeader(header);
 
                 VariantContextBuilder vcb = new VariantContextBuilder();
-                vcb.chr("SIVmac239");
+                vcb.chr("SIVmac239_Test");
                 vcb.start(10);
                 vcb.stop(10);
                 vcb.alleles(Arrays.asList(Allele.create("T", true)));
