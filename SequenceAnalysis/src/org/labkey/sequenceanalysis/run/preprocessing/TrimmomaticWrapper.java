@@ -405,7 +405,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     {{
                             put("minValue", 0);
                         }}, 4),
-                    ToolParameterDescriptor.create("avgQual", "Avg Qual", "The average quality score for the window that must be obtained", "ldk-integerfield", new JSONObject()
+                    ToolParameterDescriptor.create("avgQual", "Avg. Qual", "The average quality score for the window that must be obtained", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
                         }}, 15)
