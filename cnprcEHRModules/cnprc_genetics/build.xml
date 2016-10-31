@@ -5,7 +5,6 @@
     <property name="module.name" value="CNPRC_Genetics" />
     <property name="jar.dir" value="${moduleDir}/resources/transform" />
     <property name="build.dir" value="${moduleDir}/../../../build" />
-    <property name="cnprc.dir" value="../../cnprc_genetics" />
 
     <target name="init">
         <property name="build.dir" value="${basedir}${file.separator}..${file.separator}build" />
@@ -23,7 +22,7 @@
 
     <target name="build" depends="build_module_api, build_module" />
     <target name="build_module"
-            depends="init, copy-geneticstransform-jar"
+            depends="init, compile-geneticstransform-jar"
             description="Builds local module only.  Deploys local module into LabKey installation.">
         <ant antfile="${basedir}/build.xml"
              target="sub_build_module"
@@ -33,13 +32,8 @@
 
     <target name="compile-geneticstransform-jar" description="Builds GeneticsTransform.jar from sources">
         <ant antfile="build.xml" target="build" dir="${jar.dir}"/>
-    </target>
-
-    <target name="copy-geneticstransform-jar" description="Copy GeneticsTransform.jar to production directory"
-        depends="compile-geneticstransform-jar" if="${addAdditionalFiles}">
-        <mkdir dir="${cnprc.dir}" />
-        <copy todir="${cnprc.dir}" preservelastmodified="true">
-            <fileset dir="${jar.dir}/jar"/>
+        <copy todir="${build.dir}/artifacts/cnprc" preservelastmodified="true">
+            <fileset dir="${jar.dir}/jar" includes="*.jar"/>
         </copy>
     </target>
 </project>
