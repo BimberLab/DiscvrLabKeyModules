@@ -405,7 +405,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     {{
                             put("minValue", 0);
                         }}, 4),
-                    ToolParameterDescriptor.create("avgQual", "Avg. Qual", "The average quality score for the window that must be obtained", "ldk-integerfield", new JSONObject()
+                    ToolParameterDescriptor.create("avgQual", "Avg Qual", "The average quality score for the window that must be obtained", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
                         }}, 15)
@@ -436,7 +436,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         public AvgQualProvider()
         {
             super("AVGQUAL", "AvgQualFilter", "Average Quality Filter", "This step will discard any reads where the average of all base qualities is below the provided threshold.", Arrays.asList(
-                    ToolParameterDescriptor.create("avgqual", "Avg Qual", "Any read where the average quality of all bases is below this threshold will be discarded.", "ldk-numberfield", new JSONObject()
+                    ToolParameterDescriptor.create("avgqual", "Avg. Qual", "Any read where the average quality of all bases is below this threshold will be discarded.", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0);
                         put("allowBlank", false);
