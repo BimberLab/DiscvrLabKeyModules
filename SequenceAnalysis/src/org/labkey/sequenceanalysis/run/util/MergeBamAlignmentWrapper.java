@@ -14,6 +14,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,13 +45,14 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             getLogger().info("Running MergeBamAlignment: " + alignedBam.getPath());
             setStringency(ValidationStringency.SILENT);
 
-            //NOTE: i dont think this is required for the input BAM; however, mosaik might cause issues
-            //if (SequenceUtil.getBamSortOrder(alignedBam) != SAMFileHeader.SortOrder.queryname)
-            //{
-            //    getLogger().info("Queryname Sorting BAM: " + alignedBam.getPath());
-            //    SortSamWrapper sortSamWrapper = new SortSamWrapper(getLogger());
-            //    sortSamWrapper.execute(alignedBam, null, SAMFileHeader.SortOrder.queryname);
-            //}
+            File querySortedAlignedBam = alignedBam;
+            if (SequenceUtil.getBamSortOrder(alignedBam) != SAMFileHeader.SortOrder.queryname)
+            {
+                getLogger().info("Queryname sorting input BAM: " + alignedBam.getPath());
+                querySortedAlignedBam = new File(getOutputDir(alignedBam), FileUtil.getBaseName(alignedBam) + ".querysort.bam");
+                SamSorter sortSamWrapper = new SamSorter(getLogger());
+                sortSamWrapper.execute(alignedBam, querySortedAlignedBam, SAMFileHeader.SortOrder.queryname);
+            }
 
             List<String> params = new LinkedList<>();
             params.add(SequencePipelineService.get().getJavaFilepath());
@@ -59,7 +61,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             params.add(getPicardJar().getPath());
             params.add(getToolName());
             params.add("COMPRESSION_LEVEL=" + getCompressionLevel());
-            params.add("ALIGNED_BAM=" + alignedBam.getPath());
+            params.add("ALIGNED_BAM=" + querySortedAlignedBam.getPath());
             params.add("MAX_INSERTIONS_OR_DELETIONS=-1");
             inferMaxRecordsInRam(params);
 
@@ -130,6 +132,12 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             if (!mergedFile.exists())
             {
                 throw new PipelineJobException("Output file could not be found: " + mergedFile.getPath());
+            }
+
+            if (!alignedBam.equals(querySortedAlignedBam))
+            {
+                getLogger().debug("deleting temp query sorted BAM: " + querySortedAlignedBam.getName());
+                querySortedAlignedBam.delete();
             }
 
             //getLogger().info("\ttotal alignments in unmapped reads BAM: ");

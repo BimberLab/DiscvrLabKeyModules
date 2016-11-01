@@ -283,14 +283,17 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
                     Integer cpus = null;
                     if (getConfig().getRequestCpus() != null)
                     {
-                        cpus = maxCpus != null ? Math.min(maxCpus, getConfig().getRequestCpus()) : getConfig().getRequestCpus();
+                        //NOTE: it is possible this could exceed the max allowable for this cluster.
+                        //consider making defaultCpus and maxCpus params
+                        cpus = maxCpus != null ? maxCpus : getConfig().getRequestCpus();
                         writer.write("request_cpus = " + cpus + "\n");
                     }
 
                     Integer ram = null;
                     if (getConfig().getRequestMemory() != null)
                     {
-                        ram = maxRam != null ? Math.min(maxRam, getConfig().getRequestMemory()) : getConfig().getRequestMemory();
+                        //NOTE: see comment above for CPUs
+                        ram = maxRam != null ? maxRam : getConfig().getRequestMemory();
                         writer.write("request_memory = " + ram + " GB\n");
                     }
 

@@ -81,7 +81,7 @@ public class BWAMemWrapper extends BWAWrapper
         args.add(getExe().getPath());
         args.add("mem");
         args.add("-v");
-        args.add("3");
+        args.add("2");
         if (additionalArgs != null)
             args.addAll(additionalArgs);
         appendThreads(job, args);
