@@ -1,0 +1,40 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="perdiem" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="periodEndingDate"/>
+                    <column columnName="acctId"/>
+                    <column columnName="projectCode">
+                        <fk>
+                            <fkFolderPath>/CNPRC</fkFolderPath>
+                            <fkDbSchema>ehr</fkDbSchema>
+                            <fkTable>project</fkTable>
+                            <fkColumnName>name</fkColumnName>
+                            <fkDisplayColumnName>Project Name</fkDisplayColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="payorId"/>
+                    <column columnName="rateClass"/>
+                    <column columnName="baseRate"/>
+                    <column columnName="deductionRate"/>
+                    <column columnName="netCharge"/>
+                    <column columnName="animalId">
+                        <fk>
+                            <fkFolderPath>/CNPRC</fkFolderPath>
+                            <fkDbSchema>study</fkDbSchema>
+                            <fkTable>animal</fkTable>
+                            <fkColumnName>Id</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="startDate"/>
+                    <column columnName="endDate"/>
+                    <column columnName="animalDays"/>
+                    <column columnName="clientPoNumber"/>
+                    <column columnName="rateTierCodeFk"/>
+                    <column columnName="objectId"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

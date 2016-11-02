@@ -233,4 +233,57 @@
             <column columnName="Container"/>
         </columns>
     </table>
+    <table tableName="perdiem_month" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="periodEndingDate"/>
+            <column columnName="acctId"/>
+            <column columnName="projectCode"/>
+            <column columnName="payorId"/>
+            <column columnName="rateClass"/>
+            <column columnName="baseRate"/>
+            <column columnName="deductionRate"/>
+            <column columnName="netCharge"/>
+            <column columnName="animalId"/>
+            <column columnName="startDate"/>
+            <column columnName="endDate"/>
+            <column columnName="animalDays"/>
+            <column columnName="clientPoNumber"/>
+            <column columnName="rateTierCodeFk"/>
+            <column columnName="objectId"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="perdiem" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="payorId"/>
+            <column columnName="accountId"/>
+            <column columnName="chargeId"/>
+            <column columnName="projectCode"/>
+            <column columnName="fundSourceRank"/>
+            <column columnName="fundSourceCode"/>
+            <column columnName="animalId"/>
+            <column columnName="perdiemDate"/>
+            <column columnName="rateClass"/>
+            <column columnName="baseRate"/>
+            <column columnName="deductionFlag"/>
+            <column columnName="deductionRate"/>
+            <column columnName="netCharge"/>
+            <column columnName="billingClosed"/>
+            <column columnName="creationDate"/>
+            <column columnName="locationRateClass"/>
+            <column columnName="rateRierCodeFk"/>
+            <column columnName="objectId"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
 </tables>

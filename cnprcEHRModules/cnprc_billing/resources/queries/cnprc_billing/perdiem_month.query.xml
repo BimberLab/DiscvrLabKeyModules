@@ -1,0 +1,44 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="perdiem_month" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="payorId"/>
+                    <column columnName="accountId"/>
+                    <column columnName="chargeId"/>
+                    <column columnName="projectCode">
+                        <fk>
+                            <fkFolderPath>/CNPRC</fkFolderPath>
+                            <fkDbSchema>ehr</fkDbSchema>
+                            <fkTable>project</fkTable>
+                            <fkColumnName>name</fkColumnName>
+                            <fkDisplayColumnName>Project Name</fkDisplayColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="fundSourceRank"/>
+                    <column columnName="fundSourceCode"/>
+                    <column columnName="animalId">
+                        <fk>
+                            <fkFolderPath>/CNPRC</fkFolderPath>
+                            <fkDbSchema>study</fkDbSchema>
+                            <fkTable>animal</fkTable>
+                            <fkColumnName>Id</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="perdiemDate"/>
+                    <column columnName="rateClass"/>
+                    <column columnName="baseRate"/>
+                    <column columnName="deductionFlag"/>
+                    <column columnName="deductionRate"/>
+                    <column columnName="netCharge"/>
+                    <column columnName="billingClosed"/>
+                    <column columnName="creationDate"/>
+                    <column columnName="locationRateClass"/>
+                    <column columnName="animalDaysOfAge"/>
+                    <column columnName="rateRierCodeFk"/>
+                    <column columnName="objectId"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

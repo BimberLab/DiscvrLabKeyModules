@@ -2779,6 +2779,8 @@ DISCVR/su2c/su2c.iml -text
 DISCVR/su2c/tools/installLabKey.sh -text
 cnprcEHRModules/cnprc_billing/cnprc_billing.iml -text
 cnprcEHRModules/cnprc_billing/module.properties -text
+cnprcEHRModules/cnprc_billing/resources/etls/perdiem.xml -text
+cnprcEHRModules/cnprc_billing/resources/etls/perdiem_month.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/resource_center.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/resource_rate_item.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/wo_costing.xml -text
@@ -2803,6 +2805,10 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_wo_recipi
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_wo_recipients_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_wo_template_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_work_order_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_perdiem.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_perdiem_month.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/perdiem.query.xml -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/perdiem_month.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/resource_rate_item.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/wo_costing.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/wo_line_item.query.xml -text
@@ -2815,6 +2821,7 @@ cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billin
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.21-16.22.sql -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.22-16.23.sql -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.23-16.24.sql -text
+cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.30-16.31.sql -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingController.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingModule.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingSchema.java -text

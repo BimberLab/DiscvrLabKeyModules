@@ -1,0 +1,20 @@
+SELECT
+PM_PERIOD_ENDING_DATE AS periodEndingDate,
+PM_ACCT_ID AS acctId,
+PM_PROJ_ID AS projectCode,
+PM_PAYOR_ID AS payorId,
+PM_RATE_CLASS AS rateClass,
+PM_BASE_RATE AS baseRate,
+PM_DEDUCTION_RATE AS deductionRate,
+PM_NET_CHARGE AS netCharge,
+PM_AN_ID AS animalId,
+PM_AN_SP_CODE AS speciesCode,
+PM_AN_LOCATION AS location,
+PM_START_DATE AS startDate,
+PM_END_DATE AS endDate,
+PM_ANIMAL_DAYS AS animalDays,
+PM_CLIENT_PO_NUMBER AS clientPoNumber,
+PM_RATE_TIER_CODE_FK AS rateTierCodeFk,
+OBJECTID AS objectId,
+DATE_TIME
+FROM cnprcSrc_billing_fin.PERDIEM_MONTH;
