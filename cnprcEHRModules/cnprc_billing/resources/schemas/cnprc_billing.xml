@@ -286,4 +286,114 @@
             <column columnName="Container"/>
         </columns>
     </table>
+    <table tableName="core_service_rate_component" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Csrc_pk"/>
+            <column columnName="Csri_fk"/>
+            <column columnName="Csbc_fk"/>
+            <column columnName="Seq"/>
+            <column columnName="Component_qty"/>
+            <column columnName="Component_uom"/>
+            <column columnName="Cost_units"/>
+            <column columnName="Cost_rate"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="core_service_rate_item" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="Csri_pk"/>
+            <column columnName="Item_code"/>
+            <column columnName="Description"/>
+            <column columnName="Service_code"/>
+            <column columnName="Rc_code"/>
+            <column columnName="Category"/>
+            <column columnName="Uom"/>
+            <column columnName="Active_yn"/>
+            <column columnName="Item_cost_amt"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="perdiem_rate_names" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Rate_code"/>
+            <column columnName="Rate_name"/>
+            <column columnName="Rate_name_singular"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="perdiem_rates" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Rate_pk"/>
+            <column columnName="Location_rate_class"/>
+            <column columnName="Component_01"/>
+            <column columnName="Component_02"/>
+            <column columnName="Component_03"/>
+            <column columnName="Component_04"/>
+            <column columnName="Component_05"/>
+            <column columnName="Component_06"/>
+            <column columnName="Component_07"/>
+            <column columnName="Component_08"/>
+            <column columnName="Component_09"/>
+            <column columnName="Component_10"/>
+            <column columnName="Component_11"/>
+            <column columnName="Component_12"/>
+            <column columnName="Component_13"/>
+            <column columnName="Component_14"/>
+            <column columnName="Component_15"/>
+            <column columnName="Component_16"/>
+            <column columnName="Daily_rate"/>
+            <column columnName="Start_date"/>
+            <column columnName="End_date"/>
+            <column columnName="Comments"/>
+            <column columnName="Rate_tier_code_fk"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="core_service_line_item" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Csli_pk"/>
+            <column columnName="Csbm_fk"/>
+            <column columnName="Service_code"/>
+            <column columnName="Rc_code"/>
+            <column columnName="Line_no"/>
+            <column columnName="Reference_comment"/>
+            <column columnName="Item_code"/>
+            <column columnName="Description"/>
+            <column columnName="Qty"/>
+            <column columnName="Uom"/>
+            <column columnName="Item_cost"/>
+            <column columnName="Charge_amt"/>
+            <column columnName="Exempt_amt"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
 </tables>

@@ -1,0 +1,24 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="core_service_rate_component" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Csrc_pk"/>
+                    <column columnName="Csri_fk"/>
+                    <column columnName="Csbc_fk"/>
+                    <column columnName="Seq"/>
+                    <column columnName="Component_qty"/>
+                    <column columnName="Component_uom"/>
+                    <column columnName="Cost_units"/>
+                    <column columnName="Cost_rate"/>
+                    <column columnName="Objectid"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

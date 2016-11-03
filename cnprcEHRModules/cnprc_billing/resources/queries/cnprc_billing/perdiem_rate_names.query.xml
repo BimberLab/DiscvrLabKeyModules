@@ -1,0 +1,21 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="perdiem_rate_names" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Rate_code"/>
+                    <column columnName="Rate_name"/>
+                    <column columnName="Rate_name_singular"/>
+                    <column columnName="Objectid"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>
+
+

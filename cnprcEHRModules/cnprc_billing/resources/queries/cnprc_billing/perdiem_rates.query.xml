@@ -1,0 +1,39 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="perdiem_rates" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Rate_pk"/>
+                    <column columnName="Location_rate_class"/>
+                    <column columnName="Component_01"/>
+                    <column columnName="Component_02"/>
+                    <column columnName="Component_03"/>
+                    <column columnName="Component_04"/>
+                    <column columnName="Component_05"/>
+                    <column columnName="Component_06"/>
+                    <column columnName="Component_07"/>
+                    <column columnName="Component_08"/>
+                    <column columnName="Component_09"/>
+                    <column columnName="Component_10"/>
+                    <column columnName="Component_11"/>
+                    <column columnName="Component_12"/>
+                    <column columnName="Component_13"/>
+                    <column columnName="Component_14"/>
+                    <column columnName="Component_15"/>
+                    <column columnName="Component_16"/>
+                    <column columnName="Daily_rate"/>
+                    <column columnName="Start_date"/>
+                    <column columnName="End_date"/>
+                    <column columnName="Comments"/>
+                    <column columnName="Rate_tier_code_fk"/>
+                    <column columnName="Objectid"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

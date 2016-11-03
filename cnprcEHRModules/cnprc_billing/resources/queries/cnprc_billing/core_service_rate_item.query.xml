@@ -1,0 +1,26 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="core_service_rate_item" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Csri_pk"/>
+                    <column columnName="Item_code"/>
+                    <column columnName="Description"/>
+                    <column columnName="Service_code"/>
+                    <column columnName="Rc_code"/>
+                    <column columnName="Category"/>
+                    <column columnName="Uom"/>
+                    <column columnName="Active_yn"/>
+                    <column columnName="Item_cost_amt"/>
+                    <column columnName="Objectid"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>
+
