@@ -142,7 +142,7 @@ public class ExpRunCreator
         run.save(u);
 
         Map<String, ExpProtocolAction> expActionMap = new HashMap<>();
-        List<ExpProtocolAction> expActions = parentProtocol.getSteps();
+        List<? extends ExpProtocolAction> expActions = parentProtocol.getSteps();
         for (ExpProtocolAction action : expActions)
         {
             expActionMap.put(action.getChildProtocol().getName(), action);
