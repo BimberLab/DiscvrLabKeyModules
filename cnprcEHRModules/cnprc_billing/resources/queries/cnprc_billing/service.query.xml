@@ -1,0 +1,13 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="service" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="svcCode"/>
+                    <column columnName="svcTitle"/>
+                    <column columnName="objectid"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

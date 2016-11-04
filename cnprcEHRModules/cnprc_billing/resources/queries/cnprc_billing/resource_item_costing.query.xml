@@ -1,0 +1,21 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="resource_item_costing" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="rowid"/>
+                    <column columnName="seqpk"/>
+                    <column columnName="itemCodeFk"/>
+                    <column columnName="componentFk"/>
+                    <column columnName="altItemCode"/>
+                    <column columnName="description"/>
+                    <column columnName="itemCost"/>
+                    <column columnName="updatedCost"/>
+                    <column columnName="updatedRrItem"/>
+                    <column columnName="updateFlag"/>
+                    <column columnName="objectid"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

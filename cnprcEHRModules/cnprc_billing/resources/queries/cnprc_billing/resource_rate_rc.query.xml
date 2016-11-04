@@ -1,0 +1,13 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="resource_rate_rc" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="itemCode"/>
+                    <column columnName="rcCode"/>
+                    <column columnName="objectid"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

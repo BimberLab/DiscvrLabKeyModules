@@ -1,0 +1,16 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="resource_rate_comp" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="masterItemCode"/>
+                    <column columnName="componentSeq"/>
+                    <column columnName="componentItemCode"/>
+                    <column columnName="componentQty"/>
+                    <column columnName="componentUom"/>
+                    <column columnName="objectid"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

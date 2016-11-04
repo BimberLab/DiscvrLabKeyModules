@@ -307,6 +307,7 @@
     </table>
     <table tableName="core_service_rate_item" tableDbType="TABLE" useColumnOrder="true">
         <columns>
+            <column columnName="rowid"/>
             <column columnName="Csri_pk"/>
             <column columnName="Item_code"/>
             <column columnName="Description"/>
@@ -389,6 +390,209 @@
             <column columnName="Charge_amt"/>
             <column columnName="Exempt_amt"/>
             <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="resource_item_costing" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="seqpk"/>
+            <column columnName="itemCodeFk"/>
+            <column columnName="componentFk"/>
+            <column columnName="altItemCode"/>
+            <column columnName="description"/>
+            <column columnName="itemCost"/>
+            <column columnName="updatedCost"/>
+            <column columnName="updatedRrItem"/>
+            <column columnName="updateFlag"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="resource_item_costing_supply" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="seqPk"/>
+            <column columnName="itemCostingFk"/>
+            <column columnName="itemSupplyFk"/>
+            <column columnName="quantity"/>
+            <column columnName="costingSupplyType"/>
+            <column columnName="laborFk"/>
+            <column columnName="setName"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="resource_labor" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="seqpk"/>
+            <column columnName="description"/>
+            <column columnName="altCode"/>
+            <column columnName="costCode"/>
+            <column columnName="uom"/>
+            <column columnName="laborRate"/>
+            <column columnName="origCreatedDate"/>
+            <column columnName="origCreatedBy"/>
+            <column columnName="lastUpdate"/>
+            <column columnName="lastUpdateBy"/>
+            <column columnName="isActive"/>
+            <column columnName="beginDate"/>
+            <column columnName="endDate"/>
+            <column columnName="tieredRateLaborType"/>
+            <column columnName="rateTierCodeFk"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="resource_labor_costing" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="seqpk"/>
+            <column columnName="itemCodeFk"/>
+            <column columnName="componentFk"/>
+            <column columnName="altItemCode"/>
+            <column columnName="description"/>
+            <column columnName="itemCost"/>
+            <column columnName="itemQuantity"/>
+            <column columnName="updatedCost"/>
+            <column columnName="updatedRrItem"/>
+            <column columnName="updateFlag"/>
+            <column columnName="tieredRateLaborType"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="resource_labor_costing_supply" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="seqpk"/>
+            <column columnName="itemCostingFk"/>
+            <column columnName="itemSupplyFk"/>
+            <column columnName="quantity"/>
+            <column columnName="laborCostingSupplyType"/>
+            <column columnName="description"/>
+            <column columnName="setName"/>
+            <column columnName="tieredRateLaborType"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="resource_rate_comp" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="masterItemCode"/>
+            <column columnName="componentSeq"/>
+            <column columnName="componentItemCode"/>
+            <column columnName="componentQty"/>
+            <column columnName="componentUom"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="resource_rate_category" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="resourceCategory"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="resource_rate_rc" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="itemCode"/>
+            <column columnName="rcCode"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="resource_supply" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="seqpk"/>
+            <column columnName="description"/>
+            <column columnName="costCode"/>
+            <column columnName="catalogNum"/>
+            <column columnName="vendor"/>
+            <column columnName="uom"/>
+            <column columnName="unitsIssued"/>
+            <column columnName="subid"/>
+            <column columnName="id"/>
+            <column columnName="packageCost"/>
+            <column columnName="unitCost"/>
+            <column columnName="origCreatedDate"/>
+            <column columnName="origCreatedBy"/>
+            <column columnName="lastUpdate"/>
+            <column columnName="lastUpdateBy"/>
+            <column columnName="cnprcSupplier"/>
+            <column columnName="cnprcUsers"/>
+            <column columnName="isActive"/>
+            <column columnName="supplyGroup"/>
+            <column columnName="code"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="service" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="svcCode"/>
+            <column columnName="svcTitle"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="service_rc" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="serviceCode"/>
+            <column columnName="rcCode"/>
+            <column columnName="objectid"/>
             <column columnName="Created"/>
             <column columnName="CreatedBy"/>
             <column columnName="Modified"/>

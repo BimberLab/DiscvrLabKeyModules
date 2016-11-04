@@ -1,0 +1,19 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="resource_labor_costing" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="seqpk"/>
+                    <column columnName="itemCostingFk"/>
+                    <column columnName="itemSupplyFk"/>
+                    <column columnName="quantity"/>
+                    <column columnName="laborCostingSupplyType"/>
+                    <column columnName="description"/>
+                    <column columnName="setName"/>
+                    <column columnName="tieredRateLaborType"/>
+                    <column columnName="objectid"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

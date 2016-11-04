@@ -1,0 +1,31 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="resource_supply" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="seqpk"/>
+                    <column columnName="description"/>
+                    <column columnName="costCode"/>
+                    <column columnName="catalogNum"/>
+                    <column columnName="vendor"/>
+                    <column columnName="uom"/>
+                    <column columnName="unitsIssued"/>
+                    <column columnName="subid"/>
+                    <column columnName="id"/>
+                    <column columnName="packageCost"/>
+                    <column columnName="unitCost"/>
+                    <column columnName="origCreatedDate"/>
+                    <column columnName="origCreatedBy"/>
+                    <column columnName="lastUpdate"/>
+                    <column columnName="lastUpdateBy"/>
+                    <column columnName="cnprcSupplier"/>
+                    <column columnName="cnprcUsers"/>
+                    <column columnName="isActive"/>
+                    <column columnName="supplyGroup"/>
+                    <column columnName="code"/>
+                    <column columnName="objectid"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>
