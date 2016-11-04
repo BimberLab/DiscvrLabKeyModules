@@ -2807,9 +2807,12 @@ cnprcEHRModules/cnprc_billing/resources/etls/wo_template.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/work_order.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_core_service_line_item.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_core_service_rate_component.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_core_service_rate_component_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_core_service_rate_item.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_core_service_rate_item_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_perdiem_rate_names.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_perdiem_rates.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_perdiem_rates_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_resource_center.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_resource_item_costing.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_resource_item_costing_supply.sql -text

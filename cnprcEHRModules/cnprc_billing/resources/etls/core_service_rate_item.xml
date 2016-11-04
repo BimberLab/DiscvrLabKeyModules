@@ -14,6 +14,10 @@
             </destination>
         </transform>
     </transforms>
+    <incrementalFilter className="ModifiedSinceFilterStrategy" timestampColumnName="date_time">
+        <deletedRowsSource schemaName="cnprcSrc_billing" queryName="q_core_service_rate_item_delete" timestampColumnName="date_time"
+                           deletedSourceKeyColumnName="objectid" targetKeyColumnName="objectid"/>
+    </incrementalFilter>
     <schedule>
         <poll interval="60m"/>
     </schedule>
