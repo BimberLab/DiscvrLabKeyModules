@@ -5,7 +5,7 @@
     <transforms>
         <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
             <description>Copy to target</description>
-            <source schemaName="cnprcSrc_billing" queryName="q_perdiem_rate_names"/>
+            <source schemaName="cnprcSrc_billing_fin" queryName="q_perdiem_rate_names"/>
             <destination schemaName="cnprc_billing" queryName="perdiem_rate_names" bulkLoad="true" batchSize="500"
                          targetOption="merge">
                 <alternateKeys>

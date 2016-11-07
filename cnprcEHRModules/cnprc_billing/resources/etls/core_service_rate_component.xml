@@ -5,7 +5,7 @@
     <transforms>
         <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
             <description>Copy to target</description>
-            <source schemaName="cnprcSrc_billing" queryName="q_core_service_rate_component"/>
+            <source schemaName="cnprcSrc_billing_fin" queryName="q_core_service_rate_component"/>
             <destination schemaName="cnprc_billing" queryName="core_service_rate_component" bulkLoad="true" batchSize="500"
                          targetOption="merge">
                 <alternateKeys>
@@ -15,7 +15,7 @@
         </transform>
     </transforms>
     <incrementalFilter className="ModifiedSinceFilterStrategy" timestampColumnName="date_time">
-        <deletedRowsSource schemaName="cnprcSrc_billing" queryName="q_core_service_rate_component_delete" timestampColumnName="date_time"
+        <deletedRowsSource schemaName="cnprcSrc_billing_aud" queryName="q_core_service_rate_component_delete" timestampColumnName="date_time"
                            deletedSourceKeyColumnName="objectid" targetKeyColumnName="objectid"/>
     </incrementalFilter>
     <schedule>
