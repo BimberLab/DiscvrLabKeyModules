@@ -3019,13 +3019,10 @@ labModules/SequenceAnalysis/lib/biojava3-genome-3.0.7.jar -text
 labModules/SequenceAnalysis/lib/biojava3-phylo-3.0.7.jar -text
 labModules/SequenceAnalysis/lib/biojava3-ws-3.0.7.jar -text
 labModules/SequenceAnalysis/module.properties -text
-labModules/SequenceAnalysis/pipeline_code/cnv_tools.sh -text
-labModules/SequenceAnalysis/pipeline_code/extra_tools_install.sh -text
 labModules/SequenceAnalysis/pipeline_code/gatk/MendelianViolationCount.java -text
 labModules/SequenceAnalysis/pipeline_code/gatk/MinorAlleleFrequency.java -text
 labModules/SequenceAnalysis/pipeline_code/gatk/MultipleAllelesAtLoci.java -text
 labModules/SequenceAnalysis/pipeline_code/installPackages.r -text
-labModules/SequenceAnalysis/pipeline_code/sequence_tools_install.sh -text
 labModules/SequenceAnalysis/resources/credits/executables.txt -text
 labModules/SequenceAnalysis/resources/credits/jars.txt -text
 labModules/SequenceAnalysis/resources/external/R/methylationBasicStats.R -text
