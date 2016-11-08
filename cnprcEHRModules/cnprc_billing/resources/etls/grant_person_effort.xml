@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<etl xmlns="http://labkey.org/etl/xml">
+    <name>Grant Person Effort</name>
+    <description>Grant Person Effort</description>
+    <transforms>
+        <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
+            <description>Copy to target</description>
+            <source schemaName="cnprcSrc_billing_fin" queryName="q_grant_person_effort"/>
+            <destination schemaName="cnprc_billing" queryName="grant_person_effort" bulkLoad="true" batchSize="500"
+                         targetOption="merge">
+                <alternateKeys>
+                    <column name="Objectid"/>
+                </alternateKeys>
+            </destination>
+        </transform>
+    </transforms>
+    <incrementalFilter className="ModifiedSinceFilterStrategy" timestampColumnName="date_time">
+        <deletedRowsSource schemaName="cnprcSrc_billing_aud" queryName="q_grant_person_effort_delete" timestampColumnName="date_time"
+                           deletedSourceKeyColumnName="objectid" targetKeyColumnName="objectid"/>
+    </incrementalFilter>
+    <schedule>
+        <poll interval="60m"/>
+    </schedule>
+</etl>

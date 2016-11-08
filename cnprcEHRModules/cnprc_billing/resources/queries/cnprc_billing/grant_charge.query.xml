@@ -1,0 +1,21 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="grant_charge" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Gch_pk"/>
+                    <column columnName="Gpp_fk">
+                        <fk>
+                            <fkTable>grant_project_period</fkTable>
+                            <fkColumnName>Gpp_pk</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="Pc_charge_id"/>
+                    <column columnName="Pc_account_id"/>
+                    <column columnName="Status"/>
+                    <column columnName="Objectid"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -600,4 +600,175 @@
             <column columnName="Container"/>
         </columns>
     </table>
+    <table tableName="grant_charge" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Gch_pk"/>
+            <column columnName="Gpp_fk"/>
+            <column columnName="Pc_charge_id"/>
+            <column columnName="Pc_account_id"/>
+            <column columnName="Status"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="grant_person_effort" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Gpe_pk"/>
+            <column columnName="Pid_fk"/>
+            <column columnName="Gpp_fk"/>
+            <column columnName="Gpe_Percent"/>
+            <column columnName="Person_months"/>
+            <column columnName="Nih_key_personnel_yn"/>
+            <column columnName="Exclude_from_reports_yn"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="grant_project_period" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Gpp_pk"/>
+            <column columnName="Grant_type"/>
+            <column columnName="Ref_no"/>
+            <column columnName="Title"/>
+            <column columnName="Agency"/>
+            <column columnName="Status"/>
+            <column columnName="Ucd_per_fk"/>
+            <column columnName="Center_unit_fk"/>
+            <column columnName="Funding_type"/>
+            <column columnName="Begin_date"/>
+            <column columnName="End_date"/>
+            <column columnName="Direct_costs"/>
+            <column columnName="Total_costs"/>
+            <column columnName="Brate_direct_costs"/>
+            <column columnName="Brate_total_costs"/>
+            <column columnName="Admin_department"/>
+            <column columnName="Primate_yn"/>
+            <column columnName="Aids_grant_yn"/>
+            <column columnName="Phs_yn"/>
+            <column columnName="Service_only_yn"/>
+            <column columnName="Flag_1"/>
+            <column columnName="Flag_2"/>
+            <column columnName="Sub_institution"/>
+            <column columnName="Sub_pi_name"/>
+            <column columnName="Comment_1"/>
+            <column columnName="Comment_2"/>
+            <column columnName="Dafis_award_num"/>
+            <column columnName="Sub_agency"/>
+            <column columnName="Grant_affiliation_type"/>
+            <column columnName="Sub_pi_per_fk"/>
+            <column columnName="Submission_date"/>
+            <column columnName="Special_funding_type"/>
+            <column columnName="Last_reported_date"/>
+            <column columnName="Base_grant_indicator_yn"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="grant_year" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Gyr_pk"/>
+            <column columnName="Gpp_fk"/>
+            <column columnName="Budget_yr"/>
+            <column columnName="Award_status"/>
+            <column columnName="Supplement_yn"/>
+            <column columnName="Begin_date"/>
+            <column columnName="End_date"/>
+            <column columnName="Direct_costs"/>
+            <column columnName="Total_costs"/>
+            <column columnName="Brate_direct_costs"/>
+            <column columnName="Brate_total_costs"/>
+            <column columnName="Sponsored_pgm_ref_no"/>
+            <column columnName="Totals_indicator_yn"/>
+            <column columnName="Base_grant_year_end"/>
+            <column columnName="Submission_date"/>
+            <column columnName="Special_funding_type"/>
+            <column columnName="Last_reported_date"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="org_resource_title" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Org_resource_title_pk"/>
+            <column columnName="Resource_title_scheme"/>
+            <column columnName="Rc_code"/>
+            <column columnName="Resource_group"/>
+            <column columnName="Resource_center"/>
+            <column columnName="Resource_group_center"/>
+            <column columnName="Group_sort_order"/>
+            <column columnName="Center_sort_order"/>
+            <column columnName="Display_yn"/>
+            <column columnName="Active_yn"/>
+            <column columnName="Resource_comment"/>
+            <column columnName="ObjectId"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="billing_fiscal" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Period_end"/>
+            <column columnName="Fiscal_year"/>
+            <column columnName="Fiscal_period"/>
+            <column columnName="Basegrant_year"/>
+            <column columnName="Basegrant_cycle"/>
+            <column columnName="Fiscalyear_begin"/>
+            <column columnName="Fiscalyear_end"/>
+            <column columnName="Fiscal_range"/>
+            <column columnName="Dafis_univ_fiscal_yr"/>
+            <column columnName="Dafis_univ_fiscal_prd_cd"/>
+            <column columnName="Period_begin"/>
+            <column columnName="Fiscal_range_abbrev_1"/>
+            <column columnName="Fiscal_range_abbrev_2"/>
+            <column columnName="Fiscal_range_abbrev_3"/>
+            <column columnName="Dafis_univ_fy_range"/>
+            <column columnName="Dafis_univ_fy_range_abbrev_1"/>
+            <column columnName="Days_in_period"/>
+            <column columnName="ObjectId"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="school" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="School_code"/>
+            <column columnName="School_desc"/>
+            <column columnName="School_name"/>
+            <column columnName="ObjectId"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
 </tables>

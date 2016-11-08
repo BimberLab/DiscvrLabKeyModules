@@ -1,0 +1,14 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="school" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="School_code"/>
+                    <column columnName="School_desc"/>
+                    <column columnName="School_name"/>
+                    <column columnName="ObjectId"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

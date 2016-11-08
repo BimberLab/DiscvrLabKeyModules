@@ -1,0 +1,28 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="billing_fiscal" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Period_end"/>
+                    <column columnName="Fiscal_year"/>
+                    <column columnName="Fiscal_period"/>
+                    <column columnName="Basegrant_year"/>
+                    <column columnName="Basegrant_cycle"/>
+                    <column columnName="Fiscalyear_begin"/>
+                    <column columnName="Fiscalyear_end"/>
+                    <column columnName="Fiscal_range"/>
+                    <column columnName="Dafis_univ_fiscal_yr"/>
+                    <column columnName="Dafis_univ_fiscal_prd_cd"/>
+                    <column columnName="Period_begin"/>
+                    <column columnName="Fiscal_range_abbrev_1"/>
+                    <column columnName="Fiscal_range_abbrev_2"/>
+                    <column columnName="Fiscal_range_abbrev_3"/>
+                    <column columnName="Dafis_univ_fy_range"/>
+                    <column columnName="Dafis_univ_fy_range_abbrev_1"/>
+                    <column columnName="Days_in_period"/>
+                    <column columnName="ObjectId"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

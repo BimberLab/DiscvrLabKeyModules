@@ -1,0 +1,22 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="org_resource_title" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Org_resource_title_pk"/>
+                    <column columnName="Resource_title_scheme"/>
+                    <column columnName="Rc_code"/>
+                    <column columnName="Resource_group"/>
+                    <column columnName="Resource_center"/>
+                    <column columnName="Resource_group_center"/>
+                    <column columnName="Group_sort_order"/>
+                    <column columnName="Center_sort_order"/>
+                    <column columnName="Display_yn"/>
+                    <column columnName="Active_yn"/>
+                    <column columnName="Resource_comment"/>
+                    <column columnName="ObjectId"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -1,0 +1,45 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="grant_project_period" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Gpp_pk"/>
+                    <column columnName="Grant_type"/>
+                    <column columnName="Ref_no"/>
+                    <column columnName="Title"/>
+                    <column columnName="Agency"/>
+                    <column columnName="Status"/>
+                    <column columnName="Ucd_per_fk"/>
+                    <column columnName="Center_unit_fk"/>
+                    <column columnName="Funding_type"/>
+                    <column columnName="Begin_date"/>
+                    <column columnName="End_date"/>
+                    <column columnName="Direct_costs"/>
+                    <column columnName="Total_costs"/>
+                    <column columnName="Brate_direct_costs"/>
+                    <column columnName="Brate_total_costs"/>
+                    <column columnName="Admin_department"/>
+                    <column columnName="Primate_yn"/>
+                    <column columnName="Aids_grant_yn"/>
+                    <column columnName="Phs_yn"/>
+                    <column columnName="Service_only_yn"/>
+                    <column columnName="Flag_1"/>
+                    <column columnName="Flag_2"/>
+                    <column columnName="Sub_institution"/>
+                    <column columnName="Sub_pi_name"/>
+                    <column columnName="Comment_1"/>
+                    <column columnName="Comment_2"/>
+                    <column columnName="Dafis_award_num"/>
+                    <column columnName="Sub_agency"/>
+                    <column columnName="Grant_affiliation_type"/>
+                    <column columnName="Sub_pi_per_fk"/>
+                    <column columnName="Submission_date"/>
+                    <column columnName="Special_funding_type"/>
+                    <column columnName="Last_reported_date"/>
+                    <column columnName="Base_grant_indicator_yn"/>
+                    <column columnName="Objectid"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

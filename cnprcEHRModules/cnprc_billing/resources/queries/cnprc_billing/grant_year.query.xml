@@ -1,0 +1,33 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="grant_year" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Gyr_pk"/>
+                    <column columnName="Gpp_fk">
+                        <fk>
+                            <fkTable>grant_project_period</fkTable>
+                            <fkColumnName>Gpp_pk</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="Budget_yr"/>
+                    <column columnName="Award_status"/>
+                    <column columnName="Supplement_yn"/>
+                    <column columnName="Begin_date"/>
+                    <column columnName="End_date"/>
+                    <column columnName="Direct_costs"/>
+                    <column columnName="Total_costs"/>
+                    <column columnName="Brate_direct_costs"/>
+                    <column columnName="Brate_total_costs"/>
+                    <column columnName="Sponsored_pgm_ref_no"/>
+                    <column columnName="Gpp_totals_indicator_yn"/>
+                    <column columnName="Base_grant_year_end"/>
+                    <column columnName="Submission_date"/>
+                    <column columnName="Special_funding_type"/>
+                    <column columnName="Last_reported_date"/>
+                    <column columnName="Objectid"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

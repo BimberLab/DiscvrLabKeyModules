@@ -1,0 +1,23 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="grant_person_effort" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Gpe_pk"/>
+                    <column columnName="Pid_fk"/>
+                    <column columnName="Gpp_fk">
+                        <fk>
+                            <fkTable>grant_project_period</fkTable>
+                            <fkColumnName>Gpp_pk</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="Gpe_Percent"/>
+                    <column columnName="Person_months"/>
+                    <column columnName="Nih_key_personnel_yn"/>
+                    <column columnName="Exclude_from_reports_yn"/>
+                    <column columnName="Objectid"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>
