@@ -1,0 +1,26 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="core_service_basic_components" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Csbc_pk"/>
+                    <column columnName="Component_code"/>
+                    <column columnName="Service_code"/>
+                    <column columnName="Rc_code"/>
+                    <column columnName="Description"/>
+                    <column columnName="Basic_uom"/>
+                    <column columnName="Basic_rate"/>
+                    <column columnName="Cost_code"/>
+                    <column columnName="Sundry_debtor_markup_yn"/>
+                    <column columnName="Labor_yn"/>
+                    <column columnName="Objectid"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

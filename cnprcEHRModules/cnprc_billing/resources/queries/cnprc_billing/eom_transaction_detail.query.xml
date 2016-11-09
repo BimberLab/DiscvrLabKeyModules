@@ -1,0 +1,56 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="eom_transaction_detail" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Feed_system_code"/>
+                    <column columnName="Feed_date"/>
+                    <column columnName="Period_ending_date"/>
+                    <column columnName="Charge_account_id"/>
+                    <column columnName="Charge_object_code_old"/>
+                    <column columnName="Charge_object_code"/>
+                    <column columnName="Charge_sub_account"/>
+                    <column columnName="Income_account_id"/>
+                    <column columnName="Income_object_code_old"/>
+                    <column columnName="Income_object_code"/>
+                    <column columnName="Income_sub_account"/>
+                    <column columnName="Service_code"/>
+                    <column columnName="Transaction_type_flag"/>
+                    <column columnName="Sales_taxable_flag"/>
+                    <column columnName="Bill_description_external"/>
+                    <column columnName="Transaction_description"/>
+                    <column columnName="Transaction_reference"/>
+                    <column columnName="Transaction_amount"/>
+                    <column columnName="Transaction_sign"/>
+                    <column columnName="Invoice_number"/>
+                    <column columnName="Nud_exempt_flag"/>
+                    <column columnName="Cost_code"/>
+                    <column columnName="Rc_code"/>
+                    <column columnName="Billing_method_code"/>
+                    <column columnName="Client_po_number"/>
+                    <column columnName="Transaction_comment"/>
+                    <column columnName="Etd_aud_username"/>
+                    <column columnName="Etd_aud_time"/>
+                    <column columnName="Etd_aud_code"/>
+                    <column columnName="Etd_aud_comment"/>
+                    <column columnName="Credit_entry_flag"/>
+                    <column columnName="Credit_entry_comment"/>
+                    <column columnName="Credit_entry_prior_ref_no"/>
+                    <column columnName="Credit_entry_prior_invoice_no"/>
+                    <column columnName="Credit_memo_number"/>
+                    <column columnName="Income_sub_object_code"/>
+                    <column columnName="Charge_sub_object_code"/>
+                    <column columnName="Transaction_project_num"/>
+                    <column columnName="Gl_feed_processed_flag"/>
+                    <column columnName="Ar_feed_processed_flag"/>
+                    <column columnName="Objectid"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

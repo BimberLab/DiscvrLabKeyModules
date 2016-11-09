@@ -1,0 +1,41 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="core_service_billing_master" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Csbm_pk"/>
+                    <column columnName="Billing_master_origin"/>
+                    <column columnName="Billing_master_create_date"/>
+                    <column columnName="Period_ending_date"/>
+                    <column columnName="Dafis_fin_coa_cd"/>
+                    <column columnName="Dafis_account_nbr"/>
+                    <column columnName="Dafis_sub_acct_nbr"/>
+                    <column columnName="Dafis_project_cd"/>
+                    <column columnName="Dafis_obj_override"/>
+                    <column columnName="Service_code"/>
+                    <column columnName="Rc_code"/>
+                    <column columnName="Charge_id"/>
+                    <column columnName="Account_id"/>
+                    <column columnName="Billing_method_code"/>
+                    <column columnName="Project_code"/>
+                    <column columnName="Order_date"/>
+                    <column columnName="Client_name"/>
+                    <column columnName="Client_po_num"/>
+                    <column columnName="Client_request_num"/>
+                    <column columnName="Billing_contact_name"/>
+                    <column columnName="Total_charge_amt"/>
+                    <column columnName="Total_exempt_amt"/>
+                    <column columnName="Order_fk"/>
+                    <column columnName="Pc_invoice_number"/>
+                    <column columnName="Report_contact_name"/>
+                    <column columnName="Objectid"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

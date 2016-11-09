@@ -1,0 +1,48 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="core_service_costing" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Csc_pk"/>
+                    <column columnName="Csbm_fk">
+                        <fk>
+                            <fkTable>core_service_billing_master</fkTable>
+                            <fkColumnName>Csbm_pk</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="Csli_fk">
+                        <fk>
+                            <fkTable>core_service_line_item</fkTable>
+                            <fkColumnName>Csli_pk</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="Line_no"/>
+                    <column columnName="Item_code"/>
+                    <column columnName="Item_description"/>
+                    <column columnName="Line_item_qty"/>
+                    <column columnName="Line_item_uom"/>
+                    <column columnName="Component_seq"/>
+                    <column columnName="Component_description"/>
+                    <column columnName="Component_rate"/>
+                    <column columnName="Component_uom"/>
+                    <column columnName="Component_qty"/>
+                    <column columnName="Component_service_code"/>
+                    <column columnName="Component_rc_code"/>
+                    <column columnName="Component_cost_code"/>
+                    <column columnName="Component_sd_markup_yn"/>
+                    <column columnName="Component_labor_yn"/>
+                    <column columnName="Component_cost_rate"/>
+                    <column columnName="Costing_qty"/>
+                    <column columnName="Costing_charge_amt"/>
+                    <column columnName="Costing_exempt_amt"/>
+                    <column columnName="Objectid"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

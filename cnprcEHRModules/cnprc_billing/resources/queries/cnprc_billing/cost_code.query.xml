@@ -1,0 +1,17 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="cost_code" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Cost_code"/>
+                    <column columnName="Objectid"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -771,4 +771,337 @@
             <column columnName="Container"/>
         </columns>
     </table>
+    <table tableName="billing_cost_code" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Service_code"/>
+            <column columnName="Cost_code"/>
+            <column columnName="Begin_date"/>
+            <column columnName="Cost_code_type"/>
+            <column columnName="Base_grant_exempt_factor"/>
+            <column columnName="Routine_serv_exempt_factor"/>
+            <column columnName="Old_cost_code"/>
+            <column columnName="Sales_taxable_flag"/>
+            <column columnName="Charge_obj"/>
+            <column columnName="Charge_ct_0"/>
+            <column columnName="Charge_ct_1"/>
+            <column columnName="Charge_ct_2"/>
+            <column columnName="Charge_ct_3"/>
+            <column columnName="Charge_ct_4"/>
+            <column columnName="Charge_ct_5"/>
+            <column columnName="Charge_ct_6"/>
+            <column columnName="Charge_ct_7"/>
+            <column columnName="Charge_ct_8"/>
+            <column columnName="Charge_ct_9"/>
+            <column columnName="Charge_ct_10"/>
+            <column columnName="Charge_ct_11"/>
+            <column columnName="Charge_ct_12"/>
+            <column columnName="Charge_ct_13"/>
+            <column columnName="Charge_ct_14"/>
+            <column columnName="Charge_ct_15"/>
+            <column columnName="Charge_ct_16"/>
+            <column columnName="Charge_ct_17"/>
+            <column columnName="Charge_ct_18"/>
+            <column columnName="Charge_ct_19"/>
+            <column columnName="Income_id"/>
+            <column columnName="Income_sub"/>
+            <column columnName="Income_obj"/>
+            <column columnName="Income_ct"/>
+            <column columnName="Costxfer_to_id"/>
+            <column columnName="Costxfer_to_sub"/>
+            <column columnName="Costxfer_to_obj"/>
+            <column columnName="Costxfer_to_ct"/>
+            <column columnName="Costxfer_fr_id"/>
+            <column columnName="Costxfer_fr_sub"/>
+            <column columnName="Costxfer_fr_obj"/>
+            <column columnName="Costxfer_fr_ct"/>
+            <column columnName="External_descr"/>
+            <column columnName="End_date"/>
+            <column columnName="Rc_code"/>
+            <column columnName="Acct_type"/>
+            <column columnName="Nud_exempt_flag"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="account" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Acct_id"/>
+            <column columnName="Charge_id"/>
+            <column columnName="Begin_date"/>
+            <column columnName="End_date"/>
+            <column columnName="Replacement_acct_id"/>
+            <column columnName="Title"/>
+            <column columnName="Investigator"/>
+            <column columnName="Fund_type"/>
+            <column columnName="Cost_type_scheme"/>
+            <column columnName="Billing_method"/>
+            <column columnName="Blanket_id"/>
+            <column columnName="Blanket_sub_override"/>
+            <column columnName="Lafs_location"/>
+            <column columnName="Lafs_account"/>
+            <column columnName="Lafs_fund"/>
+            <column columnName="Lafs_sub"/>
+            <column columnName="Closing_months"/>
+            <column columnName="Po_reference"/>
+            <column columnName="Po_on_file"/>
+            <column columnName="Tax_exempt_ref"/>
+            <column columnName="Client_type"/>
+            <column columnName="Ship_to_ca"/>
+            <column columnName="Bill_contact_name"/>
+            <column columnName="Bill_contact_phone"/>
+            <column columnName="Mail_company_name"/>
+            <column columnName="Mail_division_name"/>
+            <column columnName="Mail_street_address"/>
+            <column columnName="Mail_city"/>
+            <column columnName="Mail_state_abbrev"/>
+            <column columnName="Mail_zip_code"/>
+            <column columnName="Mail_country"/>
+            <column columnName="Idfile_blanket_id"/>
+            <column columnName="Idfile_lafs_location"/>
+            <column columnName="Idfile_lafs_account"/>
+            <column columnName="Idfile_lafs_fund"/>
+            <column columnName="Idfile_lafs_sub"/>
+            <column columnName="Idfile_title"/>
+            <column columnName="Idfile_lookup_date"/>
+            <column columnName="Cur_blanket_id"/>
+            <column columnName="Cur_lafs_location"/>
+            <column columnName="Cur_lafs_account"/>
+            <column columnName="Cur_lafs_fund"/>
+            <column columnName="Cur_lafs_sub"/>
+            <column columnName="Cur_clear_flag"/>
+            <column columnName="Cur_mailroom_zip"/>
+            <column columnName="Cur_mail_line_1"/>
+            <column columnName="Cur_mail_line_2"/>
+            <column columnName="Cur_mail_line_3"/>
+            <column columnName="Cur_mail_line_4"/>
+            <column columnName="Cur_mail_line_5"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="billing_control" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Billc_key"/>
+            <column columnName="Fed_ein"/>
+            <column columnName="Dept_name"/>
+            <column columnName="Service_dept_no"/>
+            <column columnName="Journal_suffix"/>
+            <column columnName="Preparer_name"/>
+            <column columnName="Preparer_phone"/>
+            <column columnName="Exmemo_name"/>
+            <column columnName="Icmemo_name"/>
+            <column columnName="Period_ending_date"/>
+            <column columnName="Sales_tax_rate"/>
+            <column columnName="First_invoice_no"/>
+            <column columnName="Next_invoice_no"/>
+            <column columnName="Perdiem_start_date"/>
+            <column columnName="Perdiem_ending_date"/>
+            <column columnName="Nud_a_rate_part_a"/>
+            <column columnName="Nud_a_service_code"/>
+            <column columnName="Nud_a_rc_code"/>
+            <column columnName="Nud_a_cost_code"/>
+            <column columnName="Nud_a_billing_method"/>
+            <column columnName="Nud_a_collection_acct"/>
+            <column columnName="Nud_a_sub_object_code"/>
+            <column columnName="Nud_b_rate_part_b"/>
+            <column columnName="Nud_b_service_code"/>
+            <column columnName="Nud_b_rc_code"/>
+            <column columnName="Nud_b_cost_code"/>
+            <column columnName="Nud_b_billing_method"/>
+            <column columnName="Nud_b_collection_acct"/>
+            <column columnName="Nud_b_sub_object_code"/>
+            <column columnName="Nud_c_rate_part_c"/>
+            <column columnName="Nud_c_service_code"/>
+            <column columnName="Nud_c_rc_code"/>
+            <column columnName="Nud_c_cost_code"/>
+            <column columnName="Nud_c_billing_method"/>
+            <column columnName="Nud_c_collection_acct"/>
+            <column columnName="Nud_c_sub_object_code"/>
+            <column columnName="Central_spply_status_closed_yn"/>
+            <column columnName="Central_spply_status_set_by"/>
+            <column columnName="Central_spply_status_timestamp"/>
+            <column columnName="Perdiem_status_closed_yn"/>
+            <column columnName="Perdiem_status_set_by"/>
+            <column columnName="Perdiem_status_timestamp"/>
+            <column columnName="Work_orders_status_closed_yn"/>
+            <column columnName="Work_orders_status_set_by"/>
+            <column columnName="Work_orders_status_timestamp"/>
+            <column columnName="Core_services_status_closed_yn"/>
+            <column columnName="Core_services_status_set_by"/>
+            <column columnName="Core_services_status_timestamp"/>
+            <column columnName="Period_start_date"/>
+            <column columnName="Sd_next_credit_memo_no"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="core_service_basic_components" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Csbc_pk"/>
+            <column columnName="Component_code"/>
+            <column columnName="Service_code"/>
+            <column columnName="Rc_code"/>
+            <column columnName="Description"/>
+            <column columnName="Basic_uom"/>
+            <column columnName="Basic_rate"/>
+            <column columnName="Cost_code"/>
+            <column columnName="Sundry_debtor_markup_yn"/>
+            <column columnName="Labor_yn"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="core_service_billing_master" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Csbm_pk"/>
+            <column columnName="Billing_master_origin"/>
+            <column columnName="Billing_master_create_date"/>
+            <column columnName="Period_ending_date"/>
+            <column columnName="Dafis_fin_coa_cd"/>
+            <column columnName="Dafis_account_nbr"/>
+            <column columnName="Dafis_sub_acct_nbr"/>
+            <column columnName="Dafis_project_cd"/>
+            <column columnName="Dafis_obj_override"/>
+            <column columnName="Service_code"/>
+            <column columnName="Rc_code"/>
+            <column columnName="Charge_id"/>
+            <column columnName="Account_id"/>
+            <column columnName="Billing_method_code"/>
+            <column columnName="Project_code"/>
+            <column columnName="Order_date"/>
+            <column columnName="Client_name"/>
+            <column columnName="Client_po_num"/>
+            <column columnName="Client_request_num"/>
+            <column columnName="Billing_contact_name"/>
+            <column columnName="Total_charge_amt"/>
+            <column columnName="Total_exempt_amt"/>
+            <column columnName="Order_fk"/>
+            <column columnName="Pc_invoice_number"/>
+            <column columnName="Report_contact_name"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="core_service_costing" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Csc_pk"/>
+            <column columnName="Csbm_fk"/>
+            <column columnName="Csli_fk"/>
+            <column columnName="Line_no"/>
+            <column columnName="Item_code"/>
+            <column columnName="Item_description"/>
+            <column columnName="Line_item_qty"/>
+            <column columnName="Line_item_uom"/>
+            <column columnName="Component_seq"/>
+            <column columnName="Component_description"/>
+            <column columnName="Component_rate"/>
+            <column columnName="Component_uom"/>
+            <column columnName="Component_qty"/>
+            <column columnName="Component_service_code"/>
+            <column columnName="Component_rc_code"/>
+            <column columnName="Component_cost_code"/>
+            <column columnName="Component_sd_markup_yn"/>
+            <column columnName="Component_labor_yn"/>
+            <column columnName="Component_cost_rate"/>
+            <column columnName="Costing_qty"/>
+            <column columnName="Costing_charge_amt"/>
+            <column columnName="Costing_exempt_amt"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="cost_code" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Cost_code"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="eom_transaction_detail" tableDbType="TABLE" useColumnOrder="true">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="Feed_system_code"/>
+            <column columnName="Feed_date"/>
+            <column columnName="Period_ending_date"/>
+            <column columnName="Charge_account_id"/>
+            <column columnName="Charge_object_code_old"/>
+            <column columnName="Charge_object_code"/>
+            <column columnName="Charge_sub_account"/>
+            <column columnName="Income_account_id"/>
+            <column columnName="Income_object_code_old"/>
+            <column columnName="Income_object_code"/>
+            <column columnName="Income_sub_account"/>
+            <column columnName="Service_code"/>
+            <column columnName="Transaction_type_flag"/>
+            <column columnName="Sales_taxable_flag"/>
+            <column columnName="Bill_description_external"/>
+            <column columnName="Transaction_description"/>
+            <column columnName="Transaction_reference"/>
+            <column columnName="Transaction_amount"/>
+            <column columnName="Transaction_sign"/>
+            <column columnName="Invoice_number"/>
+            <column columnName="Nud_exempt_flag"/>
+            <column columnName="Cost_code"/>
+            <column columnName="Rc_code"/>
+            <column columnName="Billing_method_code"/>
+            <column columnName="Client_po_number"/>
+            <column columnName="Transaction_comment"/>
+            <column columnName="Etd_aud_username"/>
+            <column columnName="Etd_aud_time"/>
+            <column columnName="Etd_aud_code"/>
+            <column columnName="Etd_aud_comment"/>
+            <column columnName="Credit_entry_flag"/>
+            <column columnName="Credit_entry_comment"/>
+            <column columnName="Credit_entry_prior_ref_no"/>
+            <column columnName="Credit_entry_prior_invoice_no"/>
+            <column columnName="Credit_memo_number"/>
+            <column columnName="Income_sub_object_code"/>
+            <column columnName="Charge_sub_object_code"/>
+            <column columnName="Transaction_project_num"/>
+            <column columnName="Gl_feed_processed_flag"/>
+            <column columnName="Ar_feed_processed_flag"/>
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+
 </tables>

@@ -1,0 +1,62 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="billing_cost_code" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Service_code"/>
+                    <column columnName="Cost_code"/>
+                    <column columnName="Begin_date"/>
+                    <column columnName="Cost_code_type"/>
+                    <column columnName="Base_grant_exempt_factor"/>
+                    <column columnName="Routine_serv_exempt_factor"/>
+                    <column columnName="Old_cost_code"/>
+                    <column columnName="Sales_taxable_flag"/>
+                    <column columnName="Charge_obj"/>
+                    <column columnName="Charge_ct_0"/>
+                    <column columnName="Charge_ct_1"/>
+                    <column columnName="Charge_ct_2"/>
+                    <column columnName="Charge_ct_3"/>
+                    <column columnName="Charge_ct_4"/>
+                    <column columnName="Charge_ct_5"/>
+                    <column columnName="Charge_ct_6"/>
+                    <column columnName="Charge_ct_7"/>
+                    <column columnName="Charge_ct_8"/>
+                    <column columnName="Charge_ct_9"/>
+                    <column columnName="Charge_ct_10"/>
+                    <column columnName="Charge_ct_11"/>
+                    <column columnName="Charge_ct_12"/>
+                    <column columnName="Charge_ct_13"/>
+                    <column columnName="Charge_ct_14"/>
+                    <column columnName="Charge_ct_15"/>
+                    <column columnName="Charge_ct_16"/>
+                    <column columnName="Charge_ct_17"/>
+                    <column columnName="Charge_ct_18"/>
+                    <column columnName="Charge_ct_19"/>
+                    <column columnName="Income_id"/>
+                    <column columnName="Income_sub"/>
+                    <column columnName="Income_obj"/>
+                    <column columnName="Income_ct"/>
+                    <column columnName="Costxfer_to_id"/>
+                    <column columnName="Costxfer_to_sub"/>
+                    <column columnName="Costxfer_to_obj"/>
+                    <column columnName="Costxfer_to_ct"/>
+                    <column columnName="Costxfer_fr_id"/>
+                    <column columnName="Costxfer_fr_sub"/>
+                    <column columnName="Costxfer_fr_obj"/>
+                    <column columnName="Costxfer_fr_ct"/>
+                    <column columnName="External_descr"/>
+                    <column columnName="End_date"/>
+                    <column columnName="Rc_code"/>
+                    <column columnName="Acct_type"/>
+                    <column columnName="Nud_exempt_flag"/>
+                    <column columnName="Objectid"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                    <column columnName="Container"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

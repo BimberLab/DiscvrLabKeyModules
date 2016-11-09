@@ -4,7 +4,12 @@
             <table tableName="core_service_line_item" tableDbType="TABLE" useColumnOrder="true">
                 <columns>
                     <column columnName="Csli_pk"/>
-                    <column columnName="Csbm_fk"/>
+                    <column columnName="Csbm_fk">
+                        <fk>
+                            <fkTable>core_service_billing_master</fkTable>
+                            <fkColumnName>Csbm_pk</fkColumnName>
+                        </fk>
+                    </column>
                     <column columnName="Service_code"/>
                     <column columnName="Rc_code"/>
                     <column columnName="Line_no"/>
