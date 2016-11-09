@@ -2895,10 +2895,10 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_perdiem.s
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_perdiem_month.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_perdiem_rate_names.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_perdiem_rates.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/account.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/billing_control.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/billing_cost_code.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/billing_fiscal.query.xml -text
-cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/core_account.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/core_service_basic_components.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/core_service_billing_master.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/core_service_costing.query.xml -text
@@ -2945,6 +2945,7 @@ cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billin
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.32-16.33.sql -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.33-16.34.sql -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.34-16.35.sql -text
+cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.35-16.36.sql -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingController.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingModule.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingSchema.java -text
