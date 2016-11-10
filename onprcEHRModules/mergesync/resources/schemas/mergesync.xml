@@ -16,78 +16,78 @@
  * limitations under the License.
 
  -->
-<ns:tables xmlns:ns="http://labkey.org/data/xml">
-    <ns:table tableName="testnamemapping" tableDbType="TABLE">
-        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-        <ns:tableTitle>LabKey to Merge Service/Panel Name Mapping</ns:tableTitle>
-        <ns:columns>
-            <ns:column columnName="servicename">
-                <ns:columnTitle>Service Name</ns:columnTitle>
-                <ns:isKeyField>true</ns:isKeyField>
-            </ns:column>
-            <ns:column columnName="mergetestname">
-                <ns:columnTitle>Merge Test Name</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="automaticresults">
-                <ns:columnTitle>Expect Results From Merge?</ns:columnTitle>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="mergetolkmapping" tableDbType="TABLE">
-        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-        <ns:tableTitle>Merge to LabKey Service/Panel Name Mapping</ns:tableTitle>
-        <ns:columns>
-            <ns:column columnName="mergetestname">
-                <ns:columnTitle>Merge Test Name</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="servicename">
-                <ns:columnTitle>Service Name</ns:columnTitle>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="orderssynced" tableDbType="TABLE">
-        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-        <ns:tableTitle>Orders Synced To/From Merge</ns:tableTitle>
-        <ns:columns>
-            <ns:column columnName="runid">
-                <ns:columnTitle>Clinpath Runs Record</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="requestid">
-                <ns:columnTitle>Request Id</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="taskid">
-                <ns:columnTitle>Task Id</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="objectid">
-                <ns:columnTitle>Key</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="order_accession">
-                <ns:columnTitle>Merge Order Accession #</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="test_accession">
-                <ns:columnTitle>Merge Test Accession #</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="merge_datecreated">
-                <ns:columnTitle>Merge Date Created</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="merge_dateposted">
-                <ns:columnTitle>Merge Date Posted</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="deletedate">
-                <ns:columnTitle>Date Deleted In LabKey</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="container">
-                <ns:columnTitle>Folder</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="created">
+<tables xmlns="http://labkey.org/data/xml">
+    <table tableName="testnamemapping" tableDbType="TABLE">
+        <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+        <tableTitle>LabKey to Merge Service/Panel Name Mapping</tableTitle>
+        <columns>
+            <column columnName="servicename">
+                <columnTitle>Service Name</columnTitle>
+                <isKeyField>true</isKeyField>
+            </column>
+            <column columnName="mergetestname">
+                <columnTitle>Merge Test Name</columnTitle>
+            </column>
+            <column columnName="automaticresults">
+                <columnTitle>Expect Results From Merge?</columnTitle>
+            </column>
+        </columns>
+    </table>
+    <table tableName="mergetolkmapping" tableDbType="TABLE">
+        <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+        <tableTitle>Merge to LabKey Service/Panel Name Mapping</tableTitle>
+        <columns>
+            <column columnName="mergetestname">
+                <columnTitle>Merge Test Name</columnTitle>
+            </column>
+            <column columnName="servicename">
+                <columnTitle>Service Name</columnTitle>
+            </column>
+        </columns>
+    </table>
+    <table tableName="orderssynced" tableDbType="TABLE">
+        <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+        <tableTitle>Orders Synced To/From Merge</tableTitle>
+        <columns>
+            <column columnName="runid">
+                <columnTitle>Clinpath Runs Record</columnTitle>
+            </column>
+            <column columnName="requestid">
+                <columnTitle>Request Id</columnTitle>
+            </column>
+            <column columnName="taskid">
+                <columnTitle>Task Id</columnTitle>
+            </column>
+            <column columnName="objectid">
+                <columnTitle>Key</columnTitle>
+            </column>
+            <column columnName="order_accession">
+                <columnTitle>Merge Order Accession #</columnTitle>
+            </column>
+            <column columnName="test_accession">
+                <columnTitle>Merge Test Accession #</columnTitle>
+            </column>
+            <column columnName="merge_datecreated">
+                <columnTitle>Merge Date Created</columnTitle>
+            </column>
+            <column columnName="merge_dateposted">
+                <columnTitle>Merge Date Posted</columnTitle>
+            </column>
+            <column columnName="deletedate">
+                <columnTitle>Date Deleted In LabKey</columnTitle>
+            </column>
+            <column columnName="container">
+                <columnTitle>Folder</columnTitle>
+            </column>
+            <column columnName="created">
 
-            </ns:column>
-            <ns:column columnName="createdby">
+            </column>
+            <column columnName="createdby">
 
-            </ns:column>
-            <ns:column columnName="resultsreceived">
-                <ns:columnTitle>Results Received?</ns:columnTitle>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-</ns:tables>
+            </column>
+            <column columnName="resultsreceived">
+                <columnTitle>Results Received?</columnTitle>
+            </column>
+        </columns>
+    </table>
+</tables>

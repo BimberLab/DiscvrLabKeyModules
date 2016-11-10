@@ -16,38 +16,38 @@
  * limitations under the License.
 
  -->
-<ns:tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd" xmlns:ns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <ns:table tableName="condorJobs" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
-        <ns:tableTitle>Condor Submissions</ns:tableTitle>
-        <ns:columns>
-            <ns:column columnName="rowId"/>
-            <ns:column columnName="condorId"/>
-            <ns:column columnName="jobId">
-                <ns:fk>
-                    <ns:fkDbSchema>pipeline</ns:fkDbSchema>
-                    <ns:fkTable>Job</ns:fkTable>
-                    <ns:fkColumnName>Job</ns:fkColumnName>
-                    <ns:fkDisplayColumnName>RowId</ns:fkDisplayColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="location"/>
-            <ns:column columnName="activeTaskId"/>
+<tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd" xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <table tableName="condorJobs" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <tableTitle>Condor Submissions</tableTitle>
+        <columns>
+            <column columnName="rowId"/>
+            <column columnName="condorId"/>
+            <column columnName="jobId">
+                <fk>
+                    <fkDbSchema>pipeline</fkDbSchema>
+                    <fkTable>Job</fkTable>
+                    <fkColumnName>Job</fkColumnName>
+                    <fkDisplayColumnName>RowId</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="location"/>
+            <column columnName="activeTaskId"/>
             <!--TODO: remove-->
-            <ns:column columnName="hasStarted">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="status"/>
-            <ns:column columnName="clusterId"/>
-            <ns:column columnName="processId"/>
-            <ns:column columnName="lastStatusCheck">
-                <ns:formatString>yyyy-MM-dd HH:mm</ns:formatString>
-            </ns:column>
-            <ns:column columnName="container"/>
-            <ns:column columnName="created"/>
-            <ns:column columnName="createdBy"/>
-            <ns:column columnName="modified"/>
-            <ns:column columnName="modifiedBy"/>
-        </ns:columns>
-    </ns:table>
-</ns:tables>
+            <column columnName="hasStarted">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="status"/>
+            <column columnName="clusterId"/>
+            <column columnName="processId"/>
+            <column columnName="lastStatusCheck">
+                <formatString>yyyy-MM-dd HH:mm</formatString>
+            </column>
+            <column columnName="container"/>
+            <column columnName="created"/>
+            <column columnName="createdBy"/>
+            <column columnName="modified"/>
+            <column columnName="modifiedBy"/>
+        </columns>
+    </table>
+</tables>

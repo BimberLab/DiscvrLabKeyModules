@@ -18,51 +18,51 @@
         <tableName>procedureFeeDefinition</tableName>
     </tables>
     <metadata>
-        <ns:tables xmlns:ns="http://labkey.org/data/xml">
-            <ns:table tableName="publicInvoiceRuns" tableDbType="NOT_IN_DB">
-                <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-                <ns:tableTitle>Invoice Runs</ns:tableTitle>
-            </ns:table>
-            <ns:table tableName="publicInvoicedItems" tableDbType="NOT_IN_DB">
-                <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-                <ns:tableTitle>Invoiced Items</ns:tableTitle>
-            </ns:table>
-            <ns:table tableName="chargeableItems" tableDbType="NOT_IN_DB">
-                <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-                <ns:tableTitle>Chargeable Items</ns:tableTitle>
-            </ns:table>
-            <ns:table tableName="fiscalAuthorities" tableDbType="NOT_IN_DB">
-                <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-                <ns:tableTitle>Fiscal Authorities</ns:tableTitle>
-            </ns:table>
-            <ns:table tableName="aliases" tableDbType="NOT_IN_DB">
-                <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-                <ns:tableTitle>Aliases</ns:tableTitle>
-            </ns:table>
-            <ns:table tableName="grants" tableDbType="NOT_IN_DB">
-                <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-                <ns:tableTitle>Grants</ns:tableTitle>
-            </ns:table>
-            <ns:table tableName="grantProjects" tableDbType="NOT_IN_DB">
-                <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-                <ns:tableTitle>Grant Projects</ns:tableTitle>
-            </ns:table>
-            <ns:table tableName="chargeRates" tableDbType="NOT_IN_DB">
-                <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-                <ns:tableTitle>Charge Rates</ns:tableTitle>
-            </ns:table>
-            <ns:table tableName="chargeRateExemptions" tableDbType="NOT_IN_DB">
-                <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-                <ns:tableTitle>Exemptions to Default Rates</ns:tableTitle>
-            </ns:table>
-            <ns:table tableName="creditAccount" tableDbType="NOT_IN_DB">
-                <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-                <ns:tableTitle>Aliases Receiving Credits For Each Charge</ns:tableTitle>
-            </ns:table>
-            <ns:table tableName="chargeUnitss" tableDbType="NOT_IN_DB">
-                <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
-                <ns:tableTitle>Charge Units</ns:tableTitle>
-            </ns:table>
-        </ns:tables>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="publicInvoiceRuns" tableDbType="NOT_IN_DB">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Invoice Runs</tableTitle>
+            </table>
+            <table tableName="publicInvoicedItems" tableDbType="NOT_IN_DB">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Invoiced Items</tableTitle>
+            </table>
+            <table tableName="chargeableItems" tableDbType="NOT_IN_DB">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Chargeable Items</tableTitle>
+            </table>
+            <table tableName="fiscalAuthorities" tableDbType="NOT_IN_DB">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Fiscal Authorities</tableTitle>
+            </table>
+            <table tableName="aliases" tableDbType="NOT_IN_DB">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Aliases</tableTitle>
+            </table>
+            <table tableName="grants" tableDbType="NOT_IN_DB">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Grants</tableTitle>
+            </table>
+            <table tableName="grantProjects" tableDbType="NOT_IN_DB">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Grant Projects</tableTitle>
+            </table>
+            <table tableName="chargeRates" tableDbType="NOT_IN_DB">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Charge Rates</tableTitle>
+            </table>
+            <table tableName="chargeRateExemptions" tableDbType="NOT_IN_DB">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Exemptions to Default Rates</tableTitle>
+            </table>
+            <table tableName="creditAccount" tableDbType="NOT_IN_DB">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Aliases Receiving Credits For Each Charge</tableTitle>
+            </table>
+            <table tableName="chargeUnitss" tableDbType="NOT_IN_DB">
+                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <tableTitle>Charge Units</tableTitle>
+            </table>
+        </tables>
     </metadata>
 </templateSchema>

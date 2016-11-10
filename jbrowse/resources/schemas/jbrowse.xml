@@ -16,242 +16,242 @@
  * limitations under the License.
 
  -->
-<ns:tables xsi:schemaLocation="http://labkey.org/data/xml" xmlns:ns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <ns:table tableName="jsonfiles" tableDbType="TABLE" useColumnOrder="true">
+<tables xsi:schemaLocation="http://labkey.org/data/xml" xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <table tableName="jsonfiles" tableDbType="TABLE" useColumnOrder="true">
         <!--NOTE: required to allow modules to register buttons-->
-        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryEditingTableCustomizer</ns:javaCustomizer>
-        <ns:auditLogging>DETAILED</ns:auditLogging>
-        <ns:tableUrl></ns:tableUrl>
-        <ns:updateUrl></ns:updateUrl>
-        <ns:insertUrl></ns:insertUrl>
-        <ns:importUrl></ns:importUrl>
-        <ns:tableTitle>JBrowse Files</ns:tableTitle>
-        <ns:columns>
-            <ns:column columnName="trackid">
-                <ns:columnTitle>Track</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>reference_library_tracks</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="sequenceid">
-                <ns:columnTitle>Ref Sequence</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>ref_nt_sequences</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="outputfile">
-                <ns:columnTitle>File Id</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>outputfiles</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="relpath">
-                <ns:columnTitle>Relative Path</ns:columnTitle>
-                <ns:description>This is the filepath to this JSON file, relative to the JBrowse root</ns:description>
-            </ns:column>
-            <ns:column columnName="objectid">
-                <ns:columnTitle>Key</ns:columnTitle>
-                <ns:shownInDetailsView>false</ns:shownInDetailsView>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="trackJson">
-                <ns:columnTitle>Additional Track Configuration</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="container">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="createdby">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="created">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="modifiedby">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="modified">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-        </ns:columns>
-        <ns:buttonBarOptions includeStandardButtons="true">
-            <ns:item hidden="true">
-                <ns:originalText>Charts</ns:originalText>
-            </ns:item>
-        </ns:buttonBarOptions>
-    </ns:table>
-    <ns:table tableName="databases" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer>org.labkey.laboratory.query.LaboratoryEditingTableCustomizer</javaCustomizer>
+        <auditLogging>DETAILED</auditLogging>
+        <tableUrl></tableUrl>
+        <updateUrl></updateUrl>
+        <insertUrl></insertUrl>
+        <importUrl></importUrl>
+        <tableTitle>JBrowse Files</tableTitle>
+        <columns>
+            <column columnName="trackid">
+                <columnTitle>Track</columnTitle>
+                <fk>
+                    <fkDbSchema>sequenceanalysis</fkDbSchema>
+                    <fkTable>reference_library_tracks</fkTable>
+                    <fkColumnName>rowid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="sequenceid">
+                <columnTitle>Ref Sequence</columnTitle>
+                <fk>
+                    <fkDbSchema>sequenceanalysis</fkDbSchema>
+                    <fkTable>ref_nt_sequences</fkTable>
+                    <fkColumnName>rowid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="outputfile">
+                <columnTitle>File Id</columnTitle>
+                <fk>
+                    <fkDbSchema>sequenceanalysis</fkDbSchema>
+                    <fkTable>outputfiles</fkTable>
+                    <fkColumnName>rowid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="relpath">
+                <columnTitle>Relative Path</columnTitle>
+                <description>This is the filepath to this JSON file, relative to the JBrowse root</description>
+            </column>
+            <column columnName="objectid">
+                <columnTitle>Key</columnTitle>
+                <shownInDetailsView>false</shownInDetailsView>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="trackJson">
+                <columnTitle>Additional Track Configuration</columnTitle>
+            </column>
+            <column columnName="container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+        <buttonBarOptions includeStandardButtons="true">
+            <item hidden="true">
+                <originalText>Charts</originalText>
+            </item>
+        </buttonBarOptions>
+    </table>
+    <table tableName="databases" tableDbType="TABLE" useColumnOrder="true">
         <!--NOTE: required to allow modules to register buttons-->
-        <ns:javaCustomizer>org.labkey.laboratory.query.LaboratoryEditingTableCustomizer</ns:javaCustomizer>
-        <ns:auditLogging>DETAILED</ns:auditLogging>
-        <ns:tableUrl>/jbrowse/databaseDetails.view?databaseId=${objectid}</ns:tableUrl>
-        <ns:insertUrl></ns:insertUrl>
-        <ns:importUrl></ns:importUrl>
-        <ns:updateUrl>/ldk/manageRecord.view?schemaName=jbrowse&amp;query.queryName=databases&amp;keyField=objectid&amp;key=${objectid}</ns:updateUrl>
-        <ns:tableTitle>JBrowse Sessions</ns:tableTitle>
-        <ns:columns>
-            <ns:column columnName="rowid">
-                <ns:columnTitle>Row Id</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="name">
-                <ns:columnTitle>Name</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="description">
+        <javaCustomizer>org.labkey.laboratory.query.LaboratoryEditingTableCustomizer</javaCustomizer>
+        <auditLogging>DETAILED</auditLogging>
+        <tableUrl>/jbrowse/databaseDetails.view?databaseId=${objectid}</tableUrl>
+        <insertUrl></insertUrl>
+        <importUrl></importUrl>
+        <updateUrl>/ldk/manageRecord.view?schemaName=jbrowse&amp;query.queryName=databases&amp;keyField=objectid&amp;key=${objectid}</updateUrl>
+        <tableTitle>JBrowse Sessions</tableTitle>
+        <columns>
+            <column columnName="rowid">
+                <columnTitle>Row Id</columnTitle>
+            </column>
+            <column columnName="name">
+                <columnTitle>Name</columnTitle>
+            </column>
+            <column columnName="description">
 
-            </ns:column>
-            <ns:column columnName="libraryId">
-                <ns:columnTitle>Base Genome</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>sequenceanalysis</ns:fkDbSchema>
-                    <ns:fkTable>reference_libraries</ns:fkTable>
-                    <ns:fkColumnName>rowid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="objectid">
-                <ns:columnTitle>Key</ns:columnTitle>
-                <ns:shownInDetailsView>false</ns:shownInDetailsView>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="temporary">
-                <ns:columnTitle>Temporary?</ns:columnTitle>
-                <ns:description>If true, this session will be deleted at the end of the day, as part of the routine system maintenance.</ns:description>
-            </ns:column>
-            <ns:column columnName="primarydb">
-                <ns:columnTitle>Is Primary Database for Genome?</ns:columnTitle>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:description>For each reference genome, a JBrowse session is automatically created.  This session will pre-process all reference sequences and tracks, making it faster to create customized child sessions.</ns:description>
-            </ns:column>
-            <ns:column columnName="createOwnIndex">
-                <ns:columnTitle>Should Create Own Index?</ns:columnTitle>
-                <ns:isHidden>true</ns:isHidden>
-                <ns:description>When a JBrowse session is created, it generates an index of features.  This list is used for searches and type-ahead.  Because this takes a very long time to generate, by default only a single index is created per genome (copied from the session flagged as the primary).  This helps performance, but means that any features present in the others sessions will not be indexed.  This is usually not a problem, but individual sessions can set this to true to generate their own custom indexes.</ns:description>
-            </ns:column>
-            <ns:column columnName="jobid">
-                <ns:columnTitle>Pipeline Job</ns:columnTitle>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:fk>
-                    <ns:fkDbSchema>pipeline</ns:fkDbSchema>
-                    <ns:fkTable>job</ns:fkTable>
-                    <ns:fkColumnName>Job</ns:fkColumnName>
-                    <ns:fkDisplayColumnName>RowId</ns:fkDisplayColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="viewlink" wrappedColumnName="objectid">
-                <ns:columnTitle>JBrowse Link</ns:columnTitle>
-                <ns:displayColumnFactory>
-                    <ns:className>org.labkey.jbrowse.query.DatabaseDisplayColumnFactory</ns:className>
-                </ns:displayColumnFactory>
-            </ns:column>
-            <ns:column columnName="container">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="createdby">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="created">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="modifiedby">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="modified">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-        </ns:columns>
-        <ns:buttonBarOptions includeStandardButtons="true">
-            <ns:item hidden="true">
-                <ns:originalText>Charts</ns:originalText>
-            </ns:item>
-        </ns:buttonBarOptions>
-    </ns:table>
-    <ns:table tableName="database_members" tableDbType="TABLE" useColumnOrder="true">
-        <ns:javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</ns:javaCustomizer>
-        <ns:auditLogging>DETAILED</ns:auditLogging>
-        <ns:tableUrl></ns:tableUrl>
-        <ns:insertUrl></ns:insertUrl>
-        <ns:importUrl></ns:importUrl>
-        <ns:tableTitle>JBrowse Session Members</ns:tableTitle>
-        <ns:columns>
-            <ns:column columnName="rowid">
-                <ns:columnTitle>Row Id</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="database">
-                <ns:columnTitle>Session Name</ns:columnTitle>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:fk>
-                    <ns:fkDbSchema>jbrowse</ns:fkDbSchema>
-                    <ns:fkTable>databases</ns:fkTable>
-                    <ns:fkColumnName>objectid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="jsonfile">
-                <ns:columnTitle>Resource</ns:columnTitle>
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:fk>
-                    <ns:fkDbSchema>jbrowse</ns:fkDbSchema>
-                    <ns:fkTable>jsonfiles</ns:fkTable>
-                    <ns:fkColumnName>objectid</ns:fkColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="category">
-                <ns:columnTitle>Category</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="container">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="createdby">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="created">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="modifiedby">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="modified">
-                <ns:isUserEditable>false</ns:isUserEditable>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:nullable>true</ns:nullable>
-                <ns:scale>29</ns:scale>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-        </ns:columns>
-        <ns:buttonBarOptions includeStandardButtons="true">
-            <ns:item hidden="true">
-                <ns:originalText>Charts</ns:originalText>
-            </ns:item>
-        </ns:buttonBarOptions>
-    </ns:table>
-</ns:tables>
+            </column>
+            <column columnName="libraryId">
+                <columnTitle>Base Genome</columnTitle>
+                <fk>
+                    <fkDbSchema>sequenceanalysis</fkDbSchema>
+                    <fkTable>reference_libraries</fkTable>
+                    <fkColumnName>rowid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="objectid">
+                <columnTitle>Key</columnTitle>
+                <shownInDetailsView>false</shownInDetailsView>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="temporary">
+                <columnTitle>Temporary?</columnTitle>
+                <description>If true, this session will be deleted at the end of the day, as part of the routine system maintenance.</description>
+            </column>
+            <column columnName="primarydb">
+                <columnTitle>Is Primary Database for Genome?</columnTitle>
+                <isHidden>true</isHidden>
+                <isUserEditable>false</isUserEditable>
+                <description>For each reference genome, a JBrowse session is automatically created.  This session will pre-process all reference sequences and tracks, making it faster to create customized child sessions.</description>
+            </column>
+            <column columnName="createOwnIndex">
+                <columnTitle>Should Create Own Index?</columnTitle>
+                <isHidden>true</isHidden>
+                <description>When a JBrowse session is created, it generates an index of features.  This list is used for searches and type-ahead.  Because this takes a very long time to generate, by default only a single index is created per genome (copied from the session flagged as the primary).  This helps performance, but means that any features present in the others sessions will not be indexed.  This is usually not a problem, but individual sessions can set this to true to generate their own custom indexes.</description>
+            </column>
+            <column columnName="jobid">
+                <columnTitle>Pipeline Job</columnTitle>
+                <isUserEditable>false</isUserEditable>
+                <fk>
+                    <fkDbSchema>pipeline</fkDbSchema>
+                    <fkTable>job</fkTable>
+                    <fkColumnName>Job</fkColumnName>
+                    <fkDisplayColumnName>RowId</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="viewlink" wrappedColumnName="objectid">
+                <columnTitle>JBrowse Link</columnTitle>
+                <displayColumnFactory>
+                    <className>org.labkey.jbrowse.query.DatabaseDisplayColumnFactory</className>
+                </displayColumnFactory>
+            </column>
+            <column columnName="container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+        <buttonBarOptions includeStandardButtons="true">
+            <item hidden="true">
+                <originalText>Charts</originalText>
+            </item>
+        </buttonBarOptions>
+    </table>
+    <table tableName="database_members" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <auditLogging>DETAILED</auditLogging>
+        <tableUrl></tableUrl>
+        <insertUrl></insertUrl>
+        <importUrl></importUrl>
+        <tableTitle>JBrowse Session Members</tableTitle>
+        <columns>
+            <column columnName="rowid">
+                <columnTitle>Row Id</columnTitle>
+            </column>
+            <column columnName="database">
+                <columnTitle>Session Name</columnTitle>
+                <isUserEditable>false</isUserEditable>
+                <fk>
+                    <fkDbSchema>jbrowse</fkDbSchema>
+                    <fkTable>databases</fkTable>
+                    <fkColumnName>objectid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="jsonfile">
+                <columnTitle>Resource</columnTitle>
+                <isUserEditable>false</isUserEditable>
+                <fk>
+                    <fkDbSchema>jbrowse</fkDbSchema>
+                    <fkTable>jsonfiles</fkTable>
+                    <fkColumnName>objectid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="category">
+                <columnTitle>Category</columnTitle>
+            </column>
+            <column columnName="container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+        <buttonBarOptions includeStandardButtons="true">
+            <item hidden="true">
+                <originalText>Charts</originalText>
+            </item>
+        </buttonBarOptions>
+    </table>
+</tables>

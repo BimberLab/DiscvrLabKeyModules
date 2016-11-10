@@ -1,52 +1,52 @@
-<ns:tables xmlns:ns="http://labkey.org/data/xml">
-    <ns:table tableName="schedule" tableDbType="TABLE" useColumnOrder="true">
-        <ns:tableTitle>SSU Schedule</ns:tableTitle>
-        <ns:javaCustomizer>org.labkey.ehr.table.WrappingTableCustomizer</ns:javaCustomizer>
-        <ns:columns>
-            <ns:column columnName="rowid">
-                <ns:columnTitle>Row Id</ns:columnTitle>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Id">
-                <ns:conceptURI>http://cpas.labkey.com/Study#ParticipantId</ns:conceptURI>
-            </ns:column>
-            <ns:column columnName="date">
-                <ns:columnTitle>Date</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="project">
-                <ns:columnTitle>Project Id</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="location">
-                <ns:columnTitle>Location</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="procedureid">
-                <ns:columnTitle>Procedure Id</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="formcreated">
-                <ns:columnTitle>Surgery Created?</ns:columnTitle>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-            </ns:column>
-            <ns:column columnName="encounterid">
-                <ns:columnTitle>Surgery Id</ns:columnTitle>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:isUserEditable>false</ns:isUserEditable>
-            </ns:column>
-            <ns:column columnName="taskid">
-                <ns:columnTitle>Task Id</ns:columnTitle>
-                <ns:shownInInsertView>false</ns:shownInInsertView>
-                <ns:shownInUpdateView>false</ns:shownInUpdateView>
-                <ns:isUserEditable>false</ns:isUserEditable>
-            </ns:column>
-            <ns:column columnName="objectid">
-                <ns:columnTitle>Key</ns:columnTitle>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="container"/>
-            <ns:column columnName="createdby"/>
-            <ns:column columnName="created"/>
-            <ns:column columnName="modifiedby"/>
-            <ns:column columnName="modified"/>
-        </ns:columns>
-    </ns:table>
-</ns:tables>
+<tables xmlns="http://labkey.org/data/xml">
+    <table tableName="schedule" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>SSU Schedule</tableTitle>
+        <javaCustomizer>org.labkey.ehr.table.WrappingTableCustomizer</javaCustomizer>
+        <columns>
+            <column columnName="rowid">
+                <columnTitle>Row Id</columnTitle>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Id">
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+            </column>
+            <column columnName="date">
+                <columnTitle>Date</columnTitle>
+            </column>
+            <column columnName="project">
+                <columnTitle>Project Id</columnTitle>
+            </column>
+            <column columnName="location">
+                <columnTitle>Location</columnTitle>
+            </column>
+            <column columnName="procedureid">
+                <columnTitle>Procedure Id</columnTitle>
+            </column>
+            <column columnName="formcreated">
+                <columnTitle>Surgery Created?</columnTitle>
+                <shownInInsertView>false</shownInInsertView>
+            </column>
+            <column columnName="encounterid">
+                <columnTitle>Surgery Id</columnTitle>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <isUserEditable>false</isUserEditable>
+            </column>
+            <column columnName="taskid">
+                <columnTitle>Task Id</columnTitle>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <isUserEditable>false</isUserEditable>
+            </column>
+            <column columnName="objectid">
+                <columnTitle>Key</columnTitle>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="container"/>
+            <column columnName="createdby"/>
+            <column columnName="created"/>
+            <column columnName="modifiedby"/>
+            <column columnName="modified"/>
+        </columns>
+    </table>
+</tables>

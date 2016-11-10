@@ -3,14 +3,14 @@
         <tableName>samples</tableName>
     </tables>
     <metadata>
-        <ns:tables xmlns:ns="http://labkey.org/data/xml">
-            <ns:table tableName="samples" tableDbType="NOT_IN_DB">
-                <ns:filters>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="samples" tableDbType="NOT_IN_DB">
+                <filters>
                     <!--This is the non-ONPRC workbook-->
                     <cv:filter column="container" operator="neq" value="4696C825-CB09-1030-8D66-5107380A00F7"/>
-                </ns:filters>
+                </filters>
                 <!--<ns:includeColumnsList>sampleid;subjectid;sampletype;samplesubtype;samplesource;processdate;concentration;concentration_units;quantity;quantity_units;comment</ns:includeColumnsList>-->
-            </ns:table>
-        </ns:tables>
+            </table>
+        </tables>
     </metadata>
 </templateSchema>
