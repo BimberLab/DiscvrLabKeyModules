@@ -1,0 +1,33 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="central_supply_trans_master" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="csplytmPk"/>
+                    <column columnName="centralSupplyMasterOrigin"/>
+                    <column columnName="centralSupplyCreateDate"/>
+                    <column columnName="periodEndingDate"/>
+                    <column columnName="dafisFinCoaCd"/>
+                    <column columnName="dafisAccountNbr"/>
+                    <column columnName="dafisSubAcctNbr"/>
+                    <column columnName="dafisProjectCd"/>
+                    <column columnName="dafisObjOverride"/>
+                    <column columnName="serviceCode"/>
+                    <column columnName="rcCode"/>
+                    <column columnName="requisitionNum"/>
+                    <column columnName="saleDate"/>
+                    <column columnName="closeDate"/>
+                    <column columnName="purchasedBy"/>
+                    <column columnName="chargeId"/>
+                    <column columnName="accountId"/>
+                    <column columnName="billingMethodCode"/>
+                    <column columnName="clientPoNum"/>
+                    <column columnName="totalChargeAmt"/>
+                    <column columnName="clientPoNumber"/>
+                    <column columnName="requisitionNumSuffix"/>
+                    <column columnName="objectId"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

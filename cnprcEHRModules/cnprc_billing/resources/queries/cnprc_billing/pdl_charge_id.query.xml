@@ -1,0 +1,17 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="pdl_charge_id" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="pdlPk"/>
+                    <column columnName="pdlScFk"/>
+                    <column columnName="chargeId"/>
+                    <column columnName="isActive"/>
+                    <column columnName="sortOrder"/>
+                    <column columnName="pdlComment"/>
+                    <column columnName="objectid"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

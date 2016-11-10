@@ -1162,5 +1162,99 @@
             <column columnName="Container"/>
         </columns>
     </table>
+    <table tableName="central_supply_line_item" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="csplyliPk"/>
+            <column columnName="csplytmFk"/>
+            <column columnName="requisitionNum"/>
+            <column columnName="serviceCode"/>
+            <column columnName="rcCode"/>
+            <column columnName="lineNum"/>
+            <column columnName="itemSku"/>
+            <column columnName="description"/>
+            <column columnName="costCode"/>
+            <column columnName="itemQty"/>
+            <column columnName="unitOfMeasure"/>
+            <column columnName="itemCost"/>
+            <column columnName="chargeAmt"/>
+            <column columnName="overrideValidationError"/>
+            <column columnName="overrideValidationErrorUser"/>
+            <column columnName="requisitionNumSuffix"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="central_supply_trans_master" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="csplytmPk"/>
+            <column columnName="centralSupplyMasterOrigin"/>
+            <column columnName="centralSupplyCreateDate"/>
+            <column columnName="periodEndingDate"/>
+            <column columnName="dafisFinCoaCd"/>
+            <column columnName="dafisAccountNbr"/>
+            <column columnName="dafisSubAcctNbr"/>
+            <column columnName="dafisProjectCd"/>
+            <column columnName="dafisObjOverride"/>
+            <column columnName="serviceCode"/>
+            <column columnName="rcCode"/>
+            <column columnName="requisitionNum"/>
+            <column columnName="saleDate"/>
+            <column columnName="closeDate"/>
+            <column columnName="purchasedBy"/>
+            <column columnName="chargeId"/>
+            <column columnName="accountId"/>
+            <column columnName="billingMethodCode"/>
+            <column columnName="clientPoNum"/>
+            <column columnName="totalChargeAmt"/>
+            <column columnName="clientPoNumber"/>
+            <column columnName="requisitionNumSuffix"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="pdl_billing_summary" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="pdlPk"/>
+            <column columnName="soFk"/>
+            <column columnName="ssFk"/>
+            <column columnName="chargeItem"/>
+            <column columnName="chargeQty"/>
+            <column columnName="creationDate"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="pdl_charge_id" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="pdlPk"/>
+            <column columnName="pdlScFk"/>
+            <column columnName="chargeId"/>
+            <column columnName="isActive"/>
+            <column columnName="sortOrder"/>
+            <column columnName="comments"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
 
 </tables>

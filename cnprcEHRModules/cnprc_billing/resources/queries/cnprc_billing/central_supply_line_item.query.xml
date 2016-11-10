@@ -1,0 +1,27 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="central_supply_line_item" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="csplyliPk"/>
+                    <column columnName="csplytmFk"/>
+                    <column columnName="requisitionNum"/>
+                    <column columnName="serviceCode"/>
+                    <column columnName="rcCode"/>
+                    <column columnName="lineNum"/>
+                    <column columnName="itemSku"/>
+                    <column columnName="description"/>
+                    <column columnName="costCode"/>
+                    <column columnName="itemQty"/>
+                    <column columnName="unitOfMeasure"/>
+                    <column columnName="itemCost"/>
+                    <column columnName="chargeAmt"/>
+                    <column columnName="overrideValidationError"/>
+                    <column columnName="overrideValidationErrorUser"/>
+                    <column columnName="requisitionNumSuffix"/>
+                    <column columnName="objectId"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

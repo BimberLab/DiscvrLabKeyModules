@@ -2783,6 +2783,8 @@ cnprcEHRModules/cnprc_billing/resources/etls/account.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/billing_control.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/billing_cost_code.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/billing_fiscal.xml -text
+cnprcEHRModules/cnprc_billing/resources/etls/central_supply_line_item.xml -text
+cnprcEHRModules/cnprc_billing/resources/etls/central_supply_trans_master.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/core_service_basic_components.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/core_service_billing_master.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/core_service_costing.xml -text
@@ -2796,6 +2798,8 @@ cnprcEHRModules/cnprc_billing/resources/etls/grant_person_effort.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/grant_project_period.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/grant_year.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/org_resource_title.xml -text
+cnprcEHRModules/cnprc_billing/resources/etls/pdl_billing_summary.xml -text
+cnprcEHRModules/cnprc_billing/resources/etls/pdl_charge_id.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/perdiem.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/perdiem_month.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/perdiem_rate_names.xml -text
@@ -2847,6 +2851,8 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_work_order.sq
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_account_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_billing_control_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_billing_cost_code_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_central_supply_line_item_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_central_supply_trans_master_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_core_service_basic_components_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_core_service_billing_master_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_core_service_costing_delete.sql -text
@@ -2858,6 +2864,8 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_grant_cha
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_grant_person_effort_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_grant_project_period_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_grant_year_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_pdl_billing_summary_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_pdl_charge_id_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_perdiem_rates_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_resource_center_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_resource_item_costing_delete.sql -text
@@ -2879,6 +2887,8 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_wo_recipi
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_wo_template_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_work_order_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_billing_fiscal.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_central_supply_line_item.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_central_supply_trans_master.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_core_service_basic_components.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_core_service_billing_master.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_core_service_costing.sql -text
@@ -2895,10 +2905,14 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_perdiem.s
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_perdiem_month.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_perdiem_rate_names.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_perdiem_rates.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_srl/q_pdl_billing_summary.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_srl/q_pdl_charge_id.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/account.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/billing_control.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/billing_cost_code.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/billing_fiscal.query.xml -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/central_supply_line_item.query.xml -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/central_supply_trans_master.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/core_service_basic_components.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/core_service_billing_master.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/core_service_costing.query.xml -text
@@ -2912,6 +2926,8 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/grant_person_effor
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/grant_project_period.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/grant_year.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/org_resource_title.query.xml -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/pdl_billing_summary.query.xml -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/pdl_charge_id.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/perdiem.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/perdiem_month.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/perdiem_rate_names.query.xml -text
@@ -2946,6 +2962,7 @@ cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billin
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.33-16.34.sql -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.34-16.35.sql -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.35-16.36.sql -text
+cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.36-16.37.sql -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingController.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingModule.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingSchema.java -text

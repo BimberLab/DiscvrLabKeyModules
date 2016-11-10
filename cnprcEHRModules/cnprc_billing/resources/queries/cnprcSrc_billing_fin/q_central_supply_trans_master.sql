@@ -1,0 +1,27 @@
+SELECT
+CSPLYTM_PK AS csplytmPk,
+CENTRAL_SUPPLY_MASTER_ORIGIN AS centralSupplyMasterOrigin,
+CENTRAL_SUPPLY_CREATE_DATE AS centralSupplyCreateDate,
+PERIOD_ENDING_DATE AS periodEndingDate,
+DAFIS_FIN_COA_CD AS dafisFinCoaCd,
+DAFIS_ACCOUNT_NBR AS dafisAccountNbr,
+DAFIS_SUB_ACCT_NBR AS dafisSubAcctNbr,
+DAFIS_PROJECT_CD AS dafisProjectCd,
+DAFIS_OBJ_OVERRIDE AS dafisObjOverride,
+SERVICE_CODE AS serviceCode,
+RC_CODE AS rcCode,
+REQUISITION_NUM AS requisitionNum,
+SALE_DATE AS saleDate,
+CLOSE_DATE AS closeDate,
+PURCHASED_BY AS purchasedBy,
+CHARGE_ID AS chargeId,
+ACCOUNT_ID AS accountId,
+BILLING_METHOD_CODE AS billingMethodCode,
+CLIENT_PO_NUM AS clientPoNum,
+TOTAL_CHARGE_AMT AS totalChargeAmt,
+CLIENT_PO_NUMBER AS clientPoNumber,
+REQUISITION_NUM_SUFFIX AS requisitionNumSuffix,
+OBJECTID AS objectId,
+DATE_TIME
+FROM
+cnprcSrc_billing_fin.CENTRAL_SUPPLY_TRANS_MASTER;

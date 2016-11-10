@@ -1,0 +1,11 @@
+SELECT
+SBS_PK AS pdlPk,
+SBS_SO_FK AS soFk,
+SBS_SS_FK AS ssFk,
+SBS_CHARGE_ITEM AS chargeItem,
+SBS_CHARGE_QTY AS chargeQty,
+SBS_CREATION_DATE AS creationDate,
+OBJECTID AS objectid,
+DATE_TIME
+FROM
+cnprcSrc_billing_srl.SRL_BILLING_SUMMARY;

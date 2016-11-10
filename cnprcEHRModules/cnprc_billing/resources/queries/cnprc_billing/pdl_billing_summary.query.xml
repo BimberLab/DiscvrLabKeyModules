@@ -1,0 +1,17 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="pdl_billing_summary" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="pdlPk"/>
+                    <column columnName="soFk"/>
+                    <column columnName="ssFk"/>
+                    <column columnName="chargeItem"/>
+                    <column columnName="chargeQty"/>
+                    <column columnName="creationDate"/>
+                    <column columnName="objectid"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>
