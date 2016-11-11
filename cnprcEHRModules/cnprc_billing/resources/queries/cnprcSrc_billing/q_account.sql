@@ -111,3 +111,4 @@ ACCT_ID                                  AS  ACCT_ID
 ,Objectid
 ,Date_time
 FROM cnprcSrc_billing.ZACCOUNT
+WHERE ACCT_BEGIN_DATE > to_date('01-01-1900', 'DD-MM-YYYY');
