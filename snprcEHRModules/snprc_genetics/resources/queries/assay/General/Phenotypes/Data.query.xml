@@ -13,7 +13,6 @@
                     </column>
                     <column columnName="BLEED_DATE">
                         <datatype>timestamp</datatype>
-                        <formatString>yyyy-MM-dd</formatString>
                     </column>
                     <column columnName="ageAtTimeQuery" wrappedColumnName="RowId">
                         <columnTitle>Age At Time</columnTitle>
