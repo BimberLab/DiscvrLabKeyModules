@@ -29,7 +29,7 @@ public class DCMFinanceNotification extends FinanceNotification
     @Override
     public String getEmailSubject(Container c)
     {
-        return "DCM Finance/Billing Alerts: " + _dateTimeFormat.format(new Date());
+        return "DCM Finance/Billing Alerts: " + getDateTimeFormat(c).format(new Date());
     }
 
     @Override
@@ -45,10 +45,10 @@ public class DCMFinanceNotification extends FinanceNotification
     }
 
     @Override
-    protected void writeResultTable(final StringBuilder msg, Date lastInvoiceEnd, Calendar start, Calendar endDate, final Map<String, Map<String, Map<String, Map<String, Integer>>>> dataMap, final Map<String, Map<String, Double>> totalsByCategory, Map<String, String> categoryToQuery, Map<String, Container> containerMap)
+    protected void writeResultTable(final StringBuilder msg, Date lastInvoiceEnd, Calendar start, Calendar endDate, final Map<String, Map<String, Map<String, Map<String, Integer>>>> dataMap, final Map<String, Map<String, Double>> totalsByCategory, Map<String, String> categoryToQuery, Map<String, Container> containerMap, Container c)
     {
         msg.append("<b>Charge Summary:</b><p>");
-        msg.append("The table below summarizes projected charges since the since the last invoice date of " + _dateFormat.format(lastInvoiceEnd));
+        msg.append("The table below summarizes projected charges since the since the last invoice date of " + getDateFormat(c).format(lastInvoiceEnd));
 
         msg.append("<table border=1 style='border-collapse: collapse;'><tr style='font-weight: bold;'><td>Category</td><td># Items</td><td>Amount</td>");
         for (String category : totalsByCategory.keySet())
@@ -56,7 +56,7 @@ public class DCMFinanceNotification extends FinanceNotification
             Map<String, Double> totalsMap = totalsByCategory.get(category);
             Container container = containerMap.get(category);
 
-            String url = getExecuteQueryUrl(container, ONPRC_BillingSchema.NAME, categoryToQuery.get(category), null) + "&query.param.StartDate=" + _dateFormat.format(start.getTime()) + "&query.param.EndDate=" + _dateFormat.format(endDate.getTime());
+            String url = getExecuteQueryUrl(container, ONPRC_BillingSchema.NAME, categoryToQuery.get(category), null) + "&query.param.StartDate=" + getDateFormat(c).format(start.getTime()) + "&query.param.EndDate=" + getDateFormat(c).format(endDate.getTime());
             msg.append("<tr><td><a href='" + url + "'>" + category + "</a></td><td>" + totalsMap.get("total") + "</td><td>" + _dollarFormat.format(totalsMap.get("totalCost")) + "</td></tr>");
         }
         msg.append("</table><br><br>");
@@ -139,7 +139,7 @@ public class DCMFinanceNotification extends FinanceNotification
             {
                 Map<String, Integer> totals = dataByCategory.get(category);
 
-                String baseUrl = getExecuteQueryUrl(containerMap.get(category), ONPRC_BillingSchema.NAME, categoryToQuery.get(category), null) + "&query.param.StartDate=" + _dateFormat.format(start.getTime()) + "&query.param.EndDate=" + _dateFormat.format(endDate.getTime());
+                String baseUrl = getExecuteQueryUrl(containerMap.get(category), ONPRC_BillingSchema.NAME, categoryToQuery.get(category), null) + "&query.param.StartDate=" + getDateFormat(c).format(start.getTime()) + "&query.param.EndDate=" + getDateFormat(c).format(endDate.getTime());
                 String projUrl = baseUrl + ("None".equals(tokens[0]) ? "&query.project/displayName~isblank" : "&query.project/displayName~eq=" + tokens[0]);
                 msg.append("<tr><td><a href='" + projUrl + "'>" + tokens[0] + "</a></td>");
 

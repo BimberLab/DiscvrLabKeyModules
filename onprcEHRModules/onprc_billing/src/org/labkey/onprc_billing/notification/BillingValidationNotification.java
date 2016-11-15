@@ -5,21 +5,17 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
 import org.labkey.api.ehr.EHRService;
-import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.onprc_billing.ONPRC_BillingManager;
-import org.labkey.onprc_billing.ONPRC_BillingModule;
 import org.labkey.onprc_billing.ONPRC_BillingSchema;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
 
@@ -40,7 +36,7 @@ public class BillingValidationNotification extends FinanceNotification
     @Override
     public String getEmailSubject(Container c)
     {
-        return "Billing Validation: " + _dateTimeFormat.format(new Date());
+        return "Billing Validation: " + getDateTimeFormat(c).format(new Date());
     }
 
     @Override
@@ -67,7 +63,7 @@ public class BillingValidationNotification extends FinanceNotification
         StringBuilder msg = new StringBuilder();
 
         Date now = new Date();
-        msg.append(getDescription() + "  It was run on: " + _dateFormat.format(now) + " at " + _timeFormat.format(now) + ".<p>");
+        msg.append(getDescription() + "  It was run on: " + getDateFormat(c).format(now) + " at " + _timeFormat.format(now) + ".<p>");
 
         Container financeContainer = ONPRC_BillingManager.get().getBillingContainer(c);
         if (financeContainer == null)
@@ -137,8 +133,8 @@ public class BillingValidationNotification extends FinanceNotification
         {
             msg.append("<b>Warning: there are " + count + " " + label + " items expected, but not present in invoiced items.</b><p>");
             String url = getExecuteQueryUrl(financeContainer, "onprc_billing", queryName1, null);
-            url += "&query.param.StartDate=" + _dateFormat.format(startDate);
-            url += "&query.param.EndDate=" + _dateFormat.format(enddate);
+            url += "&query.param.StartDate=" + getDateFormat(financeContainer).format(startDate);
+            url += "&query.param.EndDate=" + getDateFormat(financeContainer).format(enddate);
             url += "&query.param.NumDays=" + numDays.intValue();
             url += "&query.sort=-date,Id";
 
@@ -159,8 +155,8 @@ public class BillingValidationNotification extends FinanceNotification
         {
             msg.append("<b>Warning: there are " + count2 + " " + label + " items present in invoiced items, but not expected.</b><p>");
             String url = getExecuteQueryUrl(financeContainer, "onprc_billing", queryName2, null);
-            url += "&query.param.StartDate=" + _dateFormat.format(startDate);
-            url += "&query.param.EndDate=" + _dateFormat.format(enddate);
+            url += "&query.param.StartDate=" + getDateFormat(financeContainer).format(startDate);
+            url += "&query.param.EndDate=" + getDateFormat(financeContainer).format(enddate);
             url += "&query.param.NumDays=" + numDays.intValue();
             url += "&query.sort=-date,Id";
 

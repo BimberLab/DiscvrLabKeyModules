@@ -17,7 +17,6 @@ package org.labkey.onprc_billing.notification;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.json.JSONObject;
 import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
@@ -27,13 +26,11 @@ import org.labkey.api.data.ResultsImpl;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.Sort;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.ehr.EHRService;
 import org.labkey.api.ldk.notification.AbstractNotification;
-import org.labkey.api.ldk.notification.Notification;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryDefinition;
@@ -41,8 +38,6 @@ import org.labkey.api.query.QueryException;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.Pair;
 import org.labkey.onprc_billing.ONPRC_BillingManager;
 import org.labkey.onprc_billing.ONPRC_BillingModule;
 import org.labkey.onprc_billing.ONPRC_BillingSchema;
@@ -52,7 +47,6 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -93,7 +87,7 @@ public class FinanceNotification extends AbstractNotification
     @Override
     public String getEmailSubject(Container c)
     {
-        return "Finance/Billing Alerts: " + _dateTimeFormat.format(new Date());
+        return "Finance/Billing Alerts: " + getDateTimeFormat(c).format(new Date());
     }
 
     @Override
@@ -120,7 +114,7 @@ public class FinanceNotification extends AbstractNotification
         StringBuilder msg = new StringBuilder();
 
         Date now = new Date();
-        msg.append(getDescription() + "  It was run on: " + _dateFormat.format(now) + " at " + _timeFormat.format(now) + ".<p>");
+        msg.append(getDescription() + "  It was run on: " + getDateFormat(c).format(now) + " at " + _timeFormat.format(now) + ".<p>");
 
         Container financeContainer = ONPRC_BillingManager.get().getBillingContainer(c);
         if (financeContainer == null)
@@ -184,7 +178,7 @@ public class FinanceNotification extends AbstractNotification
         simpleAlert(financeContainer, u , msg, "onprc_billing", "duplicateAliases", " duplicate aliases in the OGA data.  This is a potentially serious problem that could result in improper or duplicate charges.  These should be corrected ASAP, which probably requires contacting OGA to fix the data on their side.");
         simpleAlert(ehrContainer, u , msg, "onprc_billing", "invalidProjectAccountEntries", " project/alias records with invalid or overlapping intervals.  This is a potentially serious problem that could result in improper or duplicate charges.  These should be corrected ASAP.");
 
-        writeResultTable(msg, lastInvoiceDate, start, endDate, dataMap, totalsByCategory, categoryToQuery, containerMap);
+        writeResultTable(msg, lastInvoiceDate, start, endDate, dataMap, totalsByCategory, categoryToQuery, containerMap, c);
 
         getInvalidProjectAliases(ehrContainer, u , msg);
         getExpiredAliases(ehrContainer, u , msg);
@@ -413,10 +407,10 @@ public class FinanceNotification extends AbstractNotification
         });
     }
 
-    protected void writeResultTable(final StringBuilder msg, Date lastInvoiceEnd, Calendar start, Calendar endDate, final Map<String, Map<String, Map<String, Map<String, Integer>>>> dataMap, final Map<String, Map<String, Double>> totalsByCategory, Map<String, String> categoryToQuery, Map<String, Container> containerMap)
+    protected void writeResultTable(final StringBuilder msg, Date lastInvoiceEnd, Calendar start, Calendar endDate, final Map<String, Map<String, Map<String, Map<String, Integer>>>> dataMap, final Map<String, Map<String, Double>> totalsByCategory, Map<String, String> categoryToQuery, Map<String, Container> containerMap, Container c)
     {
         msg.append("<b>Charge Summary:</b><p>");
-        msg.append("The table below summarizes projected charges since the since the last invoice date of " + _dateFormat.format(lastInvoiceEnd));
+        msg.append("The table below summarizes projected charges since the since the last invoice date of " + getDateFormat(c).format(lastInvoiceEnd));
 
         msg.append("<table border=1 style='border-collapse: collapse;'><tr style='font-weight: bold;'><td>Category</td><td># Items</td><td>Amount</td>");
         for (String category : totalsByCategory.keySet())
@@ -424,7 +418,7 @@ public class FinanceNotification extends AbstractNotification
             Map<String, Double> totalsMap = totalsByCategory.get(category);
             Container container = containerMap.get(category);
 
-            String url = getExecuteQueryUrl(container, ONPRC_BillingSchema.NAME, categoryToQuery.get(category), null) + "&query.param.StartDate=" + _dateFormat.format(start.getTime()) + "&query.param.EndDate=" + _dateFormat.format(endDate.getTime());
+            String url = getExecuteQueryUrl(container, ONPRC_BillingSchema.NAME, categoryToQuery.get(category), null) + "&query.param.StartDate=" + getDateFormat(c).format(start.getTime()) + "&query.param.EndDate=" + getDateFormat(c).format(endDate.getTime());
             msg.append("<tr><td><a href='" + url + "'>" + category + "</a></td><td>" + totalsMap.get("total") + "</td><td>" + _dollarFormat.format(totalsMap.get("totalCost")) + "</td></tr>");
         }
         msg.append("</table><br><br>");
@@ -468,7 +462,7 @@ public class FinanceNotification extends AbstractNotification
                 {
                     Map<String, Integer> totals = dataByCategory.get(category);
 
-                    String baseUrl = getExecuteQueryUrl(containerMap.get(category), ONPRC_BillingSchema.NAME, categoryToQuery.get(category), null) + "&query.param.StartDate=" + _dateFormat.format(start.getTime()) + "&query.param.EndDate=" + _dateFormat.format(endDate.getTime());
+                    String baseUrl = getExecuteQueryUrl(containerMap.get(category), ONPRC_BillingSchema.NAME, categoryToQuery.get(category), null) + "&query.param.StartDate=" + getDateFormat(c).format(start.getTime()) + "&query.param.EndDate=" + getDateFormat(c).format(endDate.getTime());
                     String projUrl = baseUrl + ("None".equals(tokens[1]) ? "&query.project/displayName~isblank" : "&query.project/displayName~eq=" + tokens[1]);
                     msg.append("<tr><td>" + financialAnalyst + "</td>");    //the FA
                     msg.append("<td><a href='" + projUrl + "'>" + tokens[1] + "</a></td>");
@@ -537,8 +531,8 @@ public class FinanceNotification extends AbstractNotification
             {
                 msg.append("Note: there are " + count + " surgeries that have been performed, but will not be billed.  This is not necessarily a problem; however, if there is a procedure listed that one would expect to be charge then the procedure fee structure should be inspected.<p>");
                 String url = getExecuteQueryUrl(c, "onprc_billing", "proceduresNotBilled", null);
-                url += "&query.param.StartDate=" + _dateFormat.format(start.getTime());
-                url += "&query.param.EndDate=" + _dateFormat.format(endDate.getTime());
+                url += "&query.param.StartDate=" + getDateFormat(c).format(start.getTime());
+                url += "&query.param.EndDate=" + getDateFormat(c).format(endDate.getTime());
 
                 msg.append("<a href='" + url + "'>Click here to view them</a>");
                 msg.append("<hr>");
@@ -564,7 +558,7 @@ public class FinanceNotification extends AbstractNotification
             {
                 msg.append("<b>Warning: there are " + count + " active charge items missing either a default rate or a default credit alias.  This may cause problems with the billing calculation.</b><p>");
                 String url = getExecuteQueryUrl(c, "onprc_billing", "chargesMissingRate", null);
-                url += "&query.param.Date=" + _dateFormat.format(new Date());
+                url += "&query.param.Date=" + getDateFormat(c).format(new Date());
 
                 msg.append("<a href='" + url + "'>Click here to view them</a>");
                 msg.append("<hr>");

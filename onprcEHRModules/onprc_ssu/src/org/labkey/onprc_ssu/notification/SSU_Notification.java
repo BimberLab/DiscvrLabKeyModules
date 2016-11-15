@@ -11,30 +11,22 @@ import org.labkey.api.data.Sort;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.ehr.EHRService;
-import org.labkey.api.gwt.client.util.StringUtils;
 import org.labkey.api.ldk.notification.AbstractNotification;
 import org.labkey.api.module.Module;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.QueryDefinition;
-import org.labkey.api.query.QueryException;
 import org.labkey.api.query.QueryService;
-import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.ResultSetUtil;
 import org.labkey.onprc_ssu.ONPRC_SSUSchema;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +53,7 @@ public class SSU_Notification extends AbstractNotification
     @Override
     public String getEmailSubject(Container c)
     {
-        return "SSU Alerts: " + _dateTimeFormat.format(new Date());
+        return "SSU Alerts: " + getDateTimeFormat(c).format(new Date());
     }
 
     @Override
@@ -126,7 +118,7 @@ public class SSU_Notification extends AbstractNotification
         long count = ts.getRowCount();
         if (count > 0)
         {
-            msg.append("<b>WARNING: There are " + count + " procedures with a date prior to: " + _dateTimeFormat.format(date) + " that have not been finalized, excluding those under review.  This may indicate inproper dates in those surgeries, or cancelled surgeries that should be removed.</b><br>");
+            msg.append("<b>WARNING: There are " + count + " procedures with a date prior to: " + getDateTimeFormat(ehrContainer).format(date) + " that have not been finalized, excluding those under review.  This may indicate inproper dates in those surgeries, or cancelled surgeries that should be removed.</b><br>");
             msg.append("<p><a href='" + getExecuteQueryUrl(ehrContainer, "study", "encounters", "Surgeries", filter) + "'>Click here to view them</a><br>\n");
             msg.append("<hr>\n");
         }
@@ -243,7 +235,7 @@ public class SSU_Notification extends AbstractNotification
 
                     rows.append("<tr>");
                     rows.append("<td><a href='" + ret + "'>").append(safeAppend(rs, "Id", "No Id")).append("</a></td>");
-                    String formattedDate = rs.getObject(FieldKey.fromString("date")) == null ? "No Date" : _dateFormat.format(rs.getDate(FieldKey.fromString("date")));
+                    String formattedDate = rs.getObject(FieldKey.fromString("date")) == null ? "No Date" : getDateFormat(ehrContainer).format(rs.getDate(FieldKey.fromString("date")));
                     rows.append("<td>").append(formattedDate).append("</td>");
                     rows.append("<td>").append(safeAppend(rs, "procedureid/name", "No Procedure")).append("</td>");
                     rows.append("<td>").append(safeAppend(rs, "chargetype", "None")).append("</td>");
@@ -314,7 +306,7 @@ public class SSU_Notification extends AbstractNotification
                 public void exec(ResultSet rs) throws SQLException
                 {
 
-                    msg.append("<tr><td>" + rs.getString("Id") + "</td><td>" + (rs.getDate("date") == null ? "" : _dateFormat.format(rs.getDate("date"))) + "</td><td>" + (rs.getDate("enddate") == null ? "" : _dateFormat.format(rs.getDate("enddate"))) + "</td><td>" + (rs.getString("remark") == null ? "" : rs.getString("remark")) + "</td></tr>");
+                    msg.append("<tr><td>" + rs.getString("Id") + "</td><td>" + (rs.getDate("date") == null ? "" : getDateFormat(ehrContainer).format(rs.getDate("date"))) + "</td><td>" + (rs.getDate("enddate") == null ? "" : getDateFormat(ehrContainer).format(rs.getDate("enddate"))) + "</td><td>" + (rs.getString("remark") == null ? "" : rs.getString("remark")) + "</td></tr>");
                 }
             });
 
@@ -388,7 +380,7 @@ public class SSU_Notification extends AbstractNotification
 
                     msg.append("<tr>");
                     msg.append("<td><a href='" + ret + "'>").append(safeAppend(rs, "Id", "No Id")).append("</a></td>");
-                    String formattedDate = rs.getObject(FieldKey.fromString("date")) == null ? "No Date" : _dateFormat.format(rs.getDate(FieldKey.fromString("date")));
+                    String formattedDate = rs.getObject(FieldKey.fromString("date")) == null ? "No Date" : getDateFormat(c).format(rs.getDate(FieldKey.fromString("date")));
                     msg.append("<td>").append(formattedDate).append("</td>");
                     msg.append("<td>").append(safeAppend(rs, "procedureid/name", "No Procedure")).append("</td>");
                     msg.append("<td>").append(safeAppend(rs, "project/displayName", "No Project")).append("</td>");
