@@ -13,6 +13,7 @@
                     </column>
                     <column columnName="BLEED_DATE">
                         <datatype>timestamp</datatype>
+                        <formatString>Date</formatString>
                     </column>
                     <column columnName="ageAtTimeQuery" wrappedColumnName="RowId">
                         <columnTitle>Age At Time</columnTitle>
