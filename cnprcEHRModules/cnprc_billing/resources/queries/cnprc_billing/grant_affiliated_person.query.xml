@@ -1,0 +1,50 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="grant_affiliated_person" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Person_id"/>
+                    <column columnName="Last_name"/>
+                    <column columnName="First_name"/>
+                    <column columnName="Middle_initial"/>
+                    <column columnName="Pref_first_name"/>
+                    <column columnName="Name_prefix"/>
+                    <column columnName="Name_suffix"/>
+                    <column columnName="Ucd_emp_id"/>
+                    <column columnName="Ucd_stu_id"/>
+                    <column columnName="Degree_list"/>
+                    <column columnName="Title"/>
+                    <column columnName="Bus_addr_company"/>
+                    <column columnName="Bus_addr_division"/>
+                    <column columnName="Bus_addr_street"/>
+                    <column columnName="Bus_addr_city"/>
+                    <column columnName="Bus_addr_state_abbrev"/>
+                    <column columnName="Bus_addr_zip_code"/>
+                    <column columnName="Bus_addr_country"/>
+                    <column columnName="Bus_phone"/>
+                    <column columnName="Bus_fax"/>
+                    <column columnName="Bus_email"/>
+                    <column columnName="Inst_iid"/>
+                    <column columnName="Caff_code"/>
+                    <column columnName="Caff_research_unit"/>
+                    <column columnName="Caff_nonres_unit"/>
+                    <column columnName="Caff_start_date"/>
+                    <column columnName="Inst_school"/>
+                    <column columnName="Inst_dept_mailcode"/>
+                    <column columnName="Inst_start_date"/>
+                    <column columnName="Caff_sponsor_pid"/>
+                    <column columnName="Handle"/>
+                    <column columnName="Ucd_school"/>
+                    <column columnName="Ucd_dept"/>
+                    <column columnName="Inst_name_temp"/>
+                    <column columnName="Active_yn"/>
+                    <column columnName="Objectid"/>
+                    <column columnName="Created"/>
+                    <column columnName="CreatedBy"/>
+                    <column columnName="Modified"/>
+                    <column columnName="ModifiedBy"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -2793,6 +2793,7 @@ cnprcEHRModules/cnprc_billing/resources/etls/core_service_rate_component.xml -te
 cnprcEHRModules/cnprc_billing/resources/etls/core_service_rate_item.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/cost_code.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/eom_transaction_detail.xml -text
+cnprcEHRModules/cnprc_billing/resources/etls/grant_affiliated_person.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/grant_charge.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/grant_person_effort.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/grant_project_period.xml -text
@@ -2861,6 +2862,7 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_core_serv
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_core_service_rate_item_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_cost_code_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_eom_transaction_detail_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_grant_affiliated_person_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_grant_charge_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_grant_person_effort_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_grant_project_period_delete.sql -text
@@ -2897,6 +2899,7 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_core_serv
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_core_service_rate_component.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_core_service_rate_item.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_eom_transaction_detail.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_grant_affiliated_person.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_grant_charge.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_grant_person_effort.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_fin/q_grant_project_period.sql -text
@@ -2922,6 +2925,7 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/core_service_rate_
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/core_service_rate_item.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/cost_code.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/eom_transaction_detail.query.xml -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/grant_affiliated_person.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/grant_charge.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/grant_person_effort.query.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprc_billing/grant_project_period.query.xml -text
@@ -2964,6 +2968,7 @@ cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billin
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.34-16.35.sql -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.35-16.36.sql -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.36-16.37.sql -text
+cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-16.37-16.38.sql -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingController.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingModule.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingSchema.java -text
