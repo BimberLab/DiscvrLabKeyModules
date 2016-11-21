@@ -1317,4 +1317,23 @@
             <column columnName="Container"/>
         </columns>
     </table>
+    <table tableName="eom_report_log" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="report_log_sequence"/>
+            <column columnName="report_log_line_number"/>
+            <column columnName="procedure_datetime"/>
+            <column columnName="username"/>
+            <column columnName="procedure_name"/>
+            <column columnName="period_ending_date"/>
+            <column columnName="report_message_type"/>
+            <column columnName="report_message_text"/>
+            <column columnName="objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+</table>
 </tables>
