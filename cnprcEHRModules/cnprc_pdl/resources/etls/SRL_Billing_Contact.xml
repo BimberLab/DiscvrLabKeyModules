@@ -11,6 +11,7 @@
         </transform>
     </transforms>
     <schedule>
-        <poll interval="60m" />
+        <!-- run at 1 am every Monday -->
+        <cron expression="0 0 1 ? * MON *"/> <!--seconds, minutes, hours, day-of-month, month, day-of-week, year(optional) -->
     </schedule>
 </etl>
