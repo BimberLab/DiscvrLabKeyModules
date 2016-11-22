@@ -16,6 +16,7 @@
     </transforms>
     <incrementalFilter className="ModifiedSinceFilterStrategy" timestampColumnName="date_time"/>
     <schedule>
-        <poll interval="60m"/>
+        <!-- run at 1 am everyday -->
+        <cron expression="0 0 1 * * ? *"/> <!--seconds, minutes, hours, day-of-month, month, day-of-week, year(optional) -->
     </schedule>
 </etl>

@@ -19,6 +19,7 @@
                            deletedSourceKeyColumnName="objectid" targetKeyColumnName="objectid"/>
     </incrementalFilter>
     <schedule>
-        <poll interval="60m"/>
+        <!-- run on 1st day of the Month at 1 am -->
+        <cron expression="0 0 1 1 1/1 ? *"/> <!--seconds, minutes, hours, day-of-month, month, day-of-week, year(optional) -->
     </schedule>
 </etl>
