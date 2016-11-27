@@ -16,6 +16,7 @@ DISCVR/CancerStudies/src/org/labkey/cancerstudies/CancerStudiesManager.java -tex
 DISCVR/CancerStudies/src/org/labkey/cancerstudies/CancerStudiesModule.java -text
 DISCVR/CancerStudies/src/org/labkey/cancerstudies/CancerStudiesSchema.java -text
 DISCVR/blast/BLAST.iml -text
+DISCVR/blast/build.gradle -text
 DISCVR/blast/module.properties -text
 DISCVR/blast/resources/schemas/blast.xml -text
 DISCVR/blast/resources/schemas/dbscripts/postgresql/blast-13.30-13.31.sql -text
@@ -65,6 +66,7 @@ DISCVR/blast/src/org/labkey/blast/view/jobDetails.jsp -text
 DISCVR/blast/tools/install_blast.sh -text
 DISCVR/blast/webapp/WEB-INF/blast/blastContext.xml -text
 DISCVR/galaxyintegration/GalaxyIntegration.iml -text
+DISCVR/galaxyintegration/build.gradle -text
 DISCVR/galaxyintegration/lib/blend4j-0.2.0.jar -text
 DISCVR/galaxyintegration/lib/jackson-core-asl-1.9.13.jar -text
 DISCVR/galaxyintegration/lib/jackson-jaxrs-1.9.13.jar -text
@@ -94,6 +96,7 @@ DISCVR/htcondorconnector/HTCondorConnector-API.iml -text
 DISCVR/htcondorconnector/HTCondorConnector.iml -text
 DISCVR/htcondorconnector/api-src/org/labkey/api/htcondorconnector/HTCondorJobResourceAllocator.java -text
 DISCVR/htcondorconnector/api-src/org/labkey/api/htcondorconnector/HTCondorService.java -text
+DISCVR/htcondorconnector/build.gradle -text
 DISCVR/htcondorconnector/module.properties -text
 DISCVR/htcondorconnector/resources/schemas/dbscripts/postgresql/htcondorconnector-15.20-15.21.sql -text
 DISCVR/htcondorconnector/resources/schemas/dbscripts/postgresql/htcondorconnector-15.21-15.22.sql -text
@@ -116,6 +119,7 @@ DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/pipeline/HTCondorExecu
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/pipeline/HTCondorExecutionEngineConfig.java -text
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/pipeline/HTCondorJob.java -text
 DISCVR/jbrowse/JBrowse.iml -text
+DISCVR/jbrowse/build.gradle -text
 DISCVR/jbrowse/module.properties -text
 DISCVR/jbrowse/resources/queries/jbrowse/database_members/.qview.xml -text
 DISCVR/jbrowse/resources/queries/jbrowse/databases.js -text
@@ -2685,6 +2689,7 @@ DISCVR/jbrowse/src/org/labkey/jbrowse/view/browser.jsp -text
 DISCVR/jbrowse/tools/jbrowse_install.sh -text
 DISCVR/jbrowse/webapp/WEB-INF/jbrowse/jbrowseContext.xml -text
 DISCVR/omerointegration/OmeroIntegration.iml -text
+DISCVR/omerointegration/build.gradle -text
 DISCVR/omerointegration/lib/omero_client.jar -text
 DISCVR/omerointegration/module.properties -text
 DISCVR/omerointegration/resources/credits/jars.txt -text
@@ -2704,6 +2709,7 @@ DISCVR/omerointegration/src/org/labkey/omerointegration/OmeroServer.java -text
 DISCVR/omerointegration/test/src/org/labkey/test/pages/omerointegration/BeginPage.java -text
 DISCVR/omerointegration/test/src/org/labkey/test/tests/omerointegration/omeroIntegrationTest.java -text
 DISCVR/omerointegration/test/test_omerointegration.iml -text
+DISCVR/su2c/build.gradle -text
 DISCVR/su2c/module.properties -text
 DISCVR/su2c/resources/data/ldk-lookup_sets.tsv -text
 DISCVR/su2c/resources/data/lookups-differentiation.tsv -text
@@ -2777,6 +2783,7 @@ DISCVR/su2c/src/org/labkey/su2c/Su2cModule.java -text
 DISCVR/su2c/src/org/labkey/su2c/Su2cSchema.java -text
 DISCVR/su2c/su2c.iml -text
 DISCVR/su2c/tools/installLabKey.sh -text
+/build.gradle -text
 cnprcEHRModules/cnprc_billing/cnprc_billing.iml -text
 cnprcEHRModules/cnprc_billing/module.properties -text
 cnprcEHRModules/cnprc_billing/resources/etls/account.xml -text
@@ -3103,6 +3110,7 @@ labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/SelectVa
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/SimpleScriptWrapper.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/ToolPreferences.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/VariantFiltrationWrapper.java -text
+labModules/SequenceAnalysis/build.gradle -text
 labModules/SequenceAnalysis/lib/biojava3-alignment-3.0.7.jar -text
 labModules/SequenceAnalysis/lib/biojava3-core-3.0.7.jar -text
 labModules/SequenceAnalysis/lib/biojava3-genome-3.0.7.jar -text
@@ -3839,6 +3847,7 @@ labModules/laboratory/api-src/org/labkey/api/laboratory/assay/PivotingImportMeth
 labModules/laboratory/api-src/org/labkey/api/laboratory/assay/SimpleAssayDataProvider.java -text
 labModules/laboratory/api-src/org/labkey/api/laboratory/button/ChangeAssayResultStatusBtn.java -text
 labModules/laboratory/api-src/org/labkey/api/laboratory/security/LaboratoryAdminPermission.java -text
+labModules/laboratory/build.gradle -text
 labModules/laboratory/distributions/discvr.xml -text
 labModules/laboratory/distributions/discvr_modules.xml -text
 labModules/laboratory/module.properties -text
@@ -4112,6 +4121,7 @@ labModules/laboratory/src/org/labkey/laboratory/table/WrappingTableCustomizer.ja
 labModules/laboratory/src/org/labkey/laboratory/view/dataBrowser.jsp -text
 labModules/laboratory/src/org/labkey/laboratory/view/workbookHeader.jsp -text
 onprcEHRModules/GeneticsCore/GeneticsCore.iml -text
+onprcEHRModules/GeneticsCore/build.gradle -text
 onprcEHRModules/GeneticsCore/build.xml -text
 onprcEHRModules/GeneticsCore/distributions/prime-seq-modules.xml -text
 onprcEHRModules/GeneticsCore/module.properties -text
@@ -4181,6 +4191,7 @@ onprcEHRModules/GeneticsCore/tools/javaWrapper.sh -text
 onprcEHRModules/GeneticsCore/webapp/WEB-INF/geneticscoreContext.xml -text
 onprcEHRModules/README.txt -text
 onprcEHRModules/mergesync/MergeSync.iml -text
+onprcEHRModules/mergesync/build.gradle -text
 onprcEHRModules/mergesync/build.xml -text
 onprcEHRModules/mergesync/module.properties -text
 onprcEHRModules/mergesync/resources/module.xml -text
@@ -4226,6 +4237,7 @@ onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncSchema.java -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncTableCustomizer.java -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/MergeSyncUserSchema.java -text
 onprcEHRModules/mergesync/src/org/labkey/mergesync/RequestSyncHelper.java -text
+onprcEHRModules/ogasync/build.gradle -text
 onprcEHRModules/ogasync/build.xml -text
 onprcEHRModules/ogasync/module.properties -text
 onprcEHRModules/ogasync/ogaSync.iml -text
@@ -4243,6 +4255,7 @@ onprcEHRModules/ogasync/src/org/labkey/ogasync/OGASyncManager.java -text
 onprcEHRModules/ogasync/src/org/labkey/ogasync/OGASyncModule.java -text
 onprcEHRModules/ogasync/src/org/labkey/ogasync/OGASyncRunner.java -text
 onprcEHRModules/onprc_billing/ONPRC_Billing.iml -text
+onprcEHRModules/onprc_billing/build.gradle -text
 onprcEHRModules/onprc_billing/module.properties -text
 onprcEHRModules/onprc_billing/resources/module.xml -text
 onprcEHRModules/onprc_billing/resources/queries/ehr_lookups/bloodChargeType.sql -text
@@ -4543,6 +4556,7 @@ onprcEHRModules/onprc_billing/src/org/labkey/onprc_billing/table/ONPRC_BillingCu
 onprcEHRModules/onprc_billing/webapp/WEB-INF/onprc_billing/onprc_billingContext.xml -text
 onprcEHRModules/onprc_billingpublic/ONPRC_BillingPublic.iml -text
 onprcEHRModules/onprc_billingpublic/build.xml -text
+onprcEHRModules/onprc_billingpublic/gradle.properties -text
 onprcEHRModules/onprc_billingpublic/module.properties -text
 onprcEHRModules/onprc_billingpublic/resources/queries/onprc_billing_public/aliases.query.xml -text
 onprcEHRModules/onprc_billingpublic/resources/queries/onprc_billing_public/aliases/.qview.xml -text
@@ -4577,6 +4591,7 @@ onprcEHRModules/onprc_billingpublic/resources/views/begin.webpart.xml -text
 onprcEHRModules/onprc_billingpublic/src/org/labkey/onprc_billingpublic/ONPRC_BillingPublicController.java -text
 onprcEHRModules/onprc_billingpublic/src/org/labkey/onprc_billingpublic/ONPRC_BillingPublicModule.java -text
 onprcEHRModules/onprc_reports/ONPRC_Reports.iml -text
+onprcEHRModules/onprc_reports/build.gradle -text
 onprcEHRModules/onprc_reports/build.xml -text
 onprcEHRModules/onprc_reports/module.properties -text
 onprcEHRModules/onprc_reports/resources/queries/MHC_Data/MHC_Data_Pivoted/Common[!!-~]Alleles.qview.xml -text
@@ -4612,6 +4627,7 @@ onprcEHRModules/onprc_reports/src/org/labkey/onprc_reports/ONPRC_ReportsCustomiz
 onprcEHRModules/onprc_reports/src/org/labkey/onprc_reports/ONPRC_ReportsManager.java -text
 onprcEHRModules/onprc_reports/src/org/labkey/onprc_reports/ONPRC_ReportsModule.java -text
 onprcEHRModules/onprc_ssu/ONPRC_SSU.iml -text
+onprcEHRModules/onprc_ssu/build.gradle -text
 onprcEHRModules/onprc_ssu/module.properties -text
 onprcEHRModules/onprc_ssu/resources/queries/onprc_ssu/schedule.js -text
 onprcEHRModules/onprc_ssu/resources/queries/onprc_ssu/schedule/.qview.xml -text
@@ -4631,6 +4647,7 @@ onprcEHRModules/onprc_ssu/src/org/labkey/onprc_ssu/ONPRC_SSUModule.java -text
 onprcEHRModules/onprc_ssu/src/org/labkey/onprc_ssu/ONPRC_SSUSchema.java -text
 onprcEHRModules/onprc_ssu/src/org/labkey/onprc_ssu/notification/SSU_Notification.java -text
 onprcEHRModules/sla/SLA.iml -text
+onprcEHRModules/sla/build.gradle -text
 onprcEHRModules/sla/module.properties -text
 onprcEHRModules/sla/resources/etl/sla/census.sql -text
 onprcEHRModules/sla/resources/etl/sla/purchase.sql -text
@@ -4701,6 +4718,7 @@ snprcEHRModules/snprc_genetics/resources/queries/study/demographics/Genetics[!!-
 snprcEHRModules/snprc_genetics/src/org/labkey/snprc_genetics/SNPRC_GeneticsContainerListener.java -text
 snprcEHRModules/snprc_genetics/src/org/labkey/snprc_genetics/SNPRC_GeneticsController.java -text
 snprcEHRModules/snprc_genetics/src/org/labkey/snprc_genetics/SNPRC_GeneticsModule.java -text
+snprcEHRModules/snprc_r24/build.gradle -text
 snprcEHRModules/snprc_r24/build.xml -text
 snprcEHRModules/snprc_r24/module.properties -text
 snprcEHRModules/snprc_r24/resources/etls/SNPRC_demographics.xml -text
