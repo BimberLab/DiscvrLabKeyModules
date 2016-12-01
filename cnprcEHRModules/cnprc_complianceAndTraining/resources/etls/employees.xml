@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<etl xmlns="http://labkey.org/etl/xml">
+    <name>Employees</name>
+    <description>CNPRC Employees</description>
+    <transforms>
+        <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
+            <description>Copy to target</description>
+            <source schemaName="cnprcSrc_complianceAndTraining" queryName="q_employee_titles"/>
+            <destination schemaName="ehr_compliancedb" queryName="EmployeeTitles" bulkLoad="true" batchSize="500"
+                         targetOption="truncate">
+            </destination>
+        </transform>
+        <transform id="step2" type="org.labkey.di.pipeline.TransformTask">
+            <description>Copy to target</description>
+            <source schemaName="cnprcSrc_complianceAndTraining" queryName="q_employee_units"/>
+            <destination schemaName="ehr_compliancedb" queryName="unit_names" bulkLoad="true" batchSize="500"
+                         targetOption="truncate">
+            </destination>
+        </transform>
+        <transform id="step3" type="org.labkey.di.pipeline.TransformTask">
+            <description>Copy to target</description>
+            <source schemaName="cnprcSrc_complianceAndTraining" queryName="q_employee_locations"/>
+            <destination schemaName="ehr_compliancedb" queryName="EmployeeLocations" bulkLoad="true" batchSize="500"
+                         targetOption="truncate">
+            </destination>
+        </transform>
+        <transform id="step4" type="org.labkey.di.pipeline.TransformTask">
+            <description>Copy to target</description>
+            <source schemaName="cnprcSrc_complianceAndTraining" queryName="q_employees_additionalCols"/>
+            <destination schemaName="cnprc_complianceandtraining" queryName="employees" bulkLoad="true" batchSize="500"
+                         targetOption="truncate">
+            </destination>
+        </transform>
+        <transform id="step5" type="org.labkey.di.pipeline.TransformTask">
+            <description>Copy to target</description>
+            <source schemaName="cnprcSrc_complianceAndTraining" queryName="q_employees"/>
+            <destination schemaName="ehr_compliancedb" queryName="Employees" bulkLoad="true" batchSize="500"
+                         targetOption="truncate">
+            </destination>
+        </transform>
+    </transforms>
+    <schedule>
+        <!-- run at 1:30 am everyday -->
+        <cron expression="0 30 1 * * ? *"/> <!--seconds, minutes, hours, day-of-month, month, day-of-week, year(optional) -->
+    </schedule>
+</etl>
