@@ -12,7 +12,7 @@
         </transform>
     </transforms>
     <schedule>
-        <!-- run at 1:15 am everyday -->
-        <cron expression="0 15 1 * * ? *"/> <!--seconds, minutes, hours, day-of-month, month, day-of-week, year(optional) -->
+        <!-- run at 2:15 am everyday -->
+        <cron expression="0 15 2 * * ? *"/> <!--seconds, minutes, hours, day-of-month, month, day-of-week, year(optional) -->
     </schedule>
 </etl>
