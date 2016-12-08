@@ -1,0 +1,18 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="LastName"/>
+        <column name="FirstName"/>
+        <column name="middleName"/>
+        <column name="Title"/>
+        <column name="OfficePhone"/>
+        <column name="Email"/>
+        <column name="EndDate"/>
+        <column name="Unit"/>
+        <column name="Supervisor"/>
+        <column name="CellPhone"/>
+        <column name="Location"/>
+    </columns>
+    <sorts>
+        <sort column="LastName" descending="false"/>
+    </sorts>
+</customView>

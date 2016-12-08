@@ -1,0 +1,40 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="employees" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="employeeId"/>
+                    <column columnName="person_cnprc_pk">
+                        <fk>
+                            <fkDbSchema>ehr_compliancedb</fkDbSchema>
+                            <fkTable>employees</fkTable>
+                            <fkColumnName>EmployeeId</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="status"/>
+                    <column columnName="emp_stud"/>
+                    <column columnName="pager"/>
+                    <column columnName="departfk">
+                        <columnTitle>Department</columnTitle>
+                            <fk>
+                                <fkFolderPath>/CNPRC</fkFolderPath>
+                                <fkDbSchema>cnprc_ehr</fkDbSchema>
+                                <fkTable>department</fkTable>
+                                <fkColumnName>department_pk</fkColumnName>
+                                <fkDisplayColumnName>name</fkDisplayColumnName>
+                            </fk>
+                    </column>
+                    <column columnName="institution"/>
+                    <column columnName="sponsor">
+                        <fk>
+                            <fkDbSchema>ehr_compliancedb</fkDbSchema>
+                            <fkTable>employees</fkTable>
+                            <fkColumnName>EmployeeId</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="comments"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

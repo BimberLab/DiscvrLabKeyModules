@@ -36,4 +36,28 @@
             <column columnName="Container"/>
         </columns>
     </table>
+    <table tableName="position_skill_area" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="position"/>
+            <column columnName="skillRequired"/>
+            <column columnName="area"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
+    <table tableName="trainers" tableDbType="TABLE">
+        <columns>
+            <column columnName="rowid"/>
+            <column columnName="trainerName"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
 </tables>

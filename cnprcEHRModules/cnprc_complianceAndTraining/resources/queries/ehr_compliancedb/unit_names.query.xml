@@ -1,0 +1,19 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="unit_names" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Unit">
+                        <fk>
+                            <fkFolderPath>/CNPRC</fkFolderPath>
+                            <fkDbSchema>cnprc_ehr</fkDbSchema>
+                            <fkTable>center_unit</fkTable>
+                            <fkColumnName>center_unit_key</fkColumnName>
+                            <fkDisplayColumnName>center_unit_title</fkDisplayColumnName>
+                        </fk>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

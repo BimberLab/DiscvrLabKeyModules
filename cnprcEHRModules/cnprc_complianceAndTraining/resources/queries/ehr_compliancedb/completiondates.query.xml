@@ -1,0 +1,22 @@
+<query xmlns="http://labkey.org/data/xml/query">
+<metadata>
+    <tables xmlns="http://labkey.org/data/xml">
+        <table tableName="employees" tableDbType="TABLE" useColumnOrder="true">
+            <columns>
+                <column columnName="employeeid"/>
+                <column columnName="requirementname"/>
+                <column columnName="date"/>
+                <column columnName="result"/>
+                <column columnName="comment"/>
+                <column columnName="trainer">
+                    <fk>
+                        <fkDbSchema>cnprc_complianceAndTraining</fkDbSchema>
+                        <fkTable>trainers</fkTable>
+                        <fkColumnName>trainerName</fkColumnName>
+                    </fk>
+                </column>
+            </columns>
+        </table>
+    </tables>
+</metadata>
+</query>
