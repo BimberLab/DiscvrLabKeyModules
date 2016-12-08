@@ -1,3 +1,3 @@
-SELECT
+SELECT DISTINCT
 TTR_NAME AS trainerName
 FROM cnprcSrc_complianceAndTraining.ZTRAIN_TRAINERS;
