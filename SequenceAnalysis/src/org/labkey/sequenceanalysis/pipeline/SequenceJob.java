@@ -216,6 +216,12 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     }
 
     @Override
+    public String getBaseNameForFileType(FileType fileType)
+    {
+        return getBaseName();
+    }
+
+    @Override
     public File getDataDirectory()
     {
         return _webserverJobDir;
