@@ -6,11 +6,7 @@
         <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
             <description>Copy to target</description>
             <source schemaName="cnprcSrc_billing_fin" queryName="q_eom_report_log"/>
-            <destination schemaName="cnprc_billing" queryName="eom_report_log" bulkLoad="true" batchSize="5000" targetOption="truncate">
-                <alternateKeys>
-                    <column name="objectid"/>
-                </alternateKeys>
-            </destination>
+            <destination schemaName="cnprc_billing" queryName="eom_report_log" bulkLoad="true" batchSize="5000" targetOption="truncate"/>
         </transform>
     </transforms>
     <schedule>
