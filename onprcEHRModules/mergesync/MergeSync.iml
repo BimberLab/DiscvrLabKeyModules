@@ -11,6 +11,6 @@
     <orderEntry type="module" module-name="API" />
     <orderEntry type="module" module-name="Internal" />
     <orderEntry type="module" module-name="LDK-API" />
+    <orderEntry type="module" module-name="EHR-API" />
   </component>
 </module>
-
