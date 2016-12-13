@@ -3072,6 +3072,7 @@ cnprcEHRModules/cnprc_pdl/resources/schemas/dbscripts/cnprc_pdl.xml -text
 cnprcEHRModules/cnprc_pdl/resources/schemas/dbscripts/sqlserver/cnprc_pdl-16.20-16.21.sql -text
 cnprcEHRModules/cnprc_pdl/resources/schemas/dbscripts/sqlserver/cnprc_pdl-16.21-16.22.sql -text
 cnprcEHRModules/cnprc_pdl/resources/schemas/dbscripts/sqlserver/cnprc_pdl-16.22-16.23.sql -text
+cnprcEHRModules/cnprc_pdl/resources/schemas/dbscripts/sqlserver/cnprc_pdl-16.23-16.24.sql -text
 cnprcEHRModules/cnprc_pdl/src/org/labkey/cnprc_pdl/CNPRC_PDLContainerListener.java -text
 cnprcEHRModules/cnprc_pdl/src/org/labkey/cnprc_pdl/CNPRC_PDLController.java -text
 cnprcEHRModules/cnprc_pdl/src/org/labkey/cnprc_pdl/CNPRC_PDLModule.java -text
