@@ -19,7 +19,5 @@ ZP_BILLING_CLOSED AS billingClosed,
 ZP_CREATION_DATE AS creationDate,
 ZP_LOCATION_RATE_CLASS AS locationRateClass,
 ZP_AN_DAYS_OF_AGE AS animalDaysOfAge,
-ZP_RATE_TIER_CODE_FK AS rateRierCodeFk,
-OBJECTID AS objectId,
-DATE_TIME
+ZP_RATE_TIER_CODE_FK AS rateRierCodeFk
 FROM cnprcSrc_billing_fin.ZPERDIEM;
