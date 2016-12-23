@@ -54,10 +54,10 @@ import org.labkey.api.security.UserManager;
 import org.labkey.api.security.ValidEmail;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.study.DatasetTable;
-import org.labkey.api.study.StudyService;
 import org.labkey.api.util.ResultSetUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
+import org.labkey.api.view.ViewContext.StackResetter;
 import org.labkey.sla.SLAModule;
 import org.labkey.sla.SLASchema;
 
@@ -143,7 +143,7 @@ public class ETLRunnable implements Runnable
                 return;
             }
 
-            try (ViewContext.StackResetter resetter = ViewContext.pushMockViewContext(user, container, new ActionURL("sla", "fake.view", container)))
+            try (StackResetter ignored = ViewContext.pushMockViewContext(user, container, new ActionURL("sla", "fake.view", container)))
             {
                 log.info("Begin incremental sync from external datasource.");
 
@@ -154,7 +154,7 @@ public class ETLRunnable implements Runnable
                 {
                     long lastTs = getLastTimestamp(tableName);
                     byte[] lastRow = getLastVersion(tableName);
-                    String version = lastRow.equals(DEFAULT_VERSION) ? "never" : new String(Base64.encodeBase64(lastRow), "US-ASCII");
+                    String version = (lastRow == DEFAULT_VERSION ? "never" : new String(Base64.encodeBase64(lastRow), "US-ASCII"));
                     log.info(String.format("table sla.%s last synced %s", tableName, lastTs == 0 ? "never" : new Date(lastTs).toString()));
                     log.info(String.format("table sla.%s rowversion was %s", tableName, version));
                 }
