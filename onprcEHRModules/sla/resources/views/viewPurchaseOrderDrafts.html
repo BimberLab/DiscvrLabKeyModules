@@ -1,0 +1,89 @@
+<div id="order-saved-drafts"></div>
+
+<style>
+    .labkey-data-region td, .labkey-column-header {
+        padding: 3px !important;
+    }
+    .labkey-row-no-data {
+        font-style: italic;
+    }
+</style>
+
+<script type="text/javascript">
+    Ext4.onReady(function()
+    {
+        LABKEY.PurchaseOrderRemoveSavedDraft = function(rowid)
+        {
+            Ext4.Msg.confirm('Confirm Delete Saved Draft', 'Are you sure you want to delete the saved draft (Row ID: ' + rowid + ')?', function (btn)
+            {
+                if (btn == 'yes')
+                {
+                    LABKEY.Ajax.request({
+                        url: LABKEY.ActionURL.buildURL('sla', 'savePurchaseOrderDraft.api'),
+                        method : 'POST',
+                        jsonData: {
+                            rowid: rowid,
+                            toBeDeleted: true
+                        },
+                        scope: this,
+                        failure: LABKEY.Utils.getCallbackWrapper(function(response) {
+                            Ext4.Msg.alert('Error', response.exception);
+                        }),
+                        success: function(response)
+                        {
+                            window.location.reload();
+                        }
+                    });
+                }
+            });
+        };
+
+        LABKEY.Query.selectRows({
+            schemaName: 'sla_public',
+            queryName: 'SavedPurchaseOrderDrafts',
+            success: function(data)
+            {
+                var trCls = '',
+                    html = '<table class="labkey-data-region labkey-show-borders">'
+                    + '<tr><td class="labkey-column-header"></td>'
+                    + '<td class="labkey-column-header"></td>'
+                    + '<td class="labkey-column-header">Row ID</td>'
+                    + '<td class="labkey-column-header">Owner</td>'
+                    + '<td class="labkey-column-header">Created</td></tr>';
+
+                if (data.rows.length > 0)
+                {
+                    Ext4.each(data.rows, function (row)
+                    {
+                        var viewLink = LABKEY.Utils.textLink({
+                            text: 'view',
+                            href: LABKEY.ActionURL.buildURL('sla', 'createPurchaseOrder', null, {draftId: row.rowid})
+                        });
+
+                        var deleteLink = LABKEY.Utils.textLink({
+                            text: 'delete',
+                            onClick: 'LABKEY.PurchaseOrderRemoveSavedDraft(' + row.rowid + ');'
+                        });
+
+                        trCls = trCls.length == 0 ? 'labkey-alternate-row' : '';
+
+                        html += '<tr class="' + trCls + '">'
+                                + '<td>' + viewLink + '</td>'
+                                + '<td>' + deleteLink + '</td>'
+                                + '<td>' + row.rowid + '</td>'
+                                + '<td>' + row.owner + '</td>'
+                                + '<td>' + Ext4.util.Format.date(row.created, 'Y-m-d h:i:s') + '</td>'
+                                + '</tr>';
+                    });
+                }
+                else
+                {
+                    html += '<tr><td colspan="5" class="labkey-row-no-data">No data to show.</td></tr>';
+                }
+
+                html += '</table>';
+                Ext4.get('order-saved-drafts').update(html);
+            }
+        })
+    });
+</script>

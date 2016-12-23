@@ -17,6 +17,7 @@
 package org.labkey.sla;
 
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.dialect.SqlDialect;
 
 public class SLASchema
@@ -46,5 +47,30 @@ public class SLASchema
     public SqlDialect getSqlDialect()
     {
         return getSchema().getSqlDialect();
+    }
+
+    public TableInfo getTableInfoPurchase()
+    {
+        return getSchema().getTable("purchase");
+    }
+
+    public TableInfo getTableInfoPurchaseDetails()
+    {
+        return getSchema().getTable("purchasedetails");
+    }
+
+    public TableInfo getTableInfoPurchaseDrafts()
+    {
+        return getSchema().getTable("purchasedrafts");
+    }
+
+    public TableInfo getTableInfoRequestors()
+    {
+        return getSchema().getTable("requestors");
+    }
+
+    public TableInfo getTableInfoVendors()
+    {
+        return getSchema().getTable("vendors");
     }
 }

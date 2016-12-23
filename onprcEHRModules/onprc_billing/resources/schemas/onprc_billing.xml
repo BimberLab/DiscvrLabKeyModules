@@ -116,6 +116,14 @@
             <column columnName="created"/>
             <column columnName="modifiedBy"/>
             <column columnName="modified"/>
+            <column columnName="startDate">
+                <columnTitle>Start Date</columnTitle>
+            </column>
+            <column columnName="endDate">
+                <columnTitle>End Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
         </columns>
     </table>
     <table tableName="invoicedItems" tableDbType="TABLE" useColumnOrder="true">
@@ -312,6 +320,8 @@
             </column>
             <column columnName="startDate">
                 <columnTitle>Start Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
             </column>
             <column columnName="endDate">
                 <columnTitle>End Date</columnTitle>
@@ -556,6 +566,16 @@
             <column columnName="created"/>
             <column columnName="modifiedBy"/>
             <column columnName="modified"/>
+            <column columnName="startDate">
+                <columnTitle>Start Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
+            <column columnName="endDate">
+                <columnTitle>End Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
         </columns>
     </table>
     <table tableName="slaPerDiemFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
@@ -602,6 +622,16 @@
             <column columnName="created"/>
             <column columnName="modifiedBy"/>
             <column columnName="modified"/>
+            <column columnName="startDate">
+                <columnTitle>Start Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
+            <column columnName="endDate">
+                <columnTitle>End Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
         </columns>
     </table>
     <table tableName="invoiceRuns" tableDbType="TABLE" useColumnOrder="true">
@@ -721,6 +751,16 @@
             <column columnName="created"/>
             <column columnName="modifiedBy"/>
             <column columnName="modified"/>
+            <column columnName="startDate">
+                <columnTitle>Start Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
+            <column columnName="endDate">
+                <columnTitle>End Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
         </columns>
     </table>
     <table tableName="fiscalAuthorities" tableDbType="TABLE" useColumnOrder="true">
@@ -901,6 +941,16 @@
             <column columnName="created"/>
             <column columnName="modifiedBy"/>
             <column columnName="modified"/>
+            <column columnName="startDate">
+                <columnTitle>Start Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
+            <column columnName="endDate">
+                <columnTitle>End Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
         </columns>
     </table>
     <table tableName="medicationFeeDefinition" tableDbType="TABLE" useColumnOrder="true">
@@ -943,6 +993,16 @@
             <column columnName="created"/>
             <column columnName="modifiedBy"/>
             <column columnName="modified"/>
+            <column columnName="startDate">
+                <columnTitle>Start Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
+            <column columnName="endDate">
+                <columnTitle>End Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
         </columns>
     </table>
     <table tableName="projectAccountHistory" tableDbType="TABLE" useColumnOrder="true">
@@ -1195,6 +1255,16 @@
             <column columnName="active">
                 <columnTitle>Is Active?</columnTitle>
                 <defaultValue>true</defaultValue>
+            </column>
+            <column columnName="startDate">
+                <columnTitle>Start Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
+            </column>
+            <column columnName="endDate">
+                <columnTitle>End Date</columnTitle>
+                <nullable>false</nullable>
+                <formatString>yyyy-MM-dd</formatString>
             </column>
             <column columnName="objectid"/>
             <column columnName="createdBy"/>

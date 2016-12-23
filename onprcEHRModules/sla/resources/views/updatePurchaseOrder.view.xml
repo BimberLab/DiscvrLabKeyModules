@@ -1,0 +1,15 @@
+<!--
+    Used in conjunction with the updatePurchaseOrder.html file to load the
+    Ext4 library and other JavaScript dependencies and set the webpart title and frame.
+
+    The permissions setting ensures that any users with 'update' permission can see thie view/action.
+-->
+<view xmlns="http://labkey.org/data/xml/view" title="Update Purchase Order" frame="none">
+    <permissions>
+        <permission name="insert"/>
+    </permissions>
+    <dependencies>
+        <dependency path="Ext4" />
+        <dependency path="sla/purchaseOrder" />
+    </dependencies>
+</view>

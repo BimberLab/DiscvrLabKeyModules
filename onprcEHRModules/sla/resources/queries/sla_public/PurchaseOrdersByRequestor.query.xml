@@ -1,0 +1,25 @@
+<!-- Define metadata to be applied to the PurchaseOrdersByRequestor.sql query -->
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="PurchaseOrdersByRequestor" tableDbType="NOT_IN_DB">
+                <tableTitle>Check Purchase Orders By Requestor</tableTitle>
+                <columns>
+                    <column columnName="requestorid">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="numberoforders">
+                        <columnTitle>Total Number of Orders</columnTitle>
+                        <!--define a url to a filtered view of the PurchaseOrderDetails query for a given requestor-->
+                        <url>query/executeQuery.view?schemaName=sla_public&amp;query.queryName=PurchaseOrderDetails&amp;query.requestorid~eq=${requestorid}</url>
+                    </column>
+                    <column columnName="pendingorders">
+                        <columnTitle>Pending Orders</columnTitle>
+                        <!--define a url to a filtered view of the PurchaseOrderDetails query for a given requestor-->
+                        <url>query/executeQuery.view?schemaName=sla_public&amp;query.queryName=PurchaseOrderDetails&amp;query.requestorid~eq=${requestorid}&amp;query.confirmationnum~isblank=&amp;query.datecancelled~isblank=</url>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -1,0 +1,57 @@
+<!--
+    HTML content for the sla module's createPurchaseOrder action.
+-->
+<div id="purchaseOrderErrors"></div>
+<div id="purchaseOrderCreateForm"></div>
+
+<script type="text/javascript">
+    Ext4.onReady(function()
+    {
+        this.adminContainer = LABKEY.getModuleContext('sla').SLAPurchaseOrderAdminContainer;
+        if (this.adminContainer == null)
+        {
+            Ext4.get('purchaseOrderCreateForm').update('<span class="labkey-error">The sla module property "SLAPurchaseOrderAdminContainer" must be configured.</span>')
+            return;
+        }
+
+        var createOrderRequestForm = function(draftId, initData)
+        {
+            // create a new instance of the Ext component for displaying the create/update order form and species grid
+            // note: since no 'initData' property is passed in, this form will be initially empty (see updatePurchaseOrder.html)
+            Ext4.create('SLA.panel.PurchaseOrderRequest', {
+                renderTo: 'purchaseOrderCreateForm',
+                adminContainer: this.adminContainer,
+                isUpdate: false,
+                savedDraftId: draftId || null,
+                initData: initData || null
+            });
+        };
+
+        // if the user is viewing a saved draft, query the draft data and use if to initialize the
+        var draftId = LABKEY.ActionURL.getParameter('draftId');
+        if (Ext4.isNumeric(draftId))
+        {
+            Ext4.Ajax.request({
+                url: LABKEY.ActionURL.buildURL('sla', 'getPurchaseOrderDraft.api'),
+                method: 'POST',
+                jsonData: {rowid: draftId},
+                success: function (response) {
+                    var purchaseDraft = Ext4.JSON.decode(response.responseText);
+                    purchaseDraft.content = Ext4.JSON.decode(purchaseDraft.content);
+
+                    createOrderRequestForm(draftId, purchaseDraft.content);
+                },
+                failure: LABKEY.Utils.getCallbackWrapper(function (json, response, options) {
+                    var responseText = Ext4.JSON.decode(response.responseText);
+                    console.warn(responseText.exception);
+
+                    createOrderRequestForm();
+                })
+            });
+        }
+        else
+        {
+            createOrderRequestForm();
+        }
+    });
+</script>

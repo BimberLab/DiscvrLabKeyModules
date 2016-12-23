@@ -1,0 +1,11 @@
+<!--
+    Used in conjunction with the purchaseOrderDashboard.html file to load the
+    Ext4 JavaScript dependencies and set the webpart title.
+-->
+<view xmlns="http://labkey.org/data/xml/view" title="SLA Purchase Orders Dashboard">
+    <dependencies>
+        <dependency path="Ext4" />
+        <dependency path="sla/form/PurchaseOrder.css" />
+        <dependency path="sla/form/PurchaseOrderDashboard.js" />
+    </dependencies>
+</view>

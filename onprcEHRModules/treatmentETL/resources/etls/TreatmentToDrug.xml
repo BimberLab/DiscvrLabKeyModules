@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<etl xmlns="http://labkey.org/etl/xml">
+    <name>TreatmentToDrug</name>
+    <description>Transfers from the treatmentProcessing table in Study to the Drug table in Study</description>
+    <transforms>
+        <transform id="step1">
+            <description>Transfer to Drug Table</description>
+            <source queryName="treatmentToDrug" schemaName="study"/>
+            <destination schemaName="study" queryName="Drug"/>
+        </transform>
+    </transforms>
+
+</etl>
+

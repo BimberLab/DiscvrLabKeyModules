@@ -1,0 +1,10 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="rowid"/>
+        <column name="name"/>
+        <column name="phone1"/>
+        <column name="phone2"/>
+        <column name="fundingsourcerequired"/>
+        <column name="comments"/>
+    </columns>
+</customView>

@@ -1,0 +1,308 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8">
+   
+    <title>Simple Ext Demo</title>
+
+
+	<!--Ext and ux styles -->
+    <link href="/ExtScheduler/Sch/ONPRC/Schedule/resources/css/theme-classic-all.css" rel="stylesheet" type="text/css" />
+
+	<!--Example styles -->
+    <link href="/ExtScheduler/Sch/ONPRC/Schedule/resources/css/examples.css" rel="stylesheet" type="text/css" />
+
+    <!--Scheduler styles-->
+    <link href="/ExtScheduler/Sch/ONPRC/Schedule/resources/css/sch-all-debug.css" rel="stylesheet" type="text/css" />
+
+    <!--Ext JS includes-->
+    <script src="/ExtScheduler/Sch/ONPRC/Schedule/resources/extJs/ext-all-debug.js" type="text/javascript"></script>
+    <script src="/ExtScheduler/Sch/ONPRC/Schedule/resources/extJs/theme-classic.js" type="text/javascript"></script>
+
+    <!--Scheduler files-->
+    <script src="/ExtScheduler/Sch/ONPRC/Schedule/resources/extJs/sch-all-debug.js" type="text/javascript"></script>
+
+    <script src="/ExtScheduler/Sch/ONPRC/Schedule/resources/extJs/examples-shared.js" type="text/javascript"></script>
+
+    <title>Simple Editor Demo</title>
+  </head>
+  <body style="padding:20px">
+  <div id="Scheduler Header">
+    <p align="center"></p><h2><img src="/ExtScheduler/Sch/ONPRC/Schedule/NHP1.PNG" alt="ONPRC" style="width:50px;height:50px;">ONPRC Picker Lab Scheduling Tool</h2></p>
+  </div>
+  <div id="example-container"></div>
+
+<script type="text/javascript">
+Ext.onReady(function ()
+{
+	var resourceStoreData = null;
+	sm = Ext.create('Ext.selection.CheckboxModel')
+	var initResourceStore = function()
+	{
+		return Ext.create('Sch.data.ResourceStore', {
+			model   : 'Sch.model.Resource',
+			sorters : {
+				property  : 'Name',
+				direction : "ASC"
+			},
+			data: resourceStoreData
+		});
+
+	};
+
+	var eventStoreData = [
+//		{ ResourceId : '1', Name : 'Mike', StartDate : "2016-02-17 09:45", EndDate : "2016-02-17 11:00" },
+//		{ ResourceId : '2', Name : 'Linda', StartDate: "2016-02-17 13:00", EndDate : "2016-02-17 15:00" }
+	];
+	var initEventStore = function()
+	{
+		return Ext.create('Sch.data.EventStore', {
+			data : eventStoreData
+		});
+	};
+
+	var initScheduler = function()
+	{
+		var start = new Date();
+		var end  = new Date();
+		end.setDate(end.getDate()+7);
+		var scheduler = Ext.create("Sch.panel.SchedulerGrid", {
+			height            : ExampleDefaults.height,
+			width             : ExampleDefaults.width,
+			renderTo          : 'example-container',
+			title             : 'Picker Flow Scheduler ',
+			viewPreset        : 'hourAndDay',
+			startDate         : start,
+			//
+			endDate			  : end,
+			//endDate           : Date.add(new Date(startDate),Date.Day,7),
+			eventBarTextField : 'Name',
+
+			onEventCreated : function (ev) {
+				ev.set('Name', 'New booking');
+			},
+
+			// Setup static columns
+			columns        : [
+				{ text : '', width : 130, flex : 1, dataIndex : 'Name', sortable : true }
+			],
+
+			plugins        : new Sch.plugin.SimpleEditor({
+				dataIndex : 'Name',
+				field     : {
+					xtype         : 'textfield',
+					margin        : '-3 -3 0 0',
+					selectOnFocus : true
+				}
+			}),
+
+			selModel       : sm,
+
+			// Store holding all the resources
+			resourceStore  : initResourceStore(),
+
+			// Store holding all the events
+			eventStore     : initEventStore(),
+
+			rowHeight       : 35,
+			snapToIncrement : false,
+			barMargin       : 4,
+
+			tbar : [
+				{
+					text    : 'Previous day',
+					iconCls : 'icon-previous',
+
+					handler : function () {
+						scheduler.shiftPrevious();
+					}
+				},
+				{
+					text    : 'Next day',
+					iconCls : 'icon-next',
+
+					handler : function () {
+						scheduler.shiftNext();
+					}
+				},
+				{
+					text    : 'New booking...',
+					icon    : 'add.png',
+					handler : function () {
+						if (sm.selected.getCount() <= 0) {
+							Ext.Msg.alert('Error', 'You must select at a piece of equipment to book');
+							return;
+						}
+
+						if (!this.win) {
+							this.win = new Ext.Window({
+								height  : 200,
+								width   : 350,
+								title   : 'New booking...',
+								layout  : 'fit',
+								modal   : true,
+								items   : [
+									{
+										xtype     : 'form',
+										bodyStyle : 'padding:10px',
+										items     : [
+											{
+												xtype      : 'textfield',
+												fieldLabel : 'Name',
+												name       : 'name'
+											},
+											{
+												xtype      : 'fieldcontainer',
+												fieldLabel : 'Starts',
+												msgTarget  : 'side',
+												layout     : 'hbox',
+												defaults   : {
+													flex      : 1,
+													hideLabel : true
+												},
+												items      : [
+													{
+														xtype      : 'datefield',
+														name       : 'startDate',
+														margin     : '0 5 0 0',
+														value      : new Date(),
+
+														allowBlank : false
+													},
+													{
+														xtype      : 'timefield',
+														name       : 'startTime',
+														value      : '09:00',
+														allowBlank : false
+													}
+												]
+											},
+											{
+												xtype      : 'fieldcontainer',
+												fieldLabel : 'Ends',
+												msgTarget  : 'side',
+												layout     : 'hbox',
+												defaults   : {
+													flex      : 1,
+													hideLabel : true
+												},
+												items      : [
+													{
+														xtype      : 'datefield',
+														name       : 'endDate',
+														margin     : '0 5 0 0',
+														value      : new Date(),
+														allowBlank : false
+													},
+													{
+														xtype      : 'timefield',
+														name       : 'endTime',
+														value      : '11:00',
+														allowBlank : false
+													}
+												]
+											}
+										]
+									}
+								],
+								buttons : [
+									{
+										text    : 'Save',
+										scope   : this,
+										handler : function () {
+											var values = this.win.down('form').getForm().getValues();
+
+
+											sm.selected.each(function (resource) {
+												var newRow = {
+													StartDate  : Ext.Date.parseDate(values.startDate + values.startTime, 'm/d/Yg:i A'),
+													EndDate    : Ext.Date.parseDate(values.endDate + values.endTime, 'm/d/Yg:i A'),
+													Name       : values.name,
+													ResourceId : resource.get('Id')};
+												LABKEY.Query.insertRows({
+													schemaName: 'extscheduler',
+													queryName: 'events',
+													rows: [newRow],
+													success: function(){
+														scheduler.eventStore.add(new Sch.model.Event(newRow));
+
+
+													}
+
+
+												});
+
+												//console.log(scheduler.eventStore.getRange());
+											}, this);
+
+											this.win.hide();
+										}
+									},
+									{
+										text    : 'Cancel',
+								        scope   : this,
+										handler : function () {
+											this.win.hide();
+										}
+									}
+								]
+							});
+						}
+
+						this.win.show();
+					}
+				}
+			]
+		});
+	return scheduler;
+	};
+
+
+	var init = function()
+	{
+		LABKEY.Query.selectRows({
+			schemaName: 'extscheduler',
+			queryName: 'resources',
+			success: function(data)
+			{
+				resourceStoreData = data.rows;
+//take out this init Scheduler
+//				initScheduler();
+//
+				LABKEY.Query.selectRows({
+
+					schemaName: 'extscheduler',
+					queryName: 'events',
+					success: function(data){
+						Ext.each(data.rows,function(row){
+							row.StartDate=new Date(row.StartDate);
+							row.EndDate=new Date(row.EndDate);
+							console.log(row);
+
+
+
+						}
+
+
+
+
+						)
+
+
+						eventStoreData = data.rows;
+
+						initScheduler();
+					}
+				});
+			}
+		});
+	};
+
+    init();
+});
+
+
+</script>
+</body></html>
+
+
+

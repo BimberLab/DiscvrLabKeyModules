@@ -1,18 +1,3 @@
-/*
- * Copyright (c) 2013 LabKey Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 PARAMETERS(StartDate TIMESTAMP, EndDate TIMESTAMP)
 
 SELECT
@@ -28,14 +13,20 @@ a.releaseType,
 a.ageAtTime.AgeAtTimeYearsRounded as ageAtTime,
 'Lease Fees' as category,
 CASE
-  WHEN (a.duration <= CAST(javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.DAY_LEASE_MAX_DURATION') as INTEGER) AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.DAY_LEASE_NAME'))
-  WHEN a2.id IS NOT NULL THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.TMB_LEASE_NAME'))
+  WHEN (a.duration <= CAST(javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.DAY_LEASE_MAX_DURATION') as INTEGER) AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN (SELECT rowid FROM    onprc_billing_public.chargeableItems ci WHERE ci.active = true AND ci.name = javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.DAY_LEASE_NAME'))
+  WHEN a2.id IS NOT NULL THEN (SELECT rowid FROM onprc_billing_public.chargeableItems ci WHERE (ci.startDate <= a.date and ci.endDate >= a.date) AND ci.name = javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.TMB_LEASE_NAME'))
   ELSE lf.chargeId
 END as chargeId,
 --special case one-day lease rates.  note: if enddate is null, these cannot be a one-day lease
 CASE
+	  WHEN (Select Count(*) from study.birth b
+       left join "/ONPRC/EHR".study.assignment a1 on b.id = a.id and a.date = b.dateOnly and a.project.use_category in ('Center Resource','U42','U24')
+      left join "/ONPRC/EHR".study.assignment a2 on b.dam = a2.id and a2.project.use_category in ('Center Resource','U42','U24') and (a2.date <= b.dateOnly and a2.endDate >=b.dateOnly or a2.enddate is Null)
+        where b.id = a.id and a1.project.protocol = a2.project.protocol) > 0 THEN 0
   WHEN (a.duration = 0 AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN 1
   WHEN (fl.id Is Not Null) THEN 0
+--This will check for infants born to resource moms and will not charge
+
   WHEN (a.duration <= CAST(javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.DAY_LEASE_MAX_DURATION') as INTEGER) AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN a.duration
   ELSE 1
 END as quantity,
@@ -71,9 +62,10 @@ Left JOIN study.flags fl on
 	and (a.date >= fl.date and a.date <=COALESCE(fl.enddate,Now()) ))
 
 WHERE CAST(a.datefinalized AS DATE) >= CAST(STARTDATE as DATE) AND CAST(a.datefinalized AS DATE) <= CAST(ENDDATE as DATE)
-AND a.qcstate.publicdata = true
+AND a.qcstate.publicdata = true --and a.participantID.demographics.species.common not in ('Rabbit','Guinea Pigs')
 
---add setup fees for all starts, except day leases
+
+--add setup fees for all starts, except day leases aznd sla
 UNION ALL
 SELECT
   a.id,
@@ -103,6 +95,7 @@ WHERE CAST(a.datefinalized AS DATE) >= CAST(STARTDATE as DATE) AND CAST(a.datefi
 AND a.qcstate.publicdata = true
 --only charge setup fee for leases >24H.  note: duration assumes today as end, so exclude null enddates
 AND (a.duration > CAST(javaConstant('org.labkey.onprc_billing.ONPRC_BillingManager.DAY_LEASE_MAX_DURATION') as INTEGER) OR a.assignCondition != a.releaseCondition OR a.enddate IS NULL)
+and  a.id.demographics.species Not IN ('Rabbit','Guinea Pigs')
 
 --add released animals that need adjustments
 UNION ALL
@@ -145,6 +138,7 @@ LEFT JOIN onprc_billing.leaseFeeDefinition lf2
     AND lf2.releaseCondition = a.projectedReleaseCondition
     AND (a.ageAtTime.AgeAtTimeYearsRounded >= lf2.minAge OR lf2.minAge IS NULL)
     AND (a.ageAtTime.AgeAtTimeYearsRounded < lf2.maxAge OR lf2.maxAge IS NULL)
+    and (a.date >=lf2.startDate and a.date <= lf2.endDate)
   )
 
 --find overlapping TMB at date of assignment
@@ -165,4 +159,4 @@ Left JOIN study.flags fl on
 WHERE a.releaseCondition != a.projectedReleaseCondition
 AND a.enddatefinalized is not null AND CAST(a.enddatefinalized AS DATE) >= CAST(STARTDATE AS DATE) AND CAST(a.enddatefinalized AS DATE) <= CAST(EndDate as DATE)
 AND a.qcstate.publicdata = true AND lf.active = true
-AND a2.id IS NULL
+AND a2.id IS NULL and a.participantID not like '[a-z]%'

@@ -301,7 +301,7 @@ LEFT JOIN onprc_billing_public.projectMultipliers pm ON (
 )
 
 ) t
-
+where t.id.demographics.species Not IN ('Rabbit','Guinea Pig')
 UNION ALL
 
 --add misc charges

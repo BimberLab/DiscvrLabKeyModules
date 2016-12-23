@@ -1,0 +1,119 @@
+.app-header {
+    background   : transparent;
+    color        : #0072BB;
+    font-size    : 1.5em;
+    line-height  : 1.4;
+    padding-left : 10px !important;
+}
+
+.header-month {
+    font-weight  : 400;
+    margin-right : 5px;
+}
+
+.header-year {
+    font-weight : lighter;
+}
+
+
+
+
+.infopanel {
+    border-top : 1px solid #d0d0d0;,
+}
+
+.infopanel,
+.infopanel .x-panel-body,
+.infopanel .x-panel-header-default {
+    background : transparent;
+}
+
+.resources .x-panel-header-default {
+    padding-top    : 0;
+}
+
+.resources .x-form-cb-label {
+    cursor: pointer;
+}
+
+.infopanel .x-title-text {
+    color : #999;
+}
+
+
+
+.navigationbar {
+    background : #0072BB;
+}
+
+.navigationbar .x-btn {
+    background      : transparent !important;
+    border          : 0 none !important;
+}
+
+.navigationbar .x-title-text {
+    color        : #fff;
+    font-size    : 1.4em;
+    line-height  : 1.5;
+    padding-left : 5px;
+}
+
+
+.resources .x-form-cb-label {
+    color       : #404040 !important;
+    line-height : 25px;
+}
+
+.resources .x-form-checkbox {
+    color       : inherit;
+    font-family : FontAwesome !important;
+    font-size   : 25px;
+    height      : 25px;
+    width       : 25px;
+    cursor      : pointer;
+}
+
+.resources .x-form-checkbox-focus {
+    color: inherit !important;
+}
+
+.resources .x-form-checkbox:before {
+    content : "\f096";
+}
+
+.resources .x-form-cb-checked .x-form-checkbox:before {
+    content : "\f0c8";
+}
+
+.resources .x-form-item-body-default.x-form-checkboxgroup-body {
+    padding-left  : 0;
+    padding-right : 0;
+}
+
+
+
+.sch-event {
+    background-color : #fff !important;
+    color            : #777 !important;
+    border-left      : 7px solid #fff;
+}
+
+.sch-event.sch-event-selected,
+.sch-event.sch-event-hover {
+    color            : #222 !important;
+    background-color : #fff !important;
+    border-left      : 7px solid #fff;
+    box-shadow       : 1px 1px 10px rgba(0, 0, 0, 0.1);
+}
+
+.sch-event-inner {
+    padding   : 2px 4px;
+    font-size : 1.1em;
+}
+
+
+
+
+body.x-body {
+    background : #f5f5f5;
+}

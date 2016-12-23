@@ -29,7 +29,7 @@
             </column>
             <column columnName="investigatorid">
                 <columnTitle>Investigator</columnTitle>
-                <isHidden>true</isHidden>
+                <isHidden>false</isHidden>
                 <fk>
                     <fkFolderPath>/ONPRC/EHR</fkFolderPath>
                     <fkDbSchema>onprc_ehr</fkDbSchema>
@@ -40,9 +40,11 @@
             <column columnName="project" >
                 <fk>
                     <fkFolderPath>/ONPRC/EHR</fkFolderPath>
-                    <fkDbSchema>ehr</fkDbSchema>
-                    <fkTable>project</fkTable>
+                    <fkDbSchema>onprc_ehr</fkDbSchema>
+                    <fkTable>projectLabel</fkTable>
                     <fkColumnName>project</fkColumnName>
+                    <fkDisplayColumnName>projectname</fkDisplayColumnName>
+
                 </fk>
             </column>
             <column columnName="room" />
@@ -100,7 +102,7 @@
                 <isHidden>true</isHidden>
             </column>
             <column columnName="taskid" >
-                <isHidden>true</isHidden>
+                <isHidden>false</isHidden>
              </column>
         </columns>
     </table>
@@ -145,6 +147,8 @@
             <column columnName="dobrequired" />
             <column columnName="comments" />
             <column columnName="confirmationnum" />
+            <column columnName="darcomments" />
+            <column columnName="vendorcontact" />
             <column columnName="housingconfirmed" />
             <column columnName="iacucconfirmed" />
             <column columnName="requestdate" />
@@ -178,7 +182,7 @@
             <column columnName="gestation" />
             <column columnName="gender" />
             <column columnName="strain" />
-            <column columnName="cageid" />
+            <column columnName="room" />
             <column columnName="animalsordered" />
             <column columnName="animalsreceived" />
             <column columnName="boxesquantity" />
@@ -201,15 +205,32 @@
             <column columnName="modified" />
         </columns>
     </table>
+    <table tableName="purchaseDrafts" tableDbType="TABLE">
+        <tableTitle>SLA Purchase Order Saved Drafts</tableTitle>
+        <columns>
+            <column columnName="rowid" />
+            <column columnName="owner" />
+            <column columnName="content" />
+            <column columnName="container" />
+            <column columnName="createdby" />
+            <column columnName="created" />
+            <column columnName="modifiedby" />
+            <column columnName="modified" />
+        </columns>
+    </table>
     <table tableName="vendors" tableDbType="TABLE">
         <tableTitle>SLA Vendors</tableTitle>
         <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
         <columns>
-            <column columnName="rowid" />
+            <column columnName="rowid">
+                <columnTitle>Row Id</columnTitle>
+            </column>
             <column columnName="name" />
             <column columnName="phone1" />
             <column columnName="phone2" />
-            <column columnName="fundingsourcerequired" />
+            <column columnName="fundingsourcerequired">
+                <columnTitle>Funding Source Required</columnTitle>
+            </column>
             <column columnName="comments" />
 
             <column columnName="objectid" />
@@ -224,9 +245,15 @@
         <tableTitle>SLA Requestors</tableTitle>
         <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
         <columns>
-            <column columnName="rowid" />
-            <column columnName="lastname" />
-            <column columnName="firstname" />
+            <column columnName="rowid">
+                <columnTitle>Row Id</columnTitle>
+            </column>
+            <column columnName="lastname">
+                <columnTitle>Last Name</columnTitle>
+            </column>
+            <column columnName="firstname">
+                <columnTitle>First Name</columnTitle>
+            </column>
             <column columnName="initials" />
             <column columnName="phone" />
             <column columnName="email" />
@@ -398,43 +425,43 @@
             </column>
         </columns>
     </table>
-    <!--<table tableName="protocols" tableDbType="TABLE" useColumnOrder="true">-->
-        <!--<tableTitle>IACUC Protocols</tableTitle>-->
-        <!--<auditLogging>DETAILED</auditLogging>-->
-        <!--<columns>-->
-            <!--<column columnName="protocol">-->
-                <!--<columnTitle>IACUC Protocol</columnTitle>-->
-                <!--<isKeyField>true</isKeyField>-->
-            <!--</column>-->
-            <!--<column columnName="account">-->
-                <!--<columnTitle>Account</columnTitle>-->
-            <!--</column>-->
-            <!--<column columnName="grant">-->
-                <!--<columnTitle>Grant</columnTitle>-->
-            <!--</column>-->
-            <!--&lt;!&ndash;TODO additional IACUC realted fields expected&ndash;&gt;-->
-            <!--<column columnName="createdby">-->
-                <!--<isUserEditable>false</isUserEditable>-->
-                <!--<nullable>true</nullable>-->
-                <!--<isHidden>true</isHidden>-->
-            <!--</column>-->
-            <!--<column columnName="created">-->
-                <!--<isUserEditable>false</isUserEditable>-->
-                <!--<nullable>true</nullable>-->
-                <!--<isHidden>true</isHidden>-->
-            <!--</column>-->
-            <!--<column columnName="modifiedby">-->
-                <!--<isUserEditable>false</isUserEditable>-->
-                <!--<nullable>true</nullable>-->
-                <!--<isHidden>true</isHidden>-->
-            <!--</column>-->
-            <!--<column columnName="modified">-->
-                <!--<isUserEditable>false</isUserEditable>-->
-                <!--<nullable>true</nullable>-->
-                <!--<isHidden>true</isHidden>-->
-            <!--</column>-->
-        <!--</columns>-->
-    <!--</table>-->
+    <table tableName="protocols" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>IACUC Protocols</tableTitle>
+        <auditLogging>DETAILED</auditLogging>
+        <columns>
+            <column columnName="protocol">
+                <columnTitle>IACUC Protocol</columnTitle>
+                <isKeyField>true</isKeyField>
+            </column>
+            <column columnName="account">
+                <columnTitle>Account</columnTitle>
+            </column>
+            <column columnName="grant">
+                <columnTitle>Grant</columnTitle>
+            </column>
+            <!--TODO additional IACUC realted fields expected-->
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
     <table tableName="Reference_Data" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Reference_Data</tableTitle>
         <auditLogging>DETAILED</auditLogging>

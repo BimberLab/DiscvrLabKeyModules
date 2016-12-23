@@ -1,0 +1,32 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="ProtocolProjectsUsage" tableDbType="NOT_IN_DB">
+                <columns>
+                    <column columnName="ProjectID">
+                        <isKeyField>true</isKeyField>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="Species">
+                        <isKeyField>true</isKeyField>
+                    </column>
+                    <column columnName="Gender">
+                        <isKeyField>true</isKeyField>
+                    </column>
+                    <column columnName="IACUCProtocol">
+                        <columnTitle>IACUC Protocol</columnTitle>
+                    </column>
+                    <column columnName="PIName">
+                        <columnTitle>PI Name</columnTitle>
+                    </column>
+                    <column columnName="OGAProjectNumber">
+                        <columnTitle>OGA Project Number</columnTitle>
+                    </column>
+                    <column columnName="OGAGrantNumber">
+                        <columnTitle>OGA Grant Number</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

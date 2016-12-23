@@ -1,0 +1,12 @@
+<libraries xmlns="http://labkey.org/clientLibrary/xml/">
+    <library compileInProductionMode="false">
+        <script path="sla/form/PurchaseOrderUtil.js" />
+        <script path="sla/form/PurchaseOrderDetails.js" />
+        <script path="sla/form/ProtocolSelectionForm.js" />
+        <script path="sla/form/PurchaseOrderForm.js" />
+        <script path="sla/form/PurchaseSpeciesGrid.js" />
+        <script path="sla/form/PurchaseConfirmationForm.js" />
+        <script path="sla/form/CreatePurchaseOrder.js" />
+        <script path="sla/form/PurchaseOrder.css" />
+    </library>
+</libraries>

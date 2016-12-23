@@ -39,7 +39,7 @@ Ext4.define('SLA.window.AddCensusWindow', {
                     border: false,
                     width: 400
                 },
-                items: [{
+               /* items: [{
                     xtype: 'ehr-areafield',
                     multiSelect: false,
                     emptyText: '',
@@ -49,17 +49,20 @@ Ext4.define('SLA.window.AddCensusWindow', {
                     getRoomField: function(){
                         return this.up('form').down('#roomField')
                     }
-                },{
+                },{  */
+                    items: [{
                     xtype: 'ehr-roomfield',
                     multiSelect: true,
+                    addAllSelector: true,
+                    typeAhead: true,
                     emptyText: '',
-                    showOccupiedOnly: true,
+                   // showOccupiedOnly: true,
                     fieldLabel: 'Room(s)',
                     itemId: 'roomField',
                     getStoreFilterArray: function(){
                          var ret = [
                               LABKEY.Filter.create('datedisabled', null, LABKEY.Filter.Types.ISBLANK),
-                              LABKEY.Filter.create('housingType/value', 'Rodent Location', LABKEY.Filter.Types.EQUAL)
+                              LABKEY.Filter.create('housingType', 589, LABKEY.Filter.Types.EQUAL)
                               ];
                         return ret;
                      },

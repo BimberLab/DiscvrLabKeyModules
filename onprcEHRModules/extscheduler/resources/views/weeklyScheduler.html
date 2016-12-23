@@ -1,0 +1,97 @@
+<br/>
+<div id="launch-link"></div>
+<br/>
+<h3>Resources</h3>
+<div id="resources-qwp"></div>
+<br/>
+<h3>My Events</h3>
+<div id="events-radiogroup"></div>
+<div id="events-qwp"></div>
+
+<style>
+    #launch-link a.launch-button {
+        background-color: #eeeeee;
+        border-radius: 5px;
+        border: solid #c0c0c0 1px;
+        padding: 5px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    #launch-link a.launch-button:hover {
+        background-color: #c0c0c0;
+    }
+</style>
+
+<script type="text/javascript">
+    Ext4.onReady(function()
+    {
+        // verify that the module property ExtSchedulerUserGroupName has been configured
+        var userGroupName = LABKEY.getModuleContext('extscheduler').ExtSchedulerUserGroupName;
+        if (userGroupName == null)
+        {
+            var configureLink = LABKEY.ActionURL.buildURL('admin', 'folderManagement', null, {tabId: 'props'});
+            var msg = '<span class="labkey-error">ExtSchedulerUserGroupName has not been configured for this folder.</span> ';
+            if (LABKEY.user.isAdmin)
+                msg += LABKEY.Utils.textLink({text: 'Configure', href: configureLink});
+            Ext4.get('launch-link').update(msg);
+        }
+        else
+        {
+            var schedulerAppLink = LABKEY.ActionURL.buildURL('extscheduler', 'weeklyTest', null, {
+                returnUrl: window.location.pathname + window.location.search
+            });
+            Ext4.get('launch-link').update('<a class="launch-button" href="' + schedulerAppLink + '">Launch Scheduler</a>');
+        }
+
+        new LABKEY.QueryWebPart({
+            renderTo: 'resources-qwp',
+            frame: 'none',
+            schemaName: 'extscheduler',
+            queryName: 'Resources',
+            sort: 'Name'
+        });
+
+        var timeFrameFilter = null;
+        var renderEventsQueryWebPart = function()
+        {
+            var filters = [LABKEY.Filter.create('Owner', true, LABKEY.user.isAdmin ? LABKEY.Filter.Types.HAS_ANY_VALUE : LABKEY.Filter.Types.EQUALS)];
+            if (timeFrameFilter != null)
+                filters.push(timeFrameFilter);
+
+            new LABKEY.QueryWebPart({
+                renderTo: 'events-qwp',
+                frame: 'none',
+                schemaName: 'extscheduler',
+                queryName: 'Events',
+                filters: filters,
+                sort: 'StartDate,ResourceId,Name'
+            });
+        };
+
+        Ext4.create('Ext.form.RadioGroup', {
+            renderTo: 'events-radiogroup',
+            width: 250,
+            columns: 3,
+            items: [
+                {boxLabel: 'All', name: 'timeframe', inputValue: 'All', checked: true},
+                {boxLabel: 'Previous', name: 'timeframe', inputValue: 'Previous'},
+                {boxLabel: 'Upcoming', name: 'timeframe', inputValue: 'Upcoming'}
+            ],
+            listeners: {
+                change: function(radiogroup, newValue)
+                {
+                    if (newValue.timeframe == 'Previous')
+                        timeFrameFilter = LABKEY.Filter.create('StartDate', new Date(), LABKEY.Filter.Types.DATE_LESS_THAN);
+                    else if (newValue.timeframe == 'Upcoming')
+                        timeFrameFilter = LABKEY.Filter.create('StartDate', new Date(), LABKEY.Filter.Types.DATE_GREATER_THAN_OR_EQUAL);
+                    else
+                        timeFrameFilter = null;
+
+                    renderEventsQueryWebPart();
+                }
+            }
+        });
+
+        renderEventsQueryWebPart();
+    });
+</script>

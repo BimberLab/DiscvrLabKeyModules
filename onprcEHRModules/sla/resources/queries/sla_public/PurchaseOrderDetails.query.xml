@@ -1,0 +1,51 @@
+<!-- Define metadata to be applied to the PurchaseOrderDetails.sql query -->
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="PurchaseOrderDetails" tableDbType="NOT_IN_DB">
+                <tableTitle>Purchase Order Details</tableTitle>
+                <columns>
+                    <column columnName="reviewlink">
+                        <columnTitle></columnTitle>
+                        <url>${contextPath}/sla${containerPath}/updatePurchaseOrder.view?rowId=${rowid}</url>
+                    </column>
+                    <column columnName="printviewlink">
+                        <columnTitle></columnTitle>
+                        <url>${contextPath}/sla${containerPath}/reviewPurchaseOrder.view?rowId=${rowid}</url>
+                    </column>
+                    <column columnName="rowid">
+                        <columnTitle>Order Id</columnTitle>
+                    </column>
+                    <column columnName="projectname">
+                        <columnTitle>Project</columnTitle>
+                    </column>
+                    <column columnName="requestorid">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="requestdate">
+                        <columnTitle>Request Date</columnTitle>
+                    </column>
+                    <column columnName="confirmationnum">
+                        <columnTitle>Confirmation Number</columnTitle>
+                    </column>
+                    <column columnName="housingconfirmed">
+                        <columnTitle>Housing Confirmed</columnTitle>
+                    </column>
+                    <column columnName="orderdate">
+                        <columnTitle>Order Date</columnTitle>
+                    </column>
+                    <column columnName="datecancelled">
+                        <columnTitle>Date Cancelled</columnTitle>
+                    </column>
+                    <column columnName="receiveddate">
+                        <columnTitle>Received Date</columnTitle>
+                    </column>
+                    <column columnName="strain">
+                        <columnTitle>Strain or Stock Num</columnTitle>
+                    </column>
+
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -1,0 +1,11 @@
+<templateSchema sourceSchemaName="sla" xmlns="http://labkey.org/data/xml/externalSchema" xmlns:cv="http://labkey.org/data/xml/queryCustomView">
+    <tables>
+        <tableName>PlandProtocols</tableName>
+        <tableName>ProtocolProjectsUsage</tableName>
+        <tableName>PublicPurchase</tableName>
+        <tableName>PublicPurchaseDetails</tableName>
+        <tableName>SavedPurchaseOrderDrafts</tableName>
+        <tableName>requestors</tableName>
+        <tableName>vendors</tableName>
+    </tables>
+</templateSchema>

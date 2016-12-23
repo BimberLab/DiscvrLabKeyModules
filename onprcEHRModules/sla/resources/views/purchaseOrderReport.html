@@ -1,0 +1,41 @@
+<div id='purchase-order-report'></div>
+
+<script type="text/javascript">
+
+Ext4.onReady(function() {
+
+    var pageTitle = LABKEY.ActionURL.getParameter('pageTitle');
+    if (pageTitle)
+    {
+        LABKEY.NavTrail.setTrail(pageTitle);
+    }
+
+    var schemaName = LABKEY.ActionURL.getParameter('schemaName');
+    var queryName = LABKEY.ActionURL.getParameter('queryName');
+    var filterArray = LABKEY.Filter.getFiltersFromUrl(window.location.search, 'query');
+
+    if (schemaName && queryName)
+    {
+        var qwp = new LABKEY.QueryWebPart({
+            renderTo: 'purchase-order-report',
+            frame: 'none',
+            schemaName: schemaName,
+            queryName: queryName,
+            filters: filterArray,
+            buttonBar: {
+                items:[
+                    LABKEY.QueryWebPart.standardButtons.exportRows,
+                    LABKEY.QueryWebPart.standardButtons.print,
+                    LABKEY.QueryWebPart.standardButtons.pageSize
+                ]
+            }
+        });
+    }
+    else
+    {
+        Ext4.get('purchase-order-report').update('<span class="labkey-error">Report display requires schemaName and queryName parameters.</span>');
+    }
+
+});
+
+</script>

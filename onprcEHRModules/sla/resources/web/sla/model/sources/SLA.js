@@ -7,16 +7,7 @@
  * This is the default metadata applied to records in SLA forms
  */
 
-Ext4.define('SLA.form.field.RodentRoomField', {
-    extend: 'EHR.form.field.RoomField',
-    alias: 'widget.sla-rodentroomfield',
-
-    getStoreFilterArray : function() {
-        var ret = this.callParent();
-        ret.push(LABKEY.Filter.create('housingType/value', 'Rodent Location'));
-        return ret;
-    }
-});
+//Modified 3-5-2016  R. Blasa
 EHR.model.DataModelManager.registerMetadata('SLA', {
     allQueries: {
 
@@ -25,30 +16,62 @@ EHR.model.DataModelManager.registerMetadata('SLA', {
         'sla.census': {
             project: {
                 allowBlank: false,
-                xtype: 'ehr-projectfield'
-            },
-            date: {
+                xtype: 'onprc-projectfield' ,
+                columnConfig: {
+                    width: 250
+                }
 
             },
-                 /* Added 3-12-2015 Blasa */
-            room: {
-                xtype: 'sla-rodentroomfield',
+             species: {
+                allowBlank: false,
+                xtype: 'onprc_Species' ,
                 columnConfig: {
-                    width: 200
+                    width: 100
                 }
             },
-            cageSize: {
+            investigator: {
+                allowBlank: false,
                 columnConfig: {
-                    width: 200
+                    width: 100
+                }
+            },
+
+            cageSize: {
+                allowBlank: false,
+                xtype: 'onprc_CageSize' ,
+                columnConfig: {
+                    width: 150
                 }
             },
             cagetype: {
+                allowBlank: false,
+                xtype: 'onprc_CageType' ,
+                columnConfig: {
+                    width: 150
+                }
+            },
+            date: {
+                xtype: 'xdatetime',
+                editorConfig: {
+                    dateFormat: 'Y-m-d',
+                    timeFormat: 'H:i'
+                },
+
                 columnConfig: {
                     width: 200
                 }
-            }
+        },
 
-        }
+
+            /* Added 3-12-2015 Blasa */
+            room: {
+                xtype: 'onprc_Roomfield',
+                columnConfig: {
+                    width: 200
+                }
+            },
+
+         }
     }
 });
 

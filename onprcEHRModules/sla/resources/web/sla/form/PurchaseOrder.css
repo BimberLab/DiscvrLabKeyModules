@@ -1,0 +1,86 @@
+
+.order-dashboard-section {
+    display: inline-block;
+    padding: 0 20px 10px 0;
+    vertical-align: top;
+}
+
+.order-dashboard-header {
+    width: 310px;
+    padding: 7px;
+    background-color: #222222;
+    color: #ffffff;
+    font-weight: bold;
+    border-radius: 5px;
+}
+
+.order-dashboard-summary .order-dashboard-item a {
+    font-weight: bold;
+}
+
+.order-dashboard-item {
+    padding: 5px 0 0 5px;
+}
+
+.order-dashboard-projectdesc {
+    padding: 0 0 10px 5px;
+}
+
+.order-header {
+    width: 720px;
+    padding: 7px;
+    margin-bottom: 5px;
+    background-color: #222222;
+    color: #ffffff;
+    font-weight: bold;
+    border-radius: 5px;
+}
+
+.order-label {
+    display: inline-block;
+    vertical-align: top;
+    width: 175px;
+    padding: 2px;
+    font-weight: bold;
+    color: #303030;
+}
+
+.order-value {
+    display: inline-block;
+    padding: 2px;
+}
+
+.order-species {
+    width: 350px;
+    display: inline-block;
+    padding: 5px;
+    margin: 0 15px 15px 0;
+    background-color: #FFFFFF;
+    border: solid #C0C0C0 1px;
+    border-radius: 5px;
+}
+
+.order-field-details div {
+    padding: 0 0 10px 10px;
+    color: #777777 !important;
+}
+
+.order-grid-toolbar {
+    background-color: #ffffff;
+    background-image: none;
+    border-color: #b4b4b4;
+}
+
+.order-species-grid .x4-column-header-inner,
+.order-species-grid .x4-column-header-inner span {
+    white-space: normal !important;
+}
+
+/*Override standard Ext disabled opacity*/
+.x4-item-disabled .x4-form-item-label,
+.x4-item-disabled .x4-form-field,
+.x4-item-disabled .x4-form-display-field,
+.x4-item-disabled .x4-form-cb-label,
+.x4-item-disabled .x4-form-trigger {
+    opacity: 0.7;
+}

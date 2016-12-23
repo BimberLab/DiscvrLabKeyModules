@@ -1,0 +1,1 @@
+ALTER TABLE extscheduler.events ALTER COLUMN Name VARCHAR(255) NULL;

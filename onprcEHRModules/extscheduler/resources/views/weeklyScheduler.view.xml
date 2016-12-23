@@ -1,0 +1,5 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Scheduler">
+    <dependencies>
+        <dependency path="Ext4"/>
+    </dependencies>
+</view>

@@ -1,0 +1,8 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Purchase Order Report" frame="none">
+    <permissions>
+        <permission name="read"/>
+    </permissions>
+    <dependencies>
+        <dependency path="Ext4" />
+    </dependencies>
+</view>

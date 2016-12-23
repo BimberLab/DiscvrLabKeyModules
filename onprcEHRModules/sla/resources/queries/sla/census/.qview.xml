@@ -1,0 +1,10 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+ <sorts>
+  <sort column="date" descending="true"/>
+  <sort column="room" descending="true"/>
+ </sorts>
+ <filters>
+  <filter column="cageCount" operator="gt" value="0"/>
+ </filters>
+
+</customView>

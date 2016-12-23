@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\..\schemas\tableInfo.xsd"
+        xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <table tableName="resources" tableDbType="TABLE">
+        <titleColumn>Name</titleColumn>
+        <columns>
+            <column columnName="Id" />
+            <column columnName="Name" />
+            <column columnName="Color" />
+            <column columnName="Room" />
+            <column columnName="Bldg" />
+
+            <column columnName="Container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="CreatedBy">
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                </fk>
+            </column>
+            <column columnName="Created">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="ModifiedBy">
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                </fk>
+            </column>
+            <column columnName="Modified">
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+
+    <table tableName="events" tableDbType="TABLE">
+        <titleColumn>Name</titleColumn>
+        <columns>
+            <column columnName="Id" />
+            <column columnName="ResourceId">
+                <fk>
+                    <fkDbSchema>extscheduler</fkDbSchema>
+                    <fkTable>resources</fkTable>
+                    <fkColumnName>Id</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="Name" />
+            <column columnName="Alias" />
+            <column columnName="UserId">
+                <columnTitle>User</columnTitle>
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                </fk>
+            </column>
+            <column columnName="StartDate">
+                <columnTitle>Start Date/Time</columnTitle>
+                <formatString>yyyy-MM-dd HH:mm</formatString>
+            </column>
+            <column columnName="EndDate">
+                <columnTitle>End Date/Time</columnTitle>
+                <formatString>yyyy-MM-dd HH:mm</formatString>
+            </column>
+
+            <column columnName="Container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="CreatedBy">
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                </fk>
+            </column>
+            <column columnName="Created">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="ModifiedBy">
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                </fk>
+            </column>
+            <column columnName="Modified">
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+
+</tables>

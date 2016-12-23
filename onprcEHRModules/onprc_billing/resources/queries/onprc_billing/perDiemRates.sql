@@ -141,7 +141,7 @@ LEFT JOIN onprc_billing_public.projectMultipliers pm ON (
     (CAST(p.date AS DATE) <= pm.enddateCoalesced OR pm.enddate IS NULL) AND
     alias.alias = pm.account
 )
-
+Where p.id.demographics.species Not IN ('Rabbit','Guinea Pig')
 UNION ALL
 
 --add misc charges

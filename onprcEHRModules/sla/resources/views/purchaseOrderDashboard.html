@@ -1,0 +1,57 @@
+<!--
+    HTML content for the sla module's purchaseOrderDashbaord action/webpart.
+-->
+<div id="purchaseOrderDashboard"></div>
+<br/><br/>
+<div class="order-dashboard-section">
+    <div class="order-dashboard-header" style="width: 850px;">Authorized SLA Projects</div>
+</div>
+<div class="order-dashboard-projectdesc">
+    Below are the projects you are authorized to view. Check the box and click on the “Create New Order” button on the menu bar.
+    <br/>Note: If you believe there is an error in this list of projects, please use the help menu above to enter an issue.
+</div>
+<div id="protocolUsageGrid"></div>
+
+<script type="text/javascript">
+    Ext4.onReady(function()
+    {
+        Ext4.create('SLA.panel.PurchaseOrderDashboard', {
+            renderTo: 'purchaseOrderDashboard'
+        });
+
+        var qwp = new LABKEY.QueryWebPart({
+            renderTo: 'protocolUsageGrid',
+            timeout: 300000, // 5 minute timeout
+            dataRegionName: 'protocolUsage',
+            schemaName: 'sla_public',
+            queryName: 'ProtocolProjectsUsage',
+            sort: 'ProjectID,Species',
+            frame: 'none',
+            allowChooseView: false,
+            showRecordSelectors: true,
+            buttonBarPosition: 'top',
+            buttonBar: {
+                items:[
+                    {
+                        text: 'Create Purchase Order',
+                        requiresSelection: true,
+                        handler: function(dataRegion, dataRegionName)
+                        {
+                            var checked = dataRegion.getChecked();
+                            if (Ext4.isArray(checked) && checked.length > 0)
+                            {
+                                var keys = checked[0].split(',');
+                                window.location = LABKEY.ActionURL.buildURL('sla', 'createPurchaseOrder', null, {
+                                    projectId: keys[0], species: keys[1], gender: keys[2]
+                                });
+                            }
+                        }
+                    },
+                    LABKEY.QueryWebPart.standardButtons.exportRows,
+                    LABKEY.QueryWebPart.standardButtons.print,
+                    LABKEY.QueryWebPart.standardButtons.pageSize
+                ]
+            }
+        });
+    });
+</script>

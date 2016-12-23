@@ -1,0 +1,11 @@
+<module xmlns="http://labkey.org/moduleProperties/xml/">
+    <properties>
+        <propertyDescriptor name="ExtSchedulerUserGroupName">
+            <description>The group name to be used for the set of users to display in the Scheduler app UserId combobox for creating new events.</description>
+            <canSetPerContainer>true</canSetPerContainer>
+            <editPermissions>
+                <permission>ADMIN</permission>
+            </editPermissions>
+        </propertyDescriptor>
+    </properties>
+</module>

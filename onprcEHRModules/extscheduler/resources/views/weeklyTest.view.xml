@@ -1,0 +1,6 @@
+<view xmlns="http://labkey.org/data/xml/view" template="app" frame="none" title="Scheduler - Week View">
+    <dependencies>
+        <dependency path="clientapi_core"/>
+        <dependency path="extscheduler/css/weeklyview.css"/>
+    </dependencies>
+</view>

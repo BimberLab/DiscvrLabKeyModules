@@ -10,6 +10,8 @@ case rt.phonenumber
   else rt.phonenumber
 End) as phone,
 
+rt.emailaddress as Email,
+
 (SELECT max(userid) as userid FROM labkey.core.users u WHERE email =
 case max(rt.emailaddress)
   when  '' then max(sl.RequestorEmail)
@@ -20,7 +22,7 @@ max(CAST(rt.objectid as varchar(36))) as objectid
 
 From sla_purchase sl
 LEFT JOIN Ref_Technicians rt ON (rt.id = sl.RequestorID and rt.DeptCode = 8)
---and (rt.ts > ? OR sl.ts > ?)
+and (rt.ts > ? OR sl.ts > ?)
 
-GROUP BY rt.lastname, rt.firstname 
+GROUP BY rt.lastname, rt.firstname, rt.emailaddress
 having max(sl.ts) > ?

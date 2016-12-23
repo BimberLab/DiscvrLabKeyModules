@@ -1,0 +1,10 @@
+<!--
+    Defining the webpart.xml file adds a webpart to the sla module that will display
+    the contents of the purchaseOrderDashboard.html file.
+-->
+<webpart xmlns="http://labkey.org/data/xml/webpart" title="SLA Purchase Orders Dashboard">
+    <view name="purchaseOrderDashboard"/>
+    <locations>
+        <location name="body"/>
+    </locations>
+</webpart>

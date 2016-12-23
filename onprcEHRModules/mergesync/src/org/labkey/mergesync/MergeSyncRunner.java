@@ -171,7 +171,9 @@ public class MergeSyncRunner implements Job
         //sync on date/time in order to avoid additional work
         SimpleFilter runFilter = new SimpleFilter(FieldKey.fromString("dateVerified"), minDate, CompareType.GTE);
         runFilter.addCondition(FieldKey.fromString("status"), "V");
-        runFilter.addCondition(FieldKey.fromString("numericLastName"), true, CompareType.EQUAL);
+
+        //Modified: 4-11-2016 R.Blasa allow both numeric and non-numeric ids
+        //runFilter.addCondition(FieldKey.fromString("numericLastName"), true, CompareType.EQUAL);
 
         TableSelector runTs = new TableSelector(runsTable, runFilter, null);
         Long count = runTs.getRowCount();
@@ -222,7 +224,9 @@ public class MergeSyncRunner implements Job
         SimpleFilter runFilter = new SimpleFilter(FieldKey.fromString("dateVerified"), minDate, CompareType.GTE);
         runFilter.addCondition(FieldKey.fromString("dateVerified"), null, CompareType.NONBLANK);
         runFilter.addCondition(FieldKey.fromString("status"), "V");
-        runFilter.addCondition(FieldKey.fromString("numericLastName"), true, CompareType.EQUAL);
+
+        //Removed 4-12-2016 R.Blasa  allow both nuemric and non-numeric ids
+       //  runFilter.addCondition(FieldKey.fromString("numericLastName"), true, CompareType.EQUAL);
 
         final TableSelector runTs = new TableSelector(runsTable, runFilter, null);
         if (runTs.exists())
@@ -282,7 +286,12 @@ public class MergeSyncRunner implements Job
         SimpleFilter runFilter = new SimpleFilter(FieldKey.fromString("accession"), mergeAccession, CompareType.EQUAL);
         runFilter.addCondition(FieldKey.fromString("panelid"), mergeTestId);
         runFilter.addCondition(FieldKey.fromString("status"), "V");
-        runFilter.addCondition(FieldKey.fromString("numericLastName"), true, CompareType.EQUAL);
+
+        //Modified: 4-11-2016 R.Blasa allow both numeric and non-numeric ids
+       // runFilter.addCondition(FieldKey.fromString("numericLastName"), true, CompareType.EQUAL);
+
+
+
 
         TableSelector runTs = new TableSelector(runsTable, runFilter, null);
         runTs.forEach(new Selector.ForEachBlock<ResultSet>()

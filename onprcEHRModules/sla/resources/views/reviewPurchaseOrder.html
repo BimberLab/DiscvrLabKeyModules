@@ -1,0 +1,16 @@
+<!--
+    HTML content for the sla module's reviewPurchaseOrder action.
+-->
+<div id="purchaseOrderDetailsPanel"></div>
+
+<script type="text/javascript">
+    Ext4.onReady(function()
+    {
+        // create a new instance of the Ext component for displaying the
+        // purchase order details in a read only format, to be used for printing
+        Ext4.create('SLA.panel.PurchaseOrderDetails', {
+            renderTo: 'purchaseOrderDetailsPanel',
+            rowId: LABKEY.ActionURL.getParameter('rowId')
+        });
+    });
+</script>

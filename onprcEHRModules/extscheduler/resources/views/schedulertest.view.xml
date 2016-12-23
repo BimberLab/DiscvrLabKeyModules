@@ -1,0 +1,5 @@
+<view xmlns="http://labkey.org/data/xml/view" template="app" frame="none" title="Ext Scheduler Testing">
+    <dependencies>
+        <dependency path="clientapi_core"/>
+    </dependencies>
+</view>

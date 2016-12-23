@@ -17,7 +17,7 @@ DOBRequired,
 AdditionalVendorInfo as comments,
 AdminComments ,
 DARComments ,
-OtherVendor ,
+--OtherVendor ,
 VendorContact ,
 
 ConfirmationNum ,

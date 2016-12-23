@@ -1,0 +1,40 @@
+<!--
+    HTML content for the sla module's updatePurchaseOrder action.
+-->
+<div id="purchaseOrderUpdateForm"></div>
+
+<script type="text/javascript">
+    Ext4.onReady(function()
+    {
+        LABKEY.NavTrail.setTrail(LABKEY.user.canUpdate ? 'Update Purchase Order' : 'Review Purchase Order');
+
+        this.adminContainer = LABKEY.getModuleContext('sla').SLAPurchaseOrderAdminContainer;
+        if (this.adminContainer == null)
+        {
+            Ext4.get('purchaseOrderUpdateForm').update('<span class="labkey-error">The sla module property "SLAPurchaseOrderAdminContainer" must be configured.</span>')
+            return;
+        }
+
+        // get the purchase order rowId param from the URL and use it to query for the data related to that purchase order
+        var rowId = LABKEY.ActionURL.getParameter('rowId');
+        SLA.util.PurchaseOrder.getOrderData(rowId, function(data)
+        {
+            if (data.error)
+            {
+                // display error messages, i.e. if the rowId from the URL is an invalid purchase order rowId
+                Ext4.get('purchaseOrderUpdateForm').update('<div class="labkey-error">' + data.error + '</div>');
+            }
+            else
+            {
+                // create a new instance of the Ext component for displaying the create/update order form and species grid
+                // note: since 'initData' is provided, the form will be pre-populated with the existing order data (see createPurchaseOrder.html)
+                Ext4.create('SLA.panel.PurchaseOrderRequest', {
+                    renderTo: 'purchaseOrderUpdateForm',
+                    adminContainer: this.adminContainer,
+                    isUpdate: true,
+                    initData: data
+                });
+            }
+        }, this);
+    });
+</script>

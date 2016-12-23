@@ -62,7 +62,14 @@ SELECT
     group_concat(DISTINCT h3.room.housingType.value) as housingTypes,
     CASE
       WHEN (count(DISTINCT pdf.chargeId) > 1) THEN null  --this should catch duplicate chargeIds
+      --determine if the animal has been bottle fed by checking the flag - bottle fed
+      --When (count(*) from study.treatment_Order q1 where q1.id = i2.id and q1.code.value like '%bottle%' and q1.dateonly <=i2.dateOnly) then 'BottleFed' and Animal Is research assigned
+     --use the treatmentOtrder to look for BottleFed
+      WHEN (Select count(*) from study.treatment_Order t1 where t1.id = i2.id and t1.code.meaning like '%Bottle%' and t1.date <=i2.dateOnly) > 0
+   				  and (Select count(*) from study.assignment a3 where a3.id = i2.id and a3.date <= i2.dateOnly and a3.endDateCoalesced > i2.dateOnly and a3.project.Use_Category like '%Research%') > 0
+   			  THEN max(pdf.chargeId)
       --if this item supports infants, charge that
+
       WHEN (count(CASE WHEN pdf.canChargeInfants = true THEN 1 ELSE null END) > 0 AND max(pdf.chargeId) IS NOT NULL) THEN max(pdf.chargeId)
       --otherwise infants are a special rate
       WHEN (max(timestampdiff('SQL_TSI_DAY', d.birth, i2.dateOnly)) < CAST(javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.INFANT_PER_DIEM_AGE') AS INTEGER)) THEN (SELECT ci.rowid FROM onprc_billing_public.chargeableItems ci WHERE ci.name = javaConstant('org.labkey.onprc_ehr.ONPRC_EHRManager.INFANT_PER_DIEM'))
