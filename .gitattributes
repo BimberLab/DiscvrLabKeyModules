@@ -4219,6 +4219,7 @@ onprcEHRModules/GeneticsCore/tools/installLabkey.sh -text
 onprcEHRModules/GeneticsCore/tools/javaWrapper.sh -text
 onprcEHRModules/GeneticsCore/webapp/WEB-INF/geneticscoreContext.xml -text
 onprcEHRModules/README.txt -text
+onprcEHRModules/extscheduler/build.gradle -text
 onprcEHRModules/extscheduler/extscheduler.iml -text
 onprcEHRModules/extscheduler/module.properties -text
 onprcEHRModules/extscheduler/resources/module.xml -text
