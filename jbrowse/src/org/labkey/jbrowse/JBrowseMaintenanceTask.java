@@ -29,8 +29,6 @@ import java.util.Set;
  */
 public class JBrowseMaintenanceTask implements MaintenanceTask
 {
-    private static Logger _log = Logger.getLogger(JBrowseMaintenanceTask.class);
-
     public JBrowseMaintenanceTask()
     {
 
@@ -49,7 +47,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
     }
 
     @Override
-    public void run()
+    public void run(Logger log)
     {
         //delete JSON in output dir not associated with DB record
         try
@@ -60,7 +58,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             //then orphan DB members
             int deleted = new SqlExecutor(JBrowseSchema.getInstance().getSchema()).execute(new SQLFragment("DELETE FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASE_MEMBERS + " WHERE (SELECT count(objectid) FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASES + " d WHERE d.objectid = " + JBrowseSchema.TABLE_DATABASE_MEMBERS + "." + JBrowseSchema.getInstance().getSqlDialect().makeLegalIdentifier("database") + ") = 0"));
             if (deleted > 0)
-                _log.info("deleted " + deleted + " orphan database members");
+                log.info("deleted " + deleted + " orphan database members");
 
             //finally orphan JSONFiles
             int deleted2 = new SqlExecutor(JBrowseSchema.getInstance().getSchema()).execute(new SQLFragment("DELETE FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_JSONFILES +
@@ -74,20 +72,20 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             ));
 
             if (deleted2 > 0)
-                _log.info("deleted " + deleted2 + " JSON files because they are not used by any sessions");
+                log.info("deleted " + deleted2 + " JSON files because they are not used by any sessions");
 
             //now iterate every container and find orphan files
-            processContainer(ContainerManager.getRoot());
+            processContainer(ContainerManager.getRoot(), log);
         }
         catch (Exception e)
         {
-            _log.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
     }
 
-    private void processContainer(Container c) throws IOException
+    private void processContainer(Container c, Logger log) throws IOException
     {
-        JBrowseRoot root = new JBrowseRoot(_log);
+        JBrowseRoot root = new JBrowseRoot(log);
         if (root != null)
         {
             File jbrowseRoot = root.getBaseDir(c, false);
@@ -105,7 +103,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                         expectedDirs.add(json.getBaseDir());
                         if (!json.getBaseDir().exists())
                         {
-                            _log.error("expected jbrowse folder does not exist: " + json.getBaseDir().getPath());
+                            log.error("expected jbrowse folder does not exist: " + json.getBaseDir().getPath());
                         }
                     }
                 }
@@ -117,7 +115,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                     {
                         if (!expectedDirs.contains(childDir))
                         {
-                            _log.info("deleting track dir: " + childDir.getPath());
+                            log.info("deleting track dir: " + childDir.getPath());
                             FileUtils.deleteDirectory(childDir);
                         }
                     }
@@ -126,7 +124,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 File dataDir = new File(jbrowseRoot, "data");
                 if (dataDir.exists())
                 {
-                    _log.info("deleting legacy jbrowse data dir: " + dataDir.getPath());
+                    log.info("deleting legacy jbrowse data dir: " + dataDir.getPath());
                     FileUtils.deleteDirectory(dataDir);
                 }
 
@@ -137,7 +135,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                     {
                         if (!expectedDirs.contains(childDir))
                         {
-                            _log.info("deleting reference sequence dir: " + childDir.getPath());
+                            log.info("deleting reference sequence dir: " + childDir.getPath());
                             FileUtils.deleteDirectory(childDir);
                         }
                     }
@@ -154,25 +152,25 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                     {
                         if (!expectedDatabases.contains(childDir.getName()))
                         {
-                            _log.info("deleting jbrowse database dir: " + childDir.getPath());
+                            log.info("deleting jbrowse database dir: " + childDir.getPath());
                             FileUtils.deleteDirectory(childDir);
                         }
                     }
                 }
                 else if (!expectedDatabases.isEmpty() && !databaseDir.exists())
                 {
-                    _log.error("missing expected database directory: " + databaseDir.getPath());
+                    log.error("missing expected database directory: " + databaseDir.getPath());
                 }
                 else if (!expectedDatabases.isEmpty() && databaseDir.list().length == 0)
                 {
-                    _log.error("database directory is empty: " + databaseDir.getPath());
+                    log.error("database directory is empty: " + databaseDir.getPath());
                 }
             }
         }
 
         for (Container child : c.getChildren())
         {
-            processContainer(child);
+            processContainer(child, log);
         }
     }
 }

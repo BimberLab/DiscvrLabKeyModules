@@ -32,8 +32,6 @@ import java.util.Set;
  */
 public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 {
-    private static Logger _log = Logger.getLogger(SequenceAnalysisMaintenanceTask.class);
-
     public SequenceAnalysisMaintenanceTask()
     {
 
@@ -52,21 +50,21 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
     }
 
     @Override
-    public void run()
+    public void run(Logger log)
     {
         //delete sequence text files and library artifacts not associated with a DB record
         try
         {
-            processContainer(ContainerManager.getRoot());
-            verifySequenceDataPresent();
+            processContainer(ContainerManager.getRoot(), log);
+            verifySequenceDataPresent(log);
         }
         catch (Exception e)
         {
-            _log.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
     }
 
-    private void verifySequenceDataPresent()
+    private void verifySequenceDataPresent(Logger log)
     {
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
         TableSelector ts = new TableSelector(ti);
@@ -79,11 +77,11 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 Container c = ContainerManager.getForId(rd.getContainer());
                 if (d == null || d.getFile() == null)
                 {
-                    _log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId1() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId1() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
                 }
                 else if (!d.getFile().exists())
                 {
-                    _log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
                 }
             }
 
@@ -93,11 +91,11 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 Container c = ContainerManager.getForId(rd.getContainer());
                 if (d == null || d.getFile() == null)
                 {
-                    _log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId2() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId2() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
                 }
                 else if (!d.getFile().exists())
                 {
-                    _log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId2() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId2() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
                 }
             }
         }
@@ -114,17 +112,17 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 Container c = ContainerManager.getForId(m.getContainer());
                 if (d == null || d.getFile() == null)
                 {
-                    _log.error("Unable to find file associated with analysis: " + m.getAnalysisId() + ", " + m.getAlignmentFile() + " for container: " + (c == null ? m.getContainer() : c.getPath()));
+                    log.error("Unable to find file associated with analysis: " + m.getAnalysisId() + ", " + m.getAlignmentFile() + " for container: " + (c == null ? m.getContainer() : c.getPath()));
                 }
                 else if (!d.getFile().exists())
                 {
-                    _log.error("Unable to find file associated with analysis: " + m.getAnalysisId() + ", " + m.getAlignmentFile() + ", " + d.getFile().getPath() + " for container: " + (c == null ? m.getContainer() : c.getPath()));
+                    log.error("Unable to find file associated with analysis: " + m.getAnalysisId() + ", " + m.getAlignmentFile() + ", " + d.getFile().getPath() + " for container: " + (c == null ? m.getContainer() : c.getPath()));
                 }
             }
         }
     }
 
-    private void processContainer(Container c) throws IOException
+    private void processContainer(Container c, Logger log) throws IOException
     {
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root != null)
@@ -138,20 +136,20 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             {
                 if (m.getSequenceFile() == null || m.getSequenceFile() == 0)
                 {
-                    _log.error("sequence record lacks a sequence file Id: " + m.getRowid());
+                    log.error("sequence record lacks a sequence file Id: " + m.getRowid());
                     continue;
                 }
 
                 ExpData d = ExperimentService.get().getExpData(m.getSequenceFile());
                 if (d == null || d.getFile() == null)
                 {
-                    _log.error("file was null for sequence: " + m.getRowid());
+                    log.error("file was null for sequence: " + m.getRowid());
                     continue;
                 }
 
                 if (!d.getFile().exists())
                 {
-                    _log.error("expected sequence file does not exist for sequence: " + m.getRowid() + " " + m.getName() + ", expected: " + d.getFile().getPath());
+                    log.error("expected sequence file does not exist for sequence: " + m.getRowid() + " " + m.getName() + ", expected: " + d.getFile().getPath());
                     continue;
                 }
 
@@ -167,7 +165,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 {
                     if (!expectedSequences.contains(child.getName()))
                     {
-                        deleteFile(child);
+                        deleteFile(child, log);
                     }
                 }
             }
@@ -193,7 +191,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
                     if (!expectedLibraries.contains(child.getName()))
                     {
-                        deleteFile(child);
+                        deleteFile(child, log);
                     }
                     else
                     {
@@ -202,7 +200,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         Integer fastaId = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file")).getObject(Integer.parseInt(child.getName()), Integer.class);
                         if (fastaId == null)
                         {
-                            _log.error("Unable to find FASTA ExpData in DB matching jbrowse directory: " + child.getPath());
+                            log.error("Unable to find FASTA ExpData in DB matching jbrowse directory: " + child.getPath());
                             continue;
                         }
 
@@ -210,7 +208,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         File fasta = fastaData.getFile();
                         if (!fasta.exists())
                         {
-                            _log.error("expected fasta file does not exist: " + fasta.getPath());
+                            log.error("expected fasta file does not exist: " + fasta.getPath());
                         }
 
                         expectedChildren.add(fasta.getName());
@@ -226,7 +224,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         {
                             if (!expectedChildren.contains(fileName))
                             {
-                                deleteFile(new File(child, fileName));
+                                deleteFile(new File(child, fileName), log);
                             }
                         }
 
@@ -247,14 +245,14 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                                     expectedTracks.add(trackData.getFile().getName());
                                     if (!trackData.getFile().exists())
                                     {
-                                        _log.error("expected track file does not exist: " + trackData.getFile().getPath());
+                                        log.error("expected track file does not exist: " + trackData.getFile().getPath());
                                     }
 
                                     expectedTracks.addAll(getAssociatedFiles(trackData.getFile(), true));
                                 }
                                 else
                                 {
-                                    _log.warn("unable to find ExpData for track with dataId: " + dataId);
+                                    log.warn("unable to find ExpData for track with dataId: " + dataId);
                                 }
                             }
 
@@ -262,7 +260,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                             {
                                 if (!expectedTracks.contains(f.getName()))
                                 {
-                                    deleteFile(f);
+                                    deleteFile(f, log);
                                 }
                             }
                         }
@@ -282,7 +280,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                                     expectedChains.add(chainData.getFile().getName());
                                     if (!chainData.getFile().exists())
                                     {
-                                        _log.error("expected chain file does not exist: " + chainData.getFile().getPath());
+                                        log.error("expected chain file does not exist: " + chainData.getFile().getPath());
                                     }
                                 }
                             }
@@ -291,7 +289,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                             {
                                 if (!expectedChains.contains(f.getName()))
                                 {
-                                    deleteFile(f);
+                                    deleteFile(f, log);
                                 }
                             }
                         }
@@ -316,7 +314,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
                         if (!d.getFile().exists())
                         {
-                            _log.error("expected output file does not exist: " + d.getFile().getPath());
+                            log.error("expected output file does not exist: " + d.getFile().getPath());
                         }
                     }
                 }
@@ -325,7 +323,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 {
                     if (!expectedFileNames.contains(child.getName()))
                     {
-                        deleteFile(child);
+                        deleteFile(child, log);
                     }
                 }
             }
@@ -333,13 +331,13 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
         for (Container child : c.getChildren())
         {
-            processContainer(child);
+            processContainer(child, log);
         }
     }
 
-    private void deleteFile(File f) throws IOException
+    private void deleteFile(File f, Logger log) throws IOException
     {
-        _log.info("deleting sequence file: " + f.getPath());
+        log.info("deleting sequence file: " + f.getPath());
         if (f.isDirectory())
         {
             FileUtils.deleteDirectory(f);

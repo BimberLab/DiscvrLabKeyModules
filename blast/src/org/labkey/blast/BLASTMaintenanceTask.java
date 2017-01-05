@@ -28,8 +28,6 @@ import java.util.Set;
  */
 public class BLASTMaintenanceTask implements MaintenanceTask
 {
-    private static final Logger _log = Logger.getLogger(BLASTMaintenanceTask.class);
-
     public BLASTMaintenanceTask()
     {
 
@@ -48,7 +46,7 @@ public class BLASTMaintenanceTask implements MaintenanceTask
     }
 
     @Override
-    public void run()
+    public void run(Logger log)
     {
         //delete BLAST jobs not flagged to persist
         TableInfo blastJobs = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_BLAST_JOBS);
@@ -62,7 +60,7 @@ public class BLASTMaintenanceTask implements MaintenanceTask
             {
                 if (output != null && output.exists())
                 {
-                    _log.info("deleting old BLAST output: " + output.getName());
+                    log.info("deleting old BLAST output: " + output.getName());
                     output.delete();
                 }
             }
@@ -76,7 +74,7 @@ public class BLASTMaintenanceTask implements MaintenanceTask
             {
                 if (input != null && input.exists())
                 {
-                    _log.info("deleting old BLAST input: " + input.getName());
+                    log.info("deleting old BLAST input: " + input.getName());
                     input.delete();
                 }
             }
@@ -85,34 +83,34 @@ public class BLASTMaintenanceTask implements MaintenanceTask
                 allowablePaths.add(input.getAbsolutePath());
             }
 
-            File log = new File(j.getOutputDir(), "blast-" + j.getObjectid() + ".log");
+            File logFile = new File(j.getOutputDir(), "blast-" + j.getObjectid() + ".log");
             if (!j.isSaveResults())
             {
-                if (log != null && log.exists())
+                if (logFile != null && logFile.exists())
                 {
-                    _log.info("deleting old BLAST pipeline log: " + log.getName());
-                    log.delete();
+                    log.info("deleting old BLAST pipeline log: " + logFile.getName());
+                    logFile.delete();
                 }
             }
             else
             {
-                allowablePaths.add(log.getAbsolutePath());
+                allowablePaths.add(logFile.getAbsolutePath());
             }
 
             //now look for orphan files under the file root
             if (!allowablePaths.isEmpty())
             {
-                processContainer(ContainerManager.getRoot(), allowablePaths);
+                processContainer(ContainerManager.getRoot(), allowablePaths, log);
             }
         }
 
         SQLFragment sql = new SQLFragment("DELETE FROM blast." + BLASTSchema.TABLE_BLAST_JOBS + " WHERE saveResults = ?", false);
         new SqlExecutor(blastJobs.getSchema()).execute(sql);
 
-        processContainerDB(ContainerManager.getRoot());
+        processContainerDB(ContainerManager.getRoot(), log);
     }
 
-    private void processContainerDB(Container c)
+    private void processContainerDB(Container c, Logger log)
     {
         //delete blast databases not connected to a known record
         File dbDir = BLASTManager.get().getDatabaseDir(c, false);
@@ -125,7 +123,7 @@ public class BLASTMaintenanceTask implements MaintenanceTask
             {
                 if (!dbNames.isEmpty())
                 {
-                    _log.error("BLAST DBs files not found for container: " + c.getPath());
+                    log.error("BLAST DBs files not found for container: " + c.getPath());
                 }
 
                 return;
@@ -137,7 +135,7 @@ public class BLASTMaintenanceTask implements MaintenanceTask
                 {
                     if (!dbNames.contains(FileUtil.getBaseName(f)) && !dbNames.contains(f.getName().replaceAll("\\.[0-9]+\\.idx", "")))
                     {
-                        _log.info("deleting unused BLAST db: " + f.getName());
+                        log.info("deleting unused BLAST db: " + f.getName());
                         f.delete();
                     }
                 }
@@ -156,18 +154,18 @@ public class BLASTMaintenanceTask implements MaintenanceTask
 
                 if (files.length == 0)
                 {
-                    _log.error("BLAST db not found: " + dbName + " in: " + dbDir);
+                    log.error("BLAST db not found: " + dbName + " in: " + dbDir);
                 }
             }
         }
 
         for (Container child : c.getChildren())
         {
-            processContainerDB(child);
+            processContainerDB(child, log);
         }
     }
 
-    private void processContainer(Container c, Set<String> allowablePaths)
+    private void processContainer(Container c, Set<String> allowablePaths, Logger log)
     {
         File outputDir = BLASTManager.get().getBlastRoot(c, false);
         if (outputDir != null && outputDir.exists())
@@ -176,7 +174,7 @@ public class BLASTMaintenanceTask implements MaintenanceTask
             {
                 if (!allowablePaths.contains(f.getAbsolutePath()))
                 {
-                    _log.info("deleting BLAST file: " + f.getPath());
+                    log.info("deleting BLAST file: " + f.getPath());
                 }
             }
         }
@@ -186,7 +184,7 @@ public class BLASTMaintenanceTask implements MaintenanceTask
         {
             for (Container child : children)
             {
-                processContainer(child, allowablePaths);
+                processContainer(child, allowablePaths, log);
             }
         }
     }
