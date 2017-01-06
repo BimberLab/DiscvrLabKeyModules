@@ -2783,7 +2783,7 @@ DISCVR/su2c/src/org/labkey/su2c/Su2cModule.java -text
 DISCVR/su2c/src/org/labkey/su2c/Su2cSchema.java -text
 DISCVR/su2c/su2c.iml -text
 DISCVR/su2c/tools/installLabKey.sh -text
-/build.gradle -text
+cnprcEHRModules/build.gradle -text
 cnprcEHRModules/cnprc_billing/cnprc_billing.iml -text
 cnprcEHRModules/cnprc_billing/module.properties -text
 cnprcEHRModules/cnprc_billing/resources/etls/account.xml -text
@@ -3849,6 +3849,7 @@ labModules/SequenceAnalysis/tools/pipeline_config/pipelineConfig_remote.xml -tex
 labModules/SequenceAnalysis/tools/pipeline_config/remoteMuleConfig.xml -text
 labModules/SequenceAnalysis/tools/pipeline_config/sequenceanalysisConfig.xml -text
 labModules/SequenceAnalysis/webapp/WEB-INF/SequenceAnalysis/sequenceanalysisContext.xml -text
+labModules/build.gradle -text
 labModules/laboratory/Laboratory-API.iml -text
 labModules/laboratory/Laboratory.iml -text
 labModules/laboratory/api-src/org/labkey/api/laboratory/AbstractImportingNavItem.java -text
@@ -4219,6 +4220,7 @@ onprcEHRModules/GeneticsCore/tools/installLabkey.sh -text
 onprcEHRModules/GeneticsCore/tools/javaWrapper.sh -text
 onprcEHRModules/GeneticsCore/webapp/WEB-INF/geneticscoreContext.xml -text
 onprcEHRModules/README.txt -text
+onprcEHRModules/build.gradle -text
 onprcEHRModules/extscheduler/build.gradle -text
 onprcEHRModules/extscheduler/extscheduler.iml -text
 onprcEHRModules/extscheduler/module.properties -text
@@ -4831,6 +4833,7 @@ onprcEHRModules/treatmentETL/resources/etls/TreatmentToDrug.xml -text
 onprcEHRModules/treatmentETL/resources/queries/study/dateRangedata.sql -text
 onprcEHRModules/treatmentETL/resources/queries/study/treatmentScheduleUpdate.sql -text
 onprcEHRModules/treatmentETL/resources/queries/study/treatmenttodrug.sql -text
+snprcEHRModules/build.gradle -text
 snprcEHRModules/snprc_genetics/SNPRC_Genetics.iml -text
 snprcEHRModules/snprc_genetics/module.properties -text
 snprcEHRModules/snprc_genetics/resources/queries/assay/General/Gene[!!-~]Expression/Data.query.xml -text
