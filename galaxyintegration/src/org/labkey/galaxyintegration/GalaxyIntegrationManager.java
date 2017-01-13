@@ -16,15 +16,14 @@
 
 package org.labkey.galaxyintegration;
 
-import com.drew.lang.annotations.Nullable;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.security.User;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class GalaxyIntegrationManager
