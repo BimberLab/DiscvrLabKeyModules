@@ -15,7 +15,8 @@
 
     <path id="transform.build.classpath">
         <fileset dir="${external.lib.home}">
-            <include name="tika-app-1.5.jar"/>
+            <include name="poi-3.15.jar"/>
+            <include name="poi-ooxml-3.15.jar"/>
             <include name="guava-17.0.jar"/>
         </fileset>
     </path>
@@ -39,7 +40,8 @@
             </main>
             <lib>
                 <fileset dir="${external.lib.home}">
-                    <include name="tika-app-1.5.jar"/>
+                    <include name="poi-3.15.jar"/>
+                    <include name="poi-ooxml-3.15.jar"/>
                     <include name="guava-17.0.jar"/>
                     <include name="xbean.jar"/>
                 </fileset>
