@@ -23,6 +23,7 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exceptions.OptimisticConflictException;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -249,7 +250,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                     getJob().getLogger().debug("creating readdata");
                     Table.insert(getJob().getUser(), readDataTable, rd);
                 }
-                catch (Table.OptimisticConflictException e)
+                catch (OptimisticConflictException e)
                 {
                     //row doesnt exist..
                     getJob().getLogger().error("readset doesnt exist: " + readsetId);

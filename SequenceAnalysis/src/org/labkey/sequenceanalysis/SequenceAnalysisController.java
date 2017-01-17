@@ -63,6 +63,7 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exceptions.OptimisticConflictException;
 import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
@@ -680,7 +681,7 @@ public class SequenceAnalysisController extends SpringActionController
                     SequenceAnalysisManager.get().deleteRefAaSequence(rowIds);
                 }
             }
-            catch (Table.OptimisticConflictException e)
+            catch (OptimisticConflictException e)
             {
                 //if someone else already deleted this, no need to throw exception
             }
