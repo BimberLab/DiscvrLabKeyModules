@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <etl xmlns="http://labkey.org/etl/xml">
-    <name>Position Skill Area Mapping</name>
-    <description>Position Skill Area Mapping</description>
+    <name>Train Area</name>
+    <description>Train Areas</description>
     <transforms>
         <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
             <description>Copy to target</description>
-            <source schemaName="cnprcSrc_complianceAndTraining" queryName="q_position_skill_area"/>
-            <destination schemaName="cnprc_complianceandtraining" queryName="position_skill_area" bulkLoad="true" batchSize="500"
+            <source schemaName="cnprcSrc_complianceAndTraining" queryName="q_train_area"/>
+            <destination schemaName="cnprc_complianceandtraining" queryName="train_area" bulkLoad="true" batchSize="500"
                          targetOption="truncate">
             </destination>
         </transform>

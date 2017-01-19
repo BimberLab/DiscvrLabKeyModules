@@ -1,0 +1,3 @@
+SELECT
+TA_AREA AS area
+FROM cnprcSrc_complianceAndTraining.ZTRAIN_AREA

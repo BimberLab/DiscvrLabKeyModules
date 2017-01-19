@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<etl xmlns="http://labkey.org/etl/xml">
+    <name>Requirements Per Category</name>
+    <description>Position and Skill per Area</description>
+    <transforms>
+        <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
+            <description>Copy to target</description>
+            <source schemaName="cnprcSrc_complianceAndTraining" queryName="q_requirements_per_category"/>
+            <destination schemaName="ehr_compliancedb" queryName="requirementspercategory" bulkLoad="true" batchSize="500"
+                         targetOption="truncate">
+            </destination>
+        </transform>
+    </transforms>
+    <schedule>
+        <!-- run at 2:15 am everyday -->
+        <cron expression="0 15 2 * * ? *"/> <!--seconds, minutes, hours, day-of-month, month, day-of-week, year(optional) -->
+    </schedule>
+</etl>
