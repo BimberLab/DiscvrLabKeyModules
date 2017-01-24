@@ -355,7 +355,7 @@ public class FastqcRunner
             throw new RuntimeException("Not found: " + samJar.getPath());
 
         File commonsMath = new File(ModuleLoader.getInstance().getWebappDir(), "WEB-INF/lib");
-        commonsMath = new File(commonsMath, "commons-math3-3.0.jar");
+        commonsMath = new File(commonsMath, "commons-math3-3.6.1.jar");
         if (!commonsMath.exists())
             throw new RuntimeException("Not found: " + commonsMath.getPath());
 
