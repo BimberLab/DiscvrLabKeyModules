@@ -265,7 +265,7 @@ then
     echo "Downloading GATK from GIT"
     git clone git://github.com/broadgsa/gatk-protected.git
     cd gatk-protected
-    git checkout tags/3.6
+    git checkout tags/3.7
     cd ../
 
     #this is a custom extension: https://github.com/biodev/HTCondor_drivers
@@ -286,14 +286,10 @@ then
     rm ./public/external-example/src/main/java/org/mycompany/app/*
     rm ./public/external-example/src/test/java/org/mycompany/app/*
 
-    #for debugging
-    echo $JAVA_HOME
-    java -version
-
     mvn verify
     mvn package
-    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.6.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
-    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.6.jar ${LKTOOLS_DIR}/Queue.jar
+    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.7.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
+    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.7.jar ${LKTOOLS_DIR}/Queue.jar
 fi
 
 

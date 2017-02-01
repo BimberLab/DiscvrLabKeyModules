@@ -19,6 +19,7 @@ package org.labkey.jbrowse;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.jbrowse.JBrowseService;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
@@ -74,6 +75,7 @@ public class JBrowseModule extends ExtendedSimpleModule
     protected void init()
     {
         addController(JBrowseController.NAME, JBrowseController.class);
+        JBrowseService.setInstance(JBrowseServiceImpl.get());
     }
 
     @Override

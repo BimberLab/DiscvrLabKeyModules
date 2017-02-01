@@ -506,6 +506,11 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         var stepMap = this.getStepMap();
         if (params && params.length) {
             Ext4.Array.forEach(params, function (p) {
+                if (!p.getValue){
+                    LDK.Utils.logError('ERROR: AnalysisSectionPanel tool lacks getValue(): ' + p.name);
+                    return;
+                }
+
                 //check for step #
                 var stepIdx = this.getStepIdxForToolParam(p, stepMap);
                 ret[p.name + (stepIdx ? '.' + stepIdx : '')] = p.getValue();

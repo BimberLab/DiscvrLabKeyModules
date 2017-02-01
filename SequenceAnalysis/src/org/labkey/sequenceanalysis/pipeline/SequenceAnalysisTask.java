@@ -39,6 +39,7 @@ import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -204,7 +205,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             }
             else
             {
-                List<? extends ExpData> fastaDatas = run.getInputDatas(AlignmentInitTask.REFERENCE_DB_FASTA, null);
+                List<? extends ExpData> fastaDatas = run.getInputDatas(IndexOutputImpl.REFERENCE_DB_FASTA, null);
                 if (fastaDatas.size() > 0)
                 {
                     for (ExpData d : fastaDatas)

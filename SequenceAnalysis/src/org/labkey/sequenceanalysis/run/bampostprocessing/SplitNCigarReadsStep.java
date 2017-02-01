@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.bampostprocessing;
 
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
@@ -8,11 +9,13 @@ import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.run.util.SplitNCigarReadsWrapper;
 
 import java.io.File;
+import java.util.Arrays;
 
 /**
  * User: bimber
@@ -30,7 +33,11 @@ public class SplitNCigarReadsStep extends AbstractCommandPipelineStep<SplitNCiga
     {
         public Provider()
         {
-            super("SplitNCigarReads", "Split N Cigar Reads", "GATK", "This will use GATK to Splits reads that contain Ns in their CIGAR string.  It is most commonly used for RNA-Seq", null, null, "https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_rnaseq_SplitNCigarReads.php");
+            super("SplitNCigarReads", "Split N Cigar Reads", "GATK", "This will use GATK to Splits reads that contain Ns in their CIGAR string.  It is most commonly used for RNA-Seq", Arrays.asList(
+                    ToolParameterDescriptor.create("doReassignMappingQual", "Reassign Mapping Qualities", "STAR assigns a mapping quality of 255 to good alignments, but this it interpreted as unknown by GATK.  If checked, this step will convert all MAPQ scores of 255 to 60.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true)
+            ), null, "https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_rnaseq_SplitNCigarReads.php");
         }
 
         @Override
@@ -46,10 +53,12 @@ public class SplitNCigarReadsStep extends AbstractCommandPipelineStep<SplitNCiga
         BamProcessingOutputImpl output = new BamProcessingOutputImpl();
         getWrapper().setOutputDir(outputDirectory);
 
+        boolean doReassignMappingQual = getProvider().getParameterByName("doReassignMappingQual").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, true);
+
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".splitncigar.bam");
         output.addIntermediateFile(outputBam);
 
-        getWrapper().execute(referenceGenome.getWorkingFastaFile(), inputBam, outputBam);
+        getWrapper().execute(referenceGenome.getWorkingFastaFile(), inputBam, outputBam, doReassignMappingQual);
 
         if (!outputBam.exists())
         {

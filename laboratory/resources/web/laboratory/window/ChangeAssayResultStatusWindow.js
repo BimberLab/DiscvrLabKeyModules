@@ -22,7 +22,7 @@ Ext4.define('Laboratory.window.ChangeAssayResultStatusWindow', {
                 dataRegionName: dataRegionName,
                 schemaName: schemaName,
                 queryName: queryName
-        }).show();
+            }).show();
         }
     },
 

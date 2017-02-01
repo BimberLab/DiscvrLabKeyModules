@@ -66,7 +66,6 @@ import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
 import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
-import org.labkey.sequenceanalysis.run.alignment.BismarkWrapper;
 import org.labkey.sequenceanalysis.run.alignment.Bowtie2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
 import org.labkey.sequenceanalysis.run.alignment.GSnapWrapper;
@@ -132,7 +131,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.306;
+        return 12.309;
     }
 
     public boolean hasScripts()
@@ -214,7 +213,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         //not compatible with CollectAlignmentSummaryMetrics, so deprecate
         //SequencePipelineService.get().registerPipelineStep(new LastzWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new MosaikWrapper.Provider());
-        SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new GSnapWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new StarWrapper.Provider());
 
@@ -238,7 +236,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new ViralAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new HaplotypeCallerAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new SnpCountAnalysis.Provider());
-        SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.MethylationExtractorProvider());
+
         //SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new RnaSeQCStep.Provider());

@@ -38,6 +38,7 @@ public class SequenceNoOpDocumentParser extends AbstractDocumentParser
                 SequenceUtil.FILETYPE.gff.getFileType().isType(resource.getFile()) ||
                 SequenceUtil.FILETYPE.bed.getFileType().isType(resource.getFile()) ||
                 SequenceUtil.FILETYPE.vcf.getFileType().isType(resource.getFile()) ||
+                SequenceUtil.FILETYPE.bam.getFileType().isType(resource.getFile()) ||
                 isUnderAnalysisDir(resource);
     }
 

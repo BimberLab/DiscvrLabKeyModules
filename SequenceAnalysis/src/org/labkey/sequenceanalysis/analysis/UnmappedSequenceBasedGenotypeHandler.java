@@ -12,10 +12,10 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.reader.FastaDataLoader;
 import org.labkey.api.reader.FastaLoader;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -25,6 +25,7 @@ import org.labkey.sequenceanalysis.run.analysis.AlignmentAggregator;
 import org.labkey.sequenceanalysis.run.analysis.AvgBaseQualityAggregator;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAlignmentAggregator;
+import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -37,8 +38,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by bimber on 6/2/2015.
@@ -49,44 +52,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
 
     public UnmappedSequenceBasedGenotypeHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Export Unmapped SBT Reads", "This will re-run sequence-based genotyping on each input BAM and export the read pairs with at least one alignment, but no passing alignments, to a FASTQ files.  It will also collapse these reads into a single FASTA for all samples.", null, Arrays.asList(
-                        ToolParameterDescriptor.create("minSnpQual", "Minimum SNP Qual", "Only SNPs with a quality score above this threshold will be included.", "ldk-integerfield", new JSONObject()
-                        {{
-                                put("minValue", 0);
-                            }}, 17),
-                        ToolParameterDescriptor.create("minSnpAvgQual", "Minimum SNP Avg Qual", "If provided, the average quality score of all SNPs of a give base at each position must be above this value.", "ldk-integerfield", new JSONObject()
-                        {{
-                                put("minValue", 0);
-                            }}, 17),
-                        ToolParameterDescriptor.create("onlyImportValidPairs", "Only Import Valid Pairs", "If selected, only alignments consisting of valid forward/reverse pairs will be imported.  Do not check this unless you are using paired-end sequence.", "checkbox", new JSONObject()
-                        {{
-                                put("checked", false);
-                            }}, null),
-                        ToolParameterDescriptor.create("minCountForRef", "Min Read # Per Reference", "If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this many reads across each sample.  This can be a way to reduce ambiguity among allele calls.", "ldk-integerfield", new JSONObject()
-                        {{
-                                put("minValue", 0);
-                            }}, 5),
-                        ToolParameterDescriptor.create("minPctForRef", "Min Read Pct Per Reference", "If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this percent of total from each sample.  This can be a way to reduce ambiguity among allele calls.  Value should between 0-100.", "ldk-numberfield", new JSONObject()
-                        {{
-                                put("minValue", 0);
-                                put("maxValue", 100);
-                            }}, 0.05),
-                        ToolParameterDescriptor.create("minPctWithinGroup", "Min Read Pct Within Group", "If a value is provided, for a reference to be considered an allowable hit, it must be present in at least this percent of total reads within a set of hits.  For example, says 30 reads matched alleles A, B and C.  Within the whole sample, 300 reads aligned to allele B, 200 to allele B and only 30 aligned to C.  The latter represent 10% (30 / 300) of hits for that group.  If you set this filter above this, allele C would be discarded.  Value should between 0-100.", "ldk-numberfield", new JSONObject()
-                        {{
-                                put("minValue", 0);
-                                put("maxValue", 100);
-                            }}, 25),
-                        ToolParameterDescriptor.create("minAlignmentLength", "Min Alignment Length", "If a value is provided, any alignment with a length less than this value will be discarded.", "ldk-integerfield", new JSONObject()
-                        {{
-                                put("minValue", 0);
-                            }}, 40),
-                        ToolParameterDescriptor.create("writeLog", "Write Detailed Log", "If checked, the analysis will write a detailed log file of read mapping and calls.  This is intended for debugging purposes", "checkbox", new JSONObject()
-                        {{
-                                put("checked", true);
-                            }}, null))
-
-        );
-
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Export Unmapped SBT Reads", "This will re-run sequence-based genotyping on each input BAM and export the read pairs with at least one alignment, but no passing alignments, to a FASTQ files.  It will also collapse these reads into a single FASTA for all samples.", null, SequenceBasedTypingAnalysis.getDefaultParams(false));
     }
 
     @Override
@@ -186,7 +152,8 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-
+            //outDir will be the local webserver directory
+            SequenceBasedTypingAnalysis.prepareLineageMapFiles(support, job.getLogger(), outputDir);
         }
 
         @Override
@@ -203,6 +170,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
             action.setStartTime(new Date());
 
             int j = 0;
+            Set<Integer> distinctGenomes = new HashSet<>();
             for (SequenceOutputFile so : inputFiles)
             {
                 try
@@ -215,6 +183,11 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     action.addInput(so.getFile(), "Input BAM");
 
                     ReferenceGenome rg = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id());
+                    if (rg == null)
+                    {
+                        throw new PipelineJobException("Unable to find reference genome for outputfile: " + so.getRowid());
+                    }
+                    distinctGenomes.add(rg.getGenomeId());
 
                     //first calculate avg qualities at each position
                     job.getLogger().info("Calculating avg quality scores");
@@ -236,6 +209,25 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     }
 
                     SequenceBasedTypingAlignmentAggregator agg = new SequenceBasedTypingAlignmentAggregator(job.getLogger(), rg.getWorkingFastaFile(), avgBaseQualityAggregator, toolParams);
+                    agg.setDoTrackIntervals(true);
+
+                    File lineageMapFile = new File(ctx.getSourceDirectory(), rg.getGenomeId() + "_lineageMap.txt");
+                    if (lineageMapFile.exists())
+                    {
+                        ctx.getLogger().debug("using lineage map: " + lineageMapFile.getName());
+                        agg.setLineageMapFile(lineageMapFile);
+
+                        Double minPctForLineageFiltering = ctx.getParams().optDouble("minPctForLineageFiltering");
+                        if (minPctForLineageFiltering != null)
+                        {
+                            agg.setMinPctForLineageFiltering(minPctForLineageFiltering);
+                        }
+                    }
+                    else
+                    {
+                        ctx.getLogger().debug("lineage map not found, skipping");
+                    }
+
                     aggregators.add(agg);
 
                     File outputLog = null;
@@ -254,9 +246,20 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     bi.addAggregators(aggregators);
                     bi.iterateReads();
 
+                    String prefix = String.valueOf(so.getAnalysis_id());
+                    if (so.getReadset() != null)
+                    {
+                        Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
+                        if (rs != null && rs.getSubjectId() != null)
+                        {
+                            prefix = rs.getSubjectId() + "|" + rs.getRowId() + "|";
+                        }
+                    }
+
                     agg.writeSummary();
-                    job.getLogger().info("writing unmapped reads");
-                    Pair<File, File> outputs = agg.outputUnmappedReads(so.getFile(), ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()));
+                    job.getLogger().info("writing unmapped reads to: " + ctx.getOutputDir());
+                    int minExportLength = ctx.getParams().optInt(SequenceBasedTypingAnalysis.MIN_EXPORT_LENGTH, 0);
+                    Pair<File, File> outputs = agg.outputUnmappedReads(so.getFile(), ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()), prefix, minExportLength);
                     if (outputs == null)
                     {
                         job.getLogger().info("no unmapped reads, skipping");
@@ -264,6 +267,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     }
 
                     //append / merge
+                    ctx.getLogger().info("parsing FASTA: " + outputs.second.getPath());
                     try (FastaDataLoader loader = new FastaDataLoader(outputs.second, false))
                     {
                         loader.setCharacterFilter(new FastaLoader.CharacterFilter()
@@ -297,20 +301,75 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                         }
                     }
 
-                    File unmappedGz = Compress.compressGzip(outputs.first);
-                    if (outputs.first.exists())
-                    {
-                        outputs.first.delete();
-                    }
-
+                    File unmappedGz = outputs.first;
                     File unmappedCollapsedGz = Compress.compressGzip(outputs.second);
                     if (outputs.second.exists())
                     {
                         outputs.second.delete();
                     }
 
-                    action.addOutput(unmappedGz, "Unmapped FASTA", false, true);
-                    action.addOutput(unmappedCollapsedGz, "Unmapped Collapsed FASTA", false, true);
+                    action.addOutput(unmappedGz, "Unmapped SBT Reads (FASTQ)", false, true);
+                    SequenceOutputFile so1 = new SequenceOutputFile();
+                    so1.setCategory("Unmapped SBT Reads (FASTQ)");
+                    so1.setFile(unmappedGz);
+                    so1.setLibrary_id(rg.getGenomeId());
+                    so1.setDescription("Unmapped SBT Reads");
+                    so1.setAnalysis_id(so.getAnalysis_id());
+                    so1.setReadset(so.getReadset());
+                    Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
+                    if (rs != null)
+                    {
+                        so1.setName(rs.getName() + ", Unmapped SBT Reads (FASTQ)");
+                    }
+                    else
+                    {
+                        so1.setName(so.getName() + ", Unmapped SBT Reads (FASTQ)");
+                    }
+                    ctx.addSequenceOutput(so1);
+
+                    action.addOutput(unmappedCollapsedGz, "Unmapped SBT Reads (Collapsed)", false, true);
+                    SequenceOutputFile so2 = new SequenceOutputFile();
+                    so2.setCategory("Unmapped SBT Reads (Collapsed)");
+                    so2.setFile(unmappedCollapsedGz);
+                    so2.setLibrary_id(rg.getGenomeId());
+                    so2.setDescription("Unmapped SBT Reads (Collapsed)");
+                    so2.setAnalysis_id(so.getAnalysis_id());
+                    so2.setReadset(so.getReadset());
+                    if (rs != null)
+                    {
+                        so2.setName(rs.getName() + ", Unmapped SBT Reads (Collapsed)");
+                    }
+                    else
+                    {
+                        so2.setName(so.getName() + ", Unmapped SBT Reads (Collapsed)");
+                    }
+                    ctx.addSequenceOutput(so2);
+
+                    File referencesCovered = agg.outputReferencesCovered(ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()), rg.getWorkingFastaFile(), prefix);
+                    if (referencesCovered.exists())
+                    {
+                        action.addOutput(referencesCovered, "Reference Sequence Coverage FASTA", false, true);
+                        SequenceOutputFile so3 = new SequenceOutputFile();
+                        so3.setCategory("Reference Sequence Coverage FASTA");
+                        so3.setFile(referencesCovered);
+                        so3.setLibrary_id(rg.getGenomeId());
+                        so3.setDescription("Reference Sequence Coverage FASTA");
+                        so3.setAnalysis_id(so.getAnalysis_id());
+                        so3.setReadset(so.getReadset());
+                        if (rs != null)
+                        {
+                            so3.setName(rs.getName() + ", Reference Sequence Coverage FASTA");
+                        }
+                        else
+                        {
+                            so3.setName(so.getName() + ", Reference Sequence Coverage FASTA");
+                        }
+                        ctx.addSequenceOutput(so3);
+                    }
+                    else
+                    {
+                        ctx.getLogger().warn("unable to find expected FASTA: " + referencesCovered.getPath());
+                    }
 
                     if (outputLog != null)
                     {
@@ -323,7 +382,8 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                 }
             }
 
-            try (BufferedWriter jointUnmappedCollapsedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(jointUnmappedCollapsed), "UTF-8"));CSVWriter jointUnmappedCollapsedTsvWriter = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(jointUnmappedCollapsedTsv), "UTF-8"), '\t')))
+            ctx.getLogger().info("building merged file: " + jointUnmappedCollapsed.getPath());
+            try (BufferedWriter jointUnmappedCollapsedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(jointUnmappedCollapsed), "UTF-8"));CSVWriter jointUnmappedCollapsedTsvWriter = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(jointUnmappedCollapsedTsv), "UTF-8")), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 List<FastqAggregate> sorted = new ArrayList<>();
                 sorted.addAll(uniqueReads.values());
@@ -353,9 +413,53 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
 
             action.addOutput(jointUnmappedCollapsed, "Combined Unmapped FASTA", false);
             action.addOutput(jointUnmappedCollapsedTsv, "Combined Unmapped Summaary", false);
+            if (inputFiles.size() > 1)
+            {
+                SequenceOutputFile combinedCollapsed = new SequenceOutputFile();
+                combinedCollapsed.setCategory("Unmapped SBT Reads (Collapsed)");
+                combinedCollapsed.setFile(jointUnmappedCollapsed);
+                if (distinctGenomes.size() == 1)
+                {
+                    combinedCollapsed.setLibrary_id(distinctGenomes.iterator().next());
+                }
+                combinedCollapsed.setDescription("Joint Unmapped SBT Reads (Collapsed), " + inputFiles.size() + " datasets");
+                combinedCollapsed.setName("Joint Unmapped SBT Reads (Collapsed)");
+                ctx.addSequenceOutput(combinedCollapsed);
+
+                SequenceOutputFile combinedCollapsedTsv = new SequenceOutputFile();
+                combinedCollapsedTsv.setCategory("Unmapped SBT Reads Summary Table");
+                combinedCollapsedTsv.setFile(jointUnmappedCollapsedTsv);
+                if (distinctGenomes.size() == 1)
+                {
+                    combinedCollapsedTsv.setLibrary_id(distinctGenomes.iterator().next());
+                }
+                combinedCollapsedTsv.setDescription("Joint Unmapped SBT Reads Summary Table, " + inputFiles.size() + " datasets");
+                combinedCollapsedTsv.setName("Joint Unmapped SBT Reads Summary Table");
+                ctx.addSequenceOutput(combinedCollapsedTsv);
+            }
 
             action.setEndTime(new Date());
             ctx.addActions(action);
+
+            //delete lineage files
+            for (SequenceOutputFile so : inputFiles)
+            {
+                if (so.getLibrary_id() != null)
+                {
+                    ReferenceGenome referenceGenome = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id());
+                    if (referenceGenome == null)
+                    {
+                        throw new PipelineJobException("Genome not found: " + so.getLibrary_id());
+                    }
+
+                    File lineageMapFile = new File(ctx.getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
+                    if (lineageMapFile.exists())
+                    {
+                        ctx.getLogger().debug("deleting lineage map file: " + lineageMapFile.getName());
+                        lineageMapFile.delete();
+                    }
+                }
+            }
         }
 
         @Override

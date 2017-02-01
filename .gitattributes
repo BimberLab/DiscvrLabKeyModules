@@ -118,7 +118,9 @@ DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/pipeline/DockerHTCondo
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/pipeline/HTCondorExecutionEngine.java -text
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/pipeline/HTCondorExecutionEngineConfig.java -text
 DISCVR/htcondorconnector/src/org/labkey/htcondorconnector/pipeline/HTCondorJob.java -text
+DISCVR/jbrowse/JBrowse-API.iml -text
 DISCVR/jbrowse/JBrowse.iml -text
+DISCVR/jbrowse/api-src/org/labkey/api/jbrowse/JBrowseService.java -text
 DISCVR/jbrowse/build.gradle -text
 DISCVR/jbrowse/module.properties -text
 DISCVR/jbrowse/resources/queries/jbrowse/database_members/.qview.xml -text
@@ -2673,6 +2675,7 @@ DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseModule.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseRoot.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseSchema.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseSequenceOutputHandler.java -text
+DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseServiceImpl.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/button/AddDataButton.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/button/AddLibraryButton.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/button/AddTrackButton.java -text
@@ -3101,6 +3104,8 @@ labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/Abs
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/AbstractPipelineStep.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/AbstractPipelineStepProvider.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/AbstractVariantProcessingStepProvider.java -text
+labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/AlignerIndexUtil.java -text
+labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/AlignmentOutputImpl.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/AlignmentStep.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/AnalysisOutputImpl.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/AnalysisStep.java -text
@@ -3110,6 +3115,7 @@ labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/Bam
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/CommandLineParam.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/DefaultPipelineStepOutput.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/HasJobParams.java -text
+labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/IndexOutputImpl.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/InputReads.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/JobResourceSettings.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/JoinableStep.java -text
@@ -3123,9 +3129,11 @@ labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/Pro
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/ReferenceGenome.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/ReferenceLibraryStep.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SamSorter.java -text
+labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SamtoolsIndexer.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SamtoolsRunner.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SequenceAnalysisJobSupport.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SequenceOutputHandler.java -text
+labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SequenceOutputTracker.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SequencePipelineService.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/SortSamWrapper.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/pipeline/TaskFileManager.java -text
@@ -3157,7 +3165,6 @@ labModules/SequenceAnalysis/pipeline_code/gatk/MultipleAllelesAtLoci.java -text
 labModules/SequenceAnalysis/pipeline_code/installPackages.r -text
 labModules/SequenceAnalysis/resources/credits/executables.txt -text
 labModules/SequenceAnalysis/resources/credits/jars.txt -text
-labModules/SequenceAnalysis/resources/external/R/methylationBasicStats.R -text
 labModules/SequenceAnalysis/resources/external/basicHistogram.r -text
 labModules/SequenceAnalysis/resources/external/basicScatter.r -text
 labModules/SequenceAnalysis/resources/external/coverageGraph.r -text
@@ -3265,6 +3272,7 @@ labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/babraham/FastQC/Util
 labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/babraham/FastQC/Utilities/QualityCount.class -text
 labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/babraham/FastQC/Utilities/RGB.class -text
 labModules/SequenceAnalysis/resources/external/jbzip2-0.9.jar -text
+labModules/SequenceAnalysis/resources/external/qscript/GenotypeGVCFsRunner.scala -text
 labModules/SequenceAnalysis/resources/external/qscript/HaplotypeCallerRunner.scala -text
 labModules/SequenceAnalysis/resources/external/qscript/IndelRealignerRunner.scala -text
 labModules/SequenceAnalysis/resources/external/sam-1.96.jar -text
@@ -3410,6 +3418,9 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.303-12.304.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.304-12.305.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.305-12.306.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.306-12.307.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.307-12.308.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.308-12.309.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -3492,6 +3503,9 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.303-12.304.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.304-12.305.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.305-12.306.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.306-12.307.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.307-12.308.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.308-12.309.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -3598,6 +3612,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/GenotypeFilterP
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/IlluminaSampleExportPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/ImportSequencesFromFastaPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/InstrumentImportPanel.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/IntervalPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SequenceAnalysisPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SequenceImportPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SnpAlignmentConfigPanel.js -text
@@ -3612,6 +3627,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/sequenceAnalysis.lib.
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/sequenceanalysisButtons.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/snp_haplotype.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CompareSequencesWindow.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ConcatenatedSequenceWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CreateAnalysisSetWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CreateReferenceLibraryWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/DownloadSequencesWindow.js -text
@@ -3707,6 +3723,8 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ReferenceLi
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceAlignmentJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceAlignmentTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceAnalysisTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceConcatPipelineJob.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceConcatTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceJobSupportImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceNormalizationTask.java -text
@@ -3727,18 +3745,14 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceAnalys
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceAnalysisUserSchema.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceTriggerHelper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/BamHaplotyper.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/AlignerIndexUtil.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/AlignmentOutputImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BWAMemWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BWASWWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BWAWrapper.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BismarkWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/Bowtie2Wrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BowtieWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/FastaToTwoBitRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/FastqCollapser.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/GSnapWrapper.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/IndexOutputImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/LastzWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/MosaikWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/StarWrapper.java -text
@@ -4161,6 +4175,9 @@ onprcEHRModules/GeneticsCore/build.xml -text
 onprcEHRModules/GeneticsCore/distributions/prime-seq-modules.xml -text
 onprcEHRModules/GeneticsCore/module.properties -text
 onprcEHRModules/GeneticsCore/resources/external/amplicon_standard_curve.R -text
+onprcEHRModules/GeneticsCore/resources/external/comb-p/Dockerfile -text
+onprcEHRModules/GeneticsCore/resources/external/comb-p/combpWrapper.sh -text
+onprcEHRModules/GeneticsCore/resources/external/methylationBasicStats.R -text
 onprcEHRModules/GeneticsCore/resources/external/methylationComparison.R -text
 onprcEHRModules/GeneticsCore/resources/module.xml -text
 onprcEHRModules/GeneticsCore/resources/queries/sequenceanalysis/alignment_summary_by_lineage/.qview.xml -text
@@ -4217,8 +4234,10 @@ onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/AbstractBisSnp
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/BisSnpGenotyperAnalysis.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/BisSnpIndelRealignerStep.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/BisSnpIndelRealignerWrapper.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/BismarkWrapper.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/BisulfiteGenotyperWrapper.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/BlastPipelineJobResourceAllocator.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/CombpRunner.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/ExacloudResourceSettings.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/pipeline/SequenceJobResourceAllocator.java -text
 onprcEHRModules/GeneticsCore/tools/installLabkey.sh -text

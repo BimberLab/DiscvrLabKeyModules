@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.run.alignment;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -25,6 +26,12 @@ public class FastaToTwoBitRunner extends AbstractCommandWrapper
         super(logger);
     }
 
+    public File getCachedIndex(ReferenceGenome referenceGenome)
+    {
+        File baseDir = new File(referenceGenome.getSourceFastaFile().getParentFile(), (referenceGenome.getGenomeId() == null ? "" : AlignerIndexUtil.INDEX_DIR + "/") + TWO_BIT);
+        return new File(baseDir, FileUtil.getBaseName(referenceGenome.getSourceFastaFile()) + ".2bit");
+    }
+
     public File createIndex(ReferenceGenome referenceGenome, File outputDir, PipelineContext ctx) throws PipelineJobException
     {
         ctx.getLogger().info("Creating 2bit index");
@@ -32,8 +39,7 @@ public class FastaToTwoBitRunner extends AbstractCommandWrapper
         boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(ctx, TWO_BIT, referenceGenome);
         if (hasCachedIndex)
         {
-            File baseDir = new File(referenceGenome.getSourceFastaFile().getParentFile(), (referenceGenome.getGenomeId() == null ? "" : AlignerIndexUtil.INDEX_DIR + "/") + TWO_BIT);
-            return new File(baseDir, FileUtil.getBaseName(referenceGenome.getSourceFastaFile()) + ".2bit");
+            return getCachedIndex(referenceGenome);
         }
 
         File indexDir = new File(outputDir, TWO_BIT);

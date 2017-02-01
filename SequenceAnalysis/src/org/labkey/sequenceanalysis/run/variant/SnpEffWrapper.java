@@ -62,8 +62,14 @@ public class SnpEffWrapper extends AbstractCommandWrapper
         try
         {
             if (!unzippedVcf.equals(output))
+            {
+                if (output.exists())
+                {
+                    getLogger().debug("deleting pre-existing output file: " + output.getPath());
+                    output.delete();
+                }
                 FileUtils.moveFile(unzippedVcf, output);
-
+            }
             SequenceAnalysisService.get().ensureVcfIndex(output, getLogger());
         }
         catch (IOException e)

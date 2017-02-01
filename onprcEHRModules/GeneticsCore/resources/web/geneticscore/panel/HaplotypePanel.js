@@ -73,33 +73,13 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                     dataIndex: 'haplotype1',
                     width: 200,
                     renderer: function(value, cellMetaData, record, rowIndex, colIndex, store) {
-                        return record.get('haplotype1') ? record.get('haplotype1').getName() : 'No Match';
+                        return record.get('haplotypeMatch1') ? record.get('haplotypeMatch1').getHaplotype().getName() : 'No Match';
                     }
                 },{
                     header: 'Lineages Found',
                     width: 200,
                     renderer: function(value, cellMetaData, record, rowIndex, colIndex, store) {
-                        var ret = [];
-                        if (record.get('haplotype1')){
-                            var lineageNames = record.get('haplotype1').getLineageNames();
-                            Ext4.Array.forEach(lineageNames.sort(), function (l) {
-                                var required = record.get('haplotype1').isRequired(l);
-                                var present = record.get('matches1').indexOf(l) > -1;
-
-                                ret.push('<span style="' + (present ? '' : 'text-decoration: line-through;') + (required ? 'font-weight: bold;' : '') + '">' + l + '</span>')
-                            }, this);
-
-                            ret.sort(function (a, b) {
-                                return a.indexOf('line-through') > -1 ? 1 : -1;
-                            });
-
-                            var pct = 100 * record.get('matches1').length / lineageNames.length;
-                            var minPct = 50;
-                            return '<span style="' + (pct < minPct ? 'background-color: red' : '') + '">Found: ' + record.get('matches1').length + '/' + lineageNames.length + ' (' + Ext4.util.Format.number(pct, '0.00') + '%)' + (pct < minPct ? ' *LOW*' : '') + '</span><br><br>' + ret.join('<br>');
-                        }
-                        else {
-                            return '';
-                        }
+                        return GeneticsCore.panel.HaplotypePanel.lineageColRenderer(record, '1');
                     }
                 },{
                     header: 'Omit?',
@@ -110,34 +90,13 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                     dataIndex: 'haplotype2',
                     width: 200,
                     renderer: function(value, cellMetaData, record, rowIndex, colIndex, store) {
-                        return record.get('haplotype2') ? record.get('haplotype2').getName() : 'No Match';
+                        return record.get('haplotypeMatch2') ? record.get('haplotypeMatch2').getHaplotype().getName() : 'No Match';
                     }
                 },{
                     header: 'Lineages Found',
                     width: 200,
                     renderer: function(value, cellMetaData, record, rowIndex, colIndex, store) {
-                        var ret = [];
-                        if (record.get('haplotype2')){
-                            var lineageNames = record.get('haplotype2').getLineageNames();
-                            Ext4.Array.forEach(lineageNames.sort(), function (l) {
-                                var required = record.get('haplotype2').isRequired(l);
-                                var present = record.get('matches2').indexOf(l) > -1;
-
-                                ret.push('<span style="' + (present ? '' : 'text-decoration: line-through;') + (required ? 'font-weight: bold;' : '') + '">' + l + '</span>')
-                            }, this);
-
-                            ret.sort(function (a, b)
-                            {
-                                return a.indexOf('line-through') > -1 ? 1 : -1;
-                            });
-
-                            var pct = 100 * record.get('matches2').length / lineageNames.length;
-                            var minPct = 50;
-                            return '<span style="' + (pct < minPct ? 'background-color: red' : '') + '">Found: ' + record.get('matches2').length + '/' + lineageNames.length + ' (' + Ext4.util.Format.number(pct, '0.00') + '%)' + (pct < minPct ? ' *LOW*' : '') + '</span><br><br>' + ret.join('<br>');
-                        }
-                        else {
-                            return '';
-                        }
+                        return GeneticsCore.panel.HaplotypePanel.lineageColRenderer(record, '2');
                     }
                 },{
                     header: 'Omit?',
@@ -148,13 +107,13 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                     width: 300,
                     renderer: function(value, cellMetaData, record, rowIndex, colIndex, store) {
                         var ret = [];
-                        Ext4.Array.forEach(record.get('lineages').sort(), function(lineage){
+                        Ext4.Array.forEach(record.get('allLineagesInAnalysis').sort(), function(lineage){
                             var pctFromLocus = record.get('lineagePctMap')[lineage].percent_from_locus;
                             lineage = lineage.split(';');
 
                             var line = [];
                             Ext4.Array.forEach(lineage, function(l){
-                                var present = record.get('matches1').indexOf(l) > -1 || record.get('matches2').indexOf(l) > -1;
+                                var present = (record.get('haplotypeMatch1') && record.get('haplotypeMatch1').isPresentFromAnalysis(l)) || (record.get('haplotypeMatch2') && record.get('haplotypeMatch2').isPresentFromAnalysis(l));
                                 line.push('<span style="' + (present ? '' : 'text-decoration: line-through;') + '">' + l + '</span>');
                             }, this);
 
@@ -165,9 +124,9 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                             return a.indexOf('line-through') > -1 ? 1 : -1;
                         });
 
-                        var pct = record.get('lineages').length ? 100 * record.get('totalPresent') / record.get('lineages').length : 0;
+                        var pct = record.get('allLineagesInAnalysis').length ? 100 * record.get('totalPresent') / record.get('allLineagesInAnalysis').length : 0;
                         var minPct = 60;
-                        return 'Found: ' + record.get('totalPresent') + '/' + record.get('lineages').length + ' (' + Ext4.util.Format.number(pct, '0.00') + '%)<br>' +
+                        return 'Found: ' + record.get('totalPresent') + '/' + record.get('allLineagesInAnalysis').length + ' (' + Ext4.util.Format.number(pct, '0.00') + '%)<br>' +
                                 '<span style="' + (record.get('totalPctPresent') < minPct ? 'background-color: yellow' : '') +'">Pct Found: ' + Ext4.util.Format.number(record.get('totalPctPresent'), '0.00') + '%' + (record.get('totalPctPresent') && record.get('totalPctPresent') < minPct ? ' *LOW*' : '') +'</span>' +
                                 '<br><br>' + ret.join('<br>');
                     }
@@ -193,7 +152,7 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                 }],
                 store: {
                     xtype: 'array',
-                    fields: ['subjectId', 'locus', 'haplotype1', 'haplotype2', 'matches1', 'matches2', 'totalMatches', 'lineages', 'lineagePctMap', 'analysisId', 'totalPresent', 'totalPctPresent', {name: 'omit1', datatype: 'bool'}, {name: 'omit2', datatype: 'bool'}, 'comment']
+                    fields: ['subjectId', 'locus', 'haplotypeMatch1', 'haplotypeMatch2', 'lineagePctMap', 'analysisId', 'allLineagesInAnalysis', 'allLineagesFound', 'totalPresent', 'totalPctPresent', {name: 'omit1', datatype: 'bool'}, {name: 'omit2', datatype: 'bool'}, 'comment']
                 },
                 tbar: [{
                     text: 'Reload Data',
@@ -214,13 +173,13 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                         var json = [];
                         Ext4.Array.forEach(selected, function(r){
                             function getComments(r, h1, h2){
-                                if (!r.get('omit' + h2) && r.get('haplotype' + h2)){
+                                if (!r.get('omit' + h2) && r.get('haplotypeMatch' + h2)){
                                     var ret = [];
-                                    ret.push('Paired Haplotype: ' + r.get('haplotype' + h2).getName());
-                                    ret.push('Total Lineages Found: ' + Ext4.util.Format.number(r.get('totalPresent'), '0.00'));
+                                    ret.push('Paired Haplotype: ' + r.get('haplotypeMatch' + h2).getHaplotype().getName());
+                                    ret.push('Total Lineages Found: ' + r.get('totalPresent'));
                                     ret.push('Total Pct Found: ' + Ext4.util.Format.number(r.get('totalPctPresent'), '0.00'));
-                                    Ext4.Array.forEach(r.get('lineages'), function(l){
-                                        var present = r.get('matches1').indexOf(l) > -1 || r.get('matches2').indexOf(l) > -1;
+                                    Ext4.Array.forEach(r.get('allLineagesInAnalysis'), function(l){
+                                        var present = (r.get('haplotypeMatch1') && r.get('haplotypeMatch1').isPresentFromAnalysis(l)) || (r.get('haplotypeMatch2') && r.get('haplotypeMatch2').isPresentFromAnalysis(l));
                                         var pctFromLocus = r.get('lineagePctMap')[l].percent_from_locus;
                                         if (!present && pctFromLocus > 5){
                                             ret.push('Missing ' + l + ': ' + Ext4.util.Format.number(pctFromLocus, '0.00') + '%');
@@ -234,27 +193,27 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                             }
 
                             var omitMsg = 'Cannot Call Haplotype: ' + r.get('locus');
-                            if (!r.get('omit1') && r.get('haplotype1')){
-                                haplotypeNames.push(r.get('haplotype1').getName());
-                                var pct = r.get('matches1').length / r.get('haplotype1').getLineageNames().length;
-                                json.push({haplotype: r.get('haplotype1').getName(), analysisId: r.get('analysisId'), pct: pct, category: r.get('locus'), comments: getComments(r, 1, 2)});
+                            if (!r.get('omit1') && r.get('haplotypeMatch1')){
+                                haplotypeNames.push(r.get('haplotypeMatch1').getHaplotype().getName());
+                                var pct = r.get('haplotypeMatch1').getPercentMatch();
+                                json.push({haplotype: r.get('haplotypeMatch1').getHaplotype().getName(), analysisId: r.get('analysisId'), pct: pct, category: r.get('locus'), comments: getComments(r, 1, 2)});
                             }
                             else if (r.get('omit1')){
                                 haplotypeNames.push(omitMsg);
                                 json.push({haplotype: omitMsg, analysisId: r.get('analysisId'), pct: 0.0, category: r.get('locus'), comments: getComments(r, 1, 2)});
                             }
 
-                            if (!r.get('omit2') && r.get('haplotype2')){
-                                haplotypeNames.push(r.get('haplotype2').getName());
-                                var pct = r.get('matches2').length / r.get('haplotype2').getLineageNames().length;
-                                json.push({haplotype: r.get('haplotype2').getName(), analysisId: r.get('analysisId'), pct: pct, category: r.get('locus'), comments: getComments(r, 2, 1)});
+                            if (!r.get('omit2') && r.get('haplotypeMatch2')){
+                                haplotypeNames.push(r.get('haplotypeMatch2').getHaplotype().getName());
+                                var pct = r.get('haplotypeMatch2').getPercentMatch();
+                                json.push({haplotype: r.get('haplotypeMatch2').getHaplotype().getName(), analysisId: r.get('analysisId'), pct: pct, category: r.get('locus'), comments: getComments(r, 2, 1)});
                             }
                             else if (r.get('omit2')){
                                 haplotypeNames.push(omitMsg);
                                 json.push({haplotype: omitMsg, analysisId: r.get('analysisId'), pct: 0.0, category: r.get('locus'), comments: getComments(r, 2, 1)});
                             }
 
-                            if (!r.get('haplotype1') && !r.get('haplotype2')){
+                            if (!r.get('haplotypeMatch1') && !r.get('haplotypeMatch2')){
                                 var name = 'Cannot Call Haplotype: ' + r.get('locus');
                                 haplotypeNames.push(name);
                                 json.push({haplotype: name, analysisId: r.get('analysisId'), pct: 0, category: r.get('locus')});
@@ -306,26 +265,26 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
 
                                     grid.store.each(function(rec){
                                         if (minPctExplained && rec.get('totalPctPresent') < minPctExplained){
-                                            rec.set('haplotype1', null);
-                                            rec.set('haplotype2', null);
+                                            rec.set('haplotypeMatch1', null);
+                                            rec.set('haplotypeMatch2', null);
                                             totalAltered++;
                                             return;
                                         }
 
                                         if (minPctForHaplotype){
                                             var altered = false;
-                                            if (rec.get('haplotype1')){
-                                                var pct = rec.get('matches1').length / rec.get('haplotype1').getLineageNames().length;
+                                            if (rec.get('haplotypeMatch1')){
+                                                var pct = rec.get('haplotypeMatch1').getPercentMatch();
                                                 if (pct < minPctForHaplotype){
-                                                    rec.set('haplotype1', null);
+                                                    rec.set('haplotypeMatch1', null);
                                                     altered = true;
                                                 }
                                             }
 
-                                            if (rec.get('haplotype2')){
-                                                var pct = rec.get('matches2').length / rec.get('haplotype2').getLineageNames().length;
+                                            if (rec.get('haplotypeMatch2')){
+                                                var pct = rec.get('haplotypeMatch2').getPercentMatch();
                                                 if (pct < minPctForHaplotype){
-                                                    rec.set('haplotype2', null);
+                                                    rec.set('haplotypeMatch2', null);
                                                     altered = true;
                                                 }
                                             }
@@ -416,6 +375,7 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
 
     haplotypes: {},
     resultsByLoci: {},
+    lineageToAlleleMap: {},
     lineagePctMap: {},
     analysesMap: {},
 
@@ -484,6 +444,41 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
             }
         });
 
+        multi.add(LABKEY.Query.selectRows, {
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            schemaName: 'sequenceanalysis',
+            queryName: 'alignment_summary_grouped',
+            columns: 'analysis_id,lineages,loci,alleles,total_reads,percent,total_reads_from_locus,percent_from_locus',
+            apiVersion: 13.2,
+            scope: this,
+            filterArray: [
+                LABKEY.Filter.create('analysis_id', this.analysisIds.join(';'), LABKEY.Filter.Types.IN),
+                LABKEY.Filter.create('percent_from_locus', minPct || 0, LABKEY.Filter.Types.GTE)
+            ],
+            failure: LDK.Utils.getErrorCallback(),
+            success: function(results){
+                this.lineageToAlleleMap = {};
+                Ext4.Array.forEach(results.rows, function(row){
+                    if (Ext4.isArray(row.lineages)){
+                        row.lineages = row.lineages.join(';');
+                    }
+                    row.lineages = row.lineages.replace('\n', ';');
+
+                    if (Ext4.isArray(row.alleles)){
+                        row.alleles = row.alleles.join(';');
+                    }
+                    row.alleles = row.alleles.replace('\n', ';');
+                    var alleles = row.alleles ? row.alleles.split(';') : [];
+
+                    if (!this.lineageToAlleleMap[row.analysis_id]){
+                        this.lineageToAlleleMap[row.analysis_id] = {};
+                    }
+                    this.lineageToAlleleMap[row.analysis_id][row.lineages] = this.lineageToAlleleMap[row.analysis_id][row.lineages] || [];
+                    this.lineageToAlleleMap[row.analysis_id][row.lineages] = this.lineageToAlleleMap[row.analysis_id][row.lineages].concat(alleles);
+                }, this);
+            }
+        });
+
         multi.send(this.onDataLoad, this);
     },
 
@@ -507,14 +502,14 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                 var haplotypeMatches = {};
                 Ext4.Array.forEach(Ext4.Object.getKeys(this.haplotypes[locus]), function(haplotypeName){
                     var h = this.haplotypes[locus][haplotypeName];
-                    var matchingLineages = h.getMatchingLineages(lineages);
-                    if (matchingLineages){
-                        var pctMatch = 100 * (matchingLineages.length / h.getLineageNames().length);
+                    var hm = h.getMatch(lineages, this.lineageToAlleleMap[analysisId]);
+                    if (hm){
+                        var pctMatch = hm.getPercentMatch();
                         if (minPctForHaplotype && pctMatch < minPctForHaplotype){
                             console.log('haplotype below minPctForHaplotype: ' + analysisId + ', ' + haplotypeName + ', ' + pctMatch);
                         }
                         else {
-                            haplotypeMatches[haplotypeName] = matchingLineages;
+                            haplotypeMatches[haplotypeName] = hm;
                         }
                     }
                 }, this);
@@ -525,16 +520,15 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                 var pctExplainedByMatch = {};
                 Ext4.Array.forEach(Ext4.Object.getKeys(haplotypeMatches), function(h1){
                     Ext4.Array.forEach(Ext4.Object.getKeys(haplotypeMatches), function(h2){
-                        var union = [];
-                        union = union.concat(haplotypeMatches[h1]);
-                        union = union.concat(haplotypeMatches[h2]);
-                        union = Ext4.unique(union);
-
+                        var matchesUnion = [];
+                        matchesUnion = matchesUnion.concat(haplotypeMatches[h1].getAnalysisLineageNamesFound());
+                        matchesUnion = matchesUnion.concat(haplotypeMatches[h2].getAnalysisLineageNamesFound());
+                        matchesUnion = Ext4.unique(matchesUnion);
                         var names = [h1, h2].sort().join('<>');
 
                         //calculate total pct present
                         var totalPctPresent = 0;
-                        Ext4.Array.forEach(union.sort(), function(l){
+                        Ext4.Array.forEach(matchesUnion.sort(), function(l){
                             if (this.lineagePctMap[analysisId][l]){
                                 totalPctPresent += this.lineagePctMap[analysisId][l].percent_from_locus;
                             }
@@ -550,7 +544,7 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                         totalPctPresent = Ext4.util.Format.number(totalPctPresent, '0.00');
 
                         if (minPctExplained && totalPctPresent < minPctExplained) {
-                            console.log('haplotype below minPctExplained: ' + analysisId + ', ' + names + ', ' + totalPctPresent);
+                            console.log('haplotype below minPctExplained for pair: ' + analysisId + ', ' + names + ', ' + totalPctPresent);
                         }
                         else {
                             rankedPctMatches[totalPctPresent] = rankedPctMatches[totalPctPresent] || [];
@@ -560,9 +554,9 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
 
                             pctExplainedByMatch[names] = totalPctPresent;
 
-                            rankedMatches[union.length] = rankedMatches[union.length] || [];
-                            if (rankedMatches[union.length].indexOf(names) == -1) {
-                                rankedMatches[union.length].push(names);
+                            rankedMatches[matchesUnion.length] = rankedMatches[matchesUnion.length] || [];
+                            if (rankedMatches[matchesUnion.length].indexOf(names) == -1) {
+                                rankedMatches[matchesUnion.length].push(names);
                             }
                         }
                     }, this);
@@ -586,18 +580,16 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
 
                 if (!highest && !highestByPct){
                     var record = store.createModel({
+                        analysisId: analysisId,
                         subjectId: this.analysesMap[analysisId].subjectId,
                         locus: locus,
-                        haplotype1: null,
-                        haplotype2: null,
-                        matches1: [],
-                        matches2: [],
-                        totalMatches: 0,
-                        lineages: [],
+                        haplotypeMatch1: null,
+                        haplotypeMatch2: null,
+                        allLineagesInAnalysis: [],
                         lineagePctMap: this.lineagePctMap[analysisId],
-                        analysisId: analysisId,
+                        comment: ['No Match'],
                         totalPctPresent: 0,
-                        comment: ['No Match']
+                        totalPresent: 0
                     });
 
                     store.add(record);
@@ -656,27 +648,34 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                         names = names.split('<>');
                         var record = store.createModel({
                             subjectId: this.analysesMap[analysisId].subjectId,
-                            locus: locus,
-                            haplotype1: this.haplotypes[locus][names[0]],
-                            haplotype2: this.haplotypes[locus][names[1]],
-                            matches1: haplotypeMatches[names[0]] || [],
-                            matches2: haplotypeMatches[names[1]] || [],
-                            totalMatches: totalMatches,
-                            lineages: lineages,
-                            lineagePctMap: this.lineagePctMap[analysisId],
                             analysisId: analysisId,
+                            locus: locus,
+                            haplotypeMatch1: haplotypeMatches[names[0]] || [],
+                            haplotypeMatch2: haplotypeMatches[names[1]] || [],
+                            allLineagesInAnalysis: lineages,
+                            lineagePctMap: this.lineagePctMap[analysisId],
                             comment: comments
                         });
 
                         var totalPresent = 0;
                         var totalPctPresent = 0;
-                        Ext4.Array.forEach(record.get('lineages').sort(), function(l){
+                        var allLineagesFound = [];
+                        if (record.get('haplotypeMatch1')){
+                            allLineagesFound = allLineagesFound.concat(record.get('haplotypeMatch1').getAnalysisLineageNamesFound());
+                        }
+                        if (record.get('haplotypeMatch2')){
+                            allLineagesFound = allLineagesFound.concat(record.get('haplotypeMatch2').getAnalysisLineageNamesFound());
+                        }
+                        allLineagesFound = Ext4.unique(allLineagesFound);
+                        record.set('allLineagesFound', allLineagesFound);
+
+                        Ext4.Array.forEach(record.get('allLineagesInAnalysis').sort(), function(l){
                             var pctFromLocus = record.get('lineagePctMap')[l].percent_from_locus;
-                            var present = record.get('matches1').indexOf(l) > -1 || record.get('matches2').indexOf(l) > -1;
+                            var present = allLineagesFound.indexOf(l) > -1;
 
                             if (!present && l.split(';').length > 1){
                                 Ext4.Array.forEach(l.split(';'), function(toTest){
-                                    if (record.get('matches1').indexOf(toTest) > -1 || record.get('matches2').indexOf(toTest) > -1){
+                                    if (allLineagesFound.indexOf(toTest) > -1){
                                         present = true;
                                     }
                                 }, this);
@@ -699,21 +698,62 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
     },
 
     statics: {
+        HaplotypeMatch: function(haplotype, matchMap){
+                        
+            return {
+                getHaplotype: function(){
+                    return haplotype;
+                },
+                
+                getPercentMatch: function(){
+                    return 100 * (this.getAnalysisLineageNamesFound().length / haplotype.getSequences().length);
+                },
+                getAnalysisLineageNamesFound: function(){
+                    return Ext4.Object.getValues(matchMap);
+                },
+                isPresentForHaplotype: function(seqName){
+                    return matchMap[seqName] != null;
+                },
+                isPresentFromAnalysis: function(lineage){
+                    return this.getAnalysisLineageNamesFound().indexOf(lineage) > -1;
+                }
+            }
+        },
+        
         Haplotype: function (name, locus){
             var sequences = [];
 
             return {
                 addSequence: function (rowMap){
+                    if (rowMap.type){
+                        rowMap.type = rowMap.type.toLowerCase();
+                    }
+                    
                     sequences.push(rowMap);
                 },
+                getSequences: function(){
+                    return sequences;
+                },
+                getSortedSequences: function(){
+                    sequences = LDK.Utils.sortByProperty(sequences, 'type');
+                    sequences = LDK.Utils.sortByProperty(sequences, 'name');
+
+                    return sequences;
+                },
+                getAlleleNames: function(){
+                    return this.getNamesOfType('allele');
+                },
                 getLineageNames: function(){
+                    return this.getNamesOfType('lineage');
+                },
+                getNamesOfType: function(type){
                     var ret = [];
                     Ext4.Array.forEach(sequences, function(s){
-                        if (s.type.toLowerCase() == 'lineage'){
+                        if (s.type == type){
                             ret.push(s.name);
                         }
                         else {
-                            console.log('not lineage: ' + s.type);
+                            console.log('not ' + type + ': ' + s.type);
                             console.log(s);
                         }
                     }, this);
@@ -726,10 +766,11 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                 getLocus: function (){
                     return locus;
                 },
-                isRequired: function(lineage){
+                isRequired: function(toTest){
+                    //NOTE: this assumes unique names between alleles and lineages
                     var ret = false;
                     Ext4.Array.forEach(sequences, function(s){
-                        if (s.name == lineage && s.required){
+                        if (s.name == toTest && s.required){
                             ret = true;
                             return false;
                         }
@@ -737,32 +778,81 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
 
                     return ret;
                 },
-                getMatchingLineages: function(lineages){
+                getMatch: function(lineagesFromAnalysis, lineageToAlleleMap){
                     var hasRequired = true;
-                    var matches = [];
+                    var matchMap = {};
 
                     Ext4.Array.forEach(sequences, function(c){
-                        var isMatch = false;
-                        Ext4.Array.forEach(lineages, function(l){
-                            l = l.split(';');
-                            if (l.indexOf(c.name) > -1){
-                                isMatch = true;
-                                return false;
+                        var matchName = null;
+                        
+                        Ext4.Array.forEach(lineagesFromAnalysis, function(lineage){
+                            if (c.type == 'allele') {
+                                if (lineageToAlleleMap[lineage] && lineageToAlleleMap[lineage].indexOf(c.name) > -1) {
+                                    matchName = lineage;
+                                    return false;
+                                }
+                            }
+                            else if (c.type == 'lineage'){
+                                var l = lineage.split(';');
+                                if (l.indexOf(c.name) > -1){
+                                    matchName = lineage;
+                                    return false;
+                                }
+                            }
+                            else {
+                                console.error('unknown type: ' + c.type);
                             }
                         }, this);
-
-                        if (!isMatch && c.required){
+                        
+                        
+                        if (!matchName && c.required){
                             hasRequired = false;
                             return false;
                         }
 
-                        if (isMatch) {
-                            matches.push(c.name);
+                        if (matchName) {
+                            matchMap[c.name] = matchName;
                         }
                     }, this);
 
-                    return !hasRequired || !matches.length ? null : matches;
+                    if (!hasRequired || Ext4.isEmpty(matchMap)){
+                        return null;
+                    }
+                    else {
+                        return GeneticsCore.panel.HaplotypePanel.HaplotypeMatch(this, matchMap);
+                    }
                 }
+            }
+        },
+
+        lineageColRenderer: function(record, num){
+            var ret = [];
+            if (record.get('haplotypeMatch' + num)){
+                var hm = record.get('haplotypeMatch' + num);
+
+                var sequences = hm.getHaplotype().getSortedSequences();
+                var notFound = [];
+                Ext4.Array.forEach(sequences, function (l) {
+                    var required = l.required;
+                    var present = hm.isPresentForHaplotype(l.name);
+
+                    if (present) {
+                        ret.push('<span style="' + (required ? 'font-weight: bold;' : '') + '">' + l.name + '</span>');
+                    }
+                    else {
+                        notFound.push('<span style="' + ('text-decoration: line-through;') + (required ? 'font-weight: bold;' : '') + '">' + l.name + '</span>');
+                    }
+                }, this);
+
+                ret = ret.concat(notFound);
+
+                var pct = hm.getPercentMatch();
+                var minPct = 50;
+
+                return '<span style="' + (pct < minPct ? 'background-color: red' : '') + '">Found: ' + hm.getAnalysisLineageNamesFound().length + '/' + hm.getHaplotype().getSequences().length + ' (' + Ext4.util.Format.number(pct, '0.00') + '%)' + (pct < minPct ? ' *LOW*' : '') + '</span><br><br>' + ret.join('<br>');
+            }
+            else {
+                return '';
             }
         }
     }

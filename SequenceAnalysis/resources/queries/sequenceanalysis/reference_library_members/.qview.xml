@@ -4,9 +4,11 @@
        <column name="ref_nt_id" />
        <column name="start" />
        <column name="stop" />
+       <column name="type" />
+       <column name="ref_nt_id/seqLength" />
        <column name="ref_nt_id/downloadSequence" />
    </columns>
    <sorts>
-       <sort column="ref_nt_id"/>
+       <sort column="ref_nt_id/name"/>
    </sorts>
 </customView>

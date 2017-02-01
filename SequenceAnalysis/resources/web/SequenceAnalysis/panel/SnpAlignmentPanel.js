@@ -258,7 +258,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             scope: this,
             success: function(data){
                 //NOTE: we always use coverage from insert_index of 0
-                if(data && data.rows){
+                if (data && data.rows){
                     this.coverageMap = {};
                     var r;
                     for (var i=0; i<data.rows.length;i++){
@@ -275,6 +275,9 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                         this.coverageMap[r.analysis_id][r.ref_nt_id][r.ref_nt_position][r.ref_nt_insert_index] = r;
 
                     };
+                }
+                else {
+                    Ext4.Msg.alert('Error', 'There is either no coverage data, or a problem loading coverage data.');
                 }
             },
             failure: LDK.Utils.getErrorCallback()

@@ -333,7 +333,7 @@
             <item text="Paging">
                 <originalText>Paging</originalText>
             </item>
-        </buttonBarOptions>        
+        </buttonBarOptions>
     </table>
     <table tableName="dna_adapters" tableDbType="TABLE" useColumnOrder="true">
         <auditLogging>DETAILED</auditLogging>
@@ -466,6 +466,11 @@
                 <scale>29</scale>
                 <isHidden>true</isHidden>
             </column>
+            <column columnName="sra_accession">
+                <nullable>true</nullable>
+                <columnTitle>SRA Run</columnTitle>
+                <url>https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=${sra_accession}</url>
+            </column>
         </columns>
         <buttonBarOptions includeStandardButtons="false">
             <includeScript>laboratory.context</includeScript>
@@ -535,7 +540,7 @@
                     </item>
                 </item>
             </item>
-        </buttonBarOptions>        
+        </buttonBarOptions>
     </table>
     <table tableName="ref_aa_features" tableDbType="TABLE" useColumnOrder="true">
         <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
@@ -760,6 +765,9 @@
                 <nullable>true</nullable>
                 <inputType>textarea</inputType>
             </column>
+            <column columnName="seqLength">
+                <columnTitle>NT Length</columnTitle>
+            </column>
             <column columnName="sequenceFile">
                 <nullable>true</nullable>
                 <columnTitle>Sequence File</columnTitle>
@@ -842,6 +850,7 @@
             <includeScript>SequenceAnalysis/window/ImportSequencesFromFastaWindow.js</includeScript>
             <includeScript>SequenceAnalysis/window/DownloadSequencesWindow.js</includeScript>
             <includeScript>SequenceAnalysis/window/CompareSequencesWindow.js</includeScript>
+            <includeScript>SequenceAnalysis/window/ConcatenatedSequenceWindow.js</includeScript>
             <includeScript>SequenceAnalysis/window/MarkDisabledWindow.js</includeScript>
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
@@ -874,8 +883,11 @@
                 <item text="Mark Disabled">
                     <onClick>SequenceAnalysis.window.MarkDisabledWindow.buttonHandler(dataRegionName)</onClick>
                 </item>
+                <item text="Create Concatenated Sequence">
+                    <onClick>SequenceAnalysis.window.ConcatenatedSequenceWindow.buttonHandler(dataRegionName)</onClick>
+                </item>
             </item>
-        </buttonBarOptions>        
+        </buttonBarOptions>
     </table>
     <table tableName="drug_resistance" tableDbType="TABLE" useColumnOrder="true">
         <auditLogging>DETAILED</auditLogging>
@@ -1251,6 +1263,11 @@
             </column>
             <column columnName="description">
                 <columnTitle>Description/Comments</columnTitle>
+            </column>
+            <column columnName="sra_accession">
+                <nullable>true</nullable>
+                <columnTitle>SRA Run</columnTitle>
+                <url>https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=${sra_accession}</url>
             </column>
             <column columnName="container">
             </column>
@@ -2064,6 +2081,11 @@
             <column columnName="datedisabled">
                 <columnTitle>Date Disabled</columnTitle>
             </column>
+            <column columnName="assemblyId">
+                <nullable>true</nullable>
+                <columnTitle>NCBI Assembly Id</columnTitle>
+                <url>https://www.ncbi.nlm.nih.gov/assembly/${assemblyId}/</url>
+            </column>
             <column columnName="container">
                 <isHidden>true</isHidden>
             </column>
@@ -2139,6 +2161,9 @@
             </column>
             <column columnName="stop">
                 <description>Optional.  Can be used in conjunction with start to select a subsequence of the reference.  If blank the region will end with the final base of the reference</description>
+            </column>
+            <column columnName="type">
+                <columnTitle>Sequence Type</columnTitle>
             </column>
             <column columnName="container">
                 <isHidden>true</isHidden>
@@ -2384,6 +2409,11 @@
                     <fkDisplayColumnName useRawValue="true"/>
                 </fk>
             </column>
+            <column columnName="sra_accession">
+                <nullable>true</nullable>
+                <columnTitle>SRA Run</columnTitle>
+                <url>https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=${sra_accession}</url>
+            </column>
             <column columnName="container">
                 <isHidden>true</isHidden>
             </column>
@@ -2426,6 +2456,9 @@
             <item text="Import Files" insertPosition="beginning">
                 <onClick>SequenceAnalysis.window.ImportOutputFileWindow.buttonHandler(dataRegionName);</onClick>
             </item>
+            <!--<item text="Delete" permission="DELETE" requiresSelection="true">-->
+                <!--<onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>-->
+            <!--</item>-->
             <item text="View Quality Metrics" insertPosition="end">
                 <onClick>SequenceAnalysis.Buttons.viewQualityMetricsForOutputFiles(dataRegionName, 'analysis_id');</onClick>
             </item>

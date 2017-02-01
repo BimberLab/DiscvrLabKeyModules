@@ -37,6 +37,7 @@ public class CreateUnalignedFastq
     {
         FastqWriter fqWriter = null;
         FastqWriterFactory fact = new FastqWriterFactory();
+        fact.setUseAsyncIo(true);
 
         SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault();
         try (SamReader reader = samReaderFactory.open(bam))

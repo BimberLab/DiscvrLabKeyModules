@@ -12,6 +12,7 @@ import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.reports.ExternalScriptEngineDefinition;
 import org.labkey.api.reports.LabkeyScriptEngineManager;
 import org.labkey.api.reports.RScriptEngineFactory;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.JobResourceSettings;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
@@ -21,6 +22,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.sequenceanalysis.pipeline.SequenceJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerFinalTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 import org.labkey.sequenceanalysis.run.util.SortVcfWrapper;
@@ -386,5 +388,17 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     public Map<String, Object> getQualityMetrics(File fastq, Logger log)
     {
         return FastqUtils.getQualityMetrics(fastq, log);
+    }
+
+    @Override
+    public boolean hasMinLineCount(File f, long minLines) throws PipelineJobException
+    {
+        return SequenceUtil.hasMinLineCount(f, minLines);
+    }
+
+    @Override
+    public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Integer runId, Integer analysisId)
+    {
+        SequenceOutputHandlerFinalTask.updateOutputFile(o, job, runId, analysisId);
     }
 }

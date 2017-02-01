@@ -93,6 +93,11 @@ public class ProcessUtils
                     {
                         if (_log != null)
                         {
+                            if ("Stream closed".equals(e.getMessage()))
+                            {
+                                return; //ignore.  unsure how to avoid this error?
+                            }
+
                             _log.error(e.getMessage(), e);
                         }
                     }

@@ -15,8 +15,10 @@
 
 package org.labkey.sequenceanalysis;
 
+import htsjdk.samtools.util.StringUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -71,6 +73,7 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.ResultSet;
@@ -383,7 +386,7 @@ public class SequenceAnalysisManager
         return new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), sql).getObject(String.class);
     }
 
-    public ReferenceLibraryPipelineJob createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String description, boolean skipCacheIndexes) throws IOException
+    public ReferenceLibraryPipelineJob createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String description, boolean skipCacheIndexes, @Nullable List<String> unplacedContigPrefixes) throws IOException
     {
         List<ReferenceLibraryMember> libraryMembers = new ArrayList<>();
         for (Integer sequenceId : sequenceIds)
@@ -398,15 +401,15 @@ public class SequenceAnalysisManager
             libraryMembers.add(m);
         }
 
-        return createReferenceLibrary(c, u, name, description, libraryMembers, skipCacheIndexes);
+        return createReferenceLibrary(c, u, name, description, libraryMembers, skipCacheIndexes, unplacedContigPrefixes);
     }
 
-    public ReferenceLibraryPipelineJob createReferenceLibrary(Container c, User u, String name, String description, List<ReferenceLibraryMember> libraryMembers, boolean skipCacheIndexes) throws IOException
+    public ReferenceLibraryPipelineJob createReferenceLibrary(Container c, User u, String name, String description, List<ReferenceLibraryMember> libraryMembers, boolean skipCacheIndexes, @Nullable List<String> unplacedContigPrefixes) throws IOException
     {
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, root, name, description, libraryMembers, null, skipCacheIndexes);
+            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, root, name, description, libraryMembers, null, skipCacheIndexes, unplacedContigPrefixes);
             PipelineService.get().queueJob(job);
 
             return job;
@@ -639,7 +642,7 @@ public class SequenceAnalysisManager
         return null;
     }
 
-    private static final Set<String> pipelineDirs = PageFlowUtil.set(ReadsetImportJob.FOLDER_NAME, ReadsetImportJob.FOLDER_NAME + "Pipeline", AlignmentAnalysisJob.FOLDER_NAME, AlignmentAnalysisJob.FOLDER_NAME + "Pipeline", "sequenceOutputs", SequenceOutputHandlerJob.FOLDER_NAME + "Pipeline");
+    private static final Set<String> pipelineDirs = PageFlowUtil.set(ReadsetImportJob.FOLDER_NAME, ReadsetImportJob.FOLDER_NAME + "Pipeline", AlignmentAnalysisJob.FOLDER_NAME, AlignmentAnalysisJob.FOLDER_NAME + "Pipeline", "sequenceOutputs", SequenceOutputHandlerJob.FOLDER_NAME + "Pipeline", "illuminaImport", "analyzeAlignment");
     private static final Set<String> skippedDirs = PageFlowUtil.set(".sequences", ".jbrowse");
 
     public void getOrphanFilesForContainer(Container c, User u, Set<File> orphanFiles, Set<File> orphanIndexes, Set<PipelineStatusFile> orphanJobs, List<String> messages)
@@ -661,7 +664,7 @@ public class SequenceAnalysisManager
         knownExpDatas.addAll(new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES), PageFlowUtil.set("alignmentfile"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null).getArrayList(Integer.class));
         knownExpDatas.addAll(new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), PageFlowUtil.set("dataId"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null).getArrayList(Integer.class));
         knownExpDatas = Collections.unmodifiableSet(knownExpDatas);
-        messages.add("## total registered sequence ExpData: " + knownExpDatas.size());
+        //messages.add("## total registered sequence ExpData: " + knownExpDatas.size());
 
         Set<Integer> knownPipelineJobs = new HashSet<>();
         UserSchema us = QueryService.get().getUserSchema(u, c, SequenceAnalysisSchema.SCHEMA_NAME);
@@ -679,7 +682,7 @@ public class SequenceAnalysisManager
 
         knownPipelineJobs.addAll(new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("jobId"), new SimpleFilter(FieldKey.fromString("container"), c.getId()).addCondition(FieldKey.fromString("jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
         knownPipelineJobs = Collections.unmodifiableSet(knownPipelineJobs);
-        messages.add("## total expected pipeline job folders: " + knownPipelineJobs.size());
+        //messages.add("## total expected pipeline job folders: " + knownPipelineJobs.size());
 
         TableSelector jobTs = new TableSelector(jobsTable, PageFlowUtil.set("FilePath"), new SimpleFilter(FieldKey.fromString("RowId"), knownPipelineJobs, CompareType.IN), null);
 
@@ -696,7 +699,7 @@ public class SequenceAnalysisManager
                 knownJobPaths.add(f);
             }
         }
-        messages.add("## total job paths: " + knownJobPaths.size());
+        //messages.add("## total job paths: " + knownJobPaths.size());
 
         SimpleFilter dataFilter = new SimpleFilter(FieldKey.fromString("container"), c.getId());
         TableInfo dataTable = ExperimentService.get().getTinfoData();
@@ -728,7 +731,7 @@ public class SequenceAnalysisManager
                 }
             }
         });
-        messages.add("## total ExpData paths: " + dataMap.size());
+        //messages.add("## total ExpData paths: " + dataMap.size());
 
         for (String dirName : pipelineDirs)
         {
@@ -747,7 +750,8 @@ public class SequenceAnalysisManager
                     {
                         if (!knownJobPaths.remove(subdir))
                         {
-                            messages.add("pipeline path listed as orphan, but not present in known paths: " + subdir.getPath());
+                            messages.add("#pipeline path listed as orphan, but not present in known paths: ");
+                            messages.add(subdir.getPath());
                         }
 
                         getOrphanFilesForDirectory(c, knownExpDatas, dataMap, subdir, orphanFiles, orphanIndexes);
@@ -840,7 +844,12 @@ public class SequenceAnalysisManager
         }
         else if (jobIds.size() > 1)
         {
-            messages.add("## More than one possible job found: " + dir.getPath());
+            messages.add("## More than one possible job found, this may simply indicate parent/child jobs: " + dir.getPath());
+        }
+
+        //this could be a directory from an analysis that doesnt register files, like picard metrics
+        if (knownJobPaths.contains(dir))
+        {
             return false;
         }
 
@@ -855,8 +864,11 @@ public class SequenceAnalysisManager
 
         if (!CollectionUtils.containsAny(dataIdsUnderPath, knownExpDataIds))
         {
-            PipelineStatusFile sf = PipelineService.get().getStatusFile(jobIds.get(0));
-            orphanJobs.add(sf);
+            for (int jobId : jobIds)
+            {
+                PipelineStatusFile sf = PipelineService.get().getStatusFile(jobId);
+                orphanJobs.add(sf);
+            }
 
             return true;
         }
@@ -912,10 +924,52 @@ public class SequenceAnalysisManager
                     Set<Integer> dataIdsForFile = dataMap.get(FileUtil.getAbsoluteCaseSensitiveFile(f).toURI());
                     if (dataIdsForFile == null || !CollectionUtils.containsAny(dataIdsForFile, knownExpDatas))
                     {
+                        //a hack, but special-case undetermined/unaligned FASTQ files
+                        if (SequenceUtil.FILETYPE.fastq.getFileType().isType(f))
+                        {
+                            if (f.getPath().contains("/Normalization/") && f.getName().startsWith("Undetermined_"))
+                                continue;
+                            else if (f.getPath().contains("/Alignment/") && (f.getName().contains("unaligned") || f.getName().contains("unmapped")))
+                                continue;
+                        }
+
                         orphanSequenceFiles.add(f);
                     }
                 }
             }
         }
+    }
+
+    public void apppendSequenceLength(User u, Logger log)
+    {
+        TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
+
+        TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("seqLength"), null, CompareType.ISBLANK), null);
+
+        log.info(ts.getRowCount() + " total sequences to migrate");
+        ts.forEach(new Selector.ForEachBlock<RefNtSequenceModel>()
+        {
+            @Override
+            public void exec(RefNtSequenceModel nt) throws SQLException, StopIteratingException
+            {
+                try (InputStream is = nt.getSequenceInputStream())
+                {
+                    if (is == null)
+                    {
+                        _log.error("unable to read NT sequence: " + nt.getRowid());
+                        return;
+                    }
+
+                    nt.setSeqLength(StringUtil.bytesToString(IOUtils.toByteArray(is)).length());
+                    Table.update(u, ti, nt, nt.getRowid());
+                }
+                catch (IOException e)
+                {
+                    _log.error(e.getMessage(), e);
+
+                    stopIterating();
+                }
+            }
+        }, RefNtSequenceModel.class);
     }
 }

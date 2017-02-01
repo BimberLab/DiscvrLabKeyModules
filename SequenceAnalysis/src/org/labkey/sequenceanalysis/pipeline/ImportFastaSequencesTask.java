@@ -107,8 +107,8 @@ public class ImportFastaSequencesTask extends PipelineJob.Task<ImportFastaSequen
                 String libraryName = getPipelineJob().getLibraryParams().get("name");
                 String libraryDescription = getPipelineJob().getLibraryParams().get("description");
 
-                //TODO: pass true value for skipCacheIndexes
-                SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, getJob().getContainer(), getJob().getUser(), libraryName, libraryDescription, false);
+                //TODO: pass actual value for skipCacheIndexes
+                SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, getJob().getContainer(), getJob().getUser(), libraryName, libraryDescription, false, null);
             }
 
         }

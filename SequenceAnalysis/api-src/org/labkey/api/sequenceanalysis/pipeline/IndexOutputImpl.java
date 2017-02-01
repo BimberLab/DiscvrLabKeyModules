@@ -1,10 +1,6 @@
-package org.labkey.sequenceanalysis.run.alignment;
+package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
-import org.labkey.api.sequenceanalysis.pipeline.DefaultPipelineStepOutput;
-import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
-import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
 
 import java.io.File;
 
@@ -16,10 +12,12 @@ import java.io.File;
 public class IndexOutputImpl extends DefaultPipelineStepOutput implements AlignmentStep.IndexOutput
 {
     public static final String PRIMARY_ALIGNER_INDEX_FILE = "Primary Aligner Index File";
+    public static final String REFERENCE_DB_FASTA_OUTPUT = "Reference Output";
+    public static final String REFERENCE_DB_FASTA = "Reference FASTA";
 
     public IndexOutputImpl(ReferenceGenome referenceGenome)
     {
-        addInput(referenceGenome.getWorkingFastaFile(), AlignmentInitTask.REFERENCE_DB_FASTA);
+        addInput(referenceGenome.getWorkingFastaFile(), REFERENCE_DB_FASTA);
     }
 
     public void appendOutputs(File refFasta, File outputDir)
@@ -36,7 +34,7 @@ public class IndexOutputImpl extends DefaultPipelineStepOutput implements Alignm
             return;
         }
 
-        addOutput(outputDir, AlignmentInitTask.REFERENCE_DB_FASTA_OUTPUT);
+        addOutput(outputDir, REFERENCE_DB_FASTA_OUTPUT);
         for (File f : outputDir.listFiles())
         {
             if (!f.equals(refFasta) && !f.equals(refFastaIndex) && !f.equals(refFastaIdKey))

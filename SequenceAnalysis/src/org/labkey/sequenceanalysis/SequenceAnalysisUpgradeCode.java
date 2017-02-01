@@ -163,4 +163,11 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
             _log.error("Error upgrading sequenceanalysis module", e);
         }
     }
+
+    /** called at 12.306-12.307*/
+    @SuppressWarnings({"UnusedDeclaration"})
+    public void appendSequenceLength(final ModuleContext moduleContext)
+    {
+        SequenceAnalysisManager.get().apppendSequenceLength(moduleContext.getUpgradeUser(), _log);
+    }
 }

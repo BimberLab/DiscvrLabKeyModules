@@ -26,6 +26,7 @@ import org.labkey.GeneticsCore.button.SBTReviewButton;
 import org.labkey.GeneticsCore.notification.GeneticsCoreNotification;
 import org.labkey.GeneticsCore.pipeline.BisSnpGenotyperAnalysis;
 import org.labkey.GeneticsCore.pipeline.BisSnpIndelRealignerStep;
+import org.labkey.GeneticsCore.pipeline.BismarkWrapper;
 import org.labkey.GeneticsCore.pipeline.BlastPipelineJobResourceAllocator;
 import org.labkey.GeneticsCore.pipeline.ExacloudResourceSettings;
 import org.labkey.GeneticsCore.pipeline.SequenceJobResourceAllocator;
@@ -144,6 +145,9 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
             }
             else
             {
+                SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.Provider());
+                SequencePipelineService.get().registerPipelineStep(new BismarkWrapper.MethylationExtractorProvider());
+
                 SequencePipelineService.get().registerPipelineStep(new BisSnpIndelRealignerStep.Provider());
                 SequencePipelineService.get().registerPipelineStep(new BisSnpGenotyperAnalysis.Provider());
 

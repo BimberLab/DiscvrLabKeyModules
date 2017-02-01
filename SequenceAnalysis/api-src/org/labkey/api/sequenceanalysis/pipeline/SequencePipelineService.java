@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 
 import java.io.File;
@@ -99,4 +100,8 @@ abstract public class SequencePipelineService
     abstract public void registerResourceSettings(JobResourceSettings settings);
 
     abstract public Map<String, Object> getQualityMetrics(File fastq, Logger log);
+
+    abstract public boolean hasMinLineCount(File f, long minLines) throws PipelineJobException;
+
+    abstract public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Integer runId, Integer analysisId);
 }

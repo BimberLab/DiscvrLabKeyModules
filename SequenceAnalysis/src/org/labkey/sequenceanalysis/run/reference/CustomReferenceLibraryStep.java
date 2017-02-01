@@ -5,11 +5,11 @@ import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 
 import java.io.File;
@@ -89,7 +89,7 @@ public class CustomReferenceLibraryStep extends AbstractPipelineStep implements 
 
 
         ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(refFasta, null, null));
-        output.addOutput(refFasta, AlignmentInitTask.REFERENCE_DB_FASTA);
+        output.addOutput(refFasta, IndexOutputImpl.REFERENCE_DB_FASTA);
         output.addOutput(outputDirectory, "Reference Genome Folder");
 
         return output;

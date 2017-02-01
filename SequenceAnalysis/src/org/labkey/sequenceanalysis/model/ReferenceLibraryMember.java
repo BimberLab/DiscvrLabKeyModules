@@ -19,6 +19,7 @@ public class ReferenceLibraryMember implements Serializable
     private Integer _ref_nt_id;
     private Integer _start;
     private Integer _stop;
+    private String _type;
 
     private String _container;
     private String _createdby;
@@ -192,5 +193,15 @@ public class ReferenceLibraryMember implements Serializable
         }
 
         return name;
+    }
+
+    public String getType()
+    {
+        return _type;
+    }
+
+    public void setType(String type)
+    {
+        _type = type;
     }
 }

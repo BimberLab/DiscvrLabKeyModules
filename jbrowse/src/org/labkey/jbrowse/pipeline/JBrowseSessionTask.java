@@ -19,8 +19,6 @@ import org.apache.commons.io.FileUtils;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
@@ -135,7 +133,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                 throw new IllegalArgumentException("Unknown database: " + databaseGuid);
             }
 
-            root.prepareDatabase(db, getJob().getUser());
+            root.prepareDatabase(db, getJob().getUser(), getJob());
         }
         catch (IOException e)
         {
@@ -354,7 +352,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
             }
 
             getJob().getLogger().info("preparing session JSON files");
-            root.prepareDatabase(db, getJob().getUser());
+            root.prepareDatabase(db, getJob().getUser(), getJob());
 
             getJob().getLogger().info("complete");
             success = true;

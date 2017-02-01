@@ -27,6 +27,7 @@ import org.biojava3.core.sequence.compound.NucleotideCompound;
 import org.biojava3.core.sequence.io.DNASequenceCreator;
 import org.biojava3.core.sequence.io.FastaReader;
 import org.biojava3.core.sequence.io.GenericFastaHeaderParser;
+import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.JFreeChart;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -86,6 +87,7 @@ import org.labkey.api.resource.Resource;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.IgnoresTermsOfUse;
 import org.labkey.api.security.RequiresPermission;
+import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
@@ -133,6 +135,7 @@ import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceConcatPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -547,6 +550,46 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
+    @RequiresSiteAdmin
+    public class UpdateSequenceLengthAction extends ConfirmAction<Object>
+    {
+        @Override
+        public ModelAndView getConfirmView(Object form, BindException errors) throws Exception
+        {
+            if (!getContainer().isRoot())
+            {
+                throw new UnauthorizedException("This can only be used from the root container");
+            }
+
+            StringBuilder html = new StringBuilder();
+
+            html.append("This will calculate the sequence length field for any reference NT sequences lacking it.  Do you want to continue?");
+
+            return new HtmlView(html.toString());
+        }
+
+        @Override
+        public boolean handlePost(Object form, BindException errors) throws Exception
+        {
+            SequenceAnalysisManager.get().apppendSequenceLength(getUser(), _log);
+
+            return true;
+        }
+
+        @Override
+        public void validateCommand(Object form, Errors errors)
+        {
+
+        }
+
+        @NotNull
+        @Override
+        public URLHelper getSuccessURL(Object form)
+        {
+            return getContainer().getStartURL(getUser());
+        }
+    }
+
     @RequiresPermission(DeletePermission.class)
     public class DeleteRecordsAction extends ConfirmAction<QueryForm>
     {
@@ -641,6 +684,10 @@ public class SequenceAnalysisController extends SpringActionController
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_DRUG_RESISTANCE, "drug resistance mutations", keys, "ref_aa_id");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "ref_aa_id");
             }
+            //else if (SequenceAnalysisSchema.TABLE_OUTPUTFILES.equals(_table.getName()))
+            //{
+
+            //}
 
             return new HtmlView(msg.toString());
         }
@@ -716,27 +763,11 @@ public class SequenceAnalysisController extends SpringActionController
                 ret.put(stepType.name(), list);
             }
 
-            JSONArray resourceSettings = new JSONArray();
-            for (JobResourceSettings settings : SequencePipelineServiceImpl.get().getResourceSettings())
+            JSONObject resourceSettings = getReourceSettingsJson();
+            if (resourceSettings != null)
             {
-                if (settings.isAvailable(getContainer()))
-                {
-                    for (ToolParameterDescriptor pd : settings.getParams())
-                    {
-                        resourceSettings.put(pd.toJSON());
-                    }
-                }
-            }
-
-            if (resourceSettings.length() > 0)
-            {
-                JSONObject json = new JSONObject();
-                json.put("name", "resourceSettings");
-                json.put("description", "The following options are available to adjust the resources given to this job when it executes.  The are often chosen automatically, so you can generally leave these blank if you are unsure.");
-                json.put("parameters", resourceSettings);
-
                 JSONArray arr = new JSONArray();
-                arr.put(json);
+                arr.put(resourceSettings);
                 ret.put("resourceSettings", arr);
             }
 
@@ -2004,7 +2035,7 @@ public class SequenceAnalysisController extends SpringActionController
                 idx++;
             }
 
-            SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getName(), form.getDescription(), members, form.isSkipCacheIndexes());
+            SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getName(), form.getDescription(), members, form.isSkipCacheIndexes(), null);
 
             return new ApiSimpleResponse("Success", true);
         }
@@ -2969,15 +3000,27 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
+            JSONArray toolArr = new JSONArray();
             if (handler instanceof ParameterizedOutputHandler)
             {
-                JSONArray toolArr = new JSONArray();
                 for (ToolParameterDescriptor pd : ((ParameterizedOutputHandler) handler).getParameters())
                 {
                     toolArr.put(pd.toJSON());
                 }
-                ret.put("toolParameters", toolArr);
             }
+
+            JSONObject resourceSettings = getReourceSettingsJson();
+            if (resourceSettings != null && resourceSettings.get("parameters") != null)
+            {
+                for (JSONObject o : resourceSettings.getJSONArray("parameters").toJSONObjectArray())
+                {
+                    //a little unclean.  the ResourceAllocator will expect a fully qualified name
+                    o.put("name", "resourceSettings.resourceSettings." + o.getString("name"));
+                    toolArr.put(o);
+                }
+            }
+
+            ret.put("toolParameters", toolArr);
 
             ret.put("description", handler.getDescription());
             ret.put("name", handler.getName());
@@ -3070,6 +3113,33 @@ public class SequenceAnalysisController extends SpringActionController
 
             return o;
         }
+    }
+
+    private JSONObject getReourceSettingsJson()
+    {
+        JSONArray resourceSettings = new JSONArray();
+        for (JobResourceSettings settings : SequencePipelineServiceImpl.get().getResourceSettings())
+        {
+            if (settings.isAvailable(getContainer()))
+            {
+                for (ToolParameterDescriptor pd : settings.getParams())
+                {
+                    resourceSettings.put(pd.toJSON());
+                }
+            }
+        }
+
+        if (resourceSettings.length() > 0)
+        {
+            JSONObject json = new JSONObject();
+            json.put("name", "resourceSettings");
+            json.put("description", "The following options are available to adjust the resources given to this job when it executes.  The are often chosen automatically, so you can generally leave these blank if you are unsure.");
+            json.put("parameters", resourceSettings);
+
+            return json;
+        }
+
+        return null;
     }
 
     public static class CheckFileStatusForm
@@ -4242,6 +4312,85 @@ public class SequenceAnalysisController extends SpringActionController
         public void setRequireCompleteCoverage(boolean requireCompleteCoverage)
         {
             _requireCompleteCoverage = requireCompleteCoverage;
+        }
+    }
+
+    @RequiresPermission(InsertPermission.class)
+    public static class ConcatenateSequencesAction extends ApiAction<ConcatenateSequencesForm>
+    {
+        @Override
+        public Object execute(ConcatenateSequencesForm form, BindException errors) throws Exception
+        {
+            try
+            {
+                if (form.getName() == null || form.getDescription() == null)
+                {
+                    errors.reject(ERROR_MSG, "Must provide name and description");
+                    return null;
+                }
+
+                if (form.getSequenceIds() == null || form.getSequenceIds().length == 0)
+                {
+                    errors.reject(ERROR_MSG, "Must provide the sequence IDs");
+                    return null;
+                }
+
+                List<Integer> ntIds = Arrays.asList(form.getSequenceIds());
+
+                PipeRoot pr = PipelineService.get().getPipelineRootSetting(getContainer());
+                if (pr == null)
+                {
+                    errors.reject(ERROR_MSG, "Pipeline root not set");
+                    return null;
+                }
+
+                SequenceConcatPipelineJob job = new SequenceConcatPipelineJob(getContainer(), getUser(), pr, form.getName(), form.getDescription(), ntIds);
+                PipelineService.get().queueJob(job);
+
+                return new ApiSimpleResponse("success", true);
+            }
+            catch (IllegalArgumentException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+        }
+    }
+
+    public static class ConcatenateSequencesForm
+    {
+        private Integer[] _sequenceIds;
+        private String _name;
+        private String _description;
+
+        public Integer[] getSequenceIds()
+        {
+            return _sequenceIds;
+        }
+
+        public void setSequenceIds(Integer[] sequenceIds)
+        {
+            _sequenceIds = sequenceIds;
+        }
+
+        public String getName()
+        {
+            return _name;
+        }
+
+        public void setName(String name)
+        {
+            _name = name;
+        }
+
+        public String getDescription()
+        {
+            return _description;
+        }
+
+        public void setDescription(String description)
+        {
+            _description = description;
         }
     }
 }

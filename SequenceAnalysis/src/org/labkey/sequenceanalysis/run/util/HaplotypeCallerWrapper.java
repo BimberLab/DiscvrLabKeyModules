@@ -79,6 +79,9 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
         args.add("--max_alternate_alleles");
         args.add("12");
 
+        //as of version 3.7, opt into the new AF calling method
+        args.add("-newQual");
+
         if (_multiThreaded)
         {
             getLogger().debug("checking available threads");

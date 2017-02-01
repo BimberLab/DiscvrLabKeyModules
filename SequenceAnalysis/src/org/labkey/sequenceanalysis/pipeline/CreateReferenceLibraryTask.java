@@ -43,6 +43,8 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Job;
+import org.labkey.api.util.JobRunner;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.writer.PrintWriters;
@@ -153,7 +155,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             if (getPipelineJob().isCreateNew())
             {
                 Map<String, Object> libraryRow = new CaseInsensitiveHashMap();
-                libraryRow.put("name", getPipelineJob().getName());
+                libraryRow.put("name", getPipelineJob().getLibraryName());
                 libraryRow.put("description", getPipelineJob().getLibraryDescription());
 
                 BatchValidationException errors = new BatchValidationException();
@@ -201,7 +203,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             }
             getPipelineJob().setLibraryId(rowId);
 
-            String basename = FileUtil.makeLegalName(rowId + "_" + getPipelineJob().getName().replace(" ", "_"));
+            String basename = FileUtil.makeLegalName(rowId + "_" + getPipelineJob().getLibraryName().replace(" ", "_"));
             File outputDir = new File(getPipelineJob().getAnalysisDirectory(), rowId.toString());
             if (!outputDir.exists())
             {
@@ -231,10 +233,18 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 FileUtils.deleteDirectory(alignerIndexes);
             }
 
+            //TODO: check whether to include primary contigs only
+            //if (getPipelineJob().isCreateNew() && getPipelineJob().getUnplacedContigPrefixes() != null)
+            //{
+
+            //}
+
+            //TODO: check whether to build ChrUn
+
             //then gather sequences and create the FASTA
             try (PrintWriter writer = PrintWriters.getPrintWriter(fasta); PrintWriter idWriter = PrintWriters.getPrintWriter(idFile))
             {
-                idWriter.write("RowId\tName\tAccession\tStart\tStop\n");
+                idWriter.write("RowId\tName\tAccession\tStart\tStop\tType\n");
 
                 int idx = 0;
                 for (ReferenceLibraryMember lm : libraryMembers)
@@ -253,7 +263,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                     writer.write(">" + name + "\n");
                     model.writeSequence(writer, 60, lm.getStart(), lm.getStop());
 
-                    idWriter.write(model.getRowid() + "\t" + model.getName() + "\t" + (model.getGenbank() == null ? "" : model.getGenbank()) + "\t" + (lm.getStart() == null ? "" : lm.getStart()) + "\t" + (lm.getStop() == null ? "" : lm.getStop()) + "\n");
+                    idWriter.write(model.getRowid() + "\t" + model.getName() + "\t" + (model.getGenbank() == null ? "" : model.getGenbank()) + "\t" + (lm.getStart() == null ? "" : lm.getStart()) + "\t" + (lm.getStop() == null ? "" : lm.getStop())  + "\t" + (lm.getType() == null ? "" : lm.getType()) + "\n");
 
                     model.clearCachedSequence();
                 }
@@ -315,6 +325,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                     childRow.put("ref_nt_id", row.getRefNtId());
                     childRow.put("start", row.getStart());
                     childRow.put("stop", row.getStop());
+                    childRow.put("type", row.getType());
                     toInsert.add(childRow);
                 }
             }
@@ -343,21 +354,32 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             Set<GenomeTrigger> triggers = SequenceAnalysisServiceImpl.get().getGenomeTriggers();
             if (!triggers.isEmpty())
             {
-                for (GenomeTrigger t : triggers)
+                JobRunner jr = JobRunner.getDefault();
+                for (final GenomeTrigger t : triggers)
                 {
                     if (t.isAvailable(getJob().getContainer()))
                     {
                         getJob().getLogger().info("running genome trigger: " + t.getName());
-                        if (getPipelineJob().isCreateNew())
+                        final int libraryId = rowId;
+                        jr.execute(new Job()
                         {
-                            t.onCreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), rowId);
-                        }
-                        else
-                        {
-                            t.onRecreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), rowId);
-                        }
+                            @Override
+                            public void run()
+                            {
+                                if (getPipelineJob().isCreateNew())
+                                {
+                                    t.onCreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId);
+                                }
+                                else
+                                {
+                                    t.onRecreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId);
+                                }
+                            }
+                        });
                     }
                 }
+
+                jr.waitForCompletion();
             }
         }
         catch (Exception e)

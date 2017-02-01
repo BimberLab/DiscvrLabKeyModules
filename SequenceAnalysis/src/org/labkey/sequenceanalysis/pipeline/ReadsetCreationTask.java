@@ -302,7 +302,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             getJob().getLogger().info("calculating quality metrics for readset: " + model.getName() + ", " + idx + " of " + newReadsets.size());
             for (ReadDataImpl d : model.getReadDataImpl())
             {
-                getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING QUALITY METRICS");
+                getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING QUALITY METRICS (" + idx + " of " + newReadsets.size() + ")");
                 addQualityMetricsForReadset(model, d.getFileId1());
                 if (d.getFileId2() != null)
                 {

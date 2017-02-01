@@ -12,6 +12,6 @@
     <orderEntry type="module" module-name="LDK-API" />
     <orderEntry type="module" module-name="SequenceAnalysis-API" />
     <orderEntry type="module" module-name="HTCondorConnector-API" />
+    <orderEntry type="module" module-name="JBrowse-API" />
   </component>
 </module>
-

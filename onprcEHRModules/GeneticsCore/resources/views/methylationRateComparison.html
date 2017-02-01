@@ -49,7 +49,7 @@
                     items: [{
                         title: 'Instructions',
                         items: [{
-                            html: 'This tool can be used to calculate p-values for methylation rates across groups.  Please choose from the options below:'
+                            html: 'This tool can be used to calculate p-values for methylation rates across groups, and can run comb-p on these p-values to find significant regions.  Please choose from the options below:'
                         }]
                     },{
                         title: 'Sample Information',
@@ -127,6 +127,35 @@
                         itemId: 'sampleSection',
                         items: [{
                             html: 'Loading...'
+                        }]
+                    },{
+                        title: 'Step 2: Comb-p (optional)',
+                        items: [{
+                            xtype: 'checkbox',
+                            inputValue: true,
+                            fieldLabel: 'Run Comb-p',
+                            name: 'combp',
+                            checked: true
+                        },{
+                            xtype: 'ldk-integerfield',
+                            minValue: 0,
+                            fieldLabel: 'Distance',
+                            name: 'distance',
+                            value: 300,
+                            helpPopup: 'This parameter tells the program to merge peaks within X bases of each other'
+                        },{
+                            xtype: 'ldk-numberfield',
+                            minValue: 0,
+                            fieldLabel: 'Seed',
+                            name: 'seed',
+                            value: 0.05,
+                            helpPopup: 'This parameter tells the program to select peaks with p-value <X'
+                        },{
+                            xtype: 'ldk-numberfield',
+                            minValue: 0,
+                            fieldLabel: 'Step',
+                            name: 'step',
+                            value: 100
                         }]
                     }],
                     buttonAlign: 'left',

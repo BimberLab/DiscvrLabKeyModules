@@ -94,12 +94,13 @@ Ext4.define('SequenceAnalysis.panel.VariantMaskPanel', {
         return [{
             xtype: 'textfield',
             fieldLabel: 'Mask Name',
-            allowBlank: false
+            allowBlank: false,
+            itemId: 'maskName'
         },{
             xtype: 'ldk-expdatafield',
             fieldLabel: 'File Id',
             allowBlank: false,
-            itemId: 'maskName'
+            itemId: 'fileId'
         }];
     },
 

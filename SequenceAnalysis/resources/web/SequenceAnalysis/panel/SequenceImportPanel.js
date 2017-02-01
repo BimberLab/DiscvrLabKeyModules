@@ -352,10 +352,10 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     },
 
     //<sample name>_<barcode sequence>_L<lane (0-padded to 3 digits)>_R<read number>_<set number (0-padded to 3 digits>.fastq.gz
-    ILLUMINA_REGEX: /^(.+)_(.+)_L(.+)_R(.+)_(.+)(\.fastq)(\.gz)?$/i,
+    ILLUMINA_REGEX: /^(.+)_(.+)_L(.+)_R([0-9])_(.+)(\.f(ast){0,1}q)(\.gz)?$/i,
 
     //Example from NextSeq: RNA160915BB_34A_22436_Gag120_Clone-10_S10_R1_001.fastq.gz
-    ILLUMINA_REGEX_NO_LANE: /^(.+)_S([0-9]+)_R([0-9])_([0-9]+)(\.fastq)(\.gz)?$/i,
+    ILLUMINA_REGEX_NO_LANE: /^(.+)_R([0-9])_([0-9]+)(\.f(ast){0,1}q)(\.gz)?$/i,
 
     populateSamples: function(orderType, isPaired){
         this.fileNameStore.sort('displayName', 'ASC');
@@ -381,19 +381,17 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     var platformUnit = match[1] + '-' + match[2] + '_L' + match[3];
                     var lane = match[5];
                     var setId = match[1] + '-' + match[2] + '_L' + match[3] + '_' + lane;
-                    var readSet = match[4];
-                    this.processIlluminaMatch(sample, platformUnit, lane, setId, readSet, rec, map);
+                    var direction = match[4];
+                    this.processIlluminaMatch(sample, platformUnit, lane, setId, direction, rec, map);
                 }
-                //else if (this.ILLUMINA_REGEX_NO_LANE.test(rec.get('fileName'))){
-                //    //TODO
-                //    var match = this.ILLUMINA_REGEX_NO_LANE.exec(rec.get('fileName'));
-                //    var sample = match[1] + '-' + match[2];
-                //    var platformUnit = match[1] + '-' + match[2] + '_L' + match[3];
-                //    var lane = match[5];
-                //    var setId = match[1] + '-' + match[2] + '_L' + match[3] + '_' + lane;
-                //    var readSet = match[4];
-                //    this.processIlluminaMatch(sample, platformUnit, lane, setId, readSet, rec, map);
-                //}
+                else if (this.ILLUMINA_REGEX_NO_LANE.test(rec.get('fileName'))){
+                   var match = this.ILLUMINA_REGEX_NO_LANE.exec(rec.get('fileName'));
+                   var sample = match[1] + '-' + match[3];
+                   var platformUnit = match[1];
+                   var setId = match[1] + '-' + match[3];
+                   var direction = match[2];
+                   this.processIlluminaMatch(sample, platformUnit, null, setId, direction, rec, map);
+                }
                 else {
                     var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
                     m.set('fileRecord1', rec.get('id'));

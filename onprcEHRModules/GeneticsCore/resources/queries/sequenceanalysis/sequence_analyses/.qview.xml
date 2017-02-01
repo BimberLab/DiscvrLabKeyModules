@@ -31,7 +31,7 @@
        </column>
        <column name="readset/totalForwardReads"/>
        <column name="totalSbtReads"/>
-       <column name="pctUnmappedReads"/>
+       <column name="pctUnmappedSbtReads"/>
        <column name="numCachedResults"/>
        <column name="numCachedHaplotypes"/>
        <column name="numReadsDisabled"/>

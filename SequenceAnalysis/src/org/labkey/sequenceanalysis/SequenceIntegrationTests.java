@@ -48,6 +48,7 @@ import org.labkey.api.resource.Resource;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.test.TestTimeout;
@@ -64,7 +65,6 @@ import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
-import org.labkey.sequenceanalysis.run.alignment.AlignerIndexUtil;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -1569,13 +1569,14 @@ public class SequenceIntegrationTests
 
             //otherwise create saved library
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239_Test");
+            filter.addCondition(FieldKey.fromString("container"), _project.getId());
             Integer mac239Id = new TableSelector(QueryService.get().getUserSchema(_context.getUser(), _project, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("rowid"), filter, null).getObject(Integer.class);
             if (mac239Id == null)
             {
                 throw new PipelineJobException("Unable to find SIVMac239 NT sequence");
             }
 
-            ReferenceLibraryPipelineJob libraryJob = SequenceAnalysisManager.get().createReferenceLibrary(Arrays.asList(mac239Id), _project, _context.getUser(), libraryName, null, true);
+            ReferenceLibraryPipelineJob libraryJob = SequenceAnalysisManager.get().createReferenceLibrary(Arrays.asList(mac239Id), _project, _context.getUser(), libraryName, null, true, null);
             waitForJobs(Collections.singleton(libraryJob));
 
             return new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid"), libraryFilter, null).getObject(Integer.class);

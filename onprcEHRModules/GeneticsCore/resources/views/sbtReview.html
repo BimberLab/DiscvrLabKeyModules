@@ -178,7 +178,9 @@
                             containerPath: Laboratory.Utils.getQueryContainerPath(),
                             filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)],
                             removeableFilters: [
-                                LABKEY.Filter.create('percent_from_locus', 0.25, LABKEY.Filter.Types.GTE)
+                                LABKEY.Filter.create('percent_from_locus', 0.25, LABKEY.Filter.Types.GTE),
+                                LABKEY.Filter.create('total_reads', 5, LABKEY.Filter.Types.GT),
+                                LABKEY.Filter.create('totalLineages', 1, LABKEY.Filter.Types.EQUAL)
                             ],
                             scope: this,
                             success: this.onDataRegionLoad

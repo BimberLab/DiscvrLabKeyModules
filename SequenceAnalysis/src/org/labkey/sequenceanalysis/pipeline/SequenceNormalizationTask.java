@@ -480,7 +480,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                             }
                         }
 
-                        outputs = barcoder.demultiplexFiles(fastqs, new ArrayList<Readset>(readsetsForGroup), barcodeModels, outputDir);
+                        outputs = barcoder.demultiplexFiles(fastqs, new ArrayList<>(readsetsForGroup), barcodeModels, outputDir);
                         for (File output : outputs)
                         {
                             getHelper().getFileManager().addOutput(barcodeAction, SequenceTaskHelper.BARCODED_FASTQ_OUTPUTNAME, output);

@@ -84,6 +84,9 @@
                 <bean class="org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportTask$Factory">
 
                 </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceConcatTask$Factory">
+
+                </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerInitTask$Factory">
 
                 </bean>
@@ -122,6 +125,14 @@
                     <property name="taskProgressionSpec">
                         <list>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportTask</value>
+                        </list>
+                    </property>
+                </bean>
+                <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
+                    <constructor-arg type="java.lang.Class" value="org.labkey.sequenceanalysis.pipeline.SequenceConcatPipelineJob" />
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceConcatTask</value>
                         </list>
                     </property>
                 </bean>

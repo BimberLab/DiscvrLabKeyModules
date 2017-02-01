@@ -39,9 +39,11 @@ import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
@@ -55,7 +57,6 @@ import org.labkey.api.util.Pair;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
-import org.labkey.sequenceanalysis.run.alignment.AlignerIndexUtil;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
 import org.labkey.sequenceanalysis.run.util.AddOrReplaceReadGroupsWrapper;
@@ -393,7 +394,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
 
         //check client-supplied params
-        String val = getJob().getParameters().get(AlignmentInitTask.COPY_LOCALLY);
+        String val = getJob().getParameters().get(AlignerIndexUtil.COPY_LOCALLY);
         boolean doCopy = val == null ? true : ConvertHelper.convert(val, Boolean.class);
 
         //but let aligners override this.
@@ -697,6 +698,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 getJob().getLogger().info("***Starting BAM Post processing");
                 getJob().setStatus(PipelineJob.TaskStatus.running, "BAM POST-PROCESSING");
                 getHelper().getFileManager().addIntermediateFile(bam);
+                File idx = new File(bam.getPath() + ".bai");
+                if (idx.exists())
+                {
+                    getHelper().getFileManager().addIntermediateFile(idx);
+                }
 
                 for (PipelineStepProvider<BamProcessingStep> provider : providers)
                 {
@@ -804,24 +810,22 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 if (renamedBam.exists())
                 {
                     getJob().getLogger().warn("unexpected file, deleting: " + renamedBam.getPath());
-                }
-
-                if (renamedBam.exists())
-                {
-                    getJob().getLogger().debug("deleting existing BAM: " + renamedBam.getName());
                     renamedBam.delete();
                 }
                 FileUtils.moveFile(bam, renamedBam);
 
                 File bamIdxOrig = new File(bam.getPath() + ".bai");
                 File finalBamIdx = new File(renamedBam.getPath() + ".bai");
+                if (finalBamIdx.exists())
+                {
+                    getJob().getLogger().warn("unexpected file, deleting: " + finalBamIdx.getPath());
+                    finalBamIdx.delete();
+                }
+
                 if (bamIdxOrig.exists())
                 {
                     getJob().getLogger().debug("also moving bam index");
-                    if (finalBamIdx.exists())
-                    {
-                        getJob().getLogger().warn("unexpected file, deleting: " + finalBamIdx.getPath());
-                    }
+
 
                     FileUtils.moveFile(bamIdxOrig, finalBamIdx);
                 }
@@ -1009,7 +1013,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             getJob().setStatus(PipelineJob.TaskStatus.running, "DECOMPRESS INPUT FILES");
             getHelper().getFileManager().decompressInputFiles(inputFiles, actions);
             getHelper().getFileManager().addIntermediateFile(inputFiles.first);
-            getHelper().getFileManager().addIntermediateFile(inputFiles.second);
+            if (inputFiles.second != null)
+            {
+                getHelper().getFileManager().addIntermediateFile(inputFiles.second);
+            }
         }
         else
         {
@@ -1027,7 +1034,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             getHelper().getFileManager().addInput(alignmentAction, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, inputFiles.second);
         }
 
-        getHelper().getFileManager().addInput(alignmentAction, AlignmentInitTask.REFERENCE_DB_FASTA, referenceGenome.getSourceFastaFile());
+        getHelper().getFileManager().addInput(alignmentAction, IndexOutputImpl.REFERENCE_DB_FASTA, referenceGenome.getSourceFastaFile());
         getJob().getLogger().info("Beginning alignment for: " + inputFiles.first.getName() + (inputFiles.second == null ? "" : " and " + inputFiles.second.getName()) + msgSuffix);
 
         File outputDirectory = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(inputFiles.first.getName()));
@@ -1057,7 +1064,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         boolean doMergeUnaligned = mergeParam == null ? false : mergeParam.extractValue(getJob(), alignmentStep.getProvider(), Boolean.class, false);
         if (doMergeUnaligned)
         {
-            getJob().setStatus(PipelineJob.TaskStatus.running, "MERGING UNALIGNED READS INTO BAM" + (msgSuffix != null ? ": " + msgSuffix : ""));
+            getJob().setStatus(PipelineJob.TaskStatus.running, "MERGING UNALIGNED READS INTO BAM" + msgSuffix);
             getJob().getLogger().info("merging unaligned reads into BAM");
             File idx = new File(alignmentOutput.getBAM().getPath() + ".bai");
             if (idx.exists())
@@ -1078,7 +1085,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         if (alignmentStep.doAddReadGroups())
         {
-            getJob().setStatus(PipelineJob.TaskStatus.running, "ADDING READ GROUPS" + (msgSuffix != null ? ": " + msgSuffix : ""));
+            getJob().setStatus(PipelineJob.TaskStatus.running, "ADDING READ GROUPS" + msgSuffix);
             AddOrReplaceReadGroupsWrapper wrapper = new AddOrReplaceReadGroupsWrapper(getJob().getLogger());
             wrapper.executeCommand(alignmentOutput.getBAM(), null, rs.getReadsetId().toString(), rs.getPlatform(), (rd.getPlatformUnit() == null ? rs.getReadsetId().toString() : rd.getPlatformUnit()), rs.getName().replaceAll(" ", "_"));
             getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), alignmentAction);

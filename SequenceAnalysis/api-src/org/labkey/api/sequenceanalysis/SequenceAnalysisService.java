@@ -19,6 +19,7 @@ package org.labkey.api.sequenceanalysis;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.laboratory.NavItem;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.model.ReadData;
@@ -69,7 +70,13 @@ abstract public class SequenceAnalysisService
 
     abstract public File ensureVcfIndex(File vcf, Logger log) throws IOException;
 
+    abstract public File ensureVcfIndex(File vcf, Logger log, boolean forceRecreate) throws IOException;
+
     abstract public File bgzipFile(File input, Logger log) throws PipelineJobException;
 
     abstract public void ensureFastaIndex(File fasta, Logger log) throws PipelineJobException;
+
+    abstract public String getUnzippedBaseName(String filename);
+
+    abstract public Integer getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException;
 }

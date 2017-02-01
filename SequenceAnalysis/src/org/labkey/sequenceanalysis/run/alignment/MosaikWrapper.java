@@ -1,6 +1,12 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
-import org.apache.commons.io.FileUtils;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -8,11 +14,15 @@ import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
+import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
+import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
@@ -28,6 +38,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -125,10 +136,6 @@ public class MosaikWrapper extends AbstractCommandWrapper
             {
                 throw new PipelineJobException("BAM not created, expected: " + bam.getPath());
             }
-
-            //Note: mosaik has started to give errors about
-            FixBAMWrapper fixBam = new FixBAMWrapper(getPipelineCtx().getLogger());
-            fixBam.executeCommand(bam, null);
 
             output.setBAM(bam);
             output.addIntermediateFile(new File(outputDirectory, basename + ".stat"));
@@ -287,13 +294,91 @@ public class MosaikWrapper extends AbstractCommandWrapper
             boolean retainAll = args.contains("-om");
             if (retainAll)
             {
-                getLogger().info("using multiple hits BAM");
-                if (bam.exists())
+                //merge BAMs
+                int mergedRecords = 0;
+                int singleRecords = 0;
+                int multipleRecords = 0;
+
+                SamReaderFactory fact = SamReaderFactory.makeDefault();
+                fact.validationStringency(ValidationStringency.SILENT);
+                fact.referenceSequence(refFasta);
+                File mergedBam = new File(outputDirectory, basename + ".merged.bam");
+                try (SamReader bamReader = fact.open(bam);SamReader multipleReader = fact.open(multipleHitsBam))
                 {
-                    bam.delete();
+                    SAMFileWriterFactory writerFactory = new SAMFileWriterFactory();
+                    writerFactory.setUseAsyncIo(true);
+                    writerFactory.setCompressionLevel(9);
+                    SAMFileHeader header = bamReader.getFileHeader().clone();
+                    try (SAMFileWriter writer = writerFactory.makeBAMWriter(header, false, mergedBam))
+                    {
+                        //this depends on the two files being in identical queryName sort, also with forward before reverse
+                        Iterator<SAMRecord> bamIt = bamReader.iterator();
+                        Iterator<SAMRecord> multipleIt = multipleReader.iterator();
+
+                        Set<String> forwardKeys = new HashSet<>();
+                        Set<String> reverseKeys = new HashSet<>();
+                        while (bamIt.hasNext())
+                        {
+                            SAMRecord r1 = bamIt.next();
+                            writer.addAlignment(r1);
+                            singleRecords++;
+                            mergedRecords++;
+
+                            String key = r1.getReadName() + "<>" + r1.getContig() + "<>" + r1.getCigarString();
+                            if (!r1.getProperPairFlag() || r1.getFirstOfPairFlag())
+                            {
+                                forwardKeys.add(key);
+                            }
+                            else
+                            {
+                                reverseKeys.add(key);
+                            }
+                        }
+
+                        while (multipleIt.hasNext())
+                        {
+                            SAMRecord r1 = multipleIt.next();
+                            multipleRecords++;
+
+                            String key = r1.getReadName() + "<>" + r1.getContig() + "<>" + r1.getCigarString();
+                            if (!r1.getProperPairFlag() || r1.getFirstOfPairFlag())
+                            {
+                                if (!forwardKeys.contains(key))
+                                {
+                                    writer.addAlignment(r1);
+                                    mergedRecords++;
+                                }
+                            }
+                            else
+                            {
+                                if (!reverseKeys.contains(key))
+                                {
+                                    writer.addAlignment(r1);
+                                    mergedRecords++;
+                                }
+                            }
+                        }
+                    }
                 }
 
-                FileUtils.moveFile(multipleHitsBam, bam);
+                getLogger().info("total records in primary BAM: " + singleRecords);
+                getLogger().info("total records in multiple hits BAM: " + multipleRecords);
+                getLogger().info("total records in merged BAM: " + mergedRecords);
+
+                bam.delete();
+                File idx = new File(bam.getPath() + ".bai");
+                if (idx.exists())
+                {
+                    idx.delete();
+                }
+                multipleHitsBam.delete();
+                idx = new File(multipleHitsBam.getPath() + ".bai");
+                if (idx.exists())
+                {
+                    idx.delete();
+                }
+
+                bam = mergedBam;
             }
             else
             {
@@ -303,6 +388,12 @@ public class MosaikWrapper extends AbstractCommandWrapper
                     multipleHitsBam.delete();
                 }
             }
+
+            //Note: mosaik has started to give errors about bin field
+            FixBAMWrapper fixBam = new FixBAMWrapper(getLogger());
+            fixBam.executeCommand(bam, null);
+
+            new SamSorter(getLogger()).execute(bam, null, SAMFileHeader.SortOrder.coordinate);
 
             return bam;
         }

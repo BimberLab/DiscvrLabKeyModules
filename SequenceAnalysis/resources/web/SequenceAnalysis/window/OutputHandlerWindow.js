@@ -136,6 +136,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
         Ext4.Array.forEach(parameters, function (i, idx) {
             var o = {
                 xtype: i.fieldXtype,
+                labelWidth: 200,
                 isToolParam: true,
                 fieldLabel: i.label,
                 helpPopup: (i.description || '') + (i.commandLineParam ? '<br>Parameter name: \'' + i.commandLineParam + '\'' : ''),

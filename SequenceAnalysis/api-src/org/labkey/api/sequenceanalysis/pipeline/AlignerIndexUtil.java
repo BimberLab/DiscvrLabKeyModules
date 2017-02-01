@@ -1,4 +1,4 @@
-package org.labkey.sequenceanalysis.run.alignment;
+package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -6,10 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.WorkDirectory;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
-import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +18,7 @@ import java.util.Arrays;
 public class AlignerIndexUtil
 {
     public static final String INDEX_DIR = "alignerIndexes";
+    public static final String COPY_LOCALLY = "copyGenomeLocally";
 
     public static boolean hasCachedIndex(PipelineContext ctx, String name, ReferenceGenome genome) throws PipelineJobException
     {
@@ -75,7 +73,7 @@ public class AlignerIndexUtil
                 {
                     if (wd != null)
                     {
-                        String val = ctx.getJob().getParameters().get(AlignmentInitTask.COPY_LOCALLY);
+                        String val = ctx.getJob().getParameters().get(COPY_LOCALLY);
                         boolean doCopy = forceCopyLocal || (val == null ? true : ConvertHelper.convert(val, Boolean.class));
 
                         if (doCopy)

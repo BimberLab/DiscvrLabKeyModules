@@ -5,19 +5,13 @@ import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.RenderContext;
-import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.query.DetailsURL;
-import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.URLHelper;
-import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.template.ClientDependency;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.net.URI;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -67,7 +61,7 @@ public class OmeroDisplayColum extends DataColumn
 
             html.append("<img src=\"");
             html.append(thumbnailURL.getActionURL().toString());
-            html.append("\" />");
+            html.append("\" style=\"height:96px; width: 96px;\" />");
 
             html.append("</span>");
 

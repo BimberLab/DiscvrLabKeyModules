@@ -27,7 +27,7 @@ public class FastaToFastqConverter
     public File execute(File input, File output)
     {
         FastqWriterFactory fact = new FastqWriterFactory();
-
+        fact.setUseAsyncIo(true);
         _logger.info("Converting FASTA to FASTQ: " + input.getPath());
 
         try (FastaSequenceFile fasta = new FastaSequenceFile(input, false);FastqWriter writer = fact.newWriter(output))

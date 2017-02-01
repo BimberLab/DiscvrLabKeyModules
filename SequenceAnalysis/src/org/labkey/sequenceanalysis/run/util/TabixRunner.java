@@ -26,8 +26,14 @@ public class TabixRunner extends AbstractCommandWrapper
     {
         getLogger().info("Building tabix index for file: " + input.getPath());
 
-        execute(getParams(input));
         File output = new File(input.getPath() + ".tbi");
+        if (output.exists())
+        {
+            getLogger().debug("deleting pre-existing index: " + output.getPath());
+            output.delete();
+        }
+
+        execute(getParams(input));
         if (!output.exists())
             throw new PipelineJobException("Index not created, expected: " + output.getPath());
 

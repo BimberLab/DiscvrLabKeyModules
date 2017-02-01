@@ -10,12 +10,12 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
-import org.labkey.sequenceanalysis.run.alignment.AlignerIndexUtil;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
@@ -68,6 +68,7 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
         {
             if (((ReferenceLibraryPipelineJob)job).skipCacheIndexes())
             {
+                job.getLogger().debug("will skip caching of aligner indexes");
                 return false;
             }
 
@@ -124,26 +125,38 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
                     AlignmentStep alignmentStep = provider.create(ctx);
 
                     boolean hasIndex = AlignerIndexUtil.hasCachedIndex(alignmentStep.getPipelineCtx(), alignmentStep.getIndexCachedDirName(), referenceGenome);
-                    if (hasIndex)
+                    File outDir = new File(_wd.getDir(), alignmentStep.getIndexCachedDirName());
+                    if (!hasIndex)
+                    {
+                        //create locally first
+                        alignmentStep.createIndex(referenceGenome, _wd.getDir());
+
+                        //NOTE: the AlignerSteps are doing this themselves.  not sure if that is the right behvior
+                        if (!AlignerIndexUtil.hasCachedIndex(ctx, provider.getName(), referenceGenome))
+                        {
+                            AlignerIndexUtil.saveCachedIndex(false, ctx, outDir, provider.getName(), referenceGenome);
+                        }
+                        else
+                        {
+                            ctx.getLogger().debug("aligner index was already cached");
+                        }
+                    }
+                    else
                     {
                         getJob().getLogger().info("cached aligner index exists, skipping step");
-                        continue;
                     }
 
-                    //create locally first
-                    alignmentStep.createIndex(referenceGenome, _wd.getDir());
-                    File outDir = new File(_wd.getDir(), alignmentStep.getIndexCachedDirName());
-
-                    //NOTE: the AlignerSteps are doing this themselves.  not sure if that is the right behvior
-                    //AlignerIndexUtil.saveCachedIndex(false, ctx, outDir, provider.getName(), referenceGenome);
-
-                    try
+                    if (outDir.exists())
                     {
-                        FileUtils.deleteDirectory(outDir);
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
+                        try
+                        {
+                            getJob().getLogger().debug("deleting directory: " + outDir);
+                            FileUtils.deleteDirectory(outDir);
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
                     }
                 }
             }

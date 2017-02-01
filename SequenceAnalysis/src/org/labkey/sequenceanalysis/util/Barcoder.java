@@ -556,6 +556,7 @@ public class Barcoder extends AbstractSequenceMatcher
                 _input.createNewFile();
 
                 FastqWriterFactory fact = new FastqWriterFactory();
+                fact.setUseAsyncIo(true);
                 writer = fact.newWriter(_input);
 
                 for (FastqRecord fq : _helper.getBarcodedFastqData())

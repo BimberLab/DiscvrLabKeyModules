@@ -16,6 +16,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -113,56 +114,71 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         Table.insert(getJob().getUser(), analysisTable, am);
         int analysisId = am.getRowId();
 
+        List<SequenceOutputFile> outputsCreated = new ArrayList<>();
         if (!getPipelineJob().getOutputsToCreate().isEmpty())
         {
-            createOutputFiles(getPipelineJob(), runId, analysisId);
+            outputsCreated.addAll(createOutputFiles(getPipelineJob(), runId, analysisId));
         }
         else
         {
             getJob().getLogger().info("no outputs created, nothing to do");
         }
 
+        //run final handler
+        getPipelineJob().getHandler().getProcessor().complete(getPipelineJob(), getPipelineJob().getFiles(), outputsCreated);
+
         return new RecordedActionSet();
     }
 
-    public static void createOutputFiles(SequenceJob job, int runId, @Nullable Integer analysisId)
+    public static Set<SequenceOutputFile> createOutputFiles(SequenceJob job, int runId, @Nullable Integer analysisId)
     {
         job.getLogger().info("creating " + job.getOutputsToCreate().size() + " new output files");
 
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+        Set<SequenceOutputFile> created = new HashSet<>();
+
         for (SequenceOutputFile o : job.getOutputsToCreate())
         {
-            o.setRunId(runId);
-            o.setAnalysis_id(analysisId);
-            o.setCreatedby(job.getUser().getUserId());
-            if (o.getCreated() == null)
-            {
-                o.setCreated(new Date());
-            }
+            updateOutputFile(o, job, runId, analysisId);
+            created.add(Table.insert(job.getUser(), ti, o));
+        }
 
-            o.setModifiedby(job.getUser().getUserId());
-            if (o.getModified() == null)
-            {
-                o.setModified(new Date());
-            }
+        job.getLogger().debug("clearing cached job outputs");
+        job.getOutputsToCreate().clear();
 
-            if (o.getContainer() == null)
-            {
-                o.setContainer(job.getContainerId());
-            }
+        return created;
+    }
 
-            if (o.getDataId() == null && o.getFile() != null)
-            {
-                job.getLogger().debug("creating ExpData for file: " + o.getFile().getName());
-                ExpData d = ExperimentService.get().createData(job.getContainer(), new DataType(o.getCategory()));
+    public static void updateOutputFile(SequenceOutputFile o, PipelineJob job, Integer runId, Integer analysisId)
+    {
+        o.setRunId(runId);
+        o.setAnalysis_id(analysisId);
+        o.setCreatedby(job.getUser().getUserId());
+        if (o.getCreated() == null)
+        {
+            o.setCreated(new Date());
+        }
 
-                d.setDataFileURI(o.getFile().toURI());
-                d.setName(o.getFile().getName());
-                d.save(job.getUser());
-                o.setDataId(d.getRowId());
-            }
+        o.setModifiedby(job.getUser().getUserId());
+        if (o.getModified() == null)
+        {
+            o.setModified(new Date());
+        }
 
-            Table.insert(job.getUser(), ti, o);
+        if (o.getContainer() == null)
+        {
+            o.setContainer(job.getContainerId());
+        }
+
+        if (o.getDataId() == null && o.getFile() != null)
+        {
+            job.getLogger().debug("creating ExpData for file: " + o.getFile().getName());
+            ExpData d = ExperimentService.get().createData(job.getContainer(), new DataType(o.getCategory()));
+
+            d.setDataFileURI(o.getFile().toURI());
+            d.setName(o.getFile().getName());
+            d.save(job.getUser());
+            o.setDataId(d.getRowId());
         }
     }
 }

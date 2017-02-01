@@ -72,10 +72,11 @@ public class RefNtSequenceModel
     private String _status;
     private String _aliases;
     private String _comments;
+    private Integer _seqLength;
     private String _container;
-    private String _createdby;
+    private Integer _createdby;
     private Date _created;
-    private String _modifiedby;
+    private Integer _modifiedby;
     private Date _modified;
 
     private byte[] _sequenceBytes = null;
@@ -302,12 +303,12 @@ public class RefNtSequenceModel
         _container = container;
     }
 
-    public String getCreatedby()
+    public Integer getCreatedby()
     {
         return _createdby;
     }
 
-    public void setCreatedby(String createdby)
+    public void setCreatedby(Integer createdby)
     {
         _createdby = createdby;
     }
@@ -322,12 +323,12 @@ public class RefNtSequenceModel
         _created = created;
     }
 
-    public String getModifiedby()
+    public Integer getModifiedby()
     {
         return _modifiedby;
     }
 
-    public void setModifiedby(String modifiedby)
+    public void setModifiedby(Integer modifiedby)
     {
         _modifiedby = modifiedby;
     }
@@ -365,7 +366,7 @@ public class RefNtSequenceModel
             }
             catch (IOException e)
             {
-                _log.error("Unable to read sequence for sequence Id: " + getRowid());
+                _log.error("Unable to read sequence for sequence Id: " + getRowid() + ", " + e.getMessage());
             }
         }
 
@@ -391,6 +392,7 @@ public class RefNtSequenceModel
         d.setDataFileURI(output.toURI());
         d.save(u);
 
+        setSeqLength(sequence.length());
         setSequenceFile(d.getRowId());
 
         TableInfo ti = DbSchema.get("sequenceanalysis").getTable("ref_nt_sequences");
@@ -494,5 +496,15 @@ public class RefNtSequenceModel
     public void clearCachedSequence()
     {
         _sequenceBytes = null;
+    }
+
+    public Integer getSeqLength()
+    {
+        return _seqLength;
+    }
+
+    public void setSeqLength(Integer seqLength)
+    {
+        _seqLength = seqLength;
     }
 }

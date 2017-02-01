@@ -6,11 +6,12 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.util.FileType;
-import org.labkey.sequenceanalysis.run.alignment.AlignerIndexUtil;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
@@ -173,7 +174,7 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
         {
             throw new PipelineJobException("Reference fasta does not exist: " + refFasta.getPath());
         }
-        getHelper().getFileManager().addInput(action, AlignmentInitTask.REFERENCE_DB_FASTA, refFasta);
+        getHelper().getFileManager().addInput(action, IndexOutputImpl.REFERENCE_DB_FASTA, refFasta);
 
         FastaIndexer indexer = new FastaIndexer(getJob().getLogger());
         File refFastaIndex = indexer.getExpectedIndexName(refFasta);

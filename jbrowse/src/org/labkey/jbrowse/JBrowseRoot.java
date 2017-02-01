@@ -27,6 +27,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
@@ -192,6 +193,13 @@ public class JBrowseRoot
 
     public JsonFile prepareOutputFile(User u, Integer outputFileId, boolean forceRecreateJson) throws IOException
     {
+        return prepareOutputFile(u, outputFileId, forceRecreateJson, null);
+    }
+
+    public JsonFile prepareOutputFile(User u, Integer outputFileId, boolean forceRecreateJson, JSONObject additionalConfig) throws IOException
+    {
+        getLogger().debug("preparing outputfile: " + outputFileId);
+
         //find existing resource
         TableInfo jsonFiles = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
         TableSelector ts1 = new TableSelector(jsonFiles, new SimpleFilter(FieldKey.fromString("outputfile"), outputFileId), null);
@@ -220,6 +228,7 @@ public class JBrowseRoot
         //else create
         if (jsonFile == null)
         {
+            getLogger().debug("adding new jsonfile record");
             TableInfo outputFiles = DbSchema.get("sequenceanalysis").getTable("outputfiles");
             TableSelector ts2 = new TableSelector(outputFiles, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null);
             String containerId = ts2.getObject(String.class);
@@ -239,6 +248,11 @@ public class JBrowseRoot
             jsonRecord.put("modified", new Date());
             jsonRecord.put("modifiedby", u.getUserId());
             jsonRecord.put("objectid", new GUID().toString().toUpperCase());
+            if (additionalConfig != null)
+            {
+                jsonRecord.put("trackJson", additionalConfig.toString());
+            }
+
             Table.insert(u, jsonFiles, jsonRecord);
 
             jsonFile = ts1.getObject(JsonFile.class);
@@ -296,9 +310,7 @@ public class JBrowseRoot
             jsonFile = ts1.getObject(JsonFile.class);
         }
 
-        AssayFileWriter afw = new AssayFileWriter();
-        File fasta = afw.findUniqueFileName(FileUtil.makeLegalName(model.getName()) + ".fasta", outDir);
-        //fasta.createNewFile();
+        File fasta = AssayFileWriter.findUniqueFileName(FileUtil.makeLegalName(model.getName()) + ".fasta", outDir);
 
         try (PrintWriter writer = PrintWriters.getPrintWriter(fasta))
         {
@@ -352,7 +364,7 @@ public class JBrowseRoot
         return jsonFile;
     }
 
-    public void prepareDatabase(Database database, User u) throws IOException
+    public void prepareDatabase(Database database, User u, @Nullable PipelineJob job) throws IOException
     {
         File outDir = new File(getDatabaseDir(database.getContainerObj()), database.getObjectId());
 
@@ -401,8 +413,16 @@ public class JBrowseRoot
             List<Integer> refNts = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_library_members"), PageFlowUtil.set("ref_nt_id"), new SimpleFilter(FieldKey.fromString("library_id"), db.getLibraryId()), null).getArrayList(Integer.class);
 
             getLogger().info("total ref sequences: " + refNts.size());
+            int j = 0;
             for (Integer refNtId : refNts)
             {
+                //NOTE: this should also have the effect of allowing the job to cancel if it has been cancelled by the user
+                if (job != null && j % 100 == 0)
+                {
+                    job.setStatus(PipelineJob.TaskStatus.running, "Processing sequence " + (j+1) + " of " + refNts.size());
+                }
+                j++;
+
                 JsonFile f = prepareRefSeq(u, refNtId, false);
                 if (f != null && !jsonGuids.contains(f.getObjectId()))
                 {
@@ -411,13 +431,26 @@ public class JBrowseRoot
                 }
             }
 
+            if (job != null)
+            {
+                job.setStatus(PipelineJob.TaskStatus.running, "Processing tracks");
+            }
+
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("library_id"), db.getLibraryId());
             filter.addCondition(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK);
 
             List<Integer> trackIds = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_library_tracks"), PageFlowUtil.set("rowid"), filter, null).getArrayList(Integer.class);
             getLogger().info("total tracks: " + trackIds.size());
+            j = 0;
             for (Integer trackId : trackIds)
             {
+                //NOTE: this should also have the effect of allowing the job to cancel if it has been cancelled by the user
+                if (job != null && j % 10 == 0)
+                {
+                    job.setStatus(PipelineJob.TaskStatus.running, "Processing track " + (j+1) + " of " + trackIds.size());
+                }
+                j++;
+
                 JsonFile f = prepareFeatureTrack(u, trackId, "Reference Annotations", false);
                 if (f != null && !jsonGuids.contains(f.getObjectId()))
                 {
@@ -453,8 +486,16 @@ public class JBrowseRoot
         Set<Integer> referenceIds = new HashSet<>();
 
         getLogger().info("total JSON files: " + jsonFiles.size());
+        int j = 0;
         for (JsonFile f : jsonFiles)
         {
+            //NOTE: this should also have the effect of allowing the job to cancel if it has been cancelled by the user
+            if (job != null && j % 100 == 0)
+            {
+                job.setStatus(PipelineJob.TaskStatus.running, "Processing file " + (j+1) + " of " + jsonFiles.size());
+            }
+            j++;
+
             getLogger().info("processing JSON file: " + f.getObjectId());
             if (f.getSequenceId() != null)
             {
@@ -515,6 +556,7 @@ public class JBrowseRoot
                         JSONObject o = arr.getJSONObject(i);
                         if (f.getExtraTrackConfig() != null)
                         {
+                            getLogger().debug("adding extra track config");
                             o.putAll(f.getExtraTrackConfig());
                         }
 
@@ -625,6 +667,7 @@ public class JBrowseRoot
                     {
                         if (f.getExtraTrackConfig() != null)
                         {
+                            getLogger().debug("adding extra track config");
                             o.putAll(f.getExtraTrackConfig());
                         }
 
@@ -1574,6 +1617,18 @@ public class JBrowseRoot
         if (SystemUtils.IS_OS_WINDOWS)
         {
             FileUtil.deleteDir(directory);
+        }
+        //this seems to be much, much faster and aware of symlinks
+        else if (SystemUtils.IS_OS_LINUX)
+        {
+            try
+            {
+                new SimpleScriptWrapper(getLogger()).execute(Arrays.asList("rm", "-Rf", directory.getPath()));
+            }
+            catch (PipelineJobException e)
+            {
+                throw new IOException(e);
+            }
         }
         else
         {

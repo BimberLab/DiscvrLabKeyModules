@@ -23,6 +23,7 @@ import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputTracker;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -45,7 +46,7 @@ import java.util.Map;
 /**
  * Created by bimber on 8/31/2016.
  */
-public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, HasJobParams
+public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, HasJobParams, SequenceOutputTracker
 {
     private TaskId _taskPipelineId;
     private Integer _experimentRunRowId;
@@ -72,12 +73,12 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         _params = params;
         writeParameters(params);
 
-        createLogFile();
+        setLogFile(getLogFilePath());
     }
 
-    protected void createLogFile() throws IOException
+    private File getLogFilePath() throws IOException
     {
-        setLogFile(new File(getDataDirectory(), FileUtil.makeLegalName(_jobName) + ".log"));
+        return AssayFileWriter.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectory());
     }
 
     @Override
@@ -110,9 +111,8 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
             webserverOutDir.mkdir();
         }
 
-        AssayFileWriter writer = new AssayFileWriter();
         String folderName = FileUtil.makeLegalName(StringUtils.capitalize(_folderPrefix) + "_" + FileUtil.getTimestamp());
-        webserverOutDir = writer.findUniqueFileName(folderName, webserverOutDir);
+        webserverOutDir = AssayFileWriter.findUniqueFileName(folderName, webserverOutDir);
         if (!webserverOutDir.exists())
         {
             webserverOutDir.mkdirs();
@@ -339,6 +339,12 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     public List<SequenceOutputFile> getOutputsToCreate()
     {
+        if (_outputsToCreate == null)
+        {
+            getLogger().warn("job._outputsToCreate is null");
+            _outputsToCreate = new ArrayList<>();
+        }
+
         return _outputsToCreate;
     }
 }

@@ -35,6 +35,7 @@ public class FastqMerger
         FastqWriter writer = null;
         FastqReader reader = null;
         FastqWriterFactory fact = new FastqWriterFactory();
+        fact.setUseAsyncIo(true);
 
         try
         {

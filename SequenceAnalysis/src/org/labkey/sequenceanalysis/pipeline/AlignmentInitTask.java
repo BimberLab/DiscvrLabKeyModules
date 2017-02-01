@@ -27,10 +27,7 @@ import java.util.List;
 public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Factory>
 {
     private static final String ACTIONNAME = "Preparing Run";
-    public static final String REFERENCE_DB_FASTA = "Reference FASTA";
     public static final String ID_KEY_FILE = "Reference Id Key";
-    public static final String REFERENCE_DB_FASTA_OUTPUT = "Reference Output";
-    public static final String COPY_LOCALLY = "copyGenomeLocally";
 
     private SequenceTaskHelper _taskHelper;
 

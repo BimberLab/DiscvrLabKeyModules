@@ -48,12 +48,12 @@ public class GeneticsTableCustomizer extends AbstractTableCustomizer implements 
 
     private void customizeAnalyses(AbstractTableInfo ti)
     {
-        if (ti.getColumn("numUnmappedReads") == null)
+        if (ti.getColumn("numUnmappedSbtReads") == null)
         {
             //# unmapped
             SQLFragment sql = new SQLFragment("(select SUM(a.total) from sequenceanalysis.alignment_summary a left join sequenceanalysis.alignment_summary_junction j ON (a.rowid = j.alignment_id AND a.analysis_id = j.analysis_id) WHERE j.alignment_id is null AND a.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
-            ExprColumn newCol = new ExprColumn(ti, "numUnmappedReads", sql, JdbcType.INTEGER, ti.getColumn("rowid"));
-            newCol.setLabel("# Unmapped Reads");
+            ExprColumn newCol = new ExprColumn(ti, "numUnmappedSbtReads", sql, JdbcType.INTEGER, ti.getColumn("rowid"));
+            newCol.setLabel("# Unmapped SBT Reads");
             ti.addColumn(newCol);
 
             //total reads
@@ -64,8 +64,8 @@ public class GeneticsTableCustomizer extends AbstractTableCustomizer implements 
 
             //pct unmapped
             SQLFragment sql3 = new SQLFragment("(select CASE WHEN SUM(a.total) > 0 THEN CAST(SUM(CASE WHEN j.alignment_id is null THEN a.total ELSE 0 END) as DOUBLE PRECISION) / CAST(SUM(a.total) as DOUBLE PRECISION) ELSE NULL END from sequenceanalysis.alignment_summary a left join sequenceanalysis.alignment_summary_junction j ON (a.rowid = j.alignment_id AND a.analysis_id = j.analysis_id) WHERE a.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
-            ExprColumn newCol3 = new ExprColumn(ti, "pctUnmappedReads", sql3, JdbcType.DOUBLE, ti.getColumn("rowid"));
-            newCol3.setLabel("% Unmapped Reads");
+            ExprColumn newCol3 = new ExprColumn(ti, "pctUnmappedSbtReads", sql3, JdbcType.DOUBLE, ti.getColumn("rowid"));
+            newCol3.setLabel("% Unmapped SBT Reads");
             newCol3.setFormat("#.##%");
             ti.addColumn(newCol3);
 

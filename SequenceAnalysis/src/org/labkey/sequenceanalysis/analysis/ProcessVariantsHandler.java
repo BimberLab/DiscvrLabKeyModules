@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.analysis;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
@@ -205,7 +206,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
 
             try
             {
-                SequenceAnalysisService.get().ensureVcfIndex(currentVCF, ctx.getJob().getLogger());
+                SequenceAnalysisService.get().ensureVcfIndex(currentVCF, ctx.getJob().getLogger(), true);
             }
             catch (IOException e)
             {
@@ -236,7 +237,20 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
         String cat = vcf.getName().endsWith(".gz") ? "zcat" : "cat";
         SimpleScriptWrapper wrapper = new SimpleScriptWrapper(null);
 
-        return wrapper.executeWithOutput(Arrays.asList("/bin/bash", "-c", cat + " \"" + vcf.getPath() + "\" | grep -v \"#\" | " + (passOnly ? "awk ' $7 == \"PASS\" || $7 == \"\\.\" ' | " : "") + "wc -l | awk \" { print $1 } \""));
+        String ret = wrapper.executeWithOutput(Arrays.asList("/bin/bash", "-c", cat + " \"" + vcf.getPath() + "\" | grep -v \"#\" | " + (passOnly ? "awk ' $7 == \"PASS\" || $7 == \"\\.\" ' | " : "") + "wc -l | awk \" { print $1 } \""));
+
+        //NOTE: unsure how to get awk to omit this warning, so discard it:
+        if (ret != null)
+        {
+            String[] tokens = ret.split("\n");
+            if (tokens.length > 1)
+            {
+                tokens = ArrayUtils.remove(tokens, 0);
+                ret = StringUtils.join(tokens, "\n");
+            }
+        }
+
+        return ret;
     }
 
     public class Processor implements OutputProcessor

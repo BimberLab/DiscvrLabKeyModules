@@ -203,13 +203,6 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
                 defaultValue: 30
             },{
                 fieldXtype: 'ldk-integerfield',
-                name: 'stand_emit_conf',
-                label: 'Threshold For Emitting Variants',
-                description: 'The minimum phred-scaled confidence threshold at which variants should be emitted (and filtered with LowQual if less than the calling threshold)',
-                commandLineParam: '-stand_emit_conf',
-                defaultValue: 20
-            },{
-                fieldXtype: 'ldk-integerfield',
                 name: 'max_alternate_alleles',
                 label: 'Max Alternate Alleles',
                 description: 'Maximum number of alternate alleles to genotype',

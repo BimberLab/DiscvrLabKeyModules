@@ -25,6 +25,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 
@@ -122,8 +123,13 @@ public class SequenceUtil
 
     public static boolean hasMinLineCount(File f, long minLines) throws PipelineJobException
     {
+        if (!f.exists())
+        {
+            return false;
+        }
+
         FileType gz = new FileType(".gz");
-        try (InputStream is = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f);BufferedReader reader = new BufferedReader(new InputStreamReader(is));)
+        try (InputStream is = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f); BufferedReader reader = new BufferedReader(new InputStreamReader(is, StringUtilsLabKey.DEFAULT_CHARSET));)
         {
             long lineNo = 0;
             while (reader.readLine() != null)
@@ -411,7 +417,7 @@ public class SequenceUtil
 
         //then sort/append the records
         CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
-        wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + input.getPath() + "' | grep -v '^#' | sort -k1,1 -k2,2n"), ProcessBuilder.Redirect.appendTo(sorted));
+        wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + input.getPath() + "' | grep -v '^#' | sort -V -k1,1 -k2,2n"), ProcessBuilder.Redirect.appendTo(sorted));
 
         //replace the non-sorted output
         input.delete();

@@ -195,7 +195,7 @@ public class BamIterator
                     if (i % 25000 == 0)
                     {
                         long newTime = new Date().getTime();
-                        _logger.info("processed " + i + " reads in " + ((newTime - startTime) / 1000) + " seconds");
+                        _logger.info("processed " + i + " alignments in " + ((newTime - startTime) / 1000) + " seconds");
                         startTime = newTime;
                     }
                 }

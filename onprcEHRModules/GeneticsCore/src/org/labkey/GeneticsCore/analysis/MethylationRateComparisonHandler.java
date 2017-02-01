@@ -9,7 +9,9 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.GeneticsCore.GeneticsCoreModule;
+import org.labkey.GeneticsCore.pipeline.CombpRunner;
 import org.labkey.api.data.Container;
+import org.labkey.api.jbrowse.JBrowseService;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -27,6 +29,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
 
@@ -37,11 +40,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by bimber on 8/26/2014.
@@ -49,6 +50,7 @@ import java.util.Set;
 public class MethylationRateComparisonHandler implements SequenceOutputHandler
 {
     private static final FileType _methylationType = new FileType(".CpG_Site_Summary.gff");
+    private static final String METHYLATION_RATE_COMPARISON = "Methylation Rate Comparison";
 
     public MethylationRateComparisonHandler()
     {
@@ -126,7 +128,7 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
     @Override
     public boolean doRunLocal()
     {
-        return false;
+        return true;
     }
 
     @Override
@@ -141,6 +143,31 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
 
+        }
+
+        @Override
+        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
+        {
+            for (SequenceOutputFile so : outputsCreated)
+            {
+                if (so.getFile().getName().endsWith(".bed") && METHYLATION_RATE_COMPARISON.equals(so.getCategory()))
+                {
+                    job.getLogger().debug("preparing JBrowse files: " + so.getFile().getName());
+
+                    JSONObject json = new JSONObject();
+                    json.put("type", "JBrowse/View/Track/Wiggle/XYPlot");
+                    //json.put("max_score", 1);
+
+                    try
+                    {
+                        JBrowseService.get().prepareOutputFile(job.getUser(), job.getLogger(), so.getRowid(), true, json);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+            }
         }
 
         @Override
@@ -170,13 +197,13 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                 fileToGroupMap.put(Integer.parseInt(id), map.getInt(id));
             }
 
-            Integer minDatapointsPerGroup = ctx.getParams().optInt("minDatapointsPerGroup");
-            Integer minDepthPerSite = ctx.getParams().optInt("minDepthPerSite");
+            Integer minDatapointsPerGroup = ctx.getParams().optInt("minDatapointsPerGroup", 0);
+            Integer minDepthPerSite = ctx.getParams().optInt("minDepthPerSite", 0);
             String jobDescription = ctx.getParams().optString("jobDescription");
             String statisticalMethod = ctx.getParams().optString("statisticalMethod");
 
             //build map of site rates
-            Map<String, Map<Integer, Map<Integer, Set<Double>>>> rateMap = new HashMap<>();
+            Map<String, Map<Integer, Map<Integer, List<Double>>>> rateMap = new HashMap<>();
 
             int i = 0;
             for (SequenceOutputFile o : inputFiles)
@@ -248,7 +275,7 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
 
                         if (!rateMap.get(chr).get(pos).containsKey(groupNum))
                         {
-                            rateMap.get(chr).get(pos).put(groupNum, new HashSet<>());
+                            rateMap.get(chr).get(pos).put(groupNum, new ArrayList<>());
                         }
 
                         rateMap.get(chr).get(pos).get(groupNum).add(rate);
@@ -266,30 +293,31 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
             for (String chr : rateMap.keySet())
             {
                 ctx.getLogger().info("processing chr: " + chr);
-                Map<Integer, Map<Integer, Set<Double>>> posMap = rateMap.get(chr);
+                Map<Integer, Map<Integer, List<Double>>> posMap = rateMap.get(chr);
                 if (posMap.isEmpty())
                 {
                     ctx.getLogger().info("no data for chromosome, skipping");
                     continue;
                 }
-                ctx.getLogger().info("total positions: " + posMap.size());
+                ctx.getLogger().info("total positions with data in at least one subject: " + posMap.size());
 
                 File tsvOut = new File(ctx.getOutputDir(), "chrCombined." + chr + ".txt");
                 int totalLines = 0;
+                int totalPassingPositions = 0;
                 int group1Skipped = 0;
                 int group2Skipped = 0;
                 try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(tsvOut), '\t', CSVWriter.NO_QUOTE_CHARACTER))
                 {
                     for (Integer pos : posMap.keySet())
                     {
-                        Set<Double> group1 = posMap.get(pos).get(0);
+                        List<Double> group1 = posMap.get(pos).get(0);
                         if (group1 == null)
                         {
                             group1Skipped++;
                             continue;
                         }
 
-                        Set<Double> group2 = posMap.get(pos).get(1);
+                        List<Double> group2 = posMap.get(pos).get(1);
                         if (group2 == null)
                         {
                             group2Skipped++;
@@ -317,6 +345,8 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                             }
                         }
 
+                        totalPassingPositions++;
+
                         for (Double d : group1)
                         {
                             totalLines++;
@@ -337,6 +367,7 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
 
                 ctx.getLogger().info("total skipped due to insufficient group1 datapoints: " + group1Skipped);
                 ctx.getLogger().info("total skipped due to insufficient group2 datapoints: " + group2Skipped);
+                ctx.getLogger().info("total passing positions: " + totalPassingPositions);
 
                 if (totalLines == 0)
                 {
@@ -371,15 +402,16 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
             if (!outputs.isEmpty())
             {
                 //now combine
-                File finalOut = new File(ctx.getOutputDir(), "MethylationComparison.gff");
+                File finalOut = new File(ctx.getOutputDir(), "MethylationComparison.bed");
                 try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(finalOut), '\t', CSVWriter.NO_QUOTE_CHARACTER))
                 {
                     for (File f : outputs)
                     {
+                        ctx.getLogger().info("processing: " + f.getName());
+                        int skippedLines = 0;
+                        int passingLines = 0;
                         try (CSVReader reader = new CSVReader(Readers.getReader(f), '\t'))
                         {
-                            writer.writeNext(new String[]{"##gff-version 3"});
-
                             String[] line;
                             while ((line = reader.readNext()) != null)
                             {
@@ -388,19 +420,28 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                                     throw new PipelineJobException("invalid line: " + StringUtils.join(line, ";"));
                                 }
 
-                                writer.writeNext(new String[]{
-                                        line[0],  //sequence name
-                                        ".",      //source
-                                        "methylation_rate_comparison",  //type
-                                        line[1],  //start, 1-based
-                                        line[1],  //end
-                                        line[2],  //pval
-                                        "+",      //strand
-                                        "0",      //phase
-                                        ""        //attributes
-                                });
+                                if ("NA".equals(line[2]))
+                                {
+                                    skippedLines++;
+                                }
+                                else
+                                {
+                                    writer.writeNext(new String[]{
+                                            line[0],  //sequence name
+                                            String.valueOf(Integer.parseInt(line[1]) - 1),  //start, 0-based
+                                            line[1],  //end, 1-based
+                                            "Methlyation p-value", //name
+                                            line[2],  //pval
+                                            "+",      //strand
+                                    });
+
+                                    passingLines++;
+                                }
                             }
                         }
+
+                        ctx.getLogger().info("total lines skipped due to NA p-values: " + skippedLines);
+                        ctx.getLogger().info("total lines accepted: " + passingLines);
                     }
                 }
                 catch (IOException e)
@@ -412,9 +453,9 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                 {
                     //end sorted
                     ctx.getLogger().info("sorting output");
-                    File sorted = new File(ctx.getOutputDir(), "tmp.gff");
+                    File sorted = new File(ctx.getOutputDir(), "tmp.bed");
                     CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(ctx.getLogger());
-                    wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + finalOut.getPath() + "' | grep -v '^#' | sort -k1,1 -k2,2n"), ProcessBuilder.Redirect.appendTo(sorted));
+                    wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + finalOut.getPath() + "' | grep -v '^#' | sort -V -k1,1 -k2,2n"), ProcessBuilder.Redirect.appendTo(sorted));
                     finalOut.delete();
                     FileUtils.moveFile(sorted, finalOut);
                 }
@@ -423,18 +464,65 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                     throw new PipelineJobException(e);
                 }
 
-                action.addOutput(finalOut, "Methylation Rate Comparison", false);
+                if (!SequencePipelineService.get().hasMinLineCount(finalOut, 1))
+                {
+                    ctx.getLogger().warn("no lines in final BED file, skipping other steps: " + finalOut.getName());
+                }
+                else
+                {
+                    action.addOutput(finalOut, "Methylation Rate Comparison", false);
 
-                SequenceOutputFile so = new SequenceOutputFile();
-                so.setName(ctx.getJob().getDescription());
-                so.setDescription(jobDescription);
-                so.setFile(finalOut);
-                so.setCategory("Methylation Rate Comparison");
-                ctx.addSequenceOutput(so);
+                    SequenceOutputFile so = new SequenceOutputFile();
+                    so.setName(ctx.getJob().getDescription());
+                    so.setDescription(jobDescription);
+                    so.setFile(finalOut);
+                    so.setCategory(METHYLATION_RATE_COMPARISON);
+                    ctx.addSequenceOutput(so);
+
+                    //now run comb-p
+                    boolean runCombp = ctx.getParams().optBoolean("combp", false);
+                    if (runCombp)
+                    {
+                        ctx.getLogger().info("running comb-p");
+                        Integer dist = ctx.getParams().optInt("distance", 300);
+                        Double seed = ctx.getParams().optDouble("seed", 0.05);
+                        Integer step = ctx.getParams().optInt("step", 100);
+
+                        CombpRunner combp = new CombpRunner(ctx.getLogger());
+                        File outBed = combp.runCompP(finalOut, ctx.getOutputDir(), dist, seed, step);
+                        SequenceOutputFile so2 = new SequenceOutputFile();
+                        so2.setName("Comb-p: " + ctx.getJob().getDescription());
+                        so2.setDescription("Comb-p: " + jobDescription);
+                        so2.setFile(outBed);
+                        so2.setCategory("Comb-p Sites");
+                        ctx.addSequenceOutput(so2);
+
+                        File plot = new File(outBed.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(outBed.getName())) + ".manhattan.png");
+                        if (plot.exists())
+                        {
+                            SequenceOutputFile so3 = new SequenceOutputFile();
+                            so3.setName("Comb-p Plot: " + ctx.getJob().getDescription());
+                            so3.setDescription("Comb-p Plot: " + jobDescription);
+                            so3.setFile(plot);
+                            so3.setCategory("Comb-p Manhattan Plot");
+                            ctx.addSequenceOutput(so3);
+                        }
+                        else
+                        {
+                            ctx.getLogger().debug("no plot found, expected: " + plot.getPath());
+                        }
+                    }
+                    else
+                    {
+                        ctx.getLogger().info("skipping comb-p");
+                    }
+
+                    //# APPEND WILCOX AND SIDAK-P PVALUES TO DATATABLE
+                }
             }
             else
             {
-                ctx.getLogger().info("no outputs, cannot create final GFF file");
+                ctx.getLogger().info("no outputs, cannot create final BED file");
             }
 
             action.setEndTime(new Date());

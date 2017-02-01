@@ -5,10 +5,14 @@ import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.htcondorconnector.HTCondorJobResourceAllocator;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.TaskId;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.util.FileUtil;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +49,11 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
     private boolean isSequenceAlignmentTask(PipelineJob job)
     {
         return (job.getActiveTaskId() != null && job.getActiveTaskId().getNamespaceClass().getName().endsWith("SequenceAlignmentTask"));
+    }
+
+    private boolean isSequenceSequenceOutputHandlerTask(PipelineJob job)
+    {
+        return (job.getActiveTaskId() != null && job.getActiveTaskId().getNamespaceClass().getName().endsWith("SequenceOutputHandlerRemoteTask"));
     }
 
     private Long _totalFileSize = null;
@@ -103,6 +112,7 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
     @Override
     public Integer getMaxRequestMemory(PipelineJob job)
     {
+        Integer ret = null;
         if (job instanceof HasJobParams)
         {
             Map<String, String> params = ((HasJobParams)job).getJobParams();
@@ -110,7 +120,7 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
             {
                 Integer ram = ConvertHelper.convert(params.get("resourceSettings.resourceSettings.ram"), Integer.class);
                 job.getLogger().debug("using RAM supplied by job: " + ram);
-                return ram;
+                ret = ram;
             }
         }
 
@@ -126,29 +136,74 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
             return null;
         }
 
+        boolean hasHaplotypeCaller = false;
+
+        if (isSequenceSequenceOutputHandlerTask(job))
+        {
+            File jobXml = new File(job.getLogFile().getParentFile(), FileUtil.getBaseName(job.getLogFile()) + ".job.xml");
+            if (jobXml.exists())
+            {
+                try (BufferedReader reader = Readers.getReader(jobXml))
+                {
+                    String line;
+                    while ((line = reader.readLine()) != null)
+                    {
+                        if (line.contains("HaplotypeCallerHandler"))
+                        {
+                            hasHaplotypeCaller = true;
+                            break;
+                        }
+                    }
+                }
+                catch (IOException e)
+                {
+                    job.getLogger().error(e.getMessage(), e);
+                }
+            }
+        }
+
         if (isSequenceAlignmentTask(job))
         {
             if (totalFileSize <= 10e9)
             {
                 job.getLogger().debug("file size less than 10gb, setting memory to 16");
 
-                return 16;
+                ret = 16;
             }
             else if (totalFileSize <= 30e9)
             {
                 job.getLogger().debug("file size less than 30gb, setting memory to 24");
 
-                return 24;
+                ret = 24;
             }
             else
             {
                 job.getLogger().debug("file size greater than 30gb, setting memory to 48");
 
-                return 48;
+                ret = 48;
+            }
+
+            Map<String, String> params = job.getParameters();
+            if (params != null)
+            {
+                if (params.containsKey("AnalysisStep") && params.get("AnalysisStep").contains("HaplotypeCaller"))
+                {
+                    hasHaplotypeCaller = true;
+                }
             }
         }
 
-        return null;
+        if (hasHaplotypeCaller)
+        {
+            Integer orig = ret;
+            ret = ret == null ? 48 : Math.max(ret, 48);
+            if (!ret.equals(orig))
+            {
+                job.getLogger().debug("adjusting RAM for HaplotypeCaller to: " + ret);
+            }
+        }
+
+        return ret;
     }
 
     @Override

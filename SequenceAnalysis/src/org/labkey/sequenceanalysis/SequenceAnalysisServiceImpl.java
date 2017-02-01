@@ -15,6 +15,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.laboratory.NavItem;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
@@ -28,6 +29,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.BgzipRunner;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
@@ -206,6 +208,12 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     @Override
     public File ensureVcfIndex(File vcf, Logger log) throws IOException
     {
+        return ensureVcfIndex(vcf, log, false);
+    }
+
+    @Override
+    public File ensureVcfIndex(File vcf, Logger log, boolean forceRecreate) throws IOException
+    {
         if (vcf == null || !vcf.exists())
         {
             throw new IOException("VCF does not exist: " + (vcf == null ? null : vcf.getPath()));
@@ -217,11 +225,11 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             File expected = new File(vcf.getPath() + Tribble.STANDARD_INDEX_EXTENSION);
             File tbi = new File(vcf.getPath() + ".tbi");
 
-            if (expected.exists())
+            if (!forceRecreate && expected.exists())
             {
                 return expected;
             }
-            else if  (tbi.exists())
+            else if  (!forceRecreate && tbi.exists())
             {
                 return tbi;
             }
@@ -266,5 +274,17 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             log.info("creating FASTA index: " + fasta.getName());
             indexer.execute(fasta);
         }
+    }
+
+    @Override
+    public String getUnzippedBaseName(String filename)
+    {
+        return SequenceTaskHelper.getUnzippedBaseName(filename);
+    }
+
+    @Override
+    public Integer getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException
+    {
+        return SequenceTaskHelper.getExpRunIdForJob(job, throwUnlessFound);
     }
 }

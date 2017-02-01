@@ -3,12 +3,16 @@ package org.labkey.sequenceanalysis.run.variant;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
@@ -31,6 +35,8 @@ import static org.labkey.sequenceanalysis.run.variant.SelectSNVsStep.SELECT_TYPE
  */
 public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVariantsWrapper> implements VariantProcessingStep
 {
+    public static String INTERVALS = "intervals";
+
     public SelectVariantsStep(PipelineStepProvider provider, PipelineContext ctx)
     {
         super(provider, ctx, new SelectVariantsWrapper(ctx.getLogger()));
@@ -58,9 +64,10 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
                     ToolParameterDescriptor.create(SELECT_TYPE_TO_EXCLUDE, "Select Type(s) To Exclude", "Variants of the selected type(s) will be excluded", "ldk-simplecombo", new JSONObject(){{
                         put("storeValues", SelectSNVsStep.getSelectTypes());
                         put("multiSelect", true);
-                    }}, null)
+                    }}, null),
+                    new IntervalParameterDescriptor()
                     //TODO: select by IDs
-            ), Arrays.asList("sequenceanalysis/panel/VariantFilterPanel.js"), "");
+            ), Arrays.asList("sequenceanalysis/panel/VariantFilterPanel.js", "sequenceanalysis/panel/IntervalPanel.js"), "");
         }
 
         public SelectVariantsStep create(PipelineContext ctx)
@@ -81,6 +88,10 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
 
         String toExclude = getProvider().getParameterByName(SELECT_TYPE_TO_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), String.class);
         addSelectTypeOptions(toExclude, options, "--selectTypeToExclude");
+
+        //intervals:
+        String intervalText = getProvider().getParameterByName(INTERVALS).extractValue(getPipelineCtx().getJob(), getProvider(), String.class, null);
+        options.addAll(getIntervalOptions(intervalText, getPipelineCtx().getSequenceSupport()));
 
         //JEXL
         String selectText = getProvider().getParameterByName("selects").extractValue(getPipelineCtx().getJob(), getProvider(), String.class, null);
@@ -145,5 +156,79 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
                 }
             }
         }
+    }
+
+    private static class IntervalParameterDescriptor extends ToolParameterDescriptor implements ToolParameterDescriptor.CachableParam
+    {
+        public IntervalParameterDescriptor()
+        {
+            super(null, INTERVALS, "Intervals", "Only variants spanning these intervals will be included", "sequenceanalysis-intervalpanel", null, null);
+        }
+
+        @Override
+        public void doCache(PipelineJob job, Object value, SequenceAnalysisJobSupport support) throws PipelineJobException
+        {
+            job.getLogger().debug("caching param " + getName() + ": " + value);
+            if (value != null)
+            {
+                JSONObject json;
+                if (!(value instanceof JSONObject))
+                {
+                    json = new JSONObject(value.toString());
+                }
+                else
+                {
+                    json = (JSONObject)value;
+                }
+
+                if (json.get("fileId") != null)
+                {
+                    ExpData d = ExperimentService.get().getExpData(json.getInt("fileId"));
+                    if (d != null)
+                    {
+                        support.cacheExpData(d);
+                    }
+                }
+            }
+        }
+    }
+
+    public static List<String> getIntervalOptions(String intervalText, SequenceAnalysisJobSupport support) throws PipelineJobException
+    {
+        List<String> options = new ArrayList<>();
+
+        if (intervalText != null)
+        {
+            JSONObject intervalJson = new JSONObject(intervalText);
+            if (intervalJson.get("source") == null)
+            {
+                throw new PipelineJobException("Improper interval data: " + intervalText);
+            }
+
+            if (intervalJson.get("fileId") != null)
+            {
+                File d = support.getCachedData(intervalJson.getInt("fileId"));
+                if (d.exists())
+                {
+                    options.add("-L");
+                    options.add(d.getPath());
+                }
+                else
+                {
+                    throw new PipelineJobException("Unable to find file: " + d.getPath());
+                }
+            }
+            else if (intervalJson.get("intervals") != null)
+            {
+                String[] intervals = intervalJson.getString("intervals").split(";");
+                for (String i : intervals)
+                {
+                    options.add("-L");
+                    options.add(i);
+                }
+            }
+        }
+
+        return options;
     }
 }

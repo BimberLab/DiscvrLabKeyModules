@@ -9,8 +9,8 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
@@ -48,9 +48,11 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             File querySortedAlignedBam = alignedBam;
             if (SequenceUtil.getBamSortOrder(alignedBam) != SAMFileHeader.SortOrder.queryname)
             {
+                // NOTE: we need to sort w/ picard since it performs a slightly different
+                // string comparison than samtools and MergeBamAlignment will crash otherwise
                 getLogger().info("Queryname sorting input BAM: " + alignedBam.getPath());
                 querySortedAlignedBam = new File(getOutputDir(alignedBam), FileUtil.getBaseName(alignedBam) + ".querysort.bam");
-                SamSorter sortSamWrapper = new SamSorter(getLogger());
+                SortSamWrapper sortSamWrapper = new SortSamWrapper(getLogger());
                 sortSamWrapper.execute(alignedBam, querySortedAlignedBam, SAMFileHeader.SortOrder.queryname);
             }
 
@@ -98,7 +100,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
                 }
             }
 
-            SamSorter sorter = new SamSorter(getLogger());
+            SortSamWrapper sorter = new SortSamWrapper(getLogger());
             unmappedReadsBam = sorter.execute(unmappedReadsBam, null, SAMFileHeader.SortOrder.queryname);
 
             params.add("UNMAPPED_BAM=" + unmappedReadsBam.getPath());

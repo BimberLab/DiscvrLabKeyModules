@@ -1,4 +1,5 @@
 Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
+    alias: 'widget.sequenceanalysis-alignmentimportpanel',
     extend: 'SequenceAnalysis.panel.BaseSequencePanel',
     jobType: 'alignmentImport',
 
@@ -259,6 +260,34 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                     }
                     Ext4.Msg.hide();
                 }
+            },{
+                text: 'Bulk Edit',
+                tooltip: 'Click this to change values on all checked rows in bulk',
+                scope: this,
+                handler : function(btn){
+                    var grid = btn.up('grid');
+                    grid.getPlugin('cellediting').completeEdit();
+                    var s = grid.getSelectionModel().getSelection();
+
+                    //select all
+                    if (!s.length){
+                        grid.getSelectionModel().selectAll();
+                    }
+
+                    Ext4.create('LDK.window.GridBulkEditWindow', {
+                        targetGrid: grid
+                    }).show(btn);
+                }
+            },{
+                text: 'Apply Metadata From Spreadsheet',
+                tooltip: 'Click this to populate the rows of the grid using a spreadsheet',
+                itemId: 'addBatchBtn',
+                scope: this,
+                handler: function(btn){
+                    var grid = btn.up('grid');
+                    grid.getPlugin('cellediting').completeEdit();
+                    grid.up('sequenceanalysis-alignmentimportpanel').showExcelImportWin(btn);
+                }
             }],
             columns: [{
                 name: 'fileName',
@@ -448,6 +477,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 xtype: 'datecolumn',
                 format: 'Y-m-d',
                 dataIndex: 'sampledate',
+                width: 160,
                 editor: {
                     xtype: 'datefield',
                     format: 'Y-m-d',
@@ -567,7 +597,9 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
             data: []
         });
 
+        Ext4.Msg.wait('Loading...');
         LABKEY.Ajax.request({
+            method: 'POST',
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'validateReadsetFiles'),
             params: {
                 path: LABKEY.ActionURL.getParameter('path'),
@@ -580,7 +612,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
         });
 
         this.fileNameStore = Ext4.create('Ext.data.Store', {
-            fields: ['fileName', 'filePath', 'basename', 'container', 'containerPath', 'dataId', 'error']
+            fields: ['fileName', 'relPath', 'filePath', 'basename', 'container', 'containerPath', 'dataId', 'error']
         });
     },
 
@@ -588,6 +620,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
         LDK.Utils.decodeHttpResponseJson(response);
 
         if (response.responseJSON.validationErrors.length){
+            Ext4.Msg.hide();
             Ext4.Msg.alert('Error', 'There are errors with the input files:<br>' + response.responseJSON.validationErrors.join('<br>'));
         }
 
@@ -603,6 +636,8 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
 
         this.down('#fileListView').refresh();
         this.populateSamples();
+
+        Ext4.Msg.hide();
     },
 
     populateSamples: function(){
@@ -708,5 +743,218 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
         }, this);
 
         this.doResize(width);
+    },
+
+    showExcelImportWin: function(btn){
+        Ext4.create('Ext.window.Window', {
+            fileNameStore: this.fileNameStore,
+            sampleStore: this.down('#sampleGrid').store,
+            sequencePanel: this,
+            width: 800,
+            modal: true,
+            closeAction: 'destroy',
+            scope: this,
+            title: 'Add Metadata',
+            items: [{
+                border: false,
+                bodyStyle:'padding:5px',
+                defaults: {
+                    border: false
+                },
+                items: [{
+                    html: 'This allows you to add metadata from an excel file.  Just download the template using the link below, fill it out, then cut/paste it into the box below.  Note that all fields are case-sensitive and the import will fail if the case does not match.',
+                    style: 'padding-bottom: 10px;'
+                },{
+                    xtype: 'ldk-linkbutton',
+                    text: 'Download Excel Template',
+                    linkPrefix: '[',
+                    linkSuffix: ']',
+                    scope: this,
+                    handler: function(btn){
+                        var header = [];
+                        var dataIndexes = [];
+                        Ext4.each(this.down('#sampleGrid').columns, function(col){
+                            if (!col.hidden) {
+                                header.push(col.text);
+                                dataIndexes.push(col.dataIndex);
+                            }
+                        }, this);
+
+                        var data = [header];
+                        this.down('#sampleGrid').store.each(function(rec){
+                            var row = [];
+                            Ext4.Array.forEach(dataIndexes, function(di){
+                                row.push(Ext4.isEmpty(rec.get(di)) ? null : rec.get(di));
+                            }, this);
+
+                            data.push(row);
+                        }, this);
+
+                        LABKEY.Utils.convertToExcel({
+                            fileName : 'AlignmentImport_' + Ext4.util.Format.date(new Date(), 'Y-m-d H_i_s') + '.xls',
+                            sheets : [{
+                                name: 'data',
+                                data: data
+                            }]
+                        });
+                    }
+                },{
+                    xtype: 'textarea',
+                    itemId: 'excelContent',
+                    style: 'margin-top: 10px;',
+                    height: 300,
+                    width: 775
+                }]
+            }],
+            buttons: [{
+                text:'Submit',
+                disabled:false,
+                formBind: true,
+                itemId: 'submit',
+                scope: this,
+                handler: function(btn){
+                    var win = btn.up('window');
+                    Ext4.Msg.confirm('Import Rows', 'This will remove all existing rows and replace them with the rows you pasted into the textarea.  Continue?', function(val){
+                        if (val == 'yes'){
+                            win.processExcel(win);
+                        }
+                    }, this);
+                }
+            },{
+                text: 'Close',
+                itemId: 'close',
+                scope: this,
+                handler: function(c){
+                    c.up('window').close();
+                }
+            }],
+            processExcel: function(win){
+                var textarea = win.down('textarea');
+                var text = textarea.getValue();
+                if (!text){
+                    alert('You must enter something in the textarea');
+                    return;
+                }
+
+                text = Ext4.String.trim(text);
+                var data = LDK.Utils.CSVToArray(text, '\t');
+                var columns = [];
+                var errors = [];
+
+                //translate column text into name
+                var cols = this.sequencePanel.down('#sampleGrid').columns;
+                Ext4.each(data[0], function(field){
+                    if (!field)
+                        return;
+
+                    var found = false;
+                    Ext4.each(cols, function(col, idx){
+                        if (col.name == field || col.text == field || col.dataIndex.toLowerCase() == field.toLowerCase()){
+                            columns.push(col);
+                            found = true;
+                            return false;
+                        }
+                    }, this);
+
+                    if (!found){
+                        errors.push('Unable to find column: ' + field);
+                    }
+                }, this);
+                data.shift();
+
+                if (errors.length){
+                    alert(errors.join('\n'));
+                    return;
+                }
+
+                var toAdd = [];
+                var success = true;
+                Ext4.each(data, function(row){
+                    var obj = {};
+
+                    if (!success){
+                        return false;
+                    }
+
+                    Ext4.each(columns, function(col, idx){
+                        if (col.hidden === true){
+                            errors.push('The column: ' + col.text + ' cannot be set.');
+                            return;
+                        }
+
+                        var value = row[idx];
+
+                        if (col.editor){
+                            var editor = Ext4.ComponentManager.create(col.editor);
+
+                            if (col.editor.store && !Ext4.isEmpty(value)){
+                                //proxy for store creation
+                                if (!col.editor.store.find) {
+                                    col.editor.store.autoLoad = true;
+                                    col.editor.store = Ext4.data.AbstractStore.create(col.editor.store);
+                                }
+
+                                if (col.editor.store.isLoading()){
+                                    console.log('waiting for store load');
+                                    col.editor.store.on('load', function(){
+                                        this.processExcel(win);
+                                    }, this, {single: true});
+
+                                    success = false;
+                                    return;  //allow us to proceed through all columns in case more stores need to load
+                                }
+
+                                var recIdx = col.editor.store.find(col.editor.valueField, value, null, false, false);
+
+                                //attempt to resolve by displayField
+                                if (recIdx == -1) {
+                                    recIdx = col.editor.store.find(col.editor.displayField, value, null, false, false);
+                                }
+
+                                if (recIdx == -1) {
+                                    errors.push('Invalid value for field ' + col.text + ': ' + value);
+                                }
+                                else {
+                                    //ensure correct case
+                                    value = col.editor.store.getAt(recIdx).get(col.editor.valueField);
+                                }
+                            }
+                        }
+
+                        if (!Ext4.isEmpty(value)){
+                            obj[col.dataIndex] = value;
+                        }
+                    }, this);
+
+                    if (!LABKEY.Utils.isEmptyObj(obj))
+                        toAdd.push(this.sampleStore.createModel(obj));
+                }, this);
+
+                if (!success){
+                    return;
+                }
+
+                if (errors.length){
+                    errors = Ext4.unique(errors);
+                    Ext4.Msg.alert('Error', errors.join('<br>'));
+                    return;
+                }
+
+                win.close();
+                textarea.reset();
+
+                if (!toAdd.length){
+                    Ext4.Msg.alert('Error', 'No rows to add');
+                    return;
+                }
+
+                this.sampleStore.removeAll();
+                this.sampleStore.add(toAdd);
+
+                this.sampleStore.each(function(r){
+                    r.validate();
+                }, this);
+            }
+        }).show(btn);
     }
 });

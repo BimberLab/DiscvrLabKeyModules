@@ -13,8 +13,11 @@ import org.junit.Test;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -356,6 +359,11 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
             ret = getStatusForJob(job.getCondorId());
         }
 
+        if (ret == null)
+        {
+            _log.error("unable to find status for job: " + jobId);
+        }
+
         return ret == null ? "UNKNOWN" : ret;
     }
 
@@ -602,10 +610,20 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
     public synchronized void updateStatusForAll() throws PipelineJobException
     {
         //first see if we have any submissions to check
-        TableInfo ti = HTCondorConnectorSchema.getInstance().getSchema().getTable(HTCondorConnectorSchema.CONDOR_JOBS);
+        DbSchema schema = HTCondorConnectorSchema.getInstance().getSchema();
+        TableInfo ti = schema.getTable(HTCondorConnectorSchema.CONDOR_JOBS);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("status"), PageFlowUtil.set(PipelineJob.TaskStatus.error.name().toUpperCase(), PipelineJob.TaskStatus.complete.name().toUpperCase(), PipelineJob.TaskStatus.cancelled.name().toUpperCase(), PREPARING, NOT_SUBMITTED), CompareType.NOT_IN);
         TableSelector ts = new TableSelector(ti, filter, null);
         List<HTCondorJob> jobs = ts.getArrayList(HTCondorJob.class);
+
+        //account for records in condor jobs table where status doesnt match job status
+        SQLFragment sql = new SQLFragment("SELECT h.* FROM " + HTCondorConnectorSchema.NAME + "." + HTCondorConnectorSchema.CONDOR_JOBS + " h JOIN pipeline.statusfiles p ON (h.jobId = p.entityId) WHERE p.status != h.status");
+        List<HTCondorJob> conflictingStatus = new SqlSelector(schema, sql).getArrayList(HTCondorJob.class);
+        if (!conflictingStatus.isEmpty())
+        {
+            //_log.error("there are " + conflictingStatus.size() + " HTCondor jobs where the status in the jobs table conflicts with the status in the pipeline table");
+            jobs.addAll(conflictingStatus);
+        }
 
         if (jobs.isEmpty())
         {
@@ -774,9 +792,27 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
                 {
                     //if the remote job exits w/ a non-zero exit code, condor might still count this as complete.
                     //to differentiate completed w/ error from successful completion, test activeTaskStatus as recorded in the job XML
-                    if (taskStatus == PipelineJob.TaskStatus.complete && pj.getActiveTaskStatus() == PipelineJob.TaskStatus.error)
+                    if (taskStatus == PipelineJob.TaskStatus.complete)
                     {
-                        taskStatus = PipelineJob.TaskStatus.error;
+                        if (pj.getActiveTaskStatus() == PipelineJob.TaskStatus.error)
+                        {
+                            taskStatus = PipelineJob.TaskStatus.error;
+                        }
+                        else if (pj.getActiveTaskStatus() == PipelineJob.TaskStatus.running)
+                        {
+                            //this might indicate the job aborted mid-task without properly marking itself as complete
+                            pj.getLogger().warn("marking job as complete, even though XML indicates task status is running.  this might indicate the job aborted improperly?");
+                        }
+                        else if (pj.getActiveTaskStatus() != PipelineJob.TaskStatus.complete)
+                        {
+                            //this might indicate the job aborted mid-task without properly marking itself as complete
+                            pj.getLogger().warn("HTCondor indicates job status is complete, but the job XML is not marked complete.  this probably indicates the java process aborted improperly.");
+                            taskStatus = PipelineJob.TaskStatus.error;
+                        }
+                        else if (pj.getErrors() > 0)
+                        {
+                            pj.getLogger().warn("marking job as complete, even though XML indicates task has errors.  this might indicate the job aborted improperly?");
+                        }
                     }
 
                     pj.getLogger().debug("setting active task status for job: " + j.getCondorId() + " to: " + taskStatus.name() + ". status was: " + pj.getActiveTaskStatus() + " (PipelineJob) /" + sf.getStatus() + " (StatusFile) / activeTaskId: " + (pj.getActiveTaskId() != null ? pj.getActiveTaskId().toString() : "no active task") + ", hostname: " + sf.getActiveHostName());

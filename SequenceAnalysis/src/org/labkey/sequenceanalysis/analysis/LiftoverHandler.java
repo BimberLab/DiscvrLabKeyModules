@@ -317,15 +317,15 @@ public class LiftoverHandler implements SequenceOutputHandler
 
                         Interval iv = new Interval(f.getChr(), f.getStart(), f.getEnd(), f.getStrand() == Strand.POSITIVE, StringUtils.isEmpty(f.getName()) ? null : f.getName());
                         Interval lifted = lo.liftOver(iv, pct);
-
+                        String score = ((Float)f.getScore()).isNaN() ? "0" : String.valueOf(f.getScore());
                         if (lifted != null)
                         {
-                            writer.writeNext(new String[]{f.getChr(), String.valueOf(lifted.getStart() - 1), String.valueOf(f.getEnd()), f.getName(), String.valueOf(f.getScore()), (lifted.isNegativeStrand() ? "-" : lifted.isPositiveStrand() ? "+" : null)});
+                            writer.writeNext(new String[]{f.getChr(), String.valueOf(lifted.getStart() - 1), String.valueOf(f.getEnd()), f.getName(), score, (lifted.isNegativeStrand() ? "-" : lifted.isPositiveStrand() ? "+" : null)});
                             mapped++;
                         }
                         else
                         {
-                            unmappedWriter.writeNext(new String[]{f.getChr(), String.valueOf(f.getStart() - 1), String.valueOf(f.getEnd()), f.getName(), String.valueOf(f.getScore()), (f.getStrand() == Strand.NEGATIVE ? "-" : f.getStrand() == Strand.POSITIVE ? "+" : null)});
+                            unmappedWriter.writeNext(new String[]{f.getChr(), String.valueOf(f.getStart() - 1), String.valueOf(f.getEnd()), f.getName(), score, (f.getStrand() == Strand.NEGATIVE ? "-" : f.getStrand() == Strand.POSITIVE ? "+" : null)});
                             unmapped++;
                         }
                     }
