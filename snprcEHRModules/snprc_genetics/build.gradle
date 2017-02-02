@@ -1,0 +1,34 @@
+import org.labkey.gradle.util.BuildUtils
+import org.labkey.gradle.util.GroupNames
+import org.gradle.api.tasks.bundling.Jar
+
+sourceSets {
+    transform {
+        java {
+            srcDirs = ['resources/transform/src']
+        }
+    }
+}
+
+dependencies {
+    transformCompile "org.apache.poi:poi:${poiVersion}"
+    transformCompile "org.apache.poi:poi-ooxml:${poiVersion}"
+    transformCompile "org.apache.poi:poi-ooxml-schemas:${poiVersion}"
+    transformCompile "org.apache.pdfbox:pdfbox:${pdfboxVersion}"
+    transformCompile "com.google.guava:guava:${guavaVersion}"
+    transformCompile "org.apache.commons:commons-collections4:${commonsCollections4Version}"
+}
+
+project.task("transformJar",
+                group: GroupNames.BUILD,
+                type: Jar,
+                description: "Create the genetics transform jar file",
+                {Jar jar ->
+                    jar.from project.sourceSets.transform.output
+                    jar.from { configurations.transformCompile.collect { it.isDirectory() ? it : zipTree(it) }}
+                    jar.baseName "GeneticsTransform"
+                    jar.destinationDir = new File(project.buildDir, "artifacts/snprc")
+                }
+        )
+
+project.tasks.module.dependsOn(project.tasks.transformJar)
