@@ -1692,7 +1692,8 @@ public class SequenceIntegrationTests
                     "Shared/Mosaik/SIVmac239_Test.mosaik",
                     "paired1/Alignment/paired1.mosaikreads",
                     "paired1/Alignment/paired1.mosaik.stat",
-                    "paired1/Alignment/paired1.mosaik.bam"
+                    "paired1/Alignment/paired1.mosaik.bam",
+                    "paired1/Alignment/paired1.mosaik.bam.bai"
             ));
 
             extraFiles.add("Shared/SIVmac239_Test.dict");
@@ -1722,7 +1723,8 @@ public class SequenceIntegrationTests
                     "Shared/Mosaik/SIVmac239_Test.mosaik",
                     "paired3/Alignment/paired3.mosaikreads",
                     "paired3/Alignment/paired3.mosaik.stat",
-                    "paired3/Alignment/paired3.mosaik.bam"
+                    "paired3/Alignment/paired3.mosaik.bam",
+                    "paired3/Alignment/paired3.mosaik.bam.bai"
             ));
 
             extraFiles.add("Shared/SIVmac239_Test.dict");
@@ -1754,7 +1756,8 @@ public class SequenceIntegrationTests
                     "Shared/Mosaik/SIVmac239_Test.mosaik",
                     "paired4/Alignment/paired4.mosaikreads",
                     "paired4/Alignment/paired4.mosaik.stat",
-                    "paired4/Alignment/paired4.mosaik.bam"
+                    "paired4/Alignment/paired4.mosaik.bam",
+                    "paired4/Alignment/paired4.mosaik.bam.bai"
             ));
 
             extraFiles.add("Shared/SIVmac239_Test.dict");
