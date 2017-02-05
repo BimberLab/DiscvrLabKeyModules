@@ -1324,6 +1324,8 @@ public class SequenceIntegrationTests
             File bam = new File(basedir, outDir + "/Alignment/" + rs.getName() + ".bam");
             expectedOutputs.add(bam);
 
+            expectedOutputs.add(new File(basedir, outDir + "/Alignment/" + rs.getName() + ".bam.bai"));
+
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
             validateAlignment(bam, aligned, unaligned);
@@ -1642,7 +1644,6 @@ public class SequenceIntegrationTests
                 "Shared/Mosaik/SIVmac239_Test.mosaik",
                 "paired1/Alignment/paired1.mosaikreads",
                 "paired1/Alignment/paired1.mosaik.stat",
-                "paired1/Alignment/paired1.mosaik.bam",
                 "TestReadset1.snps.txt",
                 "paired1/Alignment/TestReadset1.insertsize.metrics",
                 "paired1/Alignment/TestReadset1.insertsize.metrics.pdf",
@@ -1654,7 +1655,6 @@ public class SequenceIntegrationTests
                 "Shared/Mosaik/SIVmac239_Test.mosaik",
                 "paired3/Alignment/paired3.mosaikreads",
                 "paired3/Alignment/paired3.mosaik.stat",
-                "paired3/Alignment/paired3.mosaik.bam",
                 "TestReadset2.snps.txt",
                 "paired3/Alignment/TestReadset2.sbt_hits.txt.gz"
             ), _readsets.get(1), 147, 64);
@@ -1664,7 +1664,6 @@ public class SequenceIntegrationTests
                 "Shared/Mosaik/SIVmac239_Test.mosaik",
                 "paired4/Alignment/paired4.mosaikreads",
                 "paired4/Alignment/paired4.mosaik.stat",
-                "paired4/Alignment/paired4.mosaik.bam",
                 "TestReadset3.snps.txt",
                 "paired4/Alignment/TestReadset3.sbt_hits.txt.gz"
             ), _readsets.get(2), 147, 64);
@@ -1731,7 +1730,6 @@ public class SequenceIntegrationTests
 
             extraFiles.add("paired3/Alignment/paired3.mosaikreads");
             extraFiles.add("paired3/Alignment/paired3.mosaik.stat");
-            extraFiles.add("paired3/Alignment/paired3.mosaik.bam");
             extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.bam");
             extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.bam");
             extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.bam");
@@ -1766,7 +1764,6 @@ public class SequenceIntegrationTests
             extraFiles.add("paired4/Alignment");
             extraFiles.add("paired4/Alignment/paired4.mosaikreads");
             extraFiles.add("paired4/Alignment/paired4.mosaik.stat");
-            extraFiles.add("paired4/Alignment/paired4.mosaik.bam");
             extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.bam");
             extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.bam");
             extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.bam");
