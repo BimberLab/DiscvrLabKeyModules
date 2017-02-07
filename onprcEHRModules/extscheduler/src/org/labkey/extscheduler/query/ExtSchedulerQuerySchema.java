@@ -33,7 +33,7 @@ public class ExtSchedulerQuerySchema extends UserSchema
     }
 
     @Override
-    protected TableInfo createTable(String name)
+    public TableInfo createTable(String name)
     {
         if (RESOURCES_TABLE_NAME.equalsIgnoreCase(name))
             return new ResourcesTable(ExtSchedulerSchema.getInstance().getSchema().getTable(RESOURCES_TABLE_NAME), this);
