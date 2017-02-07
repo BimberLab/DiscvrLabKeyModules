@@ -63,7 +63,7 @@ public class MergeSyncUserSchema extends SimpleUserSchema
     }
 
     @Override
-    protected TableInfo createTable(String name)
+    public TableInfo createTable(String name)
     {
         if (TABLE_MERGE_RESULTS.equalsIgnoreCase(name))
         {
