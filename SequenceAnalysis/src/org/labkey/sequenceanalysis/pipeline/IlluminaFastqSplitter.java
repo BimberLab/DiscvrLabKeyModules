@@ -52,33 +52,33 @@ import java.util.zip.GZIPOutputStream;
  * Date: 4/18/12
  * Time: 11:35 AM
  */
-public class IlluminaFastqSplitter<SampleIdType>
+public class IlluminaFastqSplitter
 {
     private String _outputPrefix;
-    private Map<Integer, SampleIdType> _sampleMap;
+    private Map<Integer, Integer> _sampleIndexToIdMap;
     private File _destinationDir;
     private List<File> _files;
-    private Map<Pair<SampleIdType, Integer>, Pair<File, FastqWriter>> _fileMap;
-    private Map<Pair<SampleIdType, Integer>, Integer> _sequenceTotals;
+    private Map<Pair<Integer, Integer>, Pair<File, FastqWriter>> _fileMap;
+    private Map<Pair<Integer, Integer>, Integer> _sequenceTotals;
     private Set<Integer> _skippedSampleIdx = new HashSet<>();
     private Logger _logger;
     private static FileType FASTQ_FILETYPE = new FileType(Arrays.asList("fastq", "fq"), "fastq", FileType.gzSupportLevel.SUPPORT_GZ);
     private boolean _outputGzip = false;
 
-    public IlluminaFastqSplitter(@Nullable String outputPrefix, Map<Integer, SampleIdType> sampleMap, Logger logger, List<File> files)
+    public IlluminaFastqSplitter(@Nullable String outputPrefix, Map<Integer, Integer> sampleIndexToIdMap, Logger logger, List<File> files)
     {
         _outputPrefix = outputPrefix;
-        _sampleMap = sampleMap;
+        _sampleIndexToIdMap = sampleIndexToIdMap;
         _files = files;
         _logger = logger;
     }
 
-    // NOTE: sampleMap maps the sample index used internally within illumina (ie. the order of this sample in the CSV), to a sampleId used
+    // NOTE: sampleIndexToIdMap maps the sample index used internally within illumina (ie. the order of this sample in the CSV), to a sampleId used
     // by the callee
-    public IlluminaFastqSplitter(String outputPrefix, Map<Integer, SampleIdType> sampleMap, Logger logger, String sourcePath, String fastqPrefix)
+    public IlluminaFastqSplitter(String outputPrefix, Map<Integer, Integer> sampleIndexToIdMap, Logger logger, String sourcePath, String fastqPrefix)
     {
         _outputPrefix = outputPrefix;
-        _sampleMap = sampleMap;
+        _sampleIndexToIdMap = sampleIndexToIdMap;
         _logger = logger;
 
         _files = inferIlluminaInputsFromPath(sourcePath, fastqPrefix);
@@ -108,7 +108,7 @@ public class IlluminaFastqSplitter<SampleIdType>
 
     //this returns a map connecting samples with output FASTQ files.
     // the key of the map is a pair where the first item is the sampleId and the second item indicated whether this file is the forward (1) or reverse (2) reads
-    public Map<Pair<SampleIdType, Integer>, File> parseFastqFiles() throws PipelineJobException
+    public Map<Pair<Integer, Integer>, File> parseFastqFiles() throws PipelineJobException
     {
         _fileMap = new HashMap<>();
         _sequenceTotals = new HashMap<>();
@@ -174,8 +174,8 @@ public class IlluminaFastqSplitter<SampleIdType>
             }
         }
 
-        Map<Pair<SampleIdType, Integer>, File> outputs = new HashMap<>();
-        for (Pair<SampleIdType, Integer> key :_fileMap.keySet())
+        Map<Pair<Integer, Integer>, File> outputs = new HashMap<>();
+        for (Pair<Integer, Integer> key :_fileMap.keySet())
         {
             outputs.put(key, _fileMap.get(key).getKey());
         }
@@ -191,9 +191,9 @@ public class IlluminaFastqSplitter<SampleIdType>
 
     private void updateCount(int sampleIdx, int pairNumber)
     {
-        if (_sampleMap.containsKey(sampleIdx))
+        if (_sampleIndexToIdMap.containsKey(sampleIdx))
         {
-            Pair<SampleIdType, Integer> key = Pair.of(_sampleMap.get(sampleIdx), pairNumber);
+            Pair<Integer, Integer> key = Pair.of(_sampleIndexToIdMap.get(sampleIdx), pairNumber);
 
             Integer total = _sequenceTotals.get(key);
             if (total == null)
@@ -207,7 +207,7 @@ public class IlluminaFastqSplitter<SampleIdType>
 
     private FastqWriter getWriter (int sampleIdx, File targetDir, int pairNumber) throws IOException
     {
-        if(!_sampleMap.containsKey(sampleIdx))
+        if(!_sampleIndexToIdMap.containsKey(sampleIdx))
         {
             if (!_skippedSampleIdx.contains(sampleIdx))
             {
@@ -219,8 +219,8 @@ public class IlluminaFastqSplitter<SampleIdType>
 
         // NOTE: sampleIdx is the index of the sample according to the Illumina CSV file, and the number assigned
         // by the illumina barcode callers.  Sample 0 always refers to control reads
-        SampleIdType sampleId = _sampleMap.get(sampleIdx);
-        Pair<SampleIdType, Integer> sampleKey = Pair.of(sampleId, pairNumber);
+        Integer sampleId = _sampleIndexToIdMap.get(sampleIdx);
+        Pair<Integer, Integer> sampleKey = Pair.of(sampleId, pairNumber);
         if (_fileMap.containsKey(sampleKey))
         {
             return _fileMap.get(sampleKey).getValue();
@@ -265,7 +265,7 @@ public class IlluminaFastqSplitter<SampleIdType>
         _destinationDir = destinationDir;
     }
 
-    public Map<Pair<SampleIdType, Integer>, Integer> getReadCounts()
+    public Map<Pair<Integer, Integer>, Integer> getReadCounts()
     {
         return _sequenceTotals;
     }

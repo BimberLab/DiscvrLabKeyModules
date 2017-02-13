@@ -135,7 +135,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             Map<Integer, Integer> sampleMap = parseCsv(input, schema);
 
             //this step will be slow
-            IlluminaFastqSplitter<Integer> parser = new IlluminaFastqSplitter<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
+            IlluminaFastqSplitter parser = new IlluminaFastqSplitter("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
             parser.setOutputGzip(true);
             parser.setDestinationDir(getSupport().getAnalysisDirectory());
 
@@ -283,7 +283,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         getJob().getLogger().info("Created run: " + _instrumentRunId);
     }
 
-    private void addQualityMetrics(DbSchema schema, int readsetId, Pair<Integer, Integer> key, IlluminaFastqSplitter<Integer> parser, ExpData d)
+    private void addQualityMetrics(DbSchema schema, int readsetId, Pair<Integer, Integer> key, IlluminaFastqSplitter parser, ExpData d)
     {
         getJob().getLogger().info("Adding quality metrics for file: " + d.getFile().getName());
         Map<Pair<Integer, Integer>, Integer> readCounts = parser.getReadCounts();
