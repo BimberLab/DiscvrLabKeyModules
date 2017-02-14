@@ -166,7 +166,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     }
 
     @Override
-    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi)
+    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi) throws PipelineJobException
     {
         _uniqueReads.add(record.getReadName());
         if (record.isSecondaryOrSupplementary())
@@ -274,7 +274,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         }
     }
 
-    private int getNumMismatches(SAMRecord record, Map<Integer, List<NTSnp>> snps)
+    private int getNumMismatches(SAMRecord record, Map<Integer, List<NTSnp>> snps) throws PipelineJobException
     {
         int highQuality = 0;
         for (Integer pos : snps.keySet())

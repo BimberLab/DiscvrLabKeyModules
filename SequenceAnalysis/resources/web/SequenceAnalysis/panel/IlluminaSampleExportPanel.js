@@ -842,7 +842,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                     msg = 'This application cannot be edited.  Please choose a different name:';
 
                 Ext4.Msg.prompt('Choose Name', msg, function(btn, msg){
-                    if(btn == 'ok'){
+                    if (btn == 'ok'){
                         if(Ext4.isEmpty(msg)){
                             alert('Must enter a name');
                             this.onSaveApplication();

@@ -19,6 +19,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.sequenceanalysis.run.util.AASnp;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
@@ -80,7 +81,7 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
         return _log;    
     }
 
-    protected boolean evaluateSnp(SAMRecord r, NTSnp snp)
+    protected boolean evaluateSnp(SAMRecord r, NTSnp snp) throws PipelineJobException
     {
         //this SNP will likely be inspected by multiple aggregators, so we
         if (snp.isFlagSet())
@@ -199,7 +200,7 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
 
     private Map<Integer, Map<Integer, Map<String, Double>>> _qualMap = new HashMap<>();
 
-    private Map<Integer, Map<String, Double>> getQualsForReference(Integer refId)
+    private Map<Integer, Map<String, Double>> getQualsForReference(Integer refId) throws PipelineJobException
     {
         if (!_qualMap.containsKey(refId))
             _qualMap.put(refId, _avgQualAggregator.getQualsForReference(refId));

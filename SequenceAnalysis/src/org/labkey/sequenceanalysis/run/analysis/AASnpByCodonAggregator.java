@@ -24,11 +24,12 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
 import org.labkey.sequenceanalysis.run.util.AASnp;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
@@ -60,7 +61,7 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
     }
 
     @Override
-    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi)
+    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi) throws PipelineJobException
     {
         super.inspectAlignment(record, ref, snps, cpi);
 
@@ -333,6 +334,7 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
             int depth = 0;
             for (Pair<Integer, Integer> nt : _ntPositions)
             {
+                //TODO: consider getHcDepthAtPosition()??
                 depth += getCoverageAggregator().getDepthAtPosition(_ntRefName, nt.first, 0); //always use depth at last non-indel position
             }
 

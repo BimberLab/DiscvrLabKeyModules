@@ -23,7 +23,7 @@ select
   sum(a.total) as total,
   max(a.total_reads) as total_reads,
   round(100 * (cast(sum(a.total) as float) / cast(max(a.total_reads) as float)), 2) as percent,
-  max(a.haplotypesWithAllele) as haplotypesWithAllele,
+  group_concat(distinct a.haplotypesWithAllele) as haplotypesWithAllele,
 
     (select sum(s.total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = a.analysis_id AND s.rowid IN (
       SELECT distinct asj.alignment_id from sequenceanalysis.alignment_summary_junction asj WHERE asj.ref_nt_id.locus = a.loci and asj.status = true

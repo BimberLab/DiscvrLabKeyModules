@@ -270,16 +270,23 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
                 if (processed != null && processed.exists())
                 {
                     ctx.getLogger().debug("adding sequence output: " + processed.getPath());
-                    SequenceOutputFile so1 = new SequenceOutputFile();
-                    so1.setName(processed.getName());
-                    so1.setFile(processed);
-                    so1.setLibrary_id(input.getLibrary_id());
-                    so1.setCategory("VCF File");
-                    so1.setContainer(ctx.getJob().getContainerId());
-                    so1.setCreated(new Date());
-                    so1.setModified(new Date());
+                    if (input.getFile().equals(processed))
+                    {
+                        ctx.getLogger().debug("processed file equals input, skipping: " + processed.getPath());
+                    }
+                    else
+                    {
+                        SequenceOutputFile so1 = new SequenceOutputFile();
+                        so1.setName(processed.getName());
+                        so1.setFile(processed);
+                        so1.setLibrary_id(input.getLibrary_id());
+                        so1.setCategory("VCF File");
+                        so1.setContainer(ctx.getJob().getContainerId());
+                        so1.setCreated(new Date());
+                        so1.setModified(new Date());
 
-                    ctx.addSequenceOutput(so1);
+                        ctx.addSequenceOutput(so1);
+                    }
                 }
             }
         }

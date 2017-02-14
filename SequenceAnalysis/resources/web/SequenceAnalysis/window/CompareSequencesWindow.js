@@ -105,21 +105,100 @@ Ext4.define('SequenceAnalysis.window.CompareSequencesWindow', {
     onDataLoaded: function(results){
         Ext4.Msg.hide();
 
-        var text = ['Name\tNumHits\tRefName\tRefId\tSequencesMatch\tFastaSequenceIsSubsetOfReference\tReferenceSequenceIsSubsetOfFasta\tFastaLength\tRefLength'];
+        var text = [];
         if (results.hits){
-
             Ext4.Array.forEach(results.hits, function(h){
                 if (h.hits.length) {
                     Ext4.Array.forEach(h.hits, function (hit) {
-                        text.push([h.name, h.hits.length, hit.refName, hit.refId, hit.sequencesMatch, hit.fastaSequenceIsSubsetOfReference, hit.referenceSequenceIsSubsetOfFasta, hit.fastaLength, hit.refLength].join('\t'))
+                        text.push([h.name, h.hits.length, hit.refName, hit.refId, hit.sequencesMatch, hit.fastaSequenceIsSubsetOfReference, hit.referenceSequenceIsSubsetOfFasta, hit.fastaLength, hit.refLength, hit.isReverseComplement, h.sequence])
                     }, this);
                 }
                 else
                 {
-                    text.push([h.name, 'No Hits'].join('\t'));
+                    text.push([h.name, 0, 'No Hits', '', '', '', '', '', '', '', h.sequence]);
                 }
             }, this);
         }
+
+        //sort based on probable type of action we expect:
+        var actionMap = {
+            multipleHits: [],
+            noHits: [],
+            namesMatch: {
+                perfectMatch: [],
+                refLonger: [],
+                refShorter: [],
+                other: []
+            },
+            nameMismatch: {
+                perfectMatch: [],
+                refLonger: [],
+                refShorter: [],
+                other: []
+            }
+        };
+
+        Ext4.Array.forEach(text, function(row){
+            if (row[2] == 'No Hits'){
+                row.push('No Hits');
+                actionMap.noHits.push(row.join('\t'));
+            }
+            else if (row[1] > 1){
+                row.push('Multiple Hits');
+                actionMap.multipleHits.push(row.join('\t'));
+            }
+            else if (row[0] == row[2]) {
+                if (Boolean(row[4])){
+                    row.push('Perfect Match');
+                    actionMap.namesMatch.perfectMatch.push(row.join('\t'));
+                }
+                else if (Boolean(row[5])) {
+                    row.push('Name Match: Shorter Than DB');
+                    actionMap.namesMatch.refLonger.push(row.join('\t'));
+                }
+                else if (Boolean(row[6])) {
+                    row.push('Name Match: Longer Than DB');
+                    actionMap.namesMatch.refShorter.push(row.join('\t'));
+                }
+                else {
+                    row.push('Name Match: Other');
+                    actionMap.namesMatch.other.push(row.join('\t'));
+                }
+            }
+            else {
+                if (Boolean(row[4])){
+                    row.push('Name Mismatch: Perfect Seq Match');
+                    actionMap.nameMismatch.perfectMatch.push(row.join('\t'));
+                }
+                else if (Boolean(row[5])) {
+                    row.push('Name Mismatch: Shorter Than DB');
+                    actionMap.nameMismatch.refLonger.push(row.join('\t'));
+                }
+                else if (Boolean(row[6])) {
+                    row.push('Name Mismatch: Longer Than DB');
+                    actionMap.nameMismatch.refShorter.push(row.join('\t'));
+                }
+                else {
+                    row.push('Name Mismatch: Other');
+                    actionMap.nameMismatch.other.push(row.join('\t'));
+                }
+            }
+            
+        }, this);
+
+        var finalText = ['Name\tNumHits\tRefName\tRefId\tSequencesMatch\tFastaSequenceIsSubsetOfReference\tReferenceSequenceIsSubsetOfFasta\tFastaLength\tRefLength\tIsReverseComplement\tSequence'];
+        Ext4.Array.forEach(['multipleHits', 'noHits', 'namesMatch','nameMismatch'], function(name){
+            if (['namesMatch','nameMismatch'].indexOf(name) == -1){
+                finalText = finalText.concat(actionMap[name]);
+            }
+            else {
+                Ext4.Array.forEach(['perfectMatch', 'refLonger', 'refShorter', 'other'], function(n){
+                    finalText = finalText.concat(actionMap[name][n]);
+                }, this);
+            }
+
+        }, this);
+
         this.close();
         Ext4.create('Ext.window.Window', {
             title: 'Results',
@@ -129,7 +208,7 @@ Ext4.define('SequenceAnalysis.window.CompareSequencesWindow', {
                 xtype: 'textarea',
                 width: 800,
                 height: 400,
-                value: text.join('\n')
+                value: finalText.join('\n')
             }],
             buttons: [{
                 text: 'Close',

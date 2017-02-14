@@ -3744,6 +3744,8 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceTas
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/TaskFileManagerImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/AnalysesTableCustomizer.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/DownloadSequenceDisplayColumnFactory.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/GenbankDisplayColumnFactory.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/IPDDisplayColumnFactory.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/JobsTableCustomizer.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceAnalysisCustomizer.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceAnalysisUserSchema.java -text

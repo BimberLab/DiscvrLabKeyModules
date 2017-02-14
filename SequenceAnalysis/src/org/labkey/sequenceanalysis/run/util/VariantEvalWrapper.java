@@ -56,6 +56,7 @@ public class VariantEvalWrapper extends AbstractGatkWrapper
     {
         getLogger().info("replacing whitespace with tabs");
         new SimpleScriptWrapper(getLogger()).execute(Arrays.asList("sed", "-i", "s/ [ ]\\+/\\t/g", outputFile.getPath()));
+        new SimpleScriptWrapper(getLogger()).execute(Arrays.asList("sed", "-i", "s/^[ ]\\+//g", outputFile.getPath()));
     }
 
     public void executeEvalBySample(File referenceFasta, File inputVcf, File outputFile, String setName) throws PipelineJobException

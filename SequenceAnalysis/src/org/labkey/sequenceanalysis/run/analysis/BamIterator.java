@@ -15,9 +15,10 @@
  */
 package org.labkey.sequenceanalysis.run.analysis;
 
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.reference.FastaSequenceIndex;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -123,24 +124,14 @@ public class BamIterator
         _alignmentAggregators.add(aggregator);
     }
 
-    public void iterateReads(String refName, int start, int stop) throws IOException
+    public void iterateReads(String refName, int start, int stop) throws IOException, PipelineJobException
     {
+        SamReaderFactory bamFact = SamReaderFactory.makeDefault();
+        bamFact.validationStringency(ValidationStringency.SILENT);
+
         File fai = new File(_ref.getPath() + ".fai");
-        try (SAMFileReader sam = new SAMFileReader(_bam, _bai);IndexedFastaSequenceFile indexedRef = new IndexedFastaSequenceFile(_ref, new FastaSequenceIndex(fai)))
+        try (SamReader sam = bamFact.open(_bam);IndexedFastaSequenceFile indexedRef = new IndexedFastaSequenceFile(_ref, new FastaSequenceIndex(fai)))
         {
-            sam.setValidationStringency(ValidationStringency.SILENT);
-
-            //TODO: verify whether this is useful
-            for (int i = 0; i < sam.getFileHeader().getSequenceDictionary().getSequences().size(); i++)
-            {
-                _logger.info("BAM summary:");
-
-                int count = sam.getIndex().getMetaData(i).getAlignedRecordCount();
-                _logger.info("\tAligned read count: " + count);
-                int unaligned = sam.getIndex().getMetaData(i).getUnalignedRecordCount();
-                _logger.info("\tUnaligned read count: " + unaligned);
-            }
-
             try (SAMRecordIterator it = sam.iterator())
             {
                 int i = 0;
@@ -174,13 +165,14 @@ public class BamIterator
      * Iterates all reads in the alignment
      * @return
      */
-    public void iterateReads() throws IOException
+    public void iterateReads() throws IOException, PipelineJobException
     {
-        File fai = new File(_ref.getPath() + ".fai");
-        try (SAMFileReader sam = new SAMFileReader(_bam, _bai);IndexedFastaSequenceFile indexedRef = new IndexedFastaSequenceFile(_ref, new FastaSequenceIndex(fai)))
-        {
-            sam.setValidationStringency(ValidationStringency.SILENT);
+        SamReaderFactory bamFact = SamReaderFactory.makeDefault();
+        bamFact.validationStringency(ValidationStringency.SILENT);
 
+        File fai = new File(_ref.getPath() + ".fai");
+        try (SamReader sam = bamFact.open(_bam); IndexedFastaSequenceFile indexedRef = new IndexedFastaSequenceFile(_ref, new FastaSequenceIndex(fai)))
+        {
             try (SAMRecordIterator it = sam.iterator())
             {
                 int i = 0;
@@ -203,7 +195,7 @@ public class BamIterator
         }
     }
 
-    private void processAlignment(SAMRecord r, IndexedFastaSequenceFile indexedRef)
+    private void processAlignment(SAMRecord r, IndexedFastaSequenceFile indexedRef) throws PipelineJobException
     {
         if (r.getReadUnmappedFlag())
         {

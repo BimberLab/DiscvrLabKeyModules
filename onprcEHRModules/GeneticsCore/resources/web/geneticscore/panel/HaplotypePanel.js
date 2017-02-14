@@ -426,7 +426,7 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                     if (Ext4.isArray(row.lineages)){
                         row.lineages = row.lineages.join(';');
                     }
-                    row.lineages = row.lineages.replace('\n', ';');
+                    row.lineages = row.lineages.replace(/\n/g, ';');
 
                     if (!this.resultsByLoci[row.analysis_id]){
                         this.resultsByLoci[row.analysis_id] = {};
@@ -462,12 +462,12 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                     if (Ext4.isArray(row.lineages)){
                         row.lineages = row.lineages.join(';');
                     }
-                    row.lineages = row.lineages.replace('\n', ';');
+                    row.lineages = row.lineages.replace(/\n/g, ';');
 
                     if (Ext4.isArray(row.alleles)){
                         row.alleles = row.alleles.join(';');
                     }
-                    row.alleles = row.alleles.replace('\n', ';');
+                    row.alleles = row.alleles.replace(/\n/g, ';');
                     var alleles = row.alleles ? row.alleles.split(';') : [];
 
                     if (!this.lineageToAlleleMap[row.analysis_id]){
@@ -785,25 +785,25 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                     Ext4.Array.forEach(sequences, function(c){
                         var matchName = null;
                         
-                        Ext4.Array.forEach(lineagesFromAnalysis, function(lineage){
-                            if (c.type == 'allele') {
-                                if (lineageToAlleleMap[lineage] && lineageToAlleleMap[lineage].indexOf(c.name) > -1) {
+                        if (c.type == 'allele') {
+                            for (var lineage in lineageToAlleleMap) {
+                                if (lineageToAlleleMap[lineage].indexOf(c.name) > -1) {
                                     matchName = lineage;
-                                    return false;
                                 }
                             }
-                            else if (c.type == 'lineage'){
+                        }
+                        else if (c.type == 'lineage'){
+                            Ext4.Array.forEach(lineagesFromAnalysis, function(lineage){
                                 var l = lineage.split(';');
                                 if (l.indexOf(c.name) > -1){
                                     matchName = lineage;
                                     return false;
                                 }
-                            }
-                            else {
-                                console.error('unknown type: ' + c.type);
-                            }
-                        }, this);
-                        
+                            }, this);
+                        }
+                        else {
+                            console.error('unknown type: ' + c.type);
+                        }
                         
                         if (!matchName && c.required){
                             hasRequired = false;

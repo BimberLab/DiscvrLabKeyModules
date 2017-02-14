@@ -458,7 +458,8 @@ then
     echo "Compressing TAR"
     gzip MOSAIK-2.2.3-source.tar
 
-    cp -R ./MOSAIK-2.2.3-source/networkFile $LKTOOLS_DIR/mosaikNetworkFile
+    mkdir -p $LKTOOLS_DIR/mosaikNetworkFile
+    cp -R ./MOSAIK-2.2.3-source/networkFile/*.ann $LKTOOLS_DIR/mosaikNetworkFile/
 else
     echo "Mosaik network files already downloaded"
 fi
@@ -568,7 +569,7 @@ then
     chmod 755 tabix-0.2.6
     cd tabix-0.2.6
     make
-    
+
     install ./tabix $LKTOOLS_DIR
     install ./bgzip $LKTOOLS_DIR
 else
@@ -602,7 +603,7 @@ then
     cd bedtools2
     git checkout tags/v2.26.0
     make
-    
+
     install ./bin/bedtools ${LKTOOLS_DIR}/bedtools
 else
     echo "Already installed"
@@ -754,7 +755,7 @@ then
     rm -Rf $LKTOOLS_DIR/htsjdk-*
     rm -Rf $LKTOOLS_DIR/libIntelDeflater.so
 
-    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/2.6.0/picard.jar
+    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/2.8.3/picard.jar
 
     cp -R ./picard.jar $LKTOOLS_DIR/
 else
@@ -847,10 +848,10 @@ then
     rm -Rf trinityrnaseq-*
     rm -Rf $LKTOOLS_DIR/Trinity
 
-    wget $WGET_OPTS https://github.com/trinityrnaseq/trinityrnaseq/archive/v2.1.1.tar.gz
-    gunzip v2.1.1.tar.gz
-    tar -xf v2.1.1.tar
-    cd trinityrnaseq-2.1.1
+    wget $WGET_OPTS https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v2.3.2.zip
+    unzip  Trinity-v2.3.2.zip
+
+    cd trinityrnaseq-Trinity-v2.3.2
     make
 
     install ./Trinity $LKTOOLS_DIR/Trinity

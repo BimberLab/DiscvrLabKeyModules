@@ -7,6 +7,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileUtil;
 
@@ -115,7 +116,7 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
         Integer ret = null;
         if (job instanceof HasJobParams)
         {
-            Map<String, String> params = ((HasJobParams)job).getJobParams();
+            Map<String, String> params = ((HasJobParams) job).getJobParams();
             if (params.get("resourceSettings.resourceSettings.ram") != null)
             {
                 Integer ram = ConvertHelper.convert(params.get("resourceSettings.resourceSettings.ram"), Integer.class);
@@ -137,6 +138,7 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
         }
 
         boolean hasHaplotypeCaller = false;
+        boolean hasStar = false;
 
         if (isSequenceSequenceOutputHandlerTask(job))
         {
@@ -186,9 +188,14 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
             Map<String, String> params = job.getParameters();
             if (params != null)
             {
-                if (params.containsKey("AnalysisStep") && params.get("AnalysisStep").contains("HaplotypeCaller"))
+                if (params.containsKey(PipelineStep.StepType.analysis.name()) && params.get(PipelineStep.StepType.analysis.name()).contains("HaplotypeCallerAnalysis"))
                 {
                     hasHaplotypeCaller = true;
+                }
+
+                if (params.containsKey(PipelineStep.StepType.alignment.name()) && params.get(PipelineStep.StepType.alignment.name()).contains("STAR"))
+                {
+                    hasStar = true;
                 }
             }
         }
@@ -200,6 +207,16 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
             if (!ret.equals(orig))
             {
                 job.getLogger().debug("adjusting RAM for HaplotypeCaller to: " + ret);
+            }
+        }
+
+        if (hasStar)
+        {
+            Integer orig = ret;
+            ret = ret == null ? 48 : Math.max(ret, 48);
+            if (!ret.equals(orig))
+            {
+                job.getLogger().debug("adjusting RAM for STAR to: " + ret);
             }
         }
 

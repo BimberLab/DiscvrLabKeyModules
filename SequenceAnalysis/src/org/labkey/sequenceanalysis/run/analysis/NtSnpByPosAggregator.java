@@ -24,11 +24,12 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
 
 import java.io.File;
@@ -64,7 +65,7 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
     }
 
     @Override
-    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi)
+    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi) throws PipelineJobException
     {
         //NOTE: in order to match the behavior of SamLocusIterator, skip over Duplicate or Secondary/Supplemental reads
         if (record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary())
@@ -90,7 +91,7 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
         }
     }
 
-    protected void inspectNtSnp(NTSnp snp, SAMRecord record, ReferenceSequence ref)
+    protected void inspectNtSnp(NTSnp snp, SAMRecord record, ReferenceSequence ref)throws PipelineJobException
     {
         String key = getSNPKey(snp);
         if (_cacheDef.get(key) == null)

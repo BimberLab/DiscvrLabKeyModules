@@ -738,11 +738,16 @@
             <column columnName="genbank">
                 <nullable>true</nullable>
                 <columnTitle>Genbank Id</columnTitle>
-                <url>http://www.ncbi.nlm.nih.gov/nuccore/?term=${genbank}</url>
+                <displayColumnFactory>
+                    <className>org.labkey.sequenceanalysis.query.GenbankDisplayColumnFactory</className>
+                </displayColumnFactory>
             </column>
             <column columnName="ipd_accession">
                 <nullable>true</nullable>
                 <columnTitle>IPD Accession</columnTitle>
+                <displayColumnFactory>
+                    <className>org.labkey.sequenceanalysis.query.IPDDisplayColumnFactory</className>
+                </displayColumnFactory>
             </column>
             <column columnName="species">
                 <nullable>true</nullable>

@@ -4,10 +4,11 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.run.util.AASnp;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
 
@@ -37,7 +38,7 @@ public class AASnpByReadAggregator extends AASnpByCodonAggregator
     }
 
     @Override
-    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi)
+    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi) throws PipelineJobException
     {
         super.inspectAlignment(record, ref, snps, cpi);
 

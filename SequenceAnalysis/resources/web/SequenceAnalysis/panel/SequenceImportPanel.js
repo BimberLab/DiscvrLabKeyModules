@@ -352,10 +352,10 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     },
 
     //<sample name>_<barcode sequence>_L<lane (0-padded to 3 digits)>_R<read number>_<set number (0-padded to 3 digits>.fastq.gz
-    ILLUMINA_REGEX: /^(.+)_(.+)_L(.+)_R([0-9])_(.+)(\.f(ast){0,1}q)(\.gz)?$/i,
+    ILLUMINA_REGEX: /^(.+)_(.+)_L(.+)_(R){0,1}([0-9])_(.+)(\.f(ast){0,1}q)(\.gz)?$/i,
 
     //Example from NextSeq: RNA160915BB_34A_22436_Gag120_Clone-10_S10_R1_001.fastq.gz
-    ILLUMINA_REGEX_NO_LANE: /^(.+)_R([0-9])_([0-9]+)(\.f(ast){0,1}q)(\.gz)?$/i,
+    ILLUMINA_REGEX_NO_LANE: /^(.+)_(R){0,1}([0-9])_([0-9]+)(\.f(ast){0,1}q)(\.gz)?$/i,
 
     populateSamples: function(orderType, isPaired){
         this.fileNameStore.sort('displayName', 'ASC');
@@ -379,17 +379,17 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     var match = this.ILLUMINA_REGEX.exec(rec.get('fileName'));
                     var sample = match[1] + '-' + match[2];
                     var platformUnit = match[1] + '-' + match[2] + '_L' + match[3];
-                    var lane = match[5];
+                    var lane = match[6];
                     var setId = match[1] + '-' + match[2] + '_L' + match[3] + '_' + lane;
-                    var direction = match[4];
+                    var direction = match[5];
                     this.processIlluminaMatch(sample, platformUnit, lane, setId, direction, rec, map);
                 }
                 else if (this.ILLUMINA_REGEX_NO_LANE.test(rec.get('fileName'))){
                    var match = this.ILLUMINA_REGEX_NO_LANE.exec(rec.get('fileName'));
-                   var sample = match[1] + '-' + match[3];
+                   var sample = match[1] + '-' + match[4];
                    var platformUnit = match[1];
-                   var setId = match[1] + '-' + match[3];
-                   var direction = match[2];
+                   var setId = match[1] + '-' + match[4];
+                   var direction = match[3];
                    this.processIlluminaMatch(sample, platformUnit, null, setId, direction, rec, map);
                 }
                 else {
@@ -1099,7 +1099,12 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             return;
                         }
 
+                        var defaultVal = s[0].get('fileGroupId');
                         Ext4.Msg.prompt('Split/Regroup Files', 'This will separate the selected rows into their own group with the following name:', function(btn, val){
+                            if (btn != 'ok'){
+                                return;
+                            }
+
                             var originals = [];
                             for (var i = 0, r; r = s[i]; i++){
                                 if (r.get('fileGroupId'))
@@ -1121,7 +1126,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             }, this);
 
                             grid.getView().refresh();
-                        }, this);
+                        }, this, null, defaultVal);
                     }
                 }]
             }]

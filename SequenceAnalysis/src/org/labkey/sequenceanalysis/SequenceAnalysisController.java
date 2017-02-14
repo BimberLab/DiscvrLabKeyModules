@@ -3966,7 +3966,7 @@ public class SequenceAnalysisController extends SpringActionController
                 filter.addCondition(FieldKey.fromString("species"), form.getSpecies(), CompareType.EQUAL);
             }
 
-            if (form.getIncludeDisabled() != false)
+            if (!form.getIncludeDisabled())
             {
                 filter.addCondition(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK);
             }
@@ -3986,7 +3986,13 @@ public class SequenceAnalysisController extends SpringActionController
                     List<JSONObject> hits = new ArrayList<>();
                     Set<String> hitNames = new HashSet<>();
 
-                    List<RefNtSequenceModel> nameMatches = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("name"), fastaHeader), null).getArrayList(RefNtSequenceModel.class);
+                    SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("name"), fastaHeader);
+                    if (!form.getIncludeDisabled())
+                    {
+                        filter2.addCondition(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK);
+                    }
+
+                    List<RefNtSequenceModel> nameMatches = new TableSelector(ti, filter2, null).getArrayList(RefNtSequenceModel.class);
                     for (RefNtSequenceModel m : nameMatches)
                     {
                         if (hitNames.contains(m.getName()))
@@ -4023,6 +4029,7 @@ public class SequenceAnalysisController extends SpringActionController
                     JSONObject o = new JSONObject();
                     o.put("hits", hits);
                     o.put("name", fastaHeader);
+                    o.put("sequence", fastaData.get(fastaHeader).getSequenceAsString());
 
                     allHits.add(o);
                 }
@@ -4045,6 +4052,7 @@ public class SequenceAnalysisController extends SpringActionController
         boolean _sequencesMatch;
         boolean _fastaSequenceIsSubsetOfReference;
         boolean _referenceSequenceIsSubsetOfFasta;
+        boolean _isReverseComplement;
 
         private SequenceMatch()
         {
@@ -4061,6 +4069,18 @@ public class SequenceAnalysisController extends SpringActionController
             if (refSeq.length() > 10000)
                 match.clearCachedSequence();
 
+            SequenceMatch ret = doCheck(name, seq, refSeq, match, fastaSequence, false);
+            if (ret != null || seq.isEmpty())
+            {
+                return ret;
+            }
+
+            //if there's no forward match, try RC
+            return doCheck(name, fastaSequence.getReverseComplement().getSequenceAsString().toLowerCase(), refSeq, match, fastaSequence, true);
+        }
+
+        private static SequenceMatch doCheck(String name, String seq, String refSeq, RefNtSequenceModel match, DNASequence fastaSequence, boolean isRC)
+        {
             boolean sequencesMatch = refSeq.length() > 0 && seq.length() > 0 && seq.equals(refSeq);
             boolean fastaSequenceIsSubsetOfReference = refSeq.length() > 0 && seq.length() > 0 && refSeq.contains(seq);
             boolean referenceSequenceIsSubsetOfFasta = refSeq.length() > 0 && seq.length() > 0 && seq.contains(refSeq);
@@ -4076,6 +4096,7 @@ public class SequenceAnalysisController extends SpringActionController
                 r._referenceSequenceIsSubsetOfFasta = referenceSequenceIsSubsetOfFasta;
                 r._fastaLength = fastaSequence.getLength();
                 r._refLength = refSeq.length();
+                r._isReverseComplement = isRC;
 
                 return r;
             }
@@ -4096,6 +4117,7 @@ public class SequenceAnalysisController extends SpringActionController
             ret.put("referenceSequenceIsSubsetOfFasta", _referenceSequenceIsSubsetOfFasta);
             ret.put("fastaLength", _fastaLength);
             ret.put("refLength", _refLength);
+            ret.put("isReverseComplement", _isReverseComplement);
 
             return ret;
         }
@@ -4138,9 +4160,9 @@ public class SequenceAnalysisController extends SpringActionController
             _species = species;
         }
 
-        public Boolean getIncludeDisabled()
+        public boolean getIncludeDisabled()
         {
-            return _includeDisabled;
+            return _includeDisabled != null && _includeDisabled;
         }
 
         public void setIncludeDisabled(Boolean includeDisabled)

@@ -1,11 +1,11 @@
 package org.labkey.sequenceanalysis.analysis;
 
-import htsjdk.samtools.SAMFileReader;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.SamRecordIntervalIteratorFactory;
@@ -161,6 +161,9 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler
                 notPrimaryAlignmentsWriter.write("track name=\"NotPrimaryAlignments\" description=\"Contains the total # of reads that are tagged not being the primary alignment, which would indicate there is ambiguity in this region\" useScore=1" + System.getProperty("line.separator"));
                 avgMappingQualWriter.write("track name=\"AvgMappingQuality\" description=\"Contains the average mapping quality of all reads spanning this region\" useScore=1" + System.getProperty("line.separator"));
 
+                SamReaderFactory bamFact = SamReaderFactory.makeDefault();
+                bamFact.validationStringency(ValidationStringency.SILENT);
+
                 for (SAMSequenceRecord sr : distinctReferences)
                 {
                     job.getLogger().info("starting reference sequence " + sr.getSequenceName());
@@ -168,8 +171,7 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler
                     List<File> bamsWithReference = new ArrayList<>();
                     for (File bam : bams)
                     {
-                        File bai = new File(bam.getPath() + ".bai");
-                        try (SAMFileReader reader = new SAMFileReader(bam, bai))
+                        try (SamReader reader = bamFact.open(bam))
                         {
                             SAMSequenceDictionary dict = reader.getFileHeader().getSequenceDictionary();
                             if (dict == null || dict.getSequence(sr.getSequenceName()) == null)
@@ -201,8 +203,7 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler
 
                         for (File bam : bamsWithReference)
                         {
-                            File bai = new File(bam.getPath() + ".bai");
-                            try (SAMFileReader reader = new SAMFileReader(bam, bai))
+                            try (SamReader reader = bamFact.open(bam))
                             {
                                 SamRecordIntervalIteratorFactory fact = new SamRecordIntervalIteratorFactory();
                                 try (CloseableIterator<SAMRecord> it = fact.makeSamRecordIntervalIterator(reader, Arrays.asList(new Interval(sr.getSequenceName(), windowStart, windowEnd)), true))

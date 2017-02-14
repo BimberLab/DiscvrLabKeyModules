@@ -1,6 +1,8 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
-import htsjdk.samtools.SAMFileReader;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.reference.FastaSequenceIndex;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
@@ -11,17 +13,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
-import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 
@@ -32,7 +34,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -139,7 +140,9 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
 
     private void calculateForInterval(BufferedWriter writer, File inputBam, File bamIndex, IndexedFastaSequenceFile indexedFastaSequenceFile, String alignmentFileName, String readsetName, String refName, int start, int stop) throws IOException
     {
-        try (SAMFileReader sam = new SAMFileReader(inputBam, bamIndex))
+        SamReaderFactory bamFact = SamReaderFactory.makeDefault();
+        bamFact.validationStringency(ValidationStringency.SILENT);
+        try (SamReader sam = bamFact.open(inputBam))
         {
             IntervalList il = new IntervalList(sam.getFileHeader());
             il.add(new Interval(refName, start, stop));

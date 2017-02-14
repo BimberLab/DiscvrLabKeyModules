@@ -276,9 +276,9 @@ public class MosaikWrapper extends AbstractCommandWrapper
 
         File networkDir = SequencePipelineService.get().getExeForPackage("MOSAIK_NETWORK_FILE", "mosaikNetworkFile");
         args.add("-annpe");
-        args.add(new File(networkDir, "2.1.26.pe.100.0065.ann").getPath());
+        args.add(new File(networkDir, "2.1.78.pe.ann").getPath());
         args.add("-annse");
-        args.add(new File(networkDir, "2.1.26.se.100.005.ann").getPath());
+        args.add(new File(networkDir, "2.1.78.se.ann").getPath());
         args.add("-quiet");
 
         args.addAll(options);
