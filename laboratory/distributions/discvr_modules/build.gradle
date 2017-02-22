@@ -1,0 +1,28 @@
+import org.labkey.gradle.task.ModuleDistribution
+import org.labkey.gradle.util.BuildUtils
+import org.labkey.gradle.util.GroupNames
+
+apply plugin: 'org.labkey.distribution'
+
+BuildUtils.addModuleDistributionDependencies(project, [":externalModules:labModules:laboratory",
+                                                       ":externalModules:labModules:LDK",
+                                                       ":externalModules:labModules:SequenceAnalysis",
+                                                       ":externalModules:DISCVR:jbrowse",
+                                                       ":externalModules:DISCVR:blast",
+                                                       ":externalModules:DISCVR:htcondorconnector",
+                                                       ":externalModules:DISCVR:variantdb",
+                                                       ":externalModules:DISCVR:omerointegration",
+                                                       ":externalModules:DISCVR:tcrdb"])
+
+project.task(
+        "distribution",
+        group: GroupNames.DISTRIBUTION,
+        type: ModuleDistribution,
+        {ModuleDistribution dist ->
+            dist.subDirName='discvr_modules'
+            dist.includeTarGZArchive=true
+            dist.includeZipArchive=true
+            dist.makeDistribution = false
+            dist.extraFileIdentifier='-ExtraModules'
+        }
+)
