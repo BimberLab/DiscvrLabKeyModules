@@ -1,6 +1,4 @@
-import org.labkey.gradle.util.BuildUtils
 import org.labkey.gradle.util.GroupNames
-import org.gradle.api.tasks.bundling.Jar
 
 sourceSets {
     transform {
@@ -26,9 +24,14 @@ project.task("transformJar",
                 {Jar jar ->
                     jar.from project.sourceSets.transform.output
                     jar.from { configurations.transformCompile.collect { it.isDirectory() ? it : zipTree(it) }}
-                    jar.baseName "GeneticsTransform"
+                    jar.baseName = "GeneticsTransform"
+                    jar.classifier = "transform"
                     jar.destinationDir = new File(project.buildDir, "artifacts/cnprc")
                 }
         )
+
+project.artifacts {
+    archives project.tasks.transformJar
+}
 
 project.tasks.module.dependsOn(project.tasks.transformJar)
