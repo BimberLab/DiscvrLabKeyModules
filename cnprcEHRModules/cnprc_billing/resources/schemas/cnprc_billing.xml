@@ -278,6 +278,8 @@
             <column columnName="creationDate"/>
             <column columnName="locationRateClass"/>
             <column columnName="rateRierCodeFk"/>
+            <column columnName="locationPrefix"/>
+            <column columnName="location"/>
             <column columnName="objectId"/>
             <column columnName="Created"/>
             <column columnName="CreatedBy"/>
