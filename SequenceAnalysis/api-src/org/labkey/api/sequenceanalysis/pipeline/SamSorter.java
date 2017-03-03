@@ -82,10 +82,11 @@ public class SamSorter extends SamtoolsRunner
 
         if (replaceOriginal)
         {
-            input.delete();
             try
             {
                 getLogger().info("\treplacing original file with sorted BAM");
+
+                input.delete();
 
                 //note: if there is a pre-existing index, we need to delete this since it is out of date
                 File idx = new File(input.getPath() + ".bai");

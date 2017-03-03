@@ -112,7 +112,7 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
 
         SequencePipelineService.get().ensureSequenceDictionaryExists(refFasta, getJob().getLogger(), false);
 
-        JobContextImpl ctx = new JobContextImpl(getJob(), null, new JSONObject(), _wd.getDir(), null, _wd);
+        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), null, new JSONObject(), _wd.getDir(), null, _wd);
 
         //pre-cache aligner indexes
         for (PipelineStepProvider<AlignmentStep> provider : SequencePipelineService.get().getProviders(AlignmentStep.class))

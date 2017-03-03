@@ -246,8 +246,8 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
             return null;
         }
 
-        //20gb alignment
-        if (isSequenceAlignmentTask(job) && totalFileSize > 20e9)
+        //25gb alignment
+        if (isSequenceAlignmentTask(job) && totalFileSize > 25e9)
         {
             return Arrays.asList("concurrency_limits = WEEK_LONG_JOBS");
         }

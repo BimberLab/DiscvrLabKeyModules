@@ -96,7 +96,7 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
         TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd);
 
         SequenceOutputHandler handler = getPipelineJob().getHandler();
-        JobContextImpl ctx = new JobContextImpl(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), manager, _wd);
+        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), manager, _wd);
 
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
         handler.getProcessor().processFilesRemote(getPipelineJob().getFiles(), ctx);

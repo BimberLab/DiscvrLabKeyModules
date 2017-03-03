@@ -17,13 +17,17 @@ import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.JobResourceSettings;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
+import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerFinalTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
+import org.labkey.sequenceanalysis.run.preprocessing.PreprocessingOutputImpl;
+import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 import org.labkey.sequenceanalysis.run.util.SortVcfWrapper;
 import org.labkey.sequenceanalysis.util.FastqUtils;
@@ -400,5 +404,42 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Integer runId, Integer analysisId)
     {
         SequenceOutputHandlerFinalTask.updateOutputFile(o, job, runId, analysisId);
+    }
+
+    @Override
+    public PreprocessingStep.Output simpleTrimFastqPair(File fq1, File fq2, List<String> additionalParams, Logger log) throws PipelineJobException
+    {
+        TrimmomaticWrapper wrapper = new TrimmomaticWrapper(log);
+        wrapper.doTrim(wrapper.getTrimmomaticParams(fq1, fq2, "trim", additionalParams));
+
+        PreprocessingOutputImpl output = new PreprocessingOutputImpl(fq1, fq2);
+        List<File> files = wrapper.getExpectedOutputFilenames(fq1, fq2, "trim");
+        for (File f : files)
+        {
+            if (!f.exists())
+            {
+                throw new PipelineJobException("Output file could not be found: " + f.getPath());
+            }
+            else if (!SequenceUtil.hasLineCount(f))
+            {
+                log.info("\tdeleting empty file: " + f.getName());
+                f.delete();
+            }
+            else
+            {
+                output.addIntermediateFile(f);
+            }
+        }
+
+        if (fq2 == null)
+        {
+            output.setProcessedFastq(Pair.of(files.get(0), null));
+        }
+        else
+        {
+            output.setProcessedFastq(Pair.of(files.get(0), files.get(2)));
+        }
+
+        return output;
     }
 }

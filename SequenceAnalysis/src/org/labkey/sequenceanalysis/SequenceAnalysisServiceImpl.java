@@ -235,7 +235,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             }
             else
             {
-                log.info("creating vcf index: " + expected.getPath());
+                log.info("creating vcf index: " + vcf.getPath());
                 //note: there is a bug in htsjdk's index creation with gz inputs
                 if (gz.isType(vcf) && !SystemUtils.IS_OS_WINDOWS)
                 {

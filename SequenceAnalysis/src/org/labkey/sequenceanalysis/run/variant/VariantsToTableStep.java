@@ -15,6 +15,7 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
+import org.labkey.api.util.Compress;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
@@ -63,6 +64,9 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
                     }}, null),
                     ToolParameterDescriptor.create("createOutputFile", "Publish Output", "If checked, the resulting table will be imported as an output, meaning that it is slightly more visible and will appear in the listing of other pipeline files, such as the VCF(s) you generate.  No matter what you select the table will be generated and downloadable.  The primary purpose for this option is to avoid polluting the table with files that are only needed for a short period of time.", "checkbox", new JSONObject(){{
                         put("checked", false);
+                    }}, false),
+                    ToolParameterDescriptor.create("gzipOutput", "GZip Output", "If checked, the resulting table will be compressed to save space.", "checkbox", new JSONObject(){{
+                        put("checked", true);
                     }}, false),
                     ToolParameterDescriptor.create("outputFileDescription", "Table Description", "If publish output is checked, this will be used as the description for the created file.  It can help identify this in the future.", "textarea", new JSONObject(){{
                         put("width", 800);
@@ -118,6 +122,19 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
 
         File outputFile = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".txt");
         getWrapper().generateTable(inputVCF, outputFile, genome.getWorkingFastaFile(), args);
+
+        if (getProvider().getParameterByName("gzipOutput").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+        {
+            getPipelineCtx().getLogger().info("compressing output: " + outputFile.getName());
+            File outputGz = Compress.compressGzip(outputFile);
+            if (outputFile.exists())
+            {
+                outputFile.delete();
+            }
+
+            outputFile = outputGz;
+        }
+
         output.addOutput(outputFile, "Variant Table");
 
         boolean createOutputFile = getProvider().getParameterByName("createOutputFile").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);

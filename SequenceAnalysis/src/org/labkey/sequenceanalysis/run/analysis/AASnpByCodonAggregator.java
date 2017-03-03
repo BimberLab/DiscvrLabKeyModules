@@ -153,13 +153,14 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
             row.put("readcount", readCount);
             row.put("ref_nt_positions", info.getNtPositionString());
 
-            Double depth = info.calculateNtDepth();
+            Double depth = info.calculateNtDepth(false);
             row.put("depth", depth);
 
             if (depth != null && !info.getReadResidue().equals(":"))
             {
-                double pct = depth == 0 ? 0 : ((double) readCount / depth ) * 100.0;
-                row.put("adj_depth", depth);
+                Double adj_depth = info.calculateNtDepth(true);
+                double pct = depth == 0 ? 0 : ((double) readCount / adj_depth ) * 100.0;
+                row.put("adj_depth", adj_depth);
                 row.put("pct", pct);
             }
 
@@ -329,13 +330,12 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
             }
         }
 
-        public double calculateNtDepth()
+        public double calculateNtDepth(boolean useHCDepth)
         {
             int depth = 0;
             for (Pair<Integer, Integer> nt : _ntPositions)
             {
-                //TODO: consider getHcDepthAtPosition()??
-                depth += getCoverageAggregator().getDepthAtPosition(_ntRefName, nt.first, 0); //always use depth at last non-indel position
+                depth += useHCDepth? getCoverageAggregator().getHcDepthAtPosition(_ntRefName, nt.first, 0) : getCoverageAggregator().getDepthAtPosition(_ntRefName, nt.first, 0); //always use depth at last non-indel position
             }
 
             return (depth / (double)_ntPositions.size());

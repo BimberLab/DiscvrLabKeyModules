@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.SAMFileHeader;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
@@ -13,6 +14,7 @@ import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -97,7 +99,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
             List<RecordedAction> actions = new ArrayList<>();
             _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
-            //move and make sure BAMs are indexed
+            //move and make sure BAMs are coordinate sorted and indexed
             FileType bamFile = new FileType("bam");
             Map<String, File> bamMap = new HashMap<>();
             for (File f : getTaskHelper().getJob().getInputFiles())
@@ -202,6 +204,13 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 }
                 getTaskHelper().getFileManager().addOutput(moveAction, SequenceAlignmentTask.FINAL_BAM_ROLE, finalDestination);
 
+                //ensure coordinate sorted:
+                if (SAMFileHeader.SortOrder.coordinate != SequencePipelineService.get().getBamSortOrder(finalDestination))
+                {
+                    new SamSorter(getJob().getLogger()).execute(finalDestination, null, SAMFileHeader.SortOrder.coordinate);
+                }
+
+                //then index
                 getJob().setStatus(PipelineJob.TaskStatus.running, "INDEXING BAM");
                 File finalIndexFile = new File(finalDestination.getPath() + ".bai");
                 if (!finalIndexFile.exists())
@@ -232,7 +241,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 {
                     getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
                     getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size  Metrics Histogram", metricsHistogram);
-                    getTaskHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, finalDestination, rs.getRowId())));
+                    getTaskHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile2, finalDestination, rs.getRowId())));
                 }
 
                 if (getTaskHelper().getSettings().doCollectWgsMetrics())
@@ -243,7 +252,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                     CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
                     wgsWrapper.executeCommand(finalDestination, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
                     getTaskHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
-                    getTaskHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, finalDestination, rs.getRowId())));
+                    getTaskHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, finalDestination, rs.getRowId())));
                 }
 
                 metricsAction.setEndTime(new Date());

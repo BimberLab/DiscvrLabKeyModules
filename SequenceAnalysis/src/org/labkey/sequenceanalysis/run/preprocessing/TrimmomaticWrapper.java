@@ -233,7 +233,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
     }
 
-    protected void doTrim(List<String> params) throws PipelineJobException
+    public void doTrim(List<String> params) throws PipelineJobException
     {
         ProcessBuilder pb = getProcessBuilder(params);
         getLogger().info(StringUtils.join(params, " "));
@@ -476,7 +476,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         return new File(workingDir, "trimLog.txt");
     }
 
-    private List<String> getTrimmomaticParams(File input, @Nullable File input2, String actionName, List<String> additionalParams) throws PipelineJobException
+    public List<String> getTrimmomaticParams(File input, @Nullable File input2, String actionName, List<String> additionalParams) throws PipelineJobException
     {
         List<String> params = new LinkedList<>();
         params.add(SequencePipelineService.get().getJavaFilepath());
@@ -541,7 +541,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         return path == null ? new File("trimmomatic.jar") : new File(path, "trimmomatic.jar");
     }
 
-    private List<File> getExpectedOutputFilenames(File input1, @Nullable File input2, String actionName)
+    public List<File> getExpectedOutputFilenames(File input1, @Nullable File input2, String actionName)
     {
         List<File> fileNames = new ArrayList<>();
         String basename = SequenceTaskHelper.getUnzippedBaseName(input1);

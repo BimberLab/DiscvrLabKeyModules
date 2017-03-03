@@ -21,7 +21,6 @@ import org.labkey.api.util.StringUtilsLabKey;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -126,14 +125,19 @@ public class SequenceModel
             }
 
             //sort based on exon list.  if sequence is reverse complemented, reverse the order
-            Collections.sort(exonList, new Comparator<Pair<Integer, Integer>>()
+            //Collections.sort(exonList, new Comparator<Pair<Integer, Integer>>()
+            //{
+            //    @Override
+            //    public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2)
+            //    {
+            //        return isComplement ? o2.first.compareTo(o1.first) : o1.first.compareTo(o2.first);
+            //    }
+            //});
+
+            if (isComplement)
             {
-                @Override
-                public int compare(Pair<Integer, Integer> o1, Pair<Integer, Integer> o2)
-                {
-                    return isComplement ? o2.first.compareTo(o1.first) : o1.first.compareTo(o2.first);
-                }
-            });
+                Collections.reverse(exonList);
+            }
         }
     }
 

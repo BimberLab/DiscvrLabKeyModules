@@ -64,6 +64,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
     private Map<File, File> _unzippedMap = new HashMap<>();
     private Set<File> _intermediateFiles = new HashSet<>();
+    private Set<SequenceOutputFile> _outputsToCreate = new HashSet<>();
 
     //for serialization
     public TaskFileManagerImpl()
@@ -81,7 +82,8 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     @Override
     public void addSequenceOutput(SequenceOutputFile o)
     {
-        _job.addOutputToCreate(o);
+        _job.getLogger().debug("adding sequence output: " + (o.getFile() == null ? o.getName() : o.getFile().getPath()));
+        _outputsToCreate.add(o);
     }
 
     @Override
@@ -96,7 +98,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         so.setLibrary_id(genomeId);
         so.setDescription(description);
 
-        _job.addOutputToCreate(so);
+        addSequenceOutput(so);
     }
 
     @Override
@@ -449,6 +451,8 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         File metricLog = getMetricsLog(false);
         if (metricLog.exists())
         {
+            _job.getLogger().debug("importing picard metrics from: " + metricLog.getPath());
+
             TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
             try (CSVReader reader = new CSVReader(Readers.getReader(metricLog), '\t'))
             {
@@ -483,10 +487,11 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                     Integer dataId = null;
                     if (typeMap.containsKey(readsetId) && type != null)
                     {
+                        _job.getLogger().debug("importing metrics using readsetId");
                         try
                         {
                             PipelineStepOutput.PicardMetricsOutput.TYPE t = PipelineStepOutput.PicardMetricsOutput.TYPE.valueOf(type);
-                            if (typeMap != null && typeMap.get(readsetId).containsKey(t))
+                            if (typeMap.get(readsetId).containsKey(t))
                             {
                                 _job.getLogger().debug("attempting to find file: " + typeMap.get(readsetId).get(t).getPath());
                                 ExpData d = ExperimentService.get().getExpDataByURL(typeMap.get(readsetId).get(t), _job.getContainer());
@@ -494,6 +499,14 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                                 {
                                     dataId = d.getRowId();
                                 }
+                                else
+                                {
+                                    _job.getLogger().warn("unable to find ExpData for file: " + typeMap.get(readsetId).get(t).getPath());
+                                }
+                            }
+                            else
+                            {
+                                _job.getLogger().warn("unable to find dataId for type: " + type);
                             }
                         }
                         catch (IllegalArgumentException e)
@@ -515,14 +528,22 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                             }
                             else
                             {
-                                _job.getLogger().warn("unable to find ExpData for relPath: " + relPath);
+                                _job.getLogger().warn("unable to find ExpData for relPath: " + relPath + " / " + f.getPath());
                             }
+                        }
+                        else
+                        {
+                            _job.getLogger().warn("unable to find file for picard metrics: " + relPath + " / " + type);
                         }
                     }
 
                     if (dataId != null)
                     {
                         toInsert.put("dataid", dataId);
+                    }
+                    else
+                    {
+                        _job.getLogger().warn("unable to find ExpData for picard metrics: " + line[1] + " / " + type);
                     }
 
                     toInsert.put("category", line[3]);
@@ -700,6 +721,13 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     {
         _job.getLogger().debug("performing file cleanup");
         _job.setStatus(PipelineJob.TaskStatus.running, "PERFORMING FILE CLEANUP");
+
+        _job.getLogger().debug("transferring " + _outputsToCreate.size() + " sequence outputs to pipeline job, existing: " + _job.getOutputsToCreate().size());
+        for (SequenceOutputFile so : _outputsToCreate)
+        {
+            _job.addOutputToCreate(so);
+        }
+        _outputsToCreate.clear();
 
         try
         {

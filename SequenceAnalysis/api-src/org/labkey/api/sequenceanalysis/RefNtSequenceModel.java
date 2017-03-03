@@ -66,6 +66,7 @@ public class RefNtSequenceModel
     private String _lineage;
     private String _mol_type;
     private String _genbank;
+    private String _refSeqId;
     private String _ipd_accession;
     private String _species;
     private String _geographic_origin;
@@ -231,6 +232,16 @@ public class RefNtSequenceModel
     public void setGenbank(String genbank)
     {
         _genbank = genbank;
+    }
+
+    public String getRefSeqId()
+    {
+        return _refSeqId;
+    }
+
+    public void setRefSeqId(String refSeqId)
+    {
+        _refSeqId = refSeqId;
     }
 
     public String getIpd_accession()

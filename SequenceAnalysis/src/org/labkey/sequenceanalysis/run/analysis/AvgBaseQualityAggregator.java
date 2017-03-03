@@ -164,9 +164,9 @@ public class AvgBaseQualityAggregator
                 for (SamLocusIterator.RecordAndOffset r : locus.getRecordAndOffsets())
                 {
                     //debugging only:
-                    if (r.getRecord().getReadBases().length <= r.getOffset())
+                    if (r.getOffset() >= r.getRecord().getReadBases().length)
                     {
-                        throw new RuntimeException("Read lacks sequence over locus: " + r.getReadName() + "/ offset: " + r.getOffset() + "/ start: " + r.getRecord().getStart() + " / sequence: " + r.getRecord().getReadString());
+                        throw new RuntimeException("Read lacks sequence over locus: " + r.getReadName() + "/ offset: " + r.getOffset() + "/ start: " + r.getRecord().getStart() + " / sequence: " + r.getRecord().getReadString() + " / " + r.getRecord().getSAMString());
                     }
 
                     String base = Character.toString((char) r.getReadBase());

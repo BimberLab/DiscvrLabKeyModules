@@ -742,6 +742,13 @@
                     <className>org.labkey.sequenceanalysis.query.GenbankDisplayColumnFactory</className>
                 </displayColumnFactory>
             </column>
+            <column columnName="refSeqId">
+                <nullable>true</nullable>
+                <columnTitle>RefSeq Id</columnTitle>
+                <displayColumnFactory>
+                    <className>org.labkey.sequenceanalysis.query.GenbankDisplayColumnFactory</className>
+                </displayColumnFactory>
+            </column>
             <column columnName="ipd_accession">
                 <nullable>true</nullable>
                 <columnTitle>IPD Accession</columnTitle>

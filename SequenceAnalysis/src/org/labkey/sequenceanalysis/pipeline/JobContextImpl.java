@@ -20,7 +20,7 @@ import java.util.LinkedHashSet;
  */
 public class JobContextImpl implements SequenceOutputHandler.JobContext
 {
-    private PipelineJob _job;
+    private SequenceJob _job;
     private SequenceAnalysisJobSupport _support;
     private JSONObject _params;
     private File _outputDir;
@@ -28,7 +28,7 @@ public class JobContextImpl implements SequenceOutputHandler.JobContext
     private TaskFileManager _fileManager;
     private WorkDirectory _wd;
 
-    public JobContextImpl(PipelineJob job, SequenceAnalysisJobSupport support, JSONObject params, File outputDir, TaskFileManager fileManager, WorkDirectory workDirectory)
+    public JobContextImpl(SequenceJob job, SequenceAnalysisJobSupport support, JSONObject params, File outputDir, TaskFileManager fileManager, WorkDirectory workDirectory)
     {
         _job = job;
         _support = support;
@@ -78,7 +78,7 @@ public class JobContextImpl implements SequenceOutputHandler.JobContext
     @Override
     public void addSequenceOutput(SequenceOutputFile o)
     {
-        _fileManager.addSequenceOutput(o);
+        _job.addOutputToCreate(o);
     }
 
     @Override

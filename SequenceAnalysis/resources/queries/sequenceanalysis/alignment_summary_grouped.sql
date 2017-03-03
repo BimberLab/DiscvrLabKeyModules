@@ -18,6 +18,7 @@ select
   a.alleles,
   a.alleleIds,
   a.lineages,
+  a.totalLineages,
   a.loci,
 
   sum(a.total) as total_reads,
@@ -55,6 +56,7 @@ FROM (
     group_concat(distinct j.ref_nt_id) as alleleIds,
     group_concat(distinct j.ref_nt_id.name, chr(10)) as alleles,
     group_concat(distinct j.ref_nt_id.lineage, chr(10)) as lineages,
+    count(distinct j.ref_nt_id.lineage) as totalLineages,
     group_concat(distinct j.ref_nt_id.locus, chr(10)) as loci,
     group_concat(distinct hs.haplotype, chr(10)) as haplotypesWithAllele,
 
@@ -74,4 +76,4 @@ FROM (
 
 ) a
 
-GROUP BY a.analysis_id, a.alleles, a.alleleIds, a.lineages, a.loci, a.haplotypesWithAllele
+GROUP BY a.analysis_id, a.alleles, a.alleleIds, a.lineages, a.totalLineages, a.loci, a.haplotypesWithAllele

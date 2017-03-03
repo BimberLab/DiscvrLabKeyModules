@@ -100,7 +100,9 @@ public class TranslatingReferenceSequence
 
             int peptideLength = model.getSequenceBases().length;
             int ntOffset = 0;
-            for (Pair<Integer, Integer> pair : model.getExonList())
+            List<Pair<Integer, Integer>> exons = model.getExonList();
+            int exonIdx = 0;
+            for (Pair<Integer, Integer> pair : exons)
             {
                 if (pair.first <= rPos1 && pair.second >= rPos1)
                 {
@@ -166,6 +168,65 @@ public class TranslatingReferenceSequence
                                 positions[2] = rPos1;
                                 break;
                         }
+                    }
+
+                    //account for codons spanning exons:
+                    int arrayIdx = 0;
+                    for (Integer position : positions)
+                    {
+                        //note: using 1-based coordinates
+                        if ((!model.isComplement() && position > pair.second) || (model.isComplement() && position < pair.first))
+                        {
+                            _log.debug("exon spanning codon: " + position);
+
+                            //try next exon
+                            if ((exonIdx + 1) < exons.size())
+                            {
+                                Pair<Integer, Integer> nextExon = exons.get(exonIdx + 1);
+                                if (model.isComplement())
+                                {
+                                    int endOffset = position - pair.first + 1;
+                                    positions[arrayIdx] = (nextExon.second + endOffset);
+                                }
+                                else
+                                {
+                                    int startOffset = position - pair.second - 1;
+                                    positions[arrayIdx] = (nextExon.first + startOffset);
+                                }
+                            }
+                            else
+                            {
+                                _log.warn("exon spanning codon, but there is no following exon: " + exonIdx + " / " + position);
+                            }
+                        }
+
+                        //also need to account for previous codon
+                        if ((!model.isComplement() && position < pair.first) || (model.isComplement() && position > pair.second))
+                        {
+                            _log.debug("exon spanning codon: " + position);
+
+                            //try previous exon
+                            if (exonIdx > 0)
+                            {
+                                Pair<Integer, Integer> previousExon = exons.get(exonIdx - 1);
+                                if (!model.isComplement())
+                                {
+                                    int endOffset = position - pair.first + 1;
+                                    positions[arrayIdx] = (previousExon.second + endOffset);
+                                }
+                                else
+                                {
+                                    int startOffset = position - pair.second - 1;
+                                    positions[arrayIdx] = (previousExon.first + startOffset);
+                                }
+                            }
+                            else
+                            {
+                                _log.warn("exon spanning codon, but there is no previous exon: " + exonIdx + " / " + position);
+                            }
+                        }
+
+                        arrayIdx++;
                     }
 
                     StringBuilder codon = new StringBuilder();
@@ -258,6 +319,7 @@ public class TranslatingReferenceSequence
                 }
 
                 ntOffset += (pair.second - pair.first) + 1;
+                exonIdx++;
             }
         }
 

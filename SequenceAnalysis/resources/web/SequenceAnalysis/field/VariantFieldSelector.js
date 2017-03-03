@@ -25,7 +25,9 @@ Ext4.define('SequenceAnalysis.form.field.VariantFieldSelector', {
     genotypeDefaults: [
         'GT',
         'GQ',
-        'DP'
+        'DP',
+        'AD'
+        //'FILTER'
     ],
 
     initComponent: function() {
