@@ -5,7 +5,7 @@ import org.labkey.gradle.util.GroupNames
 
 apply plugin: 'org.labkey.distribution'
 
-Distribution.inheritDependencies(project, ":server:distributions:standard")
+Distribution.inheritDependencies(project, ":server:distributions:community")
 
 BuildUtils.addModuleDistributionDependencies(project, [":externalModules:onprcEHRModules:GeneticsCore",
                                                        ":server:customModules:ehr",
