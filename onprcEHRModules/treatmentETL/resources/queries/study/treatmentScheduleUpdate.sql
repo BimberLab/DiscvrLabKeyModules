@@ -3,11 +3,11 @@ d.id,
 d.calculated_status,
 s.*,
 s.objectid as treatmentid,
-(SELECT max(d.qcstate) as label FROM "/ONPRC/EHR".study.drug d WHERE s.objectid = d.treatmentid AND s.date = d.timeordered) as treatmentStatus
+(SELECT max(d.qcstate) as label FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.drug d WHERE s.objectid = d.treatmentid AND s.date = d.timeordered) as treatmentStatus
 --(SELECT max(taskId) as taskId FROM "/ONPRC/EHR".study.drug d WHERE s.objectid = d.treatmentid AND s.date = d.timeordered) as taskId
 
 
-FROM "/ONPRC/EHR".study.demographics d JOIN (
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.demographics d JOIN (
 
 SELECT   s.*,
   timestampadd('SQL_TSI_MINUTE', ((s.hours * 60) + s.minutes), s.origDate) as date,
@@ -79,20 +79,20 @@ SELECT
 
 FROM dateRangedata dr
 
-JOIN "/ONPRC/EHR".study."Treatment Orders" t1
+JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Treatment Orders" t1
   --NOTE: should the enddate consider date/time?
   ON (dr.dateOnly >= t1.dateOnly and dr.dateOnly <= t1.enddateCoalesced AND
       --technically the first day of the treatment is day 1, not day 0
       mod(CAST(timestampdiff('SQL_TSI_DAY', CAST(t1.dateOnly as timestamp), dr.dateOnly) as integer), t1.frequency.intervalindays) = 0
   )
 
-LEFT JOIN "/ONPRC/EHR".ehr.treatment_times tt ON (tt.treatmentid = t1.objectid)
-LEFT JOIN "/ONPRC/EHR".ehr_lookups.treatment_frequency_times ft ON (ft.frequency = t1.frequency.meaning AND tt.rowid IS NULL)
+LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.ehr.treatment_times tt ON (tt.treatmentid = t1.objectid)
+LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.ehr_lookups.treatment_frequency_times ft ON (ft.frequency = t1.frequency.meaning AND tt.rowid IS NULL)
 
 LEFT JOIN (
     SELECT
       sc.code
-    from "/ONPRC/EHR".ehr_lookups.snomed_subset_codes sc
+    from Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.ehr_lookups.snomed_subset_codes sc
     WHERE sc.primaryCategory = 'Diet'
     GROUP BY sc.code
 ) snomed ON snomed.code = t1.code

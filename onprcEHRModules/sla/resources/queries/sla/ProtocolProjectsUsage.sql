@@ -16,17 +16,17 @@ aa.Allowed AS NumAllowed,
 calc.NumUsed,
 aa.StartDate,
 aa.EndDate
-FROM "/onprc/ehr".ehr.project a
-LEFT JOIN "/onprc/ehr".ehr.protocol p ON p.protocol = a.protocol
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.ehr.project a
+LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.ehr.protocol p ON p.protocol = a.protocol
 LEFT JOIN onprc_ehr.investigators i ON i.rowId = a.investigatorId
 LEFT JOIN onprc_billing.fiscalAuthorities f ON f.rowid = i.financialanalyst
-LEFT JOIN "/onprc/ehr".sla.allowableAnimals aa ON a.protocol = aa.protocol
+LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.sla.allowableAnimals aa ON a.protocol = aa.protocol
 LEFT JOIN (select * from onprc_billing.projectAccountHistory z where (z.StartDate IS NOT NULL AND z.EndDate IS NOT NULL AND now() between z.StartDate AND z.EndDate)) x ON a.project = x.project
 LEFT JOIN "/onprc/admin/finance/public".onprc_billing_public.aliases y ON y.alias = x.account
 LEFT JOIN (
   SELECT i.protocol,species,gender,sum(animalsreceived) AS NumUsed
   FROM sla.purchasedetails pd, sla.purchase p
-  LEFT JOIN "/onprc/ehr".ehr.project i ON p.project = i.project
+  LEFT JOIN Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.ehr.project i ON p.project = i.project
   WHERE p.objectid = pd.purchaseid AND animalsreceived IS NOT NULL
   GROUP BY i.protocol,species,gender
 ) AS calc ON a.protocol = calc.protocol

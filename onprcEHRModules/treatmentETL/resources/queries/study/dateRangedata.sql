@@ -13,7 +13,7 @@ FROM (SELECT
 
 timestampadd('SQL_TSI_DAY', i.value, CAST(COALESCE(TIMESTAMPAdd('SQL_TSI_DAY', -30, curdate()), curdate()) AS TIMESTAMP)) as date
 
-FROM "/ONPRC/EHR".ldk.integers i
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.ldk.integers i
 
 ) i
 

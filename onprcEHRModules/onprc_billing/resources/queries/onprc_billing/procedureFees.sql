@@ -73,7 +73,7 @@ mfd.chargeId.rowId,
 max(e.objectid) as sourceRecord,
 e.taskid
 
-FROM study.drug e  join "/ONPRC/EHR".onprc_billing.medicationFeeDefinition mfd ON mfd.code = e.code .code
+FROM study.drug e  join Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.medicationFeeDefinition mfd ON mfd.code = e.code .code
 and  mfd.active = true
 WHERE
 cast(e.datefinalized as Date) >= StartDate  AND CAST(e.datefinalized as date) <= CAST(EndDate as date)
@@ -97,7 +97,7 @@ mfd.chargeId.rowId,
 max(e.objectid) as sourceRecord,
 e.taskid
 
-FROM study.drug e  join "/ONPRC/EHR".onprc_billing.medicationFeeDefinition mfd ON mfd.code = e.code .code
+FROM study.drug e  join Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.onprc_billing.medicationFeeDefinition mfd ON mfd.code = e.code .code
 and  mfd.active = true
 WHERE
 cast(e.datefinalized as Date) >= StartDate  AND CAST(e.datefinalized as date) <= CAST(EndDate as date)
@@ -125,7 +125,7 @@ e.taskid
 
 
 FROM study.drug e  --join "/ONPRC/EHR".onprc_billing.medicationFeeDefinition mfd ON mfd.code = e.code .code
-left outer join  "/ONPRC/EHR".ehr_lookups.snomed_combo_list s on s.code = e.code.code
+left outer join  Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.ehr_lookups.snomed_combo_list s on s.code = e.code.code
 
 --and  mfd.active = true
 

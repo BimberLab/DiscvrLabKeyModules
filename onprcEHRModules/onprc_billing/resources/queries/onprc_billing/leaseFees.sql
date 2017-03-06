@@ -20,8 +20,8 @@ END as chargeId,
 --special case one-day lease rates.  note: if enddate is null, these cannot be a one-day lease
 CASE
 	  WHEN (Select Count(*) from study.birth b
-       left join "/ONPRC/EHR".study.assignment a1 on b.id = a.id and a.date = b.dateOnly and a.project.use_category in ('Center Resource','U42','U24')
-      left join "/ONPRC/EHR".study.assignment a2 on b.dam = a2.id and a2.project.use_category in ('Center Resource','U42','U24') and (a2.date <= b.dateOnly and a2.endDate >=b.dateOnly or a2.enddate is Null)
+      left join Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.assignment a1 on b.id = a.id and a.date = b.dateOnly and a.project.use_category in ('Center Resource','U42','U24')
+      left join Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study.assignment a2 on b.dam = a2.id and a2.project.use_category in ('Center Resource','U42','U24') and (a2.date <= b.dateOnly and a2.endDate >=b.dateOnly or a2.enddate is Null)
         where b.id = a.id and a1.project.protocol = a2.project.protocol) > 0 THEN 0
   WHEN (a.duration = 0 AND a.enddate IS NOT NULL AND a.assignCondition = a.releaseCondition) THEN 1
   WHEN (fl.id Is Not Null) THEN 0
