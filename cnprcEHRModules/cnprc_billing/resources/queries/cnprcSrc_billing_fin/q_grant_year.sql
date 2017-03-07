@@ -11,7 +11,7 @@ select
 ,Gyr_brate_direct_costs       AS Brate_direct_costs
 ,Gyr_brate_total_costs        AS Brate_total_costs
 ,Gyr_sponsored_pgm_ref_no     AS Sponsored_pgm_ref_no
-,Gyr_gpp_totals_indicator_yn  AS Gpp_totals_indicator_yn
+,Gyr_gpp_totals_indicator_yn  AS Totals_indicator_yn
 ,Gyr_base_grant_year_end      AS Base_grant_year_end
 ,Gyr_submission_date          AS Submission_date
 ,Gyr_special_funding_type     AS Special_funding_type
