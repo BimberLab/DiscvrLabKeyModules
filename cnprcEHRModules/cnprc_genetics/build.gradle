@@ -27,6 +27,9 @@ project.task("transformJar",
                     jar.baseName = "GeneticsTransform"
                     jar.classifier = "transform"
                     jar.destinationDir = new File(project.buildDir, "artifacts/cnprc")
+                    jar.manifest {
+                        attributes "Main-Class": "GeneticsTransform"
+                    }
                 }
         )
 
