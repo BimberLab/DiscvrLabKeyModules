@@ -39,18 +39,30 @@
                     <column columnName="Nud_c_billing_method"/>
                     <column columnName="Nud_c_collection_acct"/>
                     <column columnName="Nud_c_sub_object_code"/>
-                    <column columnName="Central_spply_status_closed_yn"/>
+                    <column columnName="Cs_status_closed_yn">
+                        <columnTitle>Central Supply Status Closed YN</columnTitle>
+                    </column>
                     <column columnName="Central_spply_status_set_by"/>
-                    <column columnName="Central_spply_status_timestamp"/>
+                    <column columnName="Cs_status_timestamp">
+                        <columnTitle>Central Supply Status Timestamp</columnTitle>
+                    </column>
                     <column columnName="Perdiem_status_closed_yn"/>
                     <column columnName="Perdiem_status_set_by"/>
                     <column columnName="Perdiem_status_timestamp"/>
-                    <column columnName="Work_orders_status_closed_yn"/>
+                    <column columnName="Wo_status_closed_yn">
+                        <columnTitle>Work Orders Status Closed YN</columnTitle>
+                    </column>
                     <column columnName="Work_orders_status_set_by"/>
-                    <column columnName="Work_orders_status_timestamp"/>
-                    <column columnName="Core_services_status_closed_yn"/>
+                    <column columnName="Wo_status_timestamp">
+                        <columnTitle>Work Orders Status Timestamp</columnTitle>
+                    </column>
+                    <column columnName="Core_serv_status_closed_yn">
+                        <columnTitle>Core Services Status Closed YN</columnTitle>
+                    </column>
                     <column columnName="Core_services_status_set_by"/>
-                    <column columnName="Core_services_status_timestamp"/>
+                    <column columnName="Core_serv_status_timestamp">
+                        <columnTitle>Core Services Status Timestamp</columnTitle>
+                    </column>
                     <column columnName="Period_start_date"/>
                     <column columnName="Sd_next_credit_memo_no"/>
                     <column columnName="Objectid"/>
