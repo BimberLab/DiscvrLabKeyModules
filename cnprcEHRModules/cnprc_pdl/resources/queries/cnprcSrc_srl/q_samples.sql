@@ -7,7 +7,7 @@ SELECT
   SS_SPECIES                   AS species,
   SS_SAMPLE_TYPE               AS sampleType,
   SS_SAMPLE_DATE               AS sampleDate,
-  SS_RECD_DATE                 AS recievedDate,
+  SS_RECD_DATE                 AS receivedDate,
   (CASE WHEN SS_HIDE_COMMENT   = 'Y' THEN 1 ELSE 0 END) AS isHideComment,
   SS_COMMENT                   AS comments,
   (CASE WHEN SS_EST_SAMPLE_DATE= 'Y' THEN 1 ELSE 0 END) AS isEstimateSampleDate,
