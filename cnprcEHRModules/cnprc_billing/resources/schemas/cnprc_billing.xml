@@ -749,7 +749,7 @@
             <column columnName="Fiscal_range_abbrev_2"/>
             <column columnName="Fiscal_range_abbrev_3"/>
             <column columnName="Dafis_univ_fy_range"/>
-            <column columnName="Dafis_univ_fy_range_abbrev_1"/>
+            <column columnName="Univ_fy_range_abbrev_1"/>
             <column columnName="Days_in_period"/>
             <column columnName="ObjectId"/>
             <column columnName="Created"/>
@@ -1149,7 +1149,7 @@
             <column columnName="Credit_entry_flag"/>
             <column columnName="Credit_entry_comment"/>
             <column columnName="Credit_entry_prior_ref_no"/>
-            <column columnName="Credit_entry_prior_invoice_no"/>
+            <column columnName="Credit_entry_prior_inv_no"/>
             <column columnName="Credit_memo_number"/>
             <column columnName="Income_sub_object_code"/>
             <column columnName="Charge_sub_object_code"/>

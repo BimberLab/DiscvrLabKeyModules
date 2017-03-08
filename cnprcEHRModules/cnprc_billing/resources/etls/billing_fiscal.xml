@@ -6,7 +6,7 @@
         <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
             <description>Copy to target</description>
             <source schemaName="cnprcSrc_billing_fin" queryName="q_billing_fiscal"/>
-            <destination schemaName="cnprc_billing" queryName="billing_fiscal" bulkLoad="true" batchSize="500"
+            <destination schemaName="cnprc_billing" queryName="billing_fiscal" bulkLoad="true" batchSize="5000"
                          targetOption="merge">
                 <alternateKeys>
                     <column name="Objectid"/>

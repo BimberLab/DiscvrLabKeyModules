@@ -14,7 +14,7 @@ select
 ,Bf_fiscal_range_abbrev_2       AS Fiscal_range_abbrev_2
 ,Bf_fiscal_range_abbrev_3       AS Fiscal_range_abbrev_3
 ,Dafis_univ_fy_range
-,Dafis_univ_fy_range_abbrev_1
+,Dafis_univ_fy_range_abbrev_1       AS Univ_fy_range_abbrev_1
 ,Days_in_period
 ,Objectid
 ,Date_time

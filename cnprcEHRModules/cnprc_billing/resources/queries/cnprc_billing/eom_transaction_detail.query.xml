@@ -36,7 +36,9 @@
                     <column columnName="Credit_entry_flag"/>
                     <column columnName="Credit_entry_comment"/>
                     <column columnName="Credit_entry_prior_ref_no"/>
-                    <column columnName="Credit_entry_prior_invoice_no"/>
+                    <column columnName="Credit_entry_prior_inv_no">
+                        <columnTitle>Credit Entry Prior Invoice No</columnTitle>
+                    </column>
                     <column columnName="Credit_memo_number"/>
                     <column columnName="Income_sub_object_code"/>
                     <column columnName="Charge_sub_object_code"/>

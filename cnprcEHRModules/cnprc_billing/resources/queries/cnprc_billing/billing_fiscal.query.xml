@@ -18,7 +18,9 @@
                     <column columnName="Fiscal_range_abbrev_2"/>
                     <column columnName="Fiscal_range_abbrev_3"/>
                     <column columnName="Dafis_univ_fy_range"/>
-                    <column columnName="Dafis_univ_fy_range_abbrev_1"/>
+                    <column columnName="Univ_fy_range_abbrev_1">
+                        <columnTitle>Dafis Univ Fy Range Abbrev 1</columnTitle>
+                    </column>
                     <column columnName="Days_in_period"/>
                     <column columnName="ObjectId"/>
                 </columns>
