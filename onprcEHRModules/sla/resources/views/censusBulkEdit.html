@@ -1,0 +1,39 @@
+
+<!--Created 12-29-2016 R.Blasa-->
+
+<div id="qwpDiv" />
+
+<script type="text/javascript">
+    Ext4.onReady(function()
+    {
+
+    var wp = new LABKEY.QueryWebPart({
+        schemaName : 'sla',
+        queryName : 'Census',
+        showRecordSelectors : true,
+        renderTo: 'qwpDiv',
+        buttonBar: {
+            includeStandardButtons: true,
+            items:[
+                {text: 'Bulk Edit', requiresSelection : true, handler: function(dataRegion){
+                    if (dataRegion) {
+                        var url = LABKEY.ActionURL.buildURL('query', 'updateQueryRows.view', null, {
+                            schemaName: dataRegion.schemaName,
+                            'query.queryName': dataRegion.queryName,
+                            dataRegionSelectionKey: dataRegion.selectionKey,
+                            returnUrl: LABKEY.ActionURL.buildURL('sla', 'censusBulkEdit',null, null)
+                        });
+                        var form = dataRegion.form;
+                        if (form && verifySelected.call(this, form, url, 'POST', 'rows')) {
+                            submitForm(form);
+                        }
+                        return false;
+                    }
+                }}
+            ]
+        }
+    });
+    wp.render();
+    });
+</script>
+

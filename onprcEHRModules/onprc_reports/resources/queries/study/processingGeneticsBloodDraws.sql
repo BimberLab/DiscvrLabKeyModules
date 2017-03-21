@@ -27,6 +27,7 @@ SELECT
   f.flags,
   CASE
     WHEN (f.flags LIKE '%Parentage Blood Draw Needed%') THEN 1
+    WHEN (f.flags LIKE '%Parentage Not Needed%') THEN 0
     WHEN (f.flags LIKE '%Parentage Blood Draw Collected%') THEN 0
     WHEN (gp.Id IS NOT NULL) THEN 0
     WHEN (snpData.subjectId IS NOT NULL) THEN 0
@@ -37,12 +38,14 @@ SELECT
   --Note: if changing this logic, mhcFlagSummary.sql should also be updated
   CASE
     WHEN (f.flags LIKE '%MHC Blood Draw Needed%') THEN 1
+    WHEN (f.flags LIKE '%MHC Typing Not Needed%') THEN 0
     WHEN (f.flags LIKE '%MHC Blood Draw Collected%') THEN 0
     WHEN (d.species = 'RHESUS MACAQUE' AND d.Id.age.ageInYears <= 5.0 AND d.geographic_origin = 'India' AND m.Id IS NULL AND (a.Id IS NOT NULL OR d.gender = 'm')) THEN 1
     ELSE 0
   END as mhcBloodDrawVol,
   CASE
     WHEN (f.flags LIKE '%DNA Bank Blood Draw Needed%') THEN 6
+    WHEN (f.flags LIKE '%DNA Bank Not Needed%') THEN 0
     WHEN (f.flags LIKE '%DNA Bank Blood Draw Collected%') THEN 0
     WHEN (s.subjectId IS NULL) THEN 6  --timestampdiff('SQL_TSI_DAY', curdate(), d.birth) > 365 AND
     ELSE 0
@@ -75,7 +78,7 @@ LEFT JOIN (
       pd.Id
       --count(distinct pd.relationship) as total
     FROM Study.Parentage pd
-    WHERE pd.method = 'Genetic'
+    WHERE (pd.method = 'Genetic' OR pd.method = 'Provisional Genetic')
     GROUP BY pd.Id
 ) gp ON (d.Id = gp.Id)
 

@@ -8,43 +8,43 @@
 
                     <column columnName="category"></column>
                     <column columnName="name"></column>
-                    <column columnName="CurrentYear">
+                    <column columnName="UnitCost">
                         <columnTitle>Current Year</columnTitle>
                         <formatString>$#,##0.00</formatString>
                     </column>
 
                     <column columnName="year1">
                         <columnTitle>YR58: 5/1/17 to 4/30/18</columnTitle>
-                        <formatString>$###0.00</formatString>
+                        <formatString>$#,##0.00</formatString>
                     </column>
                     <column columnName="year2">
                         <columnTitle>YR59: 5/1/18 to 4/30/19</columnTitle>
-                        <formatString>$###0.00</formatString>
+                        <formatString>$#,##0.00</formatString>
                     </column>
                     <column columnName="year3">
                         <columnTitle>YR60: 5/1/19 to 4/30/20</columnTitle>
-                        <formatString>$###0.00</formatString>
+                        <formatString>$#,##0.00</formatString>
                     </column>
                     <column columnName="year4">
                         <columnTitle>YR61: 5/1/20 to 4/30/21</columnTitle>
-                        <formatString>$###0.00</formatString>
+                        <formatString>$#,##0.00</formatString>
                     </column>
                     <column columnName="year5">
                         <columnTitle>YR62: 5/1/21 to 4/30/22</columnTitle>
-                        <formatString>$###0.00</formatString>
+                        <formatString>$#,##0.00</formatString>
                     </column>
                     <column columnName="year6">
                         <columnTitle>YR63: 5/1/22 to 4/30/23</columnTitle>
-                        <formatString>$###0.00</formatString>
+                        <formatString>$#,##0.00</formatString>
                     </column>
                     <column columnName="year7">
                         <columnTitle>YR64: 5/1/23 to 4/30/24</columnTitle>
-                        <formatString>$###0.00</formatString>
+                        <formatString>$#,##0.00</formatString>
                     </column>
 
                     <column columnName="year8">
                         <columnTitle>YR65: 5/1/24 to 4/30/25</columnTitle>
-                        <formatString>$###0.00</formatString>
+                        <formatString>$#,##0.00</formatString>
                     </column>
 
                     <column columnName="PostedDate">

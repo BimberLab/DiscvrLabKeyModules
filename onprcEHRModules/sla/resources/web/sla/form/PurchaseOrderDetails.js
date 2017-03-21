@@ -125,6 +125,8 @@ Ext4.define('SLA.panel.PurchaseOrderDetails', {
                                 '<span class="order-label">NUM ANIMALS ORDERED: </span><span class="order-value">{animalsordered}</span><br/>',
                                 '<span class="order-label">REQUESTED ARRIVAL DATE: </span><span class="order-value">{requestedarrivaldate}</span><br/>',
                                 '<span class="order-label">EXPECTED ARRIVAL DATE: </span><span class="order-value">{expectedarrivaldate}</span><br/>',
+                                '<span class="order-label">SLA_DOB: </span><span class="order-value">{sla_DOB}</span><br/>',
+                                '<span class="order-label">SLA VENDOR LOCATION: </span><span class="order-value">{vendorLocation}</span><br/>',
                                 '<span class="order-label">SPECIAL INSTRUCTIONS: </span><span class="order-value">{housinginstructions:htmlEncode}</span><br/>',
 
                             '</div>',

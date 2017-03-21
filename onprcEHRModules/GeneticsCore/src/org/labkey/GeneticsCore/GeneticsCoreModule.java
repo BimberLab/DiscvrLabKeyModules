@@ -17,7 +17,6 @@
 package org.labkey.GeneticsCore;
 
 import org.apache.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.labkey.GeneticsCore.analysis.MethylationRateComparisonHandler;
 import org.labkey.GeneticsCore.button.ChangeReadsetStatusButton;
 import org.labkey.GeneticsCore.button.HaplotypeReviewButton;
@@ -30,8 +29,6 @@ import org.labkey.GeneticsCore.pipeline.BismarkWrapper;
 import org.labkey.GeneticsCore.pipeline.BlastPipelineJobResourceAllocator;
 import org.labkey.GeneticsCore.pipeline.ExacloudResourceSettings;
 import org.labkey.GeneticsCore.pipeline.SequenceJobResourceAllocator;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.htcondorconnector.HTCondorService;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
@@ -42,10 +39,6 @@ import org.labkey.api.module.ModuleContext;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.view.template.ClientDependency;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
 
 public class GeneticsCoreModule extends ExtendedSimpleModule
 {
@@ -61,13 +54,13 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 0.02;
+        return 17.10;
     }
 
     @Override
     public boolean hasScripts()
     {
-        return false;
+        return true;
     }
 
     @Override
@@ -109,27 +102,6 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
     protected void init()
     {
         addController(CONTROLLER_NAME, GeneticsCoreController.class);
-    }
-
-    @NotNull
-    @Override
-    public Collection<String> getSummary(Container c)
-    {
-        return Collections.emptyList();
-    }
-
-    @Override
-    @NotNull
-    public Set<String> getSchemaNames()
-    {
-        return Collections.emptySet();
-    }
-
-    @Override
-    @NotNull
-    public Set<DbSchema> getSchemasToTest()
-    {
-        return Collections.emptySet();
     }
 
     public static class PipelineStartup

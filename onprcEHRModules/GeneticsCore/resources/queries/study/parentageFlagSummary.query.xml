@@ -12,6 +12,9 @@
                         <columnTitle>Is Parentage Required?</columnTitle>
                         <description>This column displays whether this monkey would typically require genetic parentage testing</description>
                     </column>
+                    <column columnName="hasDataNotNeededFlag">
+                        <columnTitle>Flagged As Parentage Not Needed?</columnTitle>
+                    </column>
                     <column columnName="hasParentageDrawnFlag">
                         <columnTitle>Has Been Flagged As Blood Drawn?</columnTitle>
                     </column>

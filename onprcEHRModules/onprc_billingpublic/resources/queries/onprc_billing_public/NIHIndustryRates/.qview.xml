@@ -1,0 +1,64 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="NIH Industry Rate Sheet">
+    <columns>
+        <column name="category"/>
+        <column name="Name"/>
+        <column name = "currentYear">
+            <properties>
+                <property name="columnTitle" value="Current Year"/>
+            </properties>
+        </column>
+        <column name = "year1">
+            <properties>
+                <property name="columnTitle" value="YR58: 5/1/17-4/30/18"/>
+            </properties>
+        </column>
+        <column name = "year2">
+            <properties>
+                <property name="columnTitle" value="YR59: 5/1/18-4/30/19"/>
+            </properties>
+        </column>
+        <column name = "year3">
+            <properties>
+                <property name="columnTitle" value="YR60: 5/1/19-4/30/20"/>
+            </properties>
+        </column>
+        <column name = "year4">
+            <properties>
+                <property name="columnTitle" value="YR61: 5/1/20-4/30/21"/>
+            </properties>
+        </column>
+        <column name = "year5">
+            <properties>
+                <property name="columnTitle" value="YR62: 5/1/21-4/30/22"/>
+            </properties>
+        </column>
+        <column name = "year6">
+            <properties>
+                <property name="columnTitle" value="YR63: 5/1/22-4/30/23"/>
+            </properties>
+        </column>
+        <column name = "year7">
+            <properties>
+                <property name="columnTitle" value="YR64: 5/1/23-4/30/24"/>
+            </properties>
+        </column>
+        <column name = "year8">
+            <properties>
+                <property name="columnTitle" value="YR65: 5/1/24-4/30/25"/>
+            </properties>
+        </column>
+        <column name = "DatePosted">
+            <properties>
+                <property name="columnTitle" value="Date Calculated"/>
+            </properties>
+        </column>
+
+
+
+    </columns>
+    <sorts>
+        <sort column="Category"/>
+        <sort column="Name"/>
+    </sorts>
+</customView>
+

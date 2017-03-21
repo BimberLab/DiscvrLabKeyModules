@@ -12,6 +12,7 @@ SELECT
   t.activeBuffyCoatQuantity,
   t.activeGDNA,
   t.hasBloodDrawnFlag,
+  t.hasDataNotNeededFlag,
   t.flags,
 
   t.lastDate as drawnFlagDateAdded,
@@ -29,6 +30,11 @@ SELECT
     ELSE true
   END as hasBloodDrawnFlag,
   dc.lastDate,
+  CASE
+    WHEN f3.Id is null THEN false
+    ELSE true
+  END as hasDataNotNeededFlag,
+  f3.lastDate as dateDataNotNeededFlagAdded,
 
   coalesce(s1.total, 0) as activeBlood,
   coalesce(s1.totalQuantity, 0) as activeBloodQuantity,
@@ -57,6 +63,14 @@ LEFT JOIN (
   GROUP BY f.Id
 ) dc ON (dc.Id = d.Id)
 
+LEFT JOIN (
+SELECT
+  f.Id,
+  max(f.date) as lastDate
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
+where f.isActive = true and f.flag.category = 'Genetics' and f.flag.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.DNA_NOT_NEEDED')
+GROUP BY f.Id
+) f3 ON (f3.Id = d.Id)
 
 LEFT JOIN (
 SELECT

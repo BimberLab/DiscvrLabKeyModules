@@ -57,6 +57,7 @@
             LABKEY.Query.selectRows({
                 schemaName: 'extscheduler',
                 queryName: 'Resources',
+                columns: 'Id,Name,Color,Room,Bldg',
                 success: function(data) {
                     resourceStore = Ext.create('Sch.data.ResourceStore', {
                         model   : 'Sch.model.Resource',
@@ -79,6 +80,7 @@
             LABKEY.Query.selectRows({
                 schemaName: 'extscheduler',
                 queryName: 'Events',
+                columns: 'Id,ResourceId,Name,StartDate,EndDate,UserId,Alias,Owner',
                 success: function(data){
 
                     // need to convert the date fields from a string to JS Date object

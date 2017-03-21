@@ -1,0 +1,7 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart" title="SLA Census Bulk Editing Grid">
+   <view name="censusBulkEdit"/>
+   <locations>
+		<location name="body"/>
+		<location name="menu"/>
+   </locations>
+</webpart>

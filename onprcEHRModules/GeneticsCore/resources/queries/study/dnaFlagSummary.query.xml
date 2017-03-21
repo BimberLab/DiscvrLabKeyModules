@@ -14,6 +14,9 @@
                     <column columnName="hasSample">
                         <columnTitle>Has Apppropriate Sample Archived?</columnTitle>
                     </column>
+                    <column columnName="hasDataNotNeededFlag">
+                        <columnTitle>Flagged As DNA Not Needed?</columnTitle>
+                    </column>
                     <column columnName="activeBlood">
                         <columnTitle># Blood Banked</columnTitle>
                         <url>/query/executeQuery.view?schemaName=DNA_Bank&amp;query.queryName=samples&amp;query.subjectId~eq=${Id}&amp;query.dateremoved~isblank&amp;query.sampletype~eq=Whole Blood</url>

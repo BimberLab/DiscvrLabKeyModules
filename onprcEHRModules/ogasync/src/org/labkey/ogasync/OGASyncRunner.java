@@ -424,6 +424,22 @@ public class OGASyncRunner implements Job
                                 {
                                     val = "No Cost Ext";
                                 }
+                                else if ("1009".equals(val))
+                                {
+                                    val = "Archived";
+                                }
+                                else if ("1010".equals(val))
+                                {
+                                    val = "IM Purged";
+                                }
+                                else if ("1011".equals(val))
+                                {
+                                    val = "Capitalized";
+                                }
+                                else if ("1012".equals(val))
+                                {
+                                    val = "Technical Issues";
+                                }
 
                                 row.put(key, val);
                             }

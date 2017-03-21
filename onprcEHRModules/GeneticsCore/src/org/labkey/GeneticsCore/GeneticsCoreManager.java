@@ -71,13 +71,19 @@ public class GeneticsCoreManager
     @Queryable
     public static final String DNA_DRAW_NEEDED = "DNA Bank Blood Draw Needed";
     @Queryable
+    public static final String DNA_NOT_NEEDED = "DNA Bank Not Needed";
+    @Queryable
     public static final String PARENTAGE_DRAW_COLLECTED = "Parentage Blood Draw Collected";
     @Queryable
     public static final String PARENTAGE_DRAW_NEEDED = "Parentage Blood Draw Needed";
     @Queryable
+    public static final String PARENTAGE_NOT_NEEDED = "Parentage Not Needed";
+    @Queryable
     public static final String MHC_DRAW_COLLECTED = "MHC Blood Draw Collected";
     @Queryable
     public static final String MHC_DRAW_NEEDED = "MHC Blood Draw Needed";
+    @Queryable
+    public static final String MHC_NOT_NEEDED = "MHC Typing Not Needed";
 
     public static final String SEQUENCEANALYSIS_SCHEMA = "sequenceanalysis";
     public static final String TABLE_SEQUENCE_ANALYSES = "sequence_analyses";

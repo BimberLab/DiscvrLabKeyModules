@@ -190,6 +190,8 @@
             <column columnName="shippingcost" />
             <column columnName="totalcost" />
             <column columnName="housinginstructions" />
+            <column columnName="sla_DOB" />
+            <column columnName="vendorLocation" />
             <column columnName="requestedarrivaldate" />
             <column columnName="expectedarrivaldate" />
             <column columnName="receiveddate" />

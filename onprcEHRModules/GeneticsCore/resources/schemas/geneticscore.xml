@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ * Copyright (c) 2011 LabKey Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+
+ -->
+<ns:tables xmlns:ns="http://labkey.org/data/xml">
+    <ns:table tableName="mhc_data" tableDbType="TABLE">
+        <ns:javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</ns:javaCustomizer>
+        <ns:tableTitle>MHC Data</ns:tableTitle>
+        <ns:pkColumnName>rowId</ns:pkColumnName>
+        <ns:columns>
+            <ns:column columnName="rowid">
+                <ns:columnTitle>Row Id</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="subjectId">
+                <ns:columnTitle>Subject Id</ns:columnTitle>
+                <ns:conceptURI>http://cpas.labkey.com/Study#ParticipantId</ns:conceptURI>
+            </ns:column>
+            <ns:column columnName="datatype">
+                <ns:columnTitle>Data Type</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="marker">
+                <ns:columnTitle>Marker</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="result">
+                <ns:columnTitle>Result</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="score">
+                <ns:columnTitle>Score/Frequency</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="assaytype">
+                <ns:columnTitle>Assay Type</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="container">
+                <ns:columnTitle>Folder</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="created">
+
+            </ns:column>
+            <ns:column columnName="createdby">
+
+            </ns:column>
+            <ns:column columnName="modified">
+
+            </ns:column>
+            <ns:column columnName="modifiedby">
+
+            </ns:column>
+        </ns:columns>
+    </ns:table>
+</ns:tables>

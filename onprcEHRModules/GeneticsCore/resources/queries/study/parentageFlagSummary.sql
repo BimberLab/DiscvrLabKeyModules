@@ -16,8 +16,17 @@ SELECT
   f2.lastDate as redrawFlagDateAdded,
   timestampdiff('SQL_TSI_DAY', curdate(), f2.lastDate) as daysSinceRedrawFlagAdded,
 
+  CASE
+    WHEN f3.Id is null THEN false
+    ELSE true
+  END as hasDataNotNeededFlag,
+  f3.lastDate as dateDataNotNeededFlagAdded,
+
   --NOTE: if changing this logic, processingGeneticsBlooddraws.sql should also be updated
-  true as isParentageRequired,
+  CASE
+    WHEN f3.Id is null THEN false
+    ELSE true
+  END as isParentageRequired,
 
   CASE
     WHEN gp.Id is null THEN false
@@ -54,14 +63,14 @@ LEFT JOIN (
   SELECT
     pd.Id
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.Study.Parentage pd
-  WHERE pd.method = 'Genetic'
+  WHERE (pd.method = 'Genetic' OR pd.method = 'Provisional Genetic')
   GROUP BY pd.Id
 ) gp ON (d.Id = gp.Id)
 
 LEFT JOIN (
   SELECT
   f.Id,
-    max(f.date) as lastDate,
+  max(f.date) as lastDate,
   count(*) as total
   FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
   where f.isActive = true and f.flag.category = 'Genetics' and f.flag.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.PARENTAGE_DRAW_COLLECTED')
@@ -76,6 +85,15 @@ FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Anim
 where f.isActive = true and f.flag.category = 'Genetics' and f.flag.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.PARENTAGE_DRAW_NEEDED')
 GROUP BY f.Id
 ) f2 ON (f2.Id = d.Id)
+
+LEFT JOIN (
+SELECT
+  f.Id,
+  max(f.date) as lastDate
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
+where f.isActive = true and f.flag.category = 'Genetics' and f.flag.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.PARENTAGE_NOT_NEEDED')
+GROUP BY f.Id
+) f3 ON (f3.Id = d.Id)
 
 --join to freezer samples
 LEFT JOIN (

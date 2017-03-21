@@ -16,8 +16,15 @@ SELECT
   f2.lastDate as redrawFlagDateAdded,
   timestampdiff('SQL_TSI_DAY', curdate(), f2.lastDate) as daysSinceRedrawFlagAdded,
 
+  CASE
+    WHEN f3.Id is null THEN false
+    ELSE true
+  END as hasDataNotNeededFlag,
+  f3.lastDate as dateDataNotNeededFlagAdded,
+
   --NOTE: if changing this logic, processingGeneticsBlooddraws.sql should also be updated
   CASE
+    WHEN f3.Id is not null THEN false
     WHEN (d.species = 'RHESUS MACAQUE' AND d.Id.age.ageInYears <= 5.0 AND d.geographic_origin = 'India' AND (a.Id IS NOT NULL OR d.gender = 'm')) THEN true
     else false
   END as isMHCRequired,
@@ -68,6 +75,15 @@ FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Anim
 where f.isActive = true and f.flag.category = 'Genetics' and f.flag.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.MHC_DRAW_NEEDED')
 GROUP BY f.Id
 ) f2 ON (f2.Id = d.Id)
+
+LEFT JOIN (
+SELECT
+  f.Id,
+  max(f.date) as lastDate
+FROM Site.{substitutePath moduleProperty('EHR','EHRStudyContainer')}.study."Animal Record Flags" f
+where f.isActive = true and f.flag.category = 'Genetics' and f.flag.value = javaConstant('org.labkey.GeneticsCore.GeneticsCoreManager.MHC_NOT_NEEDED')
+GROUP BY f.Id
+) f3 ON (f3.Id = d.Id)
 
 --join to freezer samples
 LEFT JOIN (
