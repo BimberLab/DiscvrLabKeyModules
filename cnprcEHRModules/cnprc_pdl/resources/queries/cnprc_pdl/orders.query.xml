@@ -47,9 +47,9 @@
                         <columnTitle>Project Code</columnTitle>
                         <fk>
                             <fkFolderPath>/CNPRC</fkFolderPath>
-                            <fkDbSchema>ehr</fkDbSchema>
+                            <fkDbSchema>cnprc_ehr</fkDbSchema>
                             <fkTable>project</fkTable>
-                            <fkColumnName>name</fkColumnName>
+                            <fkColumnName>projectCode</fkColumnName>
                         </fk>
                     </column>
                     <column columnName="enteredBy"/>

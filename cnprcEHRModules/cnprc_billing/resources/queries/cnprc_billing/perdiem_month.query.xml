@@ -9,10 +9,9 @@
                     <column columnName="projectCode">
                         <fk>
                             <fkFolderPath>/CNPRC</fkFolderPath>
-                            <fkDbSchema>ehr</fkDbSchema>
+                            <fkDbSchema>cnprc_ehr</fkDbSchema>
                             <fkTable>project</fkTable>
-                            <fkColumnName>name</fkColumnName>
-                            <fkDisplayColumnName>Project Name</fkDisplayColumnName>
+                            <fkColumnName>projectCode</fkColumnName>
                         </fk>
                     </column>
                     <column columnName="fundSourceRank"/>
