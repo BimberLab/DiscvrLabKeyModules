@@ -12,7 +12,8 @@ Ext4.define('SequenceAnalysis.panel.VariantFilterPanel', {
 			border: true,
 			items: [{
 				html: 'Variant selecting/filtering is a more advanced GATK feature; however, we have tried to simplify the more common filters.  It uses <a href="https://software.broadinstitute.org/gatk/guide/article?id=1255" target="_blank">JEXL syntax</a> to select or filter individual genotypes based on thresholds.  Should you include more advanced expressions, be aware that this tool does very little checking on the validity of your input.<br><br>' +
-                'Please note: you should not wrap your filter expressions in quotes (either single or double).  You can use quotes within the expression, if you would normally do this with GATK, for example around sample names.',
+                'GATK has several tutorials that help to: <a href="https://software.broadinstitute.org/gatk/guide/article?id=6925" target="_blank">explain hard filters</a> and <a href="https://software.broadinstitute.org/gatk/guide/article?id=3225" target="_blank">recommendations (which can change)</a>.<br><br>' +
+				'Please note: you should not wrap your filter expressions in quotes (either single or double).  You can use quotes within the expression, if you would normally do this with GATK, for example around sample names.',
 				maxWidth: 1000,
 				border: false,
 				style: 'padding-bottom: 10px;'
@@ -26,13 +27,19 @@ Ext4.define('SequenceAnalysis.panel.VariantFilterPanel', {
 						text: 'Quality-By-Depth',
 						scope: this,
 						handler: function(gridBtn){
-							this.addFilter('QualityFilter', 'vc.hasAttribute(\'QD\') && QD < 5.0');
+							this.addFilter('QualityFilter', 'vc.hasAttribute(\'QD\') && QD < 2.0');
 						}
 					},{
 						text: 'Strand Bias (FisherStrand)',
 						scope: this,
 						handler: function(gridBtn){
-							this.addFilter('FisherStrand', 'FS > 15.0');
+							this.addFilter('FisherStrand', 'FS > 60.0');
+						}
+					},{
+						text: 'StrandOddsRatio',
+						scope: this,
+						handler: function(gridBtn){
+							this.addFilter('StrandOddsRatio', 'SOR > 3.0');
 						}
 					},{
 						text: 'MappingQuality',

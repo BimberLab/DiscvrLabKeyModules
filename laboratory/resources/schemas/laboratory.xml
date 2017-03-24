@@ -372,6 +372,7 @@
                 <originalText>Reports</originalText>
             </item>
             <item text="Import Data">
+                <originalText>Import Bulk Data</originalText>
                 <onClick>Laboratory.buttonHandlers.importDataHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'laboratory', 'samples', 'rowid')</onClick>
             </item>
             <item text="Delete">

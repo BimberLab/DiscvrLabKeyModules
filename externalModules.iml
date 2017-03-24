@@ -22,6 +22,14 @@
       <sourceFolder url="file://$MODULE_DIR$/onprcEHRModules/GeneticsCore/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/onprcEHRModules/mergesync/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/DISCVR/htcondorconnector/api-src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DISCVR/blast/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DISCVR/htcondorconnector/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DISCVR/jbrowse/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DISCVR/jbrowse/api-src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DISCVR/mGAP/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DISCVR/omerointegration/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DISCVR/tcrdb/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DISCVR/variantdb/src" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -99,6 +107,15 @@
         <SOURCES />
       </library>
     </orderEntry>
+        <orderEntry type="module-library">
+          <library>
+            <CLASSES>
+              <root url="jar://$MODULE_DIR$/DISCVR/omerointegration/lib/omero_client.jar!/" />
+            </CLASSES>
+            <JAVADOC />
+            <SOURCES />
+          </library>
+        </orderEntry>
     <orderEntry type="module" module-name="SequenceAnalysis-API" />
     <orderEntry type="module" module-name="Laboratory-API" />
     <orderEntry type="module" module-name="LDK-API" />

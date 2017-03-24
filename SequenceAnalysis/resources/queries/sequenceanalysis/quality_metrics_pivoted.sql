@@ -3,7 +3,7 @@ select
   max(analysis_id) as analysis_id,
   max(readset) as readset,
   --container,
-  group_concat(DISTINCT category) as category,
+  max(category) as category,
   count(*) as records,
   metricName,
   avg(metricValue) as metricValue

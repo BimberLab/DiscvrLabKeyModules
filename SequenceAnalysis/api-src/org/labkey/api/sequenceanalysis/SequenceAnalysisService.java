@@ -29,6 +29,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -79,4 +80,6 @@ abstract public class SequenceAnalysisService
     abstract public String getUnzippedBaseName(String filename);
 
     abstract public Integer getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException;
+
+    abstract public List<PedigreeRecord> generatePedigree(Collection<String> sampleNames, Container c, User u);
 }

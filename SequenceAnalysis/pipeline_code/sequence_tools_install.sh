@@ -277,6 +277,7 @@ then
     mkdir -p ${LK_HOME}/svn/trunk/pipeline_code/
     svn co --username cpas --password cpas --no-auth-cache https://hedgehog.fhcrc.org/tor/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code/gatk ${LK_HOME}/svn/trunk/pipeline_code/gatk/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationCount.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
+    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationBySample.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MinorAlleleFrequency.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MultipleAllelesAtLoci.java ./gatk-protected/public/gatk-tools-public/src/main/java/org/broadinstitute/gatk/tools/walkers/coverage/
 

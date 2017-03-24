@@ -243,13 +243,32 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
         Long totalFileSize = getFileSize(job);
         if (UNABLE_TO_DETERMINE.equals(totalFileSize))
         {
-            return null;
+            return getHighIoFlag(job);
         }
 
         //25gb alignment
         if (isSequenceAlignmentTask(job) && totalFileSize > 25e9)
         {
             return Arrays.asList("concurrency_limits = WEEK_LONG_JOBS");
+        }
+
+        return getHighIoFlag(job);
+    }
+
+    private List<String> getHighIoFlag(PipelineJob job)
+    {
+        if (job instanceof HasJobParams)
+        {
+            Map<String, String> params = ((HasJobParams) job).getJobParams();
+            if (params.get("resourceSettings.resourceSettings.highio") != null)
+            {
+                Boolean highio = ConvertHelper.convert(params.get("resourceSettings.resourceSettings.highio"), Boolean.class);
+                if (highio)
+                {
+                    job.getLogger().debug("adding highio as supplied by job");
+                    return Arrays.asList("concurrency_limits = highio");
+                }
+            }
         }
 
         return null;

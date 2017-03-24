@@ -46,6 +46,7 @@ public class SequenceReadsetImpl implements Readset
     private String _sampleType;
     private String _libraryType;
     private String _application;
+    private String _chemistry;
     private Integer _instrument_run_id;
     private Integer _runId;
     private String _container;
@@ -176,6 +177,17 @@ public class SequenceReadsetImpl implements Readset
     public void setApplication(String application)
     {
         _application = application;
+    }
+
+    @Override
+    public String getChemistry()
+    {
+        return _chemistry;
+    }
+
+    public void setChemistry(String chemistry)
+    {
+        _chemistry = chemistry;
     }
 
     @Override

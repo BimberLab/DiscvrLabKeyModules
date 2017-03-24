@@ -104,6 +104,7 @@ public class OutputIntegrationTests
                 Set<File> extraFiles = new HashSet<>();
                 extraFiles.add(new File(job.getAnalysisDirectory(), jobName + "." + outputFileId + ".log"));
                 extraFiles.add(new File(job.getAnalysisDirectory(), "sequenceOutput.json"));
+                extraFiles.add(new File(job.getAnalysisDirectory(), "gatk.ped"));
                 extraFiles.add(new File(job.getAnalysisDirectory(), basename + ".gfiltered.selectVariants.annotated.filtered.vcf.gz"));
                 extraFiles.add(new File(job.getAnalysisDirectory(), basename + ".gfiltered.selectVariants.annotated.filtered.vcf.gz.tbi"));
                 extraFiles.add(new File(job.getAnalysisDirectory(), job.getBaseName() + ".pipe.xar.xml"));

@@ -21,7 +21,8 @@ public class SubjectsTableCustomizer implements TableCustomizer
         if (ti instanceof AbstractTableInfo)
         {
             LaboratoryTableCustomizer lab = new LaboratoryTableCustomizer();
-            lab.addAgeCols((AbstractTableInfo)ti, ti.getColumn("birth"));
+            lab.addAgeCols((AbstractTableInfo)ti, ti.getColumn("birth"), ti.getColumn("death"));
+            lab.appendProjectsCol(ti.getUserSchema(), (AbstractTableInfo)ti, "subjectname");
         }
     }
 }

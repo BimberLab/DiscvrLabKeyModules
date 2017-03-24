@@ -53,14 +53,8 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
                                         final Map<String, PerReadAlleleLikelihoodMap> stratifiedPerReadAlleleLikelihoodMap) {
 
         // Can only be called from VariantAnnotator
-        if ( !(walker instanceof VariantAnnotator) ) {
-            if ( !walkerIdentityCheckWarningLogged ) {
-                if ( walker != null )
-                    logger.warn("Annotation will not be calculated, must be called from VariantAnnotator, not " + walker.getClass().getName());
-                else
-                    logger.warn("Annotation will not be calculated, must be called from VariantAnnotator");
-                walkerIdentityCheckWarningLogged = true;
-            }
+        walkerIdentityCheckWarningLogged = logWalkerIdentityCheck(walker, walkerIdentityCheckWarningLogged);
+        if (walkerIdentityCheckWarningLogged){
             return null;
         }
 
@@ -69,7 +63,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
             minGenotypeQuality = ((VariantAnnotator)walker).minGenotypeQualityP;
         }
 
-        Map<String,Object> attributeMap = new HashMap<String,Object>(1);
+        Map<String,Object> attributeMap = new HashMap<>(1);
         if ( sampleDB == null ) {
             sampleDB = ((Walker) walker).getSampleDB();
         }
@@ -78,7 +72,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
             int totalViolations = 0;
             Set<String> violations = new HashSet<>();
             for (String sn : sampleDB.getSampleNames()) {
-                int count = countViolations(sampleDB.getSample(sn), vc);
+                int count = countViolations(sampleDB.getSample(sn), vc, minGenotypeQuality);
                 totalViolations += count;
                 if (count > 0)
                 {
@@ -93,7 +87,21 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
         return attributeMap;
     }
 
-    private int countViolations(Sample subject, VariantContext vc)
+    public static boolean logWalkerIdentityCheck(AnnotatorCompatible walker, boolean walkerIdentityCheckWarningLogged) {
+        if ( !(walker instanceof VariantAnnotator) ) {
+            if ( !walkerIdentityCheckWarningLogged ) {
+                if ( walker != null )
+                    logger.warn("Annotation will not be calculated, must be called from VariantAnnotator, not " + walker.getClass().getName());
+                else
+                    logger.warn("Annotation will not be calculated, must be called from VariantAnnotator");
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    public static int countViolations(Sample subject, VariantContext vc, double minGenotypeQuality)
     {
         Genotype gMom = vc.getGenotype(subject.getMaternalID());
         if (gMom == null)
@@ -123,7 +131,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
                 if (!gMom.isCalled() && !gDad.isCalled()) {
                     return 0;
                 }
-                else if (isViolation(gMom, gDad, gChild)){
+                else if (isViolation(gMom, gDad, gChild, minGenotypeQuality)){
                     return 1;
                 }
             }
@@ -132,7 +140,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
         return 0;
     }
 
-    public boolean isViolation(final Genotype gMom, final Genotype gDad, final Genotype gChild) {
+    public static boolean isViolation(final Genotype gMom, final Genotype gDad, final Genotype gChild, double minGenotypeQuality) {
         //1 parent is no "call
         if(!gMom.isCalled()){
             if (gDad.getPhredScaledQual() < minGenotypeQuality)
@@ -187,7 +195,7 @@ public class MendelianViolationCount extends InfoFieldAnnotation implements RodR
             new VCFInfoHeaderLine(MV_SAMPLES, 1, VCFHeaderLineType.String, "Samples where a mendelian violation was observed.")
     ); }
 
-    public class NoCallGenotype extends Genotype {
+    public static class NoCallGenotype extends Genotype {
         private Genotype _orig = null;
         private List<Allele> _alleles = Arrays.asList(Allele.NO_CALL, Allele.NO_CALL);
 

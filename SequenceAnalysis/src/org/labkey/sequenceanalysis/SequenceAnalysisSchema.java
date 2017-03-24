@@ -29,6 +29,8 @@ public class SequenceAnalysisSchema
     public static final String TABLE_ALIGNMENTS = "alignments";
     public static final String TABLE_REF_NT_SEQUENCES = "ref_nt_sequences";
     public static final String TABLE_REF_AA_SEQUENCES = "ref_aa_sequences";
+    public static final String TABLE_REF_AA_FEATURES = "ref_aa_features";
+    public static final String TABLE_REF_NT_FEATURES = "ref_nt_features";
     public static final String TABLE_SEQUENCE_PLATFORMS = "sequence_platforms";
     public static final String TABLE_INSTRUMENT_RUNS = "instrument_runs";
     public static final String TABLE_QUALITY_METRICS = "quality_metrics";

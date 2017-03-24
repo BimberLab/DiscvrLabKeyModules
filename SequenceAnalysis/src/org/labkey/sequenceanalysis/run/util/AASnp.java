@@ -39,7 +39,7 @@ public class AASnp
     private String _residueString;
     private String _ntPositionString;
 
-    private static final TranscriptionEngine _engine = new TranscriptionEngine.Builder().dnaCompounds(AmbiguityDNACompoundSet.getDNACompoundSet()).rnaCompounds(AmbiguityRNACompoundSet.getDNACompoundSet()).build();
+    private static final TranscriptionEngine _engine = new TranscriptionEngine.Builder().dnaCompounds(AmbiguityDNACompoundSet.getDNACompoundSet()).rnaCompounds(AmbiguityRNACompoundSet.getRNACompoundSet()).initMet(false).build();
 
     public AASnp(NTSnp ntSnp, SequenceModel aaRef, int aaPosInProtein, int aaInsertIndex, String codon, int frame, List<NTSnp> allSnps, byte[] refBases)
     {

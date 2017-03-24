@@ -98,7 +98,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
     public void submitJob(PipelineJob job) throws PipelineJobException
     {
         //check to avoid duplicate submissions
-        HTCondorJob existingSubmission = getMostRecentCondorSubmission(job.getJobGUID());
+        HTCondorJob existingSubmission = getMostRecentCondorSubmission(job.getJobGUID(), false);
         if (existingSubmission != null)
         {
             //this means we have a duplicate
@@ -347,7 +347,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
     public String getStatus(String jobId) throws PipelineJobException
     {
         String ret = null;
-        HTCondorJob job = getMostRecentCondorSubmission(jobId);
+        HTCondorJob job = getMostRecentCondorSubmission(jobId, true);
         if (job != null)
         {
             //if the job was blocked from condor submission, treat as though queued
@@ -361,7 +361,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
 
         if (ret == null)
         {
-            _log.error("unable to find status for job: " + jobId);
+            _log.error("unable to find status for job: " + jobId + (job == null ? ", and there is no record of job submission" : ", status of submission was: " + job.getStatus() + ", ID: " + job.getClusterId()));
         }
 
         return ret == null ? "UNKNOWN" : ret;
@@ -380,15 +380,20 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
     }
 
     @NotNull
-    private List<HTCondorJob> getCondorSubmissionsForJob(String jobId)
+    private List<HTCondorJob> getCondorSubmissionsForJob(String jobId, boolean includeInactive)
     {
         TableInfo ti = HTCondorConnectorSchema.getInstance().getSchema().getTable(HTCondorConnectorSchema.CONDOR_JOBS);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("jobId"), jobId);
         filter.addCondition(FieldKey.fromString("location"), getConfig().getLocation());
         filter.addCondition(FieldKey.fromString("clusterId"), null, CompareType.NONBLANK);
-        filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.cancelled.name().toUpperCase(), CompareType.NEQ_OR_NULL);
-        filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.error.name().toUpperCase(), CompareType.NEQ_OR_NULL);
-        filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.complete.name().toUpperCase(), CompareType.NEQ_OR_NULL);
+
+        if (!includeInactive)
+        {
+            filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.cancelled.name().toUpperCase(), CompareType.NEQ_OR_NULL);
+            filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.error.name().toUpperCase(), CompareType.NEQ_OR_NULL);
+            filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.complete.name().toUpperCase(), CompareType.NEQ_OR_NULL);
+        }
+
         filter.addCondition(FieldKey.fromString("status"), PREPARING, CompareType.NEQ_OR_NULL);
         filter.addCondition(FieldKey.fromString("status"), NOT_SUBMITTED, CompareType.NEQ_OR_NULL);
 
@@ -868,10 +873,10 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
     public void cancelJob(String jobId)
     {
         //find condor Id for Job Id
-        HTCondorJob condorJob = getMostRecentCondorSubmission(jobId);
+        HTCondorJob condorJob = getMostRecentCondorSubmission(jobId, false);
         if (condorJob == null)
         {
-            _log.error("unable to find HTCondor submission for jobId: " + jobId);
+            _log.error("unable to find active HTCondor submission for jobId: " + jobId);
             return;
         }
 
@@ -929,9 +934,9 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
         }
     }
 
-    private HTCondorJob getMostRecentCondorSubmission(String jobId)
+    private HTCondorJob getMostRecentCondorSubmission(String jobId, boolean includeInactive)
     {
-        List<HTCondorJob> jobs = getCondorSubmissionsForJob(jobId);
+        List<HTCondorJob> jobs = getCondorSubmissionsForJob(jobId, includeInactive);
         if (jobs.isEmpty())
         {
             return null;

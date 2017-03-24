@@ -32,4 +32,9 @@ public interface VariantProcessingStep extends PipelineStep
     {
         public File getVCF();
     }
+
+    public static interface RequiresPedigree
+    {
+
+    }
 }

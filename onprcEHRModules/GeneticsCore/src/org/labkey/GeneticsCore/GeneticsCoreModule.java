@@ -17,6 +17,7 @@
 package org.labkey.GeneticsCore;
 
 import org.apache.log4j.Logger;
+import org.labkey.GeneticsCore.analysis.CombineMethylationRatesHandler;
 import org.labkey.GeneticsCore.analysis.MethylationRateComparisonHandler;
 import org.labkey.GeneticsCore.button.ChangeReadsetStatusButton;
 import org.labkey.GeneticsCore.button.HaplotypeReviewButton;
@@ -124,6 +125,7 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
                 SequencePipelineService.get().registerPipelineStep(new BisSnpGenotyperAnalysis.Provider());
 
                 SequenceAnalysisService.get().registerFileHandler(new MethylationRateComparisonHandler());
+                SequenceAnalysisService.get().registerFileHandler(new CombineMethylationRatesHandler());
 
                 _hasRegistered = true;
             }

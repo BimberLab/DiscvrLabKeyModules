@@ -1,10 +1,15 @@
 package org.labkey.sequenceanalysis.analysis;
 
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.FeatureReader;
+import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
+import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
@@ -13,6 +18,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.PedigreeRecord;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
@@ -25,10 +31,12 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -127,9 +135,10 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
         return new Processor();
     }
 
-    public static void initVariantProcessing(PipelineJob job, SequenceAnalysisJobSupport support) throws PipelineJobException
+    public static void initVariantProcessing(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, File outputDir) throws PipelineJobException
     {
         List<PipelineStepProvider<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
+        boolean requiresPedigree = false;
         for (PipelineStepProvider<VariantProcessingStep> provider : providers)
         {
             for (ToolParameterDescriptor pd : provider.getParameters())
@@ -141,7 +150,58 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
                     ((ToolParameterDescriptor.CachableParam)pd).doCache(job, val, support);
                 }
             }
+
+            if (provider instanceof VariantProcessingStep.RequiresPedigree)
+            {
+                requiresPedigree = true;
+            }
         }
+
+        if (requiresPedigree)
+        {
+            job.getLogger().info("writing pedigree files");
+            Set<String> sampleNames = new CaseInsensitiveHashSet();
+            for (SequenceOutputFile so : inputFiles)
+            {
+                job.getLogger().info("reading file: " + so.getFile().getName());
+                try (FeatureReader reader = AbstractFeatureReader.getFeatureReader(so.getFile().getPath(), new VCFCodec(), false))
+                {
+                    VCFHeader header = (VCFHeader)reader.getHeader();
+                    sampleNames.addAll(header.getSampleNamesInOrder());
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
+            job.getLogger().info("total samples: " + sampleNames.size());
+            List<PedigreeRecord> pedigreeRecords = SequenceAnalysisService.get().generatePedigree(sampleNames, job.getContainer(), job.getUser());
+            job.getLogger().info("total pedigree records: " + pedigreeRecords.size());
+
+            File pedFile = getPedigreeFile(outputDir);
+            try (PrintWriter gatkWriter = PrintWriters.getPrintWriter(pedFile))
+            {
+                for (PedigreeRecord pd : pedigreeRecords)
+                {
+                    List<String> vals = Arrays.asList(pd.getSubjectName(), (StringUtils.isEmpty(pd.getFather()) ? "0" : pd.getFather()), (StringUtils.isEmpty(pd.getMother()) ? "0" : pd.getMother()), ("m".equals(pd.getGender()) ? "1" : "f".equals(pd.getGender()) ? "2" : "0"), "0");
+                    gatkWriter.write("FAM01 " + StringUtils.join(vals, " ") + '\n');
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            job.getLogger().debug("pedigree file not required");
+        }
+    }
+
+    public static File getPedigreeFile(File outputDir)
+    {
+        return new File(outputDir, "gatk.ped");
     }
 
     public static File processVCF(File input, Integer libraryId, JobContext ctx) throws PipelineJobException
@@ -258,7 +318,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            initVariantProcessing(job, support);
+            initVariantProcessing(job, support, inputFiles, outputDir);
         }
 
         @Override

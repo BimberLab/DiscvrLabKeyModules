@@ -4,11 +4,14 @@ import htsjdk.tribble.Tribble;
 import htsjdk.tribble.index.Index;
 import htsjdk.tribble.index.IndexFactory;
 import htsjdk.variant.vcf.VCFCodec;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -18,9 +21,11 @@ import org.labkey.api.laboratory.NavItem;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.GenomeTrigger;
+import org.labkey.api.sequenceanalysis.PedigreeRecord;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceDataProvider;
@@ -37,8 +42,12 @@ import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -286,5 +295,121 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     public Integer getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException
     {
         return SequenceTaskHelper.getExpRunIdForJob(job, throwUnlessFound);
+    }
+
+    @Override
+    public List<PedigreeRecord> generatePedigree(Collection<String> sampleNames, Container c, User u)
+    {
+        final List<PedigreeRecord> pedigreeRecords = new ArrayList<>();
+
+        TableInfo subjectTable = QueryService.get().getUserSchema(u, (c.isWorkbook() ? c.getParent() : c), "laboratory").getTable("subjects");
+        TableSelector ts = new TableSelector(subjectTable, PageFlowUtil.set("subjectname", "mother", "father", "gender"), new SimpleFilter(FieldKey.fromString("subjectname"), sampleNames, CompareType.IN), null);
+        ts.forEach(new Selector.ForEachBlock<ResultSet>()
+        {
+            @Override
+            public void exec(ResultSet rs) throws SQLException
+            {
+                PedigreeRecord pedigree = new PedigreeRecord();
+                pedigree.setSubjectName(rs.getString("subjectname"));
+                pedigree.setFather(rs.getString("father"));
+                pedigree.setMother(rs.getString("mother"));
+                pedigree.setGender(rs.getString("gender"));
+                if (!StringUtils.isEmpty(pedigree.getSubjectName()))
+                    pedigreeRecords.add(pedigree);
+            }
+        });
+
+        //insert record for any missing parents:
+        Set<String> subjects = new HashSet<>();
+        for (PedigreeRecord p : pedigreeRecords)
+        {
+            subjects.add(p.getSubjectName());
+        }
+
+        Set<String> distinctSubjects = new HashSet<>();
+        for (PedigreeRecord p : pedigreeRecords)
+        {
+            distinctSubjects.add(p.getSubjectName());
+        }
+
+        List<PedigreeRecord> newRecords = new ArrayList<>();
+        for (PedigreeRecord p : pedigreeRecords)
+        {
+            appendParents(distinctSubjects, p, newRecords);
+        }
+        pedigreeRecords.addAll(newRecords);
+
+        //if ID only has one parent, add a dummy ID
+        List<PedigreeRecord> toAdd = new ArrayList<>();
+        for (PedigreeRecord pd : pedigreeRecords)
+        {
+            if (StringUtils.isEmpty(pd.getFather()) && !StringUtils.isEmpty(pd.getMother()))
+            {
+                pd.setFather("xf" + pd.getSubjectName());
+                PedigreeRecord pr = new PedigreeRecord();
+                pr.setSubjectName(pd.getFather());
+                pr.setGender("m");
+                toAdd.add(pr);
+            }
+            else if (!StringUtils.isEmpty(pd.getFather()) && StringUtils.isEmpty(pd.getMother()))
+            {
+                pd.setMother("xm" + pd.getSubjectName());
+                PedigreeRecord pr = new PedigreeRecord();
+                pr.setSubjectName(pd.getMother());
+                pr.setGender("f");
+                toAdd.add(pr);
+            }
+        }
+
+        if (!toAdd.isEmpty())
+        {
+            //job.getLogger().info("adding " + toAdd.size() + " subjects to handle IDs with only one parent known");
+            pedigreeRecords.addAll(toAdd);
+        }
+        
+        Collections.sort(pedigreeRecords, new Comparator<PedigreeRecord>()
+        {
+            @Override
+            public int compare(PedigreeRecord o1, PedigreeRecord o2)
+            {
+                if (o1.getSubjectName().equals(o2.getFather()) || o1.getSubjectName().equals(o2.getMother()))
+                    return -1;
+                else if (o2.getSubjectName().equals(o1.getFather()) || o2.getSubjectName().equals(o1.getMother()))
+                    return 1;
+                else if (o1.getMother() == null && o1.getFather() == null)
+                    return -1;
+                else if (o2.getMother() == null && o2.getFather() == null)
+                    return 1;
+
+                return o1.getSubjectName().compareTo(o2.getSubjectName());
+            }
+        });
+        
+        return pedigreeRecords;
+    }
+    
+    private void appendParents(Set<String> distinctSubjects, PedigreeRecord p, List<PedigreeRecord> newRecords)
+    {
+        if (p.getFather() != null && !distinctSubjects.contains(p.getFather()))
+        {
+            PedigreeRecord pr = new PedigreeRecord();
+            pr.setSubjectName(p.getFather());
+            pr.setGender("m");
+
+            newRecords.add(pr);
+            distinctSubjects.add(p.getFather());
+            appendParents(distinctSubjects, pr, newRecords);
+        }
+
+        if (p.getMother() != null && !distinctSubjects.contains(p.getMother()))
+        {
+            PedigreeRecord pr = new PedigreeRecord();
+            pr.setSubjectName(p.getMother());
+            pr.setGender("f");
+
+            newRecords.add(pr);
+            distinctSubjects.add(p.getMother());
+            appendParents(distinctSubjects, pr, newRecords);
+        }
     }
 }

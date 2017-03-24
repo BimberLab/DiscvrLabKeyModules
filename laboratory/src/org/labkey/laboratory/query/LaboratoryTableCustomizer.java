@@ -36,6 +36,7 @@ import org.labkey.laboratory.LaboratoryServiceImpl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -208,6 +209,12 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                 //TODO: push this into LaboratoryService and also cache them?
                 if (target != null)
                 {
+                    if (target.getUserSchema().getName().equalsIgnoreCase(ti.getUserSchema().getName()) && (target.getName().equalsIgnoreCase(ti.getName())))
+                    {
+                        //dont link to self
+                        continue;
+                    }
+
                     String name = ColumnInfo.legalNameFromName(qd.getLabel());
 
                     if (ti.getColumn(name) != null)
@@ -224,12 +231,25 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                         {
                             AbstractTableInfo ti = (AbstractTableInfo)super.getLookupTableInfo();
                             ti.getColumn(qd.getTargetColumn()).setKeyField(true);
+
+                            Set<ColumnInfo> birthCols = new HashSet<>();
+                            Set<ColumnInfo> deathCols = new HashSet<>();
                             for (ColumnInfo ci : ti.getColumns())
                             {
                                 if (LaboratoryService.BIRTHDATE_CONCEPT_URI.equalsIgnoreCase(ci.getConceptURI()))
                                 {
-                                    addAgeCols(ti, ci);
+                                    birthCols.add(ci);
                                 }
+                                else if (LaboratoryService.DEATHDATE_CONCEPT_URI.equalsIgnoreCase(ci.getConceptURI()))
+                                {
+                                    deathCols.add(ci);
+                                }
+                            }
+
+                            for (ColumnInfo ci : birthCols)
+                            {
+                                ColumnInfo deathCol = deathCols.isEmpty() ? null : deathCols.iterator().next();
+                                addAgeCols(ti, ci, deathCol);
                             }
 
                             return ti;
@@ -419,7 +439,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         ds.addColumn(col2);
     }
 
-    private void appendProjectsCol(final UserSchema us, AbstractTableInfo ds, final String subjectColName)
+    public void appendProjectsCol(final UserSchema us, AbstractTableInfo ds, final String subjectColName)
     {
         String name = "allProjects";
         if (ds.getColumn(name) != null)
@@ -720,23 +740,23 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         return null;
     }
 
-    public void addAgeCols(AbstractTableInfo ti, ColumnInfo birthCol)
+    public void addAgeCols(AbstractTableInfo ti, ColumnInfo birthCol, ColumnInfo deathCol)
     {
         //NOTE: years will round to the nearest integer, meaning if you're 31.6 years old it reports it as 32.  not what you typically want.
-        appendTimeDiffCol(ti, birthCol, "ageInYears", "Age In Years", Calendar.DATE, 365.0, true);
-        appendTimeDiffCol(ti, birthCol, "ageInYearsDecimal", "Age In Years, Decimal", Calendar.DATE, 365.0);
-        appendAgeInMonthsCol(ti, birthCol, "ageInMonths", "Age In Months");
-        appendTimeDiffCol(ti, birthCol, "ageInDays", "Age In Days", Calendar.DATE);
+        appendTimeDiffCol(ti, birthCol, deathCol, "ageInYears", "Age In Years", Calendar.DATE, 365.0, true);
+        appendTimeDiffCol(ti, birthCol, deathCol, "ageInYearsDecimal", "Age In Years, Decimal", Calendar.DATE, 365.0);
+        appendAgeInMonthsCol(ti, birthCol, deathCol, "ageInMonths", "Age In Months");
+        appendTimeDiffCol(ti, birthCol, deathCol, "ageInDays", "Age In Days", Calendar.DATE);
     }
 
-    private void appendAgeInMonthsCol(AbstractTableInfo ti, ColumnInfo birthCol, String name, String label)
+    private void appendAgeInMonthsCol(AbstractTableInfo ti, ColumnInfo birthCol, ColumnInfo deathCol, String name, String label)
     {
         if (ti.getColumn(name) == null)
         {
-            SQLFragment sql = getAgeInMonthsSQL(ti.getSchema(), birthCol);
+            SQLFragment sql = getAgeInMonthsSQL(ti.getSchema(), birthCol, deathCol);
             JdbcType type = JdbcType.INTEGER;
 
-            ColumnInfo col = new ExprColumn(ti, name, sql, type, birthCol);
+            ColumnInfo col = new ExprColumn(ti, name, sql, type, getDependentColumns(birthCol, deathCol));
             col.setLabel(label);
             col.setShownInDetailsView(false);
             col.setFormat("0.##");
@@ -745,15 +765,16 @@ public class LaboratoryTableCustomizer implements TableCustomizer
     }
 
     //NOTE: patterned off of AgeInMonthsMethodInfo
-    public SQLFragment getAgeInMonthsSQL(DbSchema schema, ColumnInfo column)
+    public SQLFragment getAgeInMonthsSQL(DbSchema schema, ColumnInfo column, @Nullable ColumnInfo deathCol)
     {
         SQLFragment yearA = new SQLFragment(schema.getSqlDialect().getDatePart(Calendar.YEAR, ExprColumn.STR_TABLE_ALIAS + "." + column.getSelectName()));
         SQLFragment monthA = new SQLFragment(schema.getSqlDialect().getDatePart(Calendar.MONTH, ExprColumn.STR_TABLE_ALIAS + "." + column.getSelectName()));
         SQLFragment dayA = new SQLFragment(schema.getSqlDialect().getDatePart(Calendar.DATE, ExprColumn.STR_TABLE_ALIAS + "." + column.getSelectName()));
 
-        SQLFragment yearB = new SQLFragment(schema.getSqlDialect().getDatePart(Calendar.YEAR, "{fn curdate()}"));
-        SQLFragment monthB = new SQLFragment(schema.getSqlDialect().getDatePart(Calendar.MONTH, "{fn curdate()}"));
-        SQLFragment dayB = new SQLFragment(schema.getSqlDialect().getDatePart(Calendar.DATE, "{fn curdate()}"));
+        String curDateExpr = getCurDateExpr(deathCol);
+        SQLFragment yearB = new SQLFragment(schema.getSqlDialect().getDatePart(Calendar.YEAR, curDateExpr));
+        SQLFragment monthB = new SQLFragment(schema.getSqlDialect().getDatePart(Calendar.MONTH, curDateExpr));
+        SQLFragment dayB = new SQLFragment(schema.getSqlDialect().getDatePart(Calendar.DATE, curDateExpr));
 
         SQLFragment ret = new SQLFragment();
         ret.append("(CASE WHEN (")
@@ -770,30 +791,43 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         return ret;
     }
 
-    private void appendTimeDiffCol(AbstractTableInfo ti, ColumnInfo parent, String name, String label, int part)
+    private void appendTimeDiffCol(AbstractTableInfo ti, ColumnInfo parent, ColumnInfo deathCol, String name, String label, int part)
     {
-        appendTimeDiffCol(ti, parent, name, label, part, null);
+        appendTimeDiffCol(ti, parent, deathCol, name, label, part, null);
     }
 
-    private void appendTimeDiffCol(AbstractTableInfo ti, ColumnInfo parent, String name, String label, int part, Double divisor)
+    private void appendTimeDiffCol(AbstractTableInfo ti, ColumnInfo parent, ColumnInfo deathCol, String name, String label, int part, Double divisor)
     {
-        appendTimeDiffCol(ti, parent, name, label, part, divisor, false);
+        appendTimeDiffCol(ti, parent, deathCol, name, label, part, divisor, false);
     }
 
-    private void appendTimeDiffCol(AbstractTableInfo ti, ColumnInfo parent, String name, String label, int part, Double divisor, boolean floored)
+    private String getCurDateExpr(@Nullable ColumnInfo deathCol)
+    {
+        String curDateExpr = "{fn curdate()}";
+        if (deathCol != null)
+        {
+            curDateExpr = "COALESCE(" + ExprColumn.STR_TABLE_ALIAS + "." + deathCol.getName() + ", " + curDateExpr + ")";
+        }
+
+        return curDateExpr;
+    }
+
+    private void appendTimeDiffCol(AbstractTableInfo ti, ColumnInfo parent, ColumnInfo deathCol, String name, String label, int part, Double divisor, boolean floored)
     {
         if (ti.getColumn(name) == null)
         {
             JdbcType type;
             SQLFragment sql;
+            String curDateExpr = getCurDateExpr(deathCol);
+
             if (divisor == null)
             {
-                sql = new SQLFragment(ti.getSqlDialect().getDateDiff(part, "{fn curdate()}", ExprColumn.STR_TABLE_ALIAS + "." + parent.getName()));
+                sql = new SQLFragment(ti.getSqlDialect().getDateDiff(part, curDateExpr, ExprColumn.STR_TABLE_ALIAS + "." + parent.getName()));
                 type = JdbcType.INTEGER;
             }
             else
             {
-                String fragment = "((" + ti.getSqlDialect().getDateDiff(part, "{fn curdate()}", ExprColumn.STR_TABLE_ALIAS + "." + parent.getName()) + ") / ? )";
+                String fragment = "((" + ti.getSqlDialect().getDateDiff(part, curDateExpr, ExprColumn.STR_TABLE_ALIAS + "." + parent.getName()) + ") / ? )";
                 if (floored)
                 {
                     fragment = "floor(" + fragment + ")";
@@ -807,12 +841,27 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                 sql = new SQLFragment(fragment, divisor);
             }
 
-            ColumnInfo col = new ExprColumn(ti, name, sql, type, parent);
+            ColumnInfo col = new ExprColumn(ti, name, sql, type, getDependentColumns(parent, deathCol));
             col.setLabel(label);
             col.setShownInDetailsView(false);
             col.setFormat("0.##");
             ti.addColumn(col);
         }
+    }
+
+    private ColumnInfo[] getDependentColumns(ColumnInfo col1, ColumnInfo col2)
+    {
+        ColumnInfo[] dcs;
+        if (col2 != null)
+        {
+            dcs = new ColumnInfo[]{col1, col2};
+        }
+        else
+        {
+            dcs = new ColumnInfo[]{col1};
+        }
+
+        return dcs;
     }
 
     public void customizeButtonBar(AbstractTableInfo ti)

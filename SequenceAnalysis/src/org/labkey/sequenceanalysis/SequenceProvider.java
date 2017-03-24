@@ -97,6 +97,8 @@ public class SequenceProvider extends AbstractSequenceDataProvider
             items.add(new DetailsUrlWithoutLabelNavItem(this, "DISCVR-Seq Admin", DetailsURL.fromString("/sequenceAnalysis/siteAdmin.view", ContainerManager.getRoot()), LaboratoryService.NavItemCategory.settings, "DISCVR-Seq"));
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "Barcodes", categoryName, "Allowable Barcodes"));
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "DNA_Adapters", categoryName, "DNA Adapter Sequences"));
+            items.add(new SimpleSettingsItem(this, "sequenceanalysis", "Sequence_Applications", categoryName, "Sequence Applications"));
+            items.add(new SimpleSettingsItem(this, "sequenceanalysis", "Sequence_Chemistries", categoryName, "Sequence Chemistries"));
 
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "Ref_NT_Category", categoryName, "DNA Categories"));
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "DNA_Loci", categoryName, "DNA Loci"));

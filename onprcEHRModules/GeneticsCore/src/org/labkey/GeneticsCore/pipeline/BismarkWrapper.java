@@ -180,7 +180,9 @@ public class BismarkWrapper extends AbstractCommandWrapper
             }
 
             output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
-            output.addOutput(new File(outputDirectory, outputBasename + "_bismark_" + (inputFastq2 == null ? "SE" : "PE") + "_report.txt"), "Bismark Summary Report");
+            File report = new File(outputDirectory, SequenceAnalysisService.get().getUnzippedBaseName(inputFastq1.getName()) + "_bismark_bt2_" + (inputFastq2 == null ? "SE" : "PE") + "_report.txt");
+            output.addOutput(report, "Bismark Summary Report");
+            output.addSequenceOutput(report, rs.getName() + ": Bisulfite Conversion Stats", "Bismark Methylation Conversion Stats", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
@@ -746,12 +748,12 @@ public class BismarkWrapper extends AbstractCommandWrapper
                         writer.write(StringUtils.join(line, '\t') + System.getProperty("line.separator"));
 
                         String attributes = "Depth=" + depth + ";" +
-                                "TotalMethlated:" + line[4] + ";" +
-                                "TotalNonMethylated:" + line[5] + ";" +
-                                "TotalMethylatedOnPlusStand:" + line[6] + ";" +
-                                "TotalMethylatedOnMinusStand:" + line[7] + ";" +
-                                "TotalNonMethylatedOnPlusStand:" + line[8] + ";" +
-                                "TotalNonMethylatedOnPlusStand:" + line[9] + ";";
+                                "TotalMethlated=" + line[4] + ";" +
+                                "TotalNonMethylated=" + line[5] + ";" +
+                                "TotalMethylatedOnPlusStand=" + line[6] + ";" +
+                                "TotalMethylatedOnMinusStand=" + line[7] + ";" +
+                                "TotalNonMethylatedOnPlusStand=" + line[8] + ";" +
+                                "TotalNonMethylatedOnPlusStand=" + line[9] + ";";
 
                         gffWriter.write(StringUtils.join(new String[]{
                                 tokens[0],  //sequence name

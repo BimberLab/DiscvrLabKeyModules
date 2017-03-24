@@ -343,7 +343,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         else {
             var toAdd = [];
             Ext4.Array.forEach(toolNames, function(name) {
-                LDK.Assert.assertNotEmpty('Variable name is empty: ' + name, name);
+                LDK.Assert.assertNotEmpty('Variable name is empty: ' + toolNames.join(','), name);
                 var recIdx = this.getToolStore().find('name', name);
                 if (recIdx > -1) {
                     var config = this.getToolStore().getAt(recIdx).get('config');
@@ -530,7 +530,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
 
     applySavedValues: function(values){
         if (this.stepType){
-            var tools = Ext4.isDefined(values[this.stepType]) ? values[this.stepType].split(';') : [];
+            var tools = values[this.stepType] ? values[this.stepType].split(';') : [];
             this.setActiveTools(tools);
         }
 

@@ -38,6 +38,7 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -132,10 +133,10 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             RecordedAction action = new RecordedAction(ACTION_NAME);
             action.addInputIfNotPresent(input, "Illumina Sample CSV");
 
-            Map<Integer, Integer> sampleMap = parseCsv(input, schema);
+            Map<String, Integer> sampleMap = parseCsv(input, schema);
 
             //this step will be slow
-            IlluminaFastqSplitter parser = new IlluminaFastqSplitter("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
+            IlluminaFastqSplitter<Integer> parser = new IlluminaFastqSplitter<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
             parser.setOutputGzip(true);
             parser.setDestinationDir(getSupport().getAnalysisDirectory());
 
@@ -312,15 +313,15 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         return SequenceTaskHelper.createExpData(f, getJob());
     }
 
-    private Map<Integer, Integer> parseCsv(File sampleFile, DbSchema schema) throws PipelineJobException
+    private Map<String, Integer> parseCsv(File sampleFile, DbSchema schema) throws PipelineJobException
     {
         getJob().getLogger().info("Parsing Sample File: " + sampleFile.getName());
         try (CSVReader reader = new CSVReader(Readers.getReader(sampleFile)))
         {
             //parse the samples file
             String [] nextLine;
-            Map<Integer, Integer> sampleMap = new HashMap<>();
-            sampleMap.put(0, 0); //placeholder for control and unmapped reads
+            Map<String, Integer> sampleMap = new HashMap<>();
+            sampleMap.put("S0", 0); //placeholder for control and unmapped reads
 
             Boolean inSamples = false;
             int sampleIdx = 0;
@@ -346,22 +347,28 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 Integer readsetId;
                 try
                 {
-                    //TODO: consider allowing out of order lines
+                    //parse out barcodes
+                    String indexes = nextLine[5] + "-" + nextLine[7];
+
                     sampleIdx++;
-                    readsetId = Integer.parseInt(nextLine[0]);
-                    if (validateReadsetId(readsetId))
+                    readsetId = null;
+                    try
                     {
-                        sampleMap.put(sampleIdx, readsetId);
+                        Integer.parseInt(nextLine[0]);
                     }
-                    else
+                    catch (NumberFormatException e)
                     {
-                        sampleMap.put(sampleIdx, tryCreateReadset(schema, nextLine));
+                        getJob().getLogger().warn("The sample Id was not an integer: " + nextLine[0]);
+                        readsetId = tryCreateReadset(schema, nextLine);
                     }
-                }
-                catch (NumberFormatException e)
-                {
-                    getJob().getLogger().warn("The sample Id was not an integer: " + nextLine[0]);
-                    sampleMap.put(sampleIdx, tryCreateReadset(schema, nextLine));
+
+                    if (!validateReadsetId(readsetId))
+                    {
+                        readsetId = tryCreateReadset(schema, nextLine);
+                    }
+
+                    sampleMap.put(indexes, readsetId);
+                    sampleMap.put("S" + sampleIdx, readsetId);
                 }
                 catch (PipelineValidationException e)
                 {
@@ -382,6 +389,11 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
     //not very efficient, but we only expect a handful of samples per run
     private boolean validateReadsetId(Integer id) throws PipelineJobException, PipelineValidationException
     {
+        if (id == null)
+        {
+            return false;
+        }
+
         TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_READSETS), new SimpleFilter(FieldKey.fromString("rowid"), id), null);
         if (!ts.exists())
         {
@@ -444,10 +456,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         if (StringUtils.isEmpty(barcode))
             return null;
 
-        String name = null;
-
-        //TODO: attempt to resolve against table
-
-        return name;
+        //attempt to resolve against table
+        return new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_BARCODES), PageFlowUtil.set("tag_name"), new SimpleFilter(FieldKey.fromString("sequence"), barcode), null).getObject(String.class);
     }
 }

@@ -101,7 +101,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         var proteinField = this.down('#proteinField');
         this.ref_aa_ids = proteinField.getValue();
 
-        if(!this.ref_aa_ids || !this.ref_aa_ids.length){
+        if (!this.ref_aa_ids || !this.ref_aa_ids.length){
             alert('Must pick one or more proteins');
             return;
         }
@@ -109,7 +109,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         this.ref_nt_ids = [];
 
         proteinField.store.each(function(r){
-            if(this.ref_aa_ids.indexOf(r.get('rowid')) != -1){
+            if (this.ref_aa_ids.indexOf(r.get('rowid')) != -1){
                 this.ref_nt_ids.push(r.get('ref_nt_id'));
             }
         }, this);
@@ -127,13 +127,13 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             success: function(data){
                 this.allowableStrains = [];
                 var errorMsg = 'There are no reference sequences shared by all the samples, so no report can be shown';
-                if(data.rows && data.rows.length){
+                if (data.rows && data.rows.length){
                     Ext4.Array.forEach(data.rows, function(r){
                         this.allowableStrains.push(r.strain);
                     }, this);
 
                     this.allowableStrains = Ext4.unique(this.allowableStrains);
-                    if(!this.allowableStrains.length)
+                    if (!this.allowableStrains.length)
                         alert(errorMsg);
                     else
                         this.onSampleLoad();
@@ -154,12 +154,12 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             filterArray: [LABKEY.Filter.create('rowid', this.analysisIds.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)],
             scope: this,
             success: function(data){
-                if(data.rows && data.rows.length){
+                if (data.rows && data.rows.length){
                     var sampleIds = [];
                     this.analysesRecords = {};
                     var sortedIds = [];
                     Ext4.Array.forEach(data.rows, function(r){
-                        if(r.readset)
+                        if (r.readset)
                             sampleIds.push(r.readset);
 
                         if (r['readset/sampledate']){
@@ -179,14 +179,14 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
 
     queryDB: function(){
         var loaded = 0;
-        if(this.snps){
+        if (this.snps){
             Ext4.Array.forEach(this.analysisIds, function(id){
-                if(this.snps[id]){
+                if (this.snps[id]){
                     loaded++;
                 }
             }, this);
 
-            if(loaded == this.analysisIds.length){
+            if (loaded == this.analysisIds.length){
                 this.onLoadComplete();
                 return;
             }
@@ -221,8 +221,10 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             columns: 'rowid,name,exons,sequence,ref_nt_id,isComplement',
             scope: this,
             success: function(data){
-                if(data && data.rows){
-                    this.ref_aa_sequences = {};
+                this.aa_overlaps = {};
+                this.ref_aa_sequences = {};
+
+                if (data && data.rows){
                     var r;
                     for (var i=0;i<data.rows.length;i++){
                         r = data.rows[i];
@@ -234,11 +236,53 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                             return [Number(a[0]), Number(a[1])]
                         });
 
-                        r.exonMap = r.exonMap.sort(function(a, b){
-                            return a[0] > b[0] ? 1 :
-                                   a[0] < b[0] ? -1 : 0;
-                        });
+                        //NOTE: dont sort exons: rely on what was entered into the DB
+                        //r.exonMap = r.exonMap.sort(function(a, b){
+                        //    return a[0] > b[0] ? 1 :
+                        //            a[0] < b[0] ? -1 : 0;
+                        //});
                     };
+
+                    //now calculate overlaps:
+                    for (var aaId1 in this.ref_aa_sequences){
+                        var aa1 = this.ref_aa_sequences[aaId1];
+                        var overlaps = [];
+                        var offset = 0;
+                        Ext4.Array.forEach(aa1.exonMap, function(exon1){
+                            for (var aaId2 in this.ref_aa_sequences){
+                                var aa2 = this.ref_aa_sequences[aaId2];
+                                if (aa2.ref_nt_id != aa1.ref_nt_id){
+                                    continue;
+                                }
+
+                                if (aa2.rowid == aa1.rowid){
+                                    continue;
+                                }
+
+                                Ext4.Array.forEach(aa2.exonMap, function(exon2){
+                                    if (exon1[0] <= exon2[1] && exon1[1] > exon2[0]){
+                                        var o = {
+                                            ref_nt_id: aa1.ref_nt_id,
+                                            ref_aa_id: aa1.rowid,
+                                            ntStart: Math.max(exon1[0], exon2[0]),
+                                            ntStop: Math.min(exon1[1], exon2[1]),
+                                            category: 'Protein Overlap'
+                                        };
+
+                                        o.aa_start = Math.ceil((o.ntStart - exon1[0] + offset + 1) / 3);
+                                        o.aa_stop = Math.ceil((o.ntStop - exon1[0] + offset + 1) / 3);
+                                        o.name = aa2.name + ' Overlap: NTs ' + o.ntStart + '-' + o.ntStop;
+
+                                        overlaps.push(o);
+                                    }
+                                }, this);
+                            }
+
+                            offset += exon1[1] - exon1[0] + 1;
+                        }, this);
+
+                        this.aa_overlaps[aa1.rowid] = overlaps;
+                    }
                 }
             },
             failure: LDK.Utils.getErrorCallback()
@@ -263,13 +307,13 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                     var r;
                     for (var i=0; i<data.rows.length;i++){
                         r = data.rows[i];
-                        if(!this.coverageMap[r.analysis_id])
+                        if (!this.coverageMap[r.analysis_id])
                             this.coverageMap[r.analysis_id] = {};
 
-                        if(!this.coverageMap[r.analysis_id][r.ref_nt_id])
+                        if (!this.coverageMap[r.analysis_id][r.ref_nt_id])
                             this.coverageMap[r.analysis_id][r.ref_nt_id] = {};
 
-                        if(!this.coverageMap[r.analysis_id][r.ref_nt_id][r.ref_nt_position])
+                        if (!this.coverageMap[r.analysis_id][r.ref_nt_id][r.ref_nt_position])
                             this.coverageMap[r.analysis_id][r.ref_nt_id][r.ref_nt_position] = {};
 
                         this.coverageMap[r.analysis_id][r.ref_nt_id][r.ref_nt_position][r.ref_nt_insert_index] = r;
@@ -327,22 +371,22 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         var row;
         for (var i=0;i<data.rows.length;i++){
             row = data.rows[i];
-            if(!this.snps[row.analysis_id][row.ref_aa_id]){
+            if (!this.snps[row.analysis_id][row.ref_aa_id]){
                 this.snps[row.analysis_id][row.ref_aa_id] = {refName: row['ref_aa_id/name'], snps: {}};
                 this.inserts[row.ref_aa_id] = this.inserts[row.ref_aa_id] || {};
             }
 
-            if(!this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position]){
+            if (!this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position]){
                 this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position] = {};
                 this.inserts[row.ref_aa_id][row.ref_aa_position] = this.inserts[row.ref_aa_id][row.ref_aa_position] || {};
             }
 
-            if(!this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]){
+            if (!this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]){
                 this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index] = {ref_aa: row.ref_aa, adj_num_reads: 0, adj_percent: 0, adj_depth: row.adj_depth, q_aas: row.q_aas, q_non_ref_aas: row.q_non_ref_aas};
             }
 
-            if(Number(row.ref_aa_insert_index) > 0){
-                if(!this.inserts[row.ref_aa_id][row.ref_aa_position][row.ref_aa_insert_index])
+            if (Number(row.ref_aa_insert_index) > 0){
+                if (!this.inserts[row.ref_aa_id][row.ref_aa_position][row.ref_aa_insert_index])
                     this.inserts[row.ref_aa_id][row.ref_aa_position][row.ref_aa_insert_index] = {maxPct: 0, samples: {}};
 
                 this.inserts[row.ref_aa_id][row.ref_aa_position][row.ref_aa_insert_index]['samples'][row.analysis_id] = row;
@@ -367,7 +411,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             console.log('Load Time: '+(loadTime - this.startTime)/1000 + ' seconds');
         }
 
-        if(!this.snps){
+        if (!this.snps){
             alert('Problem loading data');
             Ext4.Msg.hide();
             return;
@@ -376,25 +420,38 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         this.tracks = [];
 
         this.ref_aa_features = {};
-        if(this.ref_aa_features_data){
-            Ext4.Array.forEach(this.ref_aa_features_data, function(r){
+        if (this.ref_aa_features_data || this.aa_overlaps){
+            if (this.ref_aa_features_data) {
                 var catField = this.down('#aaFeaturesCategoryField');
-                if(catField.getValue()){
-                    if(catField.getValue().indexOf(r.category) == -1)
-                        return;
-                }
+                Ext4.Array.forEach(this.ref_aa_features_data, function (r) {
+                    if (catField.getValue()) {
+                        if (catField.getValue().indexOf(r.category) == -1)
+                            return;
+                    }
 
-                if(!this.ref_aa_features[r.ref_aa_id])
-                    this.ref_aa_features[r.ref_aa_id] = [];
+                    if (!this.ref_aa_features[r.ref_aa_id])
+                        this.ref_aa_features[r.ref_aa_id] = [];
 
-                //necessary to cleanup the drug resistance field which is created by group_concat
-                if(r.description && Ext4.isArray(r.description)){
-                    r.description = r.description.join(', ');
-                    r.description = r.description.replace(/\n/g, '<br>');
-                }
+                    //necessary to cleanup the drug resistance field which is created by group_concat
+                    if (r.description && Ext4.isArray(r.description)) {
+                        r.description = r.description.join(', ');
+                        r.description = r.description.replace(/\n/g, '<br>');
+                    }
 
-                this.ref_aa_features[r.ref_aa_id].push(r);
-            }, this);
+                    this.ref_aa_features[r.ref_aa_id].push(r);
+                }, this);
+            }
+
+            if (this.aa_overlaps){
+                for (var aaId in this.aa_overlaps) {
+
+                    if (!this.ref_aa_features[aaId]) {
+                        this.ref_aa_features[aaId] = [];
+                    }
+
+                    this.ref_aa_features[aaId] = this.ref_aa_features[aaId].concat(this.aa_overlaps[aaId]);
+                };
+            }
 
             this.tracks.push({
                 data: this.ref_aa_features,
@@ -402,7 +459,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             });
         }
 
-        if(this.down('#showElispot').getValue()){
+        if (this.down('#showElispot').getValue()){
             console.log('ELISPOT not yet implemented');
 //            this.tracks.push({
 //                data: this.elispot_data,
@@ -439,36 +496,37 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         this.refPositions = {};
         var ref;
         var refId;
-        for(var i=0;i<this.ref_aa_ids.length;i++){
+        for (var i=0;i<this.ref_aa_ids.length;i++){
             refId = this.ref_aa_ids[i];
             ref = this.ref_aa_sequences[refId];
-            if(!this.refPositions[refId])
+            if (!this.refPositions[refId])
                 this.refPositions[refId] = {};
 
-            for(var j=1;j<=ref.sequence.length;j++){
+            for (var j=1;j<=ref.sequence.length;j++){
                 this.refPositions[refId][j] = {0: {residue: ref.sequence.substr((j-1), 1)}};
             }
         }
 
-        if(this.inserts && !SequenceAnalysis.Utils.isEmptyObj(this.inserts)){
+        if (this.inserts && !SequenceAnalysis.Utils.isEmptyObj(this.inserts)){
             var minPct = this.down('#minMutationPct').getValue();
             var minReads = this.down('#minReadNum').getValue();
-            var percent = 0;
-            var reads = 0;
 
-            for(var ref_id in this.inserts){
-                for(var pos in this.inserts[ref_id]){
-                    for(var idx in this.inserts[ref_id][pos]){
-                        for(var a in this.inserts[ref_id][pos][idx].samples){
+            for (var ref_id in this.inserts){
+                for (var pos in this.inserts[ref_id]){
+                    for (var idx in this.inserts[ref_id][pos]){
+                        var percent = 0;
+                        var reads = 0;
+
+                        for (var a in this.inserts[ref_id][pos][idx].samples){
                             //find the highest percent of all samples
-                            if(percent < this.inserts[ref_id][pos][idx].samples[a].pct)
+                            if (percent < this.inserts[ref_id][pos][idx].samples[a].pct)
                                 percent = this.inserts[ref_id][pos][idx].samples[a].pct;
 
-                            if(reads < this.inserts[ref_id][pos][idx].samples[a].readcount)
+                            if (reads < this.inserts[ref_id][pos][idx].samples[a].readcount)
                                 reads = this.inserts[ref_id][pos][idx].samples[a].readcount;
                         };
 
-                        if((percent==0 && reads==0) || minPct && minPct > percent || minReads && minReads > reads)
+                        if ((percent==0 && reads==0) || minPct && minPct > percent || minReads && minReads > reads)
                             continue;
 
                         this.refPositions[ref_id][pos][idx] = {residue: '-'};
@@ -478,10 +536,10 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         }
 
         this.refSequences = {};
-        for(ref_id in this.refPositions){
+        for (ref_id in this.refPositions){
             this.refSequences[ref_id] = [];
-            for(pos in this.refPositions[ref_id]){
-                for(idx in this.refPositions[ref_id][pos]){
+            for (pos in this.refPositions[ref_id]){
+                for (idx in this.refPositions[ref_id][pos]){
                     this.refSequences[ref_id].push('<span '+(idx!=0 ? ' style="background-color:#C0C0C0;"' : '')+' data-qtip="Positon: ' + this.ref_aa_sequences[ref_id].name + ' '+(idx==0 ? pos : pos+'.'+idx)+'">'+this.refPositions[ref_id][pos][idx].residue+'</span>');
                 }
             }
@@ -507,16 +565,16 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         var minReads = this.down('#minReadNum').getValue();
         var minCoverage = this.down('#minCoverage').getValue();
 
-        for(var ref_id in this.refPositions){
+        for (var ref_id in this.refPositions){
             obj[ref_id] = [];
-            for(var pos in this.refPositions[ref_id]){
-                for(var idx in this.refPositions[ref_id][pos]){
+            for (var pos in this.refPositions[ref_id]){
+                for (var idx in this.refPositions[ref_id][pos]){
                     var coverInfo = this.calcNTPositionForAA(ref_id, analysis_id, pos);
                     var ntPositions = coverInfo.nt_positions ? coverInfo.nt_positions.join('/') : '';
 
                     var cover = coverInfo.avgCover ? LABKEY.Utils.roundNumber(coverInfo.avgCover, 2) : 0;
 
-                    if(!cover || cover < minCoverage){
+                    if (!cover || cover < minCoverage){
                         residue = (idx==0) ? ':' : '-';
                         obj[ref_id].push({
                             tag: 'span',
@@ -527,15 +585,15 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                         continue;
                     }
 
-                    if(this.snps[analysis_id] &&
-                        this.snps[analysis_id][ref_id] &&
-                        this.snps[analysis_id][ref_id]['snps'][pos] &&
-                        this.snps[analysis_id][ref_id]['snps'][pos][idx]
+                    if (this.snps[analysis_id] &&
+                            this.snps[analysis_id][ref_id] &&
+                            this.snps[analysis_id][ref_id]['snps'][pos] &&
+                            this.snps[analysis_id][ref_id]['snps'][pos][idx]
                     ){
                         snp = this.snps[analysis_id][ref_id]['snps'][pos][idx];
 
                         this.processSnp(snp, minPct, minReads);
-                        if(!snp.show){
+                        if (!snp.show){
                             residue = (idx==0) ? '.' : '-';
                             obj[ref_id].push({
                                 tag: 'span',
@@ -546,10 +604,10 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                             continue;
                         }
 
-                        if(snp.displayResidues.length == 1){
+                        if (snp.displayResidues.length == 1){
                             residue = snp.displayResidues[0];
                         }
-                        else if(snp.displayResidues.length == 0){
+                        else if (snp.displayResidues.length == 0){
                             residue = snp.ref_aa;
                         }
                         //if majority of SNPs are synon, color accordingly
@@ -557,11 +615,11 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                             residue = snp.ref_aa;
                         }
                         else if (snp.displayResidues.indexOf(':') != -1 ||
-                            snp.displayResidues.indexOf('?') != -1 ||
-                            snp.displayResidues.indexOf('+') != -1
+                                snp.displayResidues.indexOf('?') != -1 ||
+                                snp.displayResidues.indexOf('+') != -1
                         ){
                             //if a significant percent of mutations at this position are indels, color as indel
-                            if((snp.indel_pct / snp.adj_percent) > .3)
+                            if ((snp.indel_pct / snp.adj_percent) > .3)
                                 snp.isIndel = true;
 
                             residue = 'X';
@@ -605,12 +663,12 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             arr = arr.concat(item);
         }, this);
         arr = Ext4.unique(arr);
-        
+
         return arr;
     },
-    
+
     processSnp: function(snp, minPct, minReads){
-        if((minPct && minPct>snp.adj_percent) || (minReads && minReads>snp.adj_num_reads)){
+        if ((minPct && minPct>snp.adj_percent) || (minReads && minReads>snp.adj_num_reads)){
             snp.show = false;
             return;
         }
@@ -651,29 +709,29 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         var color;
         var steps;
         var snpCopy = snp || {};
-        if(residue == ':'){
+        if (residue == ':'){
             return 'background-color: ' + settings.noCoverColor + ';';
         }
         else if (residue == '.'){
             return 'background-color: transparent;'
         }
-        else if(residue == refAA && residue != '-'){
+        else if (residue == refAA && residue != '-'){
             color = settings.synColor;
-            if(settings.useGradient)
+            if (settings.useGradient)
                 steps = settings.synColorSteps;
         }
         else if (refAA == '-' || residue == '+'  || residue == '?' || idx > 0 || snpCopy.isIndel){
             color = settings.fsColor;
-            if(settings.useGradient)
+            if (settings.useGradient)
                 steps = settings.fsColorSteps;
         }
         else {
             color = settings.nsColor;
-            if(settings.useGradient)
+            if (settings.useGradient)
                 steps = settings.nsColorSteps;
         }
 
-        if(settings.useGradient)
+        if (settings.useGradient)
             color = SequenceAnalysis.Utils.calcGradient(color, steps, pos, idx, snp);
 
         return 'background-color: '+color+';'
@@ -751,17 +809,17 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                     tag: 'tr',
                     children: [
                         this.renderSampleName(a)
-                    ,{
-                        tag: 'td',
-                        html: ''
-                    },{
-                        tag: 'td',
-                        style: 'font-family:courier,Courier New,monospace;white-space:nowrap;padding:5px;',
-                        children: this.querysequences[a][ref_id].slice(rowStart, rowEnd)
-                    },{
-                        tag: 'td',
-                        html: ''
-                    }]
+                        ,{
+                            tag: 'td',
+                            html: ''
+                        },{
+                            tag: 'td',
+                            style: 'font-family:courier,Courier New,monospace;white-space:nowrap;padding:5px;',
+                            children: this.querysequences[a][ref_id].slice(rowStart, rowEnd)
+                        },{
+                            tag: 'td',
+                            html: ''
+                        }]
                 });
             }, this);
         }
@@ -781,11 +839,11 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             'Readset: ' + this.analysesRecords[analysisId]['readset/name'] + ' (' + this.analysesRecords[analysisId]['readset'] + ')'
         ];
 
-        if(this.analysesRecords[analysisId]['readset/subjectid'])
+        if (this.analysesRecords[analysisId]['readset/subjectid'])
             qtip.push('Subject Id: ' + this.analysesRecords[analysisId]['readset/subjectid']);
-        if(this.analysesRecords[analysisId]['readset/sampledate'])
+        if (this.analysesRecords[analysisId]['readset/sampledate'])
             qtip.push('Sample Date: ' + Ext4.Date.format(this.analysesRecords[analysisId]['readset/sampledate'], 'Y-m-d'));
-        if(this.analysesRecords[analysisId]['readset/comment'])
+        if (this.analysesRecords[analysisId]['readset/comment'])
             qtip.push('Readset Comments: ' + this.analysesRecords[analysisId]['readset/comment']);
 
         qtip = qtip.join('<br>');
@@ -803,7 +861,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         Ext4.Array.forEach(this.tracks, function(track){
             var data = track.data;
 
-            if(data && data[ref_id]){
+            if (data && data[ref_id]){
                 Ext4.Array.forEach(data[ref_id], function(feature){
                     var start = Number(feature.aa_start);
                     var stop = Number(feature.aa_stop);
@@ -812,8 +870,8 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
 
                     Ext4.each(tracks, function(track){
                         //verify the current track is available
-                        for(var i = (start-1); i<(start + effective_length);i++){
-                            if(track[i]){
+                        for (var i = (start-1); i<(start + effective_length);i++){
+                            if (track[i]){
                                 return;
                             }
                         }
@@ -824,7 +882,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                         return false; //stop iterating other tracks
                     }, this);
 
-                    if(!foundPosition){
+                    if (!foundPosition){
                         //create new track
                         var newTrack = {};
                         this.addFeatureToTrack(newTrack, feature);
@@ -840,8 +898,8 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             var row = [];
             var counter = 0;
             var previousFeatureStart = '';
-            for(var pos in this.refPositions[ref_id]){
-                for(var idx in this.refPositions[ref_id][pos]){
+            for (var pos in this.refPositions[ref_id]){
+                for (var idx in this.refPositions[ref_id][pos]){
                     var thisPosition = '';
                     counter++;
 
@@ -852,14 +910,14 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                     }
 
                     //for now features can only begin/end on ref positions, not indels
-                    if(idx == 0 && track[pos]){
-                        if(track[pos].isStart){
+                    if (idx == 0 && track[pos]){
+                        if (track[pos].isStart){
                             previousFeatureStart = '<span data-qtip="'+Ext4.util.Format.htmlEncode(track[pos].qtip)+'" style="background-color:'+track[pos].color+'">';
                             thisPosition += previousFeatureStart;
                         }
                         thisPosition += track[pos].value;
 
-                        if(track[pos].isEnd){
+                        if (track[pos].isEnd){
                             thisPosition += '</span>';
                             previousFeatureStart = null;
                         }
@@ -926,11 +984,11 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         var stop = Math.min(Number(feature.aa_stop), refLength);
         var effective_length = Math.max(stop - start + 1, feature.name.length);
 
-        for(var i = start; i<(start + effective_length);i++){
+        for (var i = start; i<(start + effective_length);i++){
             var value = feature.name[i - start] || '&nbsp;';
             track[i] = {value: value};
 
-            if(i==start){
+            if (i==start){
                 track[i].isStart = true;
                 track[i].qtip = [
                     'Name: ' + feature.name,
@@ -939,13 +997,13 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                     'AA Stop: ' + feature.aa_stop
                 ];
 
-                if(feature.description)
+                if (feature.description)
                     track[i].qtip.push('Description: ' + feature.description);
 
                 track[i].qtip = track[i].qtip.join('<br>');
                 track[i].color = this.FEATURE_COLOR_MAP[feature.category] || 'yellow';
             }
-            if(i==stop)
+            if (i==stop)
                 track[i].isEnd = true;
         }
     },
@@ -972,7 +1030,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                 //find the corresponding position in this exon
                 exonPosition = nt_position - startNT + exon[0];
                 nt_positions.push(exonPosition);
-                if(nt_positions.length == 3)
+                if (nt_positions.length == 3)
                     break;  //jump to next exon
 
                 nt_position++;
@@ -985,11 +1043,11 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         var p;
         for (var i=0; i<nt_positions.length;i++){
             p = nt_positions[i];
-            if(!this.coverageMap[analysis_id] ||
-                !this.coverageMap[analysis_id][ref_nt_id] ||
-                !this.coverageMap[analysis_id][ref_nt_id][p] ||
-                !this.coverageMap[analysis_id][ref_nt_id][p][0] ||
-                !this.coverageMap[analysis_id][ref_nt_id][p][0].adj_depth
+            if (!this.coverageMap[analysis_id] ||
+                    !this.coverageMap[analysis_id][ref_nt_id] ||
+                    !this.coverageMap[analysis_id][ref_nt_id][p] ||
+                    !this.coverageMap[analysis_id][ref_nt_id][p][0] ||
+                    !this.coverageMap[analysis_id][ref_nt_id][p][0].adj_depth
             ){
                 cover.push(0);
             }

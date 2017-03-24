@@ -2,6 +2,13 @@ package org.labkey.GeneticsCore.analysis;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.PeekableIterator;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.CloseableTribbleIterator;
+import htsjdk.tribble.FeatureReader;
+import htsjdk.tribble.bed.BEDCodec;
+import htsjdk.tribble.bed.BEDFeature;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -23,6 +30,7 @@ import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -30,6 +38,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Pair;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
 
@@ -49,7 +58,7 @@ import java.util.Map;
  */
 public class MethylationRateComparisonHandler implements SequenceOutputHandler
 {
-    private static final FileType _methylationType = new FileType(".CpG_Site_Summary.gff");
+    public static final FileType METHYLATION_TYPE = new FileType(".CpG_Site_Summary.gff");
     private static final String METHYLATION_RATE_COMPARISON = "Methylation Rate Comparison";
 
     public MethylationRateComparisonHandler()
@@ -116,7 +125,7 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
     @Override
     public boolean canProcess(SequenceOutputFile f)
     {
-        return f.getFile() != null && (_methylationType.isType(f.getFile()));
+        return f.getFile() != null && (METHYLATION_TYPE.isType(f.getFile()));
     }
 
     @Override
@@ -497,6 +506,40 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                         so2.setCategory("Comb-p Sites");
                         ctx.addSequenceOutput(so2);
 
+                        //build new combined human-readable table with all data
+                        //# APPEND WILCOX AND SIDAK-P PVALUES TO DATATABLE
+                        if (outBed.exists())
+                        {
+                            File table = new File(ctx.getOutputDir(), "MethylationComparison.txt");
+                            List<Pair<Interval, String>> intervals = new ArrayList<>();
+                            try (FeatureReader<BEDFeature> reader = AbstractFeatureReader.getFeatureReader(outBed.getAbsolutePath(), new BEDCodec(), false))
+                            {
+                                try (CloseableTribbleIterator<BEDFeature> it = reader.iterator())
+                                {
+                                    while (it.hasNext())
+                                    {
+                                        BEDFeature f = it.next();
+
+                                        //NOTE: name is the field holding p-val
+                                        intervals.add(Pair.of(new Interval(f.getContig(), f.getStart(), f.getEnd()), f.getName()));
+                                    }
+                                }
+                            }
+                            catch (IOException e)
+                            {
+                                throw new PipelineJobException(e);
+                            }
+
+                            buildCombinedTable(table, intervals, inputFiles, ctx, true);
+
+                            SequenceOutputFile soTable = new SequenceOutputFile();
+                            soTable.setName("Comb-p Table: " + ctx.getJob().getDescription());
+                            soTable.setDescription("Comb-p Raw Data: " + jobDescription);
+                            soTable.setFile(table);
+                            soTable.setCategory("Comb-p Combined Data");
+                            ctx.addSequenceOutput(soTable);
+                        }
+
                         File plot = new File(outBed.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(outBed.getName())) + ".manhattan.png");
                         if (plot.exists())
                         {
@@ -516,8 +559,6 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                     {
                         ctx.getLogger().info("skipping comb-p");
                     }
-
-                    //# APPEND WILCOX AND SIDAK-P PVALUES TO DATATABLE
                 }
             }
             else
@@ -554,6 +595,145 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
             }
 
             return exePath;
+        }
+    }
+
+    public static void buildCombinedTable(File table, List<Pair<Interval, String>> intervals, List<SequenceOutputFile> inputFiles, PipelineContext ctx, boolean includePValCol) throws PipelineJobException
+    {
+        ctx.getLogger().info("building combined data table");
+
+        List<FeatureReader<GFF3Feature>> gffReaders = new ArrayList<>();
+        List<PeekableIterator<GFF3Feature>> iterators = new ArrayList<>();
+        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(table), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        {
+            List<String> header = new ArrayList<>();
+            header.add("IntervalName");
+            header.add("Chr");
+            header.add("Position");
+            if (includePValCol)
+                header.add("Pval");
+            for (SequenceOutputFile in : inputFiles)
+            {
+                header.add(in.getName());
+            }
+            writer.writeNext(header.toArray(new String[header.size()]));
+
+            int totalBedLines = 0;
+            for (SequenceOutputFile so : inputFiles)
+            {
+                FeatureReader<GFF3Feature> gffReader = AbstractFeatureReader.getFeatureReader(so.getFile().getAbsolutePath(), new GFF3Codec(), false);
+                gffReaders.add(gffReader);
+                iterators.add(new PeekableIterator(gffReader.iterator()));
+            }
+
+            for (Pair<Interval, String> pair : intervals)
+            {
+                Interval il = pair.first;
+                String intervalName = pair.second;
+
+                ctx.getLogger().info("inspecting interval: " + il.getContig() + ": " + il.getStart() + "-" + il.getEnd());
+                int positionsInspected = 0;
+                int positionsWithData = 0;
+
+                totalBedLines++;
+
+                int position = il.getStart();
+                while (position <= il.getEnd())
+                {
+                    positionsInspected++;
+
+                    boolean hasData = false;
+                    List<String> data = new ArrayList<>(inputFiles.size());
+                    for (PeekableIterator<GFF3Feature> it : iterators)
+                    {
+                        //scan until we hit this position or exceed
+                        GFF3Feature f = null;
+                        while (it.hasNext())
+                        {
+                            GFF3Feature toInspect = it.peek();
+                            Interval i2 = new Interval(toInspect.getContig(), toInspect.getStart(), toInspect.getEnd());
+
+                            if (toInspect.getContig().equals(il.getContig()) && toInspect.getStart() == position)
+                            {
+                                //this is a match, select and increment iterator
+                                f = it.next();
+                                break;
+                            }
+                            else if (i2.compareTo(il) > 0)
+                            {
+                                //if this interval is beyond the target position, abort but dont increment iterator
+                                break;
+                            }
+
+                            //scan to next
+                            it.next();
+                        }
+
+                        if (f != null)
+                        {
+                            hasData = true;
+                            data.add(f.getScore() == null ? "" :String.valueOf(f.getScore()));
+                        }
+                        else
+                        {
+                            data.add("");
+                        }
+                    }
+
+                    if (hasData)
+                    {
+                        List<String> row = new ArrayList<>();
+                        row.add(il.getContig() + ":" + il.getStart() + "-" + il.getEnd());
+                        row.add(il.getContig());
+                        row.add(String.valueOf(position));
+
+                        if (includePValCol)
+                            row.add(intervalName); //this is the column holding score
+                        row.addAll(data);
+
+                        writer.writeNext(row.toArray(new String[row.size()]));
+
+                        positionsWithData++;
+                    }
+
+                    position++;
+                }
+
+                ctx.getLogger().info("positions inspected: " + positionsInspected);
+                ctx.getLogger().info("positions with data: " + positionsWithData);
+            }
+
+            ctx.getLogger().info("total BED lines inspected: " + totalBedLines);
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+        finally
+        {
+            for (PeekableIterator it : iterators)
+            {
+                try
+                {
+                    it.close();
+                }
+                catch (Throwable e)
+                {
+                    //ignore
+                }
+            }
+
+            for (FeatureReader r : gffReaders)
+            {
+                try
+                {
+                    r.close();
+                }
+                catch (Throwable e)
+                {
+                    //ignore
+                }
+            }
         }
     }
 }

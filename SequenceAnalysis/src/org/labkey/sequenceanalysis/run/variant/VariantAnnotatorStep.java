@@ -1,18 +1,23 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.sequenceanalysis.analysis.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.VariantAnnotatorWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -27,11 +32,18 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
         super(provider, ctx, new VariantAnnotatorWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<VariantAnnotatorStep>
+    public static class Provider extends AbstractVariantProcessingStepProvider<VariantAnnotatorStep> implements VariantProcessingStep.RequiresPedigree
     {
         public Provider()
         {
-            super("VariantAnnotatorStep", "GATK VariantAnnotator", "GATK", "Annotate variants using GATK VariantAnnotator", null, null, "");
+            super("VariantAnnotatorStep", "GATK VariantAnnotator", "GATK", "Annotate variants using GATK VariantAnnotator", Arrays.asList(
+                    ToolParameterDescriptor.create("mv", "Mendelian Violations", "If selected, mendelian violations will be annotated at the site and genotype level.  This requires records in the laboratory.subjects table matching the sample names of the VCF(s)", "checkbox", new JSONObject(){{
+                        put("checked", false);
+                    }}, null),
+                    ToolParameterDescriptor.create("maf", "Minor Allele Frequency", "If selected, MAF will be annotated.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, null)
+            ), null, "");
         }
 
         public VariantAnnotatorStep create(PipelineContext ctx)
@@ -49,45 +61,44 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
 
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".annotated.vcf.gz");
 
-        /**
-         * #add MV count only after GenotypeFilters applied
-         MV_ANN=${BASENAME}.annotated.filtered.mv.${SUFFIX}.vcf.gz
-         if [ ! -e $MV_ANN ]; then
-         $JAVA $JAVA_OPTS $TMP_OPTS -jar $GATK \
-         -R "$REF" \
-         -T VariantAnnotator \
-         -o "$MV_ANN" \
-         -nt 4 \
-         -A MendelianViolationCount \
-         -mvq 20 \
-         -ped "$PED" \
-         -pedValidationType SILENT \
-         -V "$FILTER" \
-         -I "$BAM_LIST"
+        if (getProvider().getParameterByName("mv").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+        {
+            options.add("-A");
+            options.add("MendelianViolationCount");
+            options.add("-A");
+            options.add("MendelianViolationBySample");
 
+            File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory());
+            if (!pedFile.exists())
+            {
+                throw new PipelineJobException("Unable to find pedigree file: " + pedFile.getPath());
+            }
 
+            options.add("-ped");
+            options.add(pedFile.getPath());
+            options.add("-pedValidationType");
+            options.add("SILENT");
+        }
+
+        if (getProvider().getParameterByName("maf").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+        {
+            options.add("-A");
+            options.add("MinorAlleleFrequency");
+        }
+
+        Integer threads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
+        if (threads != null)
+        {
+            options.add("-nt");
+            options.add(String.valueOf(Math.min(threads, 8)));
+        }
+
+         //TODO: allow annotation using fields from another VCF:
         /**
-         * if [ ! -e $ANN ]; then
-         $JAVA $JAVA_OPTS $TMP_OPTS -jar $GATK \
-         -R "$REF" \
-         -T VariantAnnotator \
-         -o "$ANN" \
-         -nt 4 \
-         -A TandemRepeatAnnotator \
-         -ped "$PED" \
-         -pedValidationType SILENT \
-         -V "$INPUT" \
-         -resource:eff "$SNPEFF_OUT" \
-         -E eff.EFF \
          -resource:indian "$INDIAN_SUBSET" \
          -E indian.AF \
          -resource:chinese "$CHINESE_SUBSET" \
          -E chinese.AF \
-         -I "$BAM_LIST" \
-         --read_buffer_size 1000000
-
-         /home/groups/prime-seq/pipeline_tools/bin/tabix -f $ANN
-         fi
          */
 
         getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, options);

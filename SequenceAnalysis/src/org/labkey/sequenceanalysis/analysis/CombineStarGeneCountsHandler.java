@@ -51,7 +51,8 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                         put("extensions", Arrays.asList("gtf", "gff"));
                         put("width", 400);
                         put("allowBlank", false);
-                    }}, null)
+                    }}, null),
+                ToolParameterDescriptor.create("idInHeader", "Use RowId As Header", "If checked, this will use the output file RowId as the header, instead of name.  This ensures uniqueness.  As separate table will be written, containing this value and other sample fields.", "checkbox", null, false)
         ));
     }
 
@@ -134,12 +135,18 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            final boolean idInHeader = ctx.getParams().optBoolean("idInHeader", false);
+
             prepareFiles(ctx, inputFiles, getName(), new HeaderProvider()
             {
                 @Override
                 public String getHeader(JobContext ctx, SequenceOutputFile so)
                 {
-                    if (so.getReadset() != null && ctx.getSequenceSupport().getCachedReadset(so.getReadset()) != null)
+                    if (idInHeader)
+                    {
+                        return so.getRowid().toString();
+                    }
+                    else if (so.getReadset() != null && ctx.getSequenceSupport().getCachedReadset(so.getReadset()) != null)
                     {
                         Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
                         return rs.getName();
@@ -150,7 +157,29 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                     }
                 }
             }, "Gene Count Table");
+
+            File outFile = new File(ctx.getOutputDir(), ctx.getParams().getString("name") + ".sampleInfo.txt");
+            try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(outFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+            {
+                writer.writeNext(new String[]{"RowId", "Name", "ReadsetId", "ReadsetName", "AnalysisId", "SubjectId"});
+
+                for (SequenceOutputFile so : inputFiles)
+                {
+                    Readset rs = so.getReadset() != null ? ctx.getSequenceSupport().getCachedReadset(so.getReadset()) : null;
+
+                    writer.writeNext(new String[]{so.getRowid().toString(), so.getName(), appendIfNotNull(so.getReadset()), (rs == null ? "" : rs.getName()), appendIfNotNull(so.getAnalysis_id()), (rs == null ? "" : appendIfNotNull(rs.getSubjectId()))});
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
         }
+    }
+
+    private String appendIfNotNull(Object input)
+    {
+        return input == null ? "" : String.valueOf(input);
     }
 
     public static void prepareFiles(JobContext ctx, List<SequenceOutputFile> inputFiles, String actionName, HeaderProvider hp, String outputCategory) throws PipelineJobException

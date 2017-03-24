@@ -125,19 +125,19 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentConfigPanel', {
                     helpPopup: 'Only mutations present above this level will be shown. Note: this calculation considers the total mutations present at each AA residue, not the number per distinct AA. Therefore if you have a threshold of 1%, and 3 distinct mutations at one residue each present at 0.33%, these SNPs will be displayed.'
                 },{
                     xtype: 'numberfield',
-                    value: 5,
+                    value: 10,
                     fieldLabel: 'Minimum Read Number',
                     itemId: 'minReadNum',
                     helpPopup: 'Only mutations present at least this many reads will be shown. Note: this calculation considers the total mutations present at each AA residue, not the number per distinct AA. Therefore if you have a threshold of 5, and 3 distinct mutations at one residue each present at 2 read, these SNPs will be displayed.'
                 },{
                     xtype: 'numberfield',
-                    value: '',
+                    value: 30,
                     fieldLabel: 'Minimum Coverage',
                     itemId: 'minCoverage',
                     helpPopup: 'Positions below this coverage will be masked.  Leave blank for all'
                 },{
                     xtype: 'numberfield',
-                    value: 120,
+                    value: 150,
                     fieldLabel: 'Row Length',
                     itemId: 'rowLength',
                     helpPopup: 'The number of based to show per row.  Leave blank for all'

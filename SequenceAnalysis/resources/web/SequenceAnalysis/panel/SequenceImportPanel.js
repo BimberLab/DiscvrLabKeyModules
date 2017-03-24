@@ -40,6 +40,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     {name: 'barcode3', useNull: true},
                     {name: 'platform', allowBlank: false},
                     {name: 'application', allowBlank: false},
+                    {name: 'chemistry', allowBlank: false},
                     {name: 'librarytype', useNull: true},
                     {name: 'sampletype', useNull: true},
                     {name: 'subjectid', useNull: true},
@@ -62,6 +63,19 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
                     var id = this.getFileId();
                     var name = this.get('readsetname');
+                    var doDemultiplex = this.sequenceImportPanel.down('#doDemultiplex').getValue();
+                    if (doDemultiplex && !this.get('barcode5') && !this.get('barcode3')){
+                        var msg = 'Demultiplexing was selected, must enter at least one barcode.';
+                        errors.add({
+                            field: 'barcode5',
+                            message: msg
+                        });
+                        errors.add({
+                            field: 'barcode3',
+                            message: msg
+                        });
+                    }
+
                     if (this.store){
                         this.store.each(function(r){
                             if (r !== this && r.getFileId() == id){
@@ -355,7 +369,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     ILLUMINA_REGEX: /^(.+)_(.+)_L(.+)_(R){0,1}([0-9])_(.+)(\.f(ast){0,1}q)(\.gz)?$/i,
 
     //Example from NextSeq: RNA160915BB_34A_22436_Gag120_Clone-10_S10_R1_001.fastq.gz
-    ILLUMINA_REGEX_NO_LANE: /^(.+)_(R){0,1}([0-9])_([0-9]+)(\.f(ast){0,1}q)(\.gz)?$/i,
+    //This should also allow simple pairs, like: file1_1.fq.gz and file1_2.fq.gz
+    ILLUMINA_REGEX_NO_LANE: /^(.+)_(R){0,1}([0-9])(_[0-9]+){0,1}(\.f(ast){0,1}q)(\.gz)?$/i,
 
     populateSamples: function(orderType, isPaired){
         this.fileNameStore.sort('displayName', 'ASC');
@@ -386,9 +401,10 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 }
                 else if (this.ILLUMINA_REGEX_NO_LANE.test(rec.get('fileName'))){
                    var match = this.ILLUMINA_REGEX_NO_LANE.exec(rec.get('fileName'));
-                   var sample = match[1] + '-' + match[4];
+                   var laneInfo = match[4] ? match[4].replace(/^_/, '') : null;
+                   var sample = match[1] + (laneInfo ? '-' + laneInfo : '');
                    var platformUnit = match[1];
-                   var setId = match[1] + '-' + match[4];
+                   var setId = match[1] + (laneInfo ? '-' + laneInfo : '');
                    var direction = match[3];
                    this.processIlluminaMatch(sample, platformUnit, null, setId, direction, rec, map);
                 }
@@ -455,7 +471,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         else if (orderType == 'column') {
             if (isPaired){
                 var colSize = Math.ceil(this.fileNameStore.getCount() / 2);
-                console.log(colSize);
                 this.fileNameStore.each(function (rec, i){
                     if (i < colSize) {
                         var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
@@ -598,7 +613,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
     getReadsetParams: function(values){
         var barcodes = {};
-        var useBarcode = this.down('#useBarcode').getValue();
+        var doDemultiplex = this.down('#doDemultiplex').getValue();
+        var showBarcodes = this.down('#showBarcodes').getValue();
 
         var errors = Ext4.create('Ext.data.Errors');
         this.readDataStore.each(function(r, sampleIdx) {
@@ -672,7 +688,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             var key = [r.get('fileRecord1')];
             key.push(r.get('fileRecord2'));
 
-            if (!useBarcode){
+            if (!doDemultiplex && !showBarcodes){
                 delete r.data['barcode5'];
                 delete r.data['barcode3'];
             }
@@ -685,18 +701,23 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
             //handle barcodes
             var rec;
-            if (r.get('barcode5')){
+            if (doDemultiplex && r.get('barcode5')){
                 rec = this.barcodeStore.getAt(this.barcodeStore.find('tag_name', r.get('barcode5')));
                 if (!barcodes[r.get('barcode5')]){
                     barcodes[r.get('barcode5')] = [r.get('barcode5'), rec.get('sequence')];
                 }
             }
 
-            if (r.get('barcode3')){
+            if (doDemultiplex && r.get('barcode3')){
                 rec = this.barcodeStore.getAt(this.barcodeStore.find('tag_name', r.get('barcode3')));
                 if (rec && !barcodes[r.get('barcode3')]){
                     barcodes[r.get('barcode3')] = [r.get('barcode3'), rec.get('sequence')];
                 }
+            }
+
+            if (doDemultiplex && (!r.get('barcode5') && !r.get('barcode3'))){
+                Ext4.Msg.alert('Error', 'One or more readsets are missing barcodes.  Please either enter these or uncheck the option to demultiplex.');
+                return false;
             }
 
             values['readset_' + sampleIdx] = {
@@ -706,6 +727,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 readsetname: r.get('readsetname'),
                 platform: r.get('platform'),
                 application: r.get('application'),
+                chemistry: r.get('chemistry'),
                 librarytype: r.get('librarytype'),
                 sampletype: r.get('sampletype'),
                 subjectid: r.get('subjectid'),
@@ -905,6 +927,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 clicksToEdit: 1,
                 border: true,
                 store: this.readDataStore,
+                readsetStore: this.readsetStore,
                 fileNameStore: this.fileNameStore,
                 columns: [{
                     text: 'File Group',
@@ -917,23 +940,63 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         xtype: 'textfield',
                         listeners: {
                             scope: this,
-                            change: function(field, val, oldValue){
-                                var othersExist = false;
-                                var record = field.up('grid').getPlugin('cellediting').activeRecord;
-                                this.readDataStore.each(function(rec){
-                                    if (record !== rec && rec.get('fileGroupId') === oldValue){
-                                        //dont fire event
-                                        //rec.data['fileGroupId'] = val;
-                                        othersExist = true;
+                            buffer: 200,
+                            change: function (field, val, oldValue) {
+                                field.updateReadset.apply(this, arguments);
+                            }
+                        },
+
+                        updateReadset: function(field, val, oldValue){
+                            if (field.hasFocus) {
+                                field.on('blur', function(){
+                                    field.updateReadset.apply(field, [field, field.getValue(), oldValue]);
+                                }, field, {single: true});
+
+                                return;
+                            }
+
+                            var othersExist = false;
+                            var record = field.up('grid').getPlugin('cellediting').activeRecord;
+                            var readDataStore = field.up('grid').store;
+                            var readsetStore = field.up('grid').readsetStore;
+
+                            readDataStore.each(function (rec) {
+                                if (record !== rec && rec.get('fileGroupId') === oldValue) {
+                                    othersExist = true;
+                                }
+                            }, this);
+
+                            if (!othersExist) {
+                                readsetStore.each(function (rec) {
+                                    if (rec.get('fileGroupId') === oldValue) {
+                                        rec.data['fileGroupId'] = val;
                                     }
                                 }, this);
 
-                                if (!othersExist) {
-                                    this.readsetStore.each(function (rec) {
-                                        if (rec.get('fileGroupId') === oldValue) {
-                                            rec.data['fileGroupId'] = val;
+                                var matches = [];
+                                readsetStore.each(function (rec) {
+                                    if (rec.get('fileGroupId') == val) {
+                                        matches.push(rec);
+                                    }
+                                }, this);
+
+                                if (matches.length > 1) {
+                                    var matchMap = {};
+                                    var doDeMultiplex = field.up('sequenceanalysis-sequenceimportpanel').down('#doDemultiplex').getValue();
+                                    var toRemove = [];
+                                    Ext4.Array.forEach(matches, function(r){
+                                        var key = r.get('fileGroupId') + (doDeMultiplex ? '-' + (r.get('barcode5') || '') + '-' + (r.get('barcode3') || '') : '');
+                                        if (!matchMap[key]) {
+                                            matchMap[key] = true;
+                                        }
+                                        else {
+                                            toRemove.push(r);
                                         }
                                     }, this);
+
+                                    if (toRemove.length) {
+                                        readsetStore.remove(toRemove);
+                                    }
                                 }
                             }
                         }
@@ -1122,11 +1185,67 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                                             rs.set('fileGroupId', val);
                                         }
                                     }, this);
+
+                                    var matches = [];
+                                    this.readsetStore.each(function(rs){
+                                        if (rs.get('fileGroupId') == val) {
+                                            matches.push(rs);
+                                        }
+                                    }, this);
+
+                                    if (matches.length > 1) {
+                                        var matchMap = {};
+                                        var doDeMultiplex = this.down('#doDemultiplex').getValue();
+                                        var toRemove = [];
+                                        Ext4.Array.forEach(matches, function(r){
+                                            var key = r.get('fileGroupId') + (doDeMultiplex ? '-' + (r.get('barcode5') || '') + '-' + (r.get('barcode3') || '') : '');
+                                            if (!matchMap[key]) {
+                                                matchMap[key] = true;
+                                            }
+                                            else {
+                                                toRemove.push(r);
+                                            }
+                                        }, this);
+
+                                        if (toRemove.length) {
+                                            this.readsetStore.remove(toRemove);
+                                        }
+                                    }
                                 }
                             }, this);
 
                             grid.getView().refresh();
                         }, this, null, defaultVal);
+                    }
+                },{
+                    text: 'Add Missing Readsets',
+                    scope: this,
+                    handler : function(btn) {
+                        var grid = btn.up('grid');
+
+
+                        var fileGroupIds = [];
+                        this.readDataStore.each(function(r){
+                            fileGroupIds.push(r.get('fileGroupId'));
+                        }, this);
+                        fileGroupIds = Ext4.unique(fileGroupIds);
+
+                        this.readsetStore.each(function(r){
+                            Ext4.Array.remove(fileGroupIds, r.get('fileGroupId'));
+                        }, this);
+
+                        console.log(fileGroupIds);
+
+                        if (fileGroupIds.length){
+                            var toAdd = [];
+                            Ext4.Array.forEach(fileGroupIds, function(id){
+                                toAdd.push(this.readsetStore.createModel({
+                                    fileGroupId: id
+                                }));
+                            }, this);
+
+                            this.readsetStore.add(toAdd);
+                        }
                     }
                 }]
             }]
@@ -1143,18 +1262,25 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 style: 'padding-bottom: 10px;',
                 border: false
             },{
-                fieldLabel: 'Use Barcodes',
-                helpPopup: 'Use this option if your sequences have been tagged using an MID tag (molecular barcode).  Use the link below to view available barcodes or add new sequences.',
+                fieldLabel: 'Demultiplex Data',
+                helpPopup: 'Use this option if your sequences have been tagged using an MID tag (molecular barcode) and you need the system to demultiplex them at time of import.  Use the link below to view available barcodes or add new sequences.',
                 name: 'inputfile.barcode',
                 xtype:'checkbox',
-                itemId: 'useBarcode',
+                itemId: 'doDemultiplex',
                 scope: this,
                 handler: function(btn, val){
                     var treatmentField = btn.up('form').down('#originalFileTreatment');
                     treatmentField.setValue(val ? 'compress' : 'delete');
 
-                    this.fireEvent('midchange', btn, val);
+                    var showBarcodes = btn.up('form').down('#showBarcodes');
+                    if (val) {
+                        showBarcodes.suspendEvents(false);
+                        showBarcodes.setValue(false);
+                        showBarcodes.resumeEvents();
+                    }
+
                     btn.up('form').down('#barcodeOptions').setVisible(btn.checked);
+                    this.fireEvent('midchange', btn, (val || showBarcodes.getValue()));
                 }
             },{
                 xtype: 'fieldset',
@@ -1209,7 +1335,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     name: 'inputfile.barcodesInReadHeader',
                     value: 0,
                     minValue: 0,
-                    helpPopup: 'In rare cases, the sequencer has already parsed the sequence reads for barcodes and placed this information in the read header.  If true, check this.  Otherwise we will inspect the read sequence itself for the barcodes (the default).'
+                    helpPopup: 'In some cases, the sequencer has already parsed the sequence reads for barcodes and placed this information in the read header.  If true, check this.  Otherwise we will inspect the read sequence itself for the barcodes (the default).'
                 },{
                     xtype: 'ldk-linkbutton',
                     text: 'View Available Barcodes',
@@ -1218,6 +1344,24 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     style: 'margin-left: 210px;',
                     href: LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'sequenceanalysis', 'query.queryName': 'barcodes'})
                 }]
+            },{
+                fieldLabel: 'Store Barcode/Index Without Demultiplexing',
+                helpPopup: 'Use this option if your sequences were originally barcoded, but have already been demutiplexed.  This will store the information in the database, but the system will not demultiplex files.',
+                itemId: 'showBarcodes',
+                xtype: 'checkbox',
+                scope: this,
+                handler: function(btn, val){
+                    var doDemultiplex = btn.up('form').down('#doDemultiplex');
+                    if (val){
+                        doDemultiplex.suspendEvents(false);
+                        doDemultiplex.setValue(!val);
+                        doDemultiplex.resumeEvents();
+
+                        btn.up('form').down('#barcodeOptions').setVisible(!val);
+                    }
+
+                    this.fireEvent('midchange', btn, (val || doDemultiplex.getValue()));
+                }
             },{
                 xtype: 'checkbox',
                 itemId: 'importReadsetIds',
@@ -1265,7 +1409,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         listeners: {
                             beforeedit: function(cell, object){
                                 var useReadset = this.getCmp().up('sequenceanalysis-sequenceimportpanel').down('#importReadsetIds').getValue();
-                                if (useReadset && object.field != 'readset' && object.field != 'fileGroupId' && object.field != 'barcode5' && object.field != 'barcode3'){
+                                if (useReadset && object.field != 'readset' && object.field != 'fileGroupId'){
                                     //alert('This sample is using a readset that was created previously.  You cannot edit ' + object.column.text + ' for this readset.  If you wish to update that readset, click the View/Edit Readsets link above.');
                                     return false;
                                 }
@@ -1294,12 +1438,118 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         store: this.fileGroupStore
                     }
                 },{
+                    text: 'Readset Id',
+                    tdCls: 'ldk-wrap-text',
+                    name: 'readset',
+                    hidden: true,
+                    dataIndex: 'readset',
+                    width: 90,
+                    editable: true,
+                    renderer: SequenceAnalysis.panel.SequenceImportPanel.getRenderer('readset'),
+                    editor: {
+                        xtype: 'ldk-numberfield',
+                        minValue: 1,
+                        allowBlank: true,
+                        listeners: {
+                            buffer: 200,
+                            scope: this,
+                            blur: function(field){
+                                var records = [];
+                                this.readsetStore.each(function(r){
+                                    if (r.get('readset') === field.getValue()){
+                                        records.push(r);
+                                    }
+                                }, this);
+
+                                if (field.getValue()){
+                                    Ext4.Msg.wait('Loading...');
+                                    var doDemultiplex = this.down('#doDemultiplex').getValue();
+                                    var showBarcodes = this.down('#showBarcodes').getValue();
+
+                                    LABKEY.Query.selectRows({
+                                        containerPath: Laboratory.Utils.getQueryContainerPath(),
+                                        schemaName: 'sequenceanalysis',
+                                        queryName: 'sequence_readsets',
+                                        filterArray: [LABKEY.Filter.create('rowid', field.getValue())],
+                                        columns: 'rowid,name,platform,application,chemistry,librarytype,sampletype,subjectid,sampledate,sampleid,comments,barcode5,barcode3,instrument_run_id,totalFiles',
+                                        scope: this,
+                                        failure: LDK.Utils.getErrorCallback(),
+                                        success: function(results){
+                                            Ext4.Msg.hide();
+                                            var msgs = [];
+                                            if (results && results.rows && results.rows.length){
+                                                Ext4.Array.forEach(results.rows, function(row) {
+                                                    if (row.totalFiles) {
+                                                        msgs.push('Readset ' + field.getValue() + 'has already been associated with files and cannot be re-used.  If you would like to reanalyze this readset, load the table of readsets and look for the \'Analyze Data\' button.');
+                                                        Ext4.Array.forEach(records, function(record) {
+                                                            record.data.readset = null;
+                                                        }, this);
+                                                    }
+
+                                                    if (doDemultiplex && (!row.barcode3 && !row.barcode5)) {
+                                                        msgs.push('Readset ' + field.getValue() + ' does not have barcodes, but you have selected to use barcodes');
+                                                        Ext4.Array.forEach(records, function(record) {
+                                                            record.data.readset = null;
+                                                        }, this);
+
+                                                        return;
+                                                    }
+                                                    else if (!doDemultiplex && !showBarcodes && (row.barcode3 || row.barcode5)) {
+                                                        msgs.push('Readset ' + field.getValue() + ' has barcodes, but you have not selected to either show barcodes or perform demultiplexing');
+                                                        Ext4.Array.forEach(records, function(record) {
+                                                            record.data.readset = null;
+                                                        }, this);
+
+                                                        return;
+                                                    }
+
+                                                    //update row based on saved readset.  avoid firing event
+                                                    Ext4.Array.forEach(records, function(record) {
+                                                        Ext4.apply(record.data, {
+                                                            readsetname: row.name,
+                                                            platform: row.platform,
+                                                            application: row.application,
+                                                            chemistry: row.chemistry,
+                                                            librarytype: row.librarytype,
+                                                            sampleid: row.sampleid,
+                                                            subjectid: row.subjectid,
+                                                            sampledate: row.sampledate,
+                                                            comments: row.comments,
+                                                            sampletype: row.sampletype,
+                                                            instrument_run_id: row.instrument_run_id,
+                                                            barcode5: row.barcode5,
+                                                            barcode3: row.barcode3,
+                                                            isValid: true
+                                                        });
+                                                    }, this);
+                                                }, this);
+                                            }
+                                            else {
+                                                Ext4.Msg.alert('Error', 'Unable to find readset with rowid: ' +  field.getValue());
+                                                Ext4.Array.forEach(records, function(record){
+                                                    record.data.readset = null;
+                                                }, this);
+                                            }
+
+                                            if (msgs.length){
+                                                msgs = Ext4.unique(msgs);
+                                                Ext4.Msg.alert('Error', 'The selected readset cannot be used:<br>' + msgs.join('<br>'));
+                                            }
+
+                                            this.down('#readsetGrid').getView().refresh();
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                },{
                     text: '5\' Barcode',
                     tdCls: 'ldk-wrap-text',
                     id: 'barcode5',
                     dataIndex: 'barcode5',
                     mode: 'local',
-                    width: 80,
+                    width: 90,
                     hidden: true,
                     renderer: SequenceAnalysis.panel.SequenceImportPanel.getRenderer('barcode5'),
                     editor: {
@@ -1347,108 +1597,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             sort: 'group_name,tag_name',
                             autoLoad: true
                         })
-                    }
-                },{
-                    text: 'Readset Id',
-                    tdCls: 'ldk-wrap-text',
-                    name: 'readset',
-                    hidden: true,
-                    dataIndex: 'readset',
-                    width: 90,
-                    editable: true,
-                    renderer: SequenceAnalysis.panel.SequenceImportPanel.getRenderer('readset'),
-                    editor: {
-                        xtype: 'ldk-numberfield',
-                        minValue: 1,
-                        allowBlank: true,
-                        listeners: {
-                            buffer: 200,
-                            scope: this,
-                            blur: function(field){
-                                var records = [];
-                                this.readsetStore.each(function(r){
-                                    if (r.get('readset') === field.getValue()){
-                                        records.push(r);
-                                    }
-                                }, this);
-
-                                if (field.getValue()){
-                                    Ext4.Msg.wait('Loading...');
-                                    var useBarcodes = this.down('#useBarcode').getValue();
-
-                                    LABKEY.Query.selectRows({
-                                        containerPath: Laboratory.Utils.getQueryContainerPath(),
-                                        schemaName: 'sequenceanalysis',
-                                        queryName: 'sequence_readsets',
-                                        filterArray: [LABKEY.Filter.create('rowid', field.getValue())],
-                                        columns: 'rowid,name,platform,application,librarytype,sampletype,subjectid,sampledate,sampleid,comments,barcode5,barcode3,instrument_run_id,totalFiles',
-                                        scope: this,
-                                        failure: LDK.Utils.getErrorCallback(),
-                                        success: function(results){
-                                            Ext4.Msg.hide();
-                                            var msgs = [];
-                                            if (results && results.rows && results.rows.length){
-                                                Ext4.Array.forEach(results.rows, function(row) {
-                                                    if (row.totalFiles) {
-                                                        msgs.push('Readset ' + field.getValue() + 'has already been associated with files and cannot be re-used.  If you would like to reanalyze this readset, load the table of readsets and look for the \'Analyze Data\' button.');
-                                                        Ext4.Array.forEach(records, function(record) {
-                                                            record.data.readset = null;
-                                                        }, this);
-                                                    }
-
-                                                    if (useBarcodes && (!row.barcode3 && !row.barcode5)) {
-                                                        msgs.push('Readset ' + field.getValue() + ' does not have barcodes, but you have selected to use barcodes');
-                                                        Ext4.Array.forEach(records, function(record) {
-                                                            record.data.readset = null;
-                                                        }, this);
-
-                                                        return;
-                                                    }
-                                                    else if (!useBarcodes && (row.barcode3 || row.barcode5)) {
-                                                        msgs.push('Readset ' + field.getValue() + ' has barcodes, but you have not selected to use barcodes');
-                                                        Ext4.Array.forEach(records, function(record) {
-                                                            record.data.readset = null;
-                                                        }, this);
-
-                                                        return;
-                                                    }
-
-                                                    //update row based on saved readset.  avoid firing event
-                                                    Ext4.Array.forEach(records, function(record) {
-                                                        Ext4.apply(record.data, {
-                                                            readsetname: row.name,
-                                                            platform: row.platform,
-                                                            application: row.application,
-                                                            librarytype: row.librarytype,
-                                                            sampleid: row.sampleid,
-                                                            subjectid: row.subjectid,
-                                                            sampledate: row.sampledate,
-                                                            comments: row.comments,
-                                                            sampletype: row.sampletype,
-                                                            instrument_run_id: row.instrument_run_id,
-                                                            isValid: true
-                                                        });
-                                                    }, this);
-                                                }, this);
-                                            }
-                                            else {
-                                                Ext4.Msg.alert('Error', 'Unable to find readset with rowid: ' +  field.getValue());
-                                                Ext4.Array.forEach(records, function(record){
-                                                    record.data.readset = null;
-                                                }, this);
-                                            }
-
-                                            if (msgs.length){
-                                                msgs = Ext4.unique(msgs);
-                                                Ext4.Msg.alert('Error', 'The selected readset cannot be used:<br>' + msgs.join('<br>'));
-                                            }
-
-                                            this.down('#readsetGrid').getView().refresh();
-                                        }
-                                    });
-                                }
-                            }
-                        }
                     }
                 },{
                     text: 'Readset Name',
@@ -1508,6 +1656,31 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             containerPath: Laboratory.Utils.getQueryContainerPath(),
                             schemaName: 'sequenceanalysis',
                             queryName: 'sequence_applications',
+                            autoLoad: true
+                        })
+                    }
+                },{
+                    text: 'Chemistry',
+                    tdCls: 'ldk-wrap-text',
+                    name: 'chemistry',
+                    width: 180,
+                    mode: 'local',
+                    dataIndex: 'chemistry',
+                    renderer: SequenceAnalysis.panel.SequenceImportPanel.getRenderer('chemistry'),
+                    editor: {
+                        xtype: 'labkey-combo',
+                        allowBlank: false,
+                        forceSelection: true,
+                        displayField: 'chemistry',
+                        valueField: 'chemistry',
+                        plugins: ['ldk-usereditablecombo'],
+                        queryMode: 'local',
+                        editable: true,
+                        store: Ext4.create('LABKEY.ext4.data.Store', {
+                            type: 'labkey-store',
+                            containerPath: Laboratory.Utils.getQueryContainerPath(),
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'sequence_chemistries',
                             autoLoad: true
                         })
                     }
@@ -1893,13 +2066,10 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         Ext4.each(this.down('#readsetGrid').columns, function(col){
             if (col.dataIndex == 'barcode5' || col.dataIndex == 'barcode3'){
                 col.setVisible(v);
-                changed = true;
+                if (col.isVisible() != v)
+                    changed = true;
             }
         }, this);
-
-        if (changed){
-            this.updateColWidth();
-        }
 
         if (!v){
             this.readsetStore.each(function(r){
@@ -1907,5 +2077,14 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 r.set('barcode3', null);
             });
         }
+
+        if (changed){
+            this.updateColWidth();
+        }
+        else {
+            this.down('#readsetGrid').reconfigure();
+        }
+
+        this.readsetStore.validateAll();
     }
 });

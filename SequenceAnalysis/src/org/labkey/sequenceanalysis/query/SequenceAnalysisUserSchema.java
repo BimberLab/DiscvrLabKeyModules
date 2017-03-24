@@ -80,6 +80,10 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         }
         else if (SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES.equalsIgnoreCase(name))
             return new SharedDataTable(this, sourceTable, true).init();
+        else if (SequenceAnalysisSchema.TABLE_REF_AA_FEATURES.equalsIgnoreCase(name))
+            return new SharedDataTable(this, sourceTable, true).init();
+        else if (SequenceAnalysisSchema.TABLE_REF_NT_FEATURES.equalsIgnoreCase(name))
+            return new SharedDataTable(this, sourceTable, true).init();
         else if (SequenceAnalysisSchema.TABLE_SAVED_ANALYSES.equalsIgnoreCase(name))
             return new SharedDataTable(this, sourceTable, true).init();
         else if (SequenceAnalysisSchema.TABLE_REF_LIBRARIES.equalsIgnoreCase(name))

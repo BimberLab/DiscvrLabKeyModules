@@ -29,6 +29,7 @@
                 <include name="GenotypeAssays.module" />
                 <include name="elispot_assay.module" />
                 <include name="galaxyintegration.module" />
+                <include name="mGAP.module" />
             </fileset>
         </copy>
     </target>

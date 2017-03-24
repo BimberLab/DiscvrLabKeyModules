@@ -3097,6 +3097,7 @@ labModules/SequenceAnalysis/.project -text
 labModules/SequenceAnalysis/SequenceAnalysis-API.iml -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/AbstractSequenceDataProvider.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/GenomeTrigger.java -text
+labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/PedigreeRecord.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/RefNtSequenceModel.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/ReferenceLibraryHelper.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/SequenceAnalysisService.java -text
@@ -3166,6 +3167,7 @@ labModules/SequenceAnalysis/lib/biojava3-genome-3.0.7.jar -text
 labModules/SequenceAnalysis/lib/biojava3-phylo-3.0.7.jar -text
 labModules/SequenceAnalysis/lib/biojava3-ws-3.0.7.jar -text
 labModules/SequenceAnalysis/module.properties -text
+labModules/SequenceAnalysis/pipeline_code/gatk/MendelianViolationBySample.java -text
 labModules/SequenceAnalysis/pipeline_code/gatk/MendelianViolationCount.java -text
 labModules/SequenceAnalysis/pipeline_code/gatk/MinorAlleleFrequency.java -text
 labModules/SequenceAnalysis/pipeline_code/gatk/MultipleAllelesAtLoci.java -text
@@ -3429,6 +3431,9 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.307-12.308.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.308-12.309.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.309-12.310.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.310-12.311.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.311-12.312.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.312-12.313.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -3515,6 +3520,9 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.307-12.308.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.308-12.309.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.309-12.310.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.310-12.311.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.311-12.312.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.312-12.313.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -3603,6 +3611,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/docs/import7.jpg -tex
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/docs/import8.jpg -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/fastqc.css -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/GenomeFileSelectorField.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/IntervalField.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/ReadsetField.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/VariantFieldSelector.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/icons/dna_folder.png -text
@@ -3714,6 +3723,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/CreateRefer
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaFastqSplitter.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaImportJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaImportTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaReadHeader.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaReadsetCreationTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ImportFastaSequencesPipelineJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ImportFastaSequencesTask.java -text
@@ -3868,6 +3878,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/FastqFileType.j
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/FastqMerger.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/FastqToFastaConverter.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/FastqUtils.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/MultiFeatureIterator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/NucleotideSequenceFileType.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/ReferenceLibraryHelperImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/SequenceOutputFileType.java -text
@@ -4239,6 +4250,10 @@ onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreController.
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreManager.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsCoreModule.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/GeneticsTableCustomizer.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/analysis/CombineMethylationRatesHandler.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/analysis/GFF3Codec.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/analysis/GFF3Feature.java -text
+onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/analysis/GFF3FeatureImpl.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/analysis/MethylationRateComparison.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/analysis/MethylationRateComparisonHandler.java -text
 onprcEHRModules/GeneticsCore/src/org/labkey/GeneticsCore/button/ChangeReadsetStatusButton.java -text

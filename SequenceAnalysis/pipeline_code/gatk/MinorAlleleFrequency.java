@@ -25,7 +25,7 @@ import java.util.*;
 
 public class MinorAlleleFrequency extends ChromosomeCounts {
 
-    private Set<String> founderIds = new HashSet<String>();
+    private Set<String> founderIds = new HashSet<>();
     private boolean didUniquifiedSampleNameCheck = false;
 
     public static final String MAF_KEY = "MAF";
@@ -45,35 +45,37 @@ public class MinorAlleleFrequency extends ChromosomeCounts {
             didUniquifiedSampleNameCheck = true;
         }
 
-        Map<String, Object> chrCounts = VariantContextUtils.calculateChromosomeCounts(vc, new HashMap<String, Object>(), true, founderIds);
-        if (!chrCounts.containsKey(VCFConstants.ALLELE_FREQUENCY_KEY))
-        {
+        Map<String, Object> chrCounts = VariantContextUtils.calculateChromosomeCounts(vc, new HashMap<>(), true, founderIds);
+        if (!chrCounts.containsKey(VCFConstants.ALLELE_FREQUENCY_KEY)) {
             return null;
         }
 
+        //this will be the frequency of each ALT allele
         List<Double> afVals;
-        if (chrCounts.get(VCFConstants.ALLELE_FREQUENCY_KEY) instanceof List)
-        {
-            afVals = new ArrayList<Double>((List)chrCounts.get(VCFConstants.ALLELE_FREQUENCY_KEY));
+        if (chrCounts.get(VCFConstants.ALLELE_FREQUENCY_KEY) instanceof List) {
+            afVals = new ArrayList<>((List)chrCounts.get(VCFConstants.ALLELE_FREQUENCY_KEY));
         }
-        else if (chrCounts.get(VCFConstants.ALLELE_FREQUENCY_KEY) instanceof Double)
-        {
+        else if (chrCounts.get(VCFConstants.ALLELE_FREQUENCY_KEY) instanceof Double) {
             afVals = new ArrayList<>();
             afVals.add((Double)chrCounts.get(VCFConstants.ALLELE_FREQUENCY_KEY));
         }
-        else
-        {
+        else         {
             return null;
         }
 
-        Map<String, Object> attributeMap = new HashMap<>();
-        if (!afVals.isEmpty())
-        {
-            attributeMap.put(MAF_KEY, Collections.max(afVals));
+        double refAF = 1.0;
+        for (Double d : afVals) {
+            refAF = refAF - d;
         }
-        else
-        {
+        afVals.add(refAF);
+
+        Map<String, Object> attributeMap = new HashMap<>();
+        if (afVals.size() == 1) {
             attributeMap.put(MAF_KEY, 0.0);
+        }
+        else {
+            Collections.sort(afVals);
+            attributeMap.put(MAF_KEY, afVals.get(afVals.size() - 2));
         }
 
         return attributeMap;
@@ -83,6 +85,6 @@ public class MinorAlleleFrequency extends ChromosomeCounts {
     public List<String> getKeyNames() { return Arrays.asList(MAF_KEY); }
 
     public List<VCFInfoHeaderLine> getDescriptions() { return Arrays.asList(
-            new VCFInfoHeaderLine(MAF_KEY, 1, VCFHeaderLineType.Float, "The minor allele frequency, derived from the AF field."));
+            new VCFInfoHeaderLine(MAF_KEY, 1, VCFHeaderLineType.Float, "The minor allele frequency (frequency of second most common allele), derived from the AF field."));
     }
 }

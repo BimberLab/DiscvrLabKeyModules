@@ -146,7 +146,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutpu
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            ProcessVariantsHandler.initVariantProcessing(job, support);
+            ProcessVariantsHandler.initVariantProcessing(job, support, inputFiles, outputDir);
         }
 
         @Override

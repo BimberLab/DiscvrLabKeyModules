@@ -263,12 +263,17 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                     if (newRow.getReadsetId() == null)
                     {
                         getJob().getLogger().warn("no readsetId found after creating readset: " + r.getName());
-                        if (r.getReadsetId() != null)
+                        if (r.getReadsetId() != null && r.getReadsetId() > 0)
                         {
-                            getJob().getLogger().warn("using rowId from original model");
-                            newRow.setRowId(newRow.getReadsetId());
+                            getJob().getLogger().warn("using rowId from original model: " + r.getReadsetId());
+                            newRow.setRowId(r.getReadsetId());
                         }
                     }
+                }
+
+                if (newRow.getReadsetId() == null || newRow.getReadsetId() == 0)
+                {
+                    throw new PipelineJobException("Readset Id not found");
                 }
 
                 //create ReadData

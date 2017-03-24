@@ -36,6 +36,8 @@ public interface Readset extends Serializable
 
     public String getApplication();
 
+    public String getChemistry();
+
     public String getSampleType();
 
     public String getLibraryType();
