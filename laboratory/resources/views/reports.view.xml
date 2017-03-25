@@ -1,6 +1,6 @@
 <view xmlns="http://labkey.org/data/xml/view">
     <dependencies>
         <dependency path="laboratory.context"/>
-        <dependency path="ldk/TabbedReportPanel.js"/>
+        <dependency path="ldk/panel/TabbedReportPanel.js"/>
     </dependencies>
 </view>
