@@ -69,7 +69,7 @@ public class SequencePipelineSettings
 
         if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
-            AppProps.Interface appProps = AppProps.getInstance();
+            AppProps appProps = AppProps.getInstance();
             if (appProps != null)
                 _params.put("serverBaseUrl", appProps.getBaseServerUrl());
         }
