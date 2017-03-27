@@ -480,6 +480,7 @@ if [[ ! -e ${LKTOOLS_DIR}/bismark || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf bismark_*
+    rm -Rf Bismark_*
     rm -Rf $LKTOOLS_DIR/bismark
     rm -Rf $LKTOOLS_DIR/bismark2bedGraph
     rm -Rf $LKTOOLS_DIR/bismark2report
@@ -488,12 +489,12 @@ then
     rm -Rf $LKTOOLS_DIR/coverage2cytosine
     rm -Rf $LKTOOLS_DIR/deduplicate_bismark
 
-    wget $WGET_OPTS http://www.bioinformatics.babraham.ac.uk/projects/bismark/bismark_v0.16.3.tar.gz
-    gunzip bismark_v0.16.3.tar.gz
-    tar -xf bismark_v0.16.3.tar
+    wget $WGET_OPTS https://github.com/FelixKrueger/Bismark/archive/0.17.0.tar.gz
+    gunzip 0.17.0.tar.gz
+    tar -xf 0.17.0.tar
     echo "Compressing TAR"
-    gzip bismark_v0.16.3.tar
-    cd bismark_v0.16.3
+    gzip 0.17.0.tar
+    cd Bismark-0.17.0
 
     install ./bismark $LKTOOLS_DIR/bismark
     install ./bismark2bedGraph $LKTOOLS_DIR/bismark2bedGraph
