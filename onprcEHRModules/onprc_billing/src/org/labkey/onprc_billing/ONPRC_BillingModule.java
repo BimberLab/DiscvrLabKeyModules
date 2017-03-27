@@ -101,7 +101,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
     @Override
     protected void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
-        AuditLogService.registerAuditType(new BillingAuditProvider());
+        AuditLogService.get().registerAuditType(new BillingAuditProvider());
 
         PipelineService.get().registerPipelineProvider(new BillingPipelineProvider(this));
 

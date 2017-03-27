@@ -76,7 +76,7 @@ public class SLAModule extends ExtendedSimpleModule
     protected void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
         ETL.init(1);
-        AuditLogService.registerAuditType(new ETLAuditProvider());
+        AuditLogService.get().registerAuditType(new ETLAuditProvider());
 
         DetailsURL details = DetailsURL.fromString("/sla/etlAdmin.view", ContainerManager.getSharedContainer());
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "sla etl admin", details.getActionURL());
