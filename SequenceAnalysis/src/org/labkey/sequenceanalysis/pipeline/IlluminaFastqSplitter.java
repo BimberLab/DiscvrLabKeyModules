@@ -231,7 +231,21 @@ public class IlluminaFastqSplitter<SampleIdType>
         }
         else
         {
-            String name = (_outputPrefix == null ? "Reads" : _outputPrefix) + "-R" + pairNumber + "-" + (sampleId == "S0" ? "Undetermined" : sampleId) + ".fastq" + (_outputGzip ? ".gz" : "");
+            String suffix;
+            if (new Integer(0).equals(sampleId))
+            {
+                suffix = "Control";
+            }
+            else if (sampleId == null || new Integer(-1).equals(sampleId))
+            {
+                suffix = "Undetermined";
+            }
+            else
+            {
+                suffix = String.valueOf(sampleId);
+            }
+
+            String name = (_outputPrefix == null ? "Reads" : _outputPrefix) + "-R" + pairNumber + "-" + suffix + ".fastq" + (_outputGzip ? ".gz" : "");
             File newFile = new File(targetDir, name);
             newFile.createNewFile();
 

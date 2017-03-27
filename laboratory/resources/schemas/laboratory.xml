@@ -368,9 +368,6 @@
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
             </item>
-            <item text="Reports">
-                <originalText>Reports</originalText>
-            </item>
             <item text="Import Data">
                 <originalText>Import Bulk Data</originalText>
                 <onClick>Laboratory.buttonHandlers.importDataHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'laboratory', 'samples', 'rowid')</onClick>
@@ -1332,9 +1329,6 @@
             </item>
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
-            </item>
-            <item text="Reports">
-                <originalText>Reports</originalText>
             </item>
             <item text="Add Tag" requiresSelection="true">
                 <onClick>Ext4.create('Laboratory.window.WorkbookTagsWindow', {

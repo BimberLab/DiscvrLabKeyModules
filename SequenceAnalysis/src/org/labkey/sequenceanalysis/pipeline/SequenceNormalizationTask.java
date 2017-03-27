@@ -633,8 +633,11 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
             Set<File> finalOutputs = ReadsetInitTask.handleInputs(getPipelineJob(), getHelper().getFileManager().getInputfileTreatment(), actions, _finalOutputs, null);
             FileType gz = new FileType("gz");
+            int idx = 0;
             for (File f : finalOutputs)
             {
+                idx ++;
+
                 if (!gz.isType(f))
                 {
                     //this should no longer ever happen
@@ -648,7 +651,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     fqAction.setStartTime(new Date());
                     _taskHelper.getFileManager().addInput(fqAction, "FASTQ File", f);
 
-                    getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING FASTQC");
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING FASTQC (" + idx + " of " + finalOutputs.size() + ")");
                     getJob().getLogger().info("running FastQC for file: " + f);
                     FastqcRunner runner = new FastqcRunner(getJob().getLogger());
                     Integer threads = SequenceTaskHelper.getMaxThreads(getJob());

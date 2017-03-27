@@ -68,6 +68,7 @@ import org.labkey.api.exceptions.OptimisticConflictException;
 import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
 import org.labkey.api.laboratory.NavItem;
@@ -75,6 +76,7 @@ import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleHtmlView;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
@@ -171,6 +173,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -590,12 +593,27 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
+    public static class DeleteForm extends QueryForm
+    {
+        private Integer[] _jobIds;
+
+        public Integer[] getJobIds()
+        {
+            return _jobIds;
+        }
+
+        public void setJobIds(Integer[] jobIds)
+        {
+            _jobIds = jobIds;
+        }
+    }
+
     @RequiresPermission(DeletePermission.class)
-    public class DeleteRecordsAction extends ConfirmAction<QueryForm>
+    public class DeleteRecordsAction extends ConfirmAction<DeleteForm>
     {
         private TableInfo _table;
 
-        public void validateCommand(QueryForm form, Errors errors)
+        public void validateCommand(DeleteForm form, Errors errors)
         {
             if (form.getSchema() == null)
             {
@@ -635,72 +653,164 @@ public class SequenceAnalysisController extends SpringActionController
             }
         }
 
+        private void findAnalysesToDelete(List<Integer> keys, StringBuilder msg, Set<Integer> outputFileIds, Set<Integer> expRunsToDelete)
+        {
+            appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id", "rowid");
+            outputFileIds.addAll(appendTotal(msg, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Output Files", keys, "analysis_id", "rowid"));
+            appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id", "rowid");
+            appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "analysis_id", "rowid");
+            appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "analysis_id", "rowid");
+            appendTotal(msg, SequenceAnalysisSchema.TABLE_QUALITY_METRICS, "Quality Metrics", keys, "analysis_id", "rowid");
+
+            expRunsToDelete.addAll(getExpRunIds(SequenceAnalysisSchema.TABLE_ANALYSES, keys, "rowid", "runId"));
+        }
+
         @Override
-        public ModelAndView getConfirmView(QueryForm form, BindException errors) throws Exception
+        public ModelAndView getConfirmView(DeleteForm form, BindException errors) throws Exception
         {
             Set<String> ids = DataRegionSelection.getSelected(form.getViewContext(), true);
-            List<String> keys = new ArrayList<>(ids);
+            List<Integer> keys = new ArrayList<>();
+            for (String key : ids)
+            {
+                keys.add(ConvertHelper.convert(key, Integer.class));
+            }
 
-            StringBuilder msg = new StringBuilder("Are you sure you want to delete the ");
+            Set<Integer> expRunsToDelete = new HashSet<>();
+            Set<Integer> readsetIds = new HashSet<>();
+            Set<Integer> readDataIds = new HashSet<>();
+            Set<Integer> analysisIds = new HashSet<>();
+            Set<Integer> outputFileIds = new HashSet<>();
+
+            StringBuilder msg = new StringBuilder("Are you sure you want to delete the following " + keys.size() + " ");
             if (SequenceAnalysisSchema.TABLE_ANALYSES.equals(_table.getName()))
             {
                 msg.append("analyses " + StringUtils.join(keys, ", ") + "?  This will delete the analyses, plus all associated data.  This includes:<br>");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Output Files", keys, "analysis_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "analysis_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "analysis_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_QUALITY_METRICS, "Quality Metrics", keys, "analysis_id");
+                analysisIds.addAll(keys);
+                findAnalysesToDelete(keys, msg, outputFileIds, expRunsToDelete);
             }
             else if (SequenceAnalysisSchema.TABLE_READSETS.equals(_table.getName()))
             {
                 msg.append("readsets " + StringUtils.join(keys, ", ") + "?  This will delete the readsets, plus all associated data.  This includes:<br>");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_READ_DATA, "Sequence File Records", keys, "readset");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ANALYSES, "Analyses", keys, "readset");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Output Files", keys, "readset");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id/readset");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id/readset");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "analysis_id/readset");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "analysis_id/readset");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_QUALITY_METRICS, "Quality Metrics", keys, "readset");
-                //TODO
-                //List<PipelineJob> jobs = SequenceAnalysisManager.get().getPipelineJobsForReadsets(keys);
+                readsetIds.addAll(keys);
+                readDataIds.addAll(appendTotal(msg, SequenceAnalysisSchema.TABLE_READ_DATA, "Sequence File Records", keys, "readset", "rowid"));
+                analysisIds.addAll(appendTotal(msg, SequenceAnalysisSchema.TABLE_ANALYSES, "Analyses", keys, "readset", "rowid"));
+                outputFileIds.addAll(appendTotal(msg, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Output Files", keys, "readset", "rowid"));
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id/readset", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "analysis_id/readset", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "analysis_id/readset", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "analysis_id/readset", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_QUALITY_METRICS, "Quality Metrics", keys, "readset", "rowid");
+
+                expRunsToDelete.addAll(getExpRunIds(SequenceAnalysisSchema.TABLE_READSETS, keys, "rowid", "runId"));
             }
             else if (SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES.equals(_table.getName()))
             {
                 msg.append("NT reference sequences " + StringUtils.join(keys, ", ") + "?  This will delete the reference sequences, plus all associated data.  This includes:<br>");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES, "Reference AA Sequences", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_FEATURES, "NT Features", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION, "Alignment Records", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS, "Reference Library Member Records", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "ref_nt_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "ref_nt_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES, "Reference AA Sequences", keys, "ref_nt_id", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_FEATURES, "NT Features", keys, "ref_nt_id", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "ref_nt_id", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION, "Alignment Records", keys, "ref_nt_id", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS, "Reference Library Member Records", keys, "ref_nt_id", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, "NT SNP Records", keys, "ref_nt_id", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "ref_nt_id", "rowid");
             }
             else if (SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES.equals(_table.getName()))
             {
                 msg.append("AA reference sequences " + StringUtils.join(keys, ", ") + "?  This will delete the reference sequences, plus all associated data.  This includes:<br>");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_FEATURES, "AA features", keys, "ref_aa_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_DRUG_RESISTANCE, "drug resistance mutations", keys, "ref_aa_id");
-                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "ref_aa_id");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_FEATURES, "AA features", keys, "ref_aa_id", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_DRUG_RESISTANCE, "drug resistance mutations", keys, "ref_aa_id", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "ref_aa_id", "rowid");
             }
-            //else if (SequenceAnalysisSchema.TABLE_OUTPUTFILES.equals(_table.getName()))
-            //{
+            else if (SequenceAnalysisSchema.TABLE_OUTPUTFILES.equals(_table.getName()))
+            {
+                msg.append("output files " + StringUtils.join(keys, ", ") + "?<br>");
+                outputFileIds.addAll(keys);
 
-            //}
+                //we will delete these expDatas, so find any analysis records matching this file
+                List<Integer> additionalAnalysisIds = SequenceAnalysisManager.get().getAnalysesAssociatedWithOutputFiles(keys);
+                analysisIds.addAll(additionalAnalysisIds);
+
+                if (!additionalAnalysisIds.isEmpty())
+                {
+                    msg.append("<br><br>");
+                    msg.append("The following " + additionalAnalysisIds.size() + " analyses will also be deleted, along with these associated records/files:<br>");
+                    findAnalysesToDelete(additionalAnalysisIds, msg, outputFileIds, expRunsToDelete);
+                }
+
+                //also pipeline jobs
+                expRunsToDelete.addAll(getExpRunIds(SequenceAnalysisSchema.TABLE_OUTPUTFILES, keys, "rowid", "runId"));
+                expRunsToDelete.addAll(getExpRunIds(SequenceAnalysisSchema.TABLE_ANALYSES, additionalAnalysisIds, "rowid", "runId"));
+            }
+
+            if (!expRunsToDelete.isEmpty())
+            {
+                getAdditionalRuns(readsetIds, readDataIds, analysisIds, outputFileIds, expRunsToDelete);
+            }
+
+            if (!expRunsToDelete.isEmpty())
+            {
+                msg.append("<br><br>");
+                msg.append("The following pipeline jobs appear to be unused, and will be deleted.  Be aware, this will delete all files as well:<br><br>");
+                for (Integer runId : expRunsToDelete)
+                {
+                    ExpRun run = ExperimentService.get().getExpRun(runId);
+                    if (run != null)
+                    {
+                        msg.append("Pipeline run: " + run.getName() + "<br>");
+                        if (run.getJobId() != null)
+                        {
+                            PipelineStatusFile sf = PipelineService.get().getStatusFile(run.getJobId());
+                            if (sf != null)
+                                msg.append("Folder: " + new File(sf.getFilePath()).getParentFile().getPath() + "<br><input type='hidden' name='jobIds' value='" + sf.getRowId() + "'/>");
+                        }
+                        msg.append("<br>");
+                    }
+                }
+            }
 
             return new HtmlView(msg.toString());
         }
 
-        private void appendTotal(StringBuilder sb, String tableName, String noun, List<String> keys, String filterCol)
+        private void getAdditionalRuns(Set<Integer> readsetIds, Set<Integer> readDataIds, Set<Integer> analysisIds, Set<Integer> outputFileIds, Set<Integer> expRunsToDelete)
         {
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString(filterCol), StringUtils.join(keys, ";"), CompareType.IN);
-            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(tableName), filter, null);
-            long total = ts.getRowCount();
-            sb.append("<br>" + total + " " + noun);
+            Set<Integer> runIdsStillInUse = new HashSet<>();
+
+            //work backwards, adding additional pipeline jobs that will become orphans:
+            runIdsStillInUse.addAll(getRunIdsInUse(SequenceAnalysisSchema.TABLE_READSETS, expRunsToDelete, readsetIds));
+            runIdsStillInUse.addAll(getRunIdsInUse(SequenceAnalysisSchema.TABLE_READ_DATA, expRunsToDelete, readDataIds));
+            runIdsStillInUse.addAll(getRunIdsInUse(SequenceAnalysisSchema.TABLE_ANALYSES, expRunsToDelete, analysisIds));
+            runIdsStillInUse.addAll(getRunIdsInUse(SequenceAnalysisSchema.TABLE_OUTPUTFILES, expRunsToDelete, outputFileIds));
+
+            expRunsToDelete.removeAll(runIdsStillInUse);
         }
 
-        public boolean handlePost(QueryForm form, BindException errors) throws Exception
+        private List<Integer> getRunIdsInUse(String tableName, Collection<Integer> expRunsToDelete, Collection<Integer> pks)
+        {
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("runId"), expRunsToDelete, CompareType.IN);
+            filter.addCondition(FieldKey.fromString("rowid"), pks, CompareType.NOT_IN);
+
+            return new TableSelector(SequenceAnalysisSchema.getTable(tableName), PageFlowUtil.set("runId"), filter, null).getArrayList(Integer.class);
+        }
+
+        private Set<Integer> getExpRunIds(String tableName, Collection<Integer> keys, String pkColName, String runIdCol)
+        {
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString(pkColName), StringUtils.join(keys, ";"), CompareType.IN);
+            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(tableName), PageFlowUtil.set(runIdCol), filter, null);
+
+            return new HashSet<>(ts.getArrayList(Integer.class));
+        }
+
+        private Set<Integer> appendTotal(StringBuilder sb, String tableName, String noun, List<Integer> keys, String filterCol, String pkCol)
+        {
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString(filterCol), StringUtils.join(keys, ";"), CompareType.IN);
+            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(tableName), PageFlowUtil.set(pkCol), filter, null);
+            Set<Integer> total = new HashSet<>(ts.getArrayList(Integer.class));
+            sb.append("<br>" + total.size() + " " + noun);
+
+            return total;
+        }
+
+        public boolean handlePost(DeleteForm form, BindException errors) throws Exception
         {
             try
             {
@@ -727,20 +837,28 @@ public class SequenceAnalysisController extends SpringActionController
                 {
                     SequenceAnalysisManager.get().deleteRefAaSequence(rowIds);
                 }
+                else if (SequenceAnalysisSchema.TABLE_OUTPUTFILES.equals(_table.getName()))
+                {
+                    SequenceAnalysisManager.get().deleteOutputFiles(rowIds);
+                }
+
+                if (form.getJobIds() != null)
+                {
+                    PipelineService.get().deleteStatusFile(getContainer(), getUser(), true, Arrays.asList(form.getJobIds()));
+                }
             }
             catch (OptimisticConflictException e)
             {
                 //if someone else already deleted this, no need to throw exception
+                _log.error(e.getMessage(), e);
             }
             return true;
         }
 
-        public URLHelper getSuccessURL(QueryForm form)
+        public URLHelper getSuccessURL(DeleteForm form)
         {
             URLHelper url = form.getReturnURLHelper();
-            return url != null ? url :
-                    _table.getGridURL(getContainer()) != null ? _table.getGridURL(getContainer()) :
-                            getContainer().getStartURL(getUser());
+            return url != null ? url : _table.getGridURL(getContainer()) != null ? _table.getGridURL(getContainer()) : getContainer().getStartURL(getUser());
         }
     }
 
@@ -3275,8 +3393,8 @@ public class SequenceAnalysisController extends SpringActionController
 
                         try (PrintWriter ps = PrintWriters.getPrintWriter(new PrintStream(zOut, true)))
                         {
-                            ps.println("Failed to complete export of the file: ");
-                            e.printStackTrace(ps);
+                            ps.println("Failed to complete export of the file: " + f.getPath());
+                            _log.error(e.getMessage(), e);
                         }
                         zOut.closeEntry();
                     }
@@ -3773,57 +3891,6 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-
-//    @RequiresPermission(InsertPermission.class)
-//    @CSRF
-//    public class RestrictionSiteAction extends ApiAction<Object>
-//    {
-//        public ApiResponse execute(Object form, BindException errors) throws Exception
-//        {
-//            Map<String, Object> ret = new HashMap<>();
-//
-//            File refSeq = new File("/labkey_data/18_MacaM.fasta");
-//            try (FastaDataLoader loader = new FastaDataLoader(refSeq, false))
-//            {
-//                loader.setCharacterFilter(new FastaLoader.CharacterFilter()
-//                {
-//                    @Override
-//                    public boolean accept(char c)
-//                    {
-//                        return ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'));
-//                    }
-//                });
-//
-//                File pstOutput = new File("/labkey_data/PstI-sites-150.bed");
-//                File bglOutput = new File("/labkey_data/BglII-sites-150.bed");
-//                try (CSVWriter pstWriter = new CSVWriter(new FileWriter(pstOutput), '\t', CSVWriter.NO_QUOTE_CHARACTER);CSVWriter bglWriter = new CSVWriter(new FileWriter(bglOutput), '\t', CSVWriter.NO_QUOTE_CHARACTER))
-//                {
-//                    try (CloseableIterator<Map<String, Object>> i = loader.iterator())
-//                    {
-//                        while (i.hasNext())
-//                        {
-//                            Map<String, Object> fastaRecord = i.next();
-//                            String name = (String) fastaRecord.get("header");
-//
-//                            Matcher m = Pattern.compile("CTGCAG", Pattern.CASE_INSENSITIVE).matcher((String) fastaRecord.get("sequence"));
-//                            while (m.find())
-//                            {
-//                                bglWriter.writeNext(new String[]{name, String.valueOf(Math.max(0, m.start() - 150)), String.valueOf(m.start() + 151)});
-//                            }
-//
-//                            Matcher m2 = Pattern.compile("AGATCT", Pattern.CASE_INSENSITIVE).matcher((String) fastaRecord.get("sequence"));
-//                            while (m2.find())
-//                            {
-//                                pstWriter.writeNext(new String[]{name, String.valueOf(Math.max(0, m2.start() - 150)), String.valueOf(m2.start() + 151)});
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//
-//            return new ApiSimpleResponse(ret);
-//        }
-//    }
 
     @RequiresPermission(InsertPermission.class)
     @CSRF

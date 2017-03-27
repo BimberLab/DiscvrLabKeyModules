@@ -330,9 +330,6 @@
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
             </item>
-            <item text="Reports">
-                <originalText>Reports</originalText>
-            </item>
             <item text="Delete" permission="ADMIN" requiresSelection="true">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
             </item>
@@ -489,9 +486,6 @@
             <includeScript>sequenceanalysis/sequenceAnalysis</includeScript>
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
-            </item>
-            <item text="Reports">
-                <originalText>Reports</originalText>
             </item>
             <item text="Delete" permission="DELETE" requiresSelection="true">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
@@ -885,9 +879,6 @@
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
             </item>
-            <item text="Reports">
-                <originalText>Reports</originalText>
-            </item>
             <!--<item hidden="true">-->
                 <!--<originalText>Delete</originalText>-->
             <!--</item>-->
@@ -1041,6 +1032,7 @@
                 <nullable>true</nullable>
                 <columnTitle>Sample Date</columnTitle>
                 <conceptURI>http://cpas.labkey.com/laboratory#sampleDate</conceptURI>
+                <formatString>Date</formatString>
             </column>
             <column columnName="barcode5">
                 <columnTitle>5-Barcode</columnTitle>
@@ -2380,7 +2372,7 @@
         <tableUrl></tableUrl>
         <insertUrl></insertUrl>
         <importUrl></importUrl>
-        <!--<deleteUrl></deleteUrl>-->
+        <deleteUrl></deleteUrl>
         <tableTitle>Outputs</tableTitle>
         <columns>
             <column columnName="rowid">
@@ -2495,9 +2487,9 @@
             <item text="Import Files" insertPosition="beginning">
                 <onClick>SequenceAnalysis.window.ImportOutputFileWindow.buttonHandler(dataRegionName);</onClick>
             </item>
-            <!--<item text="Delete" permission="DELETE" requiresSelection="true" insertBefore="Export">-->
-                <!--<onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>-->
-            <!--</item>-->
+            <item text="Delete" permission="DELETE" requiresSelection="true" insertBefore="Export">
+                <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
+            </item>
             <item text="View Quality Metrics" insertPosition="end">
                 <onClick>SequenceAnalysis.Buttons.viewQualityMetricsForOutputFiles(dataRegionName, 'analysis_id');</onClick>
             </item>

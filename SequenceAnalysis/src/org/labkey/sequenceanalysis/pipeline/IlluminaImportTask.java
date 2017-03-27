@@ -50,6 +50,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -175,7 +176,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
             //update the readsets
             Map<String, Object> row;
-            for (Object key : sampleMap.values())
+            for (Object key : new HashSet<>(sampleMap.values()))
             {
                 Integer readsetId = (Integer) key;
 
@@ -344,17 +345,16 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 if ("Sample_ID".equalsIgnoreCase(nextLine[0]))
                     continue;
 
-                Integer readsetId;
                 try
                 {
                     //parse out barcodes
                     String indexes = nextLine[5] + "-" + nextLine[7];
 
                     sampleIdx++;
-                    readsetId = null;
+                    Integer readsetId;
                     try
                     {
-                        Integer.parseInt(nextLine[0]);
+                        readsetId = Integer.parseInt(nextLine[0]);
                     }
                     catch (NumberFormatException e)
                     {
@@ -389,6 +389,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
     //not very efficient, but we only expect a handful of samples per run
     private boolean validateReadsetId(Integer id) throws PipelineJobException, PipelineValidationException
     {
+        getJob().getLogger().debug("attempting to resolve readset by Id: " + id);
         if (id == null)
         {
             return false;

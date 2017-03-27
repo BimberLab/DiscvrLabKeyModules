@@ -163,6 +163,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setName(r.getName());
                 row.setComments(r.getComments());
                 row.setApplication(r.getApplication());
+                row.setChemistry(r.getChemistry());
                 row.setInstrumentRunId(r.getInstrumentRunId());
                 row.setBarcode3(r.getBarcode3());
                 row.setBarcode5(r.getBarcode5());
@@ -256,13 +257,12 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 }
                 else
                 {
-                    Integer[] pks = {r.getReadsetId()};
-                    newRow = Table.update(getJob().getUser(), readsetTable, row, pks);
+                    newRow = Table.update(getJob().getUser(), readsetTable, row, r.getReadsetId());
                     newReadsets.add(newRow);
                     getJob().getLogger().info("Updated readset: " + newRow.getReadsetId());
                     if (newRow.getReadsetId() == null)
                     {
-                        getJob().getLogger().warn("no readsetId found after creating readset: " + r.getName());
+                        getJob().getLogger().warn("no readsetId found after updating readset: " + r.getName());
                         if (r.getReadsetId() != null && r.getReadsetId() > 0)
                         {
                             getJob().getLogger().warn("using rowId from original model: " + r.getReadsetId());

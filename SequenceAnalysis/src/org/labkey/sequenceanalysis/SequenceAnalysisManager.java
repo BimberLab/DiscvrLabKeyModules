@@ -58,6 +58,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileUtil;
@@ -181,8 +182,6 @@ public class SequenceAnalysisManager
             {
                 String subselect = " analysis_id IN (select rowid from " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " WHERE readset = ?)";
 
-                //TODO: find any jobs that will no longer be associated with data
-
                 //delete all analyses and associated records
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION + " WHERE " + subselect, rowId));
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY + " WHERE " + subselect, rowId));
@@ -225,6 +224,38 @@ public class SequenceAnalysisManager
             }
             transaction.commit();
         }
+    }
+
+    public void deleteOutputFiles(List<Integer> rowIds) throws SQLException
+    {
+        SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
+
+        try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
+        {
+            List<SequenceOutputFile> files = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), new SimpleFilter(FieldKey.fromString("rowid"), rowIds, CompareType.IN), null).getArrayList(SequenceOutputFile.class);
+            for (SequenceOutputFile so : files)
+            {
+                ExpData d = so.getExpData();
+                if (d != null && d.getFile() != null && d.getFile().exists())
+                {
+                    d.getFile().delete();
+                }
+            }
+
+            List<Integer> additionalAnalysisIds = SequenceAnalysisManager.get().getAnalysesAssociatedWithOutputFiles(rowIds);
+
+            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " WHERE rowid IN (" + StringUtils.join(rowIds, ",") + ")"));
+
+            if (!additionalAnalysisIds.isEmpty())
+                SequenceAnalysisManager.get().deleteAnalysis(additionalAnalysisIds);
+
+            transaction.commit();
+        }
+    }
+
+    public List<Integer> getAnalysesAssociatedWithOutputFiles(List<Integer> keys)
+    {
+        return new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), new SQLFragment("SELECT distinct a.rowid FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " o JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a ON (o.dataId = a.alignmentFile) WHERE o.rowid IN (" + StringUtils.join(keys, ",") +")")).getArrayList(Integer.class);
     }
 
     public void deleteRefNtSequence(List<Integer> rowIds) throws SQLException
@@ -626,20 +657,6 @@ public class SequenceAnalysisManager
         }
 
         return new File(pipelineDir, ".referenceLibraries");
-    }
-
-    public List<PipelineJob> getPipelineJobsForReadsets(Collection<String> readsetIds)
-    {
-        //first find any runs referenced by these readsets
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), readsetIds, CompareType.IN);
-        List<Integer> runIds = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_READSETS), PageFlowUtil.set("runId"), filter, null).getArrayList(Integer.class);
-
-        //then analyses also using those
-
-        //then outputfiles using either those readsets or analyses
-
-
-        return null;
     }
 
     private static final Set<String> pipelineDirs = PageFlowUtil.set(ReadsetImportJob.FOLDER_NAME, ReadsetImportJob.FOLDER_NAME + "Pipeline", AlignmentAnalysisJob.FOLDER_NAME, AlignmentAnalysisJob.FOLDER_NAME + "Pipeline", "sequenceOutputs", SequenceOutputHandlerJob.FOLDER_NAME + "Pipeline", "illuminaImport", "analyzeAlignment");

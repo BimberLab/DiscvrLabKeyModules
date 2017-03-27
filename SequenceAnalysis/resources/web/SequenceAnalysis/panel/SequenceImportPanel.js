@@ -720,6 +720,11 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 return false;
             }
 
+            var sampleDate = r.get('sampledate');
+            if (sampleDate){
+                sampleDate = Ext4.Date.format(sampleDate, 'Y-m-d');
+            }
+
             values['readset_' + sampleIdx] = {
                 barcode5: r.get('barcode5'),
                 barcode3: r.get('barcode3'),
@@ -731,7 +736,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 librarytype: r.get('librarytype'),
                 sampletype: r.get('sampletype'),
                 subjectid: r.get('subjectid'),
-                sampledate: r.get('sampledate'),
+                sampledate: sampleDate,
                 comments: r.get('comments'),
                 sampleid: r.get('sampleid'),
                 instrument_run_id: r.get('instrument_run_id'),
@@ -940,21 +945,20 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         xtype: 'textfield',
                         listeners: {
                             scope: this,
-                            buffer: 200,
-                            change: function (field, val, oldValue) {
-                                field.updateReadset.apply(this, arguments);
+                            beforerender: function (field) {
+                                var editor = field.up('editor');
+                                LDK.Assert.assertNotEmpty('Unable to find editor for fileGroupField', editor);
+                                if (editor){
+                                    editor.on('complete', function (editor, value, startValue) {
+                                        if (value !== startValue) {
+                                            editor.field.updateReadset.apply(editor.field, [editor.field, value, startValue]);
+                                        }
+                                    }, this);
+                                }
                             }
                         },
 
                         updateReadset: function(field, val, oldValue){
-                            if (field.hasFocus) {
-                                field.on('blur', function(){
-                                    field.updateReadset.apply(field, [field, field.getValue(), oldValue]);
-                                }, field, {single: true});
-
-                                return;
-                            }
-
                             var othersExist = false;
                             var record = field.up('grid').getPlugin('cellediting').activeRecord;
                             var readDataStore = field.up('grid').store;
