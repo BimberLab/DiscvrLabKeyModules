@@ -284,7 +284,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
                     }
 
                     Integer cpus = null;
-                    if (getConfig().getRequestCpus() != null)
+                    if (maxCpus != null || getConfig().getRequestCpus() != null)
                     {
                         //NOTE: it is possible this could exceed the max allowable for this cluster.
                         //consider making defaultCpus and maxCpus params
@@ -293,7 +293,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
                     }
 
                     Integer ram = null;
-                    if (getConfig().getRequestMemory() != null)
+                    if (maxRam != null || getConfig().getRequestMemory() != null)
                     {
                         //NOTE: see comment above for CPUs
                         ram = maxRam != null ? maxRam : getConfig().getRequestMemory();

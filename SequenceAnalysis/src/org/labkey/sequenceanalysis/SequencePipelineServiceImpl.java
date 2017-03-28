@@ -227,8 +227,11 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         String maxRam = StringUtils.trimToNull(System.getenv("SEQUENCEANALYSIS_MAX_RAM"));
         if (maxRam != null)
         {
-            params.add("-Xmx" + maxRam + "g");
-            params.add("-Xms" + maxRam + "g");
+            if (!"-1".equals(maxRam))
+            {
+                params.add("-Xmx" + maxRam + "g");
+                params.add("-Xms" + maxRam + "g");
+            }
         }
         else
         {
