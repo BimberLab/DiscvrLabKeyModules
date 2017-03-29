@@ -246,10 +246,10 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                                 }
                             }
 
-                            for (ColumnInfo ci : birthCols)
+                            if (!birthCols.isEmpty())
                             {
                                 ColumnInfo deathCol = deathCols.isEmpty() ? null : deathCols.iterator().next();
-                                addAgeCols(ti, ci, deathCol);
+                                addAgeCols(ti, birthCols.iterator().next(), deathCol);
                             }
 
                             return ti;

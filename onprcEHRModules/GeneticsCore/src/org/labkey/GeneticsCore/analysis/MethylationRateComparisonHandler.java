@@ -245,10 +245,15 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
                             continue;
                         }
 
+                        if (StringUtils.trimToNull(line) == null)
+                        {
+                            continue;
+                        }
+
                         String[] tokens = line.split("\t");
                         if (tokens.length < 9)
                         {
-                            throw new PipelineJobException("Invalid entry on line: " + lineNo);
+                            throw new PipelineJobException("Fewer than 9 fields found on line: " + lineNo + ", line was: [" + line + "]");
                         }
 
                         String chr = tokens[0];
