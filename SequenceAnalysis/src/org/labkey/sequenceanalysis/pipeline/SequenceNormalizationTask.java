@@ -16,6 +16,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.util.FastqQualityFormat;
@@ -40,6 +41,7 @@ import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.FileGroup;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
@@ -66,6 +68,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
@@ -677,6 +680,18 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
                     fqAction.setEndTime(new Date());
                     actions.add(fqAction);
+                }
+
+                //calculate/cache metrics to save time on server
+                getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING QUALITY METRICS (" + idx + " of " + finalOutputs.size() + ")");
+                Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(f, getJob().getLogger());
+                File cachedMetrics = new File(f.getPath() + ".metrics");
+                try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(cachedMetrics), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+                {
+                    for (String key : metricsMap.keySet())
+                    {
+                        writer.writeNext(new String[]{key, String.valueOf(metricsMap.get(key))});
+                    }
                 }
             }
 

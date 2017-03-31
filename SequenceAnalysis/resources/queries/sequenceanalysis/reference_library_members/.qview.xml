@@ -6,6 +6,8 @@
        <column name="stop" />
        <column name="type" />
        <column name="ref_nt_id/seqLength" />
+       <column name="ref_nt_id/genbank" />
+       <column name="ref_nt_id/refSeqId" />
        <column name="ref_nt_id/downloadSequence" />
    </columns>
    <sorts>

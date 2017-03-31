@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVWriter;
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -109,36 +110,50 @@ public class SequenceConcatTask extends PipelineJob.Task<SequenceConcatTask.Fact
         final StringBuilder sb = new StringBuilder();
         List<RefNtSequenceModel> seqs = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), new SimpleFilter(FieldKey.fromString("rowid"), sequenceIds, CompareType.IN), null).getArrayList(RefNtSequenceModel.class);
         int offset = 0;
-        Map<Integer, Pair<String, Integer>> offsetMap = new HashMap<>();
-        int i = 0;
-        for (RefNtSequenceModel nt : seqs)
+        File offsetFile = new File(outDir, "offsetTmp.txt");
+        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(offsetFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            i++;
-
-            if (i % 1000 == 0)
+            int i = 0;
+            for (RefNtSequenceModel nt : seqs)
             {
-                getJob().getLogger().info("processed " + i + " sequences");
+                i++;
+
+                if (i % 1000 == 0)
+                {
+                    getJob().getLogger().info("processed " + i + " sequences");
+                }
+
+                writer.writeNext(new String[]{String.valueOf(nt.getRowid()), String.valueOf(offset), nt.getName(), (nt.getGenbank() == null ? "" : nt.getGenbank()), (nt.getRefSeqId() == null ? "" : nt.getRefSeqId())});
+
+                String seq = nt.getSequence();
+                if (seq == null)
+                {
+                    throw new IllegalArgumentException("Sequence not found for: " + nt.getRowid() + ", " + nt.getName());
+                }
+
+                offset += seq.length();
+                sb.append(seq);
+                sb.append(Ns);
+                offset += Ns.length();
+
+                nt.clearCachedSequence();
             }
-
-            offsetMap.put(nt.getRowid(), Pair.of(nt.getName(), offset));
-
-            String seq = nt.getSequence();
-            if (seq == null)
-            {
-                throw new IllegalArgumentException("Sequence not found for: " +  nt.getRowid() + ", " + nt.getName());
-            }
-
-            offset += seq.length();
-            sb.append(seq);
-            sb.append(Ns);
-            offset += Ns.length();
-
-            nt.clearCachedSequence();
         }
 
         RefNtSequenceModel m = new RefNtSequenceModel();
         m.setName(name);
-        m.setComments(description);
+        StringBuilder d = new StringBuilder();
+        if (description != null)
+        {
+            d.append(description);
+        }
+        if (d.length() > 0)
+        {
+            d.append(", ");
+        }
+        d.append("total sequences: " + seqs.size());
+
+        m.setComments(d.toString());
         m.setContainer(c.getId());
         m.setCreated(new Date());
         m.setCreatedby(u.getUserId());
@@ -155,16 +170,7 @@ public class SequenceConcatTask extends PipelineJob.Task<SequenceConcatTask.Fact
         getJob().getLogger().info("writing sequence file");
         m.createFileForSequence(u, sb.toString(), outDir);
 
-        File offsetFile = new File(outDir, m.getRowid() + "_offsets.txt");
-        getJob().getLogger().info("writing offsets to: " + offsetFile.getPath());
-
-        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(offsetFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
-        {
-            for (Integer rowId : offsetMap.keySet())
-            {
-                writer.writeNext(new String[]{rowId.toString(), offsetMap.get(rowId).first, offsetMap.get(rowId).second.toString()});
-            }
-        }
+        FileUtils.moveFile(offsetFile, m.getOffsetsFile());
 
         return m.getRowid();
     }

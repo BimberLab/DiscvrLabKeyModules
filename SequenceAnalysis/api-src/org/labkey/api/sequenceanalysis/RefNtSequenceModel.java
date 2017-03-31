@@ -518,4 +518,21 @@ public class RefNtSequenceModel
     {
         _seqLength = seqLength;
     }
+
+    @Nullable
+    public File getOffsetsFile()
+    {
+        if (getSequenceFile() == null)
+        {
+            return null;
+        }
+
+        ExpData d = ExperimentService.get().getExpData(_sequenceFile);
+        if (d == null || d.getFile() == null)
+        {
+            return null;
+        }
+
+        return new File(d.getFile().getParentFile(), getRowid() + "_offsets.txt");
+    }
 }

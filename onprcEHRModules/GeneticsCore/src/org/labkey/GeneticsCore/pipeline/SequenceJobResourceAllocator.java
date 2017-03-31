@@ -76,8 +76,8 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
 
         if (isSequenceNormalizationTask(job))
         {
-            job.getLogger().debug("setting max CPUs to 4");
-            return 4;
+            job.getLogger().debug("setting max CPUs to 8");
+            return 8;
         }
 
         Long totalFileSize = getFileSize(job);

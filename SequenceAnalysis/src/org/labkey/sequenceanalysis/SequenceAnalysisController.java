@@ -132,6 +132,7 @@ import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.AlignmentImportJob;
 import org.labkey.sequenceanalysis.pipeline.IlluminaImportJob;
 import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
+import org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
@@ -2275,28 +2276,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
             catch (Throwable e)
             {
-                try (OutputStream out = getViewContext().getResponse().getOutputStream(); OutputStreamWriter writer = new OutputStreamWriter(out, StringUtilsLabKey.DEFAULT_CHARSET))
-                {
-                    logger.error(e.getMessage(), e);
-
-                    getViewContext().getResponse().reset();
-                    getViewContext().getResponse().setContentType("text/plain");
-                    getViewContext().getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    if (e instanceof OutOfMemoryError)
-                    {
-                        writer.write(PageFlowUtil.jsString("Your server ran out of memory when processing this file.  You may want to contact your admin and consider increasing the tomcat heap size."));
-                    }
-                    else
-                    {
-                        writer.write(PageFlowUtil.jsString(e.getMessage()));
-                    }
-
-                    writer.flush();
-                }
-                catch (IOException err)
-                {
-                    //ignore
-                }
+                handleError(e, logger);
             }
 
             return resp.toString();
@@ -2645,11 +2625,10 @@ public class SequenceAnalysisController extends SpringActionController
             if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
                 throw new UploadException("Pipeline root must be configured before uploading files", HttpServletResponse.SC_NOT_FOUND);
 
-            AssayFileWriter writer = new AssayFileWriter();
             try
             {
-                File targetDirectory = writer.ensureUploadDirectory(getContainer());
-                return writer.findUniqueFileName(filename, targetDirectory);
+                File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
+                return AssayFileWriter.findUniqueFileName(filename, targetDirectory);
             }
             catch (ExperimentException e)
             {
@@ -2660,32 +2639,67 @@ public class SequenceAnalysisController extends SpringActionController
         protected String getResponse(Map<String, Pair<File, String>> files, ImportTrackForm form) throws UploadException
         {
             JSONObject resp = new JSONObject();
+            if (form.getTrackName() == null || form.getLibraryId() == null)
+            {
+                throw new UploadException("Must provide the track name and library Id", HttpServletResponse.SC_BAD_REQUEST);
+            }
+
             try
             {
                 for (Map.Entry<String, Pair<File, String>> entry : files.entrySet())
                 {
                     File file = entry.getValue().getKey();
 
-                    if (form.getTrackName() == null || form.getLibraryId() == null)
+                    try
                     {
-                        throw new UploadException("Must provide the track name and library Id", HttpServletResponse.SC_BAD_REQUEST);
-                    }
+                        Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
+                        PipeRoot root = PipelineService.get().getPipelineRootSetting(target);
 
-                    SequenceAnalysisManager.get().addTrackForLibrary(getContainer(), getUser(), file, form.getLibraryId(), form.getTrackName(), form.getTrackDescription(), null);
+                        ImportGenomeTrackPipelineJob job = new ImportGenomeTrackPipelineJob(target, getUser(), null, root, form.getLibraryId(), form.getTrackName(), file, entry.getValue().getValue(), form.getTrackDescription(), form.getDoChrTranslation() == null ? true : form.getDoChrTranslation());
+                        PipelineService.get().queueJob(job);
+
+                        resp.put("jobId", job.getJobGUID());
+                    }
+                    catch (PipelineValidationException e)
+                    {
+                        throw new IllegalArgumentException(e);
+                    }
 
                     resp.put("success", true);
                 }
             }
-            catch (Exception e)
+            catch (Throwable e)
             {
-                ExceptionUtil.logExceptionToMothership(getViewContext().getRequest(), e);
-                getViewContext().getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                logger.error(e.getMessage(), e);
-                resp.put("success", false);
-                resp.put("exception", e.getMessage());
+                handleError(e, logger);
             }
 
             return resp.toString();
+        }
+    }
+
+    private void handleError(Throwable e, Logger log)
+    {
+        try (OutputStream out = getViewContext().getResponse().getOutputStream(); OutputStreamWriter writer = new OutputStreamWriter(out, StringUtilsLabKey.DEFAULT_CHARSET))
+        {
+            log.error(e.getMessage(), e);
+
+            getViewContext().getResponse().reset();
+            getViewContext().getResponse().setContentType("text/plain");
+            getViewContext().getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            if (e instanceof OutOfMemoryError)
+            {
+                writer.write(PageFlowUtil.jsString("Your server ran out of memory when processing this file.  You may want to contact your admin and consider increasing the tomcat heap size."));
+            }
+            else
+            {
+                writer.write(PageFlowUtil.jsString(e.getMessage()));
+            }
+
+            writer.flush();
+        }
+        catch (IOException err)
+        {
+            //ignore
         }
     }
 
@@ -2694,6 +2708,7 @@ public class SequenceAnalysisController extends SpringActionController
         private Integer _libraryId;
         private String _trackName;
         private String _trackDescription;
+        private Boolean _doChrTranslation;
 
         public Integer getLibraryId()
         {
@@ -2723,6 +2738,16 @@ public class SequenceAnalysisController extends SpringActionController
         public void setTrackDescription(String trackDescription)
         {
             _trackDescription = trackDescription;
+        }
+
+        public Boolean getDoChrTranslation()
+        {
+            return _doChrTranslation;
+        }
+
+        public void setDoChrTranslation(Boolean doChrTranslation)
+        {
+            _doChrTranslation = doChrTranslation;
         }
     }
 
@@ -3722,7 +3747,7 @@ public class SequenceAnalysisController extends SpringActionController
             if (pr == null || !pr.isValid())
                 throw new NotFoundException();
 
-            File dirData = null;
+            File dirData = pr.getRootPath();
             if (form.getPath() != null)
             {
                 dirData = pr.resolvePath(form.getPath());
@@ -3859,6 +3884,7 @@ public class SequenceAnalysisController extends SpringActionController
         private String[] _fileNames;
         private String _path;
         private String _records;
+        private Boolean _doChrTranslation;
 
         public String[] getFileNames()
         {
@@ -3888,6 +3914,16 @@ public class SequenceAnalysisController extends SpringActionController
         public void setRecords(String records)
         {
             _records = records;
+        }
+
+        public Boolean getDoChrTranslation()
+        {
+            return _doChrTranslation;
+        }
+
+        public void setDoChrTranslation(Boolean doChrTranslation)
+        {
+            _doChrTranslation = doChrTranslation;
         }
     }
 
@@ -4480,6 +4516,92 @@ public class SequenceAnalysisController extends SpringActionController
         public void setDescription(String description)
         {
             _description = description;
+        }
+    }
+
+    @RequiresPermission(InsertPermission.class)
+    @CSRF
+    public class ImportSequenceTracksAction extends ApiAction<ImportOutputFilesForm>
+    {
+        public ApiResponse execute(ImportOutputFilesForm form, BindException errors) throws Exception
+        {
+            Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
+            PipeRoot root = PipelineService.get().getPipelineRootSetting(target);
+            if (root == null || !root.isValid())
+            {
+                throw new NotFoundException();
+            }
+
+            if (form.getRecords() == null)
+            {
+                errors.reject(ERROR_MSG, "No files to save");
+                return null;
+            }
+
+            File dirData = root.getRootPath();
+            if (form.getPath() != null)
+            {
+                dirData = root.resolvePath(form.getPath());
+                if (dirData == null || !NetworkDrive.exists(dirData))
+                {
+                    throw new NotFoundException("Could not resolve path: " + form.getPath());
+                }
+            }
+
+            JSONArray arr = new JSONArray(form.getRecords());
+
+            List<PipelineJob> toCreate = new ArrayList<>();
+            for (JSONObject o : arr.toJSONObjectArray())
+            {
+                File file = new File(dirData, o.getString("fileName"));
+                if (!file.exists())
+                {
+                    errors.reject(ERROR_MSG, "Unknown file: " + o.getString("fileName"));
+                    return null;
+                }
+
+                if (o.get("name") == null)
+                {
+                    errors.reject(ERROR_MSG, "Missing name for file: " + file.getName());
+                    return null;
+                }
+
+                if (o.get("libraryId") == null)
+                {
+                    errors.reject(ERROR_MSG, "Missing genome Id for file: " + file.getName());
+                    return null;
+                }
+
+                try
+                {
+                    ImportGenomeTrackPipelineJob job = new ImportGenomeTrackPipelineJob(target, getUser(), null, root, o.getInt("libraryId"), o.getString("name"), file, file.getName(), o.getString("description"), form.getDoChrTranslation() == null ? true : form.getDoChrTranslation());
+                    toCreate.add(job);
+                }
+                catch (IOException e)
+                {
+                    errors.reject(ERROR_MSG, e.getMessage());
+                    _log.error(e);
+
+                    return null;
+                }
+            }
+
+            try
+            {
+                for (PipelineJob job : toCreate)
+                {
+                    PipelineService.get().queueJob(job);
+                }
+            }
+            catch (PipelineValidationException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                _log.error(e);
+
+                return null;
+            }
+
+            return new ApiSimpleResponse("success", true);
         }
     }
 }

@@ -6,6 +6,7 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.util.FileUtil;
 
 import java.io.File;
 
@@ -48,6 +49,12 @@ public class ReferenceGenomeImpl implements ReferenceGenome
     public File getFastaIndex()
     {
         return getWorkingFastaFile() == null ? null : new File(getWorkingFastaFile().getPath() + ".fai");
+    }
+
+    @Override
+    public File getSequenceDictionary()
+    {
+        return getWorkingFastaFile() == null ? null : new File(FileUtil.getBaseName(getWorkingFastaFile().getPath()) + ".dict");
     }
 
     @Override

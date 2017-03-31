@@ -46,6 +46,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.reader.ColumnDescriptor;
 import org.labkey.api.reader.ExcelFactory;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.reader.TabLoader;
 import org.labkey.api.security.User;
 import org.labkey.api.study.assay.AssayProvider;
@@ -618,7 +619,7 @@ public class DefaultAssayParser implements AssayParser
     protected List<List<String>> parseTextFile(File file) throws IOException
     {
         List<List<String>> ret = new ArrayList<>();
-        try (CSVReader reader = new CSVReader(new FileReader(file), inferDelimiter(file)))
+        try (CSVReader reader = new CSVReader(Readers.getReader(file), inferDelimiter(file)))
         {
             String[] line;
             while ((line = reader.readNext()) != null)
@@ -634,7 +635,7 @@ public class DefaultAssayParser implements AssayParser
     {
         int tabCount = 0;
         int commaCount = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(f)))
+        try (BufferedReader reader = Readers.getReader(f))
         {
             String line;
             int lineCount = 0;

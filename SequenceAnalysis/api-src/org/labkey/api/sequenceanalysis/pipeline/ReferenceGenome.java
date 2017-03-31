@@ -70,4 +70,9 @@ public interface ReferenceGenome extends Serializable
      * @return The folder expected containing the cached index, which is not guarenteed to exist.  See AlignerIndexUtil for related methods.
      */
     public File getAlignerIndexDir(String name);
+
+    /**
+     * @return The path of the .dict file expected to be associated with this genome.  Will be based on the workingFasta file
+     */
+    File getSequenceDictionary();
 }

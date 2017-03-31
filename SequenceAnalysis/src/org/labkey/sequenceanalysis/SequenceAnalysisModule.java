@@ -55,6 +55,7 @@ import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.AlignmentImportJob;
 import org.labkey.sequenceanalysis.pipeline.IlluminaImportJob;
 import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
+import org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
@@ -131,7 +132,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.313;
+        return 12.314;
     }
 
     public boolean hasScripts()
@@ -320,6 +321,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         PipelineService.get().registerPipelineProvider(new NcbiGenomeImportPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new SequenceOutputHandlerPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new ImportFastaSequencesPipelineJob.Provider(this));
+        PipelineService.get().registerPipelineProvider(new ImportGenomeTrackPipelineJob.Provider(this));
         PipelineService.get().registerPipelineProvider(new SequencePipelineProvider(this));
 
         LDKService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);

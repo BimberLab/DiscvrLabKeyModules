@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import au.com.bytecode.opencsv.CSVReader;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
@@ -30,11 +31,13 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
+import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.util.FastqUtils;
@@ -150,28 +153,48 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             for (Readset rs : getPipelineJob().getSequenceSupport().getCachedReadsets())
             {
                 SequenceReadsetImpl r = (SequenceReadsetImpl)rs;
+                boolean updateExisting = r.getReadsetId() != null && r.getReadsetId() > 0;
 
                 getJob().getLogger().info("Starting readset " + r.getName());
-                SequenceReadsetImpl row = new SequenceReadsetImpl();
 
-                row.setSampleId(r.getSampleId());
-                row.setSubjectId(r.getSubjectId());
-                row.setSampleDate(r.getSampleDate());
-                row.setPlatform(r.getPlatform());
-                row.setSampleType(r.getSampleType());
-                row.setLibraryType(r.getLibraryType());
-                row.setName(r.getName());
-                row.setComments(r.getComments());
-                row.setApplication(r.getApplication());
-                row.setChemistry(r.getChemistry());
-                row.setInstrumentRunId(r.getInstrumentRunId());
-                row.setBarcode3(r.getBarcode3());
-                row.setBarcode5(r.getBarcode5());
+                SequenceReadsetImpl row;
+                if (!updateExisting)
+                {
+                    row = new SequenceReadsetImpl();
 
-                row.setContainer(getJob().getContainer().getId());
-                row.setCreatedBy(getJob().getUser().getUserId());
-                row.setCreated(new Date());
+                    row.setSampleId(r.getSampleId());
+                    row.setSubjectId(r.getSubjectId());
+                    row.setSampleDate(r.getSampleDate());
+                    row.setPlatform(r.getPlatform());
+                    row.setSampleType(r.getSampleType());
+                    row.setLibraryType(r.getLibraryType());
+                    row.setName(r.getName());
+                    row.setComments(r.getComments());
+                    row.setApplication(r.getApplication());
+                    row.setChemistry(r.getChemistry());
+                    row.setInstrumentRunId(r.getInstrumentRunId());
+                    row.setBarcode3(r.getBarcode3());
+                    row.setBarcode5(r.getBarcode5());
 
+                    row.setContainer(getJob().getContainer().getId());
+                    row.setCreatedBy(getJob().getUser().getUserId());
+                    row.setCreated(new Date());
+                }
+                else
+                {
+                    row = SequenceAnalysisServiceImpl.get().getReadset(r.getReadsetId(), getJob().getUser());
+                    if (row == null)
+                    {
+                        throw new PipelineJobException("Unable to find existing readset with id: " + r.getReadsetId());
+                    }
+
+                    if (row.getReadsetId() == null)
+                    {
+                        throw new PipelineJobException("Readset lacks a rowid: " + r.getReadsetId());
+                    }
+                }
+
+                //now add readData
                 List<ReadDataImpl> readDatas = new ArrayList<>();
                 for (ReadDataImpl rd : r.getReadDataImpl())
                 {
@@ -239,6 +262,8 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 }
 
                 row.setRunId(runId);
+                row.setModified(new Date());
+                row.setModifiedBy(getJob().getUser().getUserId());
 
                 //then import
                 if (readDatas.isEmpty())
@@ -249,7 +274,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setReadData(readDatas);
 
                 SequenceReadsetImpl newRow;
-                if (r.getReadsetId() == null || r.getReadsetId() == 0)
+                if (!updateExisting)
                 {
                     newRow = Table.insert(getJob().getUser(), readsetTable, row);
                     getJob().getLogger().info("Created readset: " + newRow.getReadsetId());
@@ -257,17 +282,14 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 }
                 else
                 {
-                    newRow = Table.update(getJob().getUser(), readsetTable, row, r.getReadsetId());
+                    getJob().getLogger().info("Updating existing readset: " + row.getReadsetId());
+                    newRow = Table.update(getJob().getUser(), readsetTable, row, row.getReadsetId());
                     newReadsets.add(newRow);
-                    getJob().getLogger().info("Updated readset: " + newRow.getReadsetId());
-                    if (newRow.getReadsetId() == null)
+                    if (newRow.getReadsetId() == null || newRow.getReadsetId() == 0)
                     {
-                        getJob().getLogger().warn("no readsetId found after updating readset: " + r.getName());
-                        if (r.getReadsetId() != null && r.getReadsetId() > 0)
-                        {
-                            getJob().getLogger().warn("using rowId from original model: " + r.getReadsetId());
-                            newRow.setRowId(r.getReadsetId());
-                        }
+                        getJob().getLogger().warn("no readsetId found after updating readset: " + row.getName());
+                        getJob().getLogger().warn("using rowId from original model: " + r.getReadsetId());
+                        newRow.setRowId(row.getReadsetId());
                     }
                 }
 
@@ -353,7 +375,26 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         try
         {
             ExpData d = ExperimentService.get().getExpData(fileId);
-            Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(d.getFile(), getJob().getLogger());
+            File cachedMetrics = new File(d.getFile().getPath() + ".metrics");
+            Map<String, Object> metricsMap;
+            if (cachedMetrics.exists())
+            {
+                getJob().getLogger().debug("reading previously calculated metrics from file: " + cachedMetrics.getPath());
+                metricsMap = new HashMap<>();
+                try (CSVReader reader = new CSVReader(Readers.getReader(cachedMetrics), '\t'))
+                {
+                    String[] line;
+                    while ((line = reader.readNext()) != null)
+                    {
+                        metricsMap.put(line[0], line[1]);
+                    }
+                }
+            }
+            else
+            {
+                metricsMap = FastqUtils.getQualityMetrics(d.getFile(), getJob().getLogger());
+            }
+
             for (String metricName : metricsMap.keySet())
             {
                 Map<String, Object> r = new HashMap<>();
@@ -365,6 +406,11 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 r.put("createdby", getJob().getUser().getUserId());
 
                 Table.insert(getJob().getUser(), SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), r);
+            }
+
+            if (cachedMetrics.exists())
+            {
+                cachedMetrics.delete();
             }
         }
         catch (Exception e)

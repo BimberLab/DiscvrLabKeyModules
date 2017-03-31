@@ -32,5 +32,10 @@ public interface GenomeTrigger
 
     public void onDelete(Container c, User u, Logger log, int genomeId);
 
+    default void onTrackAdd(Container c, User u, Logger log, int genomeId, int trackId)
+    {
+
+    }
+
     public boolean isAvailable(Container c);
 }

@@ -16,6 +16,7 @@ import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -391,6 +392,11 @@ public class SequenceUtil
     public static void sortROD(File input, Logger log) throws IOException, PipelineJobException
     {
         log.info("sorting file: " + input.getPath());
+        if (SystemUtils.IS_OS_WINDOWS)
+        {
+            log.info("unable to sort files on windows, skipping");
+            return;
+        }
 
         boolean isCompressed = input.getPath().endsWith(".gz");
         File sorted = new File(input.getParent(), "sorted.tmp");

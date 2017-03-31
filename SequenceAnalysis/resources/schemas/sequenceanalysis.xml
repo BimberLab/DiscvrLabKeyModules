@@ -2263,6 +2263,17 @@
                 </fk>
             </column>
             <column columnName="category"/>
+            <column columnName="jobid">
+                <isUserEditable>false</isUserEditable>
+                <isUnselectable>false</isUnselectable>
+                <columnTitle>Job Id</columnTitle>
+                <fk>
+                    <fkDbSchema>pipeline</fkDbSchema>
+                    <fkTable>Job</fkTable>
+                    <fkColumnName>RowId</fkColumnName>
+                    <fkDisplayColumnName>RowId</fkDisplayColumnName>
+                </fk>
+            </column>
             <column columnName="datedisabled">
                 <columnTitle>Date Disabled</columnTitle>
             </column>

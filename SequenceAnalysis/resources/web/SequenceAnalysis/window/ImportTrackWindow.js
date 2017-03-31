@@ -10,6 +10,8 @@ Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
     },
 
     initComponent: function(){
+        Ext4.QuickTips.init();
+
         Ext4.apply(this, {
             modal: true,
             title: 'Import Annotations/Tracks',
@@ -20,7 +22,7 @@ Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
                 width: 450
             },
             items: [{
-                html: 'This will import annotations or feature tracks for the selected library. Note: the names used in the track must match those in the library itself.',
+                html: 'This will import annotations or feature tracks for the selected library. Note: in general, names used in the track must match those in the library itself.  If the sequences used in the target genome have genbank accessions or refseq IDs, the incoming track will be inspected and names converted.  If the reference genome has any sequences that are concatenations of other sequences (created by this system) then incoming features will be expected and translated as well.',
                 style: 'padding-bottom: 10px;',
                 width: null
             },{
@@ -60,6 +62,13 @@ Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
                     xtype: 'textarea',
                     fieldLabel: 'Description',
                     name: 'trackDescription'
+                },{
+                    xtype: 'checkbox',
+                    fieldLabel: 'Do Simple Name Translation',
+                    name: 'doChrTranslation',
+                    helpPopup: 'If checked, the system will attempt to translate between common forms of chromosome names, like chr1, chr01 and 1.  If found, any of these forms will be converted to the name used by the target genome.  This includes numbers, X and Y.',
+                    inputValue: true,
+                    checked: true
                 }]
             }],
             buttons: [{
@@ -103,9 +112,8 @@ Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
 
                 this.close();
 
-                Ext4.Msg.alert('Success', 'Track Imported!', function(){
-                    var dataRegion = LABKEY.DataRegions[this.dataRegionName];
-                    dataRegion.refresh();
+                Ext4.Msg.alert('Success', 'Import Started!', function(){
+                    window.location = LABKEY.ActionURL.buildURL("pipeline-status", "showList.view", Laboratory.Utils.getQueryContainerPath(), {'StatusFiles.Status~neqornull': 'COMPLETE'});
                 }, this);
             },
             failure: function(form, action){

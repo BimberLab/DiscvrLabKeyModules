@@ -3434,6 +3434,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.310-12.311.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.311-12.312.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.312-12.313.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.313-12.314.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -3523,6 +3524,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.310-12.311.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.311-12.312.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.312-12.313.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.313-12.314.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -3559,6 +3561,8 @@ labModules/SequenceAnalysis/resources/views/importFasta.html -text
 labModules/SequenceAnalysis/resources/views/importFasta.view.xml -text
 labModules/SequenceAnalysis/resources/views/importReadset.html -text
 labModules/SequenceAnalysis/resources/views/importReadset.view.xml -text
+labModules/SequenceAnalysis/resources/views/importTracks.html -text
+labModules/SequenceAnalysis/resources/views/importTracks.view.xml -text
 labModules/SequenceAnalysis/resources/views/insertRefSequence.html -text
 labModules/SequenceAnalysis/resources/views/insertRefSequence.view.xml -text
 labModules/SequenceAnalysis/resources/views/instrumentImport.html -text
@@ -3727,6 +3731,8 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaRea
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/IlluminaReadsetCreationTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ImportFastaSequencesPipelineJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ImportFastaSequencesTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ImportGenomeTrackPipelineJob.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ImportGenomeTrackTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/JobContextImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeImportPipelineJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeImportPipelineProvider.java -text

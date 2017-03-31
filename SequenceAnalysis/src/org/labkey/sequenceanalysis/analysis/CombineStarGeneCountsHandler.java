@@ -15,16 +15,20 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,10 +42,13 @@ import java.util.regex.Pattern;
 public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHandler
 {
     private FileType _fileType = new FileType("ReadsPerGene.out.tab", false);
+    private static final String STRANDED = "Stranded";
+    private static final String UNSTRANDED = "Unstranded";
+    private static final String INFER = "Infer";
 
     public CombineStarGeneCountsHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Combine STAR Gene Counts", "This will combine the gene count tables from many samples produced by STAR into a single table.", null, Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Combine STAR Gene Counts", "This will combine the gene count tables from many samples produced by STAR into a single table.", new LinkedHashSet<>(Arrays.asList("LDK/field/SimpleCombo.js")), Arrays.asList(
                 ToolParameterDescriptor.create("name", "Output Name", "This is the name that will be used to describe the output.", "textfield", new JSONObject()
                 {{
                         put("allowBlank", false);
@@ -52,7 +59,12 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                         put("width", 400);
                         put("allowBlank", false);
                     }}, null),
-                ToolParameterDescriptor.create("idInHeader", "Use RowId As Header", "If checked, this will use the output file RowId as the header, instead of name.  This ensures uniqueness.  As separate table will be written, containing this value and other sample fields.", "checkbox", null, false)
+                ToolParameterDescriptor.create("idInHeader", "Use RowId As Header", "If checked, this will use the output file RowId as the header, instead of name.  This ensures uniqueness.  As separate table will be written, containing this value and other sample fields.", "checkbox", null, false),
+                ToolParameterDescriptor.create("skipGenesWithoutData", "Skip Genes Without Data", "If checked, the output table will omit any genes with zero read counts across all samples.", "checkbox", null, false),
+                ToolParameterDescriptor.create(STRANDED, "Stranded", "Choose whether to treat these data as stranded, unstranded, or to have the script infer the strandedness", "ldk-simplecombo", new JSONObject(){{
+                    put("storeValues", STRANDED + ";" + UNSTRANDED + ";"+ INFER);
+                    put("value", INFER);
+                }}, INFER)
         ));
     }
 
@@ -191,6 +203,8 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
         action.setStartTime(new Date());
 
         String name = params.getString("name");
+        Boolean doSkipGenesWithoutData = params.optBoolean("skipGenesWithoutData", false);
+        ctx.getLogger().debug("skip genes without data: " + doSkipGenesWithoutData);
 
         int gtf = params.optInt("gtf");
         if (gtf == 0)
@@ -285,10 +299,13 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
             job.getLogger().warn("total lines lacking a gene id: " + noGeneId);
         }
 
+        String stranded = params.optString(STRANDED, STRANDED);
+
         //next iterate all read count TSVs to guess strandedness
         double sumStrandRatio = 0.0;
         int countStrandRatio = 0;
         Set<String> distinctGenes = new TreeSet<>();
+        distinctGenes.addAll(geneMap.keySet());
         Map<Integer, Map<String, Long>> unstrandedCounts = new HashMap<>(inputFiles.size());
         Map<Integer, Map<String, Long>> strandedCounts = new HashMap<>(inputFiles.size());
         for (SequenceOutputFile so : inputFiles)
@@ -312,16 +329,14 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
 
                     if (unstranded > 0)
                     {
-                        if (strandMax / unstranded > 1)
-                        {
-                            job.getLogger().info("Gene " + geneId + " will be skipped because it has an out of bounds strandmax/unstranded ratio: " + (strandMax / unstranded));
-                            continue;
-                        }
-                        else
-                        {
-                            sumStrandRatio += (strandMax / unstranded);
-                            countStrandRatio++;
-                        }
+                        double ratio = (double)strandMax / unstranded;
+                        sumStrandRatio += ratio;
+                        countStrandRatio++;
+                    }
+                    else if (strandMax > 0)
+                    {
+                        //TODO: should we do something?
+                        ctx.getLogger().info(geneId + ": zero unstranded, but non-zero stranded reads: " + unstranded + " / " + strandMax);
                     }
 
                     Map<String, Long> unstrandedMap = unstrandedCounts.get(so.getRowid());
@@ -352,21 +367,55 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
 
         //finally build output
         Map<Integer, Map<String, Long>> counts;
-        double percent = 100 * sumStrandRatio / countStrandRatio;
-        //force unstranded for the time being
-        //if (percent > 0.9) {
-        if (percent > 999)
+        double avgStrandRatio = sumStrandRatio / countStrandRatio;
+        job.getLogger().info("the average stranded/unstranded ratio for all samples was: " + avgStrandRatio);
+        double threshold = 0.9;
+        String inferredStrandedness;
+        job.getLogger().info("Attempting to infer strandedness");
+        if (avgStrandRatio > threshold)
         {
-            job.getLogger().info("These data appear to be stranded because most of the reads are either on one strand or the other (" + percent + ").  Counts from the strand with the most reads will be used.");
-            counts = strandedCounts;
+            job.getLogger().info("These data appear to be stranded because more than " + (100 * threshold) + "% of the reads are either on one strand or the other (" + avgStrandRatio + ").  Counts from the strand with the most reads will be used.");
+            inferredStrandedness = STRANDED;
         }
         else
         {
-            job.getLogger().info("These data appear to be unstranded because similar numbers of reads are found on strand one and strand two (" + percent + ").  The total unstranded counts will be used.");
+            job.getLogger().info("These data appear to be unstranded because similar numbers of reads are found on strand one and strand two (" + threshold + ").  The total unstranded counts will be used.");
+            inferredStrandedness = UNSTRANDED;
+        }
+
+        if (STRANDED.equalsIgnoreCase(stranded))
+        {
+            job.getLogger().info("Using stranded counts as specified in the job");
+            counts = strandedCounts;
+
+            if (!STRANDED.equals(inferredStrandedness))
+            {
+                job.getLogger().warn("These data appear to be unstranded based on read counts");
+            }
+        }
+        else if (UNSTRANDED.equalsIgnoreCase(stranded))
+        {
+            job.getLogger().info("Using unstranded counts as specified in the job");
             counts = unstrandedCounts;
+
+            if (!UNSTRANDED.equals(inferredStrandedness))
+            {
+                job.getLogger().warn("These data appear to be stranded based on read counts");
+            }
+        }
+        else if (INFER.equalsIgnoreCase(stranded))
+        {
+            job.getLogger().info("Using inferred value for strandedness: " + inferredStrandedness);
+            counts = STRANDED.equals(inferredStrandedness) ? strandedCounts : unstrandedCounts;
+        }
+        else
+        {
+            throw new PipelineJobException("Unknown value for stranded: " + stranded);
         }
 
         job.getLogger().info("writing output.  total genes: " + distinctGenes.size());
+
+        final Set<String> OTHER_IDS = PageFlowUtil.set("N_ambiguous", "N_multimapping", "N_noFeature", "N_unmapped");
         File outputFile = new File(ctx.getOutputDir(), name + ".txt");
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(outputFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
@@ -375,6 +424,7 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
             header.add("GeneId");
             header.add("TranscriptId");
             header.add("GeneDescription");
+            header.add("SamplesWithReads");
 
             for (SequenceOutputFile so : inputFiles)
             {
@@ -383,27 +433,75 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
 
             writer.writeNext(header.toArray(new String[header.size()]));
 
+            Set<String> genesWithoutData = new HashSet<>();
             for (String geneId : distinctGenes)
             {
                 List<String> row = new ArrayList<>();
-                if (geneMap.containsKey(geneId))
+                if (geneMap.containsKey(geneId) || OTHER_IDS.contains(geneId))
                 {
-                    row.add(geneMap.get(geneId).containsKey("gene_name") ? geneId + "|" + geneMap.get(geneId).get("gene_name") : geneId);
-                    row.add(geneMap.get(geneId).get("transcript_id"));
-                    row.add(geneMap.get(geneId).get("gene_description"));
+                    if (geneMap.containsKey(geneId))
+                    {
+                        row.add(geneMap.get(geneId).containsKey("gene_name") ? geneId + "|" + geneMap.get(geneId).get("gene_name") : geneId);
+                        row.add(geneMap.get(geneId).get("transcript_id"));
+                        row.add(geneMap.get(geneId).get("gene_description"));
+                    }
+                    else
+                    {
+                        row.add(geneId);
+                        row.add("");
+                        row.add("");
+                    }
 
+                    List<String> toAdd = new ArrayList<>();
+                    Integer totalWithData = 0;
                     for (SequenceOutputFile so : inputFiles)
                     {
                         Long count = counts.get(so.getRowid()).get(geneId);
-                        row.add(count == null ? "0" : count.toString());
+                        if (count != null && count > 0)
+                        {
+                            totalWithData++;
+                        }
+
+                        toAdd.add(count == null ? "0" : count.toString());
                     }
 
-                    writer.writeNext(row.toArray(new String[row.size()]));
+                    if (totalWithData > 0 || !doSkipGenesWithoutData)
+                    {
+                        row.add(totalWithData.toString());
+                        row.addAll(toAdd);
+                        writer.writeNext(row.toArray(new String[row.size()]));
+                    }
+
+                    if (totalWithData == 0)
+                    {
+                        genesWithoutData.add(geneId);
+                    }
                 }
                 else
                 {
-                    job.getLogger().info("gene not found in GTF: [" + geneId + "]");
+                    job.getLogger().error("gene not found in GTF: [" + geneId + "]");
                 }
+            }
+
+            if (!genesWithoutData.isEmpty())
+            {
+                job.getLogger().info("writing list of genes without data");
+                File skippedGenes = new File(ctx.getOutputDir(), "genesWithoutData.txt");
+                try (PrintWriter errWriter = PrintWriters.getPrintWriter(skippedGenes))
+                {
+                    errWriter.write("GeneId\tGeneName\tGeneDescription\n");
+                    for (String geneId : genesWithoutData)
+                    {
+                        errWriter.write(geneId + "\t" + geneMap.get(geneId).get("gene_name") + "\t" + geneMap.get(geneId).get("gene_description") + "\n");
+
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+                ctx.getFileManager().addOutput(action, "Genes Without Data", skippedGenes);
             }
         }
         catch (IOException e)

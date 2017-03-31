@@ -45,7 +45,6 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
-import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.pipeline.PipelineValidationException;
@@ -80,7 +79,6 @@ import java.net.URISyntaxException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -572,62 +570,6 @@ public class SequenceAnalysisManager
         map.put("modified", new Date());
         map.put("modifiedby", u.getUserId());
         Table.insert(u, chainTable, map);
-    }
-
-    public void addTrackForLibrary(Container c, User u, File file, int libraryId, String trackName, String trackDescription, String type) throws Exception
-    {
-        TableInfo libraryTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
-        TableInfo trackTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS);
-
-        Integer fastaId = new TableSelector(libraryTable, Collections.singleton("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(Integer.class);
-        if (fastaId == null)
-        {
-            throw new IllegalArgumentException("Unable to find FASTA for library: " + libraryId);
-        }
-
-        ExpData data = ExperimentService.get().getExpData(fastaId);
-        if (data == null)
-        {
-            throw new IllegalArgumentException("Unable to find FASTA for library: " + libraryId);
-        }
-
-        File targetDir = data.getFile().getParentFile();
-        if (!targetDir.exists())
-        {
-            throw new IllegalArgumentException("Unable to find expected FASTA location: " + targetDir.getPath());
-        }
-
-        targetDir = new File(targetDir, "tracks");
-        if (!targetDir.exists())
-        {
-            targetDir.mkdirs();
-        }
-
-        //create row
-        CaseInsensitiveHashMap map = new CaseInsensitiveHashMap();
-        map.put("name", trackName);
-        map.put("description", trackDescription);
-        map.put("library_id", libraryId);
-        map.put("container", c.getId());
-        map.put("created", new Date());
-        map.put("createdby", u.getUserId());
-        map.put("modified", new Date());
-        map.put("modifiedby", u.getUserId());
-        map = Table.insert(u, trackTable, map);
-
-        //create file
-        AssayFileWriter writer = new AssayFileWriter();
-        File outputFile = writer.findUniqueFileName(file.getName().replaceAll(" ", "_"), targetDir);
-
-        FileUtils.moveFile(file, outputFile);
-        ExpData trackData = ExperimentService.get().createData(c, new DataType("Sequence Track"));
-        trackData.setName(outputFile.getName());
-        trackData.setDataFileURI(outputFile.toURI());
-        trackData.save(u);
-
-        //update row
-        map.put("fileid", trackData.getRowId());
-        Table.update(u, trackTable, map, map.get("rowid"));
     }
 
     public SequenceOutputHandler getFileHandler(String handlerClass)

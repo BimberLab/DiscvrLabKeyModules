@@ -1,0 +1,9 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Import Tracks">
+    <permissions>
+        <permission name="insert"/>
+    </permissions>
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis"/>
+    </dependencies>
+</view>

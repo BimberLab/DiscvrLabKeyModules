@@ -1,0 +1,265 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function(){
+
+        Ext4.define('SequenceAnalysis.panel.ImportSequenceTrackPanel', {
+            extend: 'Ext.grid.Panel',
+            alias: 'widget.sequenceanalysis-importsequencetrackpanel',
+
+            initComponent: function(){
+                Ext4.apply(this, {
+                    width: '100%',
+                    minHeight: 200,
+                    cls: 'ldk-grid',
+                    editingPluginId: 'cellediting',
+                    plugins: [Ext4.create('LDK.grid.plugin.CellEditing', {
+                        pluginId: 'cellediting',
+                        clicksToEdit: 1
+                    })],
+                    multiSelect: true,
+                    border: true,
+                    stripeRows: true,
+                    enableHdMenu: false,
+                    selType: 'rowmodel',
+                    store: Ext4.create('Ext.data.ArrayStore', {
+                        model: Ext4.define('Ext.data.Store.ImplicitModel-' + Ext4.id(), {
+                            extend: 'Ext.data.Model',
+                            fields: [
+                                {name: 'outputFile', allowBlank: false},
+                                {name: 'name', allowBlank: false},
+                                {name: 'description'},
+                                {name: 'libraryId', allowBlank: false}
+                            ],
+                            validations: [
+                                {type: 'presence', field: 'outputFile'},
+                                {type: 'presence', field: 'name'},
+                                {type: 'presence', field: 'libraryId'}
+                            ]
+                        }),
+                        storeId: 'metadata'
+                    }),
+                    tbar: [{
+                        text: 'Bulk Edit',
+                        tooltip: 'Click this to change values on all checked rows in bulk',
+                        scope: this,
+                        handler : function(btn){
+                            var grid = btn.up('grid');
+                            var s = grid.getSelectionModel().getSelection();
+                            if (!s.length){
+                                Ext4.Msg.alert('Error', 'No rows selected');
+                                return;
+                            }
+
+                            Ext4.create('LDK.window.GridBulkEditWindow', {
+                                targetGrid: this
+                            }).show(btn);
+                        }
+                    }],
+                    columns: [{
+                        name: 'outputFile',
+                        text: 'File',
+                        tdCls: 'ldk-wrap-text',
+                        width: 275,
+                        dataIndex: 'outputFile',
+                        editor: false
+                    },{
+                        name: 'name',
+                        text: 'Track Name',
+                        tdCls: 'ldk-wrap-text',
+                        width: 275,
+                        dataIndex: 'name',
+                        editor: {
+                            xtype: 'textfield',
+                            allowBlank: false
+                        }
+                    },{
+                        name: 'description',
+                        text: 'Description',
+                        tdCls: 'ldk-wrap-text',
+                        width: 275,
+                        dataIndex: 'description',
+                        editor: {
+                            xtype: 'textarea',
+                            height: 80
+                        }
+                    },{
+                        name: 'libraryId',
+                        text: 'Reference Genome',
+                        tdCls: 'ldk-wrap-text',
+                        width: 275,
+                        dataIndex: 'libraryId',
+                        editor: {
+                            xtype: 'ldk-simplelabkeycombo',
+                            name: 'libraryId',
+                            containerPath: Laboratory.Utils.getQueryContainerPath(),
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'reference_libraries',
+                            displayField: 'name',
+                            valueField: 'rowid',
+                            value: LABKEY.ActionURL.getParameter('libraryId') ? parseInt(LABKEY.ActionURL.getParameter('libraryId')) : null,
+                            allowBlank: false
+                        }
+                    }],
+                    buttonAlign: 'left',
+                    buttons: [{
+                        text: 'Submit',
+                        scope: this,
+                        handler: this.onSubmit
+                    }]
+                });
+
+                Ext4.Array.forEach(this.columns, function(col) {
+                    col.renderer = this.getRenderer(this, col.name);
+                }, this);
+
+                this.callParent(arguments);
+
+                Ext4.Array.forEach(this.fileNames, function(fn){
+                    this.store.add(this.store.createModel({
+                        outputFile: fn,
+                        name: fn
+                    }));
+                }, this);
+
+                this.on('afterrender', this.updateColWidth, this, {single: true});
+                this.on('columnresize', this.updateColWidth, this);
+            },
+
+            getRenderer: function(grid, colName){
+                var column;
+                return function(value, cellMetaData, record, rowIndex, colIndex, store){
+                    var errors = record.validate();
+                    if (!errors.isValid()){
+                        var msgs = errors.getByField(colName);
+                        if (msgs.length) {
+                            cellMetaData.tdCls = cellMetaData.tdCls ? cellMetaData.tdCls + ' ' : '';
+                            cellMetaData.tdCls += 'labkey-grid-cell-invalid';
+                        }
+                    }
+
+                    if (!column){
+                        Ext4.Array.forEach(this.columns, function(c){
+                            if (c.name == colName){
+                                column = c;
+                            }
+                        }, this);
+                    }
+
+                    if (column && column.getEditor && column.getEditor()){
+                        var ed = column.getEditor();
+                        if (!Ext4.isEmpty(value) && ed.store && ed.displayField != ed.valueField){
+                            var recIdx = ed.store.findExact(ed.valueField, value);
+                            if (recIdx != -1){
+                                return ed.store.getAt(recIdx).get(ed.displayField);
+                            }
+                        }
+                    }
+
+                    return value;
+                }
+            },
+
+            updateColWidth: function(){
+                var width = 20;
+                Ext4.Array.forEach(this.columns, function(c){
+                    if (c.isVisible()){
+                        width += c.getWidth();
+                    }
+                }, this);
+
+                this.updateWidth(width);
+            },
+
+            updateWidth: function(){
+                this.reconfigure();
+
+                var width = 20;
+                Ext4.Array.forEach(this.columns, function(col){
+                    if (col.width){
+                        if (!col.hidden)
+                            width += col.width;
+                    }
+                    else {
+                        console.log('no width');
+                    }
+                }, this);
+
+                this.minWidth = width;
+            },
+
+            onSubmit: function(){
+                var hasError = false;
+                var records = [];
+                var doChrTranslation = this.up('panel').down('#doChrTranslation').getValue();
+
+                this.store.each(function(r){
+                    var errors = r.validate();
+                    if (errors.getCount()){
+                        Ext4.Msg.alert('Error', 'Missing one or more required fields');
+                        hasError = true;
+                        return false;
+                    }
+
+                    records.push({
+                        fileName: r.get('outputFile'),
+                        description: r.get('description'),
+                        name: r.get('name'),
+                        libraryId: r.get('libraryId')
+                    });
+                }, this);
+
+                if (hasError){
+                    return;
+                }
+
+                Ext4.Msg.wait('Saving...');
+                LABKEY.Ajax.request({
+                    method: 'POST',
+                    url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'importSequenceTracks', null),
+                    failure: LDK.Utils.getErrorCallback(),
+                    success: LABKEY.Utils.getCallbackWrapper(function(){
+                        Ext4.Msg.hide();
+
+                        Ext4.Msg.alert('Success', 'Import Started!', function(){
+                            window.location = LABKEY.ActionURL.buildURL("pipeline-status", "showList.view", Laboratory.Utils.getQueryContainerPath(), {'StatusFiles.Status~neqornull': 'COMPLETE'});
+                        }, this);
+                    }, this),
+                    params: {
+                        path: this.path,
+                        fileNames: this.fileNames,
+                        doChrTranslation: doChrTranslation,
+                        records: Ext4.encode(records)
+                    }
+                });
+            }
+        });
+
+        Ext4.QuickTips.init();
+        Ext4.create('Ext.panel.Panel', {
+            border: false,
+            defaults: {
+                border: false
+            },
+            items: [{
+                html: 'This will import annotations or feature tracks for the selected library. Note: in general, names used in the track must match those in the library itself.  If the sequences used in the target genome have genbank accessions or refseq IDs, the incoming track will be inspected and names converted.  If the reference genome has any sequences that are concatenations of other sequences (created by this system) then incoming features will be expected and translated as well.',
+                maxWidth: 800,
+                style: 'padding-bottom: 20px;'
+            },{
+                xtype: 'checkbox',
+                fieldLabel: 'Do Simple Name Translation',
+                labelWidth: 240,
+                itemId: 'doChrTranslation',
+                helpPopup: 'If checked, the system will attempt to translate between common forms of chromosome names, like chr1, chr01 and 1.  If found, any of these forms will be converted to the name used by the target genome.  This includes numbers, X and Y.',
+                inputValue: true,
+                checked: true,
+                style: 'margin-bottom: 20px;'
+            },{
+                xtype: 'sequenceanalysis-importsequencetrackpanel',
+                path: LABKEY.ActionURL.getParameter("path"),
+                fileNames: LABKEY.ActionURL.getParameterArray("file") || []
+            }]
+        }).render(<%=webpartContext%>.wrapperDivId);
+    });
+
+
+</script>

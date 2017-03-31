@@ -324,6 +324,11 @@ public class JBrowseRoot
 
         List<String> args = new ArrayList<>();
 
+        //TODO: consider switching to:
+        //args.add("--indexed_fasta");
+        //faiUrlTemplate
+        //urlTemplate
+
         args.add("--fasta");
         args.add(fasta.getPath());
 
@@ -361,7 +366,7 @@ public class JBrowseRoot
         return jsonFile;
     }
 
-    public void prepareDatabase(Database database, User u, @Nullable PipelineJob job) throws IOException
+    public void prepareDatabase(Database database, User u, @Nullable PipelineJob job) throws IOException, PipelineJobException
     {
         File outDir = new File(getDatabaseDir(database.getContainerObj()), database.getObjectId());
 
@@ -455,6 +460,11 @@ public class JBrowseRoot
                     jsonFiles.add(f);
                     jsonGuids.add(f.getObjectId());
                 }
+            }
+
+            if (job != null)
+            {
+                job.setStatus(PipelineJob.TaskStatus.running, null);
             }
         }
 
@@ -605,7 +615,7 @@ public class JBrowseRoot
                 TableSelector outputFileTs = new TableSelector(ti, cols.values(), new SimpleFilter(FieldKey.fromString("rowid"), f.getOutputFile()), null);
                 if (!outputFileTs.exists())
                 {
-                    _log.error("unable to find outputfile: " + f.getOutputFile() + " in container: " + ti.getUserSchema().getContainer().getPath());
+                    getLogger().error("unable to find outputfile: " + f.getOutputFile() + " in container: " + ti.getUserSchema().getContainer().getPath());
                     continue;
                 }
 
@@ -702,6 +712,11 @@ public class JBrowseRoot
             }
         }
 
+        if (job != null)
+        {
+            job.setStatus(PipelineJob.TaskStatus.running, null);
+        }
+
         if (referenceIds.size() != compressedRefs && compressedRefs > 0)
         {
             getLogger().error("Some references are compressed and some are not.  Total ref: " + referenceIds.size() + ", compressed: " + compressedRefs + ".  This will cause rendering problems.");
@@ -757,101 +772,137 @@ public class JBrowseRoot
         writeJsonToFile(new File(outDir, "tracks.conf"), "");
 
         File namesDir = new File(outDir, "names");
-        File existingNamesDir = getExistingNamesDir(database.getObjectId());
-        if (existingNamesDir != null)
+        if (!shouldCreateOwnIndex(database.getObjectId()))
         {
-            getLogger().info("reusing existing search index: " + existingNamesDir.getPath());
-            if (namesDir.exists())
+            File existingNamesDir = getPreviouslyCreatedIndex(database.getObjectId());
+            if (existingNamesDir == null)
             {
-                safeDeleteDiretory(namesDir);
-            }
-
-            createSymlink(namesDir, existingNamesDir);
-        }
-        else
-        {
-            if (!namesDir.exists())
-            {
-                namesDir.mkdirs();
-            }
-
-            List<String> args = new ArrayList<>(Arrays.asList("--out", outDir.getPath()));
-            if (JBrowseManager.get().compressJSON())
-            {
-                args.add("--compress");
-            }
-
-            args.add("--verbose");
-            args.add("--mem");
-            args.add("512000000");
-
-            args.add("--completionLimit");
-            args.add("100");
-
-            Set<String> tracksToIndex = new HashSet<>();
-            for (JSONObject track : trackList.getJSONArray("tracks").toJSONObjectArray())
-            {
-                if (!track.containsKey("doIndex") || track.getBoolean("doIndex"))
-                {
-                    tracksToIndex.add(track.getString("label"));
-                }
-                else
-                {
-                    getLogger().debug("skipping indexing of track: " + track.getString("label"));
-                }
-            }
-
-            if (!tracksToIndex.isEmpty())
-            {
-                args.add("--tracks");
-                args.add(StringUtils.join(tracksToIndex, ","));
-
-                runScript("generate-names.pl", args);
+                getLogger().error("Unable to find expected search index.  this may mean the parent database needs to be regenerated");
             }
             else
             {
-                getLogger().debug("no tracks to index, skipping generate-names.pl");
+                getLogger().info("reusing existing search index: " + existingNamesDir.getPath());
+                if (namesDir.exists())
+                {
+                    safeDeleteDiretory(namesDir);
+                }
+
+                if (existingNamesDir.exists())
+                {
+                    createSymlink(namesDir, existingNamesDir);
+                }
+                else
+                {
+                    getLogger().error("Unable to find expected search index.  this may mean the parent database needs to be regenerated: " + existingNamesDir.getPath());
+                }
+            }
+        }
+        else
+        {
+            getLogger().info("will attempt to generate search index");
+            if (namesDir.exists() && namesDir.list() != null && namesDir.list().length > 0)
+            {
+                getLogger().info("existing search index dir found, will not recreate: " + namesDir.getPath());
+            }
+            else
+            {
+                getLogger().info("creating search index: " + namesDir.getPath());
+                if (!namesDir.exists())
+                {
+                    namesDir.mkdirs();
+                }
+
+                List<String> args = new ArrayList<>(Arrays.asList("--out", outDir.getPath()));
+                if (JBrowseManager.get().compressJSON())
+                {
+                    args.add("--compress");
+                }
+
+                args.add("--verbose");
+                args.add("--mem");
+                args.add("512000000");
+
+                args.add("--completionLimit");
+                args.add("100");
+
+                Set<String> tracksToIndex = new HashSet<>();
+                for (JSONObject track : trackList.getJSONArray("tracks").toJSONObjectArray())
+                {
+                    if (!track.containsKey("doIndex") || track.getBoolean("doIndex"))
+                    {
+                        tracksToIndex.add(track.getString("label"));
+                    }
+                    else
+                    {
+                        getLogger().debug("skipping indexing of track: " + track.getString("label"));
+                    }
+                }
+
+                if (!tracksToIndex.isEmpty())
+                {
+                    args.add("--tracks");
+                    args.add(StringUtils.join(tracksToIndex, ","));
+
+                    if (job != null)
+                    {
+                        job.setStatus(PipelineJob.TaskStatus.running, "Preparing search index");
+                    }
+
+                    runScript("generate-names.pl", args);
+                }
+                else
+                {
+                    getLogger().debug("no tracks to index, skipping generate-names.pl");
+                }
             }
         }
     }
 
-    private File getExistingNamesDir(String databaseId)
+    private boolean shouldCreateOwnIndex(String databaseId) throws PipelineJobException
     {
         TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("libraryId", "createOwnIndex", "primaryDb"), new SimpleFilter(FieldKey.fromString("objectid"), databaseId), null);
         Map<String, Object> map = ts.getMap();
         if (map == null)
         {
-            return null;
+            throw new PipelineJobException("Unable to find record of database: " + databaseId);
         }
 
         if (Boolean.TRUE.equals(map.get("createOwnIndex")) || Boolean.TRUE.equals(map.get("primaryDb")))
         {
-            getLogger().debug("session will not attempt to use cached index");
-
-            return null;
+            return true;
         }
 
-        SimpleFilter referenceFilter = new SimpleFilter(FieldKey.fromString("libraryId"), map.get("libraryId"));
+        getLogger().debug("this session will attempt to use the previously cached index from the parent session for this genome");
+        return false;
+    }
+
+    private File getPreviouslyCreatedIndex(String databaseId) throws PipelineJobException
+    {
+        Integer libraryId = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("libraryId"), new SimpleFilter(FieldKey.fromString("objectid"), databaseId), null).getObject(Integer.class);
+        if (libraryId == null)
+        {
+            throw new PipelineJobException("Unable to find libary Id for session");
+        }
+
+        SimpleFilter referenceFilter = new SimpleFilter(FieldKey.fromString("libraryId"), libraryId);
         referenceFilter.addCondition(FieldKey.fromString("primarydb"), true);
         TableSelector referenceTs = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("objectid", "container"), referenceFilter, null);
         Map<String, Object> refMap = referenceTs.getObject(Map.class);
         if (refMap == null)
         {
-            return null;
+            throw new PipelineJobException("unable to find record of parent DB for this genome: " + libraryId);
         }
 
         Container refContainer = ContainerManager.getForId((String)refMap.get("container"));
         if (refContainer == null)
         {
-            _log.error("unable to find container matching: " + refMap.get("container"));
-            return null;
+            throw new PipelineJobException("unable to find container matching: " + refMap.get("container"));
         }
 
         File ret = new File(getDatabaseDir(refContainer), refMap.get("objectid") + "/names");
         if (!ret.exists())
         {
-            _log.error("expected directory does not exist: " + ret.getPath());
-            return null;
+            getLogger().error("expected index directory does not exist: " + ret.getPath());
         }
 
         return ret;

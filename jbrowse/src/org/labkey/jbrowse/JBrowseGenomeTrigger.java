@@ -41,6 +41,13 @@ public class JBrowseGenomeTrigger implements GenomeTrigger
     }
 
     @Override
+    public void onTrackAdd(Container c, User u, Logger log, int genomeId, int trackId)
+    {
+        log.info("processing new track for genome: " + genomeId);
+        this.onRecreate(c, u, log, genomeId);
+    }
+
+    @Override
     public void onRecreate(Container c, User u, Logger log, int genomeId)
     {
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("libraryId"), genomeId);

@@ -27,15 +27,15 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.Pair;
 import org.labkey.api.view.NotFoundException;
+import org.labkey.api.writer.PrintWriters;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -183,7 +183,7 @@ public class FastqUtils
                 throw new NotFoundException("File " + f.getPath() + " does not exist");
             }
 
-            try (InputStream in = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f);BufferedWriter writer = new BufferedWriter(new FileWriter(output)))
+            try (InputStream in = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f); PrintWriter writer = PrintWriters.getPrintWriter(output))
             {
                 IOUtils.copy(in, writer);
             }

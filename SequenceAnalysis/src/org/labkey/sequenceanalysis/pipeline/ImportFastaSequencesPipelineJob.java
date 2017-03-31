@@ -54,7 +54,7 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
         setLogFile(new File(_outDir, FileUtil.makeFileNameWithTimestamp("fastaImport", "log")));
     }
 
-    private File createLocalDirectory(PipeRoot pipeRoot) throws IOException
+    public static File createLocalDirectory(PipeRoot pipeRoot) throws IOException
     {
         File webserverOutDir = new File(pipeRoot.getRootPath(), _folderPrefix);
         if (!webserverOutDir.exists())
