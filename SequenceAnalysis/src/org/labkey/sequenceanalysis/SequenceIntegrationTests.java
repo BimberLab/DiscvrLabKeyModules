@@ -960,6 +960,7 @@ public class SequenceIntegrationTests
             expectedOutputs.add(new File(normalizationDir, prefix + FileUtil.getBaseName(DUAL_BARCODE_FILENAME) + "_MID003_MID001.fastq.gz"));
             expectedOutputs.add(new File(normalizationDir, prefix + FileUtil.getBaseName(DUAL_BARCODE_FILENAME) + "_MID004_MID001.fastq.gz"));
             expectedOutputs.add(new File(normalizationDir, prefix + FileUtil.getBaseName(DUAL_BARCODE_FILENAME) + "_unknowns.fastq.gz"));
+            expectedOutputs.add(new File(normalizationDir, prefix + FileUtil.getBaseName(DUAL_BARCODE_FILENAME) + "_unknowns.fastq.gz.metrics"));
 
             expectedOutputs.add(new File(normalizationDir, prefix + FileUtil.getBaseName(DUAL_BARCODE_FILENAME) + ".barcode-summary.txt.gz"));
 
