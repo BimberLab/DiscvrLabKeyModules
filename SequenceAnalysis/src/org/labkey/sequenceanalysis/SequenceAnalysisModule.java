@@ -331,7 +331,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         ExperimentService.get().registerExperimentDataHandler(new HtmlExpDataHandler());
 
-        ServiceRegistry.get(SearchService.class).addDocumentParser(new SequenceNoOpDocumentParser());
+        SearchService.get().addDocumentParser(new SequenceNoOpDocumentParser());
     }
 
     @Override
@@ -359,6 +359,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         return testClasses;
     }
 
+    @NotNull
     public Set<Class> getUnitTests()
     {
         return PageFlowUtil.set(SequenceAlignmentTask.TestCase.class);
