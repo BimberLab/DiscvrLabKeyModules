@@ -110,5 +110,4 @@ ACCT_ID                                  AS  ACCT_ID
 ,ACCT_RATE_TIER_CODE_FK                  AS  RATE_TIER_CODE_FK
 ,Objectid
 ,Date_time
-FROM cnprcSrc_billing.ZACCOUNT
-WHERE ACCT_BEGIN_DATE > to_date('01-01-1900', 'DD-MM-YYYY');
+FROM cnprcSrc_billing.ZACCOUNT;
