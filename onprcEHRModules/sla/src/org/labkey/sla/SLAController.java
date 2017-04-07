@@ -31,9 +31,6 @@ import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.module.Module;
-import org.labkey.api.module.ModuleLoader;
-import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.notification.EmailMessage;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
@@ -44,18 +41,16 @@ import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.SecurityManager;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
+import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.settings.LookAndFeelProperties;
 import org.labkey.api.util.ConfigurationException;
-import org.labkey.api.util.ContainerUtil;
-import org.labkey.api.util.GUID;
 import org.labkey.api.util.MailHelper;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
-import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sla.etl.ETL;
 import org.labkey.sla.etl.ETLRunnable;
 import org.labkey.sla.model.IACUCProject;
@@ -110,16 +105,11 @@ public class SLAController extends SpringActionController
         }
     }
 
-    @RequiresPermission(AdminPermission.class)
+    @RequiresPermission(AdminOperationsPermission.class)
     public class ValidateEtlAction extends ConfirmAction<ValidateEtlSyncForm>
     {
         public boolean handlePost(ValidateEtlSyncForm form, BindException errors) throws Exception
         {
-            if (!getUser().isSiteAdmin())
-            {
-                throw new UnauthorizedException("Only site admins can view this page");
-            }
-
             ETLRunnable runnable = new ETLRunnable();
             runnable.validateEtlSync(form.isAttemptRepair());
             return true;
@@ -127,11 +117,6 @@ public class SLAController extends SpringActionController
 
         public ModelAndView getConfirmView(ValidateEtlSyncForm form, BindException errors) throws Exception
         {
-            if (!getUser().isSiteAdmin())
-            {
-                throw new UnauthorizedException("Only site admins can view this page");
-            }
-
             StringBuilder sb = new StringBuilder();
             sb.append("The following text describes the results of comparing the LabKey data with the MSSQL records from the production instance on the same server as this DB instance.  Clicking OK will cause the system to attempt to repair any differences.  Please do this very carefully.<br>");
             sb.append("<br><br>");
@@ -632,7 +617,7 @@ public class SLAController extends SpringActionController
             _draft = SLAManager.get().getPurchaseOrderDraft(getContainer(), form.getRowid());
             if (_draft == null)
                 errors.reject(ERROR_MSG, "No purchase draft found for rowid: " + form.getRowid());
-            else if (!getUser().isSiteAdmin() && _draft.getOwner() != getUser().getUserId())
+            else if ((!getUser().isSiteAdmin() || !getUser().isApplicationAdmin()) && _draft.getOwner() != getUser().getUserId())
                 errors.reject(ERROR_MSG, "You do not have permissions to view the purchase draft for rowid: " + form.getRowid());
         }
 
@@ -672,7 +657,7 @@ public class SLAController extends SpringActionController
                 PurchaseDraftForm existingDraft = SLAManager.get().getPurchaseOrderDraft(getContainer(), form.getRowid());
                 if (existingDraft == null)
                     errors.reject(ERROR_MSG, "No purchase draft found for rowid: " + form.getRowid());
-                else if (!getUser().isSiteAdmin() && existingDraft.getOwner() != getUser().getUserId())
+                else if ((!getUser().isSiteAdmin() || !getUser().isApplicationAdmin()) && existingDraft.getOwner() != getUser().getUserId())
                     errors.reject(ERROR_MSG, "You do not have permissions to update the purchase draft for rowid: " + form.getRowid());
             }
         }

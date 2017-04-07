@@ -23,6 +23,7 @@ import org.labkey.api.htcondorconnector.HTCondorService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.htcondorconnector.pipeline.HTCondorExecutionEngine;
@@ -77,7 +78,7 @@ public class HTCondorConnectorModule extends ExtendedSimpleModule
 
         DetailsURL details = DetailsURL.fromString("/htcondorconnector/settings.view");
         details.setContainerContext(ContainerManager.getRoot());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "htcondor admin", details.getActionURL());
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "htcondor admin", details.getActionURL(), AdminOperationsPermission.class);
     }
 
     @Override

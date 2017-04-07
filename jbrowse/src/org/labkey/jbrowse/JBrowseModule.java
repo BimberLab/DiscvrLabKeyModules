@@ -26,6 +26,7 @@ import org.labkey.api.ldk.LDKService;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.SystemMaintenance;
@@ -83,7 +84,7 @@ public class JBrowseModule extends ExtendedSimpleModule
     {
         DetailsURL details = DetailsURL.fromString("/jbrowse/settings.view");
         details.setContainerContext(ContainerManager.getRoot());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "jbrowse admin", details.getActionURL());
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "jbrowse admin", details.getActionURL(), AdminOperationsPermission.class);
 
         LDKService.get().registerQueryButton(new AddTrackButton(), "sequenceanalysis", "reference_library_tracks");
         LDKService.get().registerQueryButton(new AddLibraryButton(), "sequenceanalysis", "reference_libraries");

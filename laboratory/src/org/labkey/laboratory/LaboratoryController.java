@@ -63,6 +63,7 @@ import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
@@ -150,7 +151,7 @@ public class LaboratoryController extends SpringActionController
         }
     }
 
-    @RequiresPermission(AdminPermission.class)
+    @RequiresPermission(AdminOperationsPermission.class)
     public class EnsureIndexesAction extends ConfirmAction<Object>
     {
         public void validateCommand(Object form, Errors errors)
@@ -165,11 +166,6 @@ public class LaboratoryController extends SpringActionController
 
         public ModelAndView getConfirmView(Object form, BindException errors) throws Exception
         {
-            if (!getUser().isSiteAdmin())
-            {
-                throw new UnauthorizedException("Only site admins can view this page");
-            }
-
             StringBuilder msg = new StringBuilder();
             msg.append("Certain assays can have performance improved by the addition of indexes, which can be suggested by modules.  The following indexes are recommended for the assays installed on this server:<p>");
 

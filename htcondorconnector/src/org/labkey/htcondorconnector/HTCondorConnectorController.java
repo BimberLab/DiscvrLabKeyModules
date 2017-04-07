@@ -25,7 +25,7 @@ import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
-import org.labkey.api.security.RequiresSiteAdmin;
+import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.util.URLHelper;
@@ -90,7 +90,7 @@ public class HTCondorConnectorController extends SpringActionController
         }
     }
 
-    @RequiresSiteAdmin
+    @RequiresPermission(AdminOperationsPermission.class)
     @CSRF
     public class SetSettingsAction extends ApiAction<SettingsForm>
     {

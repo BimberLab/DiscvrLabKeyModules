@@ -24,6 +24,7 @@ import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.resource.Resource;
+import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.WebPartFactory;
 
@@ -73,7 +74,7 @@ public class MergeSyncModule extends ExtendedSimpleModule
         assert r != null;
         EHRService.get().registerTriggerScript(this, r);
         DetailsURL details = DetailsURL.fromString("/mergeSync/begin.view", ContainerManager.getSharedContainer());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "merge sync admin", details.getActionURL());
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "merge sync admin", details.getActionURL(), AdminPermission.class);
 
         MergeSyncManager.get().init();
 

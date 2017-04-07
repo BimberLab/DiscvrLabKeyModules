@@ -30,6 +30,7 @@ import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.QuerySchema;
+import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.sla.dataentry.CensusFormType;
@@ -79,7 +80,7 @@ public class SLAModule extends ExtendedSimpleModule
         AuditLogService.get().registerAuditType(new ETLAuditProvider());
 
         DetailsURL details = DetailsURL.fromString("/sla/etlAdmin.view", ContainerManager.getSharedContainer());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "sla etl admin", details.getActionURL());
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "sla etl admin", details.getActionURL(), AdminPermission.class);
 
         EHRService.get().registerMoreActionsButton(new EHRShowEditUIButton(this, "sla", "allowableAnimals", EHRProtocolEditPermission.class), "sla", "allowableAnimals");
 

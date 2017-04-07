@@ -28,6 +28,7 @@ import org.labkey.api.ldk.notification.NotificationService;
 import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.security.roles.RoleManager;
@@ -154,7 +155,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
 
         DetailsURL details = DetailsURL.fromString("/laboratory/siteLabSettings.view");
         details.setContainerContext(ContainerManager.getSharedContainer());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "discvr admin", details.getActionURL());
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "discvr admin", details.getActionURL(), AdminOperationsPermission.class);
         NotificationService.get().registerNotification(new LabSummaryNotification(this));
 
         LaboratoryService.get().registerTableIndex("core", "containers", Arrays.asList("RowId", "Parent", "EntityId", "Type"));
