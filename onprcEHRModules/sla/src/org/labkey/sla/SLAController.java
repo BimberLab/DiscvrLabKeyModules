@@ -617,7 +617,7 @@ public class SLAController extends SpringActionController
             _draft = SLAManager.get().getPurchaseOrderDraft(getContainer(), form.getRowid());
             if (_draft == null)
                 errors.reject(ERROR_MSG, "No purchase draft found for rowid: " + form.getRowid());
-            else if ((!getUser().isSiteAdmin() || !getUser().isApplicationAdmin()) && _draft.getOwner() != getUser().getUserId())
+            else if (!getUser().hasRootAdminPermission() && _draft.getOwner() != getUser().getUserId())
                 errors.reject(ERROR_MSG, "You do not have permissions to view the purchase draft for rowid: " + form.getRowid());
         }
 
@@ -657,7 +657,7 @@ public class SLAController extends SpringActionController
                 PurchaseDraftForm existingDraft = SLAManager.get().getPurchaseOrderDraft(getContainer(), form.getRowid());
                 if (existingDraft == null)
                     errors.reject(ERROR_MSG, "No purchase draft found for rowid: " + form.getRowid());
-                else if ((!getUser().isSiteAdmin() || !getUser().isApplicationAdmin()) && existingDraft.getOwner() != getUser().getUserId())
+                else if (!getUser().hasRootAdminPermission() && existingDraft.getOwner() != getUser().getUserId())
                     errors.reject(ERROR_MSG, "You do not have permissions to update the purchase draft for rowid: " + form.getRowid());
             }
         }
