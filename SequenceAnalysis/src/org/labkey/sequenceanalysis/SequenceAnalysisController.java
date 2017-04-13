@@ -85,7 +85,6 @@ import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QueryService;
-import org.labkey.api.resource.Resource;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.IgnoresTermsOfUse;
 import org.labkey.api.security.RequiresPermission;
@@ -383,10 +382,10 @@ public class SequenceAnalysisController extends SpringActionController
                 cds.addAll(fact.getClientDependencies());
             }
 
-            Resource r = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class).getModuleResource(Path.parse(_htmlFile));
-            assert r != null;
+            Module module = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
 
-            ModuleHtmlView view = new ModuleHtmlView(r);
+            ModuleHtmlView view = ModuleHtmlView.get(module, Path.parse(_htmlFile));
+            assert view != null;
             view.addClientDependencies(cds);
 
             return view;

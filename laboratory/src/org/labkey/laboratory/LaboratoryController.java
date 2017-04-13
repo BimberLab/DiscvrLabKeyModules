@@ -133,7 +133,7 @@ public class LaboratoryController extends SpringActionController
             }
 
             Module labModule = ModuleLoader.getInstance().getModule(LaboratoryModule.NAME);
-            HtmlView view = ModuleHtmlView.get(labModule, Path.parse("views/prepareExptRun.html"), null);
+            HtmlView view = ModuleHtmlView.get(labModule, "prepareExptRun");
 
             Set<ClientDependency> cd = ad.getClientDependencies();
             if (cd != null)
