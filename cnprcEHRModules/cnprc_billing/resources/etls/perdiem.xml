@@ -10,7 +10,7 @@
         </transform>
     </transforms>
     <schedule>
-        <!-- run on 1st day of the Month at 1 am -->
+        <!-- run on 5th day of the Month at 1 am -->
         <cron expression="0 0 1 5 1/1 ? *"/> <!--seconds, minutes, hours, day-of-month, month, day-of-week, year(optional) -->
     </schedule>
 </etl>
