@@ -2883,6 +2883,7 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_grant_pro
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_grant_year_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_pdl_billing_summary_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_pdl_charge_id_delete.sql -text
+cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_perdiem_month_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_perdiem_rates_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_project_charge_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_resource_center_delete.sql -text
