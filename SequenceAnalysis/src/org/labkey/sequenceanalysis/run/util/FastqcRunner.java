@@ -341,11 +341,15 @@ public class FastqcRunner
             params.add("-Dfastqc.threads=" + threads);
         }
 
-        File fastqcDir = lookupFile("external/fastqc");
-
+        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("/external"));
+        if (r == null)
+        {
+            throw new IllegalArgumentException("Unable to find /external directory");
+        }
+        File externalDir = ((FileResource)r).getFile();
+        File fastqcDir = new File(externalDir, "fastqc");
         List<String> classPath = new ArrayList<>();
 
-        File externalDir = lookupFile("external");
         File bzJar = new File(externalDir, "jbzip2-0.9.jar");
         if (!bzJar.exists())
             throw new RuntimeException("Not found: " + bzJar.getPath());

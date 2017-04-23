@@ -53,6 +53,8 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.FastaDataLoader;
 import org.labkey.api.reader.FastaLoader;
+import org.labkey.api.resource.FileResource;
+import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.permissions.DeletePermission;
@@ -62,6 +64,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
@@ -335,8 +338,13 @@ public class SequenceAnalysisManager
             }
         }
 
-        File samJar = new File(webappDir, "WEB-INF/lib");
-        samJar = new File(samJar, "htsjdk-2.8.1.jar");
+        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("/external/htsjdk-2.8.1.jar"));
+        if (r == null)
+        {
+            throw new IllegalArgumentException("Unable to find htsjdk JAR file");
+        }
+
+        File samJar = ((FileResource)r).getFile();
         if (!samJar.exists())
             throw new RuntimeException("Not found: " + samJar.getPath());
 
