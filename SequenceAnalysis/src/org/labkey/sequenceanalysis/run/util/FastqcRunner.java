@@ -137,7 +137,7 @@ public class FastqcRunner
             pb.directory(f.getParentFile());
 
             Process p = pb.start();
-            try (BufferedReader procReader = new BufferedReader(new InputStreamReader(p.getInputStream())))
+            try (BufferedReader procReader = new BufferedReader(new InputStreamReader(p.getInputStream(), StringUtilsLabKey.DEFAULT_CHARSET)))
             {
                 String line;
                 while ((line = procReader.readLine()) != null)
@@ -341,12 +341,19 @@ public class FastqcRunner
             params.add("-Dfastqc.threads=" + threads);
         }
 
-        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("/external"));
-        if (r == null)
+        Module m = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME);
+
+        File externalDir = null;
+        MergedDirectoryResource external = (MergedDirectoryResource)ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("external"));
+        for (Resource child : external.list())
         {
-            throw new IllegalArgumentException("Unable to find /external directory");
+            if (child instanceof FileResource)
+            {
+                externalDir = ((FileResource) child).getFile();
+                break;
+            }
         }
-        File externalDir = ((FileResource)r).getFile();
+
         File fastqcDir = new File(externalDir, "fastqc");
         List<String> classPath = new ArrayList<>();
 

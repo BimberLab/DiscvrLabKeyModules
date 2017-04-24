@@ -54,6 +54,7 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.FastaDataLoader;
 import org.labkey.api.reader.FastaLoader;
 import org.labkey.api.resource.FileResource;
+import org.labkey.api.resource.MergedDirectoryResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
@@ -338,13 +339,25 @@ public class SequenceAnalysisManager
             }
         }
 
-        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("/external/htsjdk-2.8.1.jar"));
+        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("external/htsjdk-2.8.1.jar"));
+        File samJar = null;
         if (r == null)
         {
-            throw new IllegalArgumentException("Unable to find htsjdk JAR file");
+            //debugging only.  remove when done:
+            _log.error("unable to find htsjdk JAR.  files present:");
+            MergedDirectoryResource external = (MergedDirectoryResource)ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("external"));
+            for (Resource child : external.list())
+            {
+                _log.error(child.getClass().getName() + "/" + child.getPath().toString());
+                if (child instanceof FileResource && "htsjdk-2.8.1.jar".equals(((FileResource)child).getFile().getName()))
+                {
+                    samJar = ((FileResource) child).getFile();
+                    break;
+                }
+            }
+            //throw new IllegalArgumentException("Unable to find htsjdk JAR file");
         }
 
-        File samJar = ((FileResource)r).getFile();
         if (!samJar.exists())
             throw new RuntimeException("Not found: " + samJar.getPath());
 
