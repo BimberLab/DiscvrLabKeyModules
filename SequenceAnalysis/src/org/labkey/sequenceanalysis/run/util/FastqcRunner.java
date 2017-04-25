@@ -349,7 +349,7 @@ public class FastqcRunner
         {
             if (child instanceof FileResource)
             {
-                externalDir = ((FileResource) child).getFile();
+                externalDir = ((FileResource) child).getFile().getParentFile();
                 break;
             }
         }
