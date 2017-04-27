@@ -2836,6 +2836,7 @@ cnprcEHRModules/cnprc_billing/resources/etls/wo_costing.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/wo_line_item.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/wo_recipient_codes.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/wo_recipients.xml -text
+cnprcEHRModules/cnprc_billing/resources/etls/wo_recipients_truncate.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/wo_template.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/work_order.xml -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_account.sql -text
