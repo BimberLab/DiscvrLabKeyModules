@@ -1,30 +1,20 @@
 import org.labkey.gradle.util.BuildUtils;
 
-configurations
-{
-    samtools
+repositories {
+   maven {
+      url "http://clojars.org/repo"
+   }
 }
 
 dependencies {
    apiCompile "com.github.samtools:htsjdk:${htsjdkVersion}"
    external "com.github.samtools:htsjdk:${htsjdkVersion}"
-   samtools "com.github.samtools:htsjdk:${htsjdkVersion}"
    BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":externalModules:labModules:laboratory", depProjectConfig: "apiCompile")
    BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":externalModules:labModules:LDK", depProjectConfig: "apiCompile")
    external 'com.thoughtworks.xstream:xstream:1.2.2'
    external 'org.biojava:biojava3-core:3.0.7'
    external 'org.biojava:biojava3-genome:3.0.7'
+   external 'org.itadaki:bzip2:0.9.1'
+   external 'org.clojars.chapmanb:sam:1.96'
    external "org.apache.commons:commons-math3:${commonsMath3Version}"
 }
-
-project.task("copySamtools",
-        type: Copy,
-        group: "Build",
-        description: "Copy samtools app into directory for use as an executable jar",
-        { CopySpec copy ->
-           copy.from project.configurations.samtools
-           copy.into new File(project.labkey.explodedModuleDir, "external")
-        }
-)
-
-project.tasks.module.dependsOn(project.tasks.copySamtools)

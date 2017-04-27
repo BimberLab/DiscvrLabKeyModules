@@ -341,37 +341,33 @@ public class FastqcRunner
             params.add("-Dfastqc.threads=" + threads);
         }
 
-        Module m = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME);
-
-        File externalDir = null;
-        MergedDirectoryResource external = (MergedDirectoryResource)ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("external"));
-        for (Resource child : external.list())
+        File libDir = null;
+        MergedDirectoryResource lib = (MergedDirectoryResource)ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("lib"));
+        for (Resource child : lib.list())
         {
             if (child instanceof FileResource)
             {
-                externalDir = ((FileResource) child).getFile().getParentFile();
+                libDir = ((FileResource) child).getFile().getParentFile();
                 break;
             }
         }
 
-        File fastqcDir = new File(externalDir, "fastqc");
-        List<String> classPath = new ArrayList<>();
-
-        File bzJar = new File(externalDir, "jbzip2-0.9.jar");
+        File fastqcDir = new File(libDir.getParentFile(), "external/fastqc");
+        File bzJar = new File(libDir, "jbzip2-0.9.1.jar");
         if (!bzJar.exists())
             throw new RuntimeException("Not found: " + bzJar.getPath());
 
-        File samJar = new File(externalDir, "sam-1.96.jar");
+        File samJar = new File(libDir, "sam-1.96.jar");
         if (!samJar.exists())
             throw new RuntimeException("Not found: " + samJar.getPath());
 
-        File libDir = new File(externalDir.getParentFile(), "lib");
         File commonsMath = new File(libDir, "commons-math3-3.6.1.jar");
         if (!commonsMath.exists())
         {
             throw new RuntimeException("Not found: " + commonsMath.getPath());
         }
 
+        List<String> classPath = new ArrayList<>();
         classPath.add(".");
         classPath.add(fastqcDir.getPath());
         classPath.add(samJar.getPath());
