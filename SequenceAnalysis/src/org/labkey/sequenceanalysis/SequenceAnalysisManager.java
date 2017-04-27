@@ -327,41 +327,21 @@ public class SequenceAnalysisManager
 
     public static File getHtsJdkJar()
     {
-        File webappDir = ModuleLoader.getInstance().getWebappDir();
-
-        //NOTE: webappdir is null on remote servers
-        if (webappDir == null)
-        {
-            webappDir = new File(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class).getExplodedPath(), "../../labkeywebapp");
-            if (!webappDir.exists())
-            {
-                throw new RuntimeException("Unable to find JAR root.");
-            }
-        }
-
-        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("external/htsjdk-2.8.1.jar"));
-        File samJar = null;
+        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("lib/htsjdk-2.8.1.jar"));
         if (r == null)
         {
-            //debugging only.  remove when done:
-            _log.error("unable to find htsjdk JAR.  files present:");
-            MergedDirectoryResource external = (MergedDirectoryResource)ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("external"));
-            for (Resource child : external.list())
-            {
-                _log.error(child.getClass().getName() + "/" + child.getPath().toString());
-                if (child instanceof FileResource && "htsjdk-2.8.1.jar".equals(((FileResource)child).getFile().getName()))
-                {
-                    samJar = ((FileResource) child).getFile();
-                    break;
-                }
-            }
-            //throw new IllegalArgumentException("Unable to find htsjdk JAR file");
+            throw new IllegalArgumentException("Unable to find htsjdk JAR file");
+        }
+        else if (!(r instanceof FileResource))
+        {
+            throw new IllegalArgumentException("resource not instance of FileResource: " + r.getClass().getName());
         }
 
-        if (!samJar.exists())
-            throw new RuntimeException("Not found: " + samJar.getPath());
+        File htsjdkJar = ((FileResource)r).getFile();
+        if (!htsjdkJar.exists())
+            throw new RuntimeException("Not found: " + htsjdkJar.getPath());
 
-        return samJar;
+        return htsjdkJar;
     }
 
     public static void cascadeDelete(int userId, String containerId, String schemaName, String queryName, String keyField, Object keyValue) throws SQLException
