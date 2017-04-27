@@ -14,6 +14,7 @@ dependencies {
    external 'com.thoughtworks.xstream:xstream:1.2.2'
    external 'org.biojava:biojava3-core:3.0.7'
    external 'org.biojava:biojava3-genome:3.0.7'
+   external "org.apache.commons:commons-math3:${commonsMath3Version}"
 }
 
 project.task("copySamtools",
