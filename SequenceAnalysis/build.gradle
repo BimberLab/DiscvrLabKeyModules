@@ -23,7 +23,7 @@ project.task("copySamtools",
         description: "Copy samtools app into directory for use as an executable jar",
         { CopySpec copy ->
            copy.from project.configurations.samtools
-           copy.into new File(project.buildDir, "resources/external")
+           copy.into new File(project.labkey.explodedModuleDir, "external")
         }
 )
 
