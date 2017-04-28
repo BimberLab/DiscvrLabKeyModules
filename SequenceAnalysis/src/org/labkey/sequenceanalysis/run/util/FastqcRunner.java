@@ -341,19 +341,9 @@ public class FastqcRunner
             params.add("-Dfastqc.threads=" + threads);
         }
 
-        File libDir = null;
-        MergedDirectoryResource lib = (MergedDirectoryResource)ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("lib"));
-        for (Resource child : lib.list())
-        {
-            if (child instanceof FileResource)
-            {
-                libDir = ((FileResource) child).getFile().getParentFile();
-                break;
-            }
-        }
-
+        File libDir = new File(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getExplodedPath(), "lib");
         File fastqcDir = new File(libDir.getParentFile(), "external/fastqc");
-        File bzJar = new File(libDir, "jbzip2-0.9.1.jar");
+        File bzJar = new File(libDir, "bzip2-0.9.1.jar");
         if (!bzJar.exists())
             throw new RuntimeException("Not found: " + bzJar.getPath());
 
