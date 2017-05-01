@@ -4,7 +4,8 @@ subprojects {
   Project p ->
     if (ModuleFinder.isPotentialModule(p))
     {
-      apply plugin: 'java'
-      apply plugin: 'org.labkey.module'
+        p.evaluationDependsOn(":server:api")
+        apply plugin: 'java'
+        apply plugin: 'org.labkey.module'
     }
 }
