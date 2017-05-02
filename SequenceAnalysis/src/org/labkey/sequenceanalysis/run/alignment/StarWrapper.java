@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
@@ -114,12 +115,16 @@ public class StarWrapper extends AbstractCommandWrapper
                 args.add("zcat");
             }
 
-            Boolean stranded = getProvider().getParameterByName("stranded").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
-            if (stranded)
+            Boolean addSAMStrandField = getProvider().getParameterByName("addSAMStrandField").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
+            if (addSAMStrandField)
             {
                 args.add("--outSAMstrandField");
                 args.add("intronMotif");
+            }
 
+            Boolean removeNoncanonicalUnannotated = getProvider().getParameterByName("removeNoncanonicalUnannotated").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
+            if (removeNoncanonicalUnannotated)
+            {
                 args.add("--outFilterIntronMotifs");
                 args.add("RemoveNoncanonicalUnannotated");
             }
@@ -131,6 +136,8 @@ public class StarWrapper extends AbstractCommandWrapper
                 File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class));
                 if (gtf.exists())
                 {
+                    output.addInput(gtf, "Splice Sites File");
+
                     args.add("--sjdbGTFfile");
                     args.add(gtf.getPath());
 
@@ -177,9 +184,22 @@ public class StarWrapper extends AbstractCommandWrapper
                 throw new PipelineJobException("Unable to find expected output: " + readCounts.getPath());
             }
 
-            output.addOutput(readCounts, "Reads Per Gene");
+            File readCountsMoved = new File(outputDirectory, basename + "ReadsPerGene.out.txt");
+            try
+            {
+                if (readCountsMoved.exists())
+                {
+                    readCountsMoved.delete();
+                }
+                FileUtils.moveFile(readCounts, readCountsMoved);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
 
-            output.addSequenceOutput(readCounts, rs.getName() + " Gene Counts (STAR)", "Reads Per Gene", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
+            output.addOutput(readCountsMoved, "Reads Per Gene");
+            output.addSequenceOutput(readCountsMoved, rs.getName() + " Gene Counts (STAR)", "Reads Per Gene", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             //set permissions on directories.  it is possible we actually want to delete these
@@ -342,12 +362,15 @@ public class StarWrapper extends AbstractCommandWrapper
                     put("checked", false);
                 }}, false),
                 ToolParameterDescriptor.create("sjdbGTFtagExonParentTranscript", "Exon Parent Transcript", "This is only required for GFF3 files.  It is the annotation used to assign exons to transcripts.  For GFF3 files this is usually Parent.  It will be ignored if a GTF file is used.", "textfield", null, "Parent"),
-                ToolParameterDescriptor.create("stranded", "Data Are Stranded?", "If checked, the following arguments will be added: --outSAMstrandField=intronMotif and --outFilterIntronMotifs=RemoveNoncanonicalUnannotated.", "checkbox", new JSONObject(){{
-                    put("checked", true);
+                ToolParameterDescriptor.create("addSAMStrandField", "Add SAM Strand Field", "If you have unstranded data and plan to use cufflinks, this should be checked.  It will add the XS tag to the output BAM file.", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, true),
+                ToolParameterDescriptor.create("removeNoncanonicalUnannotated", "Remove Noncanonical Unannotated Junctions", "If checked, the argument --outFilterIntronMotifs=RemoveNoncanonicalUnannotated will be added, which will filter out noncanonical, unannotated junctions.", "checkbox", new JSONObject(){{
+                    put("checked", false);
                 }}, true)
-            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://github.com/alexdobin/STAR/", true, true);
+            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://github.com/alexdobin/STAR/", true, true, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
 
-            setAlwaysCacheIndex(true);
+            setAlwaysCacheIndex(true);;
         }
 
         public StarAlignmentStep create(PipelineContext context)

@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  */
 public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHandler
 {
-    private FileType _fileType = new FileType("ReadsPerGene.out.tab", false);
+    private FileType _fileType = new FileType(Arrays.asList("ReadsPerGene.out.txt", "ReadsPerGene.out.tab"), "ReadsPerGene.out.txt", false);
     private static final String STRANDED = "Stranded";
     private static final String UNSTRANDED = "Unstranded";
     private static final String INFER = "Infer";
@@ -228,21 +228,21 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
         int noGeneId = 0;
         try (BufferedReader gtfReader = Readers.getReader(gtfFile))
         {
-            Pattern geneIdPattern = isGTF ? Pattern.compile("(gene_id \")([^\"]+)\"(.*)") : Pattern.compile("(GeneID:)([^,]+)(.*)");
+            Pattern geneIdPattern = isGTF ? Pattern.compile("((gene_id) \")([^\"]+)\"(.*)", Pattern.CASE_INSENSITIVE) : Pattern.compile("((gene_id|geneID)=)([^;]+)(.*)", Pattern.CASE_INSENSITIVE);
 
             Map<String, Pattern> patternMap = new HashMap<>();
             if (isGTF)
             {
-                patternMap.put("transcript_id", Pattern.compile("(transcript_id \")([^\"]+)\"(.*)"));
-                patternMap.put("gene_name", Pattern.compile("(gene_name \")([^\"]+)\"(.*)"));
-                patternMap.put("gene_description", Pattern.compile("(gene_description \")([^\"]+)\"(.*)"));
+                patternMap.put("transcript_id", Pattern.compile("((transcript_id \"))([^\"]+)\"(.*)", Pattern.CASE_INSENSITIVE));
+                patternMap.put("gene_name", Pattern.compile("((gene_name \"))([^\"]+)\"(.*)", Pattern.CASE_INSENSITIVE));
+                patternMap.put("gene_description", Pattern.compile("((gene_description \"))([^\"]+)\"(.*)", Pattern.CASE_INSENSITIVE));
             }
             else
             {
                 //GFF
-                patternMap.put("transcript_id", Pattern.compile("(transcript_id=)([^;]+)(.*)"));
-                patternMap.put("gene_name", Pattern.compile("(gene=)([^;]+)(.*)"));
-                patternMap.put("gene_description", Pattern.compile("(product=)([^;]+)(.*)"));
+                patternMap.put("transcript_id", Pattern.compile("((transcript_id=))([^;]+)(.*)", Pattern.CASE_INSENSITIVE));
+                patternMap.put("gene_name", Pattern.compile("((gene_name|gene)[=:])([^;]+)(.*)", Pattern.CASE_INSENSITIVE));
+                patternMap.put("gene_description", Pattern.compile("((product|description)=)([^;]+)(.*)", Pattern.CASE_INSENSITIVE));
             }
 
             String line;
@@ -263,12 +263,12 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                         Matcher m2 = pattern.matcher(line);
                         if (m2.find())
                         {
-                            String val = m2.group(2);
+                            String val = m2.group(3);
                             map.put(field, val);
                         }
                     }
 
-                    String geneId = m1.group(2);
+                    String geneId = m1.group(3);
                     geneMap.put(geneId, map);
                 }
                 else
@@ -327,16 +327,11 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
 
                     distinctGenes.add(geneId);
 
-                    if (unstranded > 0)
+                    if (strandMax > 0)
                     {
-                        double ratio = (double)strandMax / unstranded;
+                        double ratio = (double)strandMax / (strand1 + strand2);
                         sumStrandRatio += ratio;
                         countStrandRatio++;
-                    }
-                    else if (strandMax > 0)
-                    {
-                        //TODO: should we do something?
-                        ctx.getLogger().info(geneId + ": zero unstranded, but non-zero stranded reads: " + unstranded + " / " + strandMax);
                     }
 
                     Map<String, Long> unstrandedMap = unstrandedCounts.get(so.getRowid());
@@ -433,7 +428,7 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
 
             writer.writeNext(header.toArray(new String[header.size()]));
 
-            Set<String> genesWithoutData = new HashSet<>();
+            Set<String> genesWithoutData = new TreeSet<>();
             for (String geneId : distinctGenes)
             {
                 List<String> row = new ArrayList<>();
@@ -472,7 +467,7 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                         writer.writeNext(row.toArray(new String[row.size()]));
                     }
 
-                    if (totalWithData == 0)
+                    if (totalWithData == 0 && !OTHER_IDS.contains(geneId))
                     {
                         genesWithoutData.add(geneId);
                     }
@@ -485,15 +480,14 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
 
             if (!genesWithoutData.isEmpty())
             {
-                job.getLogger().info("writing list of genes without data");
                 File skippedGenes = new File(ctx.getOutputDir(), "genesWithoutData.txt");
+                job.getLogger().info("writing list of the " + genesWithoutData.size() + " genes without data to: " + skippedGenes.getPath());
                 try (PrintWriter errWriter = PrintWriters.getPrintWriter(skippedGenes))
                 {
                     errWriter.write("GeneId\tGeneName\tGeneDescription\n");
                     for (String geneId : genesWithoutData)
                     {
-                        errWriter.write(geneId + "\t" + geneMap.get(geneId).get("gene_name") + "\t" + geneMap.get(geneId).get("gene_description") + "\n");
-
+                        errWriter.write(geneId + "\t" + (geneMap.get(geneId).get("gene_name") == null ? "" : geneMap.get(geneId).get("gene_name")) + "\t" + (geneMap.get(geneId).get("gene_description") == null ? "" : geneMap.get(geneId).get("gene_description")) + "\n");
                     }
                 }
                 catch (IOException e)

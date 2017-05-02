@@ -45,7 +45,7 @@ import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
 import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
-import org.labkey.sequenceanalysis.analysis.ProcessVariantsHandler;
+import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.GenomeLoadButton;
@@ -97,9 +97,15 @@ import org.labkey.sequenceanalysis.run.reference.CustomReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.DNAReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.SavedReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.VirusReferenceLibraryStep;
+import org.labkey.sequenceanalysis.run.util.CombineGVCFsHandler;
+import org.labkey.sequenceanalysis.run.variant.CombineVariantsHandler;
+import org.labkey.sequenceanalysis.run.variant.DepthOfCoverageHandler;
+import org.labkey.sequenceanalysis.run.variant.GenotypeConcordanceStep;
 import org.labkey.sequenceanalysis.run.variant.GenotypeFiltrationStep;
+import org.labkey.sequenceanalysis.run.variant.MultiAllelicPositionsHandler;
 import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
 import org.labkey.sequenceanalysis.run.variant.SelectSNVsStep;
+import org.labkey.sequenceanalysis.run.variant.SelectSamplesStep;
 import org.labkey.sequenceanalysis.run.variant.SelectVariantsStep;
 import org.labkey.sequenceanalysis.run.variant.VariantAnnotatorStep;
 import org.labkey.sequenceanalysis.run.variant.VariantEvalBySampleStep;
@@ -245,9 +251,11 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new GenotypeFiltrationStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SelectSNVsStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SelectVariantsStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SelectSamplesStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SNPEffStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantAnnotatorStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantFiltrationStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new GenotypeConcordanceStep.Provider());
 
         SequencePipelineService.get().registerPipelineStep(new VariantEvalStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantEvalBySampleStep.Provider());
@@ -257,6 +265,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
         SequenceAnalysisService.get().registerFileHandler(new GenotypeGVCFHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CombineGVCFsHandler());
         //SequenceAnalysisService.get().registerFileHandler(new AlignmentMetricsHandler());
         SequenceAnalysisService.get().registerFileHandler(new UnmappedSequenceBasedGenotypeHandler());
         SequenceAnalysisService.get().registerFileHandler(new PicardAlignmentMetricsHandler());
@@ -267,6 +276,9 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new CombineStarGeneCountsHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessVariantsHandler());
         SequenceAnalysisService.get().registerFileHandler(new UnmappedReadExportHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CombineVariantsHandler());
+        SequenceAnalysisService.get().registerFileHandler(new DepthOfCoverageHandler());
+        SequenceAnalysisService.get().registerFileHandler(new MultiAllelicPositionsHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));
@@ -324,7 +336,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         PipelineService.get().registerPipelineProvider(new SequencePipelineProvider(this));
 
         LDKService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
-        LDKService.get().registerQueryButton(new GenomeLoadButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
+        //TODO: consider improving import based off NCBI assembly ID
+        //LDKService.get().registerQueryButton(new GenomeLoadButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
 
         SystemMaintenance.addTask(new SequenceAnalysisMaintenanceTask());
 

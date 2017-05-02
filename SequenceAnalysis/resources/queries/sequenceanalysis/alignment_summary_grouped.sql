@@ -17,8 +17,8 @@ select
   a.analysis_id,
   a.alleles,
   a.alleleIds,
-  a.lineages,
-  a.totalLineages,
+  max(a.lineages) as lineages,
+  coalesce(max(a.totalLineages), 0) as totalLineages,
   a.loci,
 
   sum(a.total) as total_reads,
@@ -34,14 +34,14 @@ select
 --   end as category,
 
   group_concat(a.rowid) as rowids,
-  a.haplotypesWithAllele,
+  group_concat(distinct a.haplotypesWithAllele) as haplotypesWithAllele,
 
   (select sum(s.total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = a.analysis_id AND s.rowid IN (
       SELECT distinct asj.alignment_id from sequenceanalysis.alignment_summary_junction asj WHERE asj.ref_nt_id.locus = a.loci and asj.status = true
     )
   ) as total_reads_from_locus,
 
-  round(100 * (cast(sum(a.total) as float) / CASE WHEN a.lineages IS NULL THEN max(a.total_reads) ELSE cast((select sum(s.total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = a.analysis_id AND s.rowid IN (
+  round(100 * (cast(sum(a.total) as float) / CASE WHEN count(a.lineages) = 0 THEN max(a.total_reads) ELSE cast((select sum(s.total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = a.analysis_id AND s.rowid IN (
       SELECT distinct asj.alignment_id from sequenceanalysis.alignment_summary_junction asj WHERE asj.ref_nt_id.locus = a.loci and asj.status = true
     )
   ) as float) END), 2) as percent_from_locus,
@@ -76,4 +76,4 @@ FROM (
 
 ) a
 
-GROUP BY a.analysis_id, a.alleles, a.alleleIds, a.lineages, a.totalLineages, a.loci, a.haplotypesWithAllele
+GROUP BY a.analysis_id, a.alleles, a.alleleIds, a.loci

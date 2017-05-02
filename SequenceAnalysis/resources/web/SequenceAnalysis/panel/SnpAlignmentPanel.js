@@ -11,7 +11,8 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
     MAX_ROWS: 250000,
     FEATURE_COLOR_MAP: {
         'CTL Epitope': 'yellow',
-        'Protein Domain': 'cyan'
+        'Protein Domain': 'cyan',
+        'Protein Overlap' : 'purple'
     },
 
     statics: {
@@ -150,7 +151,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             queryName: 'sequence_analyses',
             includeTotalCount: false,
             columns: 'rowid,readset,readset/name,ref_nt_id,sampleid,readset/sampleid/samplename,readset/sampledate,readset/subjectid,readset/comment,type',
-            sort: 'readset/name',
+            sort: 'readset/subjectid,readset/sampledate,readset/name',
             filterArray: [LABKEY.Filter.create('rowid', this.analysisIds.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)],
             scope: this,
             success: function(data){
@@ -202,7 +203,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             maxRows: -1,
             timeout: 0,
             includeTotalCount: false,
-            columns: 'analysis_id,q_aas,q_non_ref_aas,ref_aa,ref_aa_id,ref_aa_insert_index,ref_aa_position,ref_nt_id,ref_aa,readcount,adj_depth,pct,indel_pct,synon_pct,ref_aa_id/name,ref_nt_id/name',
+            columns: 'analysis_id,q_aas,q_non_ref_aas,ref_aa,ref_aa_id,ref_aa_insert_index,ref_aa_position,ref_nt_id,ref_aa,readcount,adj_depth,pct,indel_fraction,synon_fraction,ref_aa_id/name,ref_nt_id/name',
             filterArray: [
                 LABKEY.Filter.create('analysis_id', this.analysisIds.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF),
                 //NOTE: added to reduce the total rowcount being sent to the client, as these datapoints rarely alter presentation
@@ -394,8 +395,8 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
 
             this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['adj_num_reads'] = row.readcount;
             this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['adj_percent'] = row.pct;
-            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['indel_pct'] = row.indel_pct;
-            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['synon_pct'] = row.synon_pct;
+            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['indel_fraction'] = row.indel_fraction;
+            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['synon_fraction'] = row.synon_fraction;
         };
     },
 
@@ -611,7 +612,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                             residue = snp.ref_aa;
                         }
                         //if majority of SNPs are synon, color accordingly
-                        else if (snp.synon_pct > 95){
+                        else if (snp.synon_fraction > 95){
                             residue = snp.ref_aa;
                         }
                         else if (snp.displayResidues.indexOf(':') != -1 ||
@@ -619,7 +620,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                                 snp.displayResidues.indexOf('+') != -1
                         ){
                             //if a significant percent of mutations at this position are indels, color as indel
-                            if ((snp.indel_pct / snp.adj_percent) > .3)
+                            if ((snp.indel_fraction / snp.adj_percent) > .3)
                                 snp.isIndel = true;
 
                             residue = 'X';

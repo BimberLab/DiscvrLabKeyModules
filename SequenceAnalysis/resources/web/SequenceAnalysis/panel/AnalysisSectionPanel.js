@@ -513,7 +513,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
 
                 //check for step #
                 var stepIdx = this.getStepIdxForToolParam(p, stepMap);
-                ret[p.name + (stepIdx ? '.' + stepIdx : '')] = p.getValue();
+                ret[p.name + (stepIdx ? '.' + stepIdx : '')] = p.getToolParameterValue ? p.getToolParameterValue () : p.getValue();
             }, this);
         }
 

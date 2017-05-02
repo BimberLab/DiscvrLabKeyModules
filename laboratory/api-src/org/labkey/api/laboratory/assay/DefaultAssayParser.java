@@ -88,7 +88,6 @@ public class DefaultAssayParser implements AssayParser
     private String HAS_RESULT = "__hasResult__";
 
     protected String RESULT_FIELD = "result";
-    protected String RESULT_OOR_FIELD = "resultOORIndicator";
 
     private static final Logger _log = Logger.getLogger(AssayParser.class);
 
@@ -102,7 +101,10 @@ public class DefaultAssayParser implements AssayParser
 
     protected TabLoader getTabLoader(String contents) throws IOException
     {
-        return new TabLoader(contents, _hasHeaders);
+        TabLoader loader = new TabLoader(contents, _hasHeaders);
+        loader.setInferTypes(false);
+
+        return loader;
     }
 
     protected Map<String, PropertyDescriptor> getPropertyMap(Map<String, DomainProperty> importMap)
@@ -138,7 +140,12 @@ public class DefaultAssayParser implements AssayParser
             TabLoader loader = getTabLoader(sb);
             configureColumns(propertyNameToDescriptor, loader);
             List<Map<String, Object>> rows = loader.load();
-            rows = processOORIndicators(rows, propertyNameToDescriptor, context);
+            List<String> resultFieldNames = inferResultFields(importMap);
+            for (String resultFieldName : resultFieldNames)
+            {
+                rows = processOORIndicators(resultFieldName, rows, propertyNameToDescriptor, context);
+            }
+
             context.getErrors().confirmNoErrors();
 
             rows = processRowsFromFile(rows, context);
@@ -152,16 +159,42 @@ public class DefaultAssayParser implements AssayParser
         }
     }
 
-    private List<Map<String, Object>> processOORIndicators(List<Map<String, Object>> rows, Map<String, PropertyDescriptor> propertyNameToDescriptor, ImportContext context)
+    private List<String> inferResultFields(Map<String, DomainProperty> importMap)
     {
-        if (!propertyNameToDescriptor.containsKey(RESULT_OOR_FIELD))
+        boolean hasResultCol = false;
+        List<String> ret = new ArrayList<>();
+        for (String name : importMap.keySet())
+        {
+            DomainProperty dp = importMap.get(name);
+            if (RESULT_FIELD.equalsIgnoreCase(dp.getName()))
+            {
+                hasResultCol = true;
+            }
+
+            if (LaboratoryService.ASSAYRESULT_CONCEPT_URI.equalsIgnoreCase(dp.getConceptURI()))
+            {
+                ret.add(dp.getName());
+            }
+        }
+
+        if (hasResultCol && ret.isEmpty())
+        {
+            ret.add(RESULT_FIELD);
+        }
+
+        return ret;
+    }
+
+    private List<Map<String, Object>> processOORIndicators(String resultFieldName, List<Map<String, Object>> rows, Map<String, PropertyDescriptor> propertyNameToDescriptor, ImportContext context)
+    {
+        if (!propertyNameToDescriptor.containsKey(getResultOORName(resultFieldName)))
             return rows;
 
         Pattern p = Pattern.compile("^(<|>).*");
 
         for (Map<String, Object> row : rows)
         {
-            Object resultObj = row.get(RESULT_FIELD);
+            Object resultObj = row.get(resultFieldName);
             if (resultObj != null && resultObj instanceof String)
             {
                 String resultString = (String)resultObj;
@@ -169,13 +202,13 @@ public class DefaultAssayParser implements AssayParser
                 {
                     String oor = resultString.substring(0, 1);
                     resultString = resultString.substring(1);
-                    row.put(RESULT_OOR_FIELD, oor);
+                    row.put(getResultOORName(resultFieldName), oor);
                 }
 
                 try
                 {
                     Double result = Double.parseDouble(resultString);
-                    row.put(RESULT_FIELD, result);
+                    row.put(resultFieldName, result);
                 }
                 catch (NumberFormatException e)
                 {
@@ -305,6 +338,11 @@ public class DefaultAssayParser implements AssayParser
         }
     }
 
+    private String getResultOORName(String colName)
+    {
+        return colName + "OORIndicator";
+    }
+
     protected void configureColumns(Map<String, PropertyDescriptor> propertyNameToDescriptor, TabLoader loader) throws IOException
     {
         for (ColumnDescriptor column : loader.getColumns())
@@ -314,7 +352,7 @@ public class DefaultAssayParser implements AssayParser
             if (pd != null)
             {
                 column.clazz = pd.getPropertyType().getJavaType();
-                if (RESULT_FIELD.equalsIgnoreCase(pd.getName()) && propertyNameToDescriptor.containsKey(RESULT_OOR_FIELD))
+                if (propertyNameToDescriptor.containsKey(getResultOORName(pd.getName())))
                     column.clazz = String.class;
 
                 if (!columnName.equals(pd.getName()))

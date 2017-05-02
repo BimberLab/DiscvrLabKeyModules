@@ -389,15 +389,8 @@ public class SequenceUtil
         }
     }
 
-    public static void sortROD(File input, Logger log) throws IOException, PipelineJobException
+    public static void sortROD(File input, Logger log, Integer startColumnIdx) throws IOException, PipelineJobException
     {
-        log.info("sorting file: " + input.getPath());
-        if (SystemUtils.IS_OS_WINDOWS)
-        {
-            log.info("unable to sort files on windows, skipping");
-            return;
-        }
-
         boolean isCompressed = input.getPath().endsWith(".gz");
         File sorted = new File(input.getParent(), "sorted.tmp");
         try (PrintWriter writer = PrintWriters.getPrintWriter(sorted))
@@ -423,7 +416,7 @@ public class SequenceUtil
 
         //then sort/append the records
         CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
-        wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + input.getPath() + "' | grep -v '^#' | sort -V -k1,1f -k2,2n"), ProcessBuilder.Redirect.appendTo(sorted));
+        wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + input.getPath() + "' | grep -v '^#' | sort -s -V -k1,1f" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n")), ProcessBuilder.Redirect.appendTo(sorted));
 
         //replace the non-sorted output
         input.delete();

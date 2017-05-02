@@ -11,6 +11,7 @@
        <column name="centerName" />
        <column name="date" />
        <column name="description" />
+       <column name="sra_accession" />
 
        <column name="created" />
        <column name="workbook" />

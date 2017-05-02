@@ -80,6 +80,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
+import org.labkey.api.pipeline.PipelineUrls;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
@@ -761,7 +762,12 @@ public class SequenceAnalysisController extends SpringActionController
                         {
                             PipelineStatusFile sf = PipelineService.get().getStatusFile(run.getJobId());
                             if (sf != null)
-                                msg.append("Folder: " + new File(sf.getFilePath()).getParentFile().getPath() + "<br><input type='hidden' name='jobIds' value='" + sf.getRowId() + "'/>");
+                            {
+                                File target = new File(sf.getFilePath()).getParentFile();
+                                String relativePath = FileUtil.relativize(PipelineService.get().getPipelineRootSetting(run.getContainer()).getRootPath(), target, false);
+                                ActionURL url = PageFlowUtil.urlProvider(PipelineUrls.class).urlBrowse(sf.lookupContainer(), getViewContext().getActionURL(), relativePath);
+                                msg.append("Folder: <a href='" + url.toString() + "' target='_blank'>" + target.getPath() + "</a><br><input type='hidden' name='jobIds' value='" + sf.getRowId() + "'/>");
+                            }
                         }
                         msg.append("<br>");
                     }
@@ -2061,7 +2067,7 @@ public class SequenceAnalysisController extends SpringActionController
                     File f = new File(o.getString("filePath"));
                     if (!f.exists())
                     {
-                        throw new PipelineValidationException("Unknown file: " + o.getString("filePath"));
+                        throw new PipelineValidationException("Unknown file: " + f.getPath());
                     }
                 }
                 else
@@ -3777,7 +3783,7 @@ public class SequenceAnalysisController extends SpringActionController
                     File file = new File(dirData, o.getString("fileName"));
                     if (!file.exists())
                     {
-                        errors.reject(ERROR_MSG, "Unknown file: " + o.getString("fileName"));
+                        errors.reject(ERROR_MSG, "Unknown file: " + file.getPath());
                         return null;
                     }
 
@@ -4555,7 +4561,7 @@ public class SequenceAnalysisController extends SpringActionController
                 File file = new File(dirData, o.getString("fileName"));
                 if (!file.exists())
                 {
-                    errors.reject(ERROR_MSG, "Unknown file: " + o.getString("fileName"));
+                    errors.reject(ERROR_MSG, "Unknown file: " + file.getPath());
                     return null;
                 }
 

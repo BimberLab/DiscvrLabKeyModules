@@ -226,6 +226,20 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=readData&query.readset~eq=${rowid}"));
             newCol.setLabel("Total Files");
             ret.addColumn(newCol);
+
+            SQLFragment sql2 = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("d.Name"), true, true, "','")).append(new SQLFragment(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd JOIN exp.data d ON (d.RowId = rd.fileId1 OR d.RowId = rd.fileId2) WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)"));
+            ExprColumn newCol2 = new ExprColumn(ret, "fileNames", sql2, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
+            newCol2.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=readData&query.readset~eq=${rowid}"));
+            newCol2.setLabel("File Names");
+            newCol2.setDescription("This will display a comma-separated list of all file names with reads.  This can be useful for SRA submissions.");
+            ret.addColumn(newCol2);
+
+            SQLFragment sql3 = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("rd.sra_accession"), true, true, "','")).append(new SQLFragment(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)"));
+            ExprColumn newCol3 = new ExprColumn(ret, "sraRuns", sql3, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
+            newCol3.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=readData&query.readset~eq=${rowid}"));
+            newCol3.setLabel("SRA Runs");
+            newCol3.setDescription("This will display a comma-separated list of all distinct SRA runs associated with this readset.");
+            ret.addColumn(newCol3);
         }
 
         if (ret.getColumn("totalAlignments") == null)

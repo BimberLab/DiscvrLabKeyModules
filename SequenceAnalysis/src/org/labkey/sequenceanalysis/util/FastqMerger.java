@@ -1,14 +1,21 @@
 package org.labkey.sequenceanalysis.util;
 
-import htsjdk.samtools.fastq.FastqReader;
-import htsjdk.samtools.fastq.FastqRecord;
-import htsjdk.samtools.fastq.FastqWriter;
-import htsjdk.samtools.fastq.FastqWriterFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
+import org.labkey.api.util.FileType;
+import org.labkey.api.writer.PrintWriters;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.util.Iterator;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * User: bimber
@@ -24,43 +31,25 @@ public class FastqMerger
         _logger = logger;
     }
 
-    public void mergeFiles(File output, List<File> inputs)
+    public void mergeFiles(File output, List<File> inputs) throws PipelineJobException
     {
-        _logger.info("Merging FASTQ Files:");
-        for (File f : inputs)
+        _logger.info("merging FASTQ files");
+
+        FileType gz = new FileType(".gz");
+        try (PrintWriter writer = PrintWriters.getPrintWriter(gz.isType(output) ? new GZIPOutputStream(new FileOutputStream(output, true)) : new FileOutputStream(output, true)))
         {
-            _logger.info(f.getName());
-        }
-
-        FastqWriter writer = null;
-        FastqReader reader = null;
-        FastqWriterFactory fact = new FastqWriterFactory();
-        fact.setUseAsyncIo(true);
-
-        try
-        {
-            writer = fact.newWriter(output);
-
-            for (File input : inputs)
+            for (File f : inputs)
             {
-                reader = new FastqReader(input);
-                Iterator<FastqRecord> iterator = reader.iterator();
-
-                while (iterator.hasNext())
+                _logger.info("reading file: " + f.getPath());
+                try (BufferedReader reader = Readers.getReader(gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f)))
                 {
-                    writer.write(iterator.next());
+                    IOUtils.copyLarge(reader, writer);
                 }
-                reader.close();
-                reader = null;
             }
         }
-        finally
+        catch (IOException e)
         {
-            if (writer != null)
-                writer.close();
-
-            if (reader != null)
-                reader.close();
+            throw new PipelineJobException(e);
         }
     }
 }

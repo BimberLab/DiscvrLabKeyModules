@@ -261,6 +261,7 @@
             <column columnName="ratio">
                 <nullable>true</nullable>
                 <columnTitle>260/280 Ratio</columnTitle>
+                <formatString>0.##</formatString>
             </column>
             <column columnName="molecule_type">
                 <nullable>true</nullable>

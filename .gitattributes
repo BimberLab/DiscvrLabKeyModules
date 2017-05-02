@@ -3169,6 +3169,8 @@ labModules/SequenceAnalysis/lib/biojava3-genome-3.0.7.jar -text
 labModules/SequenceAnalysis/lib/biojava3-phylo-3.0.7.jar -text
 labModules/SequenceAnalysis/lib/biojava3-ws-3.0.7.jar -text
 labModules/SequenceAnalysis/module.properties -text
+labModules/SequenceAnalysis/pipeline_code/gatk/GenotypeConcordance.java -text
+labModules/SequenceAnalysis/pipeline_code/gatk/GenotypeConcordanceBySite.java -text
 labModules/SequenceAnalysis/pipeline_code/gatk/MendelianViolationBySample.java -text
 labModules/SequenceAnalysis/pipeline_code/gatk/MendelianViolationCount.java -text
 labModules/SequenceAnalysis/pipeline_code/gatk/MinorAlleleFrequency.java -text
@@ -3299,6 +3301,7 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/aa_features_combi
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/aa_snps_by_codon/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/aa_snps_by_position.query.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/aa_snps_by_position.sql -text
+labModules/SequenceAnalysis/resources/queries/sequenceanalysis/aa_snps_by_position/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/adapter_sets.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/alignment_summary.js -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/alignment_summary_by_lineage.query.xml -text
@@ -3324,6 +3327,7 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/haplotypeMatches/
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/haplotype_sequences/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/nt_snps_by_pos/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/nt_snps_by_pos/Greater[!!-~]Than[!!-~]1[!!-~]Pct.qview.xml -text
+labModules/SequenceAnalysis/resources/queries/sequenceanalysis/nt_snps_with_aa.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfile_categories.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfiles.js -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/outputfiles/.qview.xml -text
@@ -3335,6 +3339,7 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/quality_metrics_p
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/quality_metrics_pivoted.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/readData/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/readData/File[!!-~]Details.qview.xml -text
+labModules/SequenceAnalysis/resources/queries/sequenceanalysis/readData/With[!!-~]Filepath.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_aa_sequences.js -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_nt_sequences.js -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/ref_nt_sequences/.qview.xml -text
@@ -3619,6 +3624,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/fastqc.css -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/GenomeFileSelectorField.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/IntervalField.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/ReadsetField.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/TrimmingTextArea.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/VariantFieldSelector.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/icons/dna_folder.png -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/icons/error.png -text
@@ -3700,7 +3706,6 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/GenotypeGVC
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/HaplotypeCallerHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/LiftoverHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/PicardAlignmentMetricsHandler.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/ProcessVariantsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/RnaSeqcHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/UnmappedSequenceBasedGenotypeHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/picard/CigarPositionIterable.java -text
@@ -3713,6 +3718,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/ReferenceLibra
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/SequenceModel.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/SequenceTag.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/UnderscoreBeanObjectFactory.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AbstractResumer.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AbstractSequenceTaskFactory.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentAnalysisCleanupTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/AlignmentAnalysisInitTask.java -text
@@ -3741,6 +3747,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeI
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeImportTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/PicardMetricsUtil.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/PrepareAlignerIndexesTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ProcessVariantsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ReadsetCreationTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ReadsetImportJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ReadsetInitTask.java -text
@@ -3838,6 +3845,10 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CallMdWrapp
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CleanSamWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CollectInsertSizeMetricsWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CollectWgsMetricsWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CombineGVCFsHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CombineGVCFsWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/CombineVariantsWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/DepthOfCoverageWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/DownsampleSamWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/EstimateLibraryComplexityWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FastaIndexer.java -text
@@ -3847,6 +3858,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FixBAMWrapp
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FixMateInformationWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FlagStatRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/FlashWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/GFFReadWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/GenotypeGVCFsWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/HaplotypeCallerWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/IndelRealignerWrapper.java -text
@@ -3855,6 +3867,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MarkDuplica
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MarkDuplicatesWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MergeBamAlignmentWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MergeSamFilesWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/MultiAllelicPositionWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/NTSnp.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/PARalyzerRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/RnaSeQCWrapper.java -text
@@ -3866,9 +3879,14 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/SplitNCigar
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/TabixRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/VariantAnnotatorWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/util/VariantEvalWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/CombineVariantsHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/DepthOfCoverageHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/GenotypeConcordanceStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/GenotypeFiltrationStep.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/MultiAllelicPositionsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SNPEffStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SelectSNVsStep.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SelectSamplesStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SelectVariantsStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SnpEffWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/VariantAnnotatorStep.java -text

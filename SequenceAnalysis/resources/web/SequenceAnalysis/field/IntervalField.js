@@ -23,6 +23,10 @@ Ext4.define('SequenceAnalysis.field.IntervalField', {
         return val ? val.join(';') : null;
     },
 
+    getToolParameterValue : function(){
+        return this.getSubmitValue();
+    },
+
     processText: function(val){
         if (val){
             val = Ext4.String.trim(val);

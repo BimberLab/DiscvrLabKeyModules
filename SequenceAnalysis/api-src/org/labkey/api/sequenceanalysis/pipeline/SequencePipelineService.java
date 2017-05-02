@@ -93,7 +93,15 @@ abstract public class SequencePipelineService
 
     abstract public File sortVcf(File inputVcf, @Nullable File outputVcf, File sequenceDictionary, Logger log) throws PipelineJobException;
 
-    abstract public void sortROD(File input, Logger log) throws IOException, PipelineJobException;
+    /**
+     *
+     * @param input
+     * @param log
+     * @param startColumnIdx The 1-based column on which to sort.  BED files are 2 and GTF/GFF are 4
+     * @throws IOException
+     * @throws PipelineJobException
+     */
+    abstract public void sortROD(File input, Logger log, Integer startColumnIdx) throws IOException, PipelineJobException;
 
     abstract public String inferRPath(Logger log);
 

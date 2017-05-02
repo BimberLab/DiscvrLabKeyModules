@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import htsjdk.samtools.util.Interval;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
@@ -22,6 +23,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -70,8 +72,9 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
                     }}, false),
                     ToolParameterDescriptor.create("outputFileDescription", "Table Description", "If publish output is checked, this will be used as the description for the created file.  It can help identify this in the future.", "textarea", new JSONObject(){{
                         put("width", 800);
-                    }}, "")
-            ), PageFlowUtil.set("sequenceanalysis/field/VariantFieldSelector.js"), "https://software.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_variantutils_VariantsToTable.php");
+                    }}, ""),
+                    ToolParameterDescriptor.create("intervals", "Intervals", "The intervals over which to merge the data.  They should be in the form: chr01:102-20394", "sequenceanalysis-intervalfield", null, null)
+            ), PageFlowUtil.set("sequenceanalysis/field/VariantFieldSelector.js", "/sequenceanalysis/field/IntervalField.js"), "https://software.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_variantutils_VariantsToTable.php");
         }
 
         public VariantsToTableStep create(PipelineContext ctx)
@@ -117,6 +120,17 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
                     args.add("-GF");
                     args.add(field);
                 }
+            }
+        }
+
+        String intervalText = StringUtils.trimToNull(getProvider().getParameterByName("intervals").extractValue(getPipelineCtx().getJob(), getProvider(), String.class));
+        List<Interval> il = parseAndSortIntervals(intervalText);
+        if (il != null)
+        {
+            for (Interval i : il)
+            {
+                args.add("-L");
+                args.add(i.getContig() + ":" + i.getStart() + "-" + i.getEnd());
             }
         }
 
@@ -191,5 +205,32 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
                 throw new PipelineJobException("Output not found: " + outputFile.getPath());
             }
         }
+    }
+
+    private List<Interval> parseAndSortIntervals(String intervalString) throws PipelineJobException
+    {
+        intervalString = StringUtils.trimToNull(intervalString);
+        if (intervalString == null)
+        {
+            return null;
+        }
+
+        intervalString = intervalString.replaceAll("(\\n|\\r|;)+", ";");
+        List<Interval> intervals = new ArrayList<>();
+        for (String i : intervalString.split(";"))
+        {
+            String[] tokens = i.split(":|-");
+            if (tokens.length != 3)
+            {
+                throw new PipelineJobException("Invalid interval: " + i);
+            }
+
+            intervals.add(new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2])));
+        }
+
+
+        Collections.sort(intervals);
+
+        return intervals;
     }
 }

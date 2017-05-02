@@ -37,7 +37,7 @@ public class IlluminaReadHeader
     private String _indexSequenceString;
 
     private static final int NO_SAMPLE_NUMBER_FOUND = -1;
-    private static final Pattern INDEX_PATTERN = Pattern.compile("^[ATGCN]+\\+[ATGCN]+]$");
+    private static final Pattern INDEX_PATTERN = Pattern.compile("^[ATGCN]+\\+[ATGCN]+$");
 
     public IlluminaReadHeader(String header) throws IllegalArgumentException
     {

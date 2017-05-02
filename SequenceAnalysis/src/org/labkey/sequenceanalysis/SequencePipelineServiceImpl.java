@@ -334,9 +334,9 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         return wrapper.sortVcf(inputVcf, outputVcf, sequenceDictionary);
     }
 
-    public void sortROD(File input, Logger log) throws IOException, PipelineJobException
+    public void sortROD(File input, Logger log, Integer startColumnIdx) throws IOException, PipelineJobException
     {
-        SequenceUtil.sortROD(input, log);
+        SequenceUtil.sortROD(input, log, startColumnIdx);
     }
 
     @Override

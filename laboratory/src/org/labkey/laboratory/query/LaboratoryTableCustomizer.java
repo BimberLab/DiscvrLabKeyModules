@@ -78,7 +78,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
             {
                 Container c = ti.getUserSchema().getContainer();
 
-                List<TableCustomizer> customizers = LaboratoryService.get().getCustomizers(c, ti.getSchema().getName(), ti.getName());
+                List<TableCustomizer> customizers = LaboratoryServiceImpl.get().getCustomizers(c, ti.getSchema().getName(), ti.getName());
                 for (TableCustomizer customizer : customizers)
                 {
                     customizer.customize(ti);
@@ -204,7 +204,8 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         {
             for (final DemographicsSource qd : qds)
             {
-                TableInfo target = qd.getTableInfo(us.getContainer(), us.getUser());
+                Container targetContainer = us.getContainer().isWorkbookOrTab() ? us.getContainer().getParent() : us.getContainer();
+                TableInfo target = qd.getTableInfo(targetContainer, us.getUser());
 
                 //TODO: push this into LaboratoryService and also cache them?
                 if (target != null)
@@ -226,7 +227,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                     col.setIsUnselectable(true);
                     col.setUserEditable(false);
 
-                    col.setFk(new QueryForeignKey(qd.getTableInfo(us.getContainer(), us.getUser()).getUserSchema(), null, qd.getQueryName(), qd.getTargetColumn(), qd.getTargetColumn()){
+                    col.setFk(new QueryForeignKey(qd.getTableInfo(targetContainer, us.getUser()).getUserSchema(), null, qd.getQueryName(), qd.getTargetColumn(), qd.getTargetColumn()){
                         public TableInfo getLookupTableInfo()
                         {
                             AbstractTableInfo ti = (AbstractTableInfo)super.getLookupTableInfo();
@@ -294,10 +295,10 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         col.setFk(new LookupForeignKey(){
             public TableInfo getLookupTableInfo()
             {
+                Container target = us.getContainer().isWorkbookOrTab() ? us.getContainer().getParent() : us.getContainer();
+                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), target, us, colName);
 
-                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, colName);
-
-                qd.setSql(getMajorEventsSql(schemaName, querySelectName, pkColSelectName, subjectSelectName, dateSelectName));
+                qd.setSql(getMajorEventsSql(target, schemaName, querySelectName, pkColSelectName, subjectSelectName, dateSelectName));
                 qd.setIsTemporary(true);
 
                 List<QueryException> errors = new ArrayList<QueryException>();
@@ -362,9 +363,10 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         col.setFk(new LookupForeignKey(){
             public TableInfo getLookupTableInfo()
             {
-                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, colName);
+                Container target = us.getContainer().isWorkbookOrTab() ? us.getContainer().getParent() : us.getContainer();
+                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), target, us, colName);
 
-                qd.setSql(getOverlapSql(schemaName, querySelectName, pkColSelectName, subjectSelectName, dateSelectName));
+                qd.setSql(getOverlapSql(target, schemaName, querySelectName, pkColSelectName, subjectSelectName, dateSelectName));
                 qd.setIsTemporary(true);
 
                 List<QueryException> errors = new ArrayList<QueryException>();
@@ -407,9 +409,10 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         col2.setFk(new LookupForeignKey(){
             public TableInfo getLookupTableInfo()
             {
-                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, lookupColName);
+                Container target = us.getContainer().isWorkbookOrTab() ? us.getContainer().getParent() : us.getContainer();
+                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), target, us, lookupColName);
 
-                qd.setSql(getOverlapPivotSql(schemaName, querySelectName, pkColSelectName, subjectColName, dateColName));
+                qd.setSql(getOverlapPivotSql(target, schemaName, querySelectName, pkColSelectName, subjectColName, dateColName));
                 qd.setIsTemporary(true);
 
                 List<QueryException> errors = new ArrayList<QueryException>();
@@ -468,10 +471,10 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         col.setFk(new LookupForeignKey(){
             public TableInfo getLookupTableInfo()
             {
+                Container target = us.getContainer().isWorkbookOrTab() ? us.getContainer().getParent() : us.getContainer();
+                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), target, us, colName);
 
-                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, colName);
-
-                qd.setSql(getOverlapSql(schemaName, querySelectName, pkColSelectName, subjectSelectName, null));
+                qd.setSql(getOverlapSql(target, schemaName, querySelectName, pkColSelectName, subjectSelectName, null));
                 qd.setIsTemporary(true);
 
                 List<QueryException> errors = new ArrayList<QueryException>();
@@ -514,9 +517,10 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         col2.setFk(new LookupForeignKey(){
             public TableInfo getLookupTableInfo()
             {
-                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, lookupName);
+                Container target = us.getContainer().isWorkbookOrTab() ? us.getContainer().getParent() : us.getContainer();
+                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), target, us, lookupName);
 
-                qd.setSql(getOverlapPivotSql(schemaName, querySelectName, pkColSelectName, subjectSelectName, null));
+                qd.setSql(getOverlapPivotSql(target, schemaName, querySelectName, pkColSelectName, subjectSelectName, null));
                 qd.setIsTemporary(true);
 
                 List<QueryException> errors = new ArrayList<QueryException>();
@@ -546,7 +550,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         ds.addColumn(col2);
     }
 
-    private String getOverlapSql(String schemaName, String querySelectName, String pkColSelectName, String subjectSelectName, @Nullable String dateSelectName)
+    private String getOverlapSql(Container source, String schemaName, String querySelectName, String pkColSelectName, String subjectSelectName, @Nullable String dateSelectName)
     {
         return "SELECT\n" +
                 "s." + pkColSelectName + ",\n" +
@@ -564,7 +568,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                 "END as projectGroup,\n" +
                 "\n" +
                 "FROM " + schemaName + "." + querySelectName + " s\n" +
-                "JOIN laboratory.project_usage p\n" +
+                "JOIN \"" + source.getPath() + "\".laboratory.project_usage p\n" +
                 "ON (s." + subjectSelectName + " = p.subjectId" +
                 (dateSelectName != null ? " AND p.startdate <= s." + dateSelectName + " AND s." + dateSelectName + " <= COALESCE(p.enddate, {fn curdate()})" : "") +
                 ")\n" +
@@ -576,7 +580,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                 "GROUP BY s." + pkColSelectName + "";
     }
 
-    private String getOverlapPivotSql(String schemaName, String querySelectName, String pkColSelectName, String subjectSelectName, @Nullable String dateSelectName)
+    private String getOverlapPivotSql(Container source, String schemaName, String querySelectName, String pkColSelectName, String subjectSelectName, @Nullable String dateSelectName)
     {
         return "SELECT\n" +
                 "s." + pkColSelectName + ",\n" +
@@ -584,7 +588,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                 "max(p.startdate) as lastStartDate\n" +
                 "\n" +
                 "FROM " + schemaName + "." + querySelectName + " s\n" +
-                "JOIN laboratory.project_usage p\n" +
+                "JOIN \"" + source.getPath() + "\".laboratory.project_usage p\n" +
                 "ON (s." + subjectSelectName + " = p.subjectId" +
                 (dateSelectName != null ? " AND p.startdate <= s." + dateSelectName + " AND s." + dateSelectName + " <= COALESCE(p.enddate, {fn curdate()})" : "") +
                 ")\n" +
@@ -595,7 +599,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                 "PIVOT lastStartDate by project IN (select distinct project from laboratory.project_usage)";
     }
 
-    private String getMajorEventsSql(String schemaName, String querySelectName, String pkColSelectName, String subjectSelectName, @Nullable String dateSelectName)
+    private String getMajorEventsSql(Container sourceContainer, String schemaName, String querySelectName, String pkColSelectName, String subjectSelectName, @Nullable String dateSelectName)
     {
         return "SELECT\n" +
             "t." + pkColSelectName + ",\n" +
@@ -623,7 +627,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                 "ROUND(CONVERT(age_in_months(p.date, s." + dateSelectName + "), DOUBLE) / 12, 1) AS YearsPostEventDecimal,\n" +
             "\n" +
             "FROM " + schemaName + "." + querySelectName + " s\n" +
-            "JOIN laboratory.major_events p\n" +
+            "JOIN \"" + sourceContainer.getPath() + "\".laboratory.major_events p\n" +
             "ON (s." + subjectSelectName + " = p.subjectId)\n" +
             "WHERE s." + subjectSelectName + " IS NOT NULL\n" +
             "\n" +
@@ -663,7 +667,8 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         col.setFk(new LookupForeignKey(){
             public TableInfo getLookupTableInfo()
             {
-                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), us.getContainer(), us, colName);
+                Container target = us.getContainer().isWorkbookOrTab() ? us.getContainer().getParent() : us.getContainer();
+                QueryDefinition qd = QueryService.get().createQueryDef(us.getUser(), target, us, colName);
 
                 qd.setSql("SELECT\n" +
                 "t." + pkColSelectName + ",\n" +
@@ -691,7 +696,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                 "ROUND(CONVERT(age_in_months(p.startdate, s." + dateSelectName + "), DOUBLE) / 12, 1) AS YearsPostStartDecimal,\n" +
                 "\n" +
                 "FROM " + schemaName + "." + publicTableName + " s\n" +
-                "JOIN laboratory.project_usage p\n" +
+                "JOIN \"" + target.getPath() + "\".laboratory.project_usage p\n" +
                 "ON (s." + subjectSelectName + " = p.subjectId AND CONVERT(p.startdate, DATE) <= CONVERT(s." + dateSelectName + ", DATE) AND CONVERT(s." + dateSelectName + ", DATE) <= CONVERT(COALESCE(p.enddate, {fn curdate()}), DATE))\n" +
                 "WHERE s." + dateSelectName + " IS NOT NULL and s." + subjectSelectName + " IS NOT NULL\n" +
                 "\n" +

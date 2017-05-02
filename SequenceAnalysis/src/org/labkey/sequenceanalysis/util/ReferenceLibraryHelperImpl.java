@@ -1,9 +1,8 @@
 package org.labkey.sequenceanalysis.util;
 
-import htsjdk.samtools.SAMSequenceDictionary;
-import htsjdk.samtools.reference.FastaSequenceIndex;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
@@ -11,9 +10,7 @@ import picard.sam.CreateSequenceDictionary;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -106,7 +103,7 @@ public class ReferenceLibraryHelperImpl implements ReferenceLibraryHelper
         File idKey = getIdKeyFile();
         if (idKey.exists())
         {
-            try (BufferedReader reader = new BufferedReader(new FileReader(idKey)))
+            try (BufferedReader reader = Readers.getReader(idKey))
             {
                 String line;
                 int rowIdx = 0;

@@ -140,8 +140,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
     {
         addController(CONTROLLER_NAME, LaboratoryController.class);
 
-        LaboratoryServiceImpl impl = new LaboratoryServiceImpl();
-        LaboratoryService.setInstance(impl);
+        LaboratoryService.setInstance(LaboratoryServiceImpl.get());
     }
 
     @Override

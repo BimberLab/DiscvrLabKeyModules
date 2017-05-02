@@ -11,7 +11,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
-import org.labkey.sequenceanalysis.analysis.ProcessVariantsHandler;
+import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.VariantAnnotatorWrapper;
 

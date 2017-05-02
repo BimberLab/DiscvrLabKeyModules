@@ -17,6 +17,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
+import org.biojava3.core.sequence.DNASequence;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
@@ -212,7 +213,8 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 }
                 else
                 {
-                    getJob().getLogger().warn("No output file was created for readset: " + readsetId);
+                    getJob().getLogger().warn("No output file was created for readset: " + readsetId + ", skipping");
+                    continue;
                 }
 
                 pair = Pair.of(readsetId, 2);
@@ -243,10 +245,9 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 if (runId != null)
                     row.put("runid", runId);
 
-                Object[] pks = {readsetId};
                 try
                 {
-                    Table.update(getJob().getUser(), rs, row, pks);
+                    Table.update(getJob().getUser(), rs, row, readsetId);
                     getJob().getLogger().info("Updated readset: " + readsetId);
 
                     getJob().getLogger().debug("creating readdata");
@@ -294,7 +295,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         Integer count = readCounts.get(key);
 
         Map<String, Object> r = new HashMap<>();
-        r.put("metricname", "Total Sequences");
+        r.put("metricname", "Total Reads");
         r.put("metricvalue", count);
         r.put("dataid", d.getRowId());
         if (readsetId > 0)
@@ -347,8 +348,9 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
                 try
                 {
-                    //parse out barcodes
-                    String indexes = nextLine[5] + "-" + nextLine[7];
+                    //parse out barcodes.  note: the first barcode is reversed in the read header, at least for MiSeq
+                    //String indexes = nextLine[6] + "+" + nextLine[8];
+                    String indexesRC = new DNASequence(nextLine[6]).getReverseComplement().getSequenceAsString() + "+" + nextLine[8];
 
                     sampleIdx++;
                     Integer readsetId;
@@ -367,7 +369,8 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                         readsetId = tryCreateReadset(schema, nextLine);
                     }
 
-                    sampleMap.put(indexes, readsetId);
+                    //sampleMap.put(indexes, readsetId);
+                    sampleMap.put(indexesRC, readsetId);
                     sampleMap.put("S" + sampleIdx, readsetId);
                 }
                 catch (PipelineValidationException e)

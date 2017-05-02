@@ -31,7 +31,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.TestContext;
 import org.labkey.api.view.ViewServlet;
-import org.labkey.sequenceanalysis.analysis.ProcessVariantsHandler;
+import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.bind.annotation.RequestMethod;

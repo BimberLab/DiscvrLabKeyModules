@@ -40,6 +40,7 @@ import org.labkey.api.test.TestTimeout;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.util.TestContext;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ViewBackgroundInfo;
@@ -424,28 +425,22 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
 
     public static enum StatusType
     {
-        U(0, "Unexpanded", null),
-        I(1, "Submitted, Idle", PipelineJob.TaskStatus.waiting),
-        R(2, "Running", PipelineJob.TaskStatus.running),
-        X(3, "Cancelled", PipelineJob.TaskStatus.cancelled),
-        C(4, "Complete", PipelineJob.TaskStatus.complete),
-        H(5, "Held", null),
-        E(6, "Error", PipelineJob.TaskStatus.error);
+        U("Unexpanded", null),
+        I("Submitted, Idle", PipelineJob.TaskStatus.waiting),
+        R("Running", PipelineJob.TaskStatus.running),
+        X("Cancelled", PipelineJob.TaskStatus.cancelled),
+        C("Complete", PipelineJob.TaskStatus.complete),
+        H("Held", null),
+        E("Error", PipelineJob.TaskStatus.error),
+        S("Suspended", PipelineJob.TaskStatus.waiting);
 
-        private int _code;
         private String _labkeyStatus;
         private PipelineJob.TaskStatus _taskStatus;
 
-        StatusType(int code, String labkeyStatus, PipelineJob.TaskStatus taskStatus)
+        StatusType(String labkeyStatus, PipelineJob.TaskStatus taskStatus)
         {
-            _code = code;
             _labkeyStatus = labkeyStatus;
             _taskStatus = taskStatus;
-        }
-
-        public int getCode()
-        {
-            return _code;
         }
 
         public String getLabkeyStatus()
@@ -957,8 +952,8 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
             Process p = Runtime.getRuntime().exec(command);
             try
             {
-                String output = IOUtils.toString(p.getInputStream());
-                String errorOutput = IOUtils.toString(p.getErrorStream());
+                String output = IOUtils.toString(p.getInputStream(), StringUtilsLabKey.DEFAULT_CHARSET);
+                String errorOutput = IOUtils.toString(p.getErrorStream(), StringUtilsLabKey.DEFAULT_CHARSET);
 
                 p.waitFor();
 

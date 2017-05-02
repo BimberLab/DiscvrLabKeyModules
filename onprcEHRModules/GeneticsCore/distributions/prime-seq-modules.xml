@@ -30,6 +30,7 @@
                 <include name="elispot_assay.module" />
                 <include name="galaxyintegration.module" />
                 <include name="mGAP.module" />
+                <include name="Viral_Load_Assay.module" />
             </fileset>
         </copy>
     </target>

@@ -1,5 +1,7 @@
 package org.labkey.api.sequenceanalysis;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -13,6 +15,8 @@ public class PedigreeRecord
     String father;
     String mother;
     String gender;
+    boolean isPlaceholderFather = false;
+    boolean isPlaceholderMother = false;
 
     public PedigreeRecord()
     {
@@ -62,6 +66,11 @@ public class PedigreeRecord
 
     public void setSubjectName(String subjectName)
     {
+        if (StringUtils.isEmpty(subjectName))
+        {
+            throw new IllegalArgumentException("Subject name cannot be null");
+        }
+
         this.subjectName = subjectName;
     }
 
@@ -93,5 +102,35 @@ public class PedigreeRecord
     public void setGender(String gender)
     {
         this.gender = gender;
+    }
+
+    public boolean isPlaceholderFather()
+    {
+        return isPlaceholderFather;
+    }
+
+    public void setPlaceholderFather(boolean placeholderFather)
+    {
+        isPlaceholderFather = placeholderFather;
+    }
+
+    public boolean isPlaceholderMother()
+    {
+        return isPlaceholderMother;
+    }
+
+    public void setPlaceholderMother(boolean placeholderMother)
+    {
+        isPlaceholderMother = placeholderMother;
+    }
+
+    public int getTotalParents(boolean includePlaceholder)
+    {
+        int ret = 0;
+
+        ret += !StringUtils.isEmpty(getFather()) && (includePlaceholder || !isPlaceholderFather()) ? 1 : 0;
+        ret += !StringUtils.isEmpty(getMother()) && (includePlaceholder || !isPlaceholderMother()) ? 1 : 0;
+
+        return ret;
     }
 }

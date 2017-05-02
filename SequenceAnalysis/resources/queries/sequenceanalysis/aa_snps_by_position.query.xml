@@ -15,6 +15,15 @@
                     <column columnName="readcount">
                         <columnTitle>Read Count</columnTitle>
                     </column>
+                    <column columnName="q_non_ref_aas">
+                        <columnTitle>Query Non-Ref AAs</columnTitle>
+                    </column>
+                    <column columnName="synon_fraction">
+                        <columnTitle>Fraction of Reads With Synonymous Mutations</columnTitle>
+                    </column>
+                    <column columnName="indel_fraction">
+                        <columnTitle>Fraction of Reads With Indels</columnTitle>
+                    </column>
                 </columns>
             </table>
         </tables>

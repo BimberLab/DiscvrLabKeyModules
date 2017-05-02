@@ -93,6 +93,10 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                     border: false
                 },
                 items: [{
+                    html: 'You have selected ' + this.outputFileIds.length + ' files' ,
+                    style: 'padding-bottom: 20px;',
+                    border: false
+                },{
                     html: this.handlerConfig.description,
                     style: 'padding-bottom: 20px;',
                     border: false

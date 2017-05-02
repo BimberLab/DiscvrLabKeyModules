@@ -124,7 +124,7 @@ public class MultipleAllelesAtLoci extends LocusWalker<MultipleAllelesAtLoci.Sit
                     comments.add(String.format("%s: [%s/%f/%d/%d]", f.sample, (char)(f.base.byteValue()), f.pct, f.baseCount, f.depth));
                 }
 
-                out.println(String.format("%s\t%d\t%d\t%s\t%s", loc.getContig(), loc.getStart()-1, loc.getStop(), totalSubjects.size(), StringUtils.join(comments, ";")));
+                out.println(String.format("%s\t%d\t%d\t%s\t%s\t%s\t%s", loc.getContig(), loc.getStart()-1, loc.getStop(), "MultiAllelicSite", totalSubjects.size(), "+", StringUtils.join(comments, ";")));
             }
         }
 

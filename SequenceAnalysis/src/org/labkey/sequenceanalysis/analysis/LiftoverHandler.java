@@ -315,17 +315,17 @@ public class LiftoverHandler implements SequenceOutputHandler
                     {
                         FullBEDFeature f = (FullBEDFeature)i.next();
 
-                        Interval iv = new Interval(f.getChr(), f.getStart(), f.getEnd(), f.getStrand() == Strand.POSITIVE, StringUtils.isEmpty(f.getName()) ? null : f.getName());
+                        Interval iv = new Interval(f.getContig(), f.getStart(), f.getEnd(), f.getStrand() == Strand.POSITIVE, StringUtils.isEmpty(f.getName()) ? null : f.getName());
                         Interval lifted = lo.liftOver(iv, pct);
                         String score = ((Float)f.getScore()).isNaN() ? "0" : String.valueOf(f.getScore());
                         if (lifted != null)
                         {
-                            writer.writeNext(new String[]{f.getChr(), String.valueOf(lifted.getStart() - 1), String.valueOf(f.getEnd()), f.getName(), score, (lifted.isNegativeStrand() ? "-" : lifted.isPositiveStrand() ? "+" : null)});
+                            writer.writeNext(new String[]{lifted.getContig(), String.valueOf(lifted.getStart() - 1), String.valueOf(lifted.getEnd()), f.getName(), score, (lifted.isNegativeStrand() ? "-" : lifted.isPositiveStrand() ? "+" : null), ("Source: " + f.getContig() + ":" + f.getStart() + "-" + f.getEnd())});
                             mapped++;
                         }
                         else
                         {
-                            unmappedWriter.writeNext(new String[]{f.getChr(), String.valueOf(f.getStart() - 1), String.valueOf(f.getEnd()), f.getName(), score, (f.getStrand() == Strand.NEGATIVE ? "-" : f.getStrand() == Strand.POSITIVE ? "+" : null)});
+                            unmappedWriter.writeNext(new String[]{f.getContig(), String.valueOf(f.getStart() - 1), String.valueOf(f.getEnd()), f.getName(), score, (f.getStrand() == Strand.NEGATIVE ? "-" : f.getStrand() == Strand.POSITIVE ? "+" : null)});
                             unmapped++;
                         }
                     }
@@ -340,6 +340,6 @@ public class LiftoverHandler implements SequenceOutputHandler
         }
 
         //sort resulting file
-        SequenceUtil.sortROD(output, job.getLogger());
+        SequenceUtil.sortROD(output, job.getLogger(), 2);
     }
 }

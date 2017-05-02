@@ -86,7 +86,7 @@ Ext4.define('SequenceAnalysis.panel.VariantMaskPanel', {
             allowBlank: false,
             itemId: 'fileId',
             genomeId: '',
-            extensions: ['vcf', 'vcf.gz', 'bed', 'gff', 'gtf']
+            extensions: ['vcf', 'vcf.gz', 'bed']
         }];
     },
 

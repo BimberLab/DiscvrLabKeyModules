@@ -65,9 +65,10 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
                         put("storeValues", SelectSNVsStep.getSelectTypes());
                         put("multiSelect", true);
                     }}, null),
-                    new IntervalParameterDescriptor()
-                    //TODO: select by IDs
-            ), Arrays.asList("sequenceanalysis/panel/VariantFilterPanel.js", "sequenceanalysis/panel/IntervalPanel.js"), "");
+                    new IntervalParameterDescriptor(),
+                    ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_INCLUDE, "Select Sample(s) Include", "Only variants of the selected type(s) will be included", "sequenceanalysis-trimmingtextarea", null, null),
+                    ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_EXCLUDE, "Select Samples(s) To Exclude", "Variants of the selected type(s) will be excluded", "sequenceanalysis-trimmingtextarea", null, null)
+            ), Arrays.asList("sequenceanalysis/panel/VariantFilterPanel.js", "sequenceanalysis/panel/IntervalPanel.js", "/sequenceanalysis/field/TrimmingTextArea.js"), "");
         }
 
         public SelectVariantsStep create(PipelineContext ctx)
@@ -88,6 +89,12 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
 
         String toExclude = getProvider().getParameterByName(SELECT_TYPE_TO_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), String.class);
         addSelectTypeOptions(toExclude, options, "--selectTypeToExclude");
+
+        String samplesToInclude = getProvider().getParameterByName(SelectSamplesStep.SAMPLE_INCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), String.class);
+        SelectVariantsStep.addSubjectSelectOptions(samplesToInclude, options, "-sn");
+
+        String samplesToExclude = getProvider().getParameterByName(SelectSamplesStep.SAMPLE_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), String.class);
+        SelectVariantsStep.addSubjectSelectOptions(samplesToExclude, options, "-xl_sn");
 
         //intervals:
         String intervalText = getProvider().getParameterByName(INTERVALS).extractValue(getPipelineCtx().getJob(), getProvider(), String.class, null);
@@ -127,6 +134,20 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
         output.setVcf(outputVcf);
 
         return output;
+    }
+
+    public static void addSubjectSelectOptions(String text, List<String> options, String argName)
+    {
+        text = StringUtils.trimToNull(text);
+        if (text != null)
+        {
+            String[] names = text.split(";");
+            for (String name : names)
+            {
+                options.add(argName);
+                options.add(name);
+            }
+        }
     }
 
     public static void addSelectTypeOptions(String text, List<String> options, String argName)

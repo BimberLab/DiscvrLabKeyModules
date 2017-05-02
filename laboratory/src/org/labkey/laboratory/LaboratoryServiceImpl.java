@@ -55,6 +55,7 @@ import org.labkey.laboratory.query.LaboratoryTableCustomizer;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -70,6 +71,8 @@ import java.util.Set;
  */
 public class LaboratoryServiceImpl extends LaboratoryService
 {
+    private static LaboratoryServiceImpl _instance = new LaboratoryServiceImpl();
+
     private Set<Module> _registeredModules = new HashSet<Module>();
     private Map<Module, List<ClientDependency>> _clientDependencies = new HashMap<Module, List<ClientDependency>>();
     private Map<String, Map<String, List<ButtonConfigFactory>>> _assayButtons = new CaseInsensitiveHashMap<>();
@@ -81,9 +84,14 @@ public class LaboratoryServiceImpl extends LaboratoryService
     public static final String DATASOURCE_PROPERTY_CATEGORY = "laboratory.additionalDataSource";
     public static final String URL_DATASOURCE_PROPERTY_CATEGORY = "laboratory.urlDataSource";
 
-    public LaboratoryServiceImpl()
+    private LaboratoryServiceImpl()
     {
 
+    }
+
+    public static LaboratoryServiceImpl get()
+    {
+        return _instance;
     }
 
     public void registerModule(Module module)
@@ -586,6 +594,8 @@ public class LaboratoryServiceImpl extends LaboratoryService
         return Collections.unmodifiableMap(_tableIndexes);
     }
 
+    public static String ALL = "*";
+
     @Override
     public void registerTableCustomizer(Module owner, Class<? extends TableCustomizer> customizerClass, String schemaName, String queryName)
     {
@@ -603,23 +613,28 @@ public class LaboratoryServiceImpl extends LaboratoryService
         _tableCustomizers.put(schemaName, schemaMap);
     }
 
-    @Override
     public List<TableCustomizer> getCustomizers(Container c, String schemaName, String queryName)
     {
         List<TableCustomizer> list = new ArrayList<>();
         Set<Module> modules = c.getActiveModules();
 
-        if (_tableCustomizers.containsKey(schemaName))
+        for (String sn : Arrays.asList(ALL, schemaName))
         {
-            if (_tableCustomizers.get(schemaName).containsKey(queryName))
+            for (String qn : Arrays.asList(ALL, queryName))
             {
-                for (Pair<Module, Class<? extends TableCustomizer>> pair : _tableCustomizers.get(schemaName).get(queryName))
+                if (_tableCustomizers.containsKey(sn))
                 {
-                    if (modules.contains(pair.first))
+                    if (_tableCustomizers.get(sn).containsKey(qn))
                     {
-                        TableCustomizer tc = instantiateCustomizer(pair.second);
-                        if (tc != null)
-                            list.add(tc);
+                        for (Pair<Module, Class<? extends TableCustomizer>> pair : _tableCustomizers.get(sn).get(qn))
+                        {
+                            if (modules.contains(pair.first))
+                            {
+                                TableCustomizer tc = instantiateCustomizer(pair.second);
+                                if (tc != null)
+                                    list.add(tc);
+                            }
+                        }
                     }
                 }
             }

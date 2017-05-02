@@ -78,8 +78,8 @@ public class BisulfiteGenotyperWrapper extends AbstractBisSnpWrapper
 
         try
         {
-            SequencePipelineService.get().sortROD(rawCpgOutput, getLogger());
-            SequencePipelineService.get().sortROD(rawSnpOutput, getLogger());
+            SequencePipelineService.get().sortROD(rawCpgOutput, getLogger(), 2);
+            SequencePipelineService.get().sortROD(rawSnpOutput, getLogger(), 2);
         }
         catch (IOException e)
         {

@@ -1,0 +1,23 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <columns>
+       <column name="rowid" />
+       <column name="readset/rowid" />
+       <column name="readset" />
+       <column name="fileid1"/>
+       <column name="fileid1/DataFileUrl"/>
+       <column name="fileid2" />
+       <column name="fileid2/DataFileUrl"/>
+       <column name="platformunit" />
+       <column name="centerName" />
+       <column name="date" />
+       <column name="description" />
+       <column name="sra_accession" />
+
+       <column name="created" />
+       <column name="workbook" />
+   </columns>
+   <sorts>
+       <sort column="readset" />
+       <sort column="platformunit" />
+   </sorts>
+</customView>

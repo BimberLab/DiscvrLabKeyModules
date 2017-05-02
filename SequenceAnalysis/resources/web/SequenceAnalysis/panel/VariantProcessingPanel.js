@@ -271,7 +271,7 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 		LABKEY.Ajax.request({
 			url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler'),
 			jsonData: {
-				handlerClass: 'org.labkey.sequenceanalysis.analysis.' + (this.showGenotypeGVCFs ? 'GenotypeGVCFHandler' : 'ProcessVariantsHandler'),
+				handlerClass: 'org.labkey.sequenceanalysis.' + (this.showGenotypeGVCFs ? 'analysis.GenotypeGVCFHandler' : 'pipeline.ProcessVariantsHandler'),
 				outputFileIds: this.outputFileIds,
 				params: Ext4.encode(values)
 			},

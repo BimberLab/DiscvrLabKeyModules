@@ -462,7 +462,7 @@ Ext4.define('GeneticsCore.panel.HaplotypePanel', {
                     if (Ext4.isArray(row.lineages)){
                         row.lineages = row.lineages.join(';');
                     }
-                    row.lineages = row.lineages.replace(/\n/g, ';');
+                    row.lineages = row.lineages ? row.lineages.replace(/\n/g, ';') : '';
 
                     if (Ext4.isArray(row.alleles)){
                         row.alleles = row.alleles.join(';');

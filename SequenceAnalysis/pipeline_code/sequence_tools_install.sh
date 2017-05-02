@@ -196,16 +196,14 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/gffread || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf bwa-0.6.2*
-    rm -Rf bwa-0.7.9a*
-    rm -Rf bwa-0.7.12*
+    rm -Rf gclib*
+    rm -Rf gffread*
     rm -Rf $LKTOOLS_DIR/gffread
 
-    wget $WGET_OPTS http://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz
-    gunzip cufflinks-2.2.1.Linux_x86_64.tar.gz
-    tar -xf cufflinks-2.2.1.Linux_x86_64.tar
-    gzip cufflinks-2.2.1.Linux_x86_64.tar
-    cd cufflinks-2.2.1.Linux_x86_64
+    git clone https://github.com/gpertea/gclib
+    git clone https://github.com/gpertea/gffread
+    cd gffread
+    make
 
     install gffread $LKTOOLS_DIR/
 else
@@ -278,6 +276,8 @@ then
     svn co --username cpas --password cpas --no-auth-cache https://hedgehog.fhcrc.org/tor/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code/gatk ${LK_HOME}/svn/trunk/pipeline_code/gatk/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationCount.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationBySample.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
+    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/GenotypeConcordance.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
+    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/GenotypeConcordanceBySite.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MinorAlleleFrequency.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MultipleAllelesAtLoci.java ./gatk-protected/public/gatk-tools-public/src/main/java/org/broadinstitute/gatk/tools/walkers/coverage/
 
@@ -287,7 +287,7 @@ then
     rm ./public/external-example/src/main/java/org/mycompany/app/*
     rm ./public/external-example/src/test/java/org/mycompany/app/*
 
-    mvn verify
+    mvn verify -U
     mvn package
     cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.7.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
     cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.7.jar ${LKTOOLS_DIR}/Queue.jar

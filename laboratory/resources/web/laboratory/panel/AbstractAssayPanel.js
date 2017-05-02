@@ -608,7 +608,7 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
         columnNames = Ext4.unique(columnNames);
         Ext4.each(columnNames, function(fn){
             var field = meta.map[fn];
-            if (LABKEY.ext4.Util.shouldShowInInsertView(field) && !field.setGlobally){
+            if (LABKEY.ext4.Util.shouldShowInInsertView(field) && !field.setGlobally && !field.calculated){
                 var col = LDK.StoreUtils.getColumnConfigForField(field);
                 columns.push(col);
             }

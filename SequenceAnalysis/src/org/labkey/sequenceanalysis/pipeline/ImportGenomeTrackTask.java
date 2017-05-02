@@ -31,6 +31,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
@@ -51,16 +52,21 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.Job;
+import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
+import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
+import org.labkey.sequenceanalysis.run.util.GFFReadWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -126,7 +132,32 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
 
         try
         {
-            addTrackForLibrary(getPipelineJob().getTrack(), getPipelineJob().getTrackName(), getPipelineJob().getTrackDescription(), action);
+            final int trackId = addTrackForLibrary(getPipelineJob().getTrack(), getPipelineJob().getTrackName(), getPipelineJob().getTrackDescription(), action);
+
+            Set<GenomeTrigger> triggers = SequenceAnalysisServiceImpl.get().getGenomeTriggers();
+            if (!triggers.isEmpty())
+            {
+                JobRunner jr = JobRunner.getDefault();
+                for (final GenomeTrigger t : triggers)
+                {
+                    if (t.isAvailable(getJob().getContainer()))
+                    {
+                        getJob().getLogger().info("running genome trigger: " + t.getName());
+                        final int libraryId = getPipelineJob().getLibraryId();
+                        jr.execute(new Job()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                t.onTrackAdd(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId, trackId);
+                            }
+                        });
+                    }
+                }
+
+                jr.waitForCompletion();
+            }
+
         }
         catch (Exception e)
         {
@@ -136,7 +167,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         return new RecordedActionSet(action);
     }
 
-    public void addTrackForLibrary(File file, String trackName, String trackDescription, RecordedAction action) throws Exception
+    public int addTrackForLibrary(File file, String trackName, String trackDescription, RecordedAction action) throws Exception
     {
         ReferenceGenome genome = SequenceAnalysisService.get().getReferenceGenome(getPipelineJob().getLibraryId(), getJob().getUser());
         if (genome == null)
@@ -173,6 +204,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         File outputFile = getOutputFile(file, tracksDir);
         action.addOutput(file, "Transformed Track", false);
 
+        getJob().getLogger().info("input track: " + file.getPath());
         getJob().getLogger().info("writing output to: "+ outputFile.getPath());
 
         Map<String, String> knownChrs = new CaseInsensitiveHashMap();
@@ -194,18 +226,26 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         if (SequenceUtil.FILETYPE.bed.getFileType().isType(file))
         {
             validateAndTransformTsv(file, outputFile, nameTranslationMap, knownChrs, 0, 1, 2, -1, dict, action);
-            SequencePipelineService.get().sortROD(outputFile, getJob().getLogger());
+            if (SystemUtils.IS_OS_WINDOWS)
+            {
+                getJob().getLogger().warn("unable to sort BED file on windows, skipping");
+            }
+            else
+            {
+                SequencePipelineService.get().sortROD(outputFile, getJob().getLogger(), 2);
+            }
         }
-        else if (SequenceUtil.FILETYPE.gff.getFileType().isType(file))
+        else if (SequenceUtil.FILETYPE.gff.getFileType().isType(file) || SequenceUtil.FILETYPE.gtf.getFileType().isType(file))
         {
-            validateAndTransformTsv(file, outputFile, nameTranslationMap, knownChrs, 0, 3, 4, 0, dict, action);
-            SequencePipelineService.get().sortROD(outputFile, getJob().getLogger());
-        }
-        else if (SequenceUtil.FILETYPE.gtf.getFileType().isType(file))
-        {
-            validateAndTransformTsv(file, outputFile, nameTranslationMap, knownChrs, 0, 3, 4, 0, dict, action);
-            SequencePipelineService.get().sortROD(outputFile, getJob().getLogger());
+            long count1 = SequenceUtil.getLineCount(file);
+            getJob().getLogger().info("total lines in input: " + count1);
 
+            validateAndTransformTsv(file, outputFile, nameTranslationMap, knownChrs, 0, 3, 4, 0, dict, action);
+            sortGxf(outputFile);
+
+            long count2 = SequenceUtil.getLineCount(outputFile);
+            getJob().getLogger().info("total lines in sorted output: " + count2);
+            getJob().getLogger().info("difference: " + (count1 - count2));
         }
         else if (SequenceUtil.FILETYPE.vcf.getFileType().isType(file))
         {
@@ -259,9 +299,26 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         map.put("jobId", jobId);
 
         TableInfo trackTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS);
-        Table.insert(getJob().getUser(), trackTable, map);
+        map = Table.insert(getJob().getUser(), trackTable, map);
+        if (map.get("rowid") == null)
+        {
+            throw new PipelineJobException("Unable to find rowid for new track");
+        }
+
+        return (Integer)map.get("rowid");
     }
 
+    private void sortGxf(File gxf) throws PipelineJobException
+    {
+        getJob().getLogger().info("sorting file: " + gxf.getPath());
+        if (SystemUtils.IS_OS_WINDOWS)
+        {
+            getJob().getLogger().warn("unable to sort files on windows, skipping");
+            return;
+        }
+
+        new GFFReadWrapper(getJob().getLogger()).sortGxf(gxf, null);
+    }
     private File getOutputFile(File file, File tracksDir)
     {
         return AssayFileWriter.findUniqueFileName(file.getName().replaceAll(" ", "_"), tracksDir);
@@ -391,10 +448,11 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
 
         try (CSVReader reader = new CSVReader(IOUtil.openFileForBufferedReading(file), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(out), '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER);CSVWriter logWriter = new CSVWriter(PrintWriters.getPrintWriter(outLog), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            logWriter.writeNext(new String[]{"LineNo", "OrigContig", "OrigStart", "OrigEnd", "NewConfig", "Offset"});
+            logWriter.writeNext(new String[]{"LineNo", "OrigContig", "OrigStart", "OrigEnd", "NewContig", "Offset"});
 
             String[] line;
             int lineNo = 0;
+            int commentNo = 0;
             int totalShifted = 0;
             int totalRenamed = 0;
 
@@ -403,6 +461,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                 lineNo++;
                 if (line[0].startsWith("#"))
                 {
+                    commentNo++;
                     writer.writeNext(line);
                     continue;
                 }
@@ -451,7 +510,8 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                 writer.writeNext(line);
             }
 
-            getJob().getLogger().info("total lines inspected: " + lineNo);
+            getJob().getLogger().info("total lines inspected from input: " + lineNo);
+            getJob().getLogger().info("total comment lines inspected: " + commentNo);
             getJob().getLogger().info("total features renamed: " + totalRenamed);
             getJob().getLogger().info("total features with coordinates transformed: " + totalShifted);
             if (!warnedChrs.isEmpty())
@@ -467,6 +527,9 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         {
             throw new PipelineJobException(e);
         }
+
+        long count = SequenceUtil.getLineCount(out);
+        getJob().getLogger().info("total lines in output: " + count);
     }
 
     private void validateAndTransformVcf(File file, File out, Map<String, Pair<String, Integer>> nameTranslationMap, Map<String, String> knownChrs, SAMSequenceDictionary dict, RecordedAction action) throws PipelineJobException
@@ -492,7 +555,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             header.setSequenceDictionary(dict);
             writer.writeHeader(header);
 
-            logWriter.writeNext(new String[]{"LineNo", "OrigContig", "OrigStart", "OrigEnd", "NewConfig", "Offset"});
+            logWriter.writeNext(new String[]{"LineNo", "OrigContig", "OrigStart", "OrigEnd", "NewContig", "Offset"});
 
             int lineNo = 0;
             int totalShifted = 0;

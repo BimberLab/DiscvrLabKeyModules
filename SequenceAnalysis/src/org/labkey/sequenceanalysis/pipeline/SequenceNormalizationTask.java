@@ -387,7 +387,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                             {
                                 getJob().getLogger().debug("appending file: " + fp.file1.getName());
                                 getHelper().getFileManager().addInput(mergeAction, "FASTQ File", fp.file1);
-                                IOUtils.copy(is, os);
+                                IOUtils.copyLarge(is, os);
                             }
 
                             if (fp.file2 != null)
@@ -396,7 +396,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                                 {
                                     getJob().getLogger().debug("appending file: " + fp.file2.getName());
                                     getHelper().getFileManager().addInput(mergeAction, "FASTQ File", fp.file2);
-                                    IOUtils.copy(is, os);
+                                    IOUtils.copyLarge(is, os);
                                 }
                             }
                         }

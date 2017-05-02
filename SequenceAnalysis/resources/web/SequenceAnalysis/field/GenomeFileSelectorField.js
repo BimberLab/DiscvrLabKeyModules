@@ -9,6 +9,9 @@ Ext4.define('SequenceAnalysis.field.GenomeFileSelectorField', {
             forceSelection: true,
             displayField: 'fileid/Name',
             valueField: 'fileid',
+            listConfig: {
+                innerTpl: ['{name} ({[values["fileid/Name"]]})']
+            },
             store: {
                 type: 'labkey-store',
                 containerPath: Laboratory.Utils.getQueryContainerPath(),
@@ -17,7 +20,7 @@ Ext4.define('SequenceAnalysis.field.GenomeFileSelectorField', {
                 autoLoad: true,
                 filterArray: this.getTracksFilterArray(this.genomeId),
                 sort: 'fileid/name',
-                columns: 'library_id,fileid,fileid/Name,fileid/FileExtension',
+                columns: 'library_id,name,fileid,fileid/Name,fileid/FileExtension',
                 listeners: {
                     scope: this,
                     load: function(store){

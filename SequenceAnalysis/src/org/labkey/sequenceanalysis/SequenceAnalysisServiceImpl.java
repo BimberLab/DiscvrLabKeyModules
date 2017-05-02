@@ -320,12 +320,6 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         });
 
         //insert record for any missing parents:
-        Set<String> subjects = new HashSet<>();
-        for (PedigreeRecord p : pedigreeRecords)
-        {
-            subjects.add(p.getSubjectName());
-        }
-
         Set<String> distinctSubjects = new HashSet<>();
         for (PedigreeRecord p : pedigreeRecords)
         {
@@ -346,6 +340,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             if (StringUtils.isEmpty(pd.getFather()) && !StringUtils.isEmpty(pd.getMother()))
             {
                 pd.setFather("xf" + pd.getSubjectName());
+                pd.setPlaceholderFather(true);
                 PedigreeRecord pr = new PedigreeRecord();
                 pr.setSubjectName(pd.getFather());
                 pr.setGender("m");
@@ -354,6 +349,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             else if (!StringUtils.isEmpty(pd.getFather()) && StringUtils.isEmpty(pd.getMother()))
             {
                 pd.setMother("xm" + pd.getSubjectName());
+                pd.setPlaceholderMother(true);
                 PedigreeRecord pr = new PedigreeRecord();
                 pr.setSubjectName(pd.getMother());
                 pr.setGender("f");
@@ -372,13 +368,18 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             @Override
             public int compare(PedigreeRecord o1, PedigreeRecord o2)
             {
-                if (o1.getSubjectName().equals(o2.getFather()) || o1.getSubjectName().equals(o2.getMother()))
+                boolean o1ParentOfO2 = o1.getSubjectName().equals(o2.getFather()) || o1.getSubjectName().equals(o2.getMother());
+                boolean o2ParentOfO1 = o2.getSubjectName().equals(o1.getFather()) || o2.getSubjectName().equals(o1.getMother());
+
+                if (o1ParentOfO2 && o2ParentOfO1)
+                    throw new IllegalArgumentException("Pedigree records are both parents of one another: "+ o1.getSubjectName() + "/" + o2.getSubjectName());
+                else if (o1ParentOfO2)
                     return -1;
-                else if (o2.getSubjectName().equals(o1.getFather()) || o2.getSubjectName().equals(o1.getMother()))
+                else if (o2ParentOfO1)
                     return 1;
-                else if (o1.getMother() == null && o1.getFather() == null)
+                else if ((o1.getTotalParents(true) == 0 && o2.getTotalParents(true) != 0))
                     return -1;
-                else if (o2.getMother() == null && o2.getFather() == null)
+                else if ((o1.getTotalParents(true) != 0 && o2.getTotalParents(true) == 0))
                     return 1;
 
                 return o1.getSubjectName().compareTo(o2.getSubjectName());
@@ -390,7 +391,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     
     private void appendParents(Set<String> distinctSubjects, PedigreeRecord p, List<PedigreeRecord> newRecords)
     {
-        if (p.getFather() != null && !distinctSubjects.contains(p.getFather()))
+        if (!StringUtils.isEmpty(p.getFather()) && !distinctSubjects.contains(p.getFather()))
         {
             PedigreeRecord pr = new PedigreeRecord();
             pr.setSubjectName(p.getFather());
@@ -401,7 +402,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             appendParents(distinctSubjects, pr, newRecords);
         }
 
-        if (p.getMother() != null && !distinctSubjects.contains(p.getMother()))
+        if (!StringUtils.isEmpty(p.getMother()) && !distinctSubjects.contains(p.getMother()))
         {
             PedigreeRecord pr = new PedigreeRecord();
             pr.setSubjectName(p.getMother());

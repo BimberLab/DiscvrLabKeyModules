@@ -21,6 +21,8 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.util.FileType;
 import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.pipeline.JobContextImpl;
+import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.run.util.GenotypeGVCFsWrapper;
 
 import java.io.File;
@@ -153,12 +155,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutpu
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             PipelineJob job = ctx.getJob();
-            JSONObject params = ctx.getParams();
-
-            RecordedAction action = new RecordedAction(getName());
-            action.setStartTime(new Date());
-
-            GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(job.getLogger());
+            ProcessVariantsHandler.Resumer resumer = ProcessVariantsHandler.Resumer.create((JobContextImpl)ctx);
 
             Set<Integer> genomeIds = new HashSet<>();
             List<File> inputVcfs = new ArrayList<>();
@@ -166,8 +163,6 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutpu
             {
                 genomeIds.add(so.getLibrary_id());
                 inputVcfs.add(so.getFile());
-
-                action.addInput(so.getFile(), "Input gVCF");
             }
 
             if (genomeIds.size() > 1)
@@ -176,6 +171,61 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutpu
             }
 
             int genomeId = genomeIds.iterator().next();
+
+            File outputVcf;
+            if (resumer.isGenotypeGVCFsComplete())
+            {
+                outputVcf = resumer.getGenotypeGVCFsFile();
+                ctx.getLogger().info("resuming GenotypeGVCFs from file: " + outputVcf.getPath());
+            }
+            else
+            {
+                outputVcf = runGenotypeGVCFs(job, ctx, resumer, inputVcfs, genomeId);
+            }
+
+            //run post processing, if needed
+            File processed = ProcessVariantsHandler.processVCF(outputVcf, genomeId, ctx, resumer);
+            if (processed == null)
+            {
+                ctx.getLogger().debug("adding GenotypeGVCFs output because no processing was selected");
+                processed = outputVcf;
+            }
+
+            ctx.getLogger().debug("adding sequence output: " + processed.getPath());
+            SequenceOutputFile so1 = new SequenceOutputFile();
+            so1.setName(processed.getName());
+            GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(ctx.getLogger());
+            so1.setDescription("GATK GenotypeGVCF output.  GATK Version: " + wrapper.getVersionString());
+            so1.setFile(processed);
+            so1.setLibrary_id(genomeId);
+            so1.setCategory("VCF File");
+            so1.setContainer(job.getContainerId());
+            so1.setCreated(new Date());
+            so1.setModified(new Date());
+
+            resumer.addSequenceOutput(so1);
+            //TODO: rename output?
+
+            resumer.markComplete(ctx);
+        }
+
+        @Override
+        public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        {
+
+        }
+
+        private File runGenotypeGVCFs(PipelineJob job, JobContext ctx, ProcessVariantsHandler.Resumer resumer, List<File> inputVcfs, int genomeId) throws PipelineJobException
+        {
+            RecordedAction action = new RecordedAction(getName());
+            action.setStartTime(new Date());
+
+            for (File f : inputVcfs)
+            {
+                action.addInput(f, "Input gVCF");
+            }
+
+            GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(job.getLogger());
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeId);
             if (genome == null)
             {
@@ -183,25 +233,25 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutpu
             }
 
             File outDir = ctx.getOutputDir();
-            String basename = params.get("variantCalling.GenotypeGVCFs.fileBaseName") != null ? params.getString("variantCalling.GenotypeGVCFs.fileBaseName") : "CombinedGenotypes";
+            String basename = ctx.getParams().get("variantCalling.GenotypeGVCFs.fileBaseName") != null ? ctx.getParams().getString("variantCalling.GenotypeGVCFs.fileBaseName") : "CombinedGenotypes";
             basename = basename.replaceAll(".vcf.gz$", "");
             basename = basename.replaceAll(".vcf$", "");
 
             File outputVcf = new File(outDir, basename + ".vcf.gz");
             List<String> toolParams = new ArrayList<>();
-            if (params.get("variantCalling.GenotypeGVCFs.stand_call_conf") != null)
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf") != null)
             {
                 toolParams.add("-stand_call_conf");
-                toolParams.add(params.get("variantCalling.GenotypeGVCFs.stand_call_conf").toString());
+                toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf").toString());
             }
 
-            if (params.get("variantCalling.GenotypeGVCFs.max_alternate_alleles") != null)
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles") != null)
             {
                 toolParams.add("--max_alternate_alleles");
-                toolParams.add(params.get("variantCalling.GenotypeGVCFs.max_alternate_alleles").toString());
+                toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles").toString());
             }
 
-            if (params.optBoolean("variantCalling.GenotypeGVCFs.includeNonVariantSites"))
+            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.includeNonVariantSites"))
             {
                 toolParams.add("--includeNonVariantSites");
             }
@@ -212,36 +262,9 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutpu
             wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcfs.toArray(new File[inputVcfs.size()]));
             action.addOutput(outputVcf, "VCF", outputVcf.exists(), true);
             action.setEndTime(new Date());
-            ctx.addActions(action);
+            resumer.setGenotypeGVCFsComplete(action, outputVcf);
 
-            //run post processing, if needed
-            File processed = ProcessVariantsHandler.processVCF(outputVcf, genomeId, ctx);
-            if (processed == null)
-            {
-                ctx.getLogger().debug("adding GenotypeGVCFs output because no processing was selected");
-                processed = outputVcf;
-            }
-
-            ctx.getLogger().debug("adding sequence output: " + processed.getPath());
-            SequenceOutputFile so1 = new SequenceOutputFile();
-            so1.setName(processed.getName());
-            so1.setDescription("GATK GenotypeGVCF output");
-            so1.setFile(processed);
-            so1.setLibrary_id(genomeId);
-            so1.setCategory("VCF File");
-            so1.setContainer(job.getContainerId());
-            so1.setCreated(new Date());
-            so1.setModified(new Date());
-
-            ctx.addSequenceOutput(so1);
-
-            //TODO: rename output?
-        }
-
-        @Override
-        public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
-        {
-
+            return outputVcf;
         }
     }
 }

@@ -35,6 +35,7 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -155,18 +156,26 @@ public class SequencePipelineSettings
         model.setComments(o.getString("comments"));
         if (o.containsKey("sampledate") && o.get("sampledate") != null && StringUtils.trimToNull(o.getString("sampledate")) != null)
         {
-            Date date;
-            try
-            {
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-                date = format.parse(o.getString("sampledate"));
-                model.setSampleDate(date);
-            }
-            catch (ParseException e)
+            for (String fmt : Arrays.asList("yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss"))
             {
                 try
                 {
-                    date = ConvertHelper.convert(o.getString("sampledate"), Date.class);
+                    SimpleDateFormat format = new SimpleDateFormat(fmt);
+                    Date date = format.parse(o.getString("sampledate"));
+                    model.setSampleDate(date);
+                }
+                catch (ParseException e)
+                {
+                    //ignore
+                }
+            }
+
+            if (model.getSampleDate() == null)
+            {
+                try
+                {
+                    //NOTE: this no longer works on remote servers
+                    Date date = ConvertHelper.convert(o.getString("sampledate"), Date.class);
                     model.setSampleDate(date);
                 }
                 catch (ConversionException ce)

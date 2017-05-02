@@ -1,4 +1,4 @@
-package org.labkey.sequenceanalysis.analysis;
+package org.labkey.sequenceanalysis.pipeline;
 
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.FeatureReader;
@@ -40,10 +40,13 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * Created by bimber on 8/26/2014.
@@ -51,6 +54,7 @@ import java.util.Set;
 public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOutputHandler.HasActionNames
 {
     private FileType _vcfFileType = new FileType(Arrays.asList(".vcf"), ".vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
+    private ProcessVariantsHandler.Resumer _resumer;
 
     public ProcessVariantsHandler()
     {
@@ -176,21 +180,45 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
             }
 
             job.getLogger().info("total samples: " + sampleNames.size());
+            job.getLogger().debug(StringUtils.join(sampleNames, ";"));
             List<PedigreeRecord> pedigreeRecords = SequenceAnalysisService.get().generatePedigree(sampleNames, job.getContainer(), job.getUser());
             job.getLogger().info("total pedigree records: " + pedigreeRecords.size());
 
             File pedFile = getPedigreeFile(outputDir);
+            Set<String> sampleNamesCopy = new HashSet<>(sampleNames);
+            Map<String, Integer> parentMap = new TreeMap<>();
             try (PrintWriter gatkWriter = PrintWriters.getPrintWriter(pedFile))
             {
                 for (PedigreeRecord pd : pedigreeRecords)
                 {
                     List<String> vals = Arrays.asList(pd.getSubjectName(), (StringUtils.isEmpty(pd.getFather()) ? "0" : pd.getFather()), (StringUtils.isEmpty(pd.getMother()) ? "0" : pd.getMother()), ("m".equals(pd.getGender()) ? "1" : "f".equals(pd.getGender()) ? "2" : "0"), "0");
                     gatkWriter.write("FAM01 " + StringUtils.join(vals, " ") + '\n');
+                    sampleNamesCopy.remove(pd.getSubjectName());
+
+                    String parentKey = pd.getTotalParents(false) + "/" + pd.getTotalParents(true);
+                    if (!parentMap.containsKey(parentKey))
+                        parentMap.put(parentKey, 0);
+
+                    parentMap.put(parentKey, parentMap.get(parentKey) + 1);
                 }
             }
             catch (IOException e)
             {
                 throw new PipelineJobException(e);
+            }
+
+            if (!sampleNamesCopy.isEmpty())
+            {
+                job.getLogger().warn("the following " + sampleNamesCopy.size() + " animals do not have pedigree records: ");
+                for (String sn : sampleNamesCopy)
+                {
+                    job.getLogger().warn(sn);
+                }
+            }
+
+            for (String key : parentMap.keySet())
+            {
+                job.getLogger().info("records with " + key + " (known / total including placeholder) parents: " + parentMap.get(key));
             }
         }
         else
@@ -204,7 +232,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
         return new File(outputDir, "gatk.ped");
     }
 
-    public static File processVCF(File input, Integer libraryId, JobContext ctx) throws PipelineJobException
+    public static File processVCF(File input, Integer libraryId, JobContext ctx, Resumer resumer) throws PipelineJobException
     {
         try
         {
@@ -219,7 +247,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
 
         ctx.getJob().getLogger().info("***Starting processing of file: " + input.getName());
         ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Processing: " + input.getName());
-
+        int stepIdx = 0;
         List<PipelineStepProvider<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(ctx.getJob(), VariantProcessingStep.class);
         if (providers.isEmpty())
         {
@@ -230,6 +258,14 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
         for (PipelineStepProvider<VariantProcessingStep> provider : providers)
         {
             ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + provider.getLabel());
+            stepIdx++;
+
+            if (resumer.isStepComplete(stepIdx, input.getPath()))
+            {
+                ctx.getLogger().info("resuming from saved state");
+                currentVCF = resumer.getVcfFromStep(stepIdx, input.getPath());
+                continue;
+            }
 
             RecordedAction action = new RecordedAction(provider.getLabel());
             Date start = new Date();
@@ -276,7 +312,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
             Date end = new Date();
             action.setEndTime(end);
             ctx.getJob().getLogger().info(provider.getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-            ctx.addActions(action);
+
+            resumer.setStepComplete(stepIdx, input.getPath(), action, currentVCF);
         }
 
         if (currentVCF.exists())
@@ -324,9 +361,21 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            _resumer = Resumer.create((JobContextImpl)ctx);
+            if (_resumer.isResume())
+            {
+                ctx.getLogger().info("resuming previous job");
+                if (_resumer.getFileManager() == null)
+                {
+                    throw new PipelineJobException("fileManager is null for resumed job");
+                }
+
+                ((JobContextImpl)ctx).setFileManager(_resumer.getFileManager());
+            }
+
             for (SequenceOutputFile input : inputFiles)
             {
-                File processed = processVCF(input.getFile(), input.getLibrary_id(), ctx);
+                File processed = processVCF(input.getFile(), input.getLibrary_id(), ctx, _resumer);
                 if (processed != null && processed.exists())
                 {
                     ctx.getLogger().debug("adding sequence output: " + processed.getPath());
@@ -345,10 +394,12 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
                         so1.setCreated(new Date());
                         so1.setModified(new Date());
 
-                        ctx.addSequenceOutput(so1);
+                        _resumer.addSequenceOutput(so1);
                     }
                 }
             }
+
+            _resumer.markComplete(ctx);
         }
 
         @Override
@@ -368,5 +419,159 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
         }
 
         return allowableNames;
+    }
+
+    public static class Resumer extends AbstractResumer
+    {
+        public static final String XML_NAME = "processVariantsCheckpoint.xml";
+        private static final String GENOTYPE_GVCFS = "GENOTYPE_GVCFS";
+
+        private Map<String, File> _finalVcfs = new HashMap<>();
+        private Set<SequenceOutputFile> _sequenceOutputFiles = new HashSet<>();
+
+        //for serialization
+        public Resumer()
+        {
+
+        }
+
+        private Resumer(JobContextImpl ctx)
+        {
+            super(ctx.getSourceDirectory(), ctx.getLogger(), (TaskFileManagerImpl)ctx.getFileManager());
+        }
+
+        public static Resumer create(JobContextImpl ctx) throws PipelineJobException
+        {
+            File xml = getSerializedXml(ctx.getSourceDirectory(), XML_NAME);
+            if (!xml.exists())
+            {
+                return new Resumer(ctx);
+            }
+            else
+            {
+                Resumer ret = readFromXml(xml, Resumer.class);
+                ret._isResume = true;
+                ret._log = ctx.getLogger();
+                ret._localWorkDir = ctx.getWorkDir().getDir();
+                ret._fileManager._job = (SequenceOutputHandlerJob)ctx.getJob();
+                ret._fileManager._wd = ctx.getWorkDir();
+                ret._fileManager._workLocation = ctx.getWorkDir().getDir();
+                ctx.setFileManager(ret._fileManager);
+                try
+                {
+                    if (!ret._copiedInputs.isEmpty())
+                    {
+                        for (File orig : ret._copiedInputs.keySet())
+                        {
+                            ctx.getWorkDir().inputFile(orig, ret._copiedInputs.get(orig), false);
+                        }
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+                //debugging:
+                ctx.getLogger().debug("loaded from XML.  total recorded actions: " + ret.getRecordedActions().size());
+                for (RecordedAction a : ret.getRecordedActions())
+                {
+                    ctx.getLogger().debug("action: " + a.getName() + ", inputs: " + a.getInputs().size() + ", outputs: " + a.getOutputs().size());
+                }
+
+                if (ret._recordedActions == null)
+                {
+                    throw new PipelineJobException("Job read from XML, but did not have any saved actions.  This indicates a problem w/ serialization.");
+                }
+
+                return ret;
+            }
+        }
+
+        public void markComplete(JobContext ctx)
+        {
+            ctx.getLogger().debug("total sequence outputs tracked in resumer: " + getSequenceOutputFiles().size());
+            for (SequenceOutputFile so : getSequenceOutputFiles())
+            {
+                ctx.addSequenceOutput(so);
+            }
+
+            ctx.getLogger().debug("total actions tracked in resumer: " + getRecordedActions().size());
+            for (RecordedAction a : getRecordedActions())
+            {
+                ctx.addActions(a);
+            }
+
+            super.markComplete();
+        }
+
+        @Override
+        protected String getXmlName()
+        {
+            return XML_NAME;
+        }
+
+        public void setStepComplete(int stepIdx, String inputFilePath, RecordedAction action, File finalVCF) throws PipelineJobException
+        {
+            _finalVcfs.put(getKey(stepIdx, inputFilePath), finalVCF);
+            _recordedActions.add(action);
+            saveState();
+        }
+
+        private String getKey(int stepIdx, String inputFilePath)
+        {
+            return stepIdx + "<>" + inputFilePath;
+        }
+
+        public boolean isStepComplete(int stepIdx, String inputFilePath)
+        {
+            return _finalVcfs.containsKey(getKey(stepIdx, inputFilePath));
+        }
+
+        public File getVcfFromStep(int stepIdx, String inputFilePath)
+        {
+            return _finalVcfs.get(getKey(stepIdx, inputFilePath));
+        }
+
+        public Set<SequenceOutputFile> getSequenceOutputFiles()
+        {
+            return _sequenceOutputFiles;
+        }
+
+        public void setSequenceOutputFiles(Set<SequenceOutputFile> sequenceOutputFiles)
+        {
+            _sequenceOutputFiles = sequenceOutputFiles;
+        }
+
+        public void addSequenceOutput(SequenceOutputFile sequenceOutputFile)
+        {
+            _sequenceOutputFiles.add(sequenceOutputFile);
+        }
+
+        public Map<String, File> getFinalVcfs()
+        {
+            return _finalVcfs;
+        }
+
+        public void setFinalVcfs(Map<String, File> finalVcfs)
+        {
+            _finalVcfs = finalVcfs;
+        }
+
+        public void setGenotypeGVCFsComplete(RecordedAction action, File finalVCF)
+        {
+            getRecordedActions().add(action);
+            _finalVcfs.put(GENOTYPE_GVCFS, finalVCF);
+        }
+
+        public boolean isGenotypeGVCFsComplete()
+        {
+            return _finalVcfs.containsKey(GENOTYPE_GVCFS);
+        }
+
+        public File getGenotypeGVCFsFile()
+        {
+            return _finalVcfs.get(GENOTYPE_GVCFS);
+        }
     }
 }

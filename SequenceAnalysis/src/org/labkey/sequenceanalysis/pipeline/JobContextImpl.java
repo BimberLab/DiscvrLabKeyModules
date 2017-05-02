@@ -75,6 +75,11 @@ public class JobContextImpl implements SequenceOutputHandler.JobContext
         return _fileManager;
     }
 
+    public void setFileManager(TaskFileManager fileManager)
+    {
+        _fileManager = fileManager;
+    }
+
     @Override
     public void addSequenceOutput(SequenceOutputFile o)
     {

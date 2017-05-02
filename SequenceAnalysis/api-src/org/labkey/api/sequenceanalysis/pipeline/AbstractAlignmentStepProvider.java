@@ -20,6 +20,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -29,9 +30,16 @@ import java.util.List;
  */
 abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentStep> extends AbstractPipelineStepProvider<StepType>
 {
+    public static String ALIGNMENT_MODE_PARAM = "alignmentMode";
     public static String SUPPORT_MERGED_UNALIGNED = "supportsMergeUnaligned";
     public static String COLLECT_WGS_METRICS = "collectWgsMetrics";
     public static String DISCARD_BAM = "discardBam";
+
+    public static enum ALIGNMENT_MODE
+    {
+        ALIGN_THEN_MERGE(),
+        MERGE_THEN_ALIGN();
+    }
 
     private boolean _supportsPairedEnd;
     private boolean _supportsMergeUnaligned;
@@ -39,7 +47,12 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
 
     public AbstractAlignmentStepProvider(String name, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL, boolean supportsPairedEnd, boolean supportsMergeUnaligned)
     {
-        super(name, name, name, description, getParamList(parameters, supportsMergeUnaligned), clientDependencyPaths, websiteURL);
+        this(name, description, parameters, clientDependencyPaths, websiteURL, supportsPairedEnd, supportsMergeUnaligned, ALIGNMENT_MODE.ALIGN_THEN_MERGE);
+    }
+
+    public AbstractAlignmentStepProvider(String name, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL, boolean supportsPairedEnd, boolean supportsMergeUnaligned, ALIGNMENT_MODE alignmentMode)
+    {
+        super(name, name, name, description, getParamList(parameters, supportsMergeUnaligned, alignmentMode), getDependencies(clientDependencyPaths), websiteURL);
 
         _supportsPairedEnd = supportsPairedEnd;
         _supportsMergeUnaligned = supportsMergeUnaligned;
@@ -56,7 +69,7 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
         _alwaysCacheIndex = alwaysCacheIndex;
     }
 
-    private static List<ToolParameterDescriptor> getParamList(List<ToolParameterDescriptor> list, boolean supportsMergeUnaligned)
+    private static List<ToolParameterDescriptor> getParamList(List<ToolParameterDescriptor> list, boolean supportsMergeUnaligned, ALIGNMENT_MODE alignmentMode)
     {
         List<ToolParameterDescriptor> parameters = new ArrayList<>();
         if (list != null)
@@ -83,7 +96,24 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
             put("checked", false);
         }}, false));
 
+        parameters.add(ToolParameterDescriptor.create(ALIGNMENT_MODE_PARAM, "Alignment Mode", "If your readset has more than one pair of FASTQs, there pipeline can either align each pair sequentially (and then merge these BAMs), or merge the pairs of FASTQs first and then perform alignment once.  The default is to align each pair of FASTQs separately; however, some pipelines like STAR require the latter.", "ldk-simplecombo", new JSONObject(){{
+            put("storeValues", ALIGNMENT_MODE.ALIGN_THEN_MERGE.name() + ";" + ALIGNMENT_MODE.MERGE_THEN_ALIGN.name());
+            put("value", alignmentMode.name());
+        }}, true));
+
         return parameters;
+    }
+
+    private static LinkedHashSet<String> getDependencies(Collection<String> input)
+    {
+        LinkedHashSet<String> ret = new LinkedHashSet<>();
+        ret.add("/ldk/field/SimpleCombo.js");
+        if (input != null)
+        {
+            ret.addAll(input);
+        }
+
+        return ret;
     }
 
     public boolean supportsPairedEnd()

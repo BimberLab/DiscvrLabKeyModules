@@ -33,34 +33,40 @@ Ext4.define('SequenceAnalysis.panel.VariantFilterPanel', {
 						text: 'Strand Bias (FisherStrand)',
 						scope: this,
 						handler: function(gridBtn){
-							this.addFilter('FisherStrand', 'FS > 60.0');
+							this.addFilter('FisherStrand', 'vc.hasAttribute(\'FS\') && ((!vc.isIndel() && FS > 60.0) || (vc.isIndel() && FS > 200.0))');
 						}
 					},{
 						text: 'StrandOddsRatio',
 						scope: this,
 						handler: function(gridBtn){
-							this.addFilter('StrandOddsRatio', 'SOR > 3.0');
+							this.addFilter('StrandOddsRatio', 'vc.hasAttribute(\'SOR\') && ((!vc.isIndel() && SOR > 3.0) || (vc.isIndel() && SOR > 10.0))');
 						}
 					},{
 						text: 'MappingQuality',
 						scope: this,
 						handler: function(gridBtn){
-							this.addFilter('MappingQuality', 'MQ < 40');
+							this.addFilter('MappingQuality', '(!vc.isIndel() && MQ < 40.0)');
 						}
 					},{
 						text: 'MQRankSum',
 						scope: this,
 						handler: function(gridBtn){
-							this.addFilter('MQRankSum', 'vc.hasAttribute(\'MQRankSum\') && MQRankSum < -12.5');
+							this.addFilter('MQRankSum', 'vc.hasAttribute(\'MQRankSum\') && (!vc.isIndel() && MQRankSum < -12.5)');
 						}
 					},{
 						text: 'ReadPosRankSum',
 						scope: this,
 						handler: function(gridBtn){
-							this.addFilter('ReadPosRankSum', 'vc.hasAttribute(\'ReadPosRankSum\') && ReadPosRankSum < -8.0');
+							this.addFilter('ReadPosRankSum', 'vc.hasAttribute(\'ReadPosRankSum\') && ((!vc.isIndel() && ReadPosRankSum < -8.0) || (vc.isIndel() && ReadPosRankSum < -20.0))');
 						}
 					},{
-						text: 'No Genootypes Called',
+						text: 'High Depth',
+						scope: this,
+						handler: function(gridBtn){
+							this.addFilter('Depth100', 'vc.hasAttribute(\'DP\') && DP > 100.0');
+						}
+					},{
+						text: 'No Genotypes Called',
 						scope: this,
 						handler: function(gridBtn){
 							this.addFilter('NoneCalled', 'vc.getCalledChrCount() == 0');

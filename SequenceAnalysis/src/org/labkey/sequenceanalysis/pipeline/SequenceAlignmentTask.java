@@ -15,11 +15,10 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.XppDriver;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +53,6 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.Pair;
-import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
@@ -68,24 +66,23 @@ import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.FlagStatRunner;
 import org.labkey.sequenceanalysis.run.util.MergeBamAlignmentWrapper;
 import org.labkey.sequenceanalysis.run.util.MergeSamFilesWrapper;
+import org.labkey.sequenceanalysis.util.FastqMerger;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This task is designed to act on either a FASTQ or zipped FASTQ file.  Each file should already have been imported as a readset using
@@ -110,6 +107,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
     public static final String NORMALIZE_FILENAMES_ACTION = "Normalizing File Names";
     public static final String ALIGNMENT_METRICS_ACTIONNAME = "Calculating Alignment Metrics";
 
+    public static final String MERGE_FASTQ_ACTIONNAME = "Merging FASTQ Pairs";
     public static final String MERGE_ALIGNMENT_ACTIONNAME = "Merging Alignments";
     public static final String DECOMPRESS_ACTIONNAME = "Decompressing Inputs";
     private static final String ALIGNMENT_SUBFOLDER_NAME = "Alignment";  //the subfolder within which alignment data will be placed
@@ -167,6 +165,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             allowableNames.add(COPY_INPUTS_ACTIONNAME);
             allowableNames.add(NORMALIZE_FILENAMES_ACTION);
             allowableNames.add(MERGE_ALIGNMENT_ACTIONNAME);
+            allowableNames.add(MERGE_FASTQ_ACTIONNAME);
             allowableNames.add(ALIGNMENT_METRICS_ACTIONNAME);
             allowableNames.add(TrimmomaticWrapper.MultiStepTrimmomaticProvider.NAME);
 
@@ -236,6 +235,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             if (SequenceTaskHelper.isAlignmentUsed(getJob()))
             {
+                getJob().setStatus(PipelineJob.TaskStatus.running, "PERFORMING ALIGNMENT");
                 getJob().getLogger().info("Preparing to perform alignment");
                 ReferenceGenome referenceGenome = getPipelineJob().getTargetGenome();
                 String outputBasename = rs.getLegalFileName();
@@ -629,51 +629,9 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         {
             getJob().setStatus(PipelineJob.TaskStatus.running, ALIGNMENT_STATUS);
             getJob().getLogger().info("Beginning to align files for: " + basename);
+
             List<RecordedAction> alignActions = new ArrayList<>();
-
-            List<File> alignOutputs = new ArrayList<>();
-            int idx = 0;
-            for (ReadData rd : files.keySet())
-            {
-                idx++;
-                String msgSuffix = files.size() > 1 ? " (" + idx + " of " + files.size() + ")" : "";
-                Pair<File, File> pair = files.get(rd);
-
-                getJob().getLogger().info("Aligning inputs: " + pair.first.getName() + (pair.second == null ? "" : " and " + pair.second.getName()));
-
-                alignOutputs.add(doAlignmentForPair(pair, referenceGenome, rs, rd, msgSuffix));
-            }
-
-            //merge outputs
-            if (alignOutputs.size() > 1)
-            {
-                getJob().setStatus(PipelineJob.TaskStatus.running, "MERGING BAM FILES");
-                getJob().getLogger().info("merging BAMs");
-                RecordedAction mergeAction = new RecordedAction(MERGE_ALIGNMENT_ACTIONNAME);
-                Date start = new Date();
-                mergeAction.setStartTime(start);
-                MergeSamFilesWrapper mergeSamFilesWrapper = new MergeSamFilesWrapper(getJob().getLogger());
-                List<File> bams = new ArrayList<>();
-                for (File o : alignOutputs)
-                {
-                    bams.add(o);
-                    getHelper().getFileManager().addInput(mergeAction, "Input BAM", o);
-                }
-
-                bam = new File(alignOutputs.get(0).getParent(), FileUtil.getBaseName(alignOutputs.get(0).getName()) + ".merged.bam");
-                getHelper().getFileManager().addOutput(mergeAction, "Merged BAM", bam);
-                mergeSamFilesWrapper.execute(bams, bam.getPath(), true);
-                getHelper().getFileManager().addCommandsToAction(mergeSamFilesWrapper.getCommandsExecuted(), mergeAction);
-
-                Date end = new Date();
-                mergeAction.setEndTime(end);
-                getJob().getLogger().info("MergeSamFiles Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-                alignActions.add(mergeAction);
-            }
-            else
-            {
-                bam = alignOutputs.get(0);
-            }
+            bam = doAlignment(referenceGenome, rs, files, alignActions);
 
             _resumer.setInitialAlignmentDone(bam, alignActions);
         }
@@ -1002,14 +960,151 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
     }
 
-    public File doAlignmentForPair(Pair<File, File> inputFiles, ReferenceGenome referenceGenome, Readset rs, ReadData rd, String msgSuffix) throws PipelineJobException, IOException
+    private File doAlignment(ReferenceGenome referenceGenome, Readset rs, Map<ReadData, Pair<File, File>> files, List<RecordedAction> alignActions) throws PipelineJobException, IOException
+    {
+        AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
+        String alignmentMode = StringUtils.trimToNull(alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.ALIGNMENT_MODE_PARAM).extractValue(getPipelineJob(), alignmentStep.getProvider()));
+        getJob().getLogger().debug("alignment mode: " + alignmentMode);
+        AbstractAlignmentStepProvider.ALIGNMENT_MODE mode = alignmentMode == null ? AbstractAlignmentStepProvider.ALIGNMENT_MODE.ALIGN_THEN_MERGE : AbstractAlignmentStepProvider.ALIGNMENT_MODE.valueOf(alignmentMode);
+        if (mode == AbstractAlignmentStepProvider.ALIGNMENT_MODE.MERGE_THEN_ALIGN)
+        {
+            return doMergeThenAlign(referenceGenome, rs, files, alignActions);
+        }
+        else
+        {
+            return doAlignThenMerge(referenceGenome, rs, files, alignActions);
+        }
+    }
+
+    private File doMergeThenAlign(ReferenceGenome referenceGenome, Readset rs, Map<ReadData, Pair<File, File>> files, List<RecordedAction> alignActions) throws PipelineJobException, IOException
+    {
+        if (files.size() > 1)
+        {
+            getJob().setStatus(PipelineJob.TaskStatus.running, "Merging FASTQs");
+            FastqMerger merger = new FastqMerger(getJob().getLogger());
+
+            List<File> forward = new ArrayList<>();
+            List<File> reverse = new ArrayList<>();
+            RecordedAction mergeAction1 = new RecordedAction(MERGE_FASTQ_ACTIONNAME);
+            Date start = new Date();
+            mergeAction1.setStartTime(start);
+
+            Set<Integer> typesFound = new HashSet<>();
+            for (Pair<File, File> pair : files.values())
+            {
+                forward.add(pair.first);
+                getHelper().getFileManager().addInput(mergeAction1, "Input FASTQ", pair.first);
+
+                if (pair.second != null)
+                {
+                    reverse.add(pair.second);
+                }
+
+                typesFound.add(pair.second == null ? 1 : 2);
+            }
+
+            if (typesFound.size() > 1)
+            {
+                throw new PipelineJobException("These data have a mixture of paired and unpaired reads");
+            }
+
+            File mergedForward = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(forward.get(0).getName()) + ".merged.R1.fastq.gz");
+            merger.mergeFiles(mergedForward, forward);
+            getHelper().getFileManager().addIntermediateFile(mergedForward);
+            getHelper().getFileManager().addOutput(mergeAction1, "Merged FASTQ", mergedForward);
+
+            Date end = new Date();
+            mergeAction1.setEndTime(end);
+            getJob().getLogger().info("Merge Forward FASTQs Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+            alignActions.add(mergeAction1);
+
+            File mergedReverse = null;
+            if (!reverse.isEmpty())
+            {
+                RecordedAction mergeAction2 = new RecordedAction(MERGE_FASTQ_ACTIONNAME);
+                start = new Date();
+                mergeAction2.setStartTime(start);
+                reverse.forEach(x -> getHelper().getFileManager().addInput(mergeAction2, "Input FASTQ", x));
+
+                mergedReverse = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(forward.get(0).getName()) + ".merged.R2.fastq.gz");
+                merger.mergeFiles(mergedReverse, forward);
+                getHelper().getFileManager().addIntermediateFile(mergedReverse);
+                getHelper().getFileManager().addOutput(mergeAction2, "Merged FASTQ", mergedReverse);
+
+                end = new Date();
+                mergeAction2.setEndTime(end);
+                getJob().getLogger().info("Merge Reverse FASTQs Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+                alignActions.add(mergeAction2);
+            }
+
+            return doAlignmentForPair(Pair.of(mergedForward, mergedReverse), referenceGenome, rs, -1, "", null);
+        }
+        else
+        {
+            getJob().getLogger().info("No FASTQ merge necessary");
+            ReadData rd = files.keySet().iterator().next();
+            return doAlignmentForPair(files.get(rd), referenceGenome, rs, rd.getRowid(), "", rd.getPlatformUnit());
+        }
+    }
+
+    private File doAlignThenMerge(ReferenceGenome referenceGenome, Readset rs, Map<ReadData, Pair<File, File>> files, List<RecordedAction> alignActions) throws PipelineJobException, IOException
+    {
+        File bam;
+        List<File> alignOutputs = new ArrayList<>();
+        int idx = 0;
+        for (ReadData rd : files.keySet())
+        {
+            idx++;
+            String msgSuffix = files.size() > 1 ? " (" + idx + " of " + files.size() + ")" : "";
+            Pair<File, File> pair = files.get(rd);
+
+            getJob().getLogger().info("Aligning inputs: " + pair.first.getName() + (pair.second == null ? "" : " and " + pair.second.getName()));
+
+            alignOutputs.add(doAlignmentForPair(pair, referenceGenome, rs, rd.getRowid(), msgSuffix, rd.getPlatformUnit()));
+        }
+
+        //merge outputs
+        if (alignOutputs.size() > 1)
+        {
+            getJob().setStatus(PipelineJob.TaskStatus.running, "MERGING BAM FILES");
+            getJob().getLogger().info("merging BAMs");
+            RecordedAction mergeAction = new RecordedAction(MERGE_ALIGNMENT_ACTIONNAME);
+            Date start = new Date();
+            mergeAction.setStartTime(start);
+            MergeSamFilesWrapper mergeSamFilesWrapper = new MergeSamFilesWrapper(getJob().getLogger());
+            List<File> bams = new ArrayList<>();
+            for (File o : alignOutputs)
+            {
+                bams.add(o);
+                getHelper().getFileManager().addInput(mergeAction, "Input BAM", o);
+            }
+
+            bam = new File(alignOutputs.get(0).getParent(), FileUtil.getBaseName(alignOutputs.get(0).getName()) + ".merged.bam");
+            getHelper().getFileManager().addOutput(mergeAction, "Merged BAM", bam);
+            mergeSamFilesWrapper.execute(bams, bam.getPath(), true);
+            getHelper().getFileManager().addCommandsToAction(mergeSamFilesWrapper.getCommandsExecuted(), mergeAction);
+
+            Date end = new Date();
+            mergeAction.setEndTime(end);
+            getJob().getLogger().info("MergeSamFiles Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+            alignActions.add(mergeAction);
+        }
+        else
+        {
+            bam = alignOutputs.get(0);
+        }
+
+        return bam;
+    }
+
+    public File doAlignmentForPair(Pair<File, File> inputFiles, ReferenceGenome referenceGenome, Readset rs, int readDataId, @NotNull String msgSuffix, @Nullable String platformUnit) throws PipelineJobException, IOException
     {
         getJob().getLogger().info("Beginning alignment for: " + inputFiles.first.getName() + (inputFiles.second == null ? "" : " and " + inputFiles.second.getName()) + msgSuffix);
 
-        if (_resumer.isReadDataAlignmentDone(rd))
+        if (_resumer.isReadDataAlignmentDone(readDataId))
         {
-            getJob().getLogger().debug("resuming alignment of readData from saved state: " + rd.getRowid());
-            return _resumer.getBamForReadData(rd);
+            getJob().getLogger().debug("resuming alignment of readData from saved state: " + readDataId);
+            return _resumer.getBamForReadData(readDataId);
         }
         else
         {
@@ -1098,7 +1193,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             {
                 getJob().setStatus(PipelineJob.TaskStatus.running, "ADDING READ GROUPS" + msgSuffix);
                 AddOrReplaceReadGroupsWrapper wrapper = new AddOrReplaceReadGroupsWrapper(getJob().getLogger());
-                wrapper.executeCommand(alignmentOutput.getBAM(), null, rs.getReadsetId().toString(), rs.getPlatform(), (rd.getPlatformUnit() == null ? rs.getReadsetId().toString() : rd.getPlatformUnit()), rs.getName().replaceAll(" ", "_"));
+                wrapper.executeCommand(alignmentOutput.getBAM(), null, rs.getReadsetId().toString(), rs.getPlatform(), (platformUnit == null ? rs.getReadsetId().toString() : platformUnit), rs.getName().replaceAll(" ", "_"));
                 getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), alignmentAction);
             }
             else
@@ -1112,23 +1207,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             runner.execute(alignmentOutput.getBAM());
             getHelper().getFileManager().addCommandsToAction(runner.getCommandsExecuted(), alignmentAction);
 
-            _resumer.setReadDataAlignmentDone(rd, actions, alignmentOutput.getBAM());
+            _resumer.setReadDataAlignmentDone(readDataId, actions, alignmentOutput.getBAM());
 
             return alignmentOutput.getBAM();
         }
     }
 
-    public static class Resumer implements Serializable
+    public static class Resumer extends AbstractResumer
     {
-        transient SequenceAlignmentTask _task;
-        transient Logger _log;
-        transient static final XStream _xstream = new XStream(new XppDriver());
-
-        private TaskFileManagerImpl _fileManager;
-        private LinkedHashSet<RecordedAction> _recordedActions = null;
-        private Map<File, File> _copiedInputs = new HashMap<>();
-        private boolean _isResume = false;
-
         private File _workingFasta = null;
         private Map<ReadData, Pair<File, File>> _filesToAlign = null;
         private File _mergedBamFile = null;
@@ -1148,36 +1234,33 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         private Resumer(SequenceAlignmentTask task)
         {
-            _task = task;
-            _log = task.getJob().getLogger();
-            _fileManager = _task.getHelper().getFileManager();
-            _recordedActions = new LinkedHashSet<>();
+            super(task.getPipelineJob().getAnalysisDirectory(), task.getJob().getLogger(), task.getHelper().getFileManager());
         }
 
         public static Resumer create(SequenceAlignmentJob job, SequenceAlignmentTask task) throws PipelineJobException
         {
-            File xml = getSerializedXml(job.getAnalysisDirectory());
+            File xml = getSerializedXml(job.getAnalysisDirectory(), XML_NAME);
             if (!xml.exists())
             {
                 return new Resumer(task);
             }
             else
             {
-                Resumer ret = readFromXml(xml);
+                Resumer ret = readFromXml(xml, Resumer.class);
                 ret._isResume = true;
-                ret._task = task;
                 ret._log = task.getJob().getLogger();
+                ret._localWorkDir = task._wd.getDir();
                 ret._fileManager._job = job;
                 ret._fileManager._wd = task._wd;
                 ret._fileManager._workLocation = task._wd.getDir();
-                ret._task._taskHelper.setFileManager(ret._fileManager);
+                task._taskHelper.setFileManager(ret._fileManager);
                 try
                 {
                     if (!ret._copiedInputs.isEmpty())
                     {
                         for (File orig : ret._copiedInputs.keySet())
                         {
-                            ret._task._wd.inputFile(orig, ret._copiedInputs.get(orig), false);
+                            task._wd.inputFile(orig, ret._copiedInputs.get(orig), false);
                         }
                     }
                 }
@@ -1204,61 +1287,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         private static String XML_NAME = "alignmentCheckpoint.xml";
 
-        private static File getSerializedXml(File outdir)
+        @Override
+        protected String getXmlName()
         {
-            return new File(outdir, XML_NAME);
-        }
-
-        private static Resumer readFromXml(File xml) throws PipelineJobException
-        {
-            try (BufferedInputStream bus = new BufferedInputStream(new FileInputStream(xml)))
-            {
-                return (Resumer)_xstream.fromXML(bus);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
-
-        private void writeToXml() throws PipelineJobException
-        {
-            writeToXml(_task.getPipelineJob().getAnalysisDirectory());
-        }
-
-        private void writeToXml(File outDir) throws PipelineJobException
-        {
-            _log.debug("saving job checkpoint to file");
-            _log.debug("total actions: " + _recordedActions.size());
-            try (PrintWriter writer = PrintWriters.getPrintWriter(getSerializedXml(outDir)))
-            {
-                String xml = _xstream.toXML(this);
-                writer.write(xml);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
-
-        public void markComplete()
-        {
-            File xml = getSerializedXml(_task.getPipelineJob().getAnalysisDirectory());
-            if (xml.exists())
-            {
-                _log.info("closing job resumer");
-                xml.delete();
-            }
-        }
-        
-        public void saveState() throws PipelineJobException
-        {
-            writeToXml();
-        }
-
-        public boolean isResume()
-        {
-            return _isResume;
+            return XML_NAME;
         }
 
         public void setHasCopiedResources(File workingFasta, List<RecordedAction> actions, Map<File, File> copiedInputs) throws PipelineJobException
@@ -1375,31 +1407,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             saveState();
         }
 
-        public TaskFileManagerImpl getFileManager()
-        {
-            return _fileManager;
-        }
-
-        public void setFileManager(TaskFileManagerImpl fileManager)
-        {
-            _fileManager = fileManager;
-        }
-
-        public Map<File, File> getCopiedInputs()
-        {
-            return _copiedInputs;
-        }
-
-        public void setCopiedInputs(Map<File, File> copiedInputs)
-        {
-            _copiedInputs = copiedInputs;
-        }
-
-        public void setResume(boolean resume)
-        {
-            _isResume = resume;
-        }
-
         public File getWorkingFasta()
         {
             return _workingFasta;
@@ -1460,16 +1467,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _bamAnalysisDone = bamAnalysisDone;
         }
 
-        public LinkedHashSet<RecordedAction> getRecordedActions()
-        {
-            return _recordedActions;
-        }
-
-        public void setRecordedActions(LinkedHashSet<RecordedAction> recordedActions)
-        {
-            _recordedActions = recordedActions;
-        }
-
         public boolean isAlignmentMetricsDone()
         {
             return _alignmentMetricsDone;
@@ -1510,14 +1507,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             saveState();
         }
 
-        public boolean isReadDataAlignmentDone(ReadData rd)
+        public boolean isReadDataAlignmentDone(int readDataId)
         {
-            return _readDataBamMap.containsKey(rd.getRowid());
+            return _readDataBamMap.containsKey(readDataId);
         }
 
-        public void setReadDataAlignmentDone(ReadData rd, List<RecordedAction> actions, File bam) throws PipelineJobException
+        public void setReadDataAlignmentDone(int readDataId, List<RecordedAction> actions, File bam) throws PipelineJobException
         {
-            _readDataBamMap.put(rd.getRowid(), bam);
+            _readDataBamMap.put(readDataId, bam);
             if (actions != null)
             {
                 _recordedActions.addAll(actions);
@@ -1525,9 +1522,19 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             saveState();
         }
 
-        public File getBamForReadData(ReadData rd)
+        public File getBamForReadData(int readDataId)
         {
-            return _readDataBamMap.get(rd.getRowid());
+            return _readDataBamMap.get(readDataId);
+        }
+
+        public Map<Integer, File> getReadDataBamMap()
+        {
+            return _readDataBamMap;
+        }
+
+        public void setReadDataBamMap(Map<Integer, File> readDataBamMap)
+        {
+            _readDataBamMap = readDataBamMap;
         }
     }
 
@@ -1553,7 +1560,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             r.writeToXml(tmp);
 
             //after deserialization the RecordedAction should match the original
-            Resumer r2 = Resumer.readFromXml(xml);
+            Resumer r2 = Resumer.readFromXml(xml, Resumer.class);
             assertEquals(1, r2._recordedActions.size());
             RecordedAction action2 = r2._recordedActions.iterator().next();
             assertEquals("Action1", action2.getName());

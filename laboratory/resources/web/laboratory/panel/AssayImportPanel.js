@@ -216,6 +216,8 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
                         handler: this.formSubmit
                     })
                 }
+
+                this.doLayout();
             }
         }
     },
