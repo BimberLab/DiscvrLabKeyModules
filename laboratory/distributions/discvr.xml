@@ -17,7 +17,7 @@
     </target>
 
     <target name="gather_extended_distributions_modules">
-        <ant antfile="${basedir}/distributions/standard.xml" target="gather_modules" />
+        <ant antfile="${basedir}/distributions/community.xml" target="gather_modules" />
     </target>
 
     <target name="gather_modules">
