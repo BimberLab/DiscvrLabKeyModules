@@ -1556,7 +1556,7 @@ public class SequenceIntegrationTests
             TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid", "fasta_file"), libraryFilter, null);
             if (ts.exists())
             {
-                Map<String, Object> rowMap = ts.getObject(Map.class);
+                Map<String, Object> rowMap = ts.getMap();
                 Integer fasta_file = (Integer)rowMap.get("fasta_file");
                 ExpData d = fasta_file == null ? null : ExperimentService.get().getExpData(fasta_file);
                 if (d != null && d.getFile() != null && d.getFile().exists())

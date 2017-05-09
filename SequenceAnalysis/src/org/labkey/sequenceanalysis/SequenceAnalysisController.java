@@ -3187,7 +3187,7 @@ public class SequenceAnalysisController extends SpringActionController
                 TableInfo ti = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
                 for (int outputFileId : form.getOutputFileIds())
                 {
-                    Map rowMap = new TableSelector(ti, PageFlowUtil.set("dataId", "library_id"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getObject(Map.class);
+                    Map rowMap = new TableSelector(ti, PageFlowUtil.set("dataId", "library_id"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getMap();
                     if (rowMap == null || rowMap.get("dataid") == null)
                     {
                         JSONObject o = new JSONObject();

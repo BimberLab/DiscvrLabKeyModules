@@ -193,7 +193,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), genomeId);
 
-        Map<String, Object> map = new TableSelector(ti, PageFlowUtil.set("rowid", "fasta_file", "container"), filter, null).getObject(Map.class);
+        Map<String, Object> map = new TableSelector(ti, PageFlowUtil.set("rowid", "fasta_file", "container"), filter, null).getMap();
         if (map == null)
         {
             return null;
