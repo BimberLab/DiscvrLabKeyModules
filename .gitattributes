@@ -15,7 +15,6 @@ DISCVR/CancerStudies/src/org/labkey/cancerstudies/CancerStudiesController.java -
 DISCVR/CancerStudies/src/org/labkey/cancerstudies/CancerStudiesManager.java -text
 DISCVR/CancerStudies/src/org/labkey/cancerstudies/CancerStudiesModule.java -text
 DISCVR/CancerStudies/src/org/labkey/cancerstudies/CancerStudiesSchema.java -text
-DISCVR/blast/BLAST.iml -text
 DISCVR/blast/build.gradle -text
 DISCVR/blast/module.properties -text
 DISCVR/blast/resources/schemas/blast.xml -text
