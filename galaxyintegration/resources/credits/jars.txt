@@ -1,0 +1,4 @@
+{table}
+Filename|Component|Version|Source|License|LabKey Dev|Purpose
+blend4j-0.2.0-SNAPSHOT.jar|Blend4J API to Galaxy|0.2.0|{link:Blend4J|https://github.com/jmchilton/blend4j}|{link:Eclipse Public License - v 1.0|https://www.eclipse.org/legal/epl-v10.html}|bbimber|Used by Galaxy Integration
+{table}
