@@ -63,13 +63,6 @@ DISCVR/blast/src/org/labkey/blast/view/jobDetails.jsp -text
 DISCVR/blast/tools/install_blast.sh -text
 DISCVR/blast/webapp/WEB-INF/blast/blastContext.xml -text
 DISCVR/galaxyintegration/build.gradle -text
-DISCVR/galaxyintegration/lib/blend4j-0.2.0.jar -text
-DISCVR/galaxyintegration/lib/jackson-core-asl-1.9.13.jar -text
-DISCVR/galaxyintegration/lib/jackson-jaxrs-1.9.13.jar -text
-DISCVR/galaxyintegration/lib/jackson-mapper-asl-1.9.13.jar -text
-DISCVR/galaxyintegration/lib/jackson-xc-1.9.13.jar -text
-DISCVR/galaxyintegration/lib/jersey-bundle-1.19.jar -text
-DISCVR/galaxyintegration/lib/jersey-multipart-1.19.jar -text
 DISCVR/galaxyintegration/module.properties -text
 DISCVR/galaxyintegration/resources/credits/jars.txt -text
 DISCVR/galaxyintegration/resources/schemas/dbscripts/postgresql/galaxyintegration-13.30-13.31.sql -text
@@ -2684,7 +2677,6 @@ DISCVR/jbrowse/src/org/labkey/jbrowse/view/browser.jsp -text
 DISCVR/jbrowse/tools/jbrowse_install.sh -text
 DISCVR/jbrowse/webapp/WEB-INF/jbrowse/jbrowseContext.xml -text
 DISCVR/omerointegration/build.gradle -text
-DISCVR/omerointegration/lib/omero_client.jar -text
 DISCVR/omerointegration/module.properties -text
 DISCVR/omerointegration/resources/credits/jars.txt -text
 DISCVR/omerointegration/resources/queries/lists/test.query.xml -text
@@ -3143,11 +3135,6 @@ labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/SimpleSc
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/ToolPreferences.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/VariantFiltrationWrapper.java -text
 labModules/SequenceAnalysis/build.gradle -text
-labModules/SequenceAnalysis/lib/biojava3-alignment-3.0.7.jar -text
-labModules/SequenceAnalysis/lib/biojava3-core-3.0.7.jar -text
-labModules/SequenceAnalysis/lib/biojava3-genome-3.0.7.jar -text
-labModules/SequenceAnalysis/lib/biojava3-phylo-3.0.7.jar -text
-labModules/SequenceAnalysis/lib/biojava3-ws-3.0.7.jar -text
 labModules/SequenceAnalysis/module.properties -text
 labModules/SequenceAnalysis/pipeline_code/gatk/GenotypeConcordance.java -text
 labModules/SequenceAnalysis/pipeline_code/gatk/GenotypeConcordanceBySite.java -text
