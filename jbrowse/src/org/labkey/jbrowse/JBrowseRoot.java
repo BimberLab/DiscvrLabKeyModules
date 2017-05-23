@@ -56,8 +56,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -474,19 +472,15 @@ public class JBrowseRoot
 
         JSONObject tracks = new JSONObject();
 
-        Collections.sort(jsonFiles, new Comparator<JsonFile>()
+        jsonFiles.sort((o1, o2) ->
         {
-            @Override
-            public int compare(JsonFile o1, JsonFile o2)
+            int ret = o1.getCategory().compareTo(o2.getCategory());
+            if (ret != 0)
             {
-                int ret = o1.getCategory().compareTo(o2.getCategory());
-                if (ret != 0)
-                {
-                    return ret;
-                }
-
-                return o1.getLabel().compareTo(o2.getLabel());
+                return ret;
             }
+
+            return o1.getLabel().compareTo(o2.getLabel());
         });
 
         int compressedRefs = 0;

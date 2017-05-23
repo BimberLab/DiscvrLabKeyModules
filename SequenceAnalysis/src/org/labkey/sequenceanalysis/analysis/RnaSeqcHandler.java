@@ -19,7 +19,6 @@ import org.labkey.sequenceanalysis.run.util.RnaSeQCWrapper;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -156,14 +155,7 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
             List<String> sampleIds = new ArrayList<>();
             List<String> notes = new ArrayList<>();
             inputFiles = new ArrayList<>(inputFiles); //make sure mutable
-            Collections.sort(inputFiles, new Comparator<SequenceOutputFile>()
-            {
-                @Override
-                public int compare(SequenceOutputFile o1, SequenceOutputFile o2)
-                {
-                    return o1.getName().compareTo(o2.getName());
-                }
-            });
+            inputFiles.sort(Comparator.comparing(SequenceOutputFile::getName));
 
             for (SequenceOutputFile o : inputFiles)
             {

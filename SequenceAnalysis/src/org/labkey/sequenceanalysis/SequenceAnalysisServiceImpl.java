@@ -47,7 +47,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -363,27 +362,23 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             pedigreeRecords.addAll(toAdd);
         }
         
-        Collections.sort(pedigreeRecords, new Comparator<PedigreeRecord>()
+        pedigreeRecords.sort((o1, o2) ->
         {
-            @Override
-            public int compare(PedigreeRecord o1, PedigreeRecord o2)
-            {
-                boolean o1ParentOfO2 = o1.getSubjectName().equals(o2.getFather()) || o1.getSubjectName().equals(o2.getMother());
-                boolean o2ParentOfO1 = o2.getSubjectName().equals(o1.getFather()) || o2.getSubjectName().equals(o1.getMother());
+            boolean o1ParentOfO2 = o1.getSubjectName().equals(o2.getFather()) || o1.getSubjectName().equals(o2.getMother());
+            boolean o2ParentOfO1 = o2.getSubjectName().equals(o1.getFather()) || o2.getSubjectName().equals(o1.getMother());
 
-                if (o1ParentOfO2 && o2ParentOfO1)
-                    throw new IllegalArgumentException("Pedigree records are both parents of one another: "+ o1.getSubjectName() + "/" + o2.getSubjectName());
-                else if (o1ParentOfO2)
-                    return -1;
-                else if (o2ParentOfO1)
-                    return 1;
-                else if ((o1.getTotalParents(true) == 0 && o2.getTotalParents(true) != 0))
-                    return -1;
-                else if ((o1.getTotalParents(true) != 0 && o2.getTotalParents(true) == 0))
-                    return 1;
+            if (o1ParentOfO2 && o2ParentOfO1)
+                throw new IllegalArgumentException("Pedigree records are both parents of one another: " + o1.getSubjectName() + "/" + o2.getSubjectName());
+            else if (o1ParentOfO2)
+                return -1;
+            else if (o2ParentOfO1)
+                return 1;
+            else if ((o1.getTotalParents(true) == 0 && o2.getTotalParents(true) != 0))
+                return -1;
+            else if ((o1.getTotalParents(true) != 0 && o2.getTotalParents(true) == 0))
+                return 1;
 
-                return o1.getSubjectName().compareTo(o2.getSubjectName());
-            }
+            return o1.getSubjectName().compareTo(o2.getSubjectName());
         });
         
         return pedigreeRecords;

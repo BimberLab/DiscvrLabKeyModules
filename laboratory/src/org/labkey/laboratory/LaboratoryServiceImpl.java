@@ -71,14 +71,14 @@ import java.util.Set;
  */
 public class LaboratoryServiceImpl extends LaboratoryService
 {
-    private static LaboratoryServiceImpl _instance = new LaboratoryServiceImpl();
+    private static final LaboratoryServiceImpl _instance = new LaboratoryServiceImpl();
+    private static final Logger _log = Logger.getLogger(LaboratoryServiceImpl.class);
 
-    private Set<Module> _registeredModules = new HashSet<Module>();
-    private Map<Module, List<ClientDependency>> _clientDependencies = new HashMap<Module, List<ClientDependency>>();
+    private Set<Module> _registeredModules = new HashSet<>();
+    private Map<Module, List<ClientDependency>> _clientDependencies = new HashMap<>();
     private Map<String, Map<String, List<ButtonConfigFactory>>> _assayButtons = new CaseInsensitiveHashMap<>();
-    private Map<String, DataProvider> _dataProviders = new HashMap<String, DataProvider>();
+    private Map<String, DataProvider> _dataProviders = new HashMap<>();
     private Map<String, Map<String, List<Pair<Module, Class<? extends TableCustomizer>>>>> _tableCustomizers = new CaseInsensitiveHashMap<>();
-    private final Logger _log = Logger.getLogger(LaboratoryServiceImpl.class);
 
     public static final String DEMOGRAPHICS_PROPERTY_CATEGORY = "laboratory.demographicsSource";
     public static final String DATASOURCE_PROPERTY_CATEGORY = "laboratory.additionalDataSource";
@@ -115,10 +115,10 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public synchronized Set<DataProvider> getDataProviders()
     {
-        Set<DataProvider> providers = new HashSet<DataProvider>();
+        Set<DataProvider> providers = new HashSet<>();
         providers.addAll(_dataProviders.values());
 
-        Set<AssayProvider> registeredProviders = new HashSet<AssayProvider>();
+        Set<AssayProvider> registeredProviders = new HashSet<>();
         for (DataProvider dp : _dataProviders.values())
         {
             if (dp instanceof AssayDataProvider)
@@ -147,7 +147,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public Set<AssayDataProvider> getRegisteredAssayProviders()
     {
-        Set<AssayDataProvider> providers = new HashSet<AssayDataProvider>();
+        Set<AssayDataProvider> providers = new HashSet<>();
         for (DataProvider dp : _dataProviders.values())
         {
             if (dp instanceof AssayDataProvider)
@@ -211,7 +211,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public List<NavItem> getSettingsItems(Container c, User u)
     {
-        List<NavItem> items = new ArrayList<NavItem>();
+        List<NavItem> items = new ArrayList<>();
         for (DataProvider dp : getDataProviders())
         {
             items.addAll(dp.getSettingsItems(c, u));
@@ -222,7 +222,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public List<NavItem> getSampleItems(Container c, User u)
     {
-        List<NavItem> navItems = new ArrayList<NavItem>();
+        List<NavItem> navItems = new ArrayList<>();
         for (DataProvider dp : getDataProviders()){
             navItems.addAll(dp.getSampleNavItems(c, u));
         }
@@ -232,7 +232,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public List<NavItem> getMiscItems(Container c, User u)
     {
-        List<NavItem> navItems = new ArrayList<NavItem>();
+        List<NavItem> navItems = new ArrayList<>();
         for (DataProvider dp : getDataProviders()){
             navItems.addAll(dp.getMiscItems(c, u));
         }
@@ -242,7 +242,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public List<NavItem> getReportItems(Container c, User u)
     {
-        List<NavItem> navItems = new ArrayList<NavItem>();
+        List<NavItem> navItems = new ArrayList<>();
         for (DataProvider dp : getDataProviders()){
             navItems.addAll(dp.getReportItems(c, u));
         }
@@ -253,7 +253,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public List<NavItem> getDataItems(Container c, User u)
     {
-        List<NavItem> navItems = new ArrayList<NavItem>();
+        List<NavItem> navItems = new ArrayList<>();
         for (DataProvider dp : LaboratoryService.get().getDataProviders())
         {
             navItems.addAll(dp.getDataNavItems(c, u));
@@ -275,26 +275,22 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public void sortNavItems(List<? extends NavItem> navItems)
     {
-        Collections.sort(navItems, new Comparator<NavItem>()
+        navItems.sort((Comparator<NavItem>) (o1, o2) ->
         {
-            @Override
-            public int compare(NavItem o1, NavItem o2)
+            //Issue 18751: NullPointerException from org.labkey.laboratory.LaboratoryServiceImpl
+            if (o1.getLabel() == null)
             {
-                //Issue 18751: NullPointerException from org.labkey.laboratory.LaboratoryServiceImpl
-                if (o1.getLabel() == null)
-                {
-                    _log.error("NavItem has a null label: " + o1.getPropertyManagerKey());
-                    return -1;
-                }
-
-                if (o2.getLabel() == null)
-                {
-                    _log.error("NavItem has a null label: " + o2.getPropertyManagerKey());
-                    return 1;
-                }
-
-                return o1.getLabel() == null ? -1 : o1.getLabel().toLowerCase().compareTo(o2.getLabel().toLowerCase());
+                _log.error("NavItem has a null label: " + o1.getPropertyManagerKey());
+                return -1;
             }
+
+            if (o2.getLabel() == null)
+            {
+                _log.error("NavItem has a null label: " + o2.getPropertyManagerKey());
+                return 1;
+            }
+
+            return o1.getLabel() == null ? -1 : o1.getLabel().compareToIgnoreCase(o2.getLabel());
         });
     }
 
@@ -302,7 +298,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
     {
         List<ClientDependency> list = _clientDependencies.get(owner);
         if (list == null)
-            list = new ArrayList<ClientDependency>();
+            list = new ArrayList<>();
 
         list.add(cd);
 
@@ -348,7 +344,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public List<ButtonConfigFactory> getAssayButtons(TableInfo ti, String providerName, String domain)
     {
-        List<ButtonConfigFactory> buttons = new ArrayList<ButtonConfigFactory>();
+        List<ButtonConfigFactory> buttons = new ArrayList<>();
 
         Map<String, List<ButtonConfigFactory>> factories = _assayButtons.get(providerName);
         if (factories == null)
@@ -374,7 +370,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public Set<DemographicsSource> getDemographicsSources(Container c, User u) throws IllegalArgumentException
     {
-        Set<DemographicsSource> qds = new HashSet<DemographicsSource>();
+        Set<DemographicsSource> qds = new HashSet<>();
 
         Container target = c.isWorkbookOrTab() ? c.getParent() : c;
         Map<String, String> properties = PropertyManager.getProperties(target, DEMOGRAPHICS_PROPERTY_CATEGORY);
@@ -401,7 +397,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
         PropertyManager.PropertyMap props = PropertyManager.getWritableProperties(target, DEMOGRAPHICS_PROPERTY_CATEGORY, true);
         props.clear();
 
-        Set<String> labels = new HashSet<String>();
+        Set<String> labels = new HashSet<>();
         for (DemographicsSource qd : sources)
         {
             String name = ColumnInfo.legalNameFromName(qd.getLabel());
@@ -419,7 +415,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
     //enforce read permission silently.  expect the action to limit this to admins
     public Map<Container, Set<AdditionalDataSource>> getAllAdditionalDataSources(User u) throws IllegalArgumentException
     {
-        Map<Container, Set<AdditionalDataSource>> map = new HashMap<Container, Set<AdditionalDataSource>>();
+        Map<Container, Set<AdditionalDataSource>> map = new HashMap<>();
         PropertyManager.PropertyEntry[] entries = PropertyManager.findPropertyEntries(null, null, DATASOURCE_PROPERTY_CATEGORY, null);
         for (PropertyManager.PropertyEntry entry : entries)
         {
@@ -445,7 +441,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
     //enforce read permission silently.  expect the action to limit this to admins
     public Map<Container, Set<DemographicsSource>> getAllDemographicsSources(User u) throws IllegalArgumentException
     {
-        Map<Container, Set<DemographicsSource>> map = new HashMap<Container, Set<DemographicsSource>>();
+        Map<Container, Set<DemographicsSource>> map = new HashMap<>();
         PropertyManager.PropertyEntry[] entries = PropertyManager.findPropertyEntries(null, null, DEMOGRAPHICS_PROPERTY_CATEGORY, null);
         for (PropertyManager.PropertyEntry entry : entries)
         {
@@ -542,13 +538,10 @@ public class LaboratoryServiceImpl extends LaboratoryService
 
     public List<TabbedReportItem> getTabbedReportItems(Container c, User u)
     {
-        List<TabbedReportItem> items = new ArrayList<TabbedReportItem>();
+        List<TabbedReportItem> items = new ArrayList<>();
         for (DataProvider dp : getDataProviders())
         {
-            for (TabbedReportItem item : dp.getTabbedReportItems(c, u))
-            {
-                items.add(item);
-            }
+            items.addAll(dp.getTabbedReportItems(c, u));
         }
         sortNavItems(items);
         return items;

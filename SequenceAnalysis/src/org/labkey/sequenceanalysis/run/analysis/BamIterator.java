@@ -70,8 +70,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -238,16 +236,13 @@ public class BamIterator
         for (Integer pos : snpPositions.keySet())
         {
             List<NTSnp> sortedSnps = snpPositions.get(pos);
-            Collections.sort(sortedSnps, new Comparator<NTSnp>(){
-                @Override
-                public int compare(NTSnp snp1, NTSnp snp2)
-                {
-                    Integer pos1 = snp1.getLastRefPosition();
-                    Integer idx1 = snp1.getInsertIndex();
-                    Integer compare1 = pos1.compareTo(snp2.getLastRefPosition());
+            sortedSnps.sort((snp1, snp2) ->
+            {
+                Integer pos1 = snp1.getLastRefPosition();
+                Integer idx1 = snp1.getInsertIndex();
+                Integer compare1 = pos1.compareTo(snp2.getLastRefPosition());
 
-                    return compare1 != 0 ? compare1 : idx1.compareTo(snp2.getInsertIndex());
-                }
+                return compare1 != 0 ? compare1 : idx1.compareTo(snp2.getInsertIndex());
             });
             snpPositions.put(pos, sortedSnps);
         }

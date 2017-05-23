@@ -81,7 +81,7 @@ import java.util.Set;
  */
 public class LaboratoryManager
 {
-    private static LaboratoryManager _instance = new LaboratoryManager();
+    private static final LaboratoryManager _instance = new LaboratoryManager();
     public static final String DEFAULT_WORKBOOK_FOLDERTYPE_PROPNAME = "DefaultWorkbookFolderType";
     private static final Logger _log = Logger.getLogger(LaboratoryManager.class);
 
@@ -138,14 +138,7 @@ public class LaboratoryManager
 
     private void sortContainers(List<Container> containers)
     {
-        Collections.sort(containers, new Comparator<Container>()
-        {
-            @Override
-            public int compare(Container o1, Container o2)
-            {
-                return (new Integer(o1.getRowId())).compareTo(o2.getRowId());
-            }
-        });
+        containers.sort(Comparator.comparingInt(Container::getRowId));
     }
 
     public WorkbookModel getWorkbookModel(Container c)

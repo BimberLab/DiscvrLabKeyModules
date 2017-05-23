@@ -19,7 +19,6 @@ import org.labkey.api.util.Pair;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -124,14 +123,7 @@ public class CombineMethylationRatesHandler extends AbstractParameterizedOutputH
                 intervals.add(Pair.of(new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2])), ""));
             }
 
-            Collections.sort(intervals, new Comparator<Pair<Interval, String>>()
-            {
-                @Override
-                public int compare(Pair<Interval, String> o1, Pair<Interval, String> o2)
-                {
-                    return o1.first.compareTo(o2.first);
-                }
-            });
+            intervals.sort(Comparator.comparing(o -> o.first));
 
             File outputTable = new File(ctx.getOutputDir(), FileUtil.makeLegalName(outPrefix) + ".txt");
             MethylationRateComparisonHandler.buildCombinedTable(outputTable, intervals, inputFiles, ctx, false);

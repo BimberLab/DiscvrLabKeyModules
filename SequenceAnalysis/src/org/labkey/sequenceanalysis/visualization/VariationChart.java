@@ -35,8 +35,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -182,22 +180,18 @@ public class VariationChart
         plot.setRangeGridlinesVisible(false);
         plot.setOutlineVisible(false);
 
-        Collections.sort(features, new Comparator<FeatureI>()
+        features.sort((o1, o2) ->
         {
-            @Override
-            public int compare(FeatureI o1, FeatureI o2)
+            if (o1 == null)
             {
-                if (o1 == null)
-                {
-                    return -1;
-                }
-                else if (o2 == null)
-                {
-                    return 1;
-                }
-
-                return Integer.compare(o1.location().plus().bioStart(), o2.location().plus().bioStart());
+                return -1;
             }
+            else if (o2 == null)
+            {
+                return 1;
+            }
+
+            return Integer.compare(o1.location().plus().bioStart(), o2.location().plus().bioStart());
         });
 
         Iterator < FeatureI > i = features.iterator();

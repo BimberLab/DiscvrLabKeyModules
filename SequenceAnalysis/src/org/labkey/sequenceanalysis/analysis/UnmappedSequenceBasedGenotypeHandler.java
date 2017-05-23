@@ -10,7 +10,6 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.reader.FastaDataLoader;
-import org.labkey.api.reader.FastaLoader;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
@@ -34,8 +33,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -102,7 +99,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
             String[] tokens = header.split("-");
 
             Integer count = Integer.parseInt(tokens[tokens.length - 1]);
-            Integer c = _sampleMap.containsKey(sampleName) ? _sampleMap.get(sampleName) : 0;
+            Integer c = _sampleMap.getOrDefault(sampleName, 0);
             c += count;
             _totalReads += count;
             _sampleMap.put(sampleName, c);
@@ -270,14 +267,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     ctx.getLogger().info("parsing FASTA: " + outputs.second.getPath());
                     try (FastaDataLoader loader = new FastaDataLoader(outputs.second, false))
                     {
-                        loader.setCharacterFilter(new FastaLoader.CharacterFilter()
-                        {
-                            @Override
-                            public boolean accept(char c)
-                            {
-                                return ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'));
-                            }
-                        });
+                        loader.setCharacterFilter(c -> ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z')));
 
                         try (CloseableIterator<Map<String, Object>> i = loader.iterator())
                         {
@@ -387,14 +377,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
             {
                 List<FastqAggregate> sorted = new ArrayList<>();
                 sorted.addAll(uniqueReads.values());
-                Collections.sort(sorted, new Comparator<FastqAggregate>()
-                {
-                    @Override
-                    public int compare(FastqAggregate o1, FastqAggregate o2)
-                    {
-                        return o2._totalReads.compareTo(o1._totalReads);
-                    }
-                });
+                sorted.sort((o1, o2) -> o2._totalReads.compareTo(o1._totalReads));
 
                 jointUnmappedCollapsedTsvWriter.writeNext(FastqAggregate.getTSVHeader());
 
@@ -465,7 +448,6 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
         @Override
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-
         }
     }
 }
