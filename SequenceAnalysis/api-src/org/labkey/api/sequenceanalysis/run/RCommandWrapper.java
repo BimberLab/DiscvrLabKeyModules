@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.reports.ExternalScriptEngineDefinition;
-import org.labkey.api.reports.LabkeyScriptEngineManager;
+import org.labkey.api.reports.LabKey_ScriptEngineManager;
 import org.labkey.api.reports.RScriptEngineFactory;
 
 import java.io.File;
@@ -68,7 +68,7 @@ public class RCommandWrapper extends AbstractCommandWrapper
         //preferentially use R config setup in scripting props.  only works if running locally.
         if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
-            for (ExternalScriptEngineDefinition def : LabkeyScriptEngineManager.getEngineDefinitions())
+            for (ExternalScriptEngineDefinition def : LabKey_ScriptEngineManager.getEngineDefinitions())
             {
                 if (RScriptEngineFactory.isRScriptEngine(def.getExtensions()))
                 {

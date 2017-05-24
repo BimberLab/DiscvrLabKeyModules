@@ -10,7 +10,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.reports.ExternalScriptEngineDefinition;
-import org.labkey.api.reports.LabkeyScriptEngineManager;
+import org.labkey.api.reports.LabKey_ScriptEngineManager;
 import org.labkey.api.reports.RScriptEngineFactory;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
@@ -347,7 +347,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         //preferentially use R config setup in scripting props.  only works if running locally.
         if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
-            for (ExternalScriptEngineDefinition def : LabkeyScriptEngineManager.getEngineDefinitions())
+            for (ExternalScriptEngineDefinition def : LabKey_ScriptEngineManager.getEngineDefinitions())
             {
                 if (RScriptEngineFactory.isRScriptEngine(def.getExtensions()))
                 {
