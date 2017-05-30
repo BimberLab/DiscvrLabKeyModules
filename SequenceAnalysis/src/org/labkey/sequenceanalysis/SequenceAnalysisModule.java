@@ -45,10 +45,9 @@ import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
 import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
-import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
+import org.labkey.sequenceanalysis.analysis.RecalculateSequenceMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
-import org.labkey.sequenceanalysis.button.GenomeLoadButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
 import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.AlignmentImportJob;
@@ -56,6 +55,7 @@ import org.labkey.sequenceanalysis.pipeline.IlluminaImportJob;
 import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
+import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
@@ -104,6 +104,7 @@ import org.labkey.sequenceanalysis.run.variant.GenotypeConcordanceStep;
 import org.labkey.sequenceanalysis.run.variant.GenotypeFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.MultiAllelicPositionsHandler;
 import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
+import org.labkey.sequenceanalysis.run.variant.SampleRenameStep;
 import org.labkey.sequenceanalysis.run.variant.SelectSNVsStep;
 import org.labkey.sequenceanalysis.run.variant.SelectSamplesStep;
 import org.labkey.sequenceanalysis.run.variant.SelectVariantsStep;
@@ -137,7 +138,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.314;
+        return 12.315;
     }
 
     public boolean hasScripts()
@@ -256,11 +257,12 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new VariantAnnotatorStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantFiltrationStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new GenotypeConcordanceStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SampleRenameStep.Provider());
 
         SequencePipelineService.get().registerPipelineStep(new VariantEvalStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantEvalBySampleStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantsToTableStep.Provider());
-        //SequencePipelineService.get().registerPipelineStep(new VariantsSummaryStep.Provider());
+        //SequencePipelineService.get().registerPipelineStep(new VariantQCStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
@@ -279,6 +281,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new CombineVariantsHandler());
         SequenceAnalysisService.get().registerFileHandler(new DepthOfCoverageHandler());
         SequenceAnalysisService.get().registerFileHandler(new MultiAllelicPositionsHandler());
+        SequenceAnalysisService.get().registerFileHandler(new RecalculateSequenceMetricsHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));

@@ -29,7 +29,7 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>JBrowse</title>
+    <title><%=h(form.getPageTitle())%></title>
     <link rel="stylesheet" type="text/css" href="<%=h(base)%>css/genome.css">
 
     <script type="text/javascript">
@@ -92,6 +92,9 @@
                         show_menu: queryParams.menu,
                         show_tracklabels: queryParams.tracklabels,
                         highResolutionMode: queryParams.highres,
+                        aboutThisBrowser: {
+                            title: <%=q(form.getPageTitle())%>
+                        },
                         stores: { url: { type: "JBrowse/Store/SeqFeature/FromConfig", features: [] } },
                         makeFullViewURL: function( browser ) {
 

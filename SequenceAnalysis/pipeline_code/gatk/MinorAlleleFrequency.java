@@ -59,7 +59,7 @@ public class MinorAlleleFrequency extends ChromosomeCounts {
             afVals = new ArrayList<>();
             afVals.add((Double)chrCounts.get(VCFConstants.ALLELE_FREQUENCY_KEY));
         }
-        else         {
+        else {
             return null;
         }
 

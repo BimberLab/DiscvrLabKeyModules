@@ -1333,6 +1333,9 @@
         <pkColumnName>type</pkColumnName>
         <columns>
             <column columnName="type"/>
+            <column columnName="sort_order">
+                <columnTitle>Sort Order</columnTitle>
+            </column>
         </columns>
     </table>
     <table tableName="haplotype_sequences" tableDbType="TABLE" useColumnOrder="true">
@@ -1408,6 +1411,9 @@
                     <fkTable>haplotype_types</fkTable>
                     <fkColumnName>type</fkColumnName>
                 </fk>
+            </column>
+            <column columnName="color">
+                <columnTitle>Color</columnTitle>
             </column>
             <column columnName="comment">
                 <inputType>textarea</inputType>

@@ -135,7 +135,13 @@ DISCVR/jbrowse/resources/views/databaseDetails.view.xml -text
 DISCVR/jbrowse/resources/views/settings.html -text
 DISCVR/jbrowse/resources/views/settings.view.xml -text
 DISCVR/jbrowse/resources/web/README.txt -text
+DISCVR/jbrowse/resources/web/jbrowse/img/img1.jpg -text
+DISCVR/jbrowse/resources/web/jbrowse/img/img2.jpg -text
+DISCVR/jbrowse/resources/web/jbrowse/img/img3.jpg -text
+DISCVR/jbrowse/resources/web/jbrowse/img/img4.jpg -text
 DISCVR/jbrowse/resources/web/jbrowse/window/DatabaseWindow.js -text
+DISCVR/jbrowse/resources/web/jbrowse/window/GenomeBrowserHelpWindow.js -text
+DISCVR/jbrowse/resources/web/jbrowse/window/ModifyJsonConfigWindow.js -text
 DISCVR/jbrowse/resources/web/jbrowse/window/ReprocessResourcesWindow.js -text
 DISCVR/jbrowse/resources/web/jbrowseApp/INSTALL -text
 DISCVR/jbrowse/resources/web/jbrowseApp/LICENSE -text
@@ -2664,6 +2670,7 @@ DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseServiceImpl.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/button/AddDataButton.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/button/AddLibraryButton.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/button/AddTrackButton.java -text
+DISCVR/jbrowse/src/org/labkey/jbrowse/button/ModifyTrackConfigButton.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/button/ReprocessResourcesButton.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/button/ReprocessSessionsButton.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/model/Database.java -text
@@ -3142,6 +3149,7 @@ labModules/SequenceAnalysis/pipeline_code/gatk/MendelianViolationBySample.java -
 labModules/SequenceAnalysis/pipeline_code/gatk/MendelianViolationCount.java -text
 labModules/SequenceAnalysis/pipeline_code/gatk/MinorAlleleFrequency.java -text
 labModules/SequenceAnalysis/pipeline_code/gatk/MultipleAllelesAtLoci.java -text
+labModules/SequenceAnalysis/pipeline_code/gatk/RemoveAnnotations.java -text
 labModules/SequenceAnalysis/pipeline_code/installPackages.r -text
 labModules/SequenceAnalysis/resources/credits/executables.txt -text
 labModules/SequenceAnalysis/resources/credits/jars.txt -text
@@ -3409,6 +3417,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.311-12.312.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.312-12.313.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.313-12.314.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.314-12.315.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -3499,6 +3508,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.311-12.312.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.312-12.313.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.313-12.314.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.314-12.315.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -3673,6 +3683,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/GenotypeGVC
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/HaplotypeCallerHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/LiftoverHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/PicardAlignmentMetricsHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/RecalculateSequenceMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/RnaSeqcHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/UnmappedSequenceBasedGenotypeHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/picard/CigarPositionIterable.java -text
@@ -3852,6 +3863,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/Genotype
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/GenotypeFiltrationStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/MultiAllelicPositionsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SNPEffStep.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SampleRenameStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SelectSNVsStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SelectSamplesStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SelectVariantsStep.java -text

@@ -28,6 +28,7 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
     {
         super(provider, ctx, new VariantAnnotatorWrapper(ctx.getLogger()));
     }
+
     public static class Provider extends AbstractVariantProcessingStepProvider<GenotypeConcordanceStep> implements VariantProcessingStep.RequiresPedigree
     {
         public Provider()

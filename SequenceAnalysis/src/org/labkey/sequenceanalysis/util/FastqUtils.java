@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.util;
 
+import com.google.common.base.Charsets;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.util.FastqQualityFormat;
@@ -115,7 +116,9 @@ public class FastqUtils
 
         return Pair.of(count1, count2);
     }
-    
+
+    public static final int ASCII_OFFSET = 33;
+
     public static Map<String, Object> getQualityMetrics(File f, @Nullable Logger log)
     {
         if (log != null)
@@ -129,13 +132,46 @@ public class FastqUtils
             long sum = 0;
             long min = 0;
             long max = 0;
+            long totalBases = 0;
+            long totalQ10 = 0;
+            long totalQ20 = 0;
+            long totalQ30 = 0;
+            long totalQ40 = 0;
             float avg;
 
             long len;
             while (reader.hasNext())
             {
                 FastqRecord fq = reader.next();
-                len = fq.getReadString().length();
+                len = fq.length();
+
+                //parse quality scores:
+                byte[] quals = fq.getBaseQualityString().getBytes(Charsets.US_ASCII);
+                for (byte b : quals)
+                {
+                    int qual = (int)b - ASCII_OFFSET;
+                    if (qual >= 40)
+                    {
+                        totalQ40++;
+                    }
+
+                    if (qual >= 30)
+                    {
+                        totalQ30++;
+                    }
+
+                    if (qual >= 20)
+                    {
+                        totalQ20++;
+                    }
+
+                    if (qual >= 10)
+                    {
+                        totalQ10++;
+                    }
+
+                    totalBases++;
+                }
 
                 total++;
                 if (len < min || min == 0)
@@ -163,6 +199,17 @@ public class FastqUtils
             map.put("Min Read Length", min);
             map.put("Max Read Length", max);
             map.put("Mean Read Length", avg);
+            map.put("Total Bases", totalBases);
+            map.put("Total MBases", (totalBases / 1000000.0));
+            map.put("Total GBases", totalBases / 1000000000.0);
+            map.put("Total Q10 Bases", totalQ10);
+            map.put("Total Q20 Bases", totalQ20);
+            map.put("Total Q30 Bases", totalQ30);
+            map.put("Total Q40 Bases", totalQ40);
+            map.put("Pct Q10", (totalQ10 / (double)totalBases) * 100.0);
+            map.put("Pct Q20", (totalQ20 / (double)totalBases) * 100.0);
+            map.put("Pct Q30", (totalQ30 / (double)totalBases) * 100.0);
+            map.put("Pct Q40", (totalQ40 / (double)totalBases) * 100.0);
 
             return map;
         }

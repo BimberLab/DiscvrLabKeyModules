@@ -16,37 +16,62 @@
 
 package org.labkey.jbrowse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
+import org.labkey.api.action.SimpleApiJsonForm;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.CompareType;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.data.PropertyManager;
+import org.labkey.api.data.Results;
+import org.labkey.api.data.Selector;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.StopIteratingException;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.security.permissions.UpdatePermission;
+import org.labkey.api.util.ExceptionUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
+import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.PageConfig;
+import org.labkey.jbrowse.model.Database;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class JBrowseController extends SpringActionController
 {
@@ -367,11 +392,17 @@ public class JBrowseController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class BrowserAction extends SimpleViewAction<BrowserForm>
     {
+        private String _title;
+
         @Override
         public ModelAndView getView(BrowserForm form, BindException errors) throws Exception
         {
+            Database db = new TableSelector(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getDatabase()), null).getObject(Database.class);
+            _title = db == null ? "Not Found" : db.getName();
+            form.setPageTitle(_title);
+
             JspView<BrowserForm> view = new JspView<>("/org/labkey/jbrowse/view/browser.jsp", form);
-            view.setTitle("JBrowse");
+            view.setTitle(_title);
             view.setHidePageTitle(true);
             view.setFrame(WebPartView.FrameType.NONE);
             getPageConfig().setTemplate(PageConfig.Template.None);
@@ -382,13 +413,14 @@ public class JBrowseController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root.addChild("JBrowse");
+            return root.addChild(_title);
         }
     }
 
     public static class BrowserForm
     {
         private String _database;
+        private String _pageTitle;
 
         public String getDatabase()
         {
@@ -398,6 +430,98 @@ public class JBrowseController extends SpringActionController
         public void setDatabase(String database)
         {
             _database = database;
+        }
+
+        public String getPageTitle()
+        {
+            return _pageTitle;
+        }
+
+        public void setPageTitle(String pageTitle)
+        {
+            _pageTitle = pageTitle;
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    @CSRF
+    public class ModifyAttributesAction extends ApiAction<SimpleApiJsonForm>
+    {
+        public ApiResponse execute(SimpleApiJsonForm form, BindException errors)
+        {
+            JSONArray jsonFiles = form.getJsonObject().getJSONArray("jsonFiles");
+            Set<String> objectIds = new HashSet<>();
+            for (Object o : jsonFiles.toArray())
+            {
+                objectIds.add(o.toString());
+            }
+
+            JSONObject attributes = form.getJsonObject().getJSONObject("attributes");
+
+            final Map<Container, List<Map<String, Object>>> rows = new HashMap<>();
+            TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_JSONFILES), PageFlowUtil.set("objectid", "container", "trackJson"), new SimpleFilter(FieldKey.fromString("objectid"), objectIds, CompareType.IN), null);
+            ts.forEachResults(new Selector.ForEachBlock<Results>()
+            {
+                @Override
+                public void exec(Results rs) throws SQLException, StopIteratingException
+                {
+                    Container c = ContainerManager.getForId(rs.getString(FieldKey.fromString("container")));
+                    if (!c.hasPermission(getUser(), UpdatePermission.class))
+                    {
+                        throw new UnauthorizedException("User does not have permission to update records in the folder: " + c.getPath());
+                    }
+
+                    JSONObject json = rs.getString("trackJson") == null ? new JSONObject() : new JSONObject(rs.getString("trackJson"));
+                    for (String key : attributes.keySet())
+                    {
+                        if (StringUtils.trimToNull(attributes.getString(key)) == null)
+                        {
+                            json.remove(key);
+                        }
+                        else
+                        {
+                            json.put(key, attributes.get(key));
+                        }
+                    }
+
+                    if (!rows.containsKey(c))
+                    {
+                        rows.put(c, new ArrayList<>());
+                    }
+
+                    Map<String, Object> row = new CaseInsensitiveHashMap<>();
+                    row.put("objectid", rs.getString("objectid"));
+                    row.put("trackJson", json.isEmpty() ? null : json.toString());
+
+                    rows.get(c).add(row);
+                }
+            });
+
+            try (DbScope.Transaction transaction = DbScope.getLabKeyScope().ensureTransaction())
+            {
+                for (Container c : rows.keySet())
+                {
+                    TableInfo ti = QueryService.get().getUserSchema(getUser(), c, JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
+                    List<Map<String, Object>> oldKeys = new ArrayList<>();
+                    for (Map<String, Object> row : rows.get(c))
+                    {
+                        Map<String, Object> k = new CaseInsensitiveHashMap<>();
+                        k.put("objectid", row.get("objectid"));
+                        oldKeys.add(k);
+                    }
+                    ti.getUpdateService().updateRows(getUser(), c, rows.get(c), oldKeys, null, new HashMap<>());
+                }
+
+                transaction.commit();
+            }
+            catch (Exception e)
+            {
+                ExceptionUtil.logExceptionToMothership(getViewContext().getRequest(), e);
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+
+            return new ApiSimpleResponse("success", true);
         }
     }
 }

@@ -1259,7 +1259,7 @@ public class SequenceIntegrationTests
                 int expected = 0;
                 for (ReadData d : m.getReadData())
                 {
-                    expected = expected + (d.getFileId2() == null ? 4 : 8);
+                    expected = expected + (d.getFileId2() == null ? 15 : 30);
 
                     Assert.assertNotNull("RunId not set for ReadData", d.getRunId());
                 }
@@ -2546,6 +2546,12 @@ public class SequenceIntegrationTests
             job1Files.add("s_G1_L001_R1_001/Alignment/TestMergedReadset.insertsize.metrics.pdf");
 
             job1Files.add("s_G1_L002_R1_001");
+
+            //note: these are no longer deleted unless intermediate files are cleaned up
+            job1Files.add("s_G1_L001_R1_001/Alignment/s_G1_L001_R1_001.bwa-mem.bam");
+            job1Files.add("s_G1_L002_R1_001/Alignment/s_G1_L002_R1_001.bwa-mem.bam");
+            job1Files.add("s_G1_L002_R1_001/Alignment");
+
 
             validateAlignmentJob(jobs, job1Files, models.get(0), 640, 204);
         }

@@ -34,6 +34,7 @@ import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.webdav.WebdavService;
 import org.labkey.jbrowse.button.AddLibraryButton;
 import org.labkey.jbrowse.button.AddTrackButton;
+import org.labkey.jbrowse.button.ModifyTrackConfigButton;
 import org.labkey.jbrowse.button.ReprocessResourcesButton;
 import org.labkey.jbrowse.button.ReprocessSessionsButton;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineProvider;
@@ -91,6 +92,7 @@ public class JBrowseModule extends ExtendedSimpleModule
 
         LDKService.get().registerQueryButton(new ReprocessResourcesButton(), JBrowseSchema.NAME, JBrowseSchema.TABLE_JSONFILES);
         LDKService.get().registerQueryButton(new ReprocessSessionsButton(), JBrowseSchema.NAME, JBrowseSchema.TABLE_DATABASES);
+        LDKService.get().registerQueryButton(new ModifyTrackConfigButton(), JBrowseSchema.NAME, JBrowseSchema.TABLE_JSONFILES);
 
         LaboratoryService.get().registerDataProvider(new JBrowseDataProvider(this));
         SequenceAnalysisService.get().registerDataProvider(new JBrowseDataProvider(this));

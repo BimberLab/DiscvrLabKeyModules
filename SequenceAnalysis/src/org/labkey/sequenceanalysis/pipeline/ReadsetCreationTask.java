@@ -330,10 +330,10 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             for (ReadDataImpl d : model.getReadDataImpl())
             {
                 getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING QUALITY METRICS (" + idx + " of " + newReadsets.size() + ")");
-                addQualityMetricsForReadset(model, d.getFileId1());
+                addQualityMetricsForReadset(model, d.getFileId1(), getJob());
                 if (d.getFileId2() != null)
                 {
-                    addQualityMetricsForReadset(model, d.getFileId2());
+                    addQualityMetricsForReadset(model, d.getFileId2(), getJob());
                 }
 
                 if (settings.isRunFastqc())
@@ -370,7 +370,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         }
     }
 
-    private void addQualityMetricsForReadset(Readset rs, int fileId) throws PipelineJobException
+    public static void addQualityMetricsForReadset(Readset rs, int fileId, PipelineJob job) throws PipelineJobException
     {
         try
         {
@@ -379,7 +379,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             Map<String, Object> metricsMap;
             if (cachedMetrics.exists())
             {
-                getJob().getLogger().debug("reading previously calculated metrics from file: " + cachedMetrics.getPath());
+                job.getLogger().debug("reading previously calculated metrics from file: " + cachedMetrics.getPath());
                 metricsMap = new HashMap<>();
                 try (CSVReader reader = new CSVReader(Readers.getReader(cachedMetrics), '\t'))
                 {
@@ -392,7 +392,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             }
             else
             {
-                metricsMap = FastqUtils.getQualityMetrics(d.getFile(), getJob().getLogger());
+                metricsMap = FastqUtils.getQualityMetrics(d.getFile(), job.getLogger());
             }
 
             for (String metricName : metricsMap.keySet())
@@ -402,10 +402,10 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 r.put("metricvalue", metricsMap.get(metricName));
                 r.put("dataid", d.getRowId());
                 r.put("readset", rs.getReadsetId());
-                r.put("container", getJob().getContainer());
-                r.put("createdby", getJob().getUser().getUserId());
+                r.put("container", rs.getContainer() == null ? job.getContainer() : rs.getContainer());
+                r.put("createdby", job.getUser().getUserId());
 
-                Table.insert(getJob().getUser(), SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), r);
+                Table.insert(job.getUser(), SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), r);
             }
 
             if (cachedMetrics.exists())

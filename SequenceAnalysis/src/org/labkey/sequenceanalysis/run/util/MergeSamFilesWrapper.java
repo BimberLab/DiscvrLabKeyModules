@@ -84,6 +84,7 @@ public class MergeSamFilesWrapper extends PicardWrapper
 
         if (replaceOriginal)
         {
+            getLogger().debug("replacing original input bam with merged: " + files.get(0).getPath());
             try
             {
                 File target = files.get(0);

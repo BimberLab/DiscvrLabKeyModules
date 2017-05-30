@@ -52,6 +52,8 @@ public class DepthOfCoverageHandler extends AbstractParameterizedOutputHandler
                 ToolParameterDescriptor.create("omitZero", "Omit Positions of Zero Coverage", "If selected, any positions with zero coverage will be omitted", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, true),
+                ToolParameterDescriptor.create("mbq", "Min Base Quality", "The minimum quality required for a base to be included.", "ldk-integerfield", null, null),
+                ToolParameterDescriptor.create("mmq", "Min Mapping Quality", "The minimum mapping quality required for an alignment to be included.", "ldk-integerfield", null, null),
                 ToolParameterDescriptor.create("intervals", "Intervals", "The intervals over which to merge the data.  They should be in the form: chr01:102-20394", "sequenceanalysis-intervalfield", null, null)
         ));
     }
@@ -118,6 +120,20 @@ public class DepthOfCoverageHandler extends AbstractParameterizedOutputHandler
                     extraArgs.add("-L");
                     extraArgs.add(i.getContig() + ":" + i.getStart() + "-" + i.getEnd());
                 }
+            }
+
+            Integer mmq = ctx.getParams().optInt("mmq");
+            if (mmq > 0)
+            {
+                extraArgs.add("-mmq");
+                extraArgs.add(mmq.toString());
+            }
+
+            Integer mbq = ctx.getParams().optInt("mbq");
+            if (mbq > 0)
+            {
+                extraArgs.add("-mbq");
+                extraArgs.add(mbq.toString());
             }
 
             extraArgs.add("-omitLocusTable");

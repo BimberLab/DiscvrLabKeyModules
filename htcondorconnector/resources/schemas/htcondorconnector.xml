@@ -24,6 +24,9 @@
             <column columnName="rowId"/>
             <column columnName="condorId"/>
             <column columnName="jobId">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
                 <fk>
                     <fkDbSchema>pipeline</fkDbSchema>
                     <fkTable>Job</fkTable>

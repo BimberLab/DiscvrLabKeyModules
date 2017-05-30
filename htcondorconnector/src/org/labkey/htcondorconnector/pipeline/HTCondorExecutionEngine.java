@@ -129,7 +129,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
             return;
         }
 
-        if (HTCondorConnectorManager.get().isPreventNewJobs())
+        if (HTCondorConnectorManager.get().isPreventCondorInteraction())
         {
             job.getLogger().info("submission to HTCondor has been disabled.  will resubmit when this is enabled");
             job.setStatus(PipelineJob.TaskStatus.waiting, "HTCondor submission disabled");
@@ -514,6 +514,18 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
             return status;
         }
 
+        // TODO: consider also checking the DB for submissions that are marked as complete.
+        // this might indicate there was an JMS issue actually changing status on a job
+        TableInfo ti = HTCondorConnectorSchema.getInstance().getSchema().getTable(HTCondorConnectorSchema.CONDOR_JOBS);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("condorId"), condorId);
+        filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.complete.name().toUpperCase());
+        if (new TableSelector(ti, filter, null).exists())
+        {
+            _log.error("unable to find record of job from condor; however, the submissions table indicates it was marked as complete.  this might indicate a lost JMS message to update the job's status.");
+            //return PipelineJob.TaskStatus.complete.name().toUpperCase();
+        }
+
+
         //indicates we never hit the header
         _log.error("Error checking htcondor job status for job: " + condorId);
         _log.error(StringUtils.join(ret, "\n"));
@@ -580,7 +592,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
 
     public synchronized void requeueBlockedJobs() throws PipelineJobException
     {
-        if (!HTCondorConnectorManager.get().isPreventNewJobs())
+        if (!HTCondorConnectorManager.get().isPreventCondorInteraction())
         {
             //first see if we have any submissions to check
             TableInfo ti = HTCondorConnectorSchema.getInstance().getSchema().getTable(HTCondorConnectorSchema.CONDOR_JOBS);
@@ -843,6 +855,7 @@ public class HTCondorExecutionEngine implements RemoteExecutionEngine<HTCondorEx
             else
             {
                 _log.error("unable to find statusfile for job: " + j.getCondorId() + ", status: " + j.getStatus());
+                j.setStatus("UNKNOWN");
             }
 
             Table.update(null, HTCondorConnectorSchema.getInstance().getSchema().getTable(HTCondorConnectorSchema.CONDOR_JOBS), j, j.getRowId());

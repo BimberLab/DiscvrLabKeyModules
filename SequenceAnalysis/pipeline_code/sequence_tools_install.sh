@@ -122,7 +122,7 @@ if [ ! -z $SKIP_PACKAGE_MANAGER ]; then
     echo "Skipping package install"
 elif [ $(which yum) ]; then
     echo "Using Yum"
-    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-static expat expat-devel subversion cpan git cmake liblzf-devel apache-maven R
+    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-static expat expat-devel subversion cpan git cmake liblzf-devel apache-maven R perl-devel perl-CPAN perl-PerlIO-gzip
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
 
@@ -280,6 +280,7 @@ then
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/GenotypeConcordanceBySite.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MinorAlleleFrequency.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MultipleAllelesAtLoci.java ./gatk-protected/public/gatk-tools-public/src/main/java/org/broadinstitute/gatk/tools/walkers/coverage/
+    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/RemoveAnnotations.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/
 
     cd gatk-protected
 
@@ -1049,19 +1050,19 @@ echo "Installing jbrowse"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/JBrowse-1.11.5 || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/JBrowse-1.12.1 || ! -z $FORCE_REINSTALL ]];
 then
     rm -Rf JBrowse-*
     rm -Rf $LKTOOLS_DIR/JBrowse-*
 
-    wget $WGET_OPTS http://jbrowse.org/releases/JBrowse-1.11.5.zip
-    unzip JBrowse-1.11.5.zip
-    rm JBrowse-1.11.5.zip
-    cd JBrowse-1.11.5
+    wget $WGET_OPTS http://jbrowse.org/releases/JBrowse-1.12.1.zip
+    unzip JBrowse-1.12.1.zip
+    rm JBrowse-1.12.1.zip
+    cd JBrowse-1.12.1
     ./setup.sh
     cd ../
 
-    cp -R ./JBrowse-1.11.5 $LKTOOLS_DIR/JBrowse-1.11.5
+    cp -R ./JBrowse-1.12.1 $LKTOOLS_DIR/JBrowse-1.12.1
 else
     echo "Already installed"
 fi

@@ -1,6 +1,7 @@
 package org.labkey.GeneticsCore.pipeline;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.htcondorconnector.HTCondorJobResourceAllocator;
 import org.labkey.api.pipeline.PipelineJob;
@@ -247,12 +248,30 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
         }
 
         //25gb alignment
-        if (isSequenceAlignmentTask(job) && totalFileSize > 25e9)
+        if (isSequenceAlignmentTask(job) && totalFileSize > 25e9 && jobProvidedCpusOrRam(job))
         {
             return Arrays.asList("concurrency_limits = WEEK_LONG_JOBS");
         }
 
         return getHighIoFlag(job);
+    }
+
+    private boolean jobProvidedCpusOrRam(PipelineJob job)
+    {
+        if (job instanceof HasJobParams)
+        {
+            Map<String, String> params = ((HasJobParams) job).getJobParams();
+            if (StringUtils.trimToNull(params.get("resourceSettings.resourceSettings.cpus")) != null)
+            {
+                return true;
+            }
+            else if (StringUtils.trimToNull(params.get("resourceSettings.resourceSettings.ram")) != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private List<String> getHighIoFlag(PipelineJob job)

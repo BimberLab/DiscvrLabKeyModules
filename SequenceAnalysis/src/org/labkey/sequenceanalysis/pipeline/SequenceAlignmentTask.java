@@ -1077,11 +1077,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             {
                 bams.add(o);
                 getHelper().getFileManager().addInput(mergeAction, "Input BAM", o);
+                getHelper().getFileManager().addIntermediateFile(o);
+                getHelper().getFileManager().addIntermediateFile(new File(o.getPath() + ".bai"));
             }
 
             bam = new File(alignOutputs.get(0).getParent(), FileUtil.getBaseName(alignOutputs.get(0).getName()) + ".merged.bam");
             getHelper().getFileManager().addOutput(mergeAction, "Merged BAM", bam);
-            mergeSamFilesWrapper.execute(bams, bam.getPath(), true);
+            //NOTE: merged BAMs will be deleted as intermediate files, and if we delete too early this breaks job resume
+            mergeSamFilesWrapper.execute(bams, bam.getPath(), false);
             getHelper().getFileManager().addCommandsToAction(mergeSamFilesWrapper.getCommandsExecuted(), mergeAction);
 
             Date end = new Date();
@@ -1332,6 +1335,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         public void setInitialAlignmentDone(File mergedBamFile, List<RecordedAction> actions) throws PipelineJobException
         {
+            if (mergedBamFile == null)
+            {
+                throw new PipelineJobException("BAM is null");
+            }
+
             _mergedBamFile = mergedBamFile;
             for (RecordedAction action : actions)
             {

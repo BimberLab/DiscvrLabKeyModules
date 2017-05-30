@@ -3,13 +3,8 @@ package org.labkey.jbrowse.query;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
-import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.UrlColumn;
 import org.labkey.api.query.DetailsURL;
-import org.labkey.api.query.FieldKey;
-import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.StringExpression;
-import org.labkey.jbrowse.JBrowseManager;
 
 /**
  * User: bimber

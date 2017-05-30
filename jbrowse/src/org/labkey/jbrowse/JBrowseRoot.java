@@ -468,6 +468,7 @@ public class JBrowseRoot
 
         JSONArray refSeq = new JSONArray();
         JSONObject trackList = new JSONObject();
+        List<String> defaultTrackLabels = new ArrayList<>();
         trackList.put("formatVersion", 1);
 
         JSONObject tracks = new JSONObject();
@@ -559,6 +560,11 @@ public class JBrowseRoot
                         {
                             getLogger().debug("adding extra track config");
                             o.putAll(f.getExtraTrackConfig());
+
+                            if (f.getExtraTrackConfig().optBoolean("visibleByDefault", false))
+                            {
+                                defaultTrackLabels.add(o.getString("label"));
+                            }
                         }
 
                         if (f.getCategory() != null)
@@ -670,6 +676,11 @@ public class JBrowseRoot
                         {
                             getLogger().debug("adding extra track config");
                             o.putAll(f.getExtraTrackConfig());
+
+                            if (f.getExtraTrackConfig().optBoolean("visibleByDefault", false))
+                            {
+                                defaultTrackLabels.add(o.getString("label"));
+                            }
                         }
 
                         if (f.getCategory() != null)
@@ -728,6 +739,8 @@ public class JBrowseRoot
         o.put("type", "SequenceTrack");
         o.put("showTranslation", false);
 
+        defaultTrackLabels.add(0, o.getString("label"));
+
         //NOTE: this isnt perfect.  these tracks might have been created in the past with a different setting, and in fact some might be compressed and some not.
         if (compressedRefs > 0 && compressedRefs == referenceIds.size())
         {
@@ -744,6 +757,8 @@ public class JBrowseRoot
             JSONArray existingTracks2 = trackList.containsKey("tracks") ? trackList.getJSONArray("tracks") : new JSONArray();
             existingTracks2.put(codingRegionTrack);
             trackList.put("tracks", existingTracks2);
+
+            defaultTrackLabels.add(1, o.getString("label"));
         }
 
 
@@ -753,6 +768,8 @@ public class JBrowseRoot
             JSONArray existingTracks2 = trackList.containsKey("tracks") ? trackList.getJSONArray("tracks") : new JSONArray();
             existingTracks2.put(featureTrack);
             trackList.put("tracks", existingTracks2);
+
+            defaultTrackLabels.add(1, o.getString("label"));
         }
 
         JSONObject nameJson = new JSONObject();
@@ -760,6 +777,10 @@ public class JBrowseRoot
         nameJson.put("type", "Hash");
         trackList.put("names", nameJson);
 
+        if (!defaultTrackLabels.isEmpty())
+        {
+            trackList.put("defaultTracks", StringUtils.join(defaultTrackLabels, ","));
+        }
         writeJsonToFile(new File(seqDir, "refSeqs.json"), refSeq.toString(1));
         writeJsonToFile(new File(outDir, "trackList.json"), trackList.toString(1));
         writeJsonToFile(new File(outDir, "tracks.json"), tracks.toString(1));
@@ -1261,11 +1282,11 @@ public class JBrowseRoot
         {
             File temp = null;
             Set<String> nameAttrs = new HashSet<>();
+            nameAttrs.add("gene_name");
             if ("gtf".equalsIgnoreCase(ext))
             {
                 getLogger().info("converting GTF to GFF");
                 temp = convertGtfToGff(data.getFile(), File.createTempFile("temp", ".gff"));
-                nameAttrs.add("gene_name");
             }
 
             JSONObject ret = processFlatFile(data.getContainer(), (temp == null ? data.getFile() : temp), outDir, "--gff", featureName, featureLabel, metadata, category, "JBrowse/View/Track/CanvasFeatures", nameAttrs);

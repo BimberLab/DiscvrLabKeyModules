@@ -81,7 +81,7 @@ public class HTCondorConnectorController extends SpringActionController
         public ApiResponse execute(Object form, BindException errors)
         {
             JSONObject resultProperties = new JSONObject();
-            String[] configKeys = {HTCondorConnectorManager.PREVENT_NEW_JOBS};
+            String[] configKeys = {HTCondorConnectorManager.PREVENT_CONDOR_INTERACTION};
 
             resultProperties.put("configKeys", configKeys);
             resultProperties.put("config", PropertyManager.getProperties(HTCondorConnectorManager.CONFIG_PROPERTY_DOMAIN));
@@ -103,7 +103,7 @@ public class HTCondorConnectorController extends SpringActionController
             }
 
             Map<String, String> configMap = new HashMap<>();
-            configMap.put(HTCondorConnectorManager.PREVENT_NEW_JOBS, String.valueOf(form.isPreventNewJobs()));
+            configMap.put(HTCondorConnectorManager.PREVENT_CONDOR_INTERACTION, String.valueOf(form.isPreventCondorInteraction()));
 
             try
             {
@@ -121,16 +121,16 @@ public class HTCondorConnectorController extends SpringActionController
 
     public static class SettingsForm
     {
-        private boolean _preventNewJobs = false;
+        private boolean _preventCondorInteraction = false;
 
-        public boolean isPreventNewJobs()
+        public boolean isPreventCondorInteraction()
         {
-            return _preventNewJobs;
+            return _preventCondorInteraction;
         }
 
-        public void setPreventNewJobs(boolean preventNewJobs)
+        public void setPreventCondorInteraction(boolean preventCondorInteraction)
         {
-            _preventNewJobs = preventNewJobs;
+            _preventCondorInteraction = preventCondorInteraction;
         }
     }
 }

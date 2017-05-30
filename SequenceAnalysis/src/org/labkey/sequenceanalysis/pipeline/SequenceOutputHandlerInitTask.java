@@ -93,7 +93,7 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
 
             if (f.getReadset() != null)
             {
-                ((SequenceJobSupportImpl)getPipelineJob().getSequenceSupport()).cacheReadset(f.getReadset(), getJob().getUser());
+                getPipelineJob().getSequenceSupport().cacheReadset(f.getReadset(), getJob().getUser());
             }
         }
 

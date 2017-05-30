@@ -746,6 +746,7 @@
             </column>
             <column columnName="gender">
                 <nullable>true</nullable>
+                <url></url>
                 <columnTitle>Gender</columnTitle>
                 <fk>
                     <fkDbSchema>laboratory</fkDbSchema>
@@ -756,6 +757,7 @@
             </column>
             <column columnName="species">
                 <nullable>true</nullable>
+                <url></url>
                 <columnTitle>Species</columnTitle>
                 <fk>
                     <fkDbSchema>laboratory</fkDbSchema>
@@ -766,6 +768,7 @@
             </column>
             <column columnName="geographic_origin">
                 <nullable>true</nullable>
+                <url></url>
                 <columnTitle>Geographic Origin</columnTitle>
                 <fk>
                     <fkDbSchema>laboratory</fkDbSchema>
