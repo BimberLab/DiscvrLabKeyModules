@@ -407,7 +407,7 @@ Laboratory.Utils = new function(){
         },
 
         /**
-         * Retrieve the list of additonal data sources registered for this container
+         * Retrieve the list of additional data sources registered for this container
          * @param {boolean} config.includeTotals
          * @param config.success Success callback
          * @param config.scope Scope for the callback
