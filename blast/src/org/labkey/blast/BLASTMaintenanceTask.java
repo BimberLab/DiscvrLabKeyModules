@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
@@ -49,7 +48,7 @@ public class BLASTMaintenanceTask implements MaintenanceTask
     public void run(Logger log)
     {
         //delete BLAST jobs not flagged to persist
-        TableInfo blastJobs = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_BLAST_JOBS);
+        TableInfo blastJobs = BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_BLAST_JOBS);
         TableSelector ts = new TableSelector(blastJobs);
         List<BlastJob> jobs = ts.getArrayList(BlastJob.class);
         Set<String> allowablePaths = new CaseInsensitiveHashSet();
@@ -116,7 +115,7 @@ public class BLASTMaintenanceTask implements MaintenanceTask
         File dbDir = BLASTManager.get().getDatabaseDir(c, false);
         if (dbDir != null && dbDir.exists())
         {
-            TableInfo databases = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_DATABASES);
+            TableInfo databases = BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_DATABASES);
             TableSelector databaseTs = new TableSelector(databases, PageFlowUtil.set("objectid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
             List<String> dbNames = databaseTs.getArrayList(String.class);
             if (dbDir.list() == null || dbDir.list().length == 0)

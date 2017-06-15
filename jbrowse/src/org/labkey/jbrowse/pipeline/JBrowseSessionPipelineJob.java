@@ -49,8 +49,8 @@ public class JBrowseSessionPipelineJob extends PipelineJob
     public static JBrowseSessionPipelineJob addMembers(Container c, User user, PipeRoot pipeRoot, String databaseGuid, List<Integer> trackIds, List<Integer> outputFileIds)
     {
         //find existing record
-        TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
-        Map<String, Object> existingRow = ts.getObject(Map.class);
+        TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
+        Map<String, Object> existingRow = ts.getMap();
         if (existingRow == null)
         {
             throw new IllegalArgumentException("Unknown database: " + databaseGuid);
@@ -110,7 +110,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
 
     private String getSourceContainerId(String databaseGuid)
     {
-        TableInfo ti = JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES);
+        TableInfo ti = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES);
         return new TableSelector(ti, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null).getObject(String.class);
     }
 

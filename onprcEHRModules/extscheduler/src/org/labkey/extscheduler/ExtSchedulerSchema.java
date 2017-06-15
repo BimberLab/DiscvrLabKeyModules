@@ -1,8 +1,7 @@
 package org.labkey.extscheduler;
 
 import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.dialect.SqlDialect;
+import org.labkey.api.data.DbSchemaType;
 
 public class ExtSchedulerSchema
 {
@@ -24,21 +23,6 @@ public class ExtSchedulerSchema
 
     public DbSchema getSchema()
     {
-        return DbSchema.get("extscheduler");
-    }
-
-    public SqlDialect getSqlDialect()
-    {
-        return getSchema().getSqlDialect();
-    }
-
-    public TableInfo getTableInfoResources()
-    {
-        return getSchema().getTable("resources");
-    }
-
-    public TableInfo getTableInfoEvents()
-    {
-        return getSchema().getTable("events");
+        return DbSchema.get("extscheduler", DbSchemaType.Module);
     }
 }

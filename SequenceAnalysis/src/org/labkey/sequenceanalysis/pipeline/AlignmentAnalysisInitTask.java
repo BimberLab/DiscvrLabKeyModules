@@ -51,8 +51,7 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
 
         public PipelineJob.Task createTask(PipelineJob job)
         {
-            AlignmentAnalysisInitTask task = new AlignmentAnalysisInitTask(this, job);
-            return task;
+            return new AlignmentAnalysisInitTask(this, job);
         }
 
         public List<FileType> getInputTypes()

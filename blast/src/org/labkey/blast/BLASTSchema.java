@@ -17,7 +17,7 @@
 package org.labkey.blast;
 
 import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.dialect.SqlDialect;
+import org.labkey.api.data.DbSchemaType;
 
 public class BLASTSchema
 {
@@ -34,16 +34,10 @@ public class BLASTSchema
 
     private BLASTSchema()
     {
-
     }
 
     public DbSchema getSchema()
     {
-        return DbSchema.get(NAME);
-    }
-
-    public SqlDialect getSqlDialect()
-    {
-        return getSchema().getSqlDialect();
+        return DbSchema.get(NAME, DbSchemaType.Module);
     }
 }

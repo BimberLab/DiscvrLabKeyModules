@@ -196,7 +196,7 @@ public class JBrowseRoot
         getLogger().debug("preparing outputfile: " + outputFileId);
 
         //find existing resource
-        TableInfo jsonFiles = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
+        TableInfo jsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
         TableSelector ts1 = new TableSelector(jsonFiles, new SimpleFilter(FieldKey.fromString("outputfile"), outputFileId), null);
         JsonFile jsonFile = null;
         if (ts1.exists())
@@ -224,7 +224,7 @@ public class JBrowseRoot
         if (jsonFile == null)
         {
             getLogger().debug("adding new jsonfile record");
-            TableInfo outputFiles = DbSchema.get("sequenceanalysis").getTable("outputfiles");
+            TableInfo outputFiles = JBrowseManager.get().getSequenceAnalysisTable("outputfiles");
             TableSelector ts2 = new TableSelector(outputFiles, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null);
             String containerId = ts2.getObject(String.class);
             Container fileContainer = ContainerManager.getForId(containerId);
@@ -259,7 +259,7 @@ public class JBrowseRoot
     public JsonFile prepareRefSeq(User u, Integer ntId, boolean forceRecreateJson) throws IOException
     {
         //validate
-        TableInfo ti = DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("ref_nt_sequences");
+        TableInfo ti = JBrowseManager.get().getSequenceAnalysisTable("ref_nt_sequences");
         TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("rowid"), ntId), null);
         RefNtSequenceModel model = ts.getObject(RefNtSequenceModel.class);
 
@@ -269,7 +269,7 @@ public class JBrowseRoot
         }
 
         //find existing resource
-        TableInfo jsonFiles = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
+        TableInfo jsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
         TableSelector ts1 = new TableSelector(jsonFiles, new SimpleFilter(FieldKey.fromString("sequenceid"), ntId), null);
         JsonFile jsonFile = null;
         if (ts1.exists())
@@ -383,34 +383,30 @@ public class JBrowseRoot
         File trackDir = new File(outDir, "tracks");
         trackDir.mkdirs();
 
-        TableInfo tableMembers = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
+        TableInfo tableMembers = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
         TableSelector ts = new TableSelector(tableMembers, new SimpleFilter(FieldKey.fromString("database"), database.getObjectId()), null);
         final List<String> jsonGuids = new ArrayList<>();
-        ts.forEach(new Selector.ForEachBlock<ResultSet>()
+        ts.forEach(rs ->
         {
-            @Override
-            public void exec(ResultSet rs) throws SQLException
+            String jsonGuid = rs.getString("jsonfile");
+            if (jsonGuid != null)
             {
-                String jsonGuid = rs.getString("jsonfile");
-                if (jsonGuid != null)
-                {
-                    jsonGuids.add(jsonGuid);
-                }
+                jsonGuids.add(jsonGuid);
             }
         });
 
         List<JsonFile> jsonFiles = new ArrayList<>();
-        TableInfo tableJsonFiles = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
+        TableInfo tableJsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
         Sort sort = new Sort("sequenceid/name,trackid/name");
         TableSelector ts2 = new TableSelector(tableJsonFiles, new SimpleFilter(FieldKey.fromString("objectid"), jsonGuids, CompareType.IN), sort);
         jsonFiles.addAll(ts2.getArrayList(JsonFile.class));
 
         //also add library members:
-        Database db = new TableSelector(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), database.getObjectId()), null).getObject(Database.class);
+        Database db = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), database.getObjectId()), null).getObject(Database.class);
         if (db != null)
         {
             getLogger().info("adding library: " + db.getLibraryId());
-            List<Integer> refNts = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_library_members"), PageFlowUtil.set("ref_nt_id"), new SimpleFilter(FieldKey.fromString("library_id"), db.getLibraryId()), null).getArrayList(Integer.class);
+            List<Integer> refNts = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_library_members"), PageFlowUtil.set("ref_nt_id"), new SimpleFilter(FieldKey.fromString("library_id"), db.getLibraryId()), null).getArrayList(Integer.class);
 
             getLogger().info("total ref sequences: " + refNts.size());
             int j = 0;
@@ -439,7 +435,7 @@ public class JBrowseRoot
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("library_id"), db.getLibraryId());
             filter.addCondition(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK);
 
-            List<Integer> trackIds = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_library_tracks"), PageFlowUtil.set("rowid"), filter, null).getArrayList(Integer.class);
+            List<Integer> trackIds = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks"), PageFlowUtil.set("rowid"), filter, null).getArrayList(Integer.class);
             getLogger().info("total tracks: " + trackIds.size());
             j = 0;
             for (Integer trackId : trackIds)
@@ -875,7 +871,7 @@ public class JBrowseRoot
 
     private boolean shouldCreateOwnIndex(String databaseId) throws PipelineJobException
     {
-        TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("libraryId", "createOwnIndex", "primaryDb"), new SimpleFilter(FieldKey.fromString("objectid"), databaseId), null);
+        TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("libraryId", "createOwnIndex", "primaryDb"), new SimpleFilter(FieldKey.fromString("objectid"), databaseId), null);
         Map<String, Object> map = ts.getMap();
         if (map == null)
         {
@@ -893,7 +889,7 @@ public class JBrowseRoot
 
     private File getPreviouslyCreatedIndex(String databaseId) throws PipelineJobException
     {
-        Integer libraryId = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("libraryId"), new SimpleFilter(FieldKey.fromString("objectid"), databaseId), null).getObject(Integer.class);
+        Integer libraryId = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("libraryId"), new SimpleFilter(FieldKey.fromString("objectid"), databaseId), null).getObject(Integer.class);
         if (libraryId == null)
         {
             throw new PipelineJobException("Unable to find libary Id for session");
@@ -901,7 +897,7 @@ public class JBrowseRoot
 
         SimpleFilter referenceFilter = new SimpleFilter(FieldKey.fromString("libraryId"), libraryId);
         referenceFilter.addCondition(FieldKey.fromString("primarydb"), true);
-        TableSelector referenceTs = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("objectid", "container"), referenceFilter, null);
+        TableSelector referenceTs = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("objectid", "container"), referenceFilter, null);
         Map<String, Object> refMap = referenceTs.getObject(Map.class);
         if (refMap == null)
         {
@@ -945,7 +941,7 @@ public class JBrowseRoot
     private JSONObject createCodingRegionTrack(Container c, Set<Integer> referenceIds, File databaseTrackDir) throws IOException
     {
         //first add coding regions
-        TableSelector ts = new TableSelector(DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("ref_aa_sequences"), new SimpleFilter(FieldKey.fromString("ref_nt_id"), referenceIds, CompareType.IN), new Sort("ref_nt_id,start_location"));
+        TableSelector ts = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("ref_aa_sequences"), new SimpleFilter(FieldKey.fromString("ref_nt_id"), referenceIds, CompareType.IN), new Sort("ref_nt_id,start_location"));
         if (!ts.exists())
         {
             return null;
@@ -1030,7 +1026,7 @@ public class JBrowseRoot
     private JSONObject createFeatureTrack(Container c, Set<Integer> referenceIds, File databaseTrackDir) throws IOException
     {
         //first add coding regions
-        TableSelector ts = new TableSelector(DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("ref_nt_features"), new SimpleFilter(FieldKey.fromString("ref_nt_id"), referenceIds, CompareType.IN), new Sort("ref_nt_id,nt_start"));
+        TableSelector ts = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("ref_nt_features"), new SimpleFilter(FieldKey.fromString("ref_nt_id"), referenceIds, CompareType.IN), new Sort("ref_nt_id,nt_start"));
         if (!ts.exists())
         {
             return null;
@@ -1184,7 +1180,7 @@ public class JBrowseRoot
     public JsonFile prepareFeatureTrack(User u, Integer trackId, @Nullable String category, boolean forceRecreateJson) throws IOException
     {
         //validate track exists
-        TableInfo ti = DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("reference_library_tracks");
+        TableInfo ti = JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks");
         TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("rowid"), trackId), null);
         Map<String, Object> trackRowMap = ts.getMap();
 
@@ -1200,7 +1196,7 @@ public class JBrowseRoot
         }
 
         //find existing resource
-        TableInfo jsonFiles = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
+        TableInfo jsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
         TableSelector ts1 = new TableSelector(jsonFiles, new SimpleFilter(FieldKey.fromString("trackid"), trackId), null);
         JsonFile jsonFile = null;
         if (ts1.exists())
@@ -1232,7 +1228,7 @@ public class JBrowseRoot
             jsonRecord.put("modifiedby", u.getUserId());
             jsonRecord.put("objectid", new GUID().toString().toUpperCase());
 
-            TableInfo jsonTable = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
+            TableInfo jsonTable = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
             Table.insert(u, jsonTable, jsonRecord);
 
             jsonFile = ts1.getObject(JsonFile.class);

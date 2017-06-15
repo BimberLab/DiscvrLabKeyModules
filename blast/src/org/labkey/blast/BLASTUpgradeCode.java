@@ -59,7 +59,7 @@ public class BLASTUpgradeCode implements UpgradeCode
                 return;
             }
 
-            TableInfo ti = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_DATABASES);
+            TableInfo ti = BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_DATABASES);
             TableSelector ts = new TableSelector(ti, PageFlowUtil.set("objectid"));
             List<String> databaseIds = ts.getArrayList(String.class);
             for (String dbId : databaseIds)

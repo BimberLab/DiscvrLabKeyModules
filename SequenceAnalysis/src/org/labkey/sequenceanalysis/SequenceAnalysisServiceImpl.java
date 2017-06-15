@@ -148,7 +148,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
 
     public ReadDataImpl getReadData(int rowId, User u)
     {
-        TableInfo ti = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
+        TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), rowId);
 
         ReadDataImpl model = new TableSelector(ti, filter, null).getObject(ReadDataImpl.class);
@@ -168,7 +168,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
 
     public SequenceReadsetImpl getReadset(int readsetId, User u)
     {
-        TableInfo ti = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS);
+        TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), readsetId);
 
         SequenceReadsetImpl model = new TableSelector(ti, filter, null).getObject(SequenceReadsetImpl.class);

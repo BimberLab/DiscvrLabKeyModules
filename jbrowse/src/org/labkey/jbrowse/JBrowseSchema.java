@@ -17,6 +17,8 @@
 package org.labkey.jbrowse;
 
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.dialect.SqlDialect;
 
 public class JBrowseSchema
@@ -42,7 +44,12 @@ public class JBrowseSchema
 
     public DbSchema getSchema()
     {
-        return DbSchema.get(NAME);
+        return DbSchema.get(NAME, DbSchemaType.Module);
+    }
+
+    public TableInfo getTable(String tablename)
+    {
+        return getSchema().getTable(tablename);
     }
 
     public SqlDialect getSqlDialect()

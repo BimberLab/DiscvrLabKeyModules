@@ -397,7 +397,7 @@ public class JBrowseController extends SpringActionController
         @Override
         public ModelAndView getView(BrowserForm form, BindException errors) throws Exception
         {
-            Database db = new TableSelector(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getDatabase()), null).getObject(Database.class);
+            Database db = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getDatabase()), null).getObject(Database.class);
             _title = db == null ? "Not Found" : db.getName();
             form.setPageTitle(_title);
 
@@ -459,7 +459,7 @@ public class JBrowseController extends SpringActionController
             JSONObject attributes = form.getJsonObject().getJSONObject("attributes");
 
             final Map<Container, List<Map<String, Object>>> rows = new HashMap<>();
-            TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_JSONFILES), PageFlowUtil.set("objectid", "container", "trackJson"), new SimpleFilter(FieldKey.fromString("objectid"), objectIds, CompareType.IN), null);
+            TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES), PageFlowUtil.set("objectid", "container", "trackJson"), new SimpleFilter(FieldKey.fromString("objectid"), objectIds, CompareType.IN), null);
             ts.forEachResults(new Selector.ForEachBlock<Results>()
             {
                 @Override

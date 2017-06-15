@@ -27,7 +27,7 @@ public class BlastUserSchema extends SimpleUserSchema
 
     public static void register(final Module m)
     {
-        final DbSchema dbSchema = DbSchema.get(BLASTSchema.NAME);
+        final DbSchema dbSchema = BLASTSchema.getInstance().getSchema();
 
         DefaultSchema.registerProvider(BLASTSchema.NAME, new DefaultSchema.SchemaProvider(m)
         {

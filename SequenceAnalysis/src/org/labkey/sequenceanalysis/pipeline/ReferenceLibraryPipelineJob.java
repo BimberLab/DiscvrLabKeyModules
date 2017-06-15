@@ -3,7 +3,6 @@ package org.labkey.sequenceanalysis.pipeline;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -105,7 +104,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     //for recreating an existing library
     public static ReferenceLibraryPipelineJob recreate(Container c, User user, PipeRoot pipeRoot, Integer libraryId, boolean skipCacheIndexes)throws IOException
     {
-        TableInfo ti = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
+        TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         Map rowMap = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getMap();
         if (rowMap == null)
         {

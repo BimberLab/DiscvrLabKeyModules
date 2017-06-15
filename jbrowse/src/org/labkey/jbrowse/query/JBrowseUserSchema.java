@@ -27,7 +27,7 @@ public class JBrowseUserSchema extends SimpleUserSchema
 
     public static void register(final Module m)
     {
-        final DbSchema dbSchema = DbSchema.get(JBrowseSchema.NAME);
+        final DbSchema dbSchema = JBrowseSchema.getInstance().getSchema();
 
         DefaultSchema.registerProvider(JBrowseSchema.NAME, new DefaultSchema.SchemaProvider(m)
         {

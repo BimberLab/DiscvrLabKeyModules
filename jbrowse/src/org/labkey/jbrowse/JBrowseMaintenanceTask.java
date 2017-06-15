@@ -53,7 +53,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         try
         {
             //delete sessions marked as temporary
-            int sessionsDeleted = Table.delete(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("temporary"), true));
+            int sessionsDeleted = Table.delete(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("temporary"), true));
             if (sessionsDeleted > 0)
                 log.info("deleted " + sessionsDeleted + " temporary jbrowse sessions");
 
@@ -94,7 +94,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             if (jbrowseRoot != null && jbrowseRoot.exists())
             {
                 //find jsonfiles we expect to exist
-                TableInfo tableJsonFiles = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
+                TableInfo tableJsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
                 final Set<File> expectedDirs = new HashSet<>();
                 TableSelector ts = new TableSelector(tableJsonFiles, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
                 List<JsonFile> rows = ts.getArrayList(JsonFile.class);
@@ -144,7 +144,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 }
 
                 //also databases
-                TableInfo tableJsonDatabases = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES);
+                TableInfo tableJsonDatabases = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES);
                 TableSelector ts2 = new TableSelector(tableJsonDatabases, Collections.singleton("objectid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
                 List<String> expectedDatabases = ts2.getArrayList(String.class);
                 File databaseDir = new File(jbrowseRoot, "databases");

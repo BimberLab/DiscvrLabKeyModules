@@ -222,7 +222,6 @@ public class SequenceAnalysisController extends SpringActionController
                         files.add(target);
                     }
                 }
-
             }
 
             if (form.getDataIds() != null)
@@ -3070,7 +3069,7 @@ public class SequenceAnalysisController extends SpringActionController
                 PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
                 for (Integer libraryId : form.getLibraryIds())
                 {
-                    TableInfo ti = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
+                    TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
                     String containerId = new TableSelector(ti, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(String.class);
                     if (containerId == null)
                     {
@@ -3184,7 +3183,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             if (form.getOutputFileIds() != null)
             {
-                TableInfo ti = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+                TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
                 for (int outputFileId : form.getOutputFileIds())
                 {
                     Map rowMap = new TableSelector(ti, PageFlowUtil.set("dataId", "library_id"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getMap();

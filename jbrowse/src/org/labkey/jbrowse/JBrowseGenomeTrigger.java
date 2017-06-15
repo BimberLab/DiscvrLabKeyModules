@@ -52,7 +52,7 @@ public class JBrowseGenomeTrigger implements GenomeTrigger
     {
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("libraryId"), genomeId);
         filter.addCondition(FieldKey.fromString("primarydb"), true);
-        TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), filter, null);
+        TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), filter, null);
         if (!ts.exists())
         {
             log.info("creating default jbrowse session for genome");
@@ -80,7 +80,7 @@ public class JBrowseGenomeTrigger implements GenomeTrigger
     {
         try
         {
-            TableSelector ts = new TableSelector(DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("reference_libraries"), PageFlowUtil.set("name"));
+            TableSelector ts = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_libraries"), PageFlowUtil.set("name"));
             String genomeName = ts.getObject(genomeId, String.class);
 
             JBrowseManager.get().createDatabase(c, u, genomeName, "This is the default database automatically created for this genome.", genomeId, null, null, true, true, false);

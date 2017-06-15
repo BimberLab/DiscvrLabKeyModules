@@ -20,8 +20,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
@@ -47,6 +49,7 @@ public class JBrowseManager
     public final static String CONFIG_PROPERTY_DOMAIN = "org.labkey.jbrowse.settings";
     public final static String JBROWSE_BIN = "jbrowseBinDir";
     public final static String SEQUENCE_ANALYSIS = "sequenceanalysis";
+
     public static final List<FileType> ALLOWABLE_TRACK_EXTENSIONS = Arrays.asList(
             new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ),
             new FileType("bcf", FileType.gzSupportLevel.NO_GZ),
@@ -128,7 +131,7 @@ public class JBrowseManager
     public void addDatabaseMember(Container c, User u, String databaseGuid, List<Integer> trackIds, List<Integer> outputFileIds) throws IOException
     {
         //make sure this is a valid database
-        TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
+        TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
         Database db = ts.getObject(Database.class);
         if (db == null)
         {
@@ -169,5 +172,10 @@ public class JBrowseManager
         }
 
         return false;
+    }
+
+    public TableInfo getSequenceAnalysisTable(String tableName)
+    {
+        return DbSchema.get(SEQUENCE_ANALYSIS, DbSchemaType.Module).getTable(tableName);
     }
 }

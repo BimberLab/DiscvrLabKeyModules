@@ -16,6 +16,7 @@
 package org.labkey.sequenceanalysis;
 
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.dialect.SqlDialect;
 
@@ -78,11 +79,6 @@ public class SequenceAnalysisSchema
 
     public DbSchema getSchema()
     {
-        return DbSchema.get(SCHEMA_NAME);
-    }
-
-    public SqlDialect getSqlDialect()
-    {
-        return getSchema().getSqlDialect();
+        return DbSchema.get(SCHEMA_NAME, DbSchemaType.Module);
     }
 }

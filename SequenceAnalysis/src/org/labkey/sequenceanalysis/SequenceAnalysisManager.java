@@ -28,6 +28,7 @@ import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SchemaTableInfo;
@@ -54,7 +55,6 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.FastaDataLoader;
 import org.labkey.api.reader.FastaLoader;
 import org.labkey.api.resource.FileResource;
-import org.labkey.api.resource.MergedDirectoryResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
@@ -118,7 +118,7 @@ public class SequenceAnalysisManager
 
     public DbSchema getSchema()
     {
-        return DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME);
+        return DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME, DbSchemaType.Module);
     }
 
     public SchemaTableInfo getTable(String tablename)

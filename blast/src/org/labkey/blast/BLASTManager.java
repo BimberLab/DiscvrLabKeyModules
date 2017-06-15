@@ -22,7 +22,6 @@ import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
@@ -121,7 +120,7 @@ public class BLASTManager
 
     public Container getContainerForDatabase(String databaseId)
     {
-        TableInfo databases = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_DATABASES);
+        TableInfo databases = BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_DATABASES);
         String containerId = new TableSelector(databases, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("objectid"), databaseId), null).getObject(String.class);
         if (containerId != null)
         {
@@ -134,7 +133,7 @@ public class BLASTManager
     public void createDatabase(Container c, User u, Integer libraryId) throws IllegalArgumentException, IOException
     {
         //only create once per library
-        TableInfo databases = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_DATABASES);
+        TableInfo databases = BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_DATABASES);
         TableSelector dbTs = new TableSelector(databases, PageFlowUtil.set("objectid"), new SimpleFilter(FieldKey.fromString("libraryid"), libraryId), null);
         if (dbTs.exists())
         {
@@ -154,14 +153,14 @@ public class BLASTManager
 
     public String runBLASTN(Container c, User u, String blastDb, File input, String task, String title, boolean saveResults, Map<String, String> params, boolean async) throws IllegalArgumentException, IOException
     {
-        TableInfo databases = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_DATABASES);
+        TableInfo databases = BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_DATABASES);
         TableSelector ts = new TableSelector(databases, new SimpleFilter(FieldKey.fromString("objectid"), blastDb), null);
         if (!ts.exists())
         {
             throw new IllegalArgumentException("Unable to find BLAST DB: " + blastDb);
         }
 
-        TableInfo jobs = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_BLAST_JOBS);
+        TableInfo jobs = BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_BLAST_JOBS);
         BlastJob databaseRecord = new BlastJob();
         databaseRecord.setDatabaseId(blastDb);
         databaseRecord.setTitle(title);

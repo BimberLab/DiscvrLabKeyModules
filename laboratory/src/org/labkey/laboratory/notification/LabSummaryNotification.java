@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.CoreSchema;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
@@ -170,7 +171,7 @@ public class LabSummaryNotification implements Notification
         JSONObject oldValueMap = saved.containsKey(rowCount) ? new JSONObject(saved.get(rowCount)) : null;
 
         Map<String, Long> totals = new TreeMap<>();
-        TableInfo containers = DbSchema.get("core").getTable("containers");
+        TableInfo containers = CoreSchema.getInstance().getTableInfoContainers();
 
         //first add this container
         SimpleFilter filter1 = new SimpleFilter(FieldKey.fromString("Type"), "workbook");

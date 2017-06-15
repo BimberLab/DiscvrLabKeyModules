@@ -16,10 +16,10 @@
 package org.labkey.jbrowse.pipeline;
 
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -88,9 +88,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
 
         public PipelineJob.Task createTask(PipelineJob job)
         {
-            JBrowseSessionTask task = new JBrowseSessionTask(this, job);
-
-            return task;
+            return new JBrowseSessionTask(this, job);
         }
 
         public boolean isJobComplete(PipelineJob job)
@@ -99,6 +97,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         }
     }
 
+    @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
         getJob().getLogger().info(getPipelineJob().getMode().getDescription());
@@ -126,7 +125,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         try
         {
             getJob().getLogger().info("preparing session JSON files");
-            TableSelector ts = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
+            TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
             Database db = ts.getObject(Database.class);
             if (db == null)
             {
@@ -143,7 +142,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
 
     private void reprocessResources() throws PipelineJobException
     {
-        TableInfo ti = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
+        TableInfo ti = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
         TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("objectid"), getPipelineJob().getJsonFiles(), CompareType.IN), null);
         List<JsonFile> jsonFiles = ts.getArrayList(JsonFile.class);
         try
@@ -176,17 +175,17 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
             }
 
             //next update any DBs using these resources
-            TableInfo databaseMembers = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
+            TableInfo databaseMembers = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
             TableSelector ts2 = new TableSelector(databaseMembers, PageFlowUtil.set("database"), new SimpleFilter(FieldKey.fromString("jsonfile"), getPipelineJob().getJsonFiles(), CompareType.IN), null);
             Set<String> databaseGuids = new HashSet<>(ts2.getArrayList(String.class));
 
             //look for libraries using these resources.  then find any sessions based on these libraries
             Set<Integer> libraryIds = new HashSet<>();
-            libraryIds.addAll(new TableSelector(DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("reference_library_tracks"), PageFlowUtil.set("library_id"), new SimpleFilter(FieldKey.fromString("rowid"), trackIds, CompareType.IN), null).getArrayList(Integer.class));
-            libraryIds.addAll(new TableSelector(DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS).getTable("reference_library_members"), PageFlowUtil.set("library_id"), new SimpleFilter(FieldKey.fromString("ref_nt_id"), sequenceIds, CompareType.IN), null).getArrayList(Integer.class));
+            libraryIds.addAll(new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks"), PageFlowUtil.set("library_id"), new SimpleFilter(FieldKey.fromString("rowid"), trackIds, CompareType.IN), null).getArrayList(Integer.class));
+            libraryIds.addAll(new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_library_members"), PageFlowUtil.set("library_id"), new SimpleFilter(FieldKey.fromString("ref_nt_id"), sequenceIds, CompareType.IN), null).getArrayList(Integer.class));
             if (!libraryIds.isEmpty())
             {
-                List<String> newIds = new TableSelector(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("objectid"), new SimpleFilter(FieldKey.fromString("libraryId"), libraryIds, CompareType.IN), null).getArrayList(String.class);
+                List<String> newIds = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("objectid"), new SimpleFilter(FieldKey.fromString("libraryId"), libraryIds, CompareType.IN), null).getArrayList(String.class);
                 if (!newIds.isEmpty())
                 {
                     getJob().getLogger().info("re-processing " + new HashSet<>(newIds).size() + " additional sessions because they use reference genomes that were modified");
@@ -209,8 +208,8 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
     private void createOrAddToSession() throws PipelineJobException
     {
         boolean success = false;
-        TableInfo databases = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES);
-        TableInfo databaseMembers = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
+        TableInfo databases = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES);
+        TableInfo databaseMembers = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
         String databaseGuid = getPipelineJob().getDatabaseGuid();
         List<Integer> databaseMemberRecordsCreated = new ArrayList<>();
 
@@ -223,7 +222,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
             {
                 //TODO: if you restart a failed job, this record might already exist
 
-                CaseInsensitiveHashMap databaseRecord = new CaseInsensitiveHashMap();
+                CaseInsensitiveHashMap<Object> databaseRecord = new CaseInsensitiveHashMap<>();
                 databaseRecord.put("name", getPipelineJob().getName());
                 databaseRecord.put("description", getPipelineJob().getDatabaseDescription());
                 databaseRecord.put("libraryid", getPipelineJob().getLibraryId());
@@ -242,7 +241,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                 Table.insert(getJob().getUser(), databases, databaseRecord);
             }
 
-            TableSelector dbTs = new TableSelector(DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
+            TableSelector dbTs = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
             Database db = dbTs.getObject(Database.class);
             if (db == null)
             {
@@ -288,7 +287,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                             continue;
                         }
 
-                        CaseInsensitiveHashMap trackRecord = new CaseInsensitiveHashMap();
+                        CaseInsensitiveHashMap<Object> trackRecord = new CaseInsensitiveHashMap<>();
                         trackRecord.put("database", databaseGuid);
                         trackRecord.put("jsonfile", json.getObjectId());
                         trackRecord.put("container", getJob().getContainer().getId());
@@ -320,7 +319,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
 
                 for (Integer outputFileId : outputFileIdList)
                 {
-                    Integer dataId = new TableSelector(DbSchema.get("sequenceanalysis").getTable("outputfiles"), PageFlowUtil.set("dataid"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getObject(Integer.class);
+                    Integer dataId = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("outputfiles"), PageFlowUtil.set("dataid"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getObject(Integer.class);
                     if (dataId == null)
                     {
                         getJob().getLogger().error("Unable to find dataId for output file: " + outputFileId);
@@ -338,7 +337,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                         continue;
                     }
 
-                    CaseInsensitiveHashMap trackRecord = new CaseInsensitiveHashMap();
+                    CaseInsensitiveHashMap<Object> trackRecord = new CaseInsensitiveHashMap<>();
                     trackRecord.put("database", databaseGuid);
                     trackRecord.put("jsonfile", json.getObjectId());
                     trackRecord.put("container", getJob().getContainer().getId());

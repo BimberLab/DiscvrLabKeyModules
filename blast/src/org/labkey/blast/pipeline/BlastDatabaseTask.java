@@ -127,7 +127,7 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
         }
 
         //it is possible to recreate the files for an existing DB.  check to make sure this doesnt already exist
-        TableInfo databases = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_DATABASES);
+        TableInfo databases = BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_DATABASES);
         boolean dbExists = new TableSelector(databases, new SimpleFilter(FieldKey.fromString("objectid"), getPipelineJob().getDatabaseGuid()), null).exists();
         if (dbExists)
         {
@@ -136,7 +136,7 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
         else
         {
             //create the database record
-            CaseInsensitiveHashMap databaseRecord = new CaseInsensitiveHashMap();
+            CaseInsensitiveHashMap<Object> databaseRecord = new CaseInsensitiveHashMap<>();
             databaseRecord.put("name", libraryMap.get("name"));
             databaseRecord.put("description", libraryMap.get("description"));
             databaseRecord.put("libraryid", getPipelineJob().getLibraryId());

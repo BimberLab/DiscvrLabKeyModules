@@ -483,7 +483,7 @@ public class BLASTController extends SpringActionController
                 PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
                 for (String databaseGuid : form.getDatabaseIds())
                 {
-                    TableInfo databases = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_DATABASES);
+                    TableInfo databases = BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_DATABASES);
                     String containerId = new TableSelector(databases, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null).getObject(String.class);
                     if (containerId == null)
                     {

@@ -46,7 +46,7 @@ public class BlastDatabasePipelineJob extends PipelineJob
         super(null, new ViewBackgroundInfo(c, user, url), pipeRoot);
 
         //find library based on DB
-        TableInfo databases = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_DATABASES);
+        TableInfo databases = BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_DATABASES);
         _libraryId = new TableSelector(databases, PageFlowUtil.set("libraryid"), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null).getObject(Integer.class);
         if (_libraryId == null)
         {

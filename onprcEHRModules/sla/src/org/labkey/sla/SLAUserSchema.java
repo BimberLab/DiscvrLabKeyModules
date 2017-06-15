@@ -3,7 +3,6 @@ package org.labkey.sla;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.ehr.security.EHRProtocolEditPermission;
 import org.labkey.api.ldk.table.CustomPermissionsTable;
@@ -20,7 +19,7 @@ public class SLAUserSchema extends SimpleUserSchema
 {
     public SLAUserSchema(User user, Container container)
     {
-        super(SLASchema.NAME, null, user, container, DbSchema.get(SLASchema.NAME));
+        super(SLASchema.NAME, null, user, container, SLASchema.getInstance().getSchema());
     }
 
     @Override

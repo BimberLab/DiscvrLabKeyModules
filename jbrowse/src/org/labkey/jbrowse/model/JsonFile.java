@@ -14,6 +14,7 @@ import org.labkey.api.files.FileContentService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.jbrowse.JBrowseManager;
 
 import java.io.File;
 
@@ -49,7 +50,7 @@ public class JsonFile
         if (_trackId == null)
             return null;
 
-        TableInfo ti = DbSchema.get("sequenceanalysis").getTable("reference_library_tracks");
+        TableInfo ti = JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks");
         TableSelector ts = new TableSelector(ti, PageFlowUtil.set("name"), new SimpleFilter(FieldKey.fromString("rowid"), _trackId), null);
 
         return ts.getObject(String.class);
@@ -75,7 +76,7 @@ public class JsonFile
         if (_outputFile == null)
             return null;
 
-        Integer dataId = new TableSelector(DbSchema.get("sequenceanalysis").getTable("outputfiles"), PageFlowUtil.set("dataid"), new SimpleFilter(FieldKey.fromString("rowid"), _outputFile), null).getObject(Integer.class);
+        Integer dataId = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("outputfiles"), PageFlowUtil.set("dataid"), new SimpleFilter(FieldKey.fromString("rowid"), _outputFile), null).getObject(Integer.class);
         if (dataId == null)
             return null;
 
@@ -87,11 +88,11 @@ public class JsonFile
         if (_outputFile == null)
             return null;
 
-        Integer libraryId = new TableSelector(DbSchema.get("sequenceanalysis").getTable("outputfiles"), PageFlowUtil.set("library_id"), new SimpleFilter(FieldKey.fromString("rowid"), _outputFile), null).getObject(Integer.class);
+        Integer libraryId = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("outputfiles"), PageFlowUtil.set("library_id"), new SimpleFilter(FieldKey.fromString("rowid"), _outputFile), null).getObject(Integer.class);
         if (libraryId == null)
             return null;
 
-        Integer dataId = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_libraries"), PageFlowUtil.set("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(Integer.class);
+        Integer dataId = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_libraries"), PageFlowUtil.set("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(Integer.class);
         if (dataId == null)
             return null;
 
@@ -230,7 +231,7 @@ public class JsonFile
         {
             if (_trackId != null)
             {
-                _label = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_library_tracks"), PageFlowUtil.set("category"), new SimpleFilter(FieldKey.fromString("rowid"), _trackId), null).getObject(String.class);
+                _label = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks"), PageFlowUtil.set("category"), new SimpleFilter(FieldKey.fromString("rowid"), _trackId), null).getObject(String.class);
                 if (_label == null)
                 {
                     _label = "Reference Annotation";
@@ -238,7 +239,7 @@ public class JsonFile
             }
             else if (_outputFile != null)
             {
-                TableInfo ti = DbSchema.get("sequenceanalysis").getTable("outputfiles");
+                TableInfo ti = JBrowseManager.get().getSequenceAnalysisTable("outputfiles");
                 _label = new TableSelector(ti, PageFlowUtil.set("name"), new SimpleFilter(FieldKey.fromString("rowid"), _outputFile), null).getObject(String.class);
                 if (_label == null)
                 {
@@ -264,7 +265,7 @@ public class JsonFile
         {
             if (_trackId != null)
             {
-                _category = new TableSelector(DbSchema.get("sequenceanalysis").getTable("reference_library_tracks"), PageFlowUtil.set("category"), new SimpleFilter(FieldKey.fromString("rowid"), _trackId), null).getObject(String.class);
+                _category = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks"), PageFlowUtil.set("category"), new SimpleFilter(FieldKey.fromString("rowid"), _trackId), null).getObject(String.class);
                 if (_category == null)
                 {
                     _category = "Reference Annotations";
@@ -272,7 +273,7 @@ public class JsonFile
             }
             else if (_outputFile != null)
             {
-                _category = new TableSelector(DbSchema.get("sequenceanalysis").getTable("outputfiles"), PageFlowUtil.set("category"), new SimpleFilter(FieldKey.fromString("rowid"), _outputFile), null).getObject(String.class);
+                _category = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("outputfiles"), PageFlowUtil.set("category"), new SimpleFilter(FieldKey.fromString("rowid"), _outputFile), null).getObject(String.class);
                 if (_category == null)
                 {
                     _category = "Data";

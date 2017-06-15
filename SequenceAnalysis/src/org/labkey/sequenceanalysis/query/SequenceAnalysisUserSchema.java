@@ -51,7 +51,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
     public static void register(final Module m)
     {
-        final DbSchema dbSchema = DbSchema.get(SequenceAnalysisSchema.SCHEMA_NAME);
+        final DbSchema dbSchema = SequenceAnalysisSchema.getInstance().getSchema();
 
         DefaultSchema.registerProvider(SequenceAnalysisSchema.SCHEMA_NAME, new DefaultSchema.SchemaProvider(m)
         {

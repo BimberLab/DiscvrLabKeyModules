@@ -5,7 +5,6 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.DataType;
@@ -299,7 +298,7 @@ public class BlastJob implements Serializable
         {
             setJobId(job.getJobGUID());
         }
-        TableInfo jobs = DbSchema.get(BLASTSchema.NAME).getTable(BLASTSchema.TABLE_BLAST_JOBS);
+        TableInfo jobs = BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_BLAST_JOBS);
         Table.update(u, jobs, this, getObjectid());
     }
 

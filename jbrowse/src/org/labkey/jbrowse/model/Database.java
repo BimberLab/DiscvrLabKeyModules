@@ -5,7 +5,6 @@ import org.apache.log4j.Logger;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -137,7 +136,7 @@ public class Database
         }
 
         //delete children
-        TableInfo ti = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
+        TableInfo ti = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
         int deleted = Table.delete(ti, new SimpleFilter(FieldKey.fromString("database"), databaseId, CompareType.EQUAL));
 
         //then delete files
@@ -254,7 +253,7 @@ public class Database
         {
             if (_jsonFile != null)
             {
-                TableInfo tableJsonFiles = DbSchema.get(JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_JSONFILES);
+                TableInfo tableJsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
                 return new TableSelector(tableJsonFiles, new SimpleFilter(FieldKey.fromString("objectid"), _jsonFile, CompareType.EQUAL), null).getObject(JsonFile.class);
             }
 
