@@ -76,7 +76,7 @@ public class BLASTManager
             File binFolder = new File(binDir);
             if (!binFolder.exists())
             {
-                throw new IllegalArgumentException("bin dir does not exist or is not acessible: " + binFolder.getPath());
+                throw new IllegalArgumentException("bin dir does not exist or is not accessible: " + binFolder.getPath());
             }
 
             if (!binFolder.canRead())
