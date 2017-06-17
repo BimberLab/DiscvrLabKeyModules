@@ -31,7 +31,6 @@ import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.notification.EmailMessage;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.AdminConsoleAction;
@@ -48,6 +47,7 @@ import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.settings.LookAndFeelProperties;
 import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.MailHelper;
+import org.labkey.api.util.MimeMap.MimeType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
@@ -469,7 +469,7 @@ public class SLAController extends SpringActionController
             {
                 MailHelper.MultipartMessage message = MailHelper.createMultipartMessage();
                 message.setSubject(subject);
-                message.setContent(msgHtml, EmailMessage.contentType.HTML.getMimeType());
+                message.setContent(msgHtml, MimeType.HTML.getContentType());
                 message.setFrom(LookAndFeelProperties.getInstance(getContainer()).getSystemEmailAddress());
 
                 if (requestUser != null)
