@@ -1,5 +1,6 @@
 package org.labkey.jbrowse.model;
 
+import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
@@ -303,7 +304,7 @@ public class JsonFile
         _trackJson = trackJson;
     }
 
-    public JSONObject getExtraTrackConfig()
+    public JSONObject getExtraTrackConfig(Logger log)
     {
         if (_trackJson != null)
         {
@@ -314,6 +315,7 @@ public class JsonFile
             catch (JSONException e)
             {
                 //ignore?
+                log.error(e.getMessage(), e);
             }
         }
 

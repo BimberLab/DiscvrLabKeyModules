@@ -24,8 +24,10 @@ Ext4.define('JBrowse.window.GenomeBrowserHelpWindow', {
                     height: 340
                 },
                 items: [{
-                    src: LABKEY.ActionURL.getContextPath() + '/jbrowse/img/img1.jpg',
+                    src: LABKEY.ActionURL.getContextPath() + '/jbrowse/img/img0.jpg',
                     active: true
+                },{
+                    src: LABKEY.ActionURL.getContextPath() + '/jbrowse/img/img1.jpg'
                 },{
                     src: LABKEY.ActionURL.getContextPath() + '/jbrowse/img/img2.jpg'
                 },{

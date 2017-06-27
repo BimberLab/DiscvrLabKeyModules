@@ -1242,50 +1242,73 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         public static Resumer create(SequenceAlignmentJob job, SequenceAlignmentTask task) throws PipelineJobException
         {
-            File xml = getSerializedXml(job.getAnalysisDirectory(), XML_NAME);
-            if (!xml.exists())
+            //NOTE: allow a file in either local working dir or webserver dir.  if both exist, use the file most recently modified
+            File xml = null;
+            for (File dir : Arrays.asList(job.getAnalysisDirectory(), task._wd.getDir()))
             {
-                return new Resumer(task);
-            }
-            else
-            {
-                Resumer ret = readFromXml(xml, Resumer.class);
-                ret._isResume = true;
-                ret._log = task.getJob().getLogger();
-                ret._localWorkDir = task._wd.getDir();
-                ret._fileManager._job = job;
-                ret._fileManager._wd = task._wd;
-                ret._fileManager._workLocation = task._wd.getDir();
-                task._taskHelper.setFileManager(ret._fileManager);
-                try
+                File toCheck = getSerializedXml(dir, XML_NAME);
+                if (toCheck.exists())
                 {
-                    if (!ret._copiedInputs.isEmpty())
+                    job.getLogger().debug("inspecting file: " + toCheck.getPath());
+                    if (xml == null || xml.lastModified() < toCheck.lastModified())
                     {
-                        for (File orig : ret._copiedInputs.keySet())
+                        if (xml != null)
                         {
-                            task._wd.inputFile(orig, ret._copiedInputs.get(orig), false);
+                            job.getLogger().debug("choosing more recently modified file: " + toCheck.getPath());
                         }
+
+                        xml = toCheck;
                     }
                 }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-
-                //debugging:
-                job.getLogger().debug("loaded from XML.  total recorded actions: " + ret.getRecordedActions().size());
-                for (RecordedAction a : ret.getRecordedActions())
-                {
-                    job.getLogger().debug("action: " + a.getName() + ", inputs: " + a.getInputs().size() + ", outputs: " + a.getOutputs().size());
-                }
-
-                if (ret._recordedActions == null)
-                {
-                    throw new PipelineJobException("Job read from XML, but did not have any saved actions.  This indicates a problem w/ serialization.");
-                }
-
-                return ret;
             }
+
+            if (xml != null)
+            {
+                job.getLogger().debug("using xml file: " + xml.getPath());
+                return createFromXml(job, task, xml);
+            }
+
+            return new Resumer(task);
+        }
+
+        private static Resumer createFromXml(SequenceAlignmentJob job, SequenceAlignmentTask task, File xml) throws PipelineJobException
+        {
+            Resumer ret = readFromXml(xml, Resumer.class);
+            ret._isResume = true;
+            ret._log = task.getJob().getLogger();
+            ret._localWorkDir = task.getPipelineJob().getAnalysisDirectory();
+            ret._fileManager._job = job;
+            ret._fileManager._wd = task._wd;
+            ret._fileManager._workLocation = task._wd.getDir();
+            task._taskHelper.setFileManager(ret._fileManager);
+            try
+            {
+                if (!ret._copiedInputs.isEmpty())
+                {
+                    for (File orig : ret._copiedInputs.keySet())
+                    {
+                        task._wd.inputFile(orig, ret._copiedInputs.get(orig), false);
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            //debugging:
+            job.getLogger().debug("loaded from XML.  total recorded actions: " + ret.getRecordedActions().size());
+            for (RecordedAction a : ret.getRecordedActions())
+            {
+                job.getLogger().debug("action: " + a.getName() + ", inputs: " + a.getInputs().size() + ", outputs: " + a.getOutputs().size());
+            }
+
+            if (ret._recordedActions == null)
+            {
+                throw new PipelineJobException("Job read from XML, but did not have any saved actions.  This indicates a problem w/ serialization.");
+            }
+
+            return ret;
         }
 
         private static String XML_NAME = "alignmentCheckpoint.xml";
@@ -1522,6 +1545,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         public void setReadDataAlignmentDone(int readDataId, List<RecordedAction> actions, File bam) throws PipelineJobException
         {
+            _log.debug("setting read data alignment done: " + readDataId + ", " + (actions == null ? "0" : actions.size()) + " actions");
             _readDataBamMap.put(readDataId, bam);
             if (actions != null)
             {

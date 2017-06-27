@@ -135,6 +135,7 @@ DISCVR/jbrowse/resources/views/databaseDetails.view.xml -text
 DISCVR/jbrowse/resources/views/settings.html -text
 DISCVR/jbrowse/resources/views/settings.view.xml -text
 DISCVR/jbrowse/resources/web/README.txt -text
+DISCVR/jbrowse/resources/web/jbrowse/img/img0.jpg -text
 DISCVR/jbrowse/resources/web/jbrowse/img/img1.jpg -text
 DISCVR/jbrowse/resources/web/jbrowse/img/img2.jpg -text
 DISCVR/jbrowse/resources/web/jbrowse/img/img3.jpg -text
@@ -3324,6 +3325,7 @@ labModules/SequenceAnalysis/resources/queries/sequenceanalysis/referenceLiftover
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/reference_libraries.js -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/reference_libraries/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/reference_library_members/.qview.xml -text
+labModules/SequenceAnalysis/resources/queries/sequenceanalysis/reference_library_tracks/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_analyses.js -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_analyses/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/sequence_analyses/Detailed.qview.xml -text
@@ -3861,6 +3863,8 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/CombineV
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/DepthOfCoverageHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/GenotypeConcordanceStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/GenotypeFiltrationStep.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/MendelianViolationReportStep.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/MendelianViolationReportWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/MultiAllelicPositionsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SNPEffStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/SampleRenameStep.java -text
@@ -3872,7 +3876,8 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/VariantA
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/VariantEvalBySampleStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/VariantEvalStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/VariantFiltrationStep.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/VariantsSummaryStep.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/VariantQCStep.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/VariantQCWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/variant/VariantsToTableStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/AbstractSequenceMatcher.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/Barcoder.java -text

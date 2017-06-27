@@ -1256,6 +1256,98 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         }
     },
 
+    updateForReadsetIds: function(readsetIds){
+        var recordsById = {};
+        this.readsetStore.each(function(r){
+            if (readsetIds.indexOf(r.get('readset')) != -1){
+                recordsById[r.get('readset')] = recordsById[r.get('readset')] || [];
+                recordsById[r.get('readset')].push(r);
+            }
+        }, this);
+
+        Ext4.Msg.wait('Loading...');
+        var doDemultiplex = this.down('#doDemultiplex').getValue();
+        var showBarcodes = this.down('#showBarcodes').getValue();
+
+        LABKEY.Query.selectRows({
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            schemaName: 'sequenceanalysis',
+            queryName: 'sequence_readsets',
+            filterArray: [LABKEY.Filter.create('rowid', readsetIds.join(';'), LABKEY.Filter.Types.IN)],
+            columns: 'rowid,name,platform,application,chemistry,librarytype,sampletype,subjectid,sampledate,sampleid,comments,barcode5,barcode3,instrument_run_id,totalFiles',
+            scope: this,
+            failure: LDK.Utils.getErrorCallback(),
+            success: function(results){
+                Ext4.Msg.hide();
+                var msgs = [];
+                if (results && results.rows && results.rows.length){
+                    Ext4.Array.forEach(results.rows, function(row) {
+                        var records = recordsById[row.rowid];
+                        if (row.totalFiles) {
+                            msgs.push('Readset ' + row.rowid + 'has already been associated with files and cannot be re-used.  If you would like to reanalyze this readset, load the table of readsets and look for the \'Analyze Data\' button.');
+                            Ext4.Array.forEach(records, function(record) {
+                                record.data.readset = null;
+                            }, this);
+                        }
+
+                        if (doDemultiplex && (!row.barcode3 && !row.barcode5)) {
+                            msgs.push('Readset ' + row.rowid + ' does not have barcodes, but you have selected to use barcodes');
+                            Ext4.Array.forEach(records, function(record) {
+                                record.data.readset = null;
+                            }, this);
+
+                            return;
+                        }
+                        else if (!doDemultiplex && !showBarcodes && (row.barcode3 || row.barcode5)) {
+                            msgs.push('Readset ' + row.rowid + ' has barcodes, but you have not selected to either show barcodes or perform demultiplexing');
+                            Ext4.Array.forEach(records, function(record) {
+                                record.data.readset = null;
+                            }, this);
+
+                            return;
+                        }
+
+                        //update row based on saved readset.  avoid firing event
+                        Ext4.Array.forEach(records, function(record) {
+                            Ext4.apply(record.data, {
+                                readsetname: row.name,
+                                platform: row.platform,
+                                application: row.application,
+                                chemistry: row.chemistry,
+                                librarytype: row.librarytype,
+                                sampleid: row.sampleid,
+                                subjectid: row.subjectid,
+                                sampledate: row.sampledate,
+                                comments: row.comments,
+                                sampletype: row.sampletype,
+                                instrument_run_id: row.instrument_run_id,
+                                barcode5: row.barcode5,
+                                barcode3: row.barcode3,
+                                isValid: true
+                            });
+                        }, this);
+
+                        delete recordsById[row.rowid];
+                    }, this);
+                }
+
+                for (var readsetId in recordsById){
+                    msgs.push('Unable to find readset with rowid: ' +  readsetId);
+                    Ext4.Array.forEach(recordsById[readsetId], function(record){
+                        record.data.readset = null;
+                    }, this);
+                }
+
+                if (msgs.length){
+                    msgs = Ext4.unique(msgs);
+                    Ext4.Msg.alert('Error', 'The selected readset cannot be used:<br>' + msgs.join('<br>'));
+                }
+
+                this.down('#readsetGrid').getView().refresh();
+            }
+        });
+    },
+
     getReadsetSection: function(){
         return {
             xtype: 'panel',
@@ -1370,6 +1462,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 xtype: 'checkbox',
                 itemId: 'importReadsetIds',
                 fieldLabel: 'Use Previously Uploaded Readsets (not common)',
+                helpPopup: 'If checked, rather than supply all metadata here, you will simply enter the readset ID of previously imported readsets.  The previously imported values will be used.',
                 scope: this,
                 handler: function(btn, val){
                     btn.up('form').down('#existingReadsetOptions').setVisible(btn.checked);
@@ -1458,91 +1551,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             buffer: 200,
                             scope: this,
                             blur: function(field){
-                                var records = [];
-                                this.readsetStore.each(function(r){
-                                    if (r.get('readset') === field.getValue()){
-                                        records.push(r);
-                                    }
-                                }, this);
-
-                                if (field.getValue()){
-                                    Ext4.Msg.wait('Loading...');
-                                    var doDemultiplex = this.down('#doDemultiplex').getValue();
-                                    var showBarcodes = this.down('#showBarcodes').getValue();
-
-                                    LABKEY.Query.selectRows({
-                                        containerPath: Laboratory.Utils.getQueryContainerPath(),
-                                        schemaName: 'sequenceanalysis',
-                                        queryName: 'sequence_readsets',
-                                        filterArray: [LABKEY.Filter.create('rowid', field.getValue())],
-                                        columns: 'rowid,name,platform,application,chemistry,librarytype,sampletype,subjectid,sampledate,sampleid,comments,barcode5,barcode3,instrument_run_id,totalFiles',
-                                        scope: this,
-                                        failure: LDK.Utils.getErrorCallback(),
-                                        success: function(results){
-                                            Ext4.Msg.hide();
-                                            var msgs = [];
-                                            if (results && results.rows && results.rows.length){
-                                                Ext4.Array.forEach(results.rows, function(row) {
-                                                    if (row.totalFiles) {
-                                                        msgs.push('Readset ' + field.getValue() + 'has already been associated with files and cannot be re-used.  If you would like to reanalyze this readset, load the table of readsets and look for the \'Analyze Data\' button.');
-                                                        Ext4.Array.forEach(records, function(record) {
-                                                            record.data.readset = null;
-                                                        }, this);
-                                                    }
-
-                                                    if (doDemultiplex && (!row.barcode3 && !row.barcode5)) {
-                                                        msgs.push('Readset ' + field.getValue() + ' does not have barcodes, but you have selected to use barcodes');
-                                                        Ext4.Array.forEach(records, function(record) {
-                                                            record.data.readset = null;
-                                                        }, this);
-
-                                                        return;
-                                                    }
-                                                    else if (!doDemultiplex && !showBarcodes && (row.barcode3 || row.barcode5)) {
-                                                        msgs.push('Readset ' + field.getValue() + ' has barcodes, but you have not selected to either show barcodes or perform demultiplexing');
-                                                        Ext4.Array.forEach(records, function(record) {
-                                                            record.data.readset = null;
-                                                        }, this);
-
-                                                        return;
-                                                    }
-
-                                                    //update row based on saved readset.  avoid firing event
-                                                    Ext4.Array.forEach(records, function(record) {
-                                                        Ext4.apply(record.data, {
-                                                            readsetname: row.name,
-                                                            platform: row.platform,
-                                                            application: row.application,
-                                                            chemistry: row.chemistry,
-                                                            librarytype: row.librarytype,
-                                                            sampleid: row.sampleid,
-                                                            subjectid: row.subjectid,
-                                                            sampledate: row.sampledate,
-                                                            comments: row.comments,
-                                                            sampletype: row.sampletype,
-                                                            instrument_run_id: row.instrument_run_id,
-                                                            barcode5: row.barcode5,
-                                                            barcode3: row.barcode3,
-                                                            isValid: true
-                                                        });
-                                                    }, this);
-                                                }, this);
-                                            }
-                                            else {
-                                                Ext4.Msg.alert('Error', 'Unable to find readset with rowid: ' +  field.getValue());
-                                                Ext4.Array.forEach(records, function(record){
-                                                    record.data.readset = null;
-                                                }, this);
-                                            }
-
-                                            if (msgs.length){
-                                                msgs = Ext4.unique(msgs);
-                                                Ext4.Msg.alert('Error', 'The selected readset cannot be used:<br>' + msgs.join('<br>'));
-                                            }
-
-                                            this.down('#readsetGrid').getView().refresh();
-                                        }
-                                    });
+                                if (field.getValue()) {
+                                    this.updateForReadsetIds([field.getValue()]);
                                 }
                             }
                         }
@@ -1900,12 +1910,21 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     handler: function(btn){
                         var header = [];
                         var dataIndexes = [];
-                        Ext4.each(this.down('#readsetGrid').columns, function(col){
-                            if (!col.hidden && col.dataIndex != 'readset') {
-                                header.push(col.text);
-                                dataIndexes.push(col.dataIndex);
-                            }
-                        }, this);
+                        if (btn.up('window').sequencePanel.down('#importReadsetIds').getValue()){
+                            header.push('File Group');
+                            dataIndexes.push('fileGroupId');
+
+                            header.push('Readset Id');
+                            dataIndexes.push('readset');
+                        }
+                        else {
+                            Ext4.each(this.down('#readsetGrid').columns, function (col) {
+                                if (!col.hidden && col.dataIndex != 'readset') {
+                                    header.push(col.text);
+                                    dataIndexes.push(col.dataIndex);
+                                }
+                            }, this);
+                        }
 
                         var data = [header];
                         this.readsetStore.each(function(rec){
@@ -1998,6 +2017,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 }
 
                 var toAdd = [];
+                var readsetsToUpdate = [];
                 Ext4.each(data, function(row){
                     var obj = {};
                     Ext4.each(columns, function(col, idx){
@@ -2011,14 +2031,14 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         if (col.editor){
                             var editor = Ext4.ComponentManager.create(col.editor);
 
-                            if (col.editor.store && !Ext4.isEmpty(value)){
-                                var recIdx = col.editor.store.find(col.editor.valueField, value, null, false, false);
+                            if (editor.store && !Ext4.isEmpty(value)){
+                                var recIdx = editor.store.find(editor.valueField, value, null, false, false);
                                 if (recIdx == -1){
                                     errors.push('Invalid value for field ' + col.text + ': ' + value);
                                 }
                                 else {
                                     //ensure correct case
-                                    value = col.editor.store.getAt(recIdx).get(col.editor.valueField);
+                                    value = editor.store.getAt(recIdx).get(col.editor.valueField);
                                 }
                             }
                         }
@@ -2028,8 +2048,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         }
                     }, this);
 
-                    if (!LABKEY.Utils.isEmptyObj(obj))
+                    if (!LABKEY.Utils.isEmptyObj(obj)) {
                         toAdd.push(this.readsetStore.createModel(obj));
+                    }
+
+                    if (obj.readset){
+                        readsetsToUpdate.push(obj.readset);
+                    }
                 }, this);
 
                 if (errors.length){
@@ -2047,6 +2072,10 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 this.readsetStore.add(toAdd);
 
                 this.readsetStore.validateAll();
+
+                if (readsetsToUpdate.length){
+                    this.sequencePanel.updateForReadsetIds(readsetsToUpdate);
+                }
             }
         }).show(btn);
     },

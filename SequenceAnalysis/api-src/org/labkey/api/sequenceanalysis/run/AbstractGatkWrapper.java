@@ -25,6 +25,11 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
         super(log);
     }
 
+    protected String getJarName()
+    {
+        return "GenomeAnalysisTK.jar";
+    }
+
     protected File getJAR()
     {
         String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("GATKPATH");
@@ -39,7 +44,7 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
             path = PipelineJobService.get().getAppProperties().getToolsDirectory();
         }
 
-        return path == null ? new File("GenomeAnalysisTK.jar") : new File(path, "GenomeAnalysisTK.jar");
+        return path == null ? new File(getJarName()) : new File(path, getJarName());
     }
 
     protected File getQueueJAR()

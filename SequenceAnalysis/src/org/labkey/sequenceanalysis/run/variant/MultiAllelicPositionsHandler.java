@@ -14,7 +14,9 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.Compress;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.run.util.MultiAllelicPositionWrapper;
@@ -46,7 +48,8 @@ public class MultiAllelicPositionsHandler extends AbstractParameterizedOutputHan
                 ToolParameterDescriptor.create("minDepth", "Min Depth", "The minimum depth required for a position to be considered", "ldk-integerfield", new JSONObject(){{
                     put("allowBlank", false);
                 }}, 20),
-                ToolParameterDescriptor.create("callThreshold", "Call Threshold", "If provided, only sites detected in at least this many samples will be reported.", "ldk-integerfield", null, null)
+                ToolParameterDescriptor.create("callThreshold", "Call Threshold", "If provided, only sites detected in at least this many samples will be reported.", "ldk-integerfield", null, null),
+                ToolParameterDescriptor.create("doSplitJobs", "Split Jobs", "If checked, this will run once per BAM, instead of processing all as one job.  This can be useful for processing large batches", "checkbox", null, false)
             ));
     }
 
@@ -127,6 +130,13 @@ public class MultiAllelicPositionsHandler extends AbstractParameterizedOutputHan
                 options.add(minDepth.toString());
             }
 
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
+            if (maxThreads != null)
+            {
+                options.add("-nt");
+                options.add(maxThreads.toString());
+            }
+
             MultiAllelicPositionWrapper wrapper = new MultiAllelicPositionWrapper(ctx.getLogger());
             wrapper.run(inputBams, outputFile, rg.getWorkingFastaFile(), options);
             if (!outputFile.exists())
@@ -172,14 +182,26 @@ public class MultiAllelicPositionsHandler extends AbstractParameterizedOutputHan
                 }
             }
 
-            action.addOutput(outputFile, "Multi-Allelic Sites Table", false);
+            ctx.getLogger().info("compressing BED file");
+            File compressedOutput = Compress.compressGzip(outputFile);
+            if (outputFile.exists())
+            {
+                outputFile.delete();
+            }
+
+            action.addOutput(compressedOutput, "Multi-Allelic Sites Table", false);
 
             SequenceOutputFile so = new SequenceOutputFile();
-            so.setName(outputFile.getName());
+            so.setName(compressedOutput.getName());
             so.setCategory("Multi-Allelic Sites Table");
-            so.setFile(outputFile);
+            so.setFile(compressedOutput);
             String outputDescription = StringUtils.trimToNull(ctx.getParams().optString("outputDescription"));
             so.setDescription(outputDescription);
+            if (inputFiles.size() == 1)
+            {
+                so.setReadset(inputFiles.get(0).getReadset());
+                so.setAnalysis_id(inputFiles.get(0).getAnalysis_id());
+            }
 
             ctx.getFileManager().addSequenceOutput(so);
         }

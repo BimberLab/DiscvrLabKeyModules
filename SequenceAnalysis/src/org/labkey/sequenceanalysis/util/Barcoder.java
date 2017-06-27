@@ -19,15 +19,18 @@ import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
-import org.labkey.api.writer.PrintWriters;
+import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.sequenceanalysis.SequenceIntegrationTests;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.model.SequenceTag;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -40,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -288,7 +292,7 @@ public class Barcoder extends AbstractSequenceMatcher
         try
         {
             _detailLog = getDetailedLogFile(fastq);
-            _detailLogWriter = new CSVWriter(PrintWriters.getPrintWriter(_detailLog), '\t', CSVWriter.NO_QUOTE_CHARACTER, System.getProperty("line.separator"));
+            _detailLogWriter = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(_detailLog)), StringUtilsLabKey.DEFAULT_CHARSET)), '\t', CSVWriter.NO_QUOTE_CHARACTER, System.getProperty("line.separator"));
             _detailLogWriter.writeNext(new String[]{"Readname", "Barcode", "End of Molecule", "Edit Distance", "Offset", "Start", "Stop", "Barcode Sequence", "Target Sequence"});
         }
         catch (IOException e)
@@ -302,7 +306,7 @@ public class Barcoder extends AbstractSequenceMatcher
         try
         {
             _summaryLog = getSummaryLogFile(fastq);
-            _summaryLogWriter = new CSVWriter(PrintWriters.getPrintWriter(_summaryLog), '\t', CSVWriter.NO_QUOTE_CHARACTER, System.getProperty("line.separator"));
+            _summaryLogWriter = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(_summaryLog)), StringUtilsLabKey.DEFAULT_CHARSET)), '\t', CSVWriter.NO_QUOTE_CHARACTER, System.getProperty("line.separator"));
             _summaryLogWriter.writeNext(new String[]{"Readname", "Readset", "5' Barcode", "3' Barcode", "5' Edit Distance", "3' Edit Distance", "Start", "Stop", "Original Length", "Final Length", "Trimmed Sequence"});
         }
         catch (IOException e)
@@ -323,13 +327,13 @@ public class Barcoder extends AbstractSequenceMatcher
     private File getDetailedLogFile(File fastq)
     {
         String basename = FileUtil.getBaseName(fastq.getName().replaceAll("\\.gz$", ""));
-        return new File(_outputDir, basename + ".barcode-detailed.txt");
+        return new File(_outputDir, basename + ".barcode-detailed.txt.gz");
     }
 
     private File getSummaryLogFile(File fastq)
     {
         String basename = FileUtil.getBaseName(fastq.getName().replaceAll("\\.gz$", ""));
-        return new File(_outputDir, basename + ".barcode-summary.txt");
+        return new File(_outputDir, basename + ".barcode-summary.txt.gz");
     }
 
     private void processSequencePair(File fastq1, File fastq2, FastqRecord rec1, FastqRecord rec2, List<Readset> readsets, Collection<SequenceTag> barcodes5, Collection<SequenceTag> barcodes3) throws IOException
@@ -634,7 +638,7 @@ public class Barcoder extends AbstractSequenceMatcher
             Assert.assertTrue("Detailed log not found", detailLog.exists());
             detailLog.delete();
 
-            try (CSVReader reader = new CSVReader(Readers.getReader(summaryLog), '\t'))
+            try (CSVReader reader = new CSVReader(Readers.getReader(new GZIPInputStream(new FileInputStream(summaryLog))), '\t'))
             {
                 String[] line;
                 int lineNum = 0;

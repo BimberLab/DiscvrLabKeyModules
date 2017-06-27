@@ -274,6 +274,7 @@ then
     #another, for MV checking
     mkdir -p ${LK_HOME}/svn/trunk/pipeline_code/
     svn co --username cpas --password cpas --no-auth-cache https://hedgehog.fhcrc.org/tor/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code/gatk ${LK_HOME}/svn/trunk/pipeline_code/gatk/
+    #mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/VariantType.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationCount.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationBySample.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/GenotypeConcordance.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
@@ -288,10 +289,43 @@ then
     rm ./public/external-example/src/main/java/org/mycompany/app/*
     rm ./public/external-example/src/test/java/org/mycompany/app/*
 
+    #NOTE: can add -P\!queue to skip queue in some cases
     mvn verify -U
     mvn package
     cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.7.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
     cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.7.jar ${LKTOOLS_DIR}/Queue.jar
+fi
+
+if [[ ! -e ${LKTOOLS_DIR}/VariantQC.jar || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf VariantQC*
+    rm -Rf ${LKTOOLS_DIR}/VariantQC.jar
+
+    wget $WGET_OPTS https://github.com/bbimber/gatk-protected/releases/download/0.06/VariantQC-0.06.jar
+    cp VariantQC-0.06.jar ${LKTOOLS_DIR}/VariantQC.jar
+
+fi
+
+if [[ ! -e ${LKTOOLS_DIR}/GenomeAnalysisTK-discvr.jar || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf ${LKTOOLS_DIR}/GenomeAnalysisTK-discvr.jar
+    rm -Rf ${LKSRC_DIR}/gatk-discvr
+
+    mkdir -p gatk-discvr
+    cd gatk-discvr
+
+    echo "Downloading GATK from GIT"
+    git clone git://github.com/bbimber/gatk-protected.git
+    cd gatk-protected
+
+    #remove due to compilation error
+    rm ./public/external-example/src/main/java/org/mycompany/app/*
+    rm ./public/external-example/src/test/java/org/mycompany/app/*
+
+    mvn verify -U -P\!queue
+    mvn package -P\!queue
+
+    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.7.jar ${LKTOOLS_DIR}/GenomeAnalysisTK-discvr.jar
 fi
 
 

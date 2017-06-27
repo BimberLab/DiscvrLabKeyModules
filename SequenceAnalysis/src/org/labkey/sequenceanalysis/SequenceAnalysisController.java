@@ -3674,7 +3674,7 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 List<String> guids = new ArrayList<>();
-                if (handler.doSplitJobs())
+                if (handler.doSplitJobs() || form.getDoSplitJobs())
                 {
                     for (SequenceOutputFile o : files)
                     {
@@ -3719,6 +3719,7 @@ public class SequenceAnalysisController extends SpringActionController
     {
         private String _jobName;
         private String _params;
+        private Boolean _doSplitJobs = false;
 
         public String getJobName()
         {
@@ -3738,6 +3739,16 @@ public class SequenceAnalysisController extends SpringActionController
         public void setParams(String params)
         {
             _params = params;
+        }
+
+        public Boolean getDoSplitJobs()
+        {
+            return _doSplitJobs;
+        }
+
+        public void setDoSplitJobs(Boolean doSplitJobs)
+        {
+            _doSplitJobs = doSplitJobs;
         }
     }
 

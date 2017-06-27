@@ -98,11 +98,11 @@ public class FastqcRunner
         {
             //first see if we have cached HTML, otherwise run
             File expectedHtml = getExpectedHtmlFile(f);
-            if (!expectedHtml.exists())
+            File zip = getExpectedZipFile(f);
+            if (!expectedHtml.exists() || !zip.exists())
             {
                 runForFile(f);
 
-                File zip = new File(expectedHtml.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(expectedHtml)) + ".zip");
                 if (zip.exists())
                 {
                     _logger.info("adding ZIP: " + zip.getPath());
@@ -179,6 +179,13 @@ public class FastqcRunner
         }
 
         return basename;
+    }
+
+    private File getExpectedZipFile(File f)
+    {
+        File expectedHtml = getExpectedHtmlFile(f);
+
+        return new File(expectedHtml.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(expectedHtml)) + ".zip");
     }
 
     private File getExpectedHtmlFile(File f)

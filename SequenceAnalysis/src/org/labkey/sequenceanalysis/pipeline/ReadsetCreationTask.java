@@ -192,6 +192,16 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                     {
                         throw new PipelineJobException("Readset lacks a rowid: " + r.getReadsetId());
                     }
+
+                    if (row.getReadData() != null && !row.getReadData().isEmpty())
+                    {
+                        throw new PipelineJobException("Readset already has data imported: " + row.getReadsetId());
+                    }
+
+                    if (row.getInstrumentRunId() == null)
+                    {
+                        row.setInstrumentRunId(r.getInstrumentRunId());
+                    }
                 }
 
                 //now add readData

@@ -552,13 +552,14 @@ public class JBrowseRoot
                     for (int i = 0; i < arr.length(); i++)
                     {
                         JSONObject o = arr.getJSONObject(i);
-                        if (f.getExtraTrackConfig() != null)
+                        if (f.getExtraTrackConfig(getLogger()) != null)
                         {
                             getLogger().debug("adding extra track config");
-                            o.putAll(f.getExtraTrackConfig());
+                            o.putAll(f.getExtraTrackConfig(getLogger()));
 
-                            if (f.getExtraTrackConfig().optBoolean("visibleByDefault", false))
+                            if (f.getExtraTrackConfig(getLogger()).optBoolean("visibleByDefault", false))
                             {
+                                getLogger().debug("adding default visible track: " + o.getString("label"));
                                 defaultTrackLabels.add(o.getString("label"));
                             }
                         }
@@ -668,13 +669,14 @@ public class JBrowseRoot
                     JSONArray outputFileTracks = json.containsKey("tracks") ? json.getJSONArray("tracks") : new JSONArray();
                     for (JSONObject o : outputFileTracks.toJSONObjectArray())
                     {
-                        if (f.getExtraTrackConfig() != null)
+                        if (f.getExtraTrackConfig(getLogger()) != null)
                         {
                             getLogger().debug("adding extra track config");
-                            o.putAll(f.getExtraTrackConfig());
+                            o.putAll(f.getExtraTrackConfig(getLogger()));
 
-                            if (f.getExtraTrackConfig().optBoolean("visibleByDefault", false))
+                            if (f.getExtraTrackConfig(getLogger()).optBoolean("visibleByDefault", false))
                             {
+                                getLogger().debug("adding default visible track: " + o.getString("label"));
                                 defaultTrackLabels.add(o.getString("label"));
                             }
                         }
@@ -730,7 +732,7 @@ public class JBrowseRoot
         o.put("category", "Reference Annotations");
         o.put("storeClass", "JBrowse/Store/Sequence/StaticChunked");
         o.put("chunkSize", 20000);
-        o.put("label", "Reference sequence");
+        o.put("label", "reference_sequence");
         o.put("key", "Reference sequence");
         o.put("type", "SequenceTrack");
         o.put("showTranslation", false);

@@ -1,0 +1,16 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <columns>
+       <column name="rowid" />
+       <column name="name" />
+       <column name="description" />
+       <column name="library_id" />
+       <column name="fileid" />
+       <column name="category" />
+       <column name="jobid" />
+       <column name="datedisabled" />
+       <column name="fileid/ViewOrDownload" />
+   </columns>
+   <sorts>
+       <sort column="name"/>
+   </sorts>
+</customView>

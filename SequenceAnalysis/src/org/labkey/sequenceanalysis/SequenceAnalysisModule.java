@@ -102,6 +102,7 @@ import org.labkey.sequenceanalysis.run.variant.CombineVariantsHandler;
 import org.labkey.sequenceanalysis.run.variant.DepthOfCoverageHandler;
 import org.labkey.sequenceanalysis.run.variant.GenotypeConcordanceStep;
 import org.labkey.sequenceanalysis.run.variant.GenotypeFiltrationStep;
+import org.labkey.sequenceanalysis.run.variant.MendelianViolationReportStep;
 import org.labkey.sequenceanalysis.run.variant.MultiAllelicPositionsHandler;
 import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
 import org.labkey.sequenceanalysis.run.variant.SampleRenameStep;
@@ -112,6 +113,7 @@ import org.labkey.sequenceanalysis.run.variant.VariantAnnotatorStep;
 import org.labkey.sequenceanalysis.run.variant.VariantEvalBySampleStep;
 import org.labkey.sequenceanalysis.run.variant.VariantEvalStep;
 import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
+import org.labkey.sequenceanalysis.run.variant.VariantQCStep;
 import org.labkey.sequenceanalysis.run.variant.VariantsToTableStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
 
@@ -262,7 +264,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new VariantEvalStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantEvalBySampleStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantsToTableStep.Provider());
-        //SequencePipelineService.get().registerPipelineStep(new VariantQCStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VariantQCStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new MendelianViolationReportStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());

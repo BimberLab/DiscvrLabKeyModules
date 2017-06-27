@@ -193,7 +193,10 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
                 label: 'Filename',
                 description: 'This is the basename that will be used for the output gzipped VCF',
                 commandLineParam: false,
-                defaultValue: 'CombinedGenotypes'
+				additionalExtConfig: {
+					allowBlank: false
+				},
+                defaultValue: null
             },{
                 fieldXtype: 'ldk-integerfield',
                 name: 'stand_call_conf',
@@ -215,6 +218,12 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
                 description: 'If checked, all sites will be output into the VCF, instead of just those where variants are detected.  This can dramatically increase the size of the VCF.',
                 commandLineParam: '--includeNonVariantSites',
                 defaultValue: false
+			},{
+				fieldXtype: 'checkbox',
+				name: 'doCopyInputs',
+				label: 'Copy gVCFs Locally',
+				description: 'If checked, the gVCFs will be copied to the local working directory prior to running GenotypeVCFs.  This can be a good idea if a large number of input files are used.',
+				defaultValue: false
             }]
         }];
 

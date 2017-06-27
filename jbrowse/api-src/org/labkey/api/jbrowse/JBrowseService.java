@@ -3,6 +3,8 @@ package org.labkey.api.jbrowse;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.data.Container;
+import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.security.User;
 
 import java.io.IOException;
@@ -25,4 +27,6 @@ abstract public class JBrowseService
     }
 
     abstract public String prepareOutputFile(User u, Logger log, Integer outputFileId, boolean forceRecreateJson, @Nullable JSONObject additionalConfig) throws IOException;
+
+    abstract public void reprocessDatabase(Container c, User u, String databaseId) throws PipelineValidationException;
 }

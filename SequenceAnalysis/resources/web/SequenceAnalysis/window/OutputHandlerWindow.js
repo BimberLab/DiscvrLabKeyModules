@@ -186,6 +186,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
             jsonData: {
                 handlerClass: this.handlerClass,
                 outputFileIds: this.outputFileIds,
+                doSplitJobs: !!params.doSplitJobs,
                 params: Ext4.encode(params)
             },
             scope: this,

@@ -34,7 +34,10 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler
     public CombineGVCFsHandler()
     {
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), NAME, "This will run GATK\'s CombineGVCFs on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK\'s HaplotypeCaller.", null, Arrays.asList(
-                ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", null, "CombinedGenotypes")
+                ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", null, "CombinedGenotypes"),
+                ToolParameterDescriptor.create("doCopyLocal", "Copy gVCFs To Working Directory", "If selected, the gVCFs will be copied to the working directory first, which can improve performance when working with a large set of files.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, false)
         ));
     }
 
@@ -85,6 +88,8 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            boolean doCopyLocal = ctx.getParams().optBoolean("doCopyLocal", false);
+
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
@@ -109,10 +114,22 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler
                 throw new PipelineJobException("Unable to find cached genome for Id: " + genomeId);
             }
 
+            Set<File> toDelete = new HashSet<>();
+            List<File> vcfsToProcess = new ArrayList<>();
+            if (doCopyLocal)
+            {
+                ctx.getLogger().info("making local copies of gVCFs");
+                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputVcfs, toDelete, ctx.getOutputDir(), ctx.getLogger()));
+            }
+            else
+            {
+                vcfsToProcess.addAll(inputVcfs);
+            }
+
             String basename = ctx.getParams().getString("fileBaseName");
             File outputFile = new File(ctx.getOutputDir(), basename + (basename.endsWith(".") ? "" : ".") + "g.vcf.gz");
             CombineGVCFsWrapper wrapper = new CombineGVCFsWrapper(ctx.getLogger());
-            wrapper.execute(genome.getWorkingFastaFile(), outputFile, null, inputVcfs.toArray(new File[inputFiles.size()]));
+            wrapper.execute(genome.getWorkingFastaFile(), outputFile, null, vcfsToProcess.toArray(new File[vcfsToProcess.size()]));
 
             if (!outputFile.exists())
             {
@@ -143,6 +160,15 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler
 
             action.setEndTime(new Date());
             ctx.addActions(action);
+
+            if (!toDelete.isEmpty())
+            {
+                ctx.getLogger().info("deleting locally copied gVCFs");
+                for (File f : toDelete)
+                {
+                    f.delete();
+                }
+            }
         }
     }
 }

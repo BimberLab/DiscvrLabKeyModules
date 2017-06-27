@@ -13,6 +13,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
@@ -128,6 +129,8 @@ public class StarWrapper extends AbstractCommandWrapper
                 args.add("--outFilterIntronMotifs");
                 args.add("RemoveNoncanonicalUnannotated");
             }
+
+            args.addAll(getClientCommandArgs());
 
             //GTF
             if (!StringUtils.isEmpty(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider())))
@@ -367,7 +370,16 @@ public class StarWrapper extends AbstractCommandWrapper
                 }}, true),
                 ToolParameterDescriptor.create("removeNoncanonicalUnannotated", "Remove Noncanonical Unannotated Junctions", "If checked, the argument --outFilterIntronMotifs=RemoveNoncanonicalUnannotated will be added, which will filter out noncanonical, unannotated junctions.", "checkbox", new JSONObject(){{
                     put("checked", false);
-                }}, true)
+                }}, true),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMismatchNmax"), "outFilterMismatchNmax", "Remove Noncanonical Unannotated Junctions", "Alignments with more than this number of mismatches will be filtered", "ldk-integerfield", new JSONObject(){{
+                    put("minValue", 0);
+                }}, null),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMismatchNoverLmax"), "outFilterMismatchNoverLmax", "An alignment will be output only if its ratio of mismatches to *mapped* length is less than or equal to this value.  Defaults to 0.3", "Alignments with more than this number of mismatches will be filtered", "ldk-numberfield", new JSONObject(){{
+                    put("minValue", 0);
+                    put("maxValue", 1);
+                }}, null)
+
+
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://github.com/alexdobin/STAR/", true, true, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
 
             setAlwaysCacheIndex(true);;

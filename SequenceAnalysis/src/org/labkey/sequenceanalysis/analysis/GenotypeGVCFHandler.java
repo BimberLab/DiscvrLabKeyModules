@@ -259,7 +259,9 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutpu
             toolParams.add("-A");
             toolParams.add("FractionInformativeReads");
 
-            wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcfs.toArray(new File[inputVcfs.size()]));
+            boolean doCopyInputs = ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.doCopyInputs", false);
+
+            wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, doCopyInputs, inputVcfs.toArray(new File[inputVcfs.size()]));
             action.addOutput(outputVcf, "VCF", outputVcf.exists(), true);
             action.setEndTime(new Date());
             resumer.setGenotypeGVCFsComplete(action, outputVcf);

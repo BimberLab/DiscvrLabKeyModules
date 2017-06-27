@@ -6,6 +6,7 @@ import org.broadinstitute.gatk.engine.CommandLineGATK;
 import org.broadinstitute.gatk.engine.walkers.By;
 import org.broadinstitute.gatk.engine.walkers.DataSource;
 import org.broadinstitute.gatk.engine.walkers.LocusWalker;
+import org.broadinstitute.gatk.engine.walkers.TreeReducible;
 import org.broadinstitute.gatk.utils.*;
 import org.broadinstitute.gatk.utils.collections.Pair;
 import org.broadinstitute.gatk.utils.commandline.Advanced;
@@ -50,7 +51,7 @@ import java.util.*;
  */
 @DocumentedGATKFeature( groupName = HelpConstants.DOCS_CAT_QC, extraDocs = {CommandLineGATK.class} )
 @By(DataSource.REFERENCE)
-public class MultipleAllelesAtLoci extends LocusWalker<MultipleAllelesAtLoci.SiteBaseCounter, Integer> {
+public class MultipleAllelesAtLoci extends LocusWalker<MultipleAllelesAtLoci.SiteBaseCounter, Integer> implements TreeReducible<Long> {
     @Output
     PrintStream out;
 
@@ -90,6 +91,11 @@ public class MultipleAllelesAtLoci extends LocusWalker<MultipleAllelesAtLoci.Sit
     @Override
     public void initialize() {
 
+    }
+
+    @Override
+    public Long treeReduce(Long lhs, Long rhs) {
+        return null;
     }
 
     protected static class SiteBaseCounter implements HasGenomeLocation {

@@ -441,11 +441,15 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             //barcode, if needed
             if (getHelper().getSettings().isDoBarcode())
             {
+                getJob().setStatus(PipelineJob.TaskStatus.running, "Demultiplexing reads");
                 getJob().getLogger().info("Separating reads by barcode");
 
                 Barcoder barcoder = getBarcoder();
+                int readdataIdx = 0;
                 for (FileGroup fg : normalizedGroups)
                 {
+                    readdataIdx++;
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "Demultiplexing " + readdataIdx + " of " + normalizedGroups.size());
                     List<SequenceReadsetImpl> readsetsForGroup = new ArrayList<>();
                     for (SequenceReadsetImpl rs : readsets)
                     {
@@ -558,21 +562,13 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     File detailLog = barcoder.getDetailedLogFile();
                     if (detailLog != null && detailLog.exists())
                     {
-                        getJob().getLogger().debug("compressing detailed barcode log");
-                        File detailLogCompressed = Compress.compressGzip(detailLog);
-                        getHelper().getFileManager().addOutput(barcodeAction, "Barcode Log", detailLogCompressed);
-                        detailLog.delete();
-                        getJob().getLogger().debug("compressed size: " + FileUtils.byteCountToDisplaySize(detailLogCompressed.length()));
+                        getHelper().getFileManager().addOutput(barcodeAction, "Barcode Log", detailLog);
                     }
 
                     File summaryLog = barcoder.getSummaryLogFile();
                     if (summaryLog != null && summaryLog.exists())
                     {
-                        getJob().getLogger().debug("compressing summary barcode log");
-                        File summaryLogCompressed = Compress.compressGzip(summaryLog);
-                        getHelper().getFileManager().addOutput(barcodeAction, "Barcode Log", summaryLogCompressed);
-                        summaryLog.delete();
-                        getJob().getLogger().debug("compressed size: " + FileUtils.byteCountToDisplaySize(summaryLogCompressed.length()));
+                        getHelper().getFileManager().addOutput(barcodeAction, "Barcode Log", summaryLog);
                     }
 
                     _finalOutputs.addAll(outputs);
@@ -585,6 +581,8 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     barcodeAction.setEndTime(new Date());
                     actions.add(barcodeAction);
                 }
+
+                getJob().setStatus(PipelineJob.TaskStatus.running);
             }
             else
             {
@@ -745,7 +743,10 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         barcoder.setCreateSummaryLog(true);
 
         if (getHelper().getSettings().isDebugMode())
+        {
+            getJob().getLogger().debug("will create detailed barcode log");
             barcoder.setCreateDetailedLog(true);
+        }
 
         if (getBarcodeGroupsToScan(getHelper().getSettings()).size() > 0)
             barcoder.setScanAll(true);

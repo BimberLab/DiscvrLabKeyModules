@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.XppDriver;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
@@ -13,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -78,15 +80,21 @@ abstract public class AbstractResumer implements Serializable
             throw new PipelineJobException("output directory was null");
         }
 
-        try (PrintWriter writer = PrintWriters.getPrintWriter(getSerializedXml(outDir, getXmlName())))
+        File output = getSerializedXml(outDir, getXmlName());
+        _log.debug("using file: " + output.getPath());
+        try (PrintWriter writer = PrintWriters.getPrintWriter(output))
         {
             String xml = _xstream.toXML(this);
+            _log.debug("xml length: " + xml.length());
             writer.write(xml);
         }
-        catch (IOException e)
+        catch (Throwable e)
         {
             throw new PipelineJobException(e);
         }
+
+        //add to debug intermittent issue w/ XML not saving
+        _log.debug("time since xml last modified: " + DurationFormatUtils.formatDurationWords(new Date().getTime() - output.lastModified(), true, true));
     }
 
     public void markComplete()
