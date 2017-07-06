@@ -1039,7 +1039,7 @@ then
     rm -Rf liftOver
     rm -Rf $LKTOOLS_DIR/liftOver
 
-    wget $WGET_OPTS http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/liftOver
+    wget $WGET_OPTS http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/liftOver
     chmod +x liftOver
 
     install ./liftOver $LKTOOLS_DIR/liftOver
