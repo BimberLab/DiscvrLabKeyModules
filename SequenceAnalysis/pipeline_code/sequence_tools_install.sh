@@ -1064,7 +1064,7 @@ then
     rm -Rf faToTwoBit
     rm -Rf $LKTOOLS_DIR/faToTwoBit
 
-    wget $WGET_OPTS http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64.v287/faToTwoBit
+    wget $WGET_OPTS http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/faToTwoBit
     chmod +x faToTwoBit
 
     install ./faToTwoBit $LKTOOLS_DIR/faToTwoBit
