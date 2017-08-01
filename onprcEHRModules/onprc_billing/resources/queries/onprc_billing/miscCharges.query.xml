@@ -13,7 +13,7 @@
                     </column>
                     <column columnName="QCState">
                         <fk>
-                            <fkDbSchema>study</fkDbSchema>
+                            <fkDbSchema>core</fkDbSchema>
                             <fkTable>qcstate</fkTable>
                             <fkColumnName>rowid</fkColumnName>
                         </fk>                        
