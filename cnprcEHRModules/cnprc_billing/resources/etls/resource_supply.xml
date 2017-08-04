@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <etl xmlns="http://labkey.org/etl/xml">
     <name>Resource Supply</name>
-    <description>Final Central Supply supply item costs.</description>
+    <description>Final Central Supply Item Costs</description>
     <transforms>
         <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
             <description>Copy to target</description>
