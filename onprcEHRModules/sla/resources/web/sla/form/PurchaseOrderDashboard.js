@@ -38,7 +38,7 @@ Ext4.define('SLA.panel.PurchaseOrderDashboard', {
         {
             var modPropsLink = !LABKEY.user.isAdmin ? '' : LABKEY.Utils.textLink({
                 text: 'configure',
-                href: LABKEY.ActionURL.buildURL('admin', 'folderManagement', null, {tabId: 'props'})
+                href: LABKEY.ActionURL.buildURL('admin', 'moduleProperties', null, {tabId: 'props'})
             });
 
             this.add({

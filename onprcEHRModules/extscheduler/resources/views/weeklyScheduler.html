@@ -29,7 +29,7 @@
         var userGroupName = LABKEY.getModuleContext('extscheduler').ExtSchedulerUserGroupName;
         if (userGroupName == null)
         {
-            var configureLink = LABKEY.ActionURL.buildURL('admin', 'folderManagement', null, {tabId: 'props'});
+            var configureLink = LABKEY.ActionURL.buildURL('admin', 'moduleProperties', null, {tabId: 'props'});
             var msg = '<span class="labkey-error">ExtSchedulerUserGroupName has not been configured for this folder.</span> ';
             if (LABKEY.user.isAdmin)
                 msg += LABKEY.Utils.textLink({text: 'Configure', href: configureLink});
