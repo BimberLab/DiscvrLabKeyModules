@@ -8,7 +8,7 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
     extend: 'Ext.window.Window',
 
     statics: {
-        downloadFilesForReadset: function(dataRegionName, btnEl){
+        downloadFilesForReadset: function(dataRegionName){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
@@ -30,16 +30,16 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
                 success: function(result){
                     Ext4.Msg.hide();
 
-                    var ids = [];
                     if (result && result.rows.length){
                         Ext4.create('SequenceAnalysis.window.RunExportWindow', {
+                            autoShow: true,
                             dataRegionName: dataRegionName,
                             records: result.rows,
                             fileTypes: [
                                 {name: 'Forward Reads', fields: ['fileid1'], checked: true},
                                 {name: 'Reverse Reads', fields: ['fileid2'], checked: true}
                             ]
-                        }).show(btnEl);
+                        });
                     }
                     else {
                         Ext4.Msg.alert('Error', 'No sequence files found for the selected readsets');
@@ -49,7 +49,7 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
             });
         },
 
-        downloadFilesForAnalysis: function(dataRegionName, btnEl){
+        downloadFilesForAnalysis: function(dataRegionName){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 
@@ -71,16 +71,16 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
                 success: function(result){
                     Ext4.Msg.hide();
 
-                    var ids = [];
                     if (result && result.rows.length){
                         Ext4.create('SequenceAnalysis.window.RunExportWindow', {
+                            autoShow: true,
                             dataRegionName: dataRegionName,
                             records: result.rows,
                             fileTypes: [
                                 {name: 'Alignment File', fields: ['alignmentfile'], checked: true},
                                 {name: 'Reference Genome', fields: ['reference_library'], checked: true}
                             ]
-                        }).show(btnEl);
+                        });
                     }
                     else {
                         Ext4.Msg.alert('Error', 'No sequence files found for the selected analyses');
@@ -107,10 +107,6 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
                     width: 350
                 },
                 items: [{
-//                    html: 'You have chosen to export ' + this.dataIds.length + ' files',
-//                    border: false,
-//                    style: 'padding-bottom: 15px;'
-//                },{
                     xtype: 'textfield',
                     allowBlank: false,
                     fieldLabel: 'File Prefix',
@@ -211,7 +207,6 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
 
         if(!url)
             return;
-console.log(url);
         var form = Ext4.create('Ext.form.Panel', {
             url: url,
             standardSubmit: true

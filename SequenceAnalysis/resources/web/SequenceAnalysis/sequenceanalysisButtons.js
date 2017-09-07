@@ -190,7 +190,7 @@ SequenceAnalysis.Buttons = new function(){
             );
         },
 
-        performAnalysis: function(dataRegionName, btnEl){
+        performAnalysis: function(dataRegionName){
             if (!LABKEY.Security.currentUser.canUpdate){
                 alert('You do not have permission to analyze data');
                 return;
@@ -205,6 +205,7 @@ SequenceAnalysis.Buttons = new function(){
             }
 
             Ext4.create('Laboratory.window.WorkbookCreationWindow', {
+                autoShow: true,
                 controller: 'sequenceanalysis',
                 action: 'alignmentAnalysis',
                 urlParams: {
@@ -212,10 +213,10 @@ SequenceAnalysis.Buttons = new function(){
                     analyses: checked.join(';')
                 },
                 workbookFolderType: Laboratory.Utils.getDefaultWorkbookFolderType()
-            }).show(btnEl);
+            });
         },
 
-        performAnalysisFromReadsets: function(dataRegionName, btnEl){
+        performAnalysisFromReadsets: function(dataRegionName){
             if (!LABKEY.Security.currentUser.canUpdate){
                 alert('You do not have permission to analyze data');
                 return;
@@ -230,6 +231,7 @@ SequenceAnalysis.Buttons = new function(){
             }
 
             Ext4.create('Laboratory.window.WorkbookCreationWindow', {
+                autoShow: true,
                 controller: 'sequenceanalysis',
                 action: 'sequenceAnalysis',
                 urlParams: {
@@ -238,7 +240,7 @@ SequenceAnalysis.Buttons = new function(){
                     readsets: checked.join(';')
                 },
                 workbookFolderType: Laboratory.Utils.getDefaultWorkbookFolderType()
-            }).show(btnEl);
+            });
         },
 
         generateFastQc: function(dataRegionName, pkName){
@@ -263,7 +265,7 @@ SequenceAnalysis.Buttons = new function(){
             }, this);
         },
 
-        generateFastQcForAnalysis: function(dataRegionName, btnEl){
+        generateFastQcForAnalysis: function(dataRegionName){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
 

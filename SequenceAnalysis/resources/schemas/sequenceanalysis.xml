@@ -501,16 +501,16 @@
             </item>
             <item insertPosition="end" requiresSelection="true" text="More Actions">
                 <item text="Analyze Selected BAMs">
-                    <onClick>SequenceAnalysis.Buttons.performAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null)</onClick>
+                    <onClick>SequenceAnalysis.Buttons.performAnalysis(dataRegionName)</onClick>
                 </item>
                 <item text="View FASTQC Report">
-                    <onClick>SequenceAnalysis.Buttons.generateFastQcForAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</onClick>
+                    <onClick>SequenceAnalysis.Buttons.generateFastQcForAnalysis(dataRegionName);</onClick>
                 </item>
                 <item text="View Quality Metrics">
                     <onClick>SequenceAnalysis.Buttons.viewQualityMetrics(dataRegionName, 'analysis_id');</onClick>
                 </item>
                 <item text="Download Sequence Files">
-                    <onClick>SequenceAnalysis.window.RunExportWindow.downloadFilesForAnalysis(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</onClick>
+                    <onClick>SequenceAnalysis.window.RunExportWindow.downloadFilesForAnalysis(dataRegionName);</onClick>
                 </item>
                 <item text="Alignment Reports">
                     <item text="Alignment Summary">
@@ -1201,13 +1201,13 @@
             </item>
             <item insertPosition="end" requiresSelection="true" text="More Actions">
                 <item text="Align/Analyze Selected">
-                    <onClick>SequenceAnalysis.Buttons.performAnalysisFromReadsets(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null)</onClick>
+                    <onClick>SequenceAnalysis.Buttons.performAnalysisFromReadsets(dataRegionName)</onClick>
                 </item>
                 <item text="View FASTQC Report">
                     <onClick>SequenceAnalysis.Buttons.generateFastQc(dataRegionName);</onClick>
                 </item>
                 <item text="Download Sequence Files">
-                    <onClick>SequenceAnalysis.window.RunExportWindow.downloadFilesForReadset(dataRegionName, arguments[0] ? arguments[0].ownerCt.floatParent : null);</onClick>
+                    <onClick>SequenceAnalysis.window.RunExportWindow.downloadFilesForReadset(dataRegionName);</onClick>
                 </item>
                 <item text="View Quality Metrics">
                     <onClick>SequenceAnalysis.Buttons.viewQualityMetrics(dataRegionName, 'readset');</onClick>
